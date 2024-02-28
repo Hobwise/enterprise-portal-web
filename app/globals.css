@@ -25,3 +25,7 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+.login-background {
+  background-image: url('../public/assets/images/login-background.png');
+  background-color: black;
+}
