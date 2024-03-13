@@ -11,16 +11,16 @@ const BusinessInformation = () => {
   const router = useRouter();
   return (
     <main className='min-h-screen md:p-0 py-4 px-4  bg-pink200'>
-      <div className='p-10'>
+      <div className='md:p-10 p-0 pb-4 md:pb-0'>
         <HobinkLogo />
       </div>
-      <section className='flex flex-col justify-center items-center'>
-        <div className='md:w-[464px] w-full  bg-white text-black lg:p-7 py-12 px-6  rounded-2xl'>
-          <h2 className='text-[28px] font-bold '>
+      <section className='md:min-h-screen min-h-full md:top[-10rem] top-0 w-full md:absolute static grid md:place-content-center place-content-start'>
+        <div className='md:w-[464px] w-full  bg-white text-black lg:p-7 py-12 px-6  md:rounded-2xl rounded-lg'>
+          <h2 className='text-[28px] leading-8 font-bold '>
             Tell us about your business
           </h2>
 
-          <Spacer y={6} />
+          <Spacer y={8} />
           <form action={() => router.push('/dashboard')} autoComplete='off'>
             <CustomInput
               type='text'
