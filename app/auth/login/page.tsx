@@ -50,7 +50,7 @@ export default function Login() {
                 type='email'
                 label='Email Address'
                 placeholder='Enter Email'
-                isRequired={true}
+                // isRequired={true}
                 endContent={
                   <FaRegEnvelope className='text-foreground-500 text-l' />
                 }
@@ -61,7 +61,7 @@ export default function Login() {
                 type='password'
                 label='password'
                 placeholder='Enter password'
-                isRequired={true}
+                // isRequired={true}
               />
 
               <Spacer y={6} />
