@@ -25,3 +25,11 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+.login-background {
+  background-image: url('../public/assets/images/login-background.png');
+  background-color: black;
+}
+
+.main-wrapper:hover:focus {
+  border: 2px solid #c3adff;
+}
