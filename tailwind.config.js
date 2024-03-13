@@ -17,6 +17,8 @@ module.exports = {
       primary100: '#C3ADFF',
       grey400: '#98A2B3',
       grey500: '#667185',
+      grey600: '#645D5D',
+      pink200: '#EAE5FF',
     },
     extend: {
       backgroundImage: {
@@ -27,5 +29,38 @@ module.exports = {
     },
   },
   darkMode: 'class',
-  plugins: [nextui()],
+  plugins: [
+    nextui({
+      layout: {
+        disabledOpacity: '0.3',
+        radius: {
+          large: '8px',
+        },
+
+        borderWidth: {
+          small: '1px',
+          medium: '1px',
+          large: '2px',
+        },
+      },
+      colors: {
+        primary: {
+          DEFAULT: '#BEF264',
+          foreground: '#000000',
+        },
+        placeholder: {
+          small: '1px',
+          medium: '1px',
+          large: '2px',
+        },
+        focus: '#C3ADFF',
+        hover: '#C3ADFF',
+      },
+      themes: {
+        light: {},
+        dark: {},
+      },
+    }),
+  ],
 };
+// #5F35D2

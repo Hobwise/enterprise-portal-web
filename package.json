@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@nextui-org/react": "^2.2.9",
-    "framer-motion": "^11.0.6",
+    "framer-motion": "^11.0.8",
     "next": "14.0.4",
     "react": "^18",
     "react-dom": "^18",

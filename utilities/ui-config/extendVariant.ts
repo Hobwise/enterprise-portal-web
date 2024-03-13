@@ -1,30 +1,29 @@
 import { Input, extendVariants } from '@nextui-org/react';
+
 export const ExtendedInput = extendVariants(Input, {
   variants: {
     color: {
       stone: {
         inputWrapper: [
-          'bg-zinc-100',
+          'bg-none',
           'border',
-
           'transition-colors',
-          'focus-within:bg-zinc-100',
-          'data-[hover=true]:border-primary100',
-          'data-[hover=true]:bg-zinc-100',
-          'group-data-[focus=true]:border-primary100',
-
-          'dark:bg-zinc-900',
-          'dark:border-zinc-800',
-          'dark:data-[hover=true]:bg-primary100',
-          'dark:focus-within:bg-primary100',
+          'focus-within:bg-none',
+          'data-[hover=true]:border-pink-700',
+          'data-[hover=true]:bg-none',
+          'group-data-[focus=true]:border-pink-700',
+          'dark:border-pink-700',
+          'dark:data-[hover=true]:bg-none',
+          'dark:focus-within:bg-none',
         ],
         input: [
-          'text-zinc-800',
-          'placeholder:text-zinc-600',
-
-          'dark:text-zinc-400',
-          'dark:placeholder:text-zinc-600',
+          'text-[#000]',
+          'placeholder:text-zinc-500 text-sm',
+          'bg-none',
+          'dark:text-[#000]',
+          'dark:placeholder:text-zinc-500',
         ],
+        label: ['text-[#000] text-[14px]'],
       },
     },
     size: {
@@ -41,6 +40,7 @@ export const ExtendedInput = extendVariants(Input, {
         input: 'text-small',
       },
       xl: {
+        label: 'text-tiny',
         inputWrapper: 'h-unit-14 min-h-unit-14',
         input: 'text-medium',
       },
@@ -50,10 +50,10 @@ export const ExtendedInput = extendVariants(Input, {
         inputWrapper: 'rounded',
       },
       sm: {
-        inputWrapper: 'rounded-[4px]',
+        inputWrapper: 'rounded-md',
       },
       mdextra: {
-        inputWrapper: 'rounded-[6px]',
+        inputWrapper: 'rounded-lg',
       },
     },
     textSize: {

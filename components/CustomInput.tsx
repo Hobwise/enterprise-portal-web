@@ -3,7 +3,7 @@
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 
 import { useState } from 'react';
-import { ExtendedInput as Input } from '../ui-config/extendVariant';
+import { ExtendedInput as Input } from '@/utilities/ui-config/extendVariant';
 
 interface CustomInputProps {
   type?: string;
@@ -51,6 +51,8 @@ export const CustomInput = ({
       placeholder={placeholder}
       labelPlacement='outside'
       isRequired={isRequired}
+      autoComplete='false'
+      name='hidden'
       // errorMessage='Email not correct'
       // isInvalid={true}
       size={'lg'}
