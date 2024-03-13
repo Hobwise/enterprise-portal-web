@@ -58,13 +58,13 @@ export default function Signup() {
                   type='text'
                   label='First name'
                   placeholder='First name'
-                  isRequired={true}
+                  // isRequired={true}
                 />
                 <CustomInput
                   type='text'
                   label='Last name'
                   placeholder='Last name'
-                  isRequired={true}
+                  // isRequired={true}
                 />
               </div>
               <Spacer y={6} />
@@ -72,7 +72,7 @@ export default function Signup() {
                 type='email'
                 label='Email Address'
                 placeholder='Enter Email'
-                isRequired={true}
+                // isRequired={true}
                 endContent={
                   <FaRegEnvelope className='text-foreground-500 text-l' />
                 }
@@ -83,7 +83,7 @@ export default function Signup() {
                 type='password'
                 label='password'
                 placeholder='Enter password'
-                isRequired={true}
+                // isRequired={true}
               />
 
               <Spacer y={6} />
