@@ -17,9 +17,9 @@ const metadata = {
 const ConfirmEmail = () => {
   const router = useRouter();
   return (
-    <main className='min-h-screen md:p-0 py-4 px-4 flex flex-col justify-center items-center bg-pink200'>
+    <main className='min-h-screen  md:p-0 py-4 px-4 flex flex-col md:justify-center justify-start items-center bg-pink200'>
       <HobinkLogo />
-      <section className='md:w-[464px] w-full bg-white text-black lg:p-7 py-12 px-6  rounded-2xl'>
+      <section className='md:w-[464px] w-full bg-white text-black lg:p-7 py-12 px-6  md:rounded-2xl rounded-lg'>
         <div className='grid place-content-center'>
           <Image src={confirmEmailLogo} alt='confirm email logo' />
         </div>
