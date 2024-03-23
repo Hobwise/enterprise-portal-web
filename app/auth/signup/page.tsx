@@ -81,7 +81,7 @@ export default function Signup() {
               <Spacer y={6} />
               <CustomInput
                 type='password'
-                label='password'
+                label='Password'
                 placeholder='Enter password'
                 // isRequired={true}
               />

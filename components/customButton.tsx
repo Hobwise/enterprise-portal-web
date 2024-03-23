@@ -16,7 +16,7 @@ export const CustomButton = ({
   return (
     <Button
       type={type}
-      className={`${backgroundColor}  ${radius} text-white font-bold text-md  p-7 w-full`}
+      className={`${backgroundColor}  ${radius} text-white font-bold text-md  h-[55px] w-full`}
     >
       {children}
     </Button>

@@ -1,3 +1,4 @@
+'use client';
 import { Checkbox, Spacer } from '@nextui-org/react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 import Image from 'next/image';
@@ -7,13 +8,15 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { lexend } from '@/utilities/ui-config/fonts';
 import HobinkLogo from '@/components/logo';
+import { useRouter } from 'next/navigation';
 
-export const metadata = {
-  title: 'Log in to Hobink',
-  description: 'Streamline your business processes',
-};
+// export const metadata = {
+//   title: 'Log in to Hobink',
+//   description: 'Streamline your business processes',
+// };
 
 export default function Login() {
+  const router = useRouter();
   return (
     <main className='bg-secondaryColor'>
       <div className='lg:grid  md:w-3/4 xl:max-w-[912px] mx-auto px-4 lg:px-0 w-full lg:place-content-center min-h-screen '>
@@ -45,7 +48,7 @@ export default function Login() {
             <p className='text-sm  text-grey500 mb-14'>
               Enter your credentials to access your account
             </p>
-            <form autoComplete='off'>
+            <form action={() => router.push('/dashboard')} autoComplete='off'>
               <CustomInput
                 type='email'
                 label='Email Address'

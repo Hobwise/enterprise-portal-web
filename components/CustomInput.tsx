@@ -3,11 +3,14 @@
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 
 import { useState } from 'react';
-import { ExtendedInput as Input } from '@/utilities/ui-config/extendVariant';
+import { Input } from '@nextui-org/react';
+// import { ExtendedInput as Input } from '@/utilities/ui-config/extendVariant';
 
 interface CustomInputProps {
   type?: string;
-  label: string;
+  label?: string;
+  size?: 'lg' | 'md' | 'sm';
+  classnames?: string;
   placeholder?: string;
   endContent?: JSX.Element | null;
   isRequired?: boolean;
@@ -21,6 +24,8 @@ export const CustomInput = ({
   endContent,
   isRequired,
   startContent,
+  classnames,
+  size = 'lg',
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -46,16 +51,33 @@ export const CustomInput = ({
       type={type === 'password' ? passwordType : type}
       label={label}
       variant='bordered'
-      color='stone'
-      radius={'mdextra'}
+      classNames={{
+        label: 'text-[#000] font-[500] text-[14px]',
+        base: 'bg-none',
+        inputWrapper: [
+          `${classnames}  bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]`,
+        ],
+        innerWrapper: 'bg-none border-none',
+        input: ['bg-none', 'text-black placeholder:text-[14px]'],
+      }}
+      // className={classnames}
+      // color='stone'
+      aria-autocomplete='both'
+      aria-haspopup='false'
+      autocorrect='off'
+      name='hidden'
+      id='hidden'
+      autofocus=''
+      // radius={'mdextra'}
       placeholder={placeholder}
       labelPlacement='outside'
       isRequired={isRequired}
-      autoComplete='false'
-      name='hidden'
+      spellcheck='false'
+      ng-model='name'
+      autocomplete='new-password'
       // errorMessage='Email not correct'
       // isInvalid={true}
-      size={'lg'}
+      size={size}
       endContent={type === 'password' ? passwordEndContent : endContent}
       startContent={startContent}
     />
