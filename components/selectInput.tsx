@@ -1,22 +1,40 @@
 import { Select, SelectItem } from '@nextui-org/react';
 import React from 'react';
-import { ExtendedInput as Input } from '@/utilities/ui-config/extendVariant';
-const SelectInput = ({ label, contents, placeholder }) => {
+
+const SelectInput = ({
+  label,
+  contents,
+  placeholder,
+  name,
+  value,
+  onChange,
+  errorMessage,
+}) => {
   return (
-    // <div className='flex w-full flex-wrap md:flex-nowrap mb-6 md:mb-0 gap-4'>
     <Select
       labelPlacement='outside'
       key='outside'
       variant={'bordered'}
       label={label}
       size='lg'
+      name={name}
+      value={value}
+      errorMessage={errorMessage}
+      isInvalid={errorMessage && true}
+      onChange={onChange}
       radius='lg'
       placeholder={placeholder}
-      className='w-full text-black '
+      classNames={{
+        label: 'text-[#000] font-[500] text-[14px]',
+        base: 'bg-none  ',
+        value: 'text-[14px] text-[#000]',
+        trigger:
+          'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
+      }}
     >
       {contents.map((content) => (
         <SelectItem
-          className='text-black text-small '
+          className='text-black text-small'
           key={content.value}
           value={content.value}
         >
@@ -24,7 +42,6 @@ const SelectInput = ({ label, contents, placeholder }) => {
         </SelectItem>
       ))}
     </Select>
-    // </div>
   );
 };
 

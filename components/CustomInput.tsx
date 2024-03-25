@@ -3,24 +3,37 @@
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 
 import { useState } from 'react';
-import { ExtendedInput as Input } from '@/utilities/ui-config/extendVariant';
+import { Input } from '@nextui-org/react';
+// import { ExtendedInput as Input } from '@/utilities/ui-config/extendVariant';
 
 interface CustomInputProps {
   type?: string;
-  label: string;
+  label?: string;
+  value?: string;
+  name?: string;
+  errorMessage?: any;
+  size?: 'lg' | 'md' | 'sm';
+  classnames?: string;
   placeholder?: string;
   endContent?: JSX.Element | null;
   isRequired?: boolean;
+  onChange?: any;
   startContent?: string | JSX.Element;
 }
 
 export const CustomInput = ({
   type = 'text',
   label,
+  value,
   placeholder,
   endContent,
+  name,
+  onChange,
   isRequired,
   startContent,
+  classnames,
+  errorMessage,
+  size = 'lg',
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -45,17 +58,32 @@ export const CustomInput = ({
       key='outside'
       type={type === 'password' ? passwordType : type}
       label={label}
+      value={value}
+      name={name}
+      onChange={onChange}
       variant='bordered'
-      color='stone'
-      radius={'mdextra'}
+      classNames={{
+        label: 'text-[#000] font-[500] text-[14px]',
+        base: 'bg-none',
+        inputWrapper: [
+          `${classnames}  bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]`,
+        ],
+        innerWrapper: 'bg-none border-none',
+        input: ['bg-none', 'text-black placeholder:text-[14px]'],
+      }}
+      aria-autocomplete='both'
+      aria-haspopup='false'
+      autocorrect='off'
+      autofocus=''
       placeholder={placeholder}
       labelPlacement='outside'
       isRequired={isRequired}
-      autoComplete='false'
-      name='hidden'
-      // errorMessage='Email not correct'
-      // isInvalid={true}
-      size={'lg'}
+      spellcheck='false'
+      ng-model='name'
+      autocomplete='new-password'
+      errorMessage={errorMessage}
+      isInvalid={errorMessage && true}
+      size={size}
       endContent={type === 'password' ? passwordEndContent : endContent}
       startContent={startContent}
     />

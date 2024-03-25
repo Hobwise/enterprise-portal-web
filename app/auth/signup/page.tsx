@@ -1,23 +1,14 @@
-'use client';
-import { Checkbox, Spacer } from '@nextui-org/react';
-import { FaRegEnvelope } from 'react-icons/fa6';
-import Image from 'next/image';
-import hobink from '../../../public/assets/images/hobink.png';
+import { Spacer } from '@nextui-org/react';
 import Link from 'next/link';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { lexend } from '@/utilities/ui-config/fonts';
-import { useRouter } from 'next/navigation';
 import HobinkLogo from '@/components/logo';
+import SignupForm from '@/components/ui/auth/signupForm';
 
-const metadata = {
-  title: 'Create account',
+export const metadata = {
+  title: 'Hobink | Create account',
   description: 'Streamline your business processes',
 };
 
 export default function Signup() {
-  const router = useRouter();
-
   return (
     <main className='bg-secondaryColor'>
       <div className='xl:grid  md:w-3/4 xl:max-w-[912px] mx-auto px-4 xl:px-0 w-full xl:place-content-center min-h-screen'>
@@ -49,47 +40,7 @@ export default function Signup() {
             <p className='text-sm  text-grey500 mb-8'>
               Enter your details to create your account
             </p>
-            <form
-              action={() => router.push('/auth/confirm-email')}
-              autoComplete='off'
-            >
-              <div className='flex md:flex-row flex-col gap-5'>
-                <CustomInput
-                  type='text'
-                  label='First name'
-                  placeholder='First name'
-                  // isRequired={true}
-                />
-                <CustomInput
-                  type='text'
-                  label='Last name'
-                  placeholder='Last name'
-                  // isRequired={true}
-                />
-              </div>
-              <Spacer y={6} />
-              <CustomInput
-                type='email'
-                label='Email Address'
-                placeholder='Enter Email'
-                // isRequired={true}
-                endContent={
-                  <FaRegEnvelope className='text-foreground-500 text-l' />
-                }
-              />
-
-              <Spacer y={6} />
-              <CustomInput
-                type='password'
-                label='password'
-                placeholder='Enter password'
-                // isRequired={true}
-              />
-
-              <Spacer y={6} />
-
-              <CustomButton type='submit'>Create Account</CustomButton>
-            </form>
+            <SignupForm />
             <Spacer y={8} />
             <div className='flex items-center gap-2'>
               <p className='text-grey400 text-xs m-0'>{`Already have an account?`}</p>

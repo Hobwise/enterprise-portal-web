@@ -1,14 +1,8 @@
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
 import { Spacer } from '@nextui-org/react';
-import Image from 'next/image';
 import Link from 'next/link';
-
 import React from 'react';
-import { FaRegEnvelope } from 'react-icons/fa6';
-import hobink from '../../../public/assets/images/hobink.png';
-import { lexend } from '@/utilities/ui-config/fonts';
 import HobinkLogo from '@/components/logo';
+import ForgetPasswordForm from '@/components/ui/auth/forgetPasswordForm';
 
 export const metadata = {
   title: 'Create account',
@@ -24,18 +18,7 @@ const ForgetPassword = () => {
           Enter your email to reset your password
         </p>
         <Spacer y={8} />
-        <form autoComplete='off'>
-          <CustomInput
-            type='email'
-            label='Email Address'
-            placeholder='Enter Email'
-            endContent={
-              <FaRegEnvelope className='text-foreground-500 text-l' />
-            }
-          />
-          <Spacer y={8} />
-          <CustomButton type='submit'>Send password reset link</CustomButton>
-        </form>
+        <ForgetPasswordForm />
         <Spacer y={8} />
         <div className='flex items-center gap-2'>
           <p className='text-grey400 text-xs m-0'>{`Remember password?`}</p>
