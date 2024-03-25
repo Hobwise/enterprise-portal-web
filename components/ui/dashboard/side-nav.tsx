@@ -4,8 +4,6 @@ import React, { useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-
-import { Icon } from '@iconify/react';
 import { SideNavItem } from './types';
 import { SIDENAV_ITEMS } from './constants';
 import HobinkLogo from '@/components/logo';
@@ -91,7 +89,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
             </div>
 
             <div className={`${subMenuOpen ? 'rotate-180' : ''} flex`}>
-              <Icon icon='lucide:chevron-down' width='24' height='24' />
+              {/* <Icon icon='lucide:chevron-down' width='24' height='24' /> */}
             </div>
           </button>
 
