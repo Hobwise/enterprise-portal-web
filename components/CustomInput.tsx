@@ -9,22 +9,30 @@ import { Input } from '@nextui-org/react';
 interface CustomInputProps {
   type?: string;
   label?: string;
+  value?: string;
+  name?: string;
+  errorMessage?: any;
   size?: 'lg' | 'md' | 'sm';
   classnames?: string;
   placeholder?: string;
   endContent?: JSX.Element | null;
   isRequired?: boolean;
+  onChange?: any;
   startContent?: string | JSX.Element;
 }
 
 export const CustomInput = ({
   type = 'text',
   label,
+  value,
   placeholder,
   endContent,
+  name,
+  onChange,
   isRequired,
   startContent,
   classnames,
+  errorMessage,
   size = 'lg',
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -50,6 +58,9 @@ export const CustomInput = ({
       key='outside'
       type={type === 'password' ? passwordType : type}
       label={label}
+      value={value}
+      name={name}
+      onChange={onChange}
       variant='bordered'
       classNames={{
         label: 'text-[#000] font-[500] text-[14px]',
@@ -60,23 +71,18 @@ export const CustomInput = ({
         innerWrapper: 'bg-none border-none',
         input: ['bg-none', 'text-black placeholder:text-[14px]'],
       }}
-      // className={classnames}
-      // color='stone'
       aria-autocomplete='both'
       aria-haspopup='false'
       autocorrect='off'
-      name='hidden'
-      id='hidden'
       autofocus=''
-      // radius={'mdextra'}
       placeholder={placeholder}
       labelPlacement='outside'
       isRequired={isRequired}
       spellcheck='false'
       ng-model='name'
       autocomplete='new-password'
-      // errorMessage='Email not correct'
-      // isInvalid={true}
+      errorMessage={errorMessage}
+      isInvalid={errorMessage && true}
       size={size}
       endContent={type === 'password' ? passwordEndContent : endContent}
       startContent={startContent}

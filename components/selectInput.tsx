@@ -1,7 +1,15 @@
 import { Select, SelectItem } from '@nextui-org/react';
 import React from 'react';
 
-const SelectInput = ({ label, contents, placeholder }) => {
+const SelectInput = ({
+  label,
+  contents,
+  placeholder,
+  name,
+  value,
+  onChange,
+  errorMessage,
+}) => {
   return (
     <Select
       labelPlacement='outside'
@@ -9,6 +17,11 @@ const SelectInput = ({ label, contents, placeholder }) => {
       variant={'bordered'}
       label={label}
       size='lg'
+      name={name}
+      value={value}
+      errorMessage={errorMessage}
+      isInvalid={errorMessage && true}
+      onChange={onChange}
       radius='lg'
       placeholder={placeholder}
       classNames={{

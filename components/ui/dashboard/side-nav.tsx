@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { Icon } from '@iconify/react';
 import { SideNavItem } from './types';
@@ -12,8 +12,12 @@ import HobinkLogo from '@/components/logo';
 import Image from 'next/image';
 import { Avatar, Divider } from '@nextui-org/react';
 import { FiLogOut } from 'react-icons/fi';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
 
 const SideNav = () => {
+  const router = useRouter();
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const { firstName, lastName, email } = userInformation;
   return (
     <div className='md:w-[272px] bg-black h-screen flex-1 fixed  hidden md:flex'>
       <div className='flex flex-col  w-full'>
@@ -45,10 +49,15 @@ const SideNav = () => {
             />
           </div>
           <div className='flex flex-col'>
-            <span className='text-[14px] font-[600]'>Chike Opara</span>
-            <span className='text-[12px] font-[400]'>chikemd@design.me</span>
+            <span className='text-[14px] font-[600]'>
+              {firstName} {lastName}
+            </span>
+            <span className='text-[12px] font-[400]'>{email}</span>
           </div>
-          <div className='cursor-pointer'>
+          <div
+            onClick={() => router.push('/auth/login')}
+            className='cursor-pointer'
+          >
             <FiLogOut className='text-[20px]' />
           </div>
         </div>
