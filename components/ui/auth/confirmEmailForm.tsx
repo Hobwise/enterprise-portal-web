@@ -4,11 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Spacer } from '@nextui-org/react';
 import { CustomButton } from '@/components/customButton';
 import OtpInput from 'react-otp-input';
-import {
-  getJsonItemFromLocalStorage,
-  notify,
-  saveJsonItemToLocalStorage,
-} from '@/lib/utils';
+import { notify, saveJsonItemToLocalStorage } from '@/lib/utils';
 import { confirmEmail } from '@/app/api/controllers/auth';
 import { AUTH } from '@/app/api/api-url';
 import api from '@/app/api/apiService';
@@ -22,23 +18,23 @@ const ConfirmEmailForm = () => {
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleOtpChange = (newOtp) => {
+  const handleOtpChange = (newOtp: React.SetStateAction<string>) => {
     setOtp(newOtp);
   };
 
   const checkOtpLength = otp.length < 6 ? true : false;
 
   const payload = {
-    otp: otp,
+    otp,
     purpose: 0,
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    email: userData.email,
-    password: userData.password,
+    firstName: userData?.firstName,
+    lastName: userData?.lastName,
+    email: userData?.email,
+    password: userData?.password,
     isActive: true,
   };
 
-  const submitFormData = async (e) => {
+  const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setLoading(true);
     const data = await confirmEmail(payload);
@@ -74,7 +70,7 @@ const ConfirmEmailForm = () => {
   return (
     <>
       <p className='text-sm md:w-[400px] w-full  text-center text-grey600 mb-10'>
-        We sent a verification code to {userData.email}. Enter the code here to
+        We sent a verification code to {userData?.email}. Enter the code here to
         confirm your email address.
       </p>
       <form onSubmit={submitFormData} autoComplete='off'>
@@ -100,13 +96,9 @@ const ConfirmEmailForm = () => {
               outline: '1px solid #C3ADFF',
               // border: '1px solid rgba(0,0,0,0.3)',
             }}
-            focusStyle={{
-              border: '2px solid #6c63ff',
-              outline: 'none',
-            }}
           />
           <div className='flex items-center mt-2 gap-2'>
-            <p className='text-grey400 text-xs m-0'>{`Didn't get the code?`}</p>
+            <p className='text-grey400 text-xs m-0'>{"Didn't get the code?"}</p>
             {isLoading ? (
               <IoMdRefresh className='text-grey400 animate-spin' />
             ) : (

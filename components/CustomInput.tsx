@@ -4,7 +4,6 @@ import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 
 import { useState } from 'react';
 import { Input } from '@nextui-org/react';
-// import { ExtendedInput as Input } from '@/utilities/ui-config/extendVariant';
 
 interface CustomInputProps {
   type?: string;
@@ -37,7 +36,9 @@ export const CustomInput = ({
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
-  const toggleVisibility = () => setIsVisible(!isVisible);
+  const toggleVisibility = () => {
+    setIsVisible(!isVisible);
+  };
   const passwordType = isVisible ? 'text' : 'password';
   const passwordEndContent = (
     <button
@@ -71,16 +72,14 @@ export const CustomInput = ({
         innerWrapper: 'bg-none border-none',
         input: ['bg-none', 'text-black placeholder:text-[14px]'],
       }}
-      aria-autocomplete='both'
       aria-haspopup='false'
-      autocorrect='off'
-      autofocus=''
+      autoCorrect='off'
       placeholder={placeholder}
       labelPlacement='outside'
       isRequired={isRequired}
-      spellcheck='false'
+      spellCheck='false'
       ng-model='name'
-      autocomplete='new-password'
+      autoComplete='new-password'
       errorMessage={errorMessage}
       isInvalid={errorMessage && true}
       size={size}

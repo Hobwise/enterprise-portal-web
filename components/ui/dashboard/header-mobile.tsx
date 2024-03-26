@@ -232,7 +232,6 @@ const useDimensions = (ref: any) => {
       dimensions.current.width = ref.current.offsetWidth;
       dimensions.current.height = ref.current.offsetHeight;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ref]);
 
   return dimensions.current;

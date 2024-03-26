@@ -6,7 +6,7 @@ import { Spacer } from '@nextui-org/react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 import { CustomButton } from '@/components/customButton';
 import { createUser } from '@/app/api/controllers/auth';
-import { notify, saveJsonItemToLocalStorage } from '@/lib/utils';
+import { notify } from '@/lib/utils';
 import { useGlobalContext } from '@/hooks/globalProvider';
 const SignupForm = () => {
   const router = useRouter();

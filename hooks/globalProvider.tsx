@@ -3,7 +3,7 @@ import React, { useContext, useState } from 'react';
 
 const AppContext = React.createContext();
 
-const AppProvider = ({ children }) => {
+const AppProvider = ({ children }: any) => {
   const [userData, setUserData] = useState(null);
 
   return (

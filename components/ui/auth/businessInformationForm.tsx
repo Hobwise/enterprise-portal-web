@@ -28,7 +28,7 @@ const BusinessInformationForm = () => {
     logoImageReference: '',
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: { target: { name: any; value: any } }) => {
     setResponse(null);
     const { name, value } = e.target;
     setBusinessFormData((prevFormData) => ({
@@ -37,7 +37,7 @@ const BusinessInformationForm = () => {
     }));
   };
 
-  const submitFormData = async (e) => {
+  const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setLoading(true);
     const data = await createBusiness({

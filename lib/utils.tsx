@@ -6,14 +6,23 @@ import { twMerge } from 'tailwind-merge';
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
+
 export const saveToLocalStorage = (name, itemToSave) => {
-  return localStorage.setItem(name, itemToSave);
+  return typeof window !== 'undefined'
+    ? localStorage.setItem(name, itemToSave)
+    : false;
 };
 export const getFromLocalStorage = (name) => {
-  return localStorage.getItem(name);
+  return typeof window !== 'undefined' ? localStorage.getItem(name) : false;
+};
+
+export const clearItemLocalStorage = (name) => {
+  return typeof window !== 'undefined' ? localStorage.removeItem(name) : false;
 };
 export const getJsonItemFromLocalStorage = (name) => {
-  return JSON.parse(localStorage.getItem(name));
+  return typeof window !== 'undefined'
+    ? JSON.parse(localStorage.getItem(name))
+    : false;
 };
 
 export const saveJsonItemToLocalStorage = (
