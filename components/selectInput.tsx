@@ -9,7 +9,7 @@ const SelectInput = ({
   value,
   onChange,
   errorMessage,
-}) => {
+}: any) => {
   return (
     <Select
       labelPlacement='outside'
@@ -32,7 +32,7 @@ const SelectInput = ({
           'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
       }}
     >
-      {contents.map((content) => (
+      {contents.map((content: any) => (
         <SelectItem
           className='text-black text-small'
           key={content.value}

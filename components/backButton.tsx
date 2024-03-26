@@ -3,7 +3,11 @@ import Link from 'next/link';
 import React from 'react';
 import { IoIosArrowRoundBack } from 'react-icons/io';
 
-const BackButton: React.FC = ({ url }: any) => {
+interface BackButtonProps {
+  url: string;
+}
+
+const BackButton: React.FC<BackButtonProps> = ({ url }) => {
   return (
     <Link
       href={url}

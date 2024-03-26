@@ -43,7 +43,9 @@ export default function Login() {
             <LoginForm />
             <Spacer y={8} />
             <div className='flex items-center gap-2'>
-              <p className='text-grey400 text-xs m-0'>{`Don't  have an account?`}</p>
+              <p className='text-grey400 text-xs m-0'>
+                {"Don't  have an account?"}
+              </p>
               <Link className='text-primaryColor text-sm' href='/auth/signup'>
                 Create Account
               </Link>

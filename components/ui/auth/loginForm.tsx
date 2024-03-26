@@ -18,7 +18,7 @@ const LoginForm = () => {
     password: '',
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: { target: { name: any; value: any } }) => {
     setResponse(null);
     const { name, value } = e.target;
     setLoginFormData((prevFormData) => ({
@@ -27,12 +27,12 @@ const LoginForm = () => {
     }));
   };
 
-  const submitFormData = async (e) => {
+  const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
     setLoading(true);
     const data = await loginUser(loginFormData);
-    console.log(data, 'data');
+
     setLoading(false);
     setResponse(data);
     const businesses = data?.data?.data?.businesses || [];
@@ -67,18 +67,18 @@ const LoginForm = () => {
         value={loginFormData.password}
         onChange={handleInputChange}
         type='password'
-        label='password'
+        label='Password'
         name='password'
         placeholder='Enter password'
         // isRequired={true}
       />
 
-      <Spacer y={6} />
-      <div className='flex items-center justify-between'>
-        <Checkbox size='sm' className='rounded-lg' color='default'>
+      <Spacer y={4} />
+      <div className='flex items-center justify-end'>
+        {/* <Checkbox size='sm' className='rounded-lg' color='default'>
           Remember me
-          {/* for 30 days */}
-        </Checkbox>
+         
+        </Checkbox> */}
         <Link
           className='text-primaryColor text-sm'
           href='/auth/forget-password'
@@ -86,7 +86,7 @@ const LoginForm = () => {
           Forget Password?
         </Link>
       </div>
-      <Spacer y={6} />
+      <Spacer y={7} />
       <CustomButton loading={loading} disabled={loading} type='submit'>
         Log into Account
       </CustomButton>

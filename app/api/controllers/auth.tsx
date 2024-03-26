@@ -27,7 +27,7 @@ const businessSchema = z.object({
     .min(1, { message: 'Please select your business category' }),
 });
 
-export async function createUser(formData) {
+export async function createUser(formData: any) {
   const validatedFields = userSchema.safeParse({
     firstName: formData.firstName,
     lastName: formData.lastName,
@@ -54,7 +54,7 @@ export async function createUser(formData) {
     handleError(error);
   }
 }
-export async function confirmEmail(formData) {
+export async function confirmEmail(formData: any) {
   try {
     const data = await api.post(AUTH.registerUser, formData);
 
@@ -63,7 +63,7 @@ export async function confirmEmail(formData) {
     handleError(error);
   }
 }
-export async function createBusiness(formData) {
+export async function createBusiness(formData: any) {
   const validatedFields = businessSchema.safeParse({
     name: formData.name,
     businessCategory: formData.businessCategory,
@@ -84,7 +84,7 @@ export async function createBusiness(formData) {
     handleError(error);
   }
 }
-export async function loginUser(formData) {
+export async function loginUser(formData: any) {
   const validatedFields = loginSchema.safeParse({
     password: formData.password,
     email: formData.email,

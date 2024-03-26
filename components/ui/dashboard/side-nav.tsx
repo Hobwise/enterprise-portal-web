@@ -10,7 +10,10 @@ import HobinkLogo from '@/components/logo';
 import Image from 'next/image';
 import { Avatar, Divider } from '@nextui-org/react';
 import { FiLogOut } from 'react-icons/fi';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import {
+  clearItemLocalStorage,
+  getJsonItemFromLocalStorage,
+} from '@/lib/utils';
 
 const SideNav = () => {
   const router = useRouter();
@@ -53,7 +56,10 @@ const SideNav = () => {
             <span className='text-[12px] font-[400]'>{email}</span>
           </div>
           <div
-            onClick={() => router.push('/auth/login')}
+            onClick={() => {
+              clearItemLocalStorage('userInformation');
+              router.push('/auth/login');
+            }}
             className='cursor-pointer'
           >
             <FiLogOut className='text-[20px]' />

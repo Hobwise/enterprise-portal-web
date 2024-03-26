@@ -29,15 +29,16 @@ body {
   background-image: url('../public/assets/images/login-background.png');
   background-color: black;
 }
-.container: {
+.container {
   width: calc(100vw - 272px);
 }
-.main-wrapper:hover:focus {
+.main-wrapper:hover,
+.main-wrapper:focus {
   border: 2px solid #c3adff;
 }
 
-::-webkit-scrollbar {
-  width: 0px;
+*::-webkit-scrollbar {
+  width: 0;
 }
 .dashboardLogo {
   filter: sepia(100%) saturate(300%) brightness(20%) hue-rotate(180deg);
