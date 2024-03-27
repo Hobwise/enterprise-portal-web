@@ -49,7 +49,11 @@ const BusinessInformationForm = () => {
     if (data?.data?.isSuccessful) {
       router.push('/dashboard');
     } else if (data?.data?.error) {
-      notify({ message: data?.data?.error, type: 'error' });
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
     }
   };
 

@@ -3,14 +3,16 @@ import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import axios from 'axios';
 
 export const handleError = (error: any) => {
-  if (error.response.data) {
+  if (!error.response.data.title) {
     notify({
-      message: error.response.data.error.responseDescription,
+      title: 'Error!',
+      text: error.response.data.error.responseDescription,
       type: 'error',
     });
   } else {
     notify({
-      message: 'An error occured, please try again',
+      title: 'Error!',
+      text: 'An error occured, please try again',
       type: 'error',
     });
   }

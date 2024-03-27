@@ -43,7 +43,11 @@ const LoginForm = () => {
         businesses.length >= 1 ? '/dashboard' : '/auth/business-information'
       );
     } else if (data?.data?.error) {
-      notify({ message: data?.data?.error, type: 'error' });
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
     }
   };
 
