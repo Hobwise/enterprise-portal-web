@@ -23,8 +23,22 @@ export default function RootLayout({
         <AppProvider>
           <Providers>
             {children}
-            <Toaster />
-            <ToastContainer theme='colored' />
+            <Toaster
+              toastOptions={{
+                duration: 5000,
+                success: {
+                  style: {
+                    border: '2px solid #3a9ea5',
+                  },
+                },
+                error: {
+                  style: {
+                    border: '2px solid #eb5757',
+                  },
+                },
+              }}
+            />
+            <ToastContainer theme='light' />
           </Providers>
         </AppProvider>
       </body>

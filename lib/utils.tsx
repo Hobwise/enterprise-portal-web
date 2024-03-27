@@ -52,7 +52,7 @@ type ToastData = {
 const toastData: ToastData = {
   position: 'top-right',
   autoClose: 5000,
-  hideProgressBar: false,
+  hideProgressBar: true,
   closeOnClick: true,
   pauseOnHover: true,
   draggable: false,
@@ -60,11 +60,23 @@ const toastData: ToastData = {
 };
 
 interface notifyType {
-  message?: string;
+  title?: any;
+  text?: any;
   type?: string;
 }
-export const notify = ({ message, type }: notifyType) => {
-  type === 'warning' && toast.warn(message, toastData);
-  type === 'success' && toast.success(message, toastData);
-  type === 'error' && toast.error(message, toastData);
+
+const Msg = ({ title, text }: { title: string; text: string }) => {
+  return (
+    <div>
+      <p className='font-bold text-[17px] pb-1'>{title}</p>
+      <p>{text}</p>
+    </div>
+  );
+};
+export const notify = ({ title, text, type }: notifyType) => {
+  type === 'warning' &&
+    toast.warn(<Msg title={title} text={text} />, toastData);
+  type === 'success' &&
+    toast.success(<Msg title={title} text={text} />, toastData);
+  type === 'error' && toast.error(<Msg title={title} text={text} />, toastData);
 };

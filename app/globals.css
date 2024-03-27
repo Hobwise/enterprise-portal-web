@@ -49,13 +49,36 @@ input:-webkit-autofill:focus {
   -webkit-text-fill-color: black;
   -webkit-box-shadow: 0 0 0px 40rem #ffff inset;
 }
+.Toastify__toast--error {
+  border: 2px solid #eb5757;
+  border-radius: 15px !important;
+  background: #fae1e2 !important;
+}
+.Toastify__toast-icon {
+  width: 20px !important;
+}
 
-.Toastify__toast-theme--colored.Toastify__toast--success {
-  background-color: green;
+.Toastify__toast--success {
+  border: 2px solid #3a9ea5 !important;
+  border-radius: 15px !important;
+  background: #f0f9fa !important;
 }
-.Toastify__toast-theme--colored.Toastify__toast--warning {
-  background-color: yellowgreen;
+
+.Toastify__toast--warning {
+  border: 2px solid #e78326 !important;
+  border-radius: 15px !important;
+  background: #fadfc5 !important;
 }
-.Toastify__toast-theme--colored.Toastify__toast--error {
-  background-color: red;
+
+.Toastify__toast-body {
+  color: #444c63;
+  font-size: 16px;
+  padding-left: 20px;
+  line-height: 20px;
+  padding: 0;
+  padding-top: 25px;
+  width: 100%;
+  font-weight: 400;
+  min-height: 65px !important;
+  margin-left: 5px !important;
 }

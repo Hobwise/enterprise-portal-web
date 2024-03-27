@@ -16,6 +16,32 @@ const loginSchema = z.object({
   email: z.string().trim().min(1, { message: 'Please enter a valid email' }),
   password: z.string().trim().min(1, { message: 'Password field is required' }),
 });
+const forgetPasswordSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, { message: 'Please enter a valid email' })
+    .email('This is not a valid email.'),
+});
+const changePasswordSchema = z
+  .object({
+    oldPassword: z
+      .string()
+      .trim()
+      .min(1, { message: 'Enter your old password' }),
+    newPassword: z
+      .string()
+      .trim()
+      .min(1, { message: 'Enter your new password' }),
+    confirmPassword: z
+      .string()
+      .trim()
+      .min(1, { message: 'Enter your new password' }),
+  })
+  .refine((data) => data.newPassword === data?.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 const businessSchema = z.object({
   name: z
     .string()
@@ -97,6 +123,49 @@ export async function loginUser(formData: any) {
   }
   try {
     const data = await api.post(AUTH.loginUser, formData);
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function forgetPassword(formData: any) {
+  const validatedFields = forgetPasswordSchema.safeParse({
+    email: formData.email,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const data = await api.post(AUTH.forgetPassword, formData);
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function changePassword(formData: any) {
+  const validatedFields = changePasswordSchema.safeParse({
+    oldPassword: formData?.oldPassword,
+    newPassword: formData?.newPassword,
+    confirmPassword: formData?.confirmPassword,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const payload = {
+    email: formData?.email,
+    oldPassword: formData?.oldPassword,
+    newPassword: formData?.newPassword,
+  };
+  try {
+    const data = await api.post(AUTH.changePassword, payload);
 
     return data;
   } catch (error) {
