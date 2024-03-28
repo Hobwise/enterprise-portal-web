@@ -4,7 +4,11 @@ import { useRouter } from 'next/navigation';
 import { Spacer } from '@nextui-org/react';
 import { CustomButton } from '@/components/customButton';
 import OtpInput from 'react-otp-input';
-import { notify, saveJsonItemToLocalStorage } from '@/lib/utils';
+import {
+  notify,
+  saveJsonItemToLocalStorage,
+  setTokenCookie,
+} from '@/lib/utils';
 import { confirmEmail } from '@/app/api/controllers/auth';
 import { AUTH } from '@/app/api/api-url';
 import api from '@/app/api/apiService';
@@ -40,6 +44,7 @@ const ConfirmEmailForm = () => {
     const data = await confirmEmail(payload);
     setLoading(false);
     if (data?.data?.isSuccessful) {
+      setTokenCookie('token', data?.data?.data.token);
       saveJsonItemToLocalStorage('userInformation', data?.data?.data);
       router.push('/auth/business-information');
     } else if (data?.data?.error) {
