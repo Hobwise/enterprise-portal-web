@@ -56,7 +56,7 @@ const ForgetPasswordForm = ({ setScreen, email, setEmail }) => {
             setEmail(e.target.value);
           }}
           value={email}
-          placeholder='Enter Email'
+          placeholder='Enter email'
           endContent={<FaRegEnvelope className='text-foreground-500 text-l' />}
         />
         <Spacer y={8} />

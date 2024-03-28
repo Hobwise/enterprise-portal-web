@@ -11,10 +11,10 @@ export default function Login() {
   return (
     <main className='flex justify-center items-center h-screen gap-3 '>
       <Link className={linkStyle} href='/auth/login'>
-        Go to Login
+        Login
       </Link>
       <Link className={linkStyle} href='/auth/signup'>
-        Go to Signup
+        Signup
       </Link>
     </main>
   );

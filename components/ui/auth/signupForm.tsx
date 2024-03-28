@@ -78,7 +78,7 @@ const SignupForm = () => {
         onChange={handleInputChange}
         value={signupFormData.email}
         label='Email Address'
-        placeholder='Enter Email'
+        placeholder='Enter email'
         endContent={<FaRegEnvelope className='text-foreground-500 text-l' />}
       />
 

@@ -1,5 +1,5 @@
 'use client';
-import { changePassword, forgetPassword } from '@/app/api/controllers/auth';
+import { changePassword } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { notify } from '@/lib/utils';
@@ -7,7 +7,6 @@ import { Spacer } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { FaRegEnvelope } from 'react-icons/fa6';
 
 const ChangePasswordForm = ({ email }) => {
   const router = useRouter();
@@ -71,7 +70,7 @@ const ChangePasswordForm = ({ email }) => {
           name='oldPassword'
           type='password'
           label='Enter the password that was sent to your email'
-          placeholder='Enter Password'
+          placeholder='Enter password'
           // isRequired={true}
         />
         <Spacer y={6} />

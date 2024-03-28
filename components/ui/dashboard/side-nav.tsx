@@ -13,6 +13,7 @@ import { FiLogOut } from 'react-icons/fi';
 import {
   clearItemLocalStorage,
   getJsonItemFromLocalStorage,
+  removeCookie,
 } from '@/lib/utils';
 
 const SideNav = () => {
@@ -58,6 +59,7 @@ const SideNav = () => {
           <div
             onClick={() => {
               clearItemLocalStorage('userInformation');
+              removeCookie('token');
               router.push('/auth/login');
             }}
             className='cursor-pointer'

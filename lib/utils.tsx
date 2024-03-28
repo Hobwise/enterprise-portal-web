@@ -2,7 +2,7 @@
 import { clsx, type ClassValue } from 'clsx';
 import { toast } from 'react-toastify';
 import { twMerge } from 'tailwind-merge';
-
+import cookie from 'js-cookie';
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
@@ -30,6 +30,38 @@ export const saveJsonItemToLocalStorage = (
   itemToSave: any
 ): void => {
   localStorage.setItem(name, JSON.stringify(itemToSave));
+};
+
+// export const setTokenCookie = (token: string) => {
+//   cookie.set('token', token, {
+//     expires: 30,
+//     path: '/',
+//     sameSite: 'strict',
+//     secure: process.env.NODE_ENV === 'production',
+//   });
+// };
+
+export const setTokenCookie = (
+  name: string,
+  value: string,
+  options?: cookie.CookieAttributes
+) => {
+  if (typeof window !== 'undefined') {
+    cookie.set(name, value, options);
+  }
+};
+
+export const getTokenCookie = (name: string) => {
+  if (typeof window !== 'undefined') {
+    return cookie.get(name);
+  }
+  return null;
+};
+
+export const removeCookie = (name: string) => {
+  if (typeof window !== 'undefined') {
+    cookie.remove(name);
+  }
 };
 
 type ToastData = {

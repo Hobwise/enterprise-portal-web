@@ -1,24 +1,16 @@
-'use client';
 import Container from '@/components/dashboardContainer';
-import { notify } from '@/lib/utils';
 
 import React from 'react';
+
+export const metadata = {
+  title: 'Hobink | Dashboard',
+  description: 'Streamline your business processes',
+};
 
 const Dashboard: React.FC = () => {
   return (
     <Container>
-      <span
-        onClick={() =>
-          notify({
-            title: 'Error!',
-            text: 'Something went wrong',
-            type: 'error',
-          })
-        }
-        className='font-bold text-4xl'
-      >
-        Home
-      </span>
+      <span className='font-bold text-4xl'>Home</span>
     </Container>
   );
 };

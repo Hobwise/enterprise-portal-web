@@ -7,7 +7,11 @@ import { FaRegEnvelope } from 'react-icons/fa6';
 import { CustomButton } from '@/components/customButton';
 import Link from 'next/link';
 import { loginUser } from '@/app/api/controllers/auth';
-import { notify, saveJsonItemToLocalStorage } from '@/lib/utils';
+import {
+  notify,
+  saveJsonItemToLocalStorage,
+  setTokenCookie,
+} from '@/lib/utils';
 const LoginForm = () => {
   const router = useRouter();
 
@@ -39,6 +43,7 @@ const LoginForm = () => {
 
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage('userInformation', data?.data?.data);
+      setTokenCookie('token', data?.data?.data.token);
       router.push(
         businesses.length >= 1 ? '/dashboard' : '/auth/business-information'
       );
@@ -60,7 +65,7 @@ const LoginForm = () => {
         onChange={handleInputChange}
         value={loginFormData.email}
         label='Email Address'
-        placeholder='Enter Email'
+        placeholder='Enter email'
         // isRequired={true}
         endContent={<FaRegEnvelope className='text-foreground-500 text-l' />}
       />
