@@ -3,6 +3,9 @@ import api, { handleError } from '../apiService';
 import { AUTH } from '../api-url';
 import { notify } from '@/lib/utils';
 
+const passwordValidation = new RegExp(
+  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/
+);
 const userSchema = z.object({
   firstName: z
     .string()
@@ -10,8 +13,13 @@ const userSchema = z.object({
     .min(1, { message: 'Firstname field is required' }),
   lastName: z.string().trim().min(1, { message: 'Lastname field is required' }),
   email: z.string().trim().min(1, { message: 'Please enter a valid email' }),
-  password: z.string().trim().min(1, { message: 'Password field is required' }),
+  password: z
+    .string()
+    .trim()
+    .min(8, 'The password must be at least 8 characters long')
+    .max(32, 'The password must be a maximun 32 characters'),
 });
+
 const loginSchema = z.object({
   email: z.string().trim().min(1, { message: 'Please enter a valid email' }),
   password: z.string().trim().min(1, { message: 'Password field is required' }),
@@ -32,7 +40,8 @@ const changePasswordSchema = z
     newPassword: z
       .string()
       .trim()
-      .min(1, { message: 'Enter your new password' }),
+      .min(8, 'The password must be at least 8 characters long')
+      .max(32, 'The password must be a maximun 32 characters'),
     confirmPassword: z
       .string()
       .trim()
@@ -51,6 +60,13 @@ const businessSchema = z.object({
   businessCategory: z
     .number()
     .min(1, { message: 'Please select your business category' }),
+});
+
+const passwordSchema = z.object({
+  password: z
+    .string()
+    .min(8, 'The password must be at least 8 characters long')
+    .max(32, 'The password must be a maximun 32 characters'),
 });
 
 export async function createUser(formData: any) {
