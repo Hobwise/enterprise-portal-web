@@ -47,7 +47,12 @@ const BusinessInformationForm = () => {
     setLoading(false);
     setResponse(data);
     if (data?.data?.isSuccessful) {
-      router.push('/dashboard');
+      notify({
+        title: 'Success!',
+        text: 'Registration completed, Proceed to login',
+        type: 'success',
+      });
+      router.push('/auth/login');
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',

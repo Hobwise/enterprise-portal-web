@@ -30,8 +30,13 @@ const api = axios.create({
 api.interceptors.request.use(async (config) => {
   const userData = getJsonItemFromLocalStorage('userInformation');
   const token = userData?.token;
+  const cooperateID = userData?.cooperateID;
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (cooperateID) {
+    config.headers['cooperateId'] = cooperateID;
   }
 
   return config;

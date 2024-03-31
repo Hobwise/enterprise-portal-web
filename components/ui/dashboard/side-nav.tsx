@@ -25,7 +25,7 @@ const SideNav = () => {
       <div className='flex flex-col  w-full'>
         <div className='h-[83%] scrollbarstyles overflow-y-scroll'>
           <Link
-            href='/'
+            href='/dashboard'
             className='flex flex-row  items-center justify-center md:justify-start md:px-8 md:py-10   w-full'
           >
             <HobinkLogo
@@ -47,6 +47,8 @@ const SideNav = () => {
           <div>
             <Avatar
               isBordered
+              showFallback={true}
+              name={firstName}
               src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
             />
           </div>

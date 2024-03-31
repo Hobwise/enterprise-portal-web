@@ -19,6 +19,8 @@ export const config = {
     '/dashboard/qr-code',
     '/dashboard/reports',
     '/dashboard/reservation',
+    '/dashboard/settings',
     '/auth/business-information',
+    '/auth/select-business',
   ],
 };
