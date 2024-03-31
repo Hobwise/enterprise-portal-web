@@ -6,4 +6,5 @@ export const AUTH = {
   loginUser: 'api/v1/User/login',
   forgetPassword: 'api/v1/User/forget-password',
   changePassword: 'api/v1/User/change-password',
+  getBusiness: 'api/v1/Business/configuration',
 };

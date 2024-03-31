@@ -188,3 +188,18 @@ export async function changePassword(formData: any) {
     handleError(error);
   }
 }
+export async function getBusinessDetails(formData: any) {
+  const headers = formData.businessId
+    ? { businessId: formData.businessId }
+    : {};
+
+  try {
+    const data = await api.get(AUTH.getBusiness, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}

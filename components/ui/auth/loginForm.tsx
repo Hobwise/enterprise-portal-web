@@ -43,9 +43,14 @@ const LoginForm = () => {
 
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage('userInformation', data?.data?.data);
+      saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
       setTokenCookie('token', data?.data?.data.token);
       router.push(
-        businesses.length >= 1 ? '/dashboard' : '/auth/business-information'
+        businesses.length === 1
+          ? '/dashboard'
+          : businesses.length === 0
+          ? '/auth/business-information'
+          : '/auth/select-business'
       );
     } else if (data?.data?.error) {
       notify({

@@ -56,9 +56,10 @@ const ChangePasswordForm = ({ email }) => {
   };
   return (
     <>
-      <h2 className='text-[28px] font-bold'>Create new password</h2>
+      <h2 className='text-[28px] font-bold'>Enter password</h2>
       <p className='text-sm  text-tomato mb-8'>
-        Secure your account with a new password
+        Enter the password that was sent to{' '}
+        <span className='font-bold'>{email}</span>
       </p>
 
       <Spacer y={8} />
@@ -69,7 +70,7 @@ const ChangePasswordForm = ({ email }) => {
           onChange={handleInputChange}
           name='oldPassword'
           type='password'
-          label='Enter the password that was sent to your email'
+          label='Enter password'
           placeholder='Enter password'
           // isRequired={true}
         />

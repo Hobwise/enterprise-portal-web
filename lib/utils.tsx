@@ -112,3 +112,8 @@ export const notify = ({ title, text, type }: notifyType) => {
     toast.success(<Msg title={title} text={text} />, toastData);
   type === 'error' && toast.error(<Msg title={title} text={text} />, toastData);
 };
+export function getInitials(name: string) {
+  const words = name.split(' ');
+  const initials = words.map((word) => word.charAt(0));
+  return initials.join('').toUpperCase();
+}
