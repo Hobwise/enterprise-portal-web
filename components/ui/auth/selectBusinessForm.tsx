@@ -49,10 +49,27 @@ const SelectBusinessForm = () => {
             onClick={() => handleSelectedBusiness(item)}
             key={item.businessName}
           >
-            <div className='flex flex-col items-center justify-center rounded-2xl border-[#EFEFEF]  border p-9 cursor-pointer '>
-              <div className='w-[64px] rounded-full text-[24px] font-[500] grid place-content-center text-black bg-[#EAE5FF] h-[64px]'>
+            <div
+              className={`flex flex-col items-center justify-center rounded-2xl ${
+                isLoading && item.businessName === business?.businessName
+                  ? item.primaryBrandColour
+                  : 'border-[#EFEFEF]'
+              } border p-9 cursor-pointer `}
+            >
+              <div
+                className={`w-[64px] rounded-full text-[24px] font-[500] grid place-content-center text-black ${
+                  item.primaryBrandColour
+                    ? item.primaryBrandColour
+                    : 'bg-[#EAE5FF]'
+                } h-[64px]`}
+              >
                 {isLoading && item.businessName === business?.businessName ? (
-                  <Spinner size='sm' />
+                  <Spinner
+                    classNames={{
+                      base: 'text-primaryColor',
+                    }}
+                    size='sm'
+                  />
                 ) : (
                   getInitials(item.businessName)
                 )}

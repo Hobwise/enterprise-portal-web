@@ -19,6 +19,15 @@ const userSchema = z.object({
     .min(8, 'The password must be at least 8 characters long')
     .max(32, 'The password must be a maximun 32 characters'),
 });
+const updateUserSchema = z.object({
+  firstName: z
+    .string()
+    .trim()
+    .min(1, { message: 'Firstname field is required' }),
+  lastName: z.string().trim().min(1, { message: 'Lastname field is required' }),
+  email: z.string().trim().min(1, { message: 'Please enter a valid email' }),
+  role: z.string().trim().min(1, 'Select a role'),
+});
 
 const loginSchema = z.object({
   email: z.string().trim().min(1, { message: 'Please enter a valid email' }),
@@ -90,6 +99,39 @@ export async function createUser(formData: any) {
 
   try {
     const data = await api.post(AUTH.generateToken, payload);
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function updateUser(formData: any) {
+  const validatedFields = updateUserSchema.safeParse({
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.email,
+    role: formData.role,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const payload = {
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.email,
+    role: +formData.role,
+    businessID: formData.businessID,
+    cooperateID: formData.cooperateID,
+    isActive: formData.isActive,
+  };
+  try {
+    const data = await api.put(
+      `${AUTH.updateUser}?userId=${formData.id}`,
+      payload
+    );
 
     return data;
   } catch (error) {

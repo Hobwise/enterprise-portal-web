@@ -4,22 +4,27 @@ import React from 'react';
 interface ButtonProps {
   children: React.ReactNode;
   backgroundColor?: string;
+  className?: string;
   radius?: string;
   disabled?: boolean;
   loading?: boolean;
+  onClick?: any;
   type?: 'submit' | 'button' | 'reset';
 }
 export const CustomButton = ({
   children,
   disabled,
   loading,
+  onClick,
   type = 'submit',
   backgroundColor = 'bg-primaryColor',
   radius = 'rounded-lg',
+  className = 'text-white font-bold text-md  h-[55px] w-full',
 }: ButtonProps) => {
   return (
     <Button
       type={type}
+      onClick={onClick}
       isLoading={loading}
       disabled={disabled}
       spinner={
@@ -44,7 +49,7 @@ export const CustomButton = ({
           />
         </svg>
       }
-      className={`${backgroundColor}  ${radius} disabled:bg-grey500 disabled:cursor-not-allowed text-white font-bold text-md  h-[55px] w-full`}
+      className={`${backgroundColor}  ${radius} ${className} disabled:bg-grey500 disabled:cursor-not-allowed`}
     >
       {loading ? 'Loading' : children}
     </Button>

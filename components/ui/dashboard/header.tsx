@@ -24,7 +24,6 @@ import {
   PopoverContent,
   Avatar,
   Tooltip,
-  Button,
 } from '@nextui-org/react';
 import { MdPerson } from 'react-icons/md';
 import Link from 'next/link';
@@ -35,6 +34,15 @@ const Header = () => {
   const selectedLayout = useSelectedLayoutSegment();
   const navItem = SIDENAV_ITEMS.filter((item) => item.path === pathname)[0];
   const router = useRouter();
+  const routeOutsideSidebar = () => {
+    if (pathname.includes('settings')) {
+      return {
+        title: 'Settings',
+        icon: <IoIosSettings className='text-[20px] dashboardLogo' />,
+      };
+    }
+  };
+
   return (
     <div
       className={cn(
@@ -48,12 +56,25 @@ const Header = () => {
       <div className='flex h-[64px] bg-white text-black border-b border-primaryGrey items-center justify-between px-6'>
         <div className='flex items-center space-x-4'>
           <div className='flex items-center gap-2'>
-            <Image
-              className={'dashboardLogo'}
-              src={navItem.icon}
-              alt={navItem.title}
-            />
-            <span className='text-[#494E58] font-[600]'>{navItem.title}</span>
+            {navItem ? (
+              <>
+                <Image
+                  className={'dashboardLogo'}
+                  src={navItem?.icon}
+                  alt={navItem?.title}
+                />
+                <span className='text-[#494E58] font-[600]'>
+                  {navItem?.title}
+                </span>
+              </>
+            ) : (
+              <>
+                {routeOutsideSidebar()?.icon}
+                <span className='text-[#494E58] font-[600]'>
+                  {routeOutsideSidebar()?.title}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
