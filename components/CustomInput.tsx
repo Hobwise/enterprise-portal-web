@@ -16,6 +16,8 @@ interface CustomInputProps {
   placeholder?: string;
   endContent?: JSX.Element | null;
   isRequired?: boolean;
+  disabled?: boolean;
+  hidden?: boolean;
   onChange?: any;
   startContent?: string | JSX.Element;
 }
@@ -26,12 +28,15 @@ export const CustomInput = ({
   value,
   placeholder,
   endContent,
+  hidden,
   name,
+  disabled,
   onChange,
   isRequired,
   startContent,
-  classnames,
+  classnames = 'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
   errorMessage,
+
   size = 'lg',
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -61,15 +66,15 @@ export const CustomInput = ({
       label={label}
       value={value}
       name={name}
+      hidden={hidden}
+      disabled={disabled}
       onChange={onChange}
       variant='bordered'
       classNames={{
         label: 'text-[#000] font-[500] text-[14px]',
         base: 'bg-none',
-        inputWrapper: [
-          `${classnames}  bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]`,
-        ],
-        innerWrapper: 'bg-none border-none',
+        inputWrapper: [`${classnames} ${disabled && 'bg-secondaryGrey'} `],
+        innerWrapper: ` bg-none border-none`,
         input: ['bg-none', 'text-black placeholder:text-[14px]'],
       }}
       aria-haspopup='false'

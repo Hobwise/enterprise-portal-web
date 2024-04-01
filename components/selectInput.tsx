@@ -9,6 +9,8 @@ const SelectInput = ({
   value,
   onChange,
   errorMessage,
+  selectedKeys,
+  defaultSelectedKeys,
 }: any) => {
   return (
     <Select
@@ -18,6 +20,8 @@ const SelectInput = ({
       label={label}
       size='lg'
       name={name}
+      defaultSelectedKeys={defaultSelectedKeys}
+      selectedKeys={selectedKeys}
       value={value}
       errorMessage={errorMessage}
       isInvalid={errorMessage && true}

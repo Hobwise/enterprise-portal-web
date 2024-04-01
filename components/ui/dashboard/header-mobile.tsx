@@ -67,13 +67,13 @@ const HeaderMobile = () => {
               ) : (
                 <MenuItem>
                   <Link
-                    href={item.path}
+                    href={item?.path}
                     onClick={() => toggleOpen()}
                     className={`flex w-full text-white text-xl ${
-                      item.path === pathname ? 'font-bold' : ''
+                      item?.path === pathname ? 'font-bold' : ''
                     }`}
                   >
-                    {item.title}
+                    {item?.title}
                   </Link>
                 </MenuItem>
               )}

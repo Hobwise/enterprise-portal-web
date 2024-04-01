@@ -20,6 +20,7 @@ module.exports = {
       grey600: '#645D5D',
       pink200: '#EAE5FF',
       primaryGrey: '#F0F2F5',
+      secondaryGrey: '#E4E7EC',
     },
     extend: {
       backgroundImage: {
