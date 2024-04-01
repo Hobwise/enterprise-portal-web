@@ -23,7 +23,7 @@ const Profile = () => {
     cooperateID: userInformation?.cooperateID,
     isActive: true,
     role: String(role),
-    id: userInformation?.userId,
+    id: userInformation?.id,
   });
 
   const handleInputChange = (e) => {
