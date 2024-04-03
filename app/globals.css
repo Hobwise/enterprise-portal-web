@@ -25,13 +25,20 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
-.login-background {
-  background-image: url('../public/assets/images/login-background.png');
+.auth-background {
+  background-image: url('../public/assets/images/nightlife-party-with-drinks-bar\ 1.png');
   background-color: black;
 }
 .container {
   width: calc(100vw - 272px);
 }
+
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+  }
+}
+
 .main-wrapper:hover,
 .main-wrapper:focus {
   border: 2px solid #c3adff;

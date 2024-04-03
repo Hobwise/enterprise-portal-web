@@ -24,7 +24,7 @@ const SignupForm = () => {
     isActive: false,
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = e.target;
     setSignupFormData((prevFormData) => ({
