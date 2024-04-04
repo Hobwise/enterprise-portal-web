@@ -31,7 +31,8 @@ export const businessNameValidation = () => {
 export const businessAddressValidation = () => {
   return z
     .string()
-    .min(1, `Business address field is required`)
+
+    .min(5, 'Business address must contain at least 5 characters')
     .max(100, `Business address cannot be longer than 100 characters`)
     .regex(
       /^[a-zA-Z0-9\s]+$/,

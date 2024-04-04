@@ -3,7 +3,12 @@
 import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
 
 import { useState } from 'react';
-import { Input } from '@nextui-org/react';
+import {
+  Input,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@nextui-org/react';
 
 interface CustomInputProps {
   type?: string;

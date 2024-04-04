@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CustomInput } from '@/components/CustomInput';
-import { Spacer } from '@nextui-org/react';
+import { Spacer, Tooltip } from '@nextui-org/react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 import { CustomButton } from '@/components/customButton';
 import { createUser } from '@/app/api/controllers/auth';
@@ -89,15 +89,48 @@ const SignupForm = () => {
       />
 
       <Spacer y={6} />
-      <CustomInput
-        errorMessage={response?.errors?.password?.[0]}
-        value={signupFormData.password}
-        onChange={handleInputChange}
-        type='password'
-        name='password'
-        label='Password'
-        placeholder='Enter password'
-      />
+      <Tooltip
+        showArrow
+        placement='left'
+        classNames={{
+          base: [
+            // arrow color
+            'before:bg-neutral-400 dark:before:bg-white',
+          ],
+          content: [
+            'py-2 px-4 shadow-xl bg-[#F2F8FF] rounded-md',
+            'text-black bg-gradient-to-br from-white to-neutral-400',
+          ],
+        }}
+        content={
+          <div className='px-1 py-2 space-y-2'>
+            <div className='text-small font-bold'>
+              Your password should include
+            </div>
+            <div className='text-tiny'>
+              One uppercase character e.g A,B,C,etc
+            </div>
+            <div className='text-tiny'>
+              One lowercase character e.g a,b,c,etc
+            </div>
+            <div className='text-tiny'>One special character e.g !,@,#,etc</div>
+            <div className='text-tiny'>One number e.g 1,2,3,4 etc</div>
+            <div className='text-tiny'>At least 8 characters </div>
+          </div>
+        }
+      >
+        <div>
+          <CustomInput
+            errorMessage={response?.errors?.password?.[0]}
+            value={signupFormData.password}
+            onChange={handleInputChange}
+            type='password'
+            name='password'
+            label='Password'
+            placeholder='Enter password'
+          />
+        </div>
+      </Tooltip>
 
       <Spacer y={6} />
       <CustomInput
