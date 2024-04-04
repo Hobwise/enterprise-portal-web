@@ -9,7 +9,7 @@ export const passwordValidation = () => {
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/\d/, 'Password must contain at least one number')
     .regex(
-      /[!@#$%^&*()]/,
+      /[!@#$%^&*.,()]/,
       'Password must contain at least one special character'
     );
 };

@@ -2,6 +2,8 @@ import { Spacer } from '@nextui-org/react';
 import Link from 'next/link';
 import HobinkLogo from '@/components/logo';
 import SignupForm from '@/components/ui/auth/signupForm';
+import Background from '../../../public/assets/images/nightlife-party-with-drinks-bar 1.png';
+import Image from 'next/image';
 
 export const metadata = {
   title: 'Hobink | Create account',
@@ -18,12 +20,13 @@ export const metadata = {
 export default function Signup() {
   return (
     <main
-      className={` auth-background relative xl:py-8 py-2  bg-no-repeat flex justify-center xl:items-center items-start bg-cover  min-h-screen `}
+      className={`  relative xl:py-8 py-2   flex justify-center xl:items-center items-start  min-h-screen `}
     >
+      <Image fill className='absolute' src={Background} alt='background' />
       <div className='container flex flex-col justify-center  w-full xl:p-0 px-4 '>
         <HobinkLogo
           textColor='text-white'
-          containerClass='flex xl:hidden gap-2 items-center pt-8 mb-10'
+          containerClass='flex xl:hidden z-10 gap-2 items-center pt-8 mb-10'
         />
         <div className='flex w-full flex-col  justify-between xl:flex-row'>
           {/* Left Card: Text Content */}
@@ -44,7 +47,7 @@ export default function Signup() {
           </div>
 
           {/* Right Card: Login Form */}
-          <div className='flex-1   mb-10 xl:max-w-[456px]  w-full md:mb-0 bg-white text-black lg:p-7 py-12 px-6  rounded-xl'>
+          <div className='flex-1 z-10  mb-10 xl:max-w-[456px]  w-full md:mb-0 bg-white text-black lg:p-7 py-12 px-6  rounded-xl'>
             <h2 className='text-[28px] font-bold mb-2'>Create Account</h2>
             <p className='text-sm  text-grey500 mb-8'>
               Enter your details to create your account
