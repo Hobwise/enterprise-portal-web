@@ -41,6 +41,7 @@ const SignupForm = () => {
     const data = await createUser(signupFormData);
     setLoading(false);
     setResponse(data);
+
     if (data?.data?.isSuccessful) {
       router.push('/auth/confirm-email');
     } else if (data?.data?.error) {
