@@ -43,7 +43,7 @@ const SideNav = () => {
 
         <Divider className='bg-[#27272A]  w-[80%] mx-auto h-[1px]' />
 
-        <div className=' flex justify-center items-center h-[17%]  gap-4 w-full'>
+        <div className='flex justify-center items-center h-[17%]  gap-4 w-full'>
           <div>
             <Avatar
               isBordered
@@ -52,7 +52,7 @@ const SideNav = () => {
               src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
             />
           </div>
-          <div className='flex flex-col'>
+          <div className='flex flex-col '>
             <span className='text-[14px] font-[600]'>
               {firstName} {lastName}
             </span>

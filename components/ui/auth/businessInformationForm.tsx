@@ -5,7 +5,11 @@ import { Spacer } from '@nextui-org/react';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CustomButton } from '@/components/customButton';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import {
+  getJsonItemFromLocalStorage,
+  notify,
+  saveJsonItemToLocalStorage,
+} from '@/lib/utils';
 import { createBusiness } from '@/app/api/controllers/auth';
 
 const BusinessInformationForm = () => {
@@ -47,12 +51,13 @@ const BusinessInformationForm = () => {
     setLoading(false);
     setResponse(data);
     if (data?.data?.isSuccessful) {
+      saveJsonItemToLocalStorage('business', [data?.data?.data]);
+      router.push('/dashboard');
       notify({
         title: 'Success!',
-        text: 'Registration completed, Proceed to login',
+        text: 'Registration completed',
         type: 'success',
       });
-      router.push('/auth/login');
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',

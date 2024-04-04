@@ -19,11 +19,12 @@ const SignupForm = () => {
     lastName: '',
     email: '',
     password: '',
+    confirmPassword: '',
     role: 'admin',
     isActive: false,
   });
 
-  const handleInputChange = (e) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = e.target;
     setSignupFormData((prevFormData) => ({
@@ -40,6 +41,7 @@ const SignupForm = () => {
     const data = await createUser(signupFormData);
     setLoading(false);
     setResponse(data);
+
     if (data?.data?.isSuccessful) {
       router.push('/auth/confirm-email');
     } else if (data?.data?.error) {
@@ -94,6 +96,17 @@ const SignupForm = () => {
         type='password'
         name='password'
         label='Password'
+        placeholder='Enter password'
+      />
+
+      <Spacer y={6} />
+      <CustomInput
+        errorMessage={response?.errors?.confirmPassword?.[0]}
+        value={signupFormData.confirmPassword}
+        onChange={handleInputChange}
+        type='password'
+        name='confirmPassword'
+        label='Confirm Password'
         placeholder='Enter password'
       />
 

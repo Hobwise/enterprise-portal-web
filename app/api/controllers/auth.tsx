@@ -2,43 +2,42 @@ import { z } from 'zod';
 import api, { handleError } from '../apiService';
 import { AUTH } from '../api-url';
 import { notify } from '@/lib/utils';
+import {
+  businessAddressValidation,
+  businessNameValidation,
+  emailValidation,
+  inputNameValidation,
+  passwordValidation,
+} from './validations';
 
-const passwordValidation = new RegExp(
-  /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/
-);
-const userSchema = z.object({
-  firstName: z
-    .string()
-    .trim()
-    .min(1, { message: 'Firstname field is required' }),
-  lastName: z.string().trim().min(1, { message: 'Lastname field is required' }),
-  email: z.string().trim().min(1, { message: 'Please enter a valid email' }),
-  password: z
-    .string()
-    .trim()
-    .min(8, 'The password must be at least 8 characters long')
-    .max(32, 'The password must be a maximun 32 characters'),
-});
+const userSchema = z
+  .object({
+    firstName: inputNameValidation('First name'),
+    lastName: inputNameValidation('Last name'),
+    email: emailValidation(),
+    password: passwordValidation(),
+    confirmPassword: z
+      .string()
+      .trim()
+      .min(1, { message: 'Enter your password' }),
+  })
+  .refine((data) => data.password === data?.confirmPassword, {
+    message: "Password don't match",
+    path: ['confirmPassword'],
+  });
 const updateUserSchema = z.object({
-  firstName: z
-    .string()
-    .trim()
-    .min(1, { message: 'Firstname field is required' }),
-  lastName: z.string().trim().min(1, { message: 'Lastname field is required' }),
-  email: z.string().trim().min(1, { message: 'Please enter a valid email' }),
+  firstName: inputNameValidation('First name'),
+  lastName: inputNameValidation('Last name'),
+  email: emailValidation(),
   role: z.string().trim().min(1, 'Select a role'),
 });
 
 const loginSchema = z.object({
-  email: z.string().trim().min(1, { message: 'Please enter a valid email' }),
+  email: emailValidation(),
   password: z.string().trim().min(1, { message: 'Password field is required' }),
 });
 const forgetPasswordSchema = z.object({
-  email: z
-    .string()
-    .trim()
-    .min(1, { message: 'Please enter a valid email' })
-    .email('This is not a valid email.'),
+  email: emailValidation(),
 });
 const changePasswordSchema = z
   .object({
@@ -46,36 +45,22 @@ const changePasswordSchema = z
       .string()
       .trim()
       .min(1, { message: 'Enter your old password' }),
-    newPassword: z
-      .string()
-      .trim()
-      .min(8, 'The password must be at least 8 characters long')
-      .max(32, 'The password must be a maximun 32 characters'),
+    newPassword: passwordValidation(),
     confirmPassword: z
       .string()
       .trim()
       .min(1, { message: 'Enter your new password' }),
   })
   .refine((data) => data.newPassword === data?.confirmPassword, {
-    message: "Passwords don't match",
+    message: "Password don't match",
     path: ['confirmPassword'],
   });
 const businessSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, { message: 'Business name field is required' }),
-  address: z.string().trim().min(1, { message: 'Address field is required' }),
+  name: businessNameValidation(),
+  address: businessAddressValidation(),
   businessCategory: z
     .number()
     .min(1, { message: 'Please select your business category' }),
-});
-
-const passwordSchema = z.object({
-  password: z
-    .string()
-    .min(8, 'The password must be at least 8 characters long')
-    .max(32, 'The password must be a maximun 32 characters'),
 });
 
 export async function createUser(formData: any) {
@@ -84,6 +69,7 @@ export async function createUser(formData: any) {
     lastName: formData.lastName,
     email: formData.email,
     password: formData.password,
+    confirmPassword: formData.confirmPassword,
   });
 
   if (!validatedFields.success) {

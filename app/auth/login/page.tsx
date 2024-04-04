@@ -10,21 +10,22 @@ export const metadata = {
 
 export default function Login() {
   return (
-    <main className='bg-secondaryColor'>
-      <div className='lg:grid  md:w-3/4 xl:max-w-[912px] mx-auto px-4 lg:px-0 w-full lg:place-content-center min-h-screen '>
+    <main
+      className={` auth-background relative xl:py-8 py-2 bg-no-repeat flex justify-center xl:items-center items-start bg-cover  min-h-screen `}
+    >
+      <div className='container flex flex-col justify-center  w-full xl:p-0 px-4 '>
         <HobinkLogo
           textColor='text-white'
-          containerClass='flex lg:hidden gap-2 items-center pt-8 mb-10'
+          containerClass='flex xl:hidden gap-2 items-center pt-8 mb-10'
         />
-        <div className='flex flex-col lg:flex-row'>
-          {/* Left Card: Text Content */}
-          <div className='login-background flex-1 h-full relative  lg:flex flex-col justify-between hidden  text-white p-10 rounded-tl-3xl rounded-bl-3xl '>
+        <div className='flex flex-col justify-between xl:flex-row'>
+          <div className='relative w-[400px] xl:flex flex-col  hidden  text-white'>
             <HobinkLogo
               textColor='text-white'
-              containerClass='flex gap-2 items-center mb-4'
+              containerClass='xl:flex hidden gap-2 '
             />
-            <div className='flex flex-col justify-between'>
-              <h2 className='text-[32px] font-[600] leading-9 mb-3'>
+            <div className='absolute bottom-0'>
+              <h2 className='text-[32px] font-[600]  leading-9 mb-3'>
                 Streamline your business processes{' '}
               </h2>
               <p className='text-foreground-400 font-[400]'>
@@ -34,8 +35,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Right Card: Login Form */}
-          <div className='flex-1 mb-10 md:mb-0 bg-white text-black lg:p-7 py-12 px-6  lg:rounded-tr-3xl lg:rounded-br-3xl lg:rounded-none rounded-lg'>
+          <div className='flex-1   mb-10 xl:max-w-[456px] w-full md:mb-0 bg-white text-black lg:p-7 py-12 px-6  rounded-xl'>
             <h2 className='text-[28px] font-bold mb-2'>Log In</h2>
             <p className='text-sm  text-grey500 mb-14'>
               Enter your credentials to access your account
