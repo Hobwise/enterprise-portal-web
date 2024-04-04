@@ -13,7 +13,7 @@ export const metadata = {
 export default function Login() {
   return (
     <main
-      className={` relative xl:py-8 py-2  flex justify-center xl:items-center items-start   min-h-screen `}
+      className={`background relative xl:py-8 py-2  flex justify-center xl:items-center items-start   min-h-screen `}
     >
       <Image fill className='absolute' src={Background} alt='background' />
       <div className='container flex flex-col justify-center  w-full xl:p-0 px-4 '>

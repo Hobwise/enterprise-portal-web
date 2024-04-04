@@ -11,7 +11,7 @@ export const metadata = {
 };
 const ForgetPassword = () => {
   return (
-    <main className='min-h-screen  flex flex-col md:justify-center justify-start items-center md:p-0 py-24 px-4 '>
+    <main className='min-h-screen background flex flex-col md:justify-center justify-start items-center md:p-0 py-24 px-4 '>
       <Image
         fill
         className='absolute bg-no-repeat h-full   w-full bg-cover'
