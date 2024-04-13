@@ -24,7 +24,7 @@ const SelectBusinessForm = () => {
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage('business', data?.data?.data);
+      saveJsonItemToLocalStorage('business', [data?.data?.data]);
       router.push('/dashboard');
     } else if (data?.data?.error) {
       notify({
