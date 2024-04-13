@@ -9,3 +9,11 @@ export const AUTH = {
   changePassword: 'api/v1/User/change-password',
   getBusiness: 'api/v1/Business/configuration',
 };
+export const DASHBOARD = {
+  getRoleByBusiness: 'api/v1/User/role-by-business',
+  getMenu: 'api/v1/Menu',
+  getMenuByBusiness: 'api/v1/Menu/by-business',
+  menuItem: 'api/v1/Menu/item',
+  uploadFile: 'api/v1/File/upload',
+  menuVariety: 'api/v1/Menu/item-variety',
+};

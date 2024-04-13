@@ -39,7 +39,23 @@ api.interceptors.request.use(async (config) => {
     config.headers['cooperateId'] = cooperateID;
   }
 
+  const isMultipartFormData =
+    config.headers['Content-Type'] === 'multipart/form-data';
+  if (isMultipartFormData) {
+    delete config.headers['Content-Type'];
+  }
+
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response.status === 401) {
+      // window.location.href = '/auth/login';
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default api;

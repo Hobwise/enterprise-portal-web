@@ -21,7 +21,7 @@ const SideNav = () => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { firstName, lastName, email } = userInformation;
   return (
-    <div className='md:w-[272px] bg-black h-screen flex-1 fixed  hidden md:flex'>
+    <div className='md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex'>
       <div className='flex flex-col  w-full'>
         <div className='h-[83%] scrollbarstyles overflow-y-scroll'>
           <Link
@@ -49,7 +49,7 @@ const SideNav = () => {
               isBordered
               showFallback={true}
               name={firstName}
-              src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
+              // src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
             />
           </div>
           <div className='flex flex-col '>
@@ -83,6 +83,14 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
     setSubMenuOpen(!subMenuOpen);
   };
 
+  function checkPathname(path = 'order') {
+    // Lowercase both pathname and target string for case-insensitive comparison
+    const lowerPathname = pathname.toLowerCase();
+    const lowerTarget = path.toLowerCase();
+
+    // Check for exact match or presence within the path (considering "dashboard/orders")
+    return lowerPathname === lowerTarget || lowerPathname.includes(lowerTarget);
+  }
   return (
     <div>
       {item.submenu ? (

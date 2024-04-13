@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Container from '../../../components/dashboardContainer';
 
 import React from 'react';
