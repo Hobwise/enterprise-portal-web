@@ -59,13 +59,18 @@ const Menu: React.FC = () => {
 
     const data = await getMenuByBusiness(businessInformation[0]?.businessId);
     setIsLoading(false);
-    let response = data?.data?.data;
-    response.sort((a, b) => a.name.localeCompare(b.name));
-
-    setMenus(response);
 
     if (data?.data?.isSuccessful) {
+      let response = data?.data?.data;
+      response.sort((a, b) => a.name.localeCompare(b.name));
+
+      setMenus(response);
     } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
     }
   };
 
