@@ -27,6 +27,7 @@ import {
 } from '@nextui-org/react';
 import { MdPerson } from 'react-icons/md';
 import Link from 'next/link';
+import Menu from '../../../public/assets/icons/menu.png';
 
 const Header = () => {
   const pathname = usePathname();
@@ -34,11 +35,26 @@ const Header = () => {
   const selectedLayout = useSelectedLayoutSegment();
   const navItem = SIDENAV_ITEMS.filter((item) => item.path === pathname)[0];
   const router = useRouter();
+
   const routeOutsideSidebar = () => {
     if (pathname.includes('settings')) {
       return {
         title: 'Settings',
         icon: <IoIosSettings className='text-[20px] dashboardLogo' />,
+      };
+    } else if (
+      pathname.includes('add-menu-item') ||
+      pathname.includes('menu/')
+    ) {
+      return {
+        title: 'Menu',
+        icon: (
+          <Image
+            src={Menu}
+            className={'dashboardLogo'}
+            alt='add item to menu'
+          />
+        ),
       };
     }
   };
@@ -46,7 +62,7 @@ const Header = () => {
   return (
     <div
       className={cn(
-        `sticky inset-x-0 top-0 z-30 w-full transition-all border-b  border-primaryGrey`,
+        `sticky inset-x-0 top-0 z-20 w-full transition-all border-b  border-primaryGrey`,
         {
           'border-b  border-primaryGrey bg-white/75 backdrop-blur-lg': scrolled,
           'border-b  border-primaryGrey bg-white': selectedLayout,
@@ -79,7 +95,7 @@ const Header = () => {
         </div>
 
         <div className='hidden md:flex items-center space-x-8'>
-          <CustomInput
+          {/* <CustomInput
             classnames={'w-[450px]'}
             label=''
             size='md'
@@ -87,7 +103,7 @@ const Header = () => {
             startContent={<IoSearchOutline />}
             type='text'
             placeholder='Search here...'
-          />
+          /> */}
           <div className='flex items-center space-x-4'>
             <Tooltip
               placement='bottom'
@@ -114,7 +130,7 @@ const Header = () => {
                 <div className='flex items-center gap-1 cursor-pointer'>
                   <Avatar
                     size='sm'
-                    src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
+                    // src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
                   />
                   <IoIosArrowDown />
                 </div>

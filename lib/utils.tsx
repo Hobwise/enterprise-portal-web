@@ -3,6 +3,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { toast } from 'react-toastify';
 import { twMerge } from 'tailwind-merge';
 import cookie from 'js-cookie';
+
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
@@ -117,3 +118,34 @@ export function getInitials(name: string) {
   const initials = words.map((word) => word.charAt(0));
   return initials.join('').toUpperCase();
 }
+export const ONEMB = 1048576;
+export const convertBase64ToImageURL = (base64String: string) => {
+  const base64WithoutPrefix = base64String.replace(
+    /^data:image\/[a-z]+;base64,/,
+    ''
+  );
+
+  const byteCharacters = atob(base64WithoutPrefix);
+  const byteArrays = [];
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  const blob = new Blob(byteArrays, { type: 'image/png' });
+  console.log(blob, 'blob');
+  const imageURL = URL.createObjectURL(blob);
+
+  return imageURL;
+};
+
+export const imageCompressOptions = {
+  maxSizeMB: 0.2,
+  maxWidthOrHeight: 1920,
+  useWebWorker: true,
+};
