@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { CustomTextArea } from '@/components/customTextArea';
 import SelectInput from '@/components/selectInput';
 import { CustomButton } from '@/components/customButton';
+import { MdOutlineFileDownload } from 'react-icons/md';
 import {
   Modal,
   ModalContent,
@@ -29,15 +30,25 @@ import {
 } from '@/app/api/controllers/dashboard/menu';
 import { useRouter } from 'next/navigation';
 import imageCompression from 'browser-image-compression';
+import SelectMenu from './add-mulitple-menuItem/selectMenu';
+import AddMultipleMenu from './add-mulitple-menuItem/addMultipleMenu';
 
 const AddItemToMenu = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState('');
+
   const [imageError, setImageError] = useState('');
   const [response, setResponse] = useState(null);
   const [selectedImage, setSelectedImage] = useState('');
+  const [activeScreen, setActiveScreen] = useState(1);
+  const [isOpenMultipleMenu, setIsOpenMultipleMenu] = useState(false);
+
+  const toggleMultipleMenu = () => {
+    setIsOpenMultipleMenu(!isOpenMultipleMenu);
+  };
 
   const [menu, setMenu] = useState([]);
   const [menuItem, setMenuItem] = useState<payloadMenuItem>({
@@ -164,13 +175,16 @@ const AddItemToMenu = () => {
             Add an item to your menu.
           </p>
         </div>
-        {/* <CustomButton
-          onClick={openAddRoleModal}
-          className='py-2 px-4 md:mb-0 mb-4 text-white'
-          backgroundColor='bg-primaryColor'
+        <CustomButton
+          onClick={toggleMultipleMenu}
+          className='py-2 px-4 md:mb-0 text-black border border-[#D0D5DD] mb-4 '
+          backgroundColor='bg-white'
         >
-          Add role
-        </CustomButton> */}
+          <div className='flex gap-2 items-center justify-center'>
+            <MdOutlineFileDownload className='text-[22px]' />
+            <p> Add multiple items</p>
+          </div>
+        </CustomButton>
       </div>
       <div className='flex xl:flex-row flex-col'>
         <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
@@ -310,6 +324,31 @@ const AddItemToMenu = () => {
                 </div>
 
                 <Spacer y={4} />
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      <Modal
+        size='xl'
+        isOpen={isOpenMultipleMenu}
+        onOpenChange={toggleMultipleMenu}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalBody>
+                {activeScreen === 1 && (
+                  <SelectMenu
+                    setActiveScreen={setActiveScreen}
+                    setSelectedMenu={setSelectedMenu}
+                    selectedMenu={selectedMenu}
+                    toggleMultipleMenu={toggleMultipleMenu}
+                  />
+                )}
+                {activeScreen === 2 && (
+                  <AddMultipleMenu selectedMenu={selectedMenu} />
+                )}
               </ModalBody>
             </>
           )}

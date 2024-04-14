@@ -15,44 +15,45 @@ const Filters = ({
 }: any) => {
   return (
     <>
-      <div className='flex absolute w-full justify-between top-0'>
-        <Tabs
-          classNames={{
-            tabList:
-              'gap-6 w-full relative rounded-none p-0 border-b border-divider',
-            cursor: 'w-full bg-primaryColor',
-            tab: 'max-w-fit px-0 h-10',
-            tabContent: 'group-data-[selected=true]:text-primaryColor',
-          }}
-          variant={'underlined'}
-          aria-label='menu filter'
-          onChange={handleTabChange}
-        >
-          {menus.map((menu) => {
-            return (
-              <Tab
-                key={menu.name}
-                title={
-                  <div
-                    onClick={() => handleTabClick(menu.name)}
-                    className='flex items-center space-x-2'
-                  >
-                    <span>{menu.name}</span>
-
-                    <Chip
-                      classNames={{
-                        base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
-                      }}
+      <div className='flex  absolute w-full  justify-between top-0'>
+        <div className='overflow-scroll w-[80%]'>
+          <Tabs
+            classNames={{
+              tabList:
+                'gap-6 w-full relative rounded-none p-0 border-b border-divider',
+              cursor: 'w-full bg-primaryColor',
+              tab: 'max-w-fit px-0 h-10',
+              tabContent: 'group-data-[selected=true]:text-primaryColor',
+            }}
+            variant={'underlined'}
+            aria-label='menu filter'
+            onChange={handleTabChange}
+          >
+            {menus.map((menu) => {
+              return (
+                <Tab
+                  key={menu.name}
+                  title={
+                    <div
+                      onClick={() => handleTabClick(menu.name)}
+                      className='flex items-center space-x-2'
                     >
-                      {menu?.items?.length}
-                    </Chip>
-                  </div>
-                }
-              />
-            );
-          })}
+                      <span>{menu.name}</span>
 
-          {/* <Tab
+                      <Chip
+                        classNames={{
+                          base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
+                        }}
+                      >
+                        {menu?.items?.length}
+                      </Chip>
+                    </div>
+                  }
+                />
+              );
+            })}
+
+            {/* <Tab
             key='drinks'
             title={
               <div className='flex items-center space-x-2'>
@@ -67,10 +68,11 @@ const Filters = ({
               </div>
             }
           /> */}
-        </Tabs>
+          </Tabs>
+        </div>
         <CustomButton
           onClick={onOpen}
-          className='bg-white text-primaryColor flex gap-1'
+          className='bg-white text-primaryColor  flex gap-1'
         >
           <GoPlus className='text-[20px]' />
           <span>Create new menu</span>

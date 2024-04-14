@@ -123,16 +123,16 @@ const MenuDetails = () => {
 
   return (
     <Container>
-      <div className='flex justify-between'>
+      <div className='xl:flex block justify-between'>
         <Link
           href={'/dashboard/menu'}
-          className={`cursor-pointer text-primaryColor flex gap-2 text-sm items-center`}
+          className={`cursor-pointer text-primaryColor flex gap-2 xl:mb-0 mb-2 text-sm items-center`}
         >
           <IoIosArrowRoundBack className='text-[22px]' />
           <span className='text-sm'>Back to menu</span>
         </Link>
         <div className='gap-6 xl:flex block'>
-          <div className='bg-primaryGrey px-4 py-2 rounded-lg flex gap-3 items-center'>
+          {/* <div className='bg-primaryGrey inline-flex px-4 py-2 rounded-lg  gap-3 items-center'>
             <span
               className={!isAvailable ? 'text-primaryColor' : 'text-grey600'}
             >
@@ -154,7 +154,7 @@ const MenuDetails = () => {
             >
               Available
             </span>
-          </div>
+          </div> */}
           <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
             <Button
               onClick={toggleModalEdit}

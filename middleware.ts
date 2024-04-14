@@ -14,6 +14,7 @@ export const config = {
   matcher: [
     '/dashboard',
     '/dashboard/menu',
+    '/dashboard/menu/add-menu-item',
     '/dashboard/campaigns',
     '/dashboard/orders',
     '/dashboard/qr-code',

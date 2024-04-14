@@ -9,6 +9,7 @@ const AppProvider = ({ children }: any) => {
   const [userData, setUserData] = useState(null);
 
   const [isOpenDelete, setIsOpenDelete] = useState(false);
+
   const [isOpenEdit, setIsOpenEdit] = useState(false);
 
   const toggleModalDelete = () => {

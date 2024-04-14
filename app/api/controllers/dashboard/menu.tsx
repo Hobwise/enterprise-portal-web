@@ -50,6 +50,24 @@ export async function uploadFile(businessId: string, formData: FormData) {
     handleError(error);
   }
 }
+export async function uploadFilemultipleMenuItem(
+  businessId: string,
+  formData: FormData,
+  menuId: string
+) {
+  const headers = businessId
+    ? { businessId, menuId, 'Content-Type': 'multipart/form-data' }
+    : {};
+  try {
+    const data = await api.post(DASHBOARD.uploadBulkMenuItem, formData, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function getMenuByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
@@ -86,7 +104,7 @@ export type payloadMenuItem = {
   itemName: string;
   itemDescription: string;
   price: number;
-  isAvailable: boolean;
+  isAvailable?: boolean;
   imageReference: string;
 };
 export type payloadMenuVariety = {
