@@ -15,5 +15,6 @@ export const DASHBOARD = {
   getMenuByBusiness: 'api/v1/Menu/by-business',
   menuItem: 'api/v1/Menu/item',
   uploadFile: 'api/v1/File/upload',
+  uploadBulkMenuItem: 'api/v1/Menu/item-upload',
   menuVariety: 'api/v1/Menu/item-variety',
 };

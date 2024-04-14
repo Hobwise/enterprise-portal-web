@@ -26,6 +26,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import hobink from '../../../public/assets/images/hobink.png';
+import { useGlobalContext } from '@/hooks/globalProvider';
 
 type MenuItem = {
   name: string;
@@ -45,6 +46,7 @@ type MenuItem = {
 type MenuData = Array<MenuItem>;
 const Menu: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
   const [menus, setMenus] = useState<MenuData>([]);
 
   const [isLoading, setIsLoading] = useState<Boolean>(false);

@@ -20,6 +20,7 @@ import {
   ModalContent,
   ModalFooter,
   Spacer,
+  Switch,
 } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
 import Image from 'next/image';
@@ -33,6 +34,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
   const [imageError, setImageError] = useState('');
+  const [isAvailable, setIsAvailable] = useState(menuItem.isAvailabale);
   const [menu, setMenu] = useState([]);
 
   const [menuItemState, setMenuItemState] = useState<payloadMenuItem>({
@@ -40,7 +42,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
     itemName: menuItem?.itemName || '',
     price: +menuItem?.price || 0,
     menuID: menuItem?.menuID || '',
-    isAvailable: menuItem?.isAvailabale || '',
+
     imageReference: '',
   });
   useEffect(() => {
@@ -49,7 +51,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
       itemName: menuItem?.itemName,
       price: +menuItem?.price,
       menuID: menuItem?.menuID,
-      isAvailable: menuItem?.isAvailabale,
+
       imageReference: '',
     });
   }, []);
@@ -92,11 +94,10 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
       menuFileUpload(formData, file);
     }
   };
+  const handleToggle = async (isSelected: boolean) => {
+    setIsAvailable(isSelected);
+  };
   const updateMenuItem = async () => {
-    // if (!selectedImage) {
-    //   return setImageError('Upload an image');
-    // }
-
     setIsLoading(true);
     const payload = {
       menuID: menuItemState.menuID,
@@ -235,6 +236,35 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                     label='Add a price'
                     placeholder='Add a price'
                   />
+                  <Spacer y={6} />
+                  <div className='bg-primaryGrey inline-flex px-4 py-2 rounded-lg  gap-3 items-center'>
+                    <span
+                      className={
+                        !isAvailable ? 'text-primaryColor' : 'text-grey600'
+                      }
+                    >
+                      Unavailable
+                    </span>
+
+                    <Switch
+                      classNames={{
+                        wrapper: 'm-0 !bg-primaryColor',
+                      }}
+                      name='isAvailable'
+                      defaultChecked={isAvailable}
+                      onChange={(e) => handleToggle(e.target.checked)}
+                      isSelected={isAvailable}
+                      aria-label='Toggle availability'
+                    />
+
+                    <span
+                      className={
+                        isAvailable ? 'text-primaryColor' : 'text-grey600'
+                      }
+                    >
+                      Available
+                    </span>
+                  </div>
                   {/* <Spacer y={6} />
                   <SelectInput
                     errorMessage={response?.errors?.menuID?.[0]}

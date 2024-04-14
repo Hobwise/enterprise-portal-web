@@ -145,7 +145,7 @@ const MenuList = ({ menus, onOpen }: any) => {
         );
       case 'desc':
         return (
-          <div className='flex  max-h-[100px] m-0 overflow-scroll w-[360px] flex-col'>
+          <div className='flex  max-h-[100px] m-0 overflow-scroll xl:w-[360px] w-0 flex-col'>
             {menu.itemDescription}
           </div>
         );
