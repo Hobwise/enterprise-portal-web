@@ -28,15 +28,15 @@ const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
 
   const menuFileUpload = async (formData: FormData, file) => {
     setIsLoading(true);
+    setImageError('');
     const data = await uploadFilemultipleMenuItem(
       businessInformation[0]?.businessId,
       formData,
       selectedMenu
     );
     setIsLoading(false);
-    setImageError('');
     if (data?.data?.isSuccessful) {
-      toast.success('upload successful');
+      toast.success('Upload Successful');
       router.push('/dashboard/menu');
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
@@ -54,11 +54,19 @@ const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
       if (file.size > ONEMB) {
         return setImageError('File too large');
       }
+      if (
+        file &&
+        file.type ===
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ) {
+        const formData = new FormData();
+        formData.append('file', file);
+        menuFileUpload(formData, file);
+      } else {
+        return setImageError('Please select an XLSX file');
+      }
 
       //   const compressedFile = await imageCompression(file, imageCompressOptions);
-      const formData = new FormData();
-      formData.append('file', file);
-      menuFileUpload(formData, file);
     }
   };
 
@@ -70,7 +78,7 @@ const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
         </h1>
         <p className='font-[500]  text-grey600 mb-4'>
           Upload a spreadsheet with the columns formatted in the following
-          order; “Name”, “Description”, “Price”
+          order; “Name”, “Description”, “Price”, "Availability"
         </p>
       </div>
       <Spacer y={8} />
@@ -128,13 +136,13 @@ const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
       <div className='flex justify-center items-center'>
         <label className='cursor-pointer relative bg-primaryColor  rounded-lg font-semibold  w-full h-[55px]  text-center'>
           <span className='absolute top-4 left-[40%]'>
-            {isLoading ? 'Loading...' : 'Upload CSV'}
+            {isLoading ? 'Loading...' : 'Upload XLSX'}
           </span>
 
           <input
             type='file'
             multiple
-            accept='file_extension'
+            accept='.xlsx'
             onChange={handleFileChange}
             className='hidden'
           />
