@@ -2,10 +2,18 @@ import { updateUser } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import {
+  ONEMB,
+  getJsonItemFromLocalStorage,
+  imageCompressOptions,
+  notify,
+} from '@/lib/utils';
 import { Avatar, Divider, Spacer } from '@nextui-org/react';
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { MdOutlineMonochromePhotos } from 'react-icons/md';
+import imageCompression from 'browser-image-compression';
+import { uploadFile } from '@/app/api/controllers/dashboard/menu';
 
 const Profile = () => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
@@ -14,7 +22,10 @@ const Profile = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
-  const [uploadFile, setUploadFile] = useState('');
+
+  const [selectedImage, setSelectedImage] = useState('');
+  const [imageReference, setImageReference] = useState('');
+
   const [updateUserFormData, setUpdateUserFormData] = useState({
     firstName: firstName,
     lastName: lastName,
@@ -35,10 +46,33 @@ const Profile = () => {
     }));
   };
 
-  const handleFileChange = (event) => {
-    const selectedFile = Array.from(event.target.files);
-    console.log(selectedFile, 'selectedFile');
-    setUploadFile(selectedFile);
+  const menuFileUpload = async (formData: FormData, file: any) => {
+    const data = await uploadFile(businessInformation[0]?.businessId, formData);
+
+    if (data?.data?.isSuccessful) {
+      setSelectedImage(URL.createObjectURL(file));
+      setImageReference(data.data.data);
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
+
+  const handleFileChange = async (event: any) => {
+    if (event.target.files) {
+      const file = event.target.files[0];
+      if (file.size > ONEMB) {
+        return toast.error('File too large');
+      }
+
+      const compressedFile = await imageCompression(file, imageCompressOptions);
+      const formData = new FormData();
+      formData.append('file', compressedFile);
+      menuFileUpload(formData, file);
+    }
   };
 
   const submitFormData = async (e) => {
@@ -80,17 +114,13 @@ const Profile = () => {
               type='file'
               multiple
               accept='image/*'
-              onChange={handleFileChange}
+              // onChange={handleFileChange}
               className='hidden'
             />
           </label>
         </div>
       </div>
-      <Avatar
-        size='lg'
-        className='h-[120px] w-[120px]'
-        src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
-      />
+      <Avatar size='lg' className='h-[120px] w-[120px]' src={selectedImage} />
       <Spacer y={6} />
       <Divider className=' text-secondaryGrey' />
       <Spacer y={6} />

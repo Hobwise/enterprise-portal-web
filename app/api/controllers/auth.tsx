@@ -173,6 +173,15 @@ export async function loginUser(formData: any) {
     handleError(error);
   }
 }
+export async function generateRefreshToken(formData: any) {
+  try {
+    const data = await api.post(AUTH.refreshToken, formData);
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function forgetPassword(formData: any) {
   const validatedFields = forgetPasswordSchema.safeParse({
     email: formData.email,
