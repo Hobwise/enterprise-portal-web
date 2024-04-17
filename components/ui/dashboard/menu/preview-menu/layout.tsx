@@ -49,6 +49,7 @@ const Layout: React.FC = () => {
   const handleChangeColor = (color: any) => {
     setBackgroundColor(color.hex);
     setImageReference('');
+    setSelectedImage('');
   };
 
   const convertActiveTile = () => {
@@ -226,7 +227,9 @@ const Layout: React.FC = () => {
         </div>
         <Switch
           classNames={{
-            wrapper: 'm-0 !bg-primaryColor',
+            wrapper: `m-0 ${
+              isSelectedPreview ? '!bg-primaryColor' : 'bg-[#E4E7EC]'
+            } `,
           }}
           isSelected={isSelectedPreview}
           onValueChange={setIsSelectedPreview}

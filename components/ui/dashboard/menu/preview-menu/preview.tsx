@@ -4,18 +4,40 @@ import Image from 'next/image';
 import React from 'react';
 
 import noImage from '../../../../../public/assets/images/no-image.jpg';
+import Champagne from '../../../../../public/assets/images/champage.webp';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { menus, togglePreview } from './data';
 
 const Preview = () => {
-  const { activeTile, isSelectedPreview, selectedImage, backgroundColor } =
-    useGlobalContext();
-
+  const {
+    activeTile,
+    isSelectedPreview,
+    selectedImage,
+    backgroundColor,
+    imageReference,
+  } = useGlobalContext();
+  console.log(selectedImage, 'selectedImage');
+  const baseString = 'data:image/jpeg;base64,';
   return (
-    <article className='xl:block overflow-scroll hidden w-[320px] border-[8px] p-4 border-black rounded-[40px] h-[684px] shadow-lg'>
-      <h1 className='text-[28px] font-[700] pt-2 pb-3'>Menu</h1>
-      <div className='overflow-scroll w-full'>
+    <article className='xl:block relative overflow-scroll hidden w-[320px] border-[8px]  border-black rounded-[40px] h-[684px] shadow-lg'>
+      {backgroundColor && (
+        <div
+          style={{ backgroundColor: backgroundColor }}
+          className={`absolute h-full w-full`}
+        />
+      )}
+      {selectedImage.length > baseString.length && (
+        <Image
+          fill
+          className='absolute backdrop-brightness-125 bg-cover opacity-25'
+          src={selectedImage}
+          alt='background'
+        />
+      )}
+
+      <h1 className='text-[28px] font-[700] relative p-4 pt-6'>Menu</h1>
+      <div className='overflow-scroll w-full px-4'>
         <Tabs
           classNames={{
             tabList:
@@ -49,7 +71,7 @@ const Preview = () => {
           })}
         </Tabs>
       </div>
-      <div className={togglePreview(activeTile)?.main}>
+      <div className={`${togglePreview(activeTile)?.main} relative  px-4`}>
         {[1, 2, 3, 4].map((item) => {
           return (
             <>
@@ -58,11 +80,11 @@ const Preview = () => {
                   activeTile === 'List Right' &&
                   isSelectedPreview &&
                   'flex-row-reverse'
-                } flex  my-4 `}
+                } flex  my-4`}
               >
                 {isSelectedPreview && (
                   <div className={togglePreview(activeTile)?.imageContainer}>
-                    {backgroundColor ? (
+                    {/* {backgroundColor ? (
                       <div
                         style={{
                           backgroundColor: backgroundColor,
@@ -81,7 +103,16 @@ const Preview = () => {
                         src={selectedImage || noImage}
                         alt='menu'
                       />
-                    )}
+                    )} */}
+                    <Image
+                      className={`bg-cover rounded-lg ${
+                        togglePreview(activeTile)?.imageClass
+                      }`}
+                      width={60}
+                      height={60}
+                      src={Champagne}
+                      alt='menu'
+                    />
                   </div>
                 )}
                 <div
@@ -103,7 +134,7 @@ const Preview = () => {
           );
         })}
       </div>
-      <div className='flex mt-6 gap-3'>
+      <div className='flex mt-6 gap-3 px-4'>
         <CustomButton className='flex-grow w-full bg-white border border-[#E4E7EC] rounded-lg'>
           Previous
         </CustomButton>
