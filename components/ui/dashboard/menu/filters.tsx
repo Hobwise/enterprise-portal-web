@@ -1,18 +1,11 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
-import { Chip, Spacer, Tab, Tabs } from '@nextui-org/react';
-import React, { useState } from 'react';
-import { IoAddCircleOutline } from 'react-icons/io5';
-import { MdOutlineFileDownload } from 'react-icons/md';
+import { Chip, Tab, Tabs } from '@nextui-org/react';
+import React from 'react';
+
 import { GoPlus } from 'react-icons/go';
 
-const Filters = ({
-  onOpen,
-  menus,
-  handleTabChange,
-  value,
-  handleTabClick,
-}: any) => {
+const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
   return (
     <>
       <div className='flex  absolute w-full  justify-between top-0'>
@@ -52,22 +45,6 @@ const Filters = ({
                 />
               );
             })}
-
-            {/* <Tab
-            key='drinks'
-            title={
-              <div className='flex items-center space-x-2'>
-                <span>Drinks</span>
-                <Chip
-                  classNames={{
-                    base: ` text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
-                  }}
-                >
-                  2
-                </Chip>
-              </div>
-            }
-          /> */}
           </Tabs>
         </div>
         <CustomButton

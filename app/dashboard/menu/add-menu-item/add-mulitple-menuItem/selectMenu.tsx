@@ -58,6 +58,7 @@ const SelectMenu = ({
         placeholder={'E.g drinks'}
         contents={menuArray}
       />
+
       <Spacer y={6} />
       <CustomButton
         className='w-full h-[55px] text-white'

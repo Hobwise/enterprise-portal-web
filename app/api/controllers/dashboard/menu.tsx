@@ -98,6 +98,35 @@ export async function createMenu(businessId: string, payload: payloadMenu) {
     handleError(error);
   }
 }
+export async function createMenuConfiguration(
+  businessId: string,
+  payload: any
+) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.post(DASHBOARD.menuConfiguration, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function getMenuConfiguration(businessId: string) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.menuConfiguration, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 
 export type payloadMenuItem = {
   menuID: string;

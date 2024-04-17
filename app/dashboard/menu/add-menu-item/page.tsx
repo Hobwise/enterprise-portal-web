@@ -332,7 +332,11 @@ const AddItemToMenu = () => {
       <Modal
         size='xl'
         isOpen={isOpenMultipleMenu}
-        onOpenChange={toggleMultipleMenu}
+        onOpenChange={() => {
+          setActiveScreen(1);
+          setSelectedMenu('');
+          toggleMultipleMenu();
+        }}
       >
         <ModalContent>
           {(onClose) => (

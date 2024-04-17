@@ -14,6 +14,7 @@ import {
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { CustomButton } from '@/components/customButton';
+import { IoPhonePortraitOutline } from 'react-icons/io5';
 import {
   Modal,
   ModalContent,
@@ -21,6 +22,8 @@ import {
   useDisclosure,
   Spacer,
   Chip,
+  Button,
+  ButtonGroup,
 } from '@nextui-org/react';
 import { CustomInput } from '@/components/CustomInput';
 import { useRouter } from 'next/navigation';
@@ -154,7 +157,26 @@ const Menu: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          <CustomButton
+          {menus.length > 0 && (
+            <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+              <Button
+                onClick={() => router.push('/dashboard/menu/preview-menu')}
+                className='flex text-grey600 bg-white'
+              >
+                <IoPhonePortraitOutline />
+                <p>Preview menu</p>
+              </Button>
+
+              <Button
+                // onClick={toggleModalDelete}
+                className='flex text-grey600 bg-white'
+              >
+                <MdOutlineFileDownload className='text-[22px]' />
+                <p>Export csv</p>
+              </Button>
+            </ButtonGroup>
+          )}
+          {/* <CustomButton
             // onClick={openAddRoleModal}
             className='py-2 px-4 md:mb-0 text-black border border-[#D0D5DD] mb-4 '
             backgroundColor='bg-white'
@@ -163,7 +185,7 @@ const Menu: React.FC = () => {
               <MdOutlineFileDownload className='text-[22px]' />
               <p>Export csv</p>
             </div>
-          </CustomButton>
+          </CustomButton> */}
 
           <CustomButton
             onClick={
