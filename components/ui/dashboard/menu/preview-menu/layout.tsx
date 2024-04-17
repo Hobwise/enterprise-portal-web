@@ -176,7 +176,7 @@ const Layout: React.FC = () => {
     fetchMenuConfig();
   }, []);
   return (
-    <article className='flex-grow h-full p-5 border border-[#E4E7EC] rounded-lg'>
+    <article className='xl:w-[70%] w-full h-full p-5 border border-[#E4E7EC] rounded-lg'>
       <div className='flex justify-between'>
         <div>
           <h1 className='text-[16px] leading-8 font-semibold'>Layout</h1>
