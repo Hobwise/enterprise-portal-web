@@ -18,26 +18,35 @@ import {
   PaginationItemType,
   Pagination,
   menu,
+  Chip,
 } from '@nextui-org/react';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { IoIosArrowForward } from 'react-icons/io';
-import { columns } from './data';
+import {
+  columns,
+  getTableClasses,
+  statusColorMap,
+  statusDataMap,
+} from './data';
 import Filters from './filters';
 import Link from 'next/link';
 import Image from 'next/image';
-import {
-  convertBase64ToImageURL,
-  saveJsonItemToLocalStorage,
-} from '@/lib/utils';
+
 import { useGlobalContext } from '@/hooks/globalProvider';
-import DeleteMenu from '@/app/dashboard/menu/[menuId]/deleteMenu';
-import EditMenu from '@/app/dashboard/menu/[menuId]/editMenu';
+
 import noImage from '../../../../public/assets/images/no-image.jpg';
 
-const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
-const MenuList = ({ menus, onOpen }: any) => {
+const INITIAL_VISIBLE_COLUMNS = [
+  'name',
+  'amount',
+  'orderID',
+  'placedByPhoneNumber',
+  'status',
+  'actions',
+];
+const OrdersList = ({ orders, onOpen }: any) => {
   const [filterValue, setFilterValue] = React.useState('');
-  const [filteredMenu, setFilteredMenu] = React.useState(menus[0]?.items);
+  const [filteredMenu, setFilteredMenu] = React.useState(orders[0]?.orders);
   const {
     toggleModalDelete,
     isOpenDelete,
@@ -58,8 +67,8 @@ const MenuList = ({ menus, onOpen }: any) => {
   };
 
   const handleTabClick = (index) => {
-    const filteredMenu = menus.filter((item) => item.name === index);
-    setFilteredMenu(filteredMenu[0]?.items);
+    const filteredMenu = orders.filter((item) => item.name === index);
+    setFilteredMenu(filteredMenu[0]?.orders);
   };
 
   const [statusFilter, setStatusFilter] = React.useState('all');
@@ -111,42 +120,38 @@ const MenuList = ({ menus, onOpen }: any) => {
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback((menu, columnKey) => {
-    const cellValue = menu[columnKey];
+  const renderCell = React.useCallback((order, columnKey) => {
+    const cellValue = order[columnKey];
 
     switch (columnKey) {
       case 'name':
         return (
-          <div className='flex '>
-            <Image
-              className='h-[60px] w-[60px] bg-cover rounded-lg'
-              width={60}
-              height={60}
-              alt='menu'
-              unoptimized
-              aria-label='menu'
-              src={
-                menu.image ? `data:image/jpeg;base64,${menu.image}` : noImage
-              }
-            />
-
-            <div className='ml-5 gap-1 grid place-content-center'>
-              <p className='font-bold text-sm'>{menu.itemName}</p>
-              <p className='text-sm'>{menu.itemName}</p>
-            </div>
+          <div className='flex text-textGrey text-sm'>{order.placedByName}</div>
+        );
+      case 'amount':
+        return (
+          <div className='text-textGrey text-sm'>
+            <p>₦{order.totalAmount}</p>
           </div>
         );
-      case 'price':
+      case 'orderID':
+        return <div className='text-textGrey text-sm'>{order.reference}</div>;
+      case 'placedByPhoneNumber':
         return (
-          <div className='text-sm'>
-            <p>₦{menu.price}</p>
+          <div className='text-textGrey text-sm'>
+            {order.placedByPhoneNumber}
           </div>
         );
-      case 'desc':
+      case 'status':
         return (
-          <div className=' text-sm grid  m-0  xl:w-[360px] w-0 flex-col'>
-            {menu.itemDescription}
-          </div>
+          <Chip
+            className='capitalize'
+            color={statusColorMap[order.status]}
+            size='sm'
+            variant='bordered'
+          >
+            {statusDataMap[cellValue]}
+          </Chip>
         );
 
       case 'actions':
@@ -162,9 +167,9 @@ const MenuList = ({ menus, onOpen }: any) => {
                 <DropdownItem aria-label='view'>
                   <Link
                     href={{
-                      pathname: `/dashboard/menu/${menu.itemName}`,
+                      pathname: `/dashboard/order/${order.itemName}`,
                       query: {
-                        itemId: menu.id,
+                        itemId: order.id,
                       },
                     }}
                   >
@@ -234,7 +239,7 @@ const MenuList = ({ menus, onOpen }: any) => {
     return (
       <Filters
         onOpen={onOpen}
-        menus={menus}
+        menus={orders}
         handleTabChange={handleTabChange}
         value={value}
         handleTabClick={handleTabClick}
@@ -351,36 +356,17 @@ const MenuList = ({ menus, onOpen }: any) => {
     );
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
-  const classNames = React.useMemo(
-    () => ({
-      wrapper: ['max-h-[382px]', 'max-w-3xl'],
-      th: ['bg-transparent', 'text-default-500', 'border-b', 'border-divider'],
-      tr: ' border-b border-divider',
-      td: [
-        // changing the rows border radius
-        // first
-        'py-3',
-        'group-data-[first=true]:first:before:rounded-none',
-        'group-data-[first=true]:last:before:rounded-none',
-        // middle
-        'group-data-[middle=true]:before:rounded-none',
-        // last
-        'group-data-[last=true]:first:before:rounded-none',
-        'group-data-[last=true]:last:before:rounded-none',
-      ],
-    }),
-    []
-  );
   return (
-    <section>
+    <section className='border border-primaryGrey rounded-lg'>
       <Table
+        radius='lg'
         isCompact
         removeWrapper
-        hideHeader
-        aria-label='list of menu'
+        allowsSorting
+        aria-label='list of orders'
         bottomContent={bottomContent}
         bottomContentPlacement='outside'
-        classNames={classNames}
+        classNames={getTableClasses()}
         selectedKeys={selectedKeys}
         // selectionMode='multiple'
         sortDescriptor={sortDescriptor}
@@ -400,7 +386,7 @@ const MenuList = ({ menus, onOpen }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No menu items found'} items={sortedItems}>
+        <TableBody emptyContent={'No orders found'} items={sortedItems}>
           {(item) => (
             <TableRow key={item?.name}>
               {(columnKey) => (
@@ -414,4 +400,4 @@ const MenuList = ({ menus, onOpen }: any) => {
   );
 };
 
-export default MenuList;
+export default OrdersList;

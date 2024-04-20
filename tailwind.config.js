@@ -14,6 +14,7 @@ module.exports = {
       white: '#fff',
       black: '#000',
       primaryColor: '#5F35D2',
+      textGrey: '#475367',
       primary100: '#C3ADFF',
       grey400: '#98A2B3',
       grey500: '#667185',

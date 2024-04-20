@@ -286,7 +286,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                 onClick={updateMenuItem}
                 type='submit'
               >
-                {isLoading ? 'Loading' : 'Add to menu'}
+                {isLoading ? 'Loading' : 'Save'}
               </CustomButton>
             </ModalFooter>
           </>

@@ -35,6 +35,7 @@ import EditMenu from './editMenu';
 import hobink from '../../../../public/assets/images/hobink.png';
 import noImage from '../../../../public/assets/images/no-image.jpg';
 import { toast } from 'react-toastify';
+import DeleteVariety from './deleteVariety';
 const MenuDetails = () => {
   const searchParams = useSearchParams();
   const {
@@ -44,6 +45,9 @@ const MenuDetails = () => {
     toggleModalEdit,
     setIsOpenEdit,
     isOpenEdit,
+    isOpenDeleteVariety,
+    setIsOpenDeleteVariety,
+    toggleModalDeleteVariety,
   } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +55,7 @@ const MenuDetails = () => {
   const itemId = searchParams.get('itemId') || null;
   const [menuItem, setMenuItem] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [varietyDetails, setVarietyDetails] = useState(null);
   const [isAvailable, setIsAvailable] = useState<Boolean>(
     menuItem.isAvailabale
   );
@@ -86,7 +91,6 @@ const MenuDetails = () => {
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
-      console.log(data.data.data, 'menuItem');
       setIsAvailable(data?.data?.data.isAvailabale);
       setMenuItem(data?.data?.data);
     } else if (data?.data?.error) {
@@ -101,25 +105,6 @@ const MenuDetails = () => {
   useEffect(() => {
     getMenu();
   }, []);
-
-  if (isLoading) {
-    return (
-      <Container>
-        <div
-          className={`loadingContainer bg-white flex flex-col justify-center items-center`}
-        >
-          <div className='animate-bounce'>
-            <Image
-              src={hobink}
-              style={{ objectFit: 'cover' }}
-              alt='hobink logo'
-            />
-          </div>
-          <p className='text-center text-primaryColor'>Loading...</p>
-        </div>
-      </Container>
-    );
-  }
 
   return (
     <Container>
@@ -183,9 +168,7 @@ const MenuDetails = () => {
       </div>
       <Spacer y={5} />
       <div className='flex  xl:flex-row flex-col'>
-        <div
-          className={`flex-grow  xl:h-auto xl:w-1/2 full Xl:p-8 p-0  xl:mt-0 mt-4 `}
-        >
+        <div className={`h-[564px]  xl:w-1/2 w-full  xl:mt-0 mt-4 `}>
           <Image
             src={
               menuItem?.image
@@ -225,10 +208,10 @@ const MenuDetails = () => {
                 <div>
                   <CustomButton
                     onClick={toggleModal}
-                    className='bg-white text-primaryColor flex gap-1'
+                    className='bg-white text-primaryColor font-[700] flex gap-1'
                   >
-                    <GoPlus className='text-[20px]' />
-                    <span>Create new menu</span>
+                    <GoPlus className='text-[20px] font-[700]' />
+                    <span>Create variety</span>
                   </CustomButton>
                 </div>
               </div>
@@ -237,7 +220,7 @@ const MenuDetails = () => {
                   <>
                     <div
                       key={index}
-                      className='rounded-lg p-3 text-sm text-black  flex'
+                      className='rounded-lg p-3 text-sm text-black  flex justify-between'
                     >
                       <div className='p-1'>
                         <p className=' font-[700]'>{menuItem?.itemName}</p>
@@ -246,6 +229,13 @@ const MenuDetails = () => {
                         <Spacer y={2} />
                         <p className='font-[700]'>₦{item.price}</p>
                       </div>
+                      <RiDeleteBin6Line
+                        onClick={() => {
+                          toggleModalDeleteVariety();
+                          setVarietyDetails(item);
+                        }}
+                        className='text-[20px] text-[#dc2626] mr-4 cursor-pointer'
+                      />
                     </div>
                   </>
                 );
@@ -266,6 +256,12 @@ const MenuDetails = () => {
         menuItem={menuItem}
         isOpenDelete={isOpenDelete}
         toggleModalDelete={toggleModalDelete}
+      />
+      <DeleteVariety
+        getMenu={getMenu}
+        varietyDetails={varietyDetails}
+        isOpenDeleteVariety={isOpenDeleteVariety}
+        toggleModalDeleteVariety={toggleModalDeleteVariety}
       />
       <EditMenu
         getMenu={getMenu}
