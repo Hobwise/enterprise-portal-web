@@ -25,6 +25,7 @@ const AppProvider = ({ children }: any) => {
   const [userData, setUserData] = useState(null);
 
   const [isOpenDelete, setIsOpenDelete] = useState(false);
+  const [isOpenDeleteVariety, setIsOpenDeleteVariety] = useState(false);
   const [isSelectedPreview, setIsSelectedPreview] = useState(true);
   const [activeTile, setActiveTile] = useState<string>('List left');
   const [backgroundColor, setBackgroundColor] = useState('');
@@ -37,6 +38,9 @@ const AppProvider = ({ children }: any) => {
   };
   const toggleModalEdit = () => {
     setIsOpenEdit(!isOpenEdit);
+  };
+  const toggleModalDeleteVariety = () => {
+    setIsOpenDeleteVariety(!isOpenDeleteVariety);
   };
 
   const handleListItemClick = (column: string) => {
@@ -72,6 +76,9 @@ const AppProvider = ({ children }: any) => {
         isOpenDelete,
         isOpenEdit,
         selectedImage,
+        isOpenDeleteVariety,
+        setIsOpenDeleteVariety,
+        toggleModalDeleteVariety,
         setSelectedImage,
         activeTile,
         setIsOpenDelete,

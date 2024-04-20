@@ -8,12 +8,12 @@ import { GoPlus } from 'react-icons/go';
 const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
   return (
     <>
-      <div className='flex  absolute w-full  justify-between top-0'>
-        <div className='overflow-scroll w-[80%]'>
+      <div className='flex relative top-3  w-full border-b border-divider justify-between'>
+        <div>
           <Tabs
             classNames={{
               tabList:
-                'gap-6 w-full relative rounded-none p-0 border-b border-divider',
+                'gap-6 w-full relative rounded-none p-0  overflow-scroll',
               cursor: 'w-full bg-primaryColor',
               tab: 'max-w-fit px-0 h-10',
               tabContent: 'group-data-[selected=true]:text-primaryColor',
@@ -22,7 +22,7 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
             aria-label='menu filter'
             onChange={handleTabChange}
           >
-            {menus.map((menu) => {
+            {menus.map((menu: any) => {
               return (
                 <Tab
                   key={menu.name}

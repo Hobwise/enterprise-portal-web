@@ -29,7 +29,6 @@ import { CustomInput } from '@/components/CustomInput';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import hobink from '../../../public/assets/images/hobink.png';
-import { useGlobalContext } from '@/hooks/globalProvider';
 
 type MenuItem = {
   name: string;
@@ -67,7 +66,7 @@ const Menu: React.FC = () => {
 
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;
-      response.sort((a, b) => a.name.localeCompare(b.name));
+      response.sort((a: MenuItem, b: MenuItem) => a.name.localeCompare(b.name));
 
       setMenus(response);
     } else if (data?.data?.error) {
@@ -105,33 +104,48 @@ const Menu: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <Container>
+        <div
+          className={`loadingContainer bg-white flex flex-col justify-center items-center`}
+        >
+          <div className='animate-bounce'>
+            <Image
+              src={hobink}
+              style={{ objectFit: 'cover' }}
+              alt='hobink logo'
+            />
+          </div>
+          <p className='text-center text-primaryColor'>Loading...</p>
+        </div>
+      </Container>
+    );
+  }
+
   const getScreens = () => {
-    if (menus.length === 0 && !isLoading) {
+    if (menus.length > 0) {
+      return <MenuList menus={menus} onOpen={onOpen} />;
+    } else {
       return <CreateMenu onOpen={onOpen} />;
     }
-    if (menus.length > 0 && !isLoading) {
-      return <MenuList menus={menus} onOpen={onOpen} />;
-    }
 
-    return (
-      <div
-        className={`loadingContainer bg-white flex flex-col justify-center items-center`}
-      >
-        <div className='animate-bounce'>
-          <Image
-            src={hobink}
-            style={{ objectFit: 'cover' }}
-            alt='hobink logo'
-          />
-        </div>
-        <p className='text-center text-primaryColor'>Loading...</p>
-      </div>
-    );
+    // return (
+    //   <div
+    //     className={`loadingContainer bg-white flex flex-col justify-center items-center`}
+    //   >
+    //     <div className='animate-bounce'>
+    //       <Image
+    //         src={hobink}
+    //         style={{ objectFit: 'cover' }}
+    //         alt='hobink logo'
+    //       />
+    //     </div>
+    //     <p className='text-center text-primaryColor'>Loading...</p>
+    //   </div>
+    // );
   };
 
-  // useEffect(() => {
-  //   getAllMenus();
-  // }, []);
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
@@ -145,7 +159,7 @@ const Menu: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {menus.length}
+                  {menus[0].items?.length}
                 </Chip>
               </div>
             ) : (

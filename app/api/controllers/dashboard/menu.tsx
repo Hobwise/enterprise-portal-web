@@ -210,6 +210,21 @@ export async function deleteMenuItem(businessId: string, itemId: string) {
     handleError(error);
   }
 }
+export async function deleteVariety(businessId: string, itemId: string) {
+  const headers = businessId ? { businessId } : {};
+  try {
+    const data = await api.delete(
+      `${DASHBOARD.menuVariety}?itemVarietyId=${itemId}`,
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function editMenuItem(
   businessId: string,
   payload: payloadMenuItem,
