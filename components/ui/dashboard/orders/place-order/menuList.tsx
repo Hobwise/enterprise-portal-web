@@ -141,47 +141,86 @@ const MenuList = () => {
         handleTabClick={handleTabClick}
       />
       <article className='flex mt-6 gap-3'>
-        <div className='grid cursor-pointer xl:max-w-[65%] w-full grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4'>
-          {filteredMenu?.map((menu, index) => (
-            <div
-              title='select menu'
-              onClick={() => handleCardClick(menu)}
-              key={menu.id}
-              className={'relative'}
-            >
-              {selectedItems.find(
-                (selected) => selected.menuID === menu.menuID
-              ) && (
-                <Chip
-                  className='absolute top-2 left-2'
-                  startContent={<CheckIcon size={18} />}
-                  variant='flat'
-                  classNames={{
-                    base: 'bg-primaryColor text-white',
-                  }}
-                >
-                  Selected
-                </Chip>
-              )}
+        <div className='xl:max-w-[65%]'>
+          <div className='grid w-full grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4'>
+            {filteredMenu?.map((menu, index) => (
+              <div
+                title='select menu'
+                onClick={() => handleCardClick(menu)}
+                key={menu.id}
+                className={'relative cursor-pointer'}
+              >
+                {selectedItems.find(
+                  (selected) => selected.menuID === menu.menuID
+                ) && (
+                  <Chip
+                    className='absolute top-2 left-2'
+                    startContent={<CheckIcon size={18} />}
+                    variant='flat'
+                    classNames={{
+                      base: 'bg-primaryColor text-white',
+                    }}
+                  >
+                    Selected
+                  </Chip>
+                )}
 
-              <Image
-                width={163.5}
-                height={211.54}
-                src={
-                  menu?.image
-                    ? `data:image/jpeg;base64,${menu?.image}`
-                    : noImage
-                }
-                alt={index + menu.id}
-                className='w-full h-[211.54px] rounded-lg border border-primaryGrey mb-2 bg-contain'
-              />
-              <div className=''>
-                <h3 className='text-lg font-semibold'>{menu.itemName}</h3>
-                <p className='text-gray-600'>₦{menu.price}</p>
+                <Image
+                  width={163.5}
+                  height={211.54}
+                  src={
+                    menu?.image
+                      ? `data:image/jpeg;base64,${menu?.image}`
+                      : noImage
+                  }
+                  alt={index + menu.id}
+                  className='w-full h-[211.54px] rounded-lg border border-primaryGrey mb-2 bg-contain'
+                />
+                <div className=''>
+                  <h3 className=' font-[500]'>{menu.itemName}</h3>
+                  <p className='text-gray-600 text-[14px] font-[400]'>
+                    ₦{menu.price}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
+          <Spacer y={8} />
+
+          <div className='flex gap-2 justify-between items-center'>
+            <Button
+              size='sm'
+              variant='faded'
+              className='text-black'
+              color='secondary'
+              onPress={() =>
+                setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev))
+              }
+            >
+              Previous
+            </Button>
+            <Pagination
+              total={filteredMenu.length}
+              classNames={{
+                item: '[data-active=true]:bg-primaryColor',
+              }}
+              page={currentPage}
+              onChange={setCurrentPage}
+            />
+            <Button
+              size='sm'
+              variant='faded'
+              className='text-black'
+              color='secondary'
+              onPress={() =>
+                setCurrentPage((prev) => (prev < 10 ? prev + 1 : prev))
+              }
+            >
+              Next
+            </Button>
+          </div>
         </div>
+
         <div className='hidden xl:block bg-[#F7F6FA] p-4 rounded-lg flex-grow'>
           {selectedItems.length > 0 ? (
             <>
@@ -263,41 +302,6 @@ const MenuList = () => {
           )}
         </div>
       </article>
-      <Spacer y={6} />
-      <div className='flex flex-col gap-5'>
-        <div className='flex gap-2 justify-between'>
-          <Button
-            size='sm'
-            variant='faded'
-            className='text-black'
-            color='secondary'
-            onPress={() =>
-              setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev))
-            }
-          >
-            Previous
-          </Button>
-          <Pagination
-            total={filteredMenu.length}
-            classNames={{
-              item: '[data-active=true]:bg-primaryColor',
-            }}
-            page={currentPage}
-            onChange={setCurrentPage}
-          />
-          <Button
-            size='sm'
-            variant='faded'
-            className='text-black'
-            color='secondary'
-            onPress={() =>
-              setCurrentPage((prev) => (prev < 10 ? prev + 1 : prev))
-            }
-          >
-            Next
-          </Button>
-        </div>
-      </div>
     </section>
   );
 };
