@@ -6,6 +6,7 @@ import { Textarea } from '@nextui-org/react';
 interface CustomTextProps {
   label?: string;
   value?: string;
+  defaultValue?: string;
   name?: string;
   errorMessage?: any;
   size?: 'lg' | 'md' | 'sm';
@@ -22,7 +23,7 @@ export const CustomTextArea = ({
   label,
   value,
   placeholder,
-
+  defaultValue,
   hidden,
   name,
   disabled,
@@ -39,6 +40,7 @@ export const CustomTextArea = ({
       key='outside'
       label={label}
       value={value}
+      defaultValue={defaultValue}
       name={name}
       hidden={hidden}
       disabled={disabled}

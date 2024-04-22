@@ -47,12 +47,13 @@ const refreshToken = async () => {
     console.error('Error refreshing token:', error);
   }
 };
-
+const timeout = 5000;
 const api = axios.create({
   baseURL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // timeout,
 });
 
 api.interceptors.request.use(async (config) => {
@@ -80,7 +81,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response.status === 401) {
-      // window.location.href = '/auth/login';
+      notify({
+        title: 'Error!',
+        text: 'Session timeout',
+        type: 'error',
+      });
     }
     return Promise.reject(error);
   }

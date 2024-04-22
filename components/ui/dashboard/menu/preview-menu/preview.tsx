@@ -17,7 +17,7 @@ const Preview = () => {
     backgroundColor,
     imageReference,
   } = useGlobalContext();
-  console.log(selectedImage, 'selectedImage');
+
   const baseString = 'data:image/jpeg;base64,';
   return (
     <article className='xl:block relative overflow-scroll hidden w-[320px] border-[8px]  border-black rounded-[40px] h-[684px] shadow-lg'>

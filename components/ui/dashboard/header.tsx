@@ -18,6 +18,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { IoIosArrowDown } from 'react-icons/io';
 import { FiLogOut } from 'react-icons/fi';
 import { IoIosSettings } from 'react-icons/io';
+import Orders from '../../../public/assets/icons/order.png';
 import {
   Popover,
   PopoverTrigger,
@@ -51,6 +52,17 @@ const Header = () => {
         icon: (
           <Image
             src={Menu}
+            className={'dashboardLogo'}
+            alt='add item to menu'
+          />
+        ),
+      };
+    } else if (pathname.includes('place-order')) {
+      return {
+        title: 'Orders',
+        icon: (
+          <Image
+            src={Orders}
             className={'dashboardLogo'}
             alt='add item to menu'
           />
