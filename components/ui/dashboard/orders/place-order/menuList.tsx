@@ -18,7 +18,7 @@ import { FaMinus } from 'react-icons/fa6';
 type MenuItem = {
   name: string;
   items: Array<{
-    menuID: string;
+    id: string;
     itemName: string;
     itemDescription: string;
     price: number;
@@ -33,7 +33,7 @@ type MenuItem = {
 type MenuData = Array<MenuItem>;
 
 type SelectedItem = {
-  menuID: string;
+  id: string;
   count: number;
   itemName: string;
   price: number;
@@ -50,19 +50,15 @@ const MenuList = () => {
   const [currentPage, setCurrentPage] = React.useState(1);
 
   const handleCardClick = (menuItem: MenuItem) => {
-    const existingItem = selectedItems.find(
-      (item) => item.menuID === menuItem.menuID
-    );
+    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
 
     if (existingItem) {
-      setSelectedItems(
-        selectedItems.filter((item) => item.menuID !== menuItem.menuID)
-      );
+      setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
       setSelectedItems([
         ...selectedItems,
         {
-          menuID: menuItem.menuID,
+          id: menuItem.id,
           count: 1,
           itemName: menuItem.itemName,
           price: menuItem.price,
@@ -72,10 +68,10 @@ const MenuList = () => {
     }
   };
 
-  const handleDecrement = (menuID: string) => {
+  const handleDecrement = (id: string) => {
     setSelectedItems((prevItems) =>
       prevItems.map((item) => {
-        if (item.menuID === menuID && item.count > 1) {
+        if (item.id === id && item.count > 1) {
           return { ...item, count: item.count - 1 };
         }
 
@@ -84,10 +80,10 @@ const MenuList = () => {
     );
   };
 
-  const handleIncrement = (menuID: string) => {
+  const handleIncrement = (id: string) => {
     setSelectedItems((prevItems) =>
       prevItems.map((item) =>
-        item.menuID === menuID ? { ...item, count: item.count + 1 } : item
+        item.id === id ? { ...item, count: item.count + 1 } : item
       )
     );
   };
@@ -150,9 +146,7 @@ const MenuList = () => {
                 key={menu.id}
                 className={'relative cursor-pointer'}
               >
-                {selectedItems.find(
-                  (selected) => selected.menuID === menu.menuID
-                ) && (
+                {selectedItems.find((selected) => selected.id === menu.id) && (
                   <Chip
                     className='absolute top-2 left-2'
                     startContent={<CheckIcon size={18} />}
@@ -256,7 +250,7 @@ const MenuList = () => {
                       </div>
                       <div className='flex items-center'>
                         <Button
-                          onClick={() => handleDecrement(item.menuID)}
+                          onClick={() => handleDecrement(item.id)}
                           isIconOnly
                           radius='sm'
                           variant='faded'
@@ -269,7 +263,7 @@ const MenuList = () => {
                           {item.count}
                         </span>
                         <Button
-                          onClick={() => handleIncrement(item.menuID)}
+                          onClick={() => handleIncrement(item.id)}
                           isIconOnly
                           radius='sm'
                           variant='faded'
