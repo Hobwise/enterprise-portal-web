@@ -35,6 +35,7 @@ import Image from 'next/image';
 import { useGlobalContext } from '@/hooks/globalProvider';
 
 import noImage from '../../../../public/assets/images/no-image.jpg';
+import moment from 'moment';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'name',
@@ -42,6 +43,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'orderID',
   'placedByPhoneNumber',
   'status',
+  'dateCreated',
   'actions',
 ];
 const OrdersList = ({ orders, onOpen }: any) => {
@@ -152,6 +154,12 @@ const OrdersList = ({ orders, onOpen }: any) => {
           >
             {statusDataMap[cellValue]}
           </Chip>
+        );
+      case 'dateCreated':
+        return (
+          <div className='text-textGrey text-sm'>
+            {moment(order.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
         );
 
       case 'actions':

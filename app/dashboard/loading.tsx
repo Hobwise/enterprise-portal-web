@@ -1,25 +1,10 @@
 import Container from '@/components/dashboardContainer';
-import Image from 'next/image';
-import React from 'react';
-import hobink from '../../public/assets/images/hobink.png';
+import { CustomLoading } from '@/lib/utils';
 
-const LoadingSpinner = () => {
+export default function Loading() {
   return (
     <Container>
-      <div
-        className={`loadingContainer bg-white flex flex-col justify-center items-center`}
-      >
-        <div className='animate-bounce'>
-          <Image
-            src={hobink}
-            style={{ objectFit: 'cover' }}
-            alt='hobink logo'
-          />
-        </div>
-        <p className='text-center text-primaryColor'>Loading...</p>
-      </div>
+      <CustomLoading />
     </Container>
   );
-};
-
-export default LoadingSpinner;
+}

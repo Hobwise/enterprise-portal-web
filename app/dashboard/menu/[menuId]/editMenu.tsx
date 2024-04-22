@@ -7,7 +7,6 @@ import {
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
-import SelectInput from '@/components/selectInput';
 import {
   ONEMB,
   getJsonItemFromLocalStorage,
@@ -24,7 +23,7 @@ import {
 } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 
@@ -34,15 +33,13 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
   const [imageError, setImageError] = useState('');
-  const [isAvailable, setIsAvailable] = useState(menuItem.isAvailabale);
-  const [menu, setMenu] = useState([]);
 
   const [menuItemState, setMenuItemState] = useState<payloadMenuItem>({
     itemDescription: menuItem?.itemDescription || '',
     itemName: menuItem?.itemName || '',
     price: +menuItem?.price || 0,
     menuID: menuItem?.menuID || '',
-
+    isAvailable: menuItem?.isAvailabale || true,
     imageReference: '',
   });
   useEffect(() => {
@@ -51,10 +48,10 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
       itemName: menuItem?.itemName,
       price: +menuItem?.price,
       menuID: menuItem?.menuID,
-
+      isAvailable: menuItem?.isAvailabale || true,
       imageReference: '',
     });
-  }, []);
+  }, [menuItem]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -95,7 +92,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
     }
   };
   const handleToggle = async (isSelected: boolean) => {
-    setIsAvailable(isSelected);
+    setMenuItemState({ ...menuItemState, isAvailable: isSelected });
   };
   const updateMenuItem = async () => {
     setIsLoading(true);
@@ -106,6 +103,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
       price: +menuItemState.price,
       isAvailable: menuItemState.isAvailable,
       imageReference: menuItemState.imageReference,
+      hasVariety: menuItem.hasVariety,
     };
 
     const data = await editMenuItem(
@@ -210,6 +208,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                 <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 '>
                   <CustomInput
                     type='text'
+                    // defaultValue={menuItem?.itemName}
                     value={menuItemState.itemName}
                     errorMessage={response?.errors?.itemName?.[0]}
                     onChange={handleInputChange}
@@ -219,6 +218,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                   />
                   <Spacer y={6} />
                   <CustomTextArea
+                    // defaultValue={menuItem?.itemDescription}
                     value={menuItemState.itemDescription}
                     name='itemDescription'
                     errorMessage={response?.errors?.itemDescription?.[0]}
@@ -230,6 +230,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                   <CustomInput
                     type='text'
                     name='price'
+                    // defaultValue={Number(menuItem?.price)}
                     errorMessage={response?.errors?.price?.[0]}
                     onChange={handleInputChange}
                     value={`${menuItemState.price}`}
@@ -240,7 +241,9 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                   <div className='bg-primaryGrey inline-flex px-4 py-2 rounded-lg  gap-3 items-center'>
                     <span
                       className={
-                        !isAvailable ? 'text-primaryColor' : 'text-grey600'
+                        !menuItemState.isAvailable
+                          ? 'text-primaryColor'
+                          : 'text-grey600'
                       }
                     >
                       Unavailable
@@ -248,34 +251,29 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
 
                     <Switch
                       classNames={{
-                        wrapper: 'm-0 !bg-primaryColor',
+                        wrapper: `m-0 ${
+                          menuItemState.isAvailable
+                            ? '!bg-primaryColor'
+                            : 'bg-[#E4E7EC]'
+                        } `,
                       }}
                       name='isAvailable'
-                      defaultChecked={isAvailable}
+                      defaultChecked={menuItemState.isAvailable}
                       onChange={(e) => handleToggle(e.target.checked)}
-                      isSelected={isAvailable}
+                      isSelected={menuItemState.isAvailable}
                       aria-label='Toggle availability'
                     />
 
                     <span
                       className={
-                        isAvailable ? 'text-primaryColor' : 'text-grey600'
+                        menuItemState.isAvailable
+                          ? 'text-primaryColor'
+                          : 'text-grey600'
                       }
                     >
                       Available
                     </span>
                   </div>
-                  {/* <Spacer y={6} />
-                  <SelectInput
-                    errorMessage={response?.errors?.menuID?.[0]}
-                    label={'Menu'}
-                   
-                    name='menuID'
-                    onChange={handleInputChange}
-                    value={menuItemState.menuID}
-                    placeholder={'Menu'}
-                    contents={menu}
-                  /> */}
                 </div>
               </div>
             </ModalBody>

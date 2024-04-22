@@ -86,28 +86,6 @@ const Orders: React.FC = () => {
     getAllOrders();
   }, []);
 
-  const handleCreateMenu = async () => {
-    setLoading(true);
-
-    const data = await createMenu(businessInformation[0]?.businessId, { name });
-    setLoading(false);
-
-    if (data?.data?.isSuccessful) {
-      notify({
-        title: 'Success!',
-        text: 'Menu successfully created',
-        type: 'success',
-      });
-      router.push('/dashboard/menu/add-menu-item');
-    } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
-    }
-  };
-
   if (isLoading) {
     return (
       <Container>
@@ -183,7 +161,7 @@ const Orders: React.FC = () => {
           </CustomButton> */}
 
           <CustomButton
-            // onClick={() => router.push('/dashboard/menu/add-menu-item')}
+            onClick={() => router.push('/dashboard/orders/place-order')}
             className='py-2 px-4 md:mb-0 mb-4 text-white'
             backgroundColor='bg-primaryColor'
           >

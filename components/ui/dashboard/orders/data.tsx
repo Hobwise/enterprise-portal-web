@@ -7,6 +7,7 @@ const columns = [
   { name: 'Phone number', uid: 'placedByPhoneNumber' },
   { name: 'Payment', uid: 'payment' },
   { name: 'Status', uid: 'status' },
+  { name: 'Date Created', uid: 'dateCreated' },
   { name: '', uid: 'actions' },
 ];
 export const statusColorMap: Record<number, 'warning' | 'success' | 'danger'> =

@@ -13,6 +13,7 @@ import {
 interface CustomInputProps {
   type?: string;
   label?: string;
+  defaultValue?: string | number;
   value?: string;
   name?: string;
   errorMessage?: any;
@@ -39,6 +40,7 @@ export const CustomInput = ({
   onChange,
   isRequired,
   startContent,
+  defaultValue,
   classnames = 'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
   errorMessage,
 
@@ -74,6 +76,7 @@ export const CustomInput = ({
       hidden={hidden}
       disabled={disabled}
       onChange={onChange}
+      defaultValue={defaultValue}
       variant='bordered'
       classNames={{
         label: 'text-[#000] font-[500] text-[14px]',

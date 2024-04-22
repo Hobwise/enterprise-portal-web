@@ -3,6 +3,8 @@ import { clsx, type ClassValue } from 'clsx';
 import { toast } from 'react-toastify';
 import { twMerge } from 'tailwind-merge';
 import cookie from 'js-cookie';
+import Image from 'next/image';
+import hobink from '../public/assets/images/hobink.png';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -138,7 +140,7 @@ export const convertBase64ToImageURL = (base64String: string) => {
   }
 
   const blob = new Blob(byteArrays, { type: 'image/png' });
-  console.log(blob, 'blob');
+
   const imageURL = URL.createObjectURL(blob);
 
   return imageURL;
@@ -148,4 +150,17 @@ export const imageCompressOptions = {
   maxSizeMB: 0.2,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
+};
+
+export const CustomLoading = () => {
+  return (
+    <div
+      className={`loadingContainer bg-white flex flex-col justify-center items-center`}
+    >
+      <div className='animate-bounce'>
+        <Image src={hobink} style={{ objectFit: 'cover' }} alt='hobink logo' />
+      </div>
+      <p className='text-center text-primaryColor'>Loading...</p>
+    </div>
+  );
 };

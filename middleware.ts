@@ -16,6 +16,7 @@ export const config = {
     '/dashboard/menu',
     '/dashboard/menu/add-menu-item',
     '/dashboard/menu/preview-menu',
+    '/dashboard/orders/place-order',
     '/dashboard/campaigns',
     '/dashboard/orders',
     '/dashboard/qr-code',
