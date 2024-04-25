@@ -18,7 +18,7 @@ import {
   Skeleton,
   Spacer,
 } from '@nextui-org/react';
-import { CheckIcon, SkeletonLoading, renderItem } from './data';
+import { CheckIcon, SkeletonLoading } from './data';
 import { FaPlus } from 'react-icons/fa6';
 import { FaMinus } from 'react-icons/fa6';
 
