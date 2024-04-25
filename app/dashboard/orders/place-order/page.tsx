@@ -37,7 +37,7 @@ const PlaceOrder = () => {
           </div>
           <CustomButton
             // onClick={() => router.push('/dashboard/orders/place-order')}
-            className='py-2 px-4 md:mb-0 mb-4 text-white'
+            className='py-2 px-4 mb-0 text-white'
             backgroundColor='bg-primaryColor'
           >
             <div className='flex gap-2 items-center justify-center'>

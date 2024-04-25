@@ -13,7 +13,7 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
           <Tabs
             classNames={{
               tabList:
-                'gap-6 w-full relative rounded-none p-0  overflow-scroll',
+                'gap-6  relative rounded-none p-0 w-[70%] xl:w-[100%]  overflow-scroll',
               cursor: 'w-full bg-primaryColor',
               tab: 'max-w-fit px-0 h-10',
               tabContent: 'group-data-[selected=true]:text-primaryColor',

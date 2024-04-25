@@ -17,7 +17,7 @@ import {
 import Image from 'next/image';
 import Success from '../../../../public/assets/images/success.png';
 import {
-  ONEMB,
+  THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
@@ -100,7 +100,7 @@ const AddItemToMenu = () => {
   const handleImageChange = async (event: any) => {
     if (event.target.files) {
       const file = event.target.files[0];
-      if (file.size > ONEMB) {
+      if (file.size > THREEMB) {
         return setImageError('File too large');
       }
 
@@ -201,7 +201,6 @@ const AddItemToMenu = () => {
           <CustomTextArea
             value={menuItem.itemDescription}
             name='itemDescription'
-            errorMessage={response?.errors?.itemDescription?.[0]}
             onChange={handleInputChange}
             label='Add a description'
             placeholder=''
@@ -219,11 +218,11 @@ const AddItemToMenu = () => {
           <Spacer y={6} />
           <SelectInput
             errorMessage={response?.errors?.menuID?.[0]}
-            label={'Menu'}
+            label={'Select a menu'}
             name='menuID'
             onChange={handleInputChange}
             value={menuItem.menuID}
-            placeholder={'Menu'}
+            placeholder={'Select...'}
             contents={menu}
           />
         </div>
@@ -233,7 +232,7 @@ const AddItemToMenu = () => {
           <label className='flex xl:m-4 m-0 justify-between  bg-white'>
             <p className='font-[500] text-[14px]'>Images</p>
             <p className='text-[#475467] text-[14px] font-[400]'>
-              Maximum of 1MB
+              Maximum of 3MB
             </p>
           </label>
           <div

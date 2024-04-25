@@ -9,7 +9,7 @@ import { SketchPicker } from 'react-color';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import {
-  ONEMB,
+  THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
@@ -109,7 +109,7 @@ const Layout: React.FC = () => {
   const handleImageChange = async (event: any) => {
     if (event.target.files) {
       const file = event.target.files[0];
-      if (file.size > ONEMB) {
+      if (file.size > THREEMB) {
         return setImageError('File too large');
       }
 

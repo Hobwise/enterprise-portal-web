@@ -324,13 +324,6 @@ const OrdersList = ({ orders, onOpen }: any) => {
   const bottomContent = React.useMemo(() => {
     return (
       <div className='py-2 px-2 flex justify-between items-center'>
-        <span className='w-[30%] text-small text-black'>
-          Page{' '}
-          {selectedKeys === 'all'
-            ? 'All items selected'
-            : `${selectedKeys.size} of ${filteredItems.length} `}
-        </span>
-
         <Pagination
           disableCursorAnimation
           showControls

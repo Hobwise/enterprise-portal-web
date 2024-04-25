@@ -3,7 +3,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
 import {
-  ONEMB,
+  THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
@@ -64,7 +64,7 @@ const Profile = () => {
   const handleFileChange = async (event: any) => {
     if (event.target.files) {
       const file = event.target.files[0];
-      if (file.size > ONEMB) {
+      if (file.size > THREEMB) {
         return toast.error('File too large');
       }
 

@@ -1,7 +1,14 @@
 'use client';
-import { Button, Pagination } from '@nextui-org/react';
+import {
+  Button,
+  Card,
+  Pagination,
+  PaginationItemType,
+  Skeleton,
+  cn,
+} from '@nextui-org/react';
 import React from 'react';
-
+import { IoIosArrowForward } from 'react-icons/io';
 export const CheckIcon = ({ size, height, width, ...props }: any) => {
   return (
     <svg
@@ -20,58 +27,24 @@ export const CheckIcon = ({ size, height, width, ...props }: any) => {
   );
 };
 
-export const CustomPagination = ({
-  selectedKeys,
-  filteredItems,
-  page,
-  pages,
-  setPage,
-  renderItem,
-  onPreviousPage,
-  items,
-  onNextPage,
-  hasSearchFilter,
-}: any) => {
-  return React.useMemo(() => {
-    return (
-      <div className='py-2 px-2 flex justify-between items-center'>
-        <span className='w-[30%] text-small text-black'>
-          Page{' '}
-          {selectedKeys === 'all'
-            ? 'All items selected'
-            : `${selectedKeys?.size} of ${filteredItems?.length} `}
-        </span>
-
-        <Pagination
-          disableCursorAnimation
-          showControls
-          page={page}
-          total={pages}
-          onChange={setPage}
-          className='gap-2'
-          radius='full'
-          renderItem={renderItem}
-          variant='light'
-        />
-        <div className='hidden sm:flex w-[30%] justify-end gap-2'>
-          <Button
-            isDisabled={pages === 1}
-            size='sm'
-            variant='flat'
-            onPress={onPreviousPage}
-          >
-            Previous
-          </Button>
-          <Button
-            isDisabled={pages === 1}
-            size='sm'
-            variant='flat'
-            onPress={onNextPage}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    );
-  }, [selectedKeys, items?.length, page, pages, hasSearchFilter]);
+export const SkeletonLoading = () => {
+  return (
+    <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
+      {[1, 2, 3, 4, 5, 6].map((item) => (
+        <Card key={item} className='space-y-2 p-2' radius='lg'>
+          <Skeleton className='rounded-lg animate-pulse'>
+            <div className='h-20 rounded-lg bg-default-300'></div>
+          </Skeleton>
+          <div className='space-y-2'>
+            <Skeleton className='w-3/5 rounded-lg animate-pulse'>
+              <div className='h-3 w-3/5 rounded-lg bg-default-200'></div>
+            </Skeleton>
+            <Skeleton className='w-4/5 rounded-lg animate-pulse'>
+              <div className='h-3 w-4/5 rounded-lg bg-default-200'></div>
+            </Skeleton>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
 };
