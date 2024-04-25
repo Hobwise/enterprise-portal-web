@@ -8,7 +8,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
 import {
-  ONEMB,
+  THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
@@ -81,7 +81,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
   const handleImageChange = async (event: any) => {
     if (event.target.files) {
       const file = event.target.files[0];
-      if (file.size > ONEMB) {
+      if (file.size > THREEMB) {
         return setImageError('File too large');
       }
 
@@ -159,7 +159,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                   <label className='flex xl:my-2 m-0 justify-between  bg-white'>
                     <p className='font-[500] text-[14px] text-black'>Images</p>
                     <p className='text-[#475467] text-[14px] font-[400]'>
-                      Maximum of 1MB
+                      Maximum of 3MB
                     </p>
                   </label>
                   <div
@@ -221,7 +221,6 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                     // defaultValue={menuItem?.itemDescription}
                     value={menuItemState.itemDescription}
                     name='itemDescription'
-                    errorMessage={response?.errors?.itemDescription?.[0]}
                     onChange={handleInputChange}
                     label='Add a description'
                     placeholder=''

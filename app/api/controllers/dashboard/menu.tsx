@@ -4,7 +4,6 @@ import api, { handleError } from '../../apiService';
 import { inputNameValidation } from '../validations';
 
 const menuItemSchema = z.object({
-  itemDescription: z.string().trim().min(1, 'Description is required'),
   itemName: z.string().trim().min(1, 'Item name is required'),
   price: z.number().min(1, 'Price is required'),
   menuID: z.string().trim().min(1, 'Select a menu'),
@@ -141,6 +140,7 @@ export type payloadMenuVariety = {
   unit: string;
   itemID?: string;
   menuID?: string;
+
   currency?: string;
 };
 export async function createMenuItem(
@@ -148,7 +148,6 @@ export async function createMenuItem(
   payload: payloadMenuItem
 ) {
   const validatedFields = menuItemSchema.safeParse({
-    itemDescription: payload?.itemDescription,
     itemName: payload?.itemName,
     price: payload?.price,
     menuID: payload.menuID,
@@ -231,7 +230,6 @@ export async function editMenuItem(
   itemId: string
 ) {
   const validatedFields = menuItemSchema.safeParse({
-    itemDescription: payload?.itemDescription,
     itemName: payload?.itemName,
     price: payload?.price,
     menuID: payload.menuID,

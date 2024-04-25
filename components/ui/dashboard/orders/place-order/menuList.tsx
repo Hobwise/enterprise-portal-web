@@ -10,8 +10,15 @@ import {
 import Image from 'next/image';
 import noImage from '../../../../../public/assets/images/no-image.jpg';
 import noMenu from '../../../../../public/assets/images/no-menu.png';
-import { Button, Chip, Pagination, Spacer } from '@nextui-org/react';
-import { CheckIcon } from './data';
+import {
+  Button,
+  Card,
+  Chip,
+  Pagination,
+  Skeleton,
+  Spacer,
+} from '@nextui-org/react';
+import { CheckIcon, SkeletonLoading, renderItem } from './data';
 import { FaPlus } from 'react-icons/fa6';
 import { FaMinus } from 'react-icons/fa6';
 
@@ -47,7 +54,18 @@ const MenuList = () => {
   const [filteredMenu, setFilteredMenu] = React.useState([]);
   const [value, setValue] = useState('');
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
-  const [currentPage, setCurrentPage] = React.useState(1);
+
+  const [page, setPage] = React.useState(1);
+  const rowsPerPage = 12;
+
+  const pages = Math.ceil(filteredMenu.length / rowsPerPage);
+
+  const items = React.useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredMenu.slice(start, end);
+  }, [page, filteredMenu]);
 
   const handleCardClick = (menuItem: MenuItem) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
@@ -125,10 +143,6 @@ const MenuList = () => {
     getAllMenus();
   }, []);
 
-  if (isLoading) {
-    return <CustomLoading />;
-  }
-
   return (
     <section>
       <Filters
@@ -137,48 +151,54 @@ const MenuList = () => {
         handleTabClick={handleTabClick}
       />
       <article className='flex mt-6 gap-3'>
-        <div className='xl:max-w-[65%]'>
-          <div className='grid w-full grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4'>
-            {filteredMenu?.map((menu, index) => (
-              <div
-                title='select menu'
-                onClick={() => handleCardClick(menu)}
-                key={menu.id}
-                className={'relative cursor-pointer'}
-              >
-                {selectedItems.find((selected) => selected.id === menu.id) && (
-                  <Chip
-                    className='absolute top-2 left-2'
-                    startContent={<CheckIcon size={18} />}
-                    variant='flat'
-                    classNames={{
-                      base: 'bg-primaryColor text-white',
-                    }}
-                  >
-                    Selected
-                  </Chip>
-                )}
+        <div className='xl:max-w-[65%] w-full'>
+          {isLoading ? (
+            <SkeletonLoading />
+          ) : (
+            <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
+              {items?.map((menu, index) => (
+                <div
+                  title='select menu'
+                  onClick={() => handleCardClick(menu)}
+                  key={menu.id}
+                  className={'relative cursor-pointer'}
+                >
+                  {selectedItems.find(
+                    (selected) => selected.id === menu.id
+                  ) && (
+                    <Chip
+                      className='absolute top-2 left-2'
+                      startContent={<CheckIcon size={18} />}
+                      variant='flat'
+                      classNames={{
+                        base: 'bg-primaryColor text-white text-[12px]',
+                      }}
+                    >
+                      Selected
+                    </Chip>
+                  )}
 
-                <Image
-                  width={163.5}
-                  height={211.54}
-                  src={
-                    menu?.image
-                      ? `data:image/jpeg;base64,${menu?.image}`
-                      : noImage
-                  }
-                  alt={index + menu.id}
-                  className='w-full h-[211.54px] rounded-lg border border-primaryGrey mb-2 bg-contain'
-                />
-                <div className=''>
-                  <h3 className=' font-[500]'>{menu.itemName}</h3>
-                  <p className='text-gray-600 text-[14px] font-[400]'>
-                    ₦{menu.price}
-                  </p>
+                  <Image
+                    width={163.5}
+                    height={100.54}
+                    src={
+                      menu?.image
+                        ? `data:image/jpeg;base64,${menu?.image}`
+                        : noImage
+                    }
+                    alt={index + menu.id}
+                    className='w-full md:h-[100.54px] h-[150px] rounded-lg border border-primaryGrey mb-2 bg-contain'
+                  />
+                  <div className=''>
+                    <h3 className='text-[14px] font-[500]'>{menu.itemName}</h3>
+                    <p className='text-gray-600 text-[13px] font-[400]'>
+                      ₦{menu.price}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
           <Spacer y={8} />
 
           <div className='flex gap-2 justify-between items-center'>
@@ -187,28 +207,22 @@ const MenuList = () => {
               variant='faded'
               className='text-black'
               color='secondary'
-              onPress={() =>
-                setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev))
-              }
+              onPress={() => setPage((prev) => (prev > 1 ? prev - 1 : prev))}
             >
               Previous
             </Button>
             <Pagination
-              total={filteredMenu.length}
-              classNames={{
-                item: '[data-active=true]:bg-primaryColor',
-              }}
-              page={currentPage}
-              onChange={setCurrentPage}
+              isCompact
+              page={page}
+              total={pages}
+              onChange={setPage}
             />
             <Button
               size='sm'
               variant='faded'
               className='text-black'
               color='secondary'
-              onPress={() =>
-                setCurrentPage((prev) => (prev < 10 ? prev + 1 : prev))
-              }
+              onPress={() => setPage((prev) => (prev < 10 ? prev + 1 : prev))}
             >
               Next
             </Button>
@@ -240,12 +254,10 @@ const MenuList = () => {
                             alt='uploaded image(s)'
                           />
                         </div>
-                        <div className='p-3 flex flex-col justify-center'>
-                          <p className='text-grey600 text-sm'>
-                            {item.itemName}
-                          </p>
+                        <div className='p-3 flex flex-col text-sm justify-center'>
+                          <p className='text-grey600 '>{item.itemName}</p>
                           <Spacer y={2} />
-                          <p className='font-[700]'>₦{item?.price}</p>
+                          <p className='font-[600]'>₦{item?.price}</p>
                         </div>
                       </div>
                       <div className='flex items-center'>
@@ -284,7 +296,7 @@ const MenuList = () => {
               </div>
             </>
           ) : (
-            <div className='flex flex-col h-full  font-[600] justify-center items-center'>
+            <div className='flex flex-col h-full rounded-xl font-[500] justify-center items-center'>
               <Image
                 className='w-[50px] h-[50px]'
                 src={noMenu}

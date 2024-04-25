@@ -94,3 +94,7 @@ input:-webkit-autofill:focus {
   min-height: 65px !important;
   margin-left: 5px !important;
 }
+
+.custom-pagination-item[data-active='true'] {
+  background-color: #5f35d2;
+}

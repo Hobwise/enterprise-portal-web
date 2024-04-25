@@ -3,11 +3,18 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { motion, useCycle } from 'framer-motion';
 import { SIDENAV_ITEMS } from './constants';
 import { SideNavItem } from './types';
+import { Avatar, Divider } from '@nextui-org/react';
+import {
+  clearItemLocalStorage,
+  getJsonItemFromLocalStorage,
+  removeCookie,
+} from '@/lib/utils';
+import { FiLogOut } from 'react-icons/fi';
 
 type MenuItemWithSubMenuProps = {
   item: SideNavItem;
@@ -34,6 +41,9 @@ const sidebar = {
 };
 
 const HeaderMobile = () => {
+  const router = useRouter();
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const { firstName, lastName, email } = userInformation;
   const pathname = usePathname();
   const containerRef = useRef(null);
   const { height } = useDimensions(containerRef);
@@ -86,6 +96,19 @@ const HeaderMobile = () => {
         })}
       </motion.ul>
       <MenuToggle toggle={toggleOpen} />
+      <div
+        onClick={() => {
+          clearItemLocalStorage('userInformation');
+          removeCookie('token');
+          router.push('/auth/login');
+        }}
+        className={`cursor-pointer  gap-3 text-xl font-bold text-danger-500 ${
+          isOpen ? 'flex ' : 'hidden'
+        } items-center absolute bottom-[20%] left-[40px]`}
+      >
+        <span>Logout</span>
+        <FiLogOut />
+      </div>
     </motion.nav>
   );
 };

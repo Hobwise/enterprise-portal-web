@@ -144,7 +144,7 @@ const MenuList = ({ menus, onOpen }: any) => {
         );
       case 'desc':
         return (
-          <div className=' text-sm grid  m-0  xl:w-[360px] w-0 flex-col'>
+          <div className=' text-sm grid  m-0  w-[360px]   flex-col'>
             {menu.itemDescription}
           </div>
         );
@@ -161,6 +161,7 @@ const MenuList = ({ menus, onOpen }: any) => {
               <DropdownMenu className='text-black'>
                 <DropdownItem aria-label='view'>
                   <Link
+                    className='flex w-full'
                     href={{
                       pathname: `/dashboard/menu/${menu.itemName}`,
                       query: {
@@ -311,13 +312,6 @@ const MenuList = ({ menus, onOpen }: any) => {
   const bottomContent = React.useMemo(() => {
     return (
       <div className='py-2 px-2 flex justify-between items-center'>
-        <span className='w-[30%] text-small text-black'>
-          Page{' '}
-          {selectedKeys === 'all'
-            ? 'All items selected'
-            : `${selectedKeys.size} of ${filteredItems.length} `}
-        </span>
-
         <Pagination
           disableCursorAnimation
           showControls

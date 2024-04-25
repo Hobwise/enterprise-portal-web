@@ -14,7 +14,7 @@ import toast from 'react-hot-toast';
 import {
   notify,
   imageCompressOptions,
-  ONEMB,
+  THREEMB,
   getJsonItemFromLocalStorage,
 } from '@/lib/utils';
 import imageCompression from 'browser-image-compression';
@@ -51,7 +51,7 @@ const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
   const handleFileChange = async (event: any) => {
     if (event.target.files) {
       const file = event.target.files[0];
-      if (file.size > ONEMB) {
+      if (file.size > THREEMB) {
         return setImageError('File too large');
       }
       if (

@@ -8,10 +8,11 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
       <div className='flex  relative w-full top-4 px-3 py-1 border-b border-primaryGrey justify-between'>
         <Tabs
           classNames={{
-            tabList: 'gap-10 w-full relative rounded-none p-0 overflow-scroll',
+            tabList:
+              'gap-6  relative rounded-none p-0 lg:w-[70%] w-[100%]  overflow-scroll',
             cursor: 'w-full bg-primaryColor',
-            tab: 'px-0 h-10 ',
-            tabContent: 'group-data-[selected=true]:text-primaryColor m-0',
+            tab: 'max-w-fit px-0 h-10',
+            tabContent: 'group-data-[selected=true]:text-primaryColor',
           }}
           variant={'underlined'}
           aria-label='menu filter'

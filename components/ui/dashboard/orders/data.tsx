@@ -27,7 +27,7 @@ const getTableClasses = () => {
   return React.useMemo(
     () => ({
       wrapper: ['max-h-[382px]', 'max-w-3xl'],
-      //   thead: 'bg-[#E4E7EC] !rounded-[0px]',
+
       th: [
         'bg-transparent',
         'text-default-500',

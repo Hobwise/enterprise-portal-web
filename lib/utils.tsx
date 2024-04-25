@@ -121,6 +121,7 @@ export function getInitials(name: string) {
   return initials.join('').toUpperCase();
 }
 export const ONEMB = 1048576;
+export const THREEMB = 3145728;
 export const convertBase64ToImageURL = (base64String: string) => {
   const base64WithoutPrefix = base64String.replace(
     /^data:image\/[a-z]+;base64,/,

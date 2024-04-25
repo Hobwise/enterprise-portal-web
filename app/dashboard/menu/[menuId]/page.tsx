@@ -10,6 +10,7 @@ import {
   ModalContent,
   Spacer,
   Switch,
+  Tooltip,
   useDisclosure,
 } from '@nextui-org/react';
 import Link from 'next/link';
@@ -229,13 +230,17 @@ const MenuDetails = () => {
                         <Spacer y={2} />
                         <p className='font-[700]'>₦{item.price}</p>
                       </div>
-                      <RiDeleteBin6Line
-                        onClick={() => {
-                          toggleModalDeleteVariety();
-                          setVarietyDetails(item);
-                        }}
-                        className='text-[20px] text-[#dc2626] mr-4 cursor-pointer'
-                      />
+                      <Tooltip color='danger' content={'Delete'}>
+                        <span>
+                          <RiDeleteBin6Line
+                            onClick={() => {
+                              toggleModalDeleteVariety();
+                              setVarietyDetails(item);
+                            }}
+                            className='text-[20px] text-[#dc2626] mr-4 cursor-pointer'
+                          />
+                        </span>
+                      </Tooltip>
                     </div>
                   </>
                 );
