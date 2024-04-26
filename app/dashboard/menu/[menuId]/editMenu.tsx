@@ -1,4 +1,5 @@
 import {
+  deleteFile,
   editMenuItem,
   getMenu,
   payloadMenuItem,
@@ -94,8 +95,9 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
   const handleToggle = async (isSelected: boolean) => {
     setMenuItemState({ ...menuItemState, isAvailable: isSelected });
   };
-  const updateMenuItem = async () => {
-    setIsLoading(true);
+
+  const updateMenuItem = async (loading = true) => {
+    loading && setIsLoading(true);
     const payload = {
       menuID: menuItemState.menuID,
       itemName: menuItemState.itemName,
@@ -157,7 +159,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
               <div className='flex xl:flex-row flex-col'>
                 <div className={`flex-grow xl:h-auto xl:w-1/2 full mt-4`}>
                   <label className='flex xl:my-2 m-0 justify-between  bg-white'>
-                    <p className='font-[500] text-[14px] text-black'>Images</p>
+                    <p className='font-[500] text-[14px] text-black'>Image</p>
                     <p className='text-[#475467] text-[14px] font-[400]'>
                       Maximum of 3MB
                     </p>
@@ -168,14 +170,22 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                     }   text-sm font-[400] text-center`}
                   >
                     {selectedImage ? (
-                      <Image
-                        src={selectedImage}
-                        width={150}
-                        height={150}
-                        className='object-cover h-full rounded-lg w-full'
-                        aria-label='uploaded image'
-                        alt='uploaded image(s)'
-                      />
+                      <>
+                        <Image
+                          src={selectedImage}
+                          width={150}
+                          height={150}
+                          className='object-cover h-full rounded-lg w-full'
+                          aria-label='uploaded image'
+                          alt='uploaded image(s)'
+                        />
+                        <span
+                          onClick={() => setSelectedImage('')}
+                          className='text-danger-500 float-left cursor-pointer'
+                        >
+                          Remove
+                        </span>
+                      </>
                     ) : (
                       <div className='flex flex-col h-full justify-center items-center'>
                         <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>

@@ -78,10 +78,10 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
                   />
                 </div>
                 <div className='p-3'>
-                  {/* <p className=' font-[700]'>{menuItem?.name}</p>
-                  <Spacer y={2} /> */}
+                  <p className=' font-[700]'>{menuItem?.menuName}</p>
+                  <Spacer y={1} />
                   <p className='text-grey600 text-sm'>{menuItem?.itemName}</p>
-                  <Spacer y={2} />
+                  <Spacer y={1} />
                   <p className='font-[700]'>₦{menuItem?.price}</p>
                 </div>
               </div>

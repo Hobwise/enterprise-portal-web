@@ -131,7 +131,7 @@ const MenuList = ({ menus, onOpen }: any) => {
             />
 
             <div className='ml-5 gap-1 grid place-content-center'>
-              <p className='font-bold text-sm'>{menu.itemName}</p>
+              <p className='font-bold text-sm'>{menu.menuName}</p>
               <p className='text-sm'>{menu.itemName}</p>
             </div>
           </div>

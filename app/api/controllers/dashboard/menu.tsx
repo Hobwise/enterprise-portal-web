@@ -49,6 +49,18 @@ export async function uploadFile(businessId: string, formData: FormData) {
     handleError(error);
   }
 }
+export async function deleteFile(businessId: string, referenceId: string) {
+  const headers = businessId ? { businessId, referenceId } : {};
+  try {
+    const data = await api.delete(DASHBOARD.removeFile, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function uploadFilemultipleMenuItem(
   businessId: string,
   formData: FormData,

@@ -32,6 +32,7 @@ import hobink from '../../../public/assets/images/hobink.png';
 import OrdersList from '@/components/ui/dashboard/orders/order';
 import { getOrderByBusiness } from '@/app/api/controllers/dashboard/orders';
 import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
+import { downloadCSV } from '@/lib/downloadToExcel';
 
 type OrderItem = {
   name: string;
@@ -113,6 +114,16 @@ const Orders: React.FC = () => {
     }
   };
 
+  const newArray = orders.flatMap((item) =>
+    item.orders.map((order) => ({
+      placedByName: order.placedByName,
+      reference: order.reference,
+      totalAmount: order.totalAmount,
+      dateCreated: order.dateCreated,
+      paymentReference: order.paymentReference,
+      placedByPhoneNumber: order.placedByPhoneNumber,
+    }))
+  );
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
@@ -141,7 +152,7 @@ const Orders: React.FC = () => {
           {orders.length > 0 && (
             <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
               <Button
-                // onClick={toggleModalDelete}
+                onClick={() => downloadCSV(newArray)}
                 className='flex text-grey600 bg-white'
               >
                 <MdOutlineFileDownload className='text-[22px]' />

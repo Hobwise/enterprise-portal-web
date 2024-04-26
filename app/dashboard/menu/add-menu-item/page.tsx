@@ -24,6 +24,7 @@ import {
 } from '@/lib/utils';
 import {
   createMenuItem,
+  deleteFile,
   getMenu,
   payloadMenuItem,
   uploadFile,
@@ -32,6 +33,7 @@ import { useRouter } from 'next/navigation';
 import imageCompression from 'browser-image-compression';
 import SelectMenu from './add-mulitple-menuItem/selectMenu';
 import AddMultipleMenu from './add-mulitple-menuItem/addMultipleMenu';
+import toast from 'react-hot-toast';
 
 const AddItemToMenu = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -87,6 +89,24 @@ const AddItemToMenu = () => {
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
       setMenuItem({ ...menuItem, imageReference: data.data.data });
+    } else if (data?.data?.error) {
+      setImageError(data?.data?.error);
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
+  const removeUploadedFile = async () => {
+    const data = await deleteFile(
+      businessInformation[0]?.businessId,
+      menuItem.imageReference
+    );
+
+    if (data?.data?.isSuccessful) {
+      setSelectedImage('');
+      toast.success('Image removed');
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
       notify({
@@ -230,7 +250,7 @@ const AddItemToMenu = () => {
           className={`flex-grow xl:h-auto xl:w-1/2 full Xl:p-8 p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
         >
           <label className='flex xl:m-4 m-0 justify-between  bg-white'>
-            <p className='font-[500] text-[14px]'>Images</p>
+            <p className='font-[500] text-[14px]'>Image</p>
             <p className='text-[#475467] text-[14px] font-[400]'>
               Maximum of 3MB
             </p>
@@ -241,34 +261,44 @@ const AddItemToMenu = () => {
             }   text-sm font-[400] text-center`}
           >
             {selectedImage ? (
-              <Image
-                src={selectedImage}
-                width={200}
-                height={200}
-                className='object-cover h-full rounded-md w-full'
-                aria-label='uploaded image'
-                alt='uploaded image(s)'
-              />
-            ) : (
-              <div className='flex flex-col h-full justify-center items-center'>
-                <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
-                  <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                  <span>
-                    Drag and drop files to upload or{' '}
-                    <span className='text-primaryColor'>click here</span> to
-                    browse
-                  </span>
-                </div>
-                <input
-                  title='upload an image'
-                  alt='upload a menu'
-                  type='file'
-                  id='menu-upload'
-                  accept='image/*'
-                  onChange={(event) => handleImageChange(event)}
-                  className='h-[100%] opacity-0 cursor-pointer absolute top-0'
+              <>
+                <Image
+                  src={selectedImage}
+                  width={200}
+                  height={200}
+                  className='object-cover h-full rounded-md w-full'
+                  aria-label='uploaded image'
+                  alt='uploaded image(s)'
                 />
-              </div>
+                <span
+                  onClick={removeUploadedFile}
+                  className='text-danger-500 float-left cursor-pointer'
+                >
+                  Remove
+                </span>
+              </>
+            ) : (
+              <>
+                <div className='flex flex-col h-full justify-center items-center'>
+                  <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
+                    <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
+                    <span>
+                      Drag and drop files to upload or{' '}
+                      <span className='text-primaryColor'>click here</span> to
+                      browse
+                    </span>
+                  </div>
+                  <input
+                    title='upload an image'
+                    alt='upload a menu'
+                    type='file'
+                    id='menu-upload'
+                    accept='image/*'
+                    onChange={(event) => handleImageChange(event)}
+                    className='h-[100%] opacity-0 cursor-pointer absolute top-0'
+                  />
+                </div>
+              </>
             )}
 
             <span className='text-sm float-left text-danger-600'>
