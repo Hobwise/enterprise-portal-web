@@ -184,7 +184,7 @@ const MenuDetails = () => {
           />
         </div>
         <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 '>
-          <h1 className='text-[28px] font-semibold'>{menuItem?.itemName}</h1>
+          <h1 className='text-[28px] font-semibold'>{menuItem?.menuName}</h1>
           <Spacer y={5} />
           <p className='text-sm font-sm text-grey600 xl:w-[360px] w-full'>
             {menuItem?.itemDescription}

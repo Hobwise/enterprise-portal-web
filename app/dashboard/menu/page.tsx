@@ -29,6 +29,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import hobink from '../../../public/assets/images/hobink.png';
+import { downloadCSV } from '@/lib/downloadToExcel';
 
 type MenuItem = {
   name: string;
@@ -129,23 +130,27 @@ const Menu: React.FC = () => {
     } else {
       return <CreateMenu onOpen={onOpen} />;
     }
-
-    // return (
-    //   <div
-    //     className={`loadingContainer bg-white flex flex-col justify-center items-center`}
-    //   >
-    //     <div className='animate-bounce'>
-    //       <Image
-    //         src={hobink}
-    //         style={{ objectFit: 'cover' }}
-    //         alt='hobink logo'
-    //       />
-    //     </div>
-    //     <p className='text-center text-primaryColor'>Loading...</p>
-    //   </div>
-    // );
   };
-
+  const newArray = menus?.map((item) => {
+    const {
+      menuName,
+      itemName,
+      itemDescription,
+      price,
+      currency,
+      isAvailabale,
+      hasVariety,
+    } = item.items[0];
+    return {
+      menuName,
+      itemName,
+      price,
+      itemDescription,
+      currency,
+      isAvailabale,
+      hasVariety,
+    };
+  });
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
@@ -182,7 +187,7 @@ const Menu: React.FC = () => {
               </Button>
 
               <Button
-                // onClick={toggleModalDelete}
+                onClick={() => downloadCSV(newArray)}
                 className='flex text-grey600 bg-white'
               >
                 <MdOutlineFileDownload className='text-[22px]' />
