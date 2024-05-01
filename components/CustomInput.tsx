@@ -81,9 +81,11 @@ export const CustomInput = ({
       classNames={{
         label: 'text-[#000] font-[500] text-[14px]',
         base: 'bg-none',
-        inputWrapper: [`${classnames} ${disabled && 'bg-secondaryGrey'} `],
-        innerWrapper: ` bg-none border-none`,
-        input: ['bg-none', 'text-black placeholder:text-[14px]'],
+        inputWrapper: [
+          `${classnames} ${disabled ? 'bg-secondaryGrey' : 'bg-white'} `,
+        ],
+        innerWrapper: `bg-none border-none`,
+        input: ['bg-none', 'text-black placeholder:text-[14px] bg-none'],
       }}
       aria-haspopup='false'
       autoCorrect='off'

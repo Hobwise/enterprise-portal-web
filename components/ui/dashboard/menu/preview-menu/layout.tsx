@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { FaList } from 'react-icons/fa';
 import { FaSquare } from 'react-icons/fa6';
 import { PiSquaresFourFill } from 'react-icons/pi';
-import { Divider, Switch } from '@nextui-org/react';
+import { Chip, Divider, Spacer, Switch } from '@nextui-org/react';
 import { CustomButton } from '@/components/customButton';
 import { SketchPicker } from 'react-color';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
@@ -20,6 +20,7 @@ import {
   uploadFile,
 } from '@/app/api/controllers/dashboard/menu';
 import imageCompression from 'browser-image-compression';
+import { CheckIcon } from '../../orders/place-order/data';
 
 interface Column {
   name: string;
@@ -41,6 +42,8 @@ const Layout: React.FC = () => {
     setImageReference,
     selectedImage,
     setSelectedImage,
+    selectedTextColor,
+    setSelectedTextColor,
   } = useGlobalContext();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +78,7 @@ const Layout: React.FC = () => {
       useBackground: isSelectedPreview,
       backgroundColour: backgroundColor,
       imageRef: imageReference,
+      textColour: selectedTextColor,
     };
 
     const data = await createMenuConfiguration(
@@ -118,6 +122,10 @@ const Layout: React.FC = () => {
       formData.append('file', compressedFile);
       menuFileUpload(formData, file);
     }
+  };
+
+  const handleClick = (textColor: string) => {
+    setSelectedTextColor(textColor);
   };
 
   const previewColumn: Column[] = [
@@ -216,6 +224,46 @@ const Layout: React.FC = () => {
             </div>
           );
         })}
+      </div>
+      <Divider className='my-6 text-[#E4E7EC]' />
+      <div>
+        <div>
+          <h1 className='text-[16px] leading-8 font-semibold'>Text Color</h1>
+          <p className='text-sm  text-grey600 '>
+            Select whether your text should be white or black
+          </p>
+        </div>
+        <Spacer y={5} />
+        <div className='flex items-center gap-3'>
+          <Chip
+            onClick={() => handleClick('#000')}
+            startContent={<CheckIcon size={18} />}
+            variant='bordered'
+            classNames={{
+              base: ` cursor-pointer h-8 text-[12px] ${
+                selectedTextColor === '#000'
+                  ? 'border border-primaryColor text-primaryColor'
+                  : 'border border-primaryGrey text-grey400'
+              }`,
+            }}
+          >
+            Black text
+          </Chip>
+          <Chip
+            onClick={() => handleClick('#fff')}
+            startContent={<CheckIcon size={18} />}
+            variant='bordered'
+            classNames={{
+              base: ` cursor-pointer h-8 text-[12px] ${
+                selectedTextColor === '#fff'
+                  ? 'border border-primaryColor text-primaryColor'
+                  : 'border border-primaryGrey text-grey400'
+              }`,
+            }}
+          >
+            White text
+          </Chip>
+        </div>
       </div>
       <Divider className='my-6 text-[#E4E7EC]' />
       <div className='flex justify-between'>

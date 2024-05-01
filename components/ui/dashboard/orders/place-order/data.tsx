@@ -31,7 +31,11 @@ export const SkeletonLoading = () => {
   return (
     <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
       {[1, 2, 3, 4, 5, 6].map((item) => (
-        <Card key={item} className='space-y-2 p-2' radius='lg'>
+        <Card
+          key={item}
+          className='space-y-2 p-2 shadow-none border-none'
+          radius='lg'
+        >
           <Skeleton className='rounded-lg animate-pulse'>
             <div className='h-20 rounded-lg bg-default-300'></div>
           </Skeleton>

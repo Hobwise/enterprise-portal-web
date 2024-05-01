@@ -26,11 +26,13 @@ const AppProvider = ({ children }: any) => {
 
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenDeleteVariety, setIsOpenDeleteVariety] = useState(false);
+  const [isOpenEditVariety, setIsOpenEditVariety] = useState(false);
   const [isSelectedPreview, setIsSelectedPreview] = useState(true);
   const [activeTile, setActiveTile] = useState<string>('List left');
   const [backgroundColor, setBackgroundColor] = useState('');
   const [imageReference, setImageReference] = useState('');
   const [selectedImage, setSelectedImage] = useState('');
+  const [selectedTextColor, setSelectedTextColor] = useState('#000');
 
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const toggleModalDelete = () => {
@@ -41,6 +43,9 @@ const AppProvider = ({ children }: any) => {
   };
   const toggleModalDeleteVariety = () => {
     setIsOpenDeleteVariety(!isOpenDeleteVariety);
+  };
+  const toggleModalEditVariety = () => {
+    setIsOpenEditVariety(!isOpenEditVariety);
   };
 
   const handleListItemClick = (column: string) => {
@@ -54,6 +59,7 @@ const AppProvider = ({ children }: any) => {
       setActiveTile(convertActiveTile(data?.data?.data?.layout));
       setSelectedImage(`data:image/jpeg;base64,${data?.data?.data?.image}`);
       setBackgroundColor(data?.data?.data?.backgroundColour);
+      setSelectedTextColor(data?.data?.data?.textColour);
       setImageReference(data?.data?.data?.imageRef);
       setIsSelectedPreview(data?.data?.data?.useBackground);
     } else if (data?.data?.error) {
@@ -66,10 +72,15 @@ const AppProvider = ({ children }: any) => {
         userData,
         setUserData,
         fetchMenuConfig,
+        toggleModalEditVariety,
         imageReference,
         setImageReference,
         backgroundColor,
         setBackgroundColor,
+        selectedTextColor,
+        setSelectedTextColor,
+        isOpenEditVariety,
+        setIsOpenEditVariety,
         isSelectedPreview,
         setIsSelectedPreview,
         handleListItemClick,

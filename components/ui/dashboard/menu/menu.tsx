@@ -32,7 +32,7 @@ import {
 import { useGlobalContext } from '@/hooks/globalProvider';
 import DeleteMenu from '@/app/dashboard/menu/[menuId]/deleteMenu';
 import EditMenu from '@/app/dashboard/menu/[menuId]/editMenu';
-import noImage from '../../../../public/assets/images/no-image.jpg';
+import noImage from '../../../../public/assets/images/no-image.png';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
 const MenuList = ({ menus, onOpen }: any) => {
@@ -63,7 +63,7 @@ const MenuList = ({ menus, onOpen }: any) => {
   };
 
   const [statusFilter, setStatusFilter] = React.useState('all');
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [sortDescriptor, setSortDescriptor] = React.useState({
     column: 'price',
     direction: 'ascending',

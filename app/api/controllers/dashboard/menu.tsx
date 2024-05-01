@@ -209,6 +209,37 @@ export async function createMenuVariety(
     handleError(error);
   }
 }
+export async function editMenuVariety(
+  businessId: string,
+  payload: payloadMenuVariety,
+  varietyId: string
+) {
+  const validatedFields = menuVarietySchema.safeParse({
+    price: payload?.price,
+    unit: payload?.unit,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.put(
+      `${DASHBOARD.menuVariety}?itemVarietyId=${varietyId}`,
+      payload,
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function deleteMenuItem(businessId: string, itemId: string) {
   const headers = businessId ? { businessId } : {};
   try {
