@@ -23,6 +23,7 @@ import { useSearchParams } from 'next/navigation';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import Image from 'next/image';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { FaRegEdit } from 'react-icons/fa';
 import {
   editMenuItem,
   getMenuItem,
@@ -34,9 +35,10 @@ import { GoPlus } from 'react-icons/go';
 import DeleteMenu from './deleteMenu';
 import EditMenu from './editMenu';
 import hobink from '../../../../public/assets/images/hobink.png';
-import noImage from '../../../../public/assets/images/no-image.jpg';
+import noImage from '../../../../public/assets/images/no-image.png';
 import { toast } from 'react-toastify';
 import DeleteVariety from './deleteVariety';
+import EditVariety from './editVariety';
 const MenuDetails = () => {
   const searchParams = useSearchParams();
   const {
@@ -49,6 +51,9 @@ const MenuDetails = () => {
     isOpenDeleteVariety,
     setIsOpenDeleteVariety,
     toggleModalDeleteVariety,
+    isOpenEditVariety,
+    setIsOpenEditVariety,
+    toggleModalEditVariety,
   } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [isOpen, setIsOpen] = useState(false);
@@ -178,7 +183,7 @@ const MenuDetails = () => {
             }
             width={200}
             height={200}
-            className='bg-contain h-full rounded-lg w-full'
+            className={'bg-contain h-full rounded-lg w-full'}
             aria-label='uploaded image'
             alt='uploaded image(s)'
           />
@@ -216,35 +221,50 @@ const MenuDetails = () => {
                   </CustomButton>
                 </div>
               </div>
-              {menuItem?.varieties.map((item, index) => {
-                return (
-                  <>
-                    <div
-                      key={index}
-                      className='rounded-lg p-3 text-sm text-black  flex justify-between'
-                    >
-                      <div className='p-1'>
-                        <p className=' font-[700]'>{menuItem?.itemName}</p>
-                        <Spacer y={2} />
-                        <p className='text-grey600 text-sm'>{item.unit}</p>
-                        <Spacer y={2} />
-                        <p className='font-[700]'>₦{item.price}</p>
+              <div className='h-[250px] overflow-scroll'>
+                {menuItem?.varieties.map((item, index) => {
+                  return (
+                    <>
+                      <div
+                        key={index}
+                        className='rounded-lg  p-3 text-sm text-black  flex justify-between'
+                      >
+                        <div className='p-1'>
+                          <p className=' font-[700]'>{menuItem?.itemName}</p>
+                          <Spacer y={2} />
+                          <p className='text-grey600 text-sm'>{item.unit}</p>
+                          <Spacer y={2} />
+                          <p className='font-[700]'>₦{item.price}</p>
+                        </div>
+                        <div className='flex items-center'>
+                          <Tooltip color='secondary' content={'Edit'}>
+                            <span>
+                              <FaRegEdit
+                                onClick={() => {
+                                  toggleModalEditVariety();
+                                  setVarietyDetails(item);
+                                }}
+                                className='text-[20px] text-grey500 mr-4 cursor-pointer'
+                              />
+                            </span>
+                          </Tooltip>
+                          <Tooltip color='danger' content={'Delete'}>
+                            <span>
+                              <RiDeleteBin6Line
+                                onClick={() => {
+                                  toggleModalDeleteVariety();
+                                  setVarietyDetails(item);
+                                }}
+                                className='text-[20px] text-[#dc2626] mr-4 cursor-pointer'
+                              />
+                            </span>
+                          </Tooltip>
+                        </div>
                       </div>
-                      <Tooltip color='danger' content={'Delete'}>
-                        <span>
-                          <RiDeleteBin6Line
-                            onClick={() => {
-                              toggleModalDeleteVariety();
-                              setVarietyDetails(item);
-                            }}
-                            className='text-[20px] text-[#dc2626] mr-4 cursor-pointer'
-                          />
-                        </span>
-                      </Tooltip>
-                    </div>
-                  </>
-                );
-              })}
+                    </>
+                  );
+                })}
+              </div>
             </div>
           ) : (
             <p className='text-grey600 text-sm'>No varieties</p>
@@ -267,6 +287,13 @@ const MenuDetails = () => {
         varietyDetails={varietyDetails}
         isOpenDeleteVariety={isOpenDeleteVariety}
         toggleModalDeleteVariety={toggleModalDeleteVariety}
+      />
+      <EditVariety
+        menuItem={menuItem}
+        getMenu={getMenu}
+        varietyDetails={varietyDetails}
+        isOpenEditVariety={isOpenEditVariety}
+        toggleModalEditVariety={toggleModalEditVariety}
       />
       <EditMenu
         getMenu={getMenu}

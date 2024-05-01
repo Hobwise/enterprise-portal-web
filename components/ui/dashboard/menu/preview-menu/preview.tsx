@@ -3,7 +3,7 @@ import { Chip, Divider, Tab, Tabs } from '@nextui-org/react';
 import Image from 'next/image';
 import React from 'react';
 
-import noImage from '../../../../../public/assets/images/no-image.jpg';
+import noImage from '../../../../../public/assets/images/no-image.png';
 import Champagne from '../../../../../public/assets/images/champage.webp';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
@@ -16,6 +16,7 @@ const Preview = () => {
     selectedImage,
     backgroundColor,
     imageReference,
+    selectedTextColor,
   } = useGlobalContext();
 
   const baseString = 'data:image/jpeg;base64,';
@@ -116,7 +117,10 @@ const Preview = () => {
                   </div>
                 )}
                 <div
-                  className={`text-[14px] ${
+                  style={{
+                    color: selectedTextColor,
+                  }}
+                  className={`text-[14px]  ${
                     togglePreview(activeTile)?.textContainer
                   } flex flex-col justify-center`}
                 >

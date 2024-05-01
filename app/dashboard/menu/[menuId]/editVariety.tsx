@@ -1,25 +1,44 @@
-'use client';
-import { createMenuVariety } from '@/app/api/controllers/dashboard/menu';
-import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
-import { Modal, ModalBody, ModalContent, Spacer } from '@nextui-org/react';
-import Image from 'next/image';
-import React, { useState } from 'react';
-import noImage from '../../../../public/assets/images/no-image.png';
+import {
+  Button,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  Spacer,
+} from '@nextui-org/react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import {
+  deleteMenuItem,
+  deleteVariety,
+  editMenuVariety,
+} from '@/app/api/controllers/dashboard/menu';
 import toast from 'react-hot-toast';
+import { revalidatePath } from 'next/cache';
+import { CustomInput } from '@/components/CustomInput';
+import Image from 'next/image';
+import noImage from '../../../../public/assets/images/no-image.png';
 
-const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
+const EditVariety = ({
+  isOpenEditVariety,
+  toggleModalEditVariety,
+  menuItem,
+  varietyDetails,
+  getMenu,
+}: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const [loading, setLoading] = useState(false);
-  const [unit, setUnit] = useState('');
-  const [price, setPrice] = useState(0);
+  const [unit, setUnit] = useState(varietyDetails?.unit || '');
+  const [price, setPrice] = useState(varietyDetails?.price || '');
   const [response, setResponse] = useState(null);
 
-  const createVariety = async () => {
+  const updateVariety = async () => {
     setLoading(true);
     const payload = {
+      id: varietyDetails?.id,
       itemID: menuItem?.id,
       menuID: menuItem?.menuID,
       unit: unit,
@@ -27,9 +46,10 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
       currency: 'NGA',
     };
 
-    const data = await createMenuVariety(
+    const data = await editMenuVariety(
       businessInformation[0]?.businessId,
-      payload
+      payload,
+      varietyDetails?.id
     );
 
     setResponse(data);
@@ -37,10 +57,10 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
     setLoading(false);
 
     if (data?.data?.isSuccessful) {
-      toast.success('Variety successfully added');
+      toast.success('Variety updated successfully ');
       getMenu();
-      toggleModal();
-      setPrice(0);
+      toggleModalEditVariety();
+      setPrice('');
       setUnit('');
     } else if (data?.data?.error) {
       notify({
@@ -50,18 +70,27 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
       });
     }
   };
+  useEffect(() => {
+    setUnit(varietyDetails?.unit);
+    setPrice(varietyDetails?.price);
+  }, [varietyDetails]);
   return (
-    <Modal isOpen={isOpen} onOpenChange={toggleModal}>
+    <Modal
+      isOpen={isOpenEditVariety}
+      onOpenChange={() => {
+        toggleModalEditVariety();
+        setUnit(varietyDetails?.unit || '');
+        setPrice(varietyDetails?.price || '');
+      }}
+    >
       <ModalContent>
         {(onClose) => (
           <>
             <ModalBody>
               <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
-                Create Variety
+                Update Variety
               </h2>
-              <p className='text-sm  text-grey600  xl:w-[231px]  w-full mb-4'>
-                Create variety for menu items
-              </p>
+
               <div className='bg-[#F5F5F5] rounded-lg text-black  flex'>
                 <div className='p-3'>
                   <Image
@@ -82,7 +111,7 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
                   <Spacer y={1} />
                   <p className='text-grey600 text-sm'>{menuItem?.itemName}</p>
                   <Spacer y={1} />
-                  <p className='font-[700]'>₦{menuItem?.price}</p>
+                  <p className='font-[700]'>₦{varietyDetails?.price}</p>
                 </div>
               </div>
               <CustomInput
@@ -112,7 +141,7 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
 
               <CustomButton
                 loading={loading}
-                onClick={createVariety}
+                onClick={updateVariety}
                 disabled={loading}
                 type='submit'
               >
@@ -128,4 +157,4 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
   );
 };
 
-export default VarietyModal;
+export default EditVariety;

@@ -49,7 +49,9 @@ export const CustomTextArea = ({
       classNames={{
         label: 'text-[#000] font-[500] text-[14px]',
         base: 'bg-none',
-        inputWrapper: [`${classnames} ${disabled && 'bg-secondaryGrey'} `],
+        inputWrapper: [
+          `${classnames} ${disabled ? 'bg-secondaryGrey' : 'bg-white'} `,
+        ],
         innerWrapper: ` bg-none border-none`,
         input: ['bg-none', 'text-black placeholder:text-[14px]'],
       }}

@@ -59,20 +59,14 @@ const Orders: React.FC = () => {
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const businessInformation = getJsonItemFromLocalStorage('business');
 
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const getAllOrders = async () => {
-    setIsLoading(true);
-
+  const getAllOrders = async (checkLoading = true) => {
+    setIsLoading(checkLoading);
     const data = await getOrderByBusiness(businessInformation[0]?.businessId);
     setIsLoading(false);
-
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;
-      console.log(response, 'response');
-
       setOrders(response);
     } else if (data?.data?.error) {
       notify({
@@ -108,7 +102,13 @@ const Orders: React.FC = () => {
 
   const getScreens = () => {
     if (orders.length > 0) {
-      return <OrdersList orders={orders} onOpen={onOpen} />;
+      return (
+        <OrdersList
+          orders={orders}
+          onOpen={onOpen}
+          getAllOrders={getAllOrders}
+        />
+      );
     } else {
       return <CreateOrder />;
     }

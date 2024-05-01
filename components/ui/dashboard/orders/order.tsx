@@ -22,20 +22,23 @@ import {
 } from '@nextui-org/react';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { IoIosArrowForward } from 'react-icons/io';
+import { BsCalendar2Check } from 'react-icons/bs';
+import { LiaTimesSolid } from 'react-icons/lia';
+import { FaRegEdit } from 'react-icons/fa';
 import {
+  availableOptions,
   columns,
   getTableClasses,
   statusColorMap,
   statusDataMap,
 } from './data';
 import Filters from './filters';
-import Link from 'next/link';
-import Image from 'next/image';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
 
-import noImage from '../../../../public/assets/images/no-image.jpg';
 import moment from 'moment';
+import CancelOrderModal from './cancelOrder';
+import ConfirmOrderModal from './confirmOrder';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'name',
@@ -46,8 +49,13 @@ const INITIAL_VISIBLE_COLUMNS = [
   'dateCreated',
   'actions',
 ];
-const OrdersList = ({ orders, onOpen }: any) => {
+const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
   const [filterValue, setFilterValue] = React.useState('');
+  const [singleOrder, setSingleOrder] = React.useState('');
+  const [isOpenCancelOrder, setIsOpenCancelOrder] =
+    React.useState<Boolean>(false);
+  const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
+    React.useState<Boolean>(false);
   const [filteredMenu, setFilteredMenu] = React.useState(orders[0]?.orders);
   const {
     toggleModalDelete,
@@ -56,6 +64,15 @@ const OrdersList = ({ orders, onOpen }: any) => {
     isOpenEdit,
     toggleModalEdit,
   } = useGlobalContext();
+
+  const toggleCancelModal = (order: any) => {
+    setSingleOrder(order);
+    setIsOpenCancelOrder(!isOpenCancelOrder);
+  };
+  const toggleConfirmModal = (order: any) => {
+    setSingleOrder(order);
+    setIsOpenConfirmOrder(!isOpenConfirmOrder);
+  };
 
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(
@@ -74,7 +91,7 @@ const OrdersList = ({ orders, onOpen }: any) => {
   };
 
   const [statusFilter, setStatusFilter] = React.useState('all');
-  const [rowsPerPage, setRowsPerPage] = React.useState(5);
+  const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [sortDescriptor, setSortDescriptor] = React.useState({
     column: 'price',
     direction: 'ascending',
@@ -124,7 +141,7 @@ const OrdersList = ({ orders, onOpen }: any) => {
 
   const renderCell = React.useCallback((order, columnKey) => {
     const cellValue = order[columnKey];
-
+    const options = availableOptions[statusDataMap[order.status]];
     switch (columnKey) {
       case 'name':
         return (
@@ -172,38 +189,42 @@ const OrdersList = ({ orders, onOpen }: any) => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu className='text-black'>
-                <DropdownItem aria-label='view'>
-                  <Link
-                    href={{
-                      pathname: `/dashboard/order/${order.itemName}`,
-                      query: {
-                        itemId: order.id,
-                      },
-                    }}
+                {options && options.includes('Update Order') && (
+                  <DropdownItem
+                    // onClick={() => toggleConfirmModal(order)}
+                    aria-label='update order'
                   >
-                    View
-                  </Link>
-                </DropdownItem>
-                {/* <DropdownItem
-                  onClick={() => {
-                    saveJsonItemToLocalStorage('menuItem', menu);
-                    toggleModalEdit();
-                  }}
-                  aria-label='edit'
-                >
-                  Edit
-                </DropdownItem> */}
-                {/* <DropdownItem
-                  aria-label='delete'
-                  onClick={() => {
-                    toggleModalDelete();
-                    console.log(menu.id, 'cellValue');
-                    // setFilteredMenu(menu);
-                    // saveJsonItemToLocalStorage('menuItem', menu);
-                  }}
-                >
-                  Delete
-                </DropdownItem> */}
+                    <div className={` flex gap-3  items-center text-grey500`}>
+                      <FaRegEdit />
+                      <p>Update order</p>
+                    </div>
+                  </DropdownItem>
+                )}
+                {options && options.includes('Checkout') && (
+                  <DropdownItem
+                    onClick={() => toggleConfirmModal(order)}
+                    aria-label='ccheckout'
+                  >
+                    <div className={`flex gap-3 items-center text-grey500`}>
+                      <BsCalendar2Check />
+                      <p>Checkout</p>
+                    </div>
+                  </DropdownItem>
+                )}
+                {options && options.includes('Cancel Order') && (
+                  <DropdownItem
+                    onClick={() => toggleCancelModal(order)}
+                    aria-label='cancel order'
+                  >
+                    <div
+                      className={` text-danger-500 flex  items-center gap-3 `}
+                    >
+                      <LiaTimesSolid />
+
+                      <p>Cancel order</p>
+                    </div>
+                  </DropdownItem>
+                )}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -247,7 +268,7 @@ const OrdersList = ({ orders, onOpen }: any) => {
     return (
       <Filters
         onOpen={onOpen}
-        menus={orders}
+        orders={orders}
         handleTabChange={handleTabChange}
         value={value}
         handleTabClick={handleTabClick}
@@ -397,6 +418,18 @@ const OrdersList = ({ orders, onOpen }: any) => {
           )}
         </TableBody>
       </Table>
+      <CancelOrderModal
+        getAllOrders={getAllOrders}
+        singleOrder={singleOrder}
+        isOpenCancelOrder={isOpenCancelOrder}
+        toggleCancelModal={toggleCancelModal}
+      />
+      <ConfirmOrderModal
+        getAllOrders={getAllOrders}
+        singleOrder={singleOrder}
+        isOpenConfirmOrder={isOpenConfirmOrder}
+        toggleConfirmModal={toggleConfirmModal}
+      />
     </section>
   );
 };

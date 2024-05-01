@@ -30,8 +30,9 @@ const SelectInput = ({
       placeholder={placeholder}
       classNames={{
         label: 'text-[#000] font-[500] text-[14px]',
-        base: 'bg-none  ',
+        base: 'bg-white',
         value: 'text-[14px] text-[#000]',
+
         trigger:
           'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
       }}

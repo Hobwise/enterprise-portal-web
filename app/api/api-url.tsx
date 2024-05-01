@@ -24,4 +24,10 @@ export const DASHBOARD = {
   menuVariety: 'api/v1/Menu/item-variety',
   // orders
   orderByBusiness: 'api/v1/Order/by-business',
+  orderByReference: 'api/v1/Order/by-reference',
+  order: 'api/v1/Order',
+  placeOrder: 'api/v1/Order/place',
+  completeOrder: 'api/v1/Order/complete',
+  // Quick response
+  qr: 'api/v1/QuickResponse/by-business',
 };
