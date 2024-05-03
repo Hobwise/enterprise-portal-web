@@ -139,7 +139,7 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
                     </>
                   )}
                   <Spacer y={5} />
-                  {singlePayment.paymentMethod === 1 && (
+                  {singlePayment.status === 0 && (
                     <div className='flex gap-5'>
                       <CustomButton
                         onClick={toggleApproveModal}

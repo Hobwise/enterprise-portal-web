@@ -13,6 +13,7 @@ import {
   ModalContent,
   ModalHeader,
   Spacer,
+  Spinner,
 } from '@nextui-org/react';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
@@ -140,34 +141,47 @@ const ConfirmOrderModal = ({
                 <ModalBody>
                   <div className='flex lg:flex-row flex-col gap-3 mb-4'>
                     <div className='lg:w-[60%] max-h-[300px] overflow-y-scroll  w-full rounded-lg border border-[#E4E7EC80] p-2 '>
-                      {order?.orderDetails?.map((item, index) => {
-                        return (
-                          <>
-                            <div key={item.id} className='flex justify-between'>
-                              <div className='w-[250px] rounded-lg text-black  flex'>
-                                <div className='p-3 flex  flex-col text-sm justify-center'>
-                                  <p className='font-[600]'>{item.menuName}</p>
-                                  <Spacer y={2} />
-                                  <p className='text-grey600'>
-                                    {item.itemName}
-                                  </p>
+                      {order.length === 0 ? (
+                        <div className={`grid h-full place-content-center`}>
+                          <Spinner />
+                        </div>
+                      ) : (
+                        <>
+                          {order?.orderDetails?.map((item, index) => {
+                            return (
+                              <>
+                                <div
+                                  key={item.id}
+                                  className='flex justify-between'
+                                >
+                                  <div className='w-[250px] rounded-lg text-black  flex'>
+                                    <div className='p-3 flex  flex-col text-sm justify-center'>
+                                      <p className='font-[600]'>
+                                        {item.menuName}
+                                      </p>
+                                      <Spacer y={2} />
+                                      <p className='text-grey600'>
+                                        {item.itemName}
+                                      </p>
 
-                                  <p className=''>{item.iquantity}</p>
+                                      <p className=''>{item.iquantity}</p>
+                                    </div>
+                                  </div>
+
+                                  <div className='text-black w-[150px] grid place-content-center'>
+                                    <h3 className='font-[600]'>
+                                      {formatPrice(item?.unitPrice)}
+                                    </h3>
+                                  </div>
                                 </div>
-                              </div>
-
-                              <div className='text-black w-[150px] grid place-content-center'>
-                                <h3 className='font-[600]'>
-                                  {formatPrice(item?.unitPrice)}
-                                </h3>
-                              </div>
-                            </div>
-                            {index !== order?.orderDetails?.length - 1 && (
-                              <Divider className='bg-primaryGrey' />
-                            )}
-                          </>
-                        );
-                      })}
+                                {index !== order?.orderDetails?.length - 1 && (
+                                  <Divider className='bg-primaryGrey' />
+                                )}
+                              </>
+                            );
+                          })}
+                        </>
+                      )}
                     </div>
                     <div className='flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4'>
                       <div className='flex justify-between items-center'>
