@@ -27,6 +27,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   convertBase64ToImageURL,
+  formatPrice,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
 import { useGlobalContext } from '@/hooks/globalProvider';
@@ -139,7 +140,7 @@ const MenuList = ({ menus, onOpen }: any) => {
       case 'price':
         return (
           <div className='text-sm'>
-            <p>₦{menu.price}</p>
+            <p>{formatPrice(menu.price)}</p>
           </div>
         );
       case 'desc':

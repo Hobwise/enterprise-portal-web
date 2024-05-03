@@ -4,7 +4,7 @@ import {
   notify,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
-import axios from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { generateRefreshToken } from './controllers/auth';
 
 export const handleError = (error: any) => {
@@ -22,6 +22,114 @@ export const handleError = (error: any) => {
     });
   }
 };
+
+// interface UserInformation {
+//   token: string;
+//   refreshToken: string;
+//   email: string;
+//   tokenExpiry?: number;
+//   cooperateID?: string;
+// }
+
+// const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+// const REFRESH_WINDOW = 60 * 1000;
+// const TOKEN_EXPIRY_TIME = 30 * 60 * 1000;
+
+// const api = axios.create({
+//   baseURL,
+//   headers: {
+//     'Content-Type': 'application/json',
+//   },
+// });
+
+// const refreshToken = async (): Promise<string | null> => {
+//   const userData =
+//     getJsonItemFromLocalStorage<UserInformation>('userInformation');
+//   if (!userData) return null;
+
+//   const { token, email } = userData;
+
+//   try {
+//     const response = await generateRefreshToken({ token, email });
+//     const newToken = response.data.jwtToken;
+//     console.log(response, 'refresh token response');
+
+//     const newExpiry = Date.now() + TOKEN_EXPIRY_TIME;
+//     saveJsonItemToLocalStorage('userInformation', {
+//       ...userData,
+//       token: newToken,
+//       tokenExpiry: newExpiry,
+//     });
+
+//     return newToken;
+//   } catch (error) {
+//     console.error('Error refreshing token:', error);
+//     return null;
+//   }
+// };
+
+// api.interceptors.request.use(async (config: AxiosRequestConfig) => {
+//   const userData =
+//     getJsonItemFromLocalStorage<UserInformation>('userInformation');
+//   if (userData) {
+//     const { token, tokenExpiry, cooperateID } = userData;
+
+//     const now = Date.now();
+
+//     if (tokenExpiry && now >= tokenExpiry - REFRESH_WINDOW) {
+//       const newToken = await refreshToken();
+//       if (newToken) {
+//         config.headers.Authorization = `Bearer ${newToken}`;
+//       }
+//     } else {
+//       if (token) {
+//         config.headers.Authorization = `Bearer ${token}`;
+//       }
+//     }
+
+//     if (cooperateID) {
+//       config.headers.cooperateId = cooperateID;
+//     }
+//   }
+
+//   if (config.headers['Content-Type'] === 'multipart/form-data') {
+//     delete config.headers['Content-Type'];
+//   }
+
+//   return config;
+// });
+
+// api.interceptors.response.use(
+//   (response: AxiosResponse) => response,
+//   async (error) => {
+//     const originalRequest = error.config as AxiosRequestConfig & {
+//       _retry?: boolean;
+//     };
+
+//     if (error.response.status === 401 && !originalRequest._retry) {
+//       originalRequest._retry = true;
+
+//       const newToken = await refreshToken();
+//       if (newToken) {
+//         originalRequest.headers.Authorization = `Bearer ${newToken}`;
+//         return api(originalRequest);
+//       } else {
+//         notify({
+//           title: 'Session expired',
+//           text: 'Please log in again',
+//           type: 'error',
+//         });
+
+//         return Promise.reject(error);
+//       }
+//     }
+
+//     return Promise.reject(error);
+//   }
+// );
+
+// export default api;
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 

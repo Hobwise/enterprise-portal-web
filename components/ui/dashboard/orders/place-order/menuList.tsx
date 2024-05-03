@@ -2,7 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import Filters from './filter';
 import { getMenuByBusiness } from '@/app/api/controllers/dashboard/menu';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import {
+  clearItemLocalStorage,
+  formatPrice,
+  getJsonItemFromLocalStorage,
+  notify,
+} from '@/lib/utils';
 import Image from 'next/image';
 import noImage from '../../../../../public/assets/images/no-image.png';
 import noMenu from '../../../../../public/assets/images/no-menu.png';
@@ -23,6 +28,7 @@ import { CustomButton } from '@/components/customButton';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import { IoSearchOutline } from 'react-icons/io5';
 import ViewModal from './view';
+import { getOrder } from '@/app/api/controllers/dashboard/orders';
 
 type MenuItem = {
   name: string;
@@ -37,6 +43,7 @@ type MenuItem = {
     isAvailabale: boolean;
     hasVariety: boolean;
     image: string;
+    isVariety: boolean;
     varieties: null | any;
   }>;
 };
@@ -50,10 +57,12 @@ type SelectedItem = {
   itemName: string;
   price: number;
   image: string;
+  isVariety: boolean;
 };
 
 const MenuList = () => {
   const businessInformation = getJsonItemFromLocalStorage('business');
+  const order = getJsonItemFromLocalStorage('order');
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const [menus, setMenus] = useState<MenuData>([]);
@@ -63,6 +72,34 @@ const MenuList = () => {
   const [isOpenVariety, setIsOpenVariety] = useState(false);
 
   const [selectedMenu, setSelectedMenu] = useState([]);
+  const [orderDetails, setOrderDetails] = useState([]);
+
+  const getOrderDetails = async () => {
+    const data = await getOrder(order.id);
+
+    if (data?.data?.isSuccessful) {
+      const secondArrayIds = menus.flatMap((section) =>
+        section.items.map((item) => item.id)
+      );
+
+      const idsInCommon = data?.data?.data?.orderDetails.filter((item) =>
+        secondArrayIds.includes(item.itemID)
+      );
+
+      const updatedArray = idsInCommon.map((item) => {
+        const { unitPrice, quantity, ...rest } = item;
+        return {
+          ...rest,
+          price: unitPrice,
+          count: quantity,
+        };
+      });
+      setOrderDetails(data?.data?.data);
+      setSelectedItems(updatedArray);
+      clearItemLocalStorage('order');
+    } else if (data?.data?.error) {
+    }
+  };
 
   const toggleVarietyModal = (menu: any) => {
     setSelectedMenu(menu);
@@ -92,7 +129,7 @@ const MenuList = () => {
         {
           id: menuItem.id,
           count: 1,
-
+          isVariety: menuItem.isVariety,
           itemName: menuItem.itemName,
           menuName: menuItem.menuName,
           price: menuItem.price,
@@ -158,6 +195,11 @@ const MenuList = () => {
   useEffect(() => {
     getAllMenus();
   }, []);
+  useEffect(() => {
+    if (order?.id && menus.length > 0) {
+      getOrderDetails();
+    }
+  }, [order?.id, menus]);
 
   return (
     <>
@@ -259,7 +301,7 @@ const MenuList = () => {
                         {menu.itemName}
                       </h3>
                       <p className='text-gray-600 text-[13px] font-[400]'>
-                        ₦{menu.price}
+                        {formatPrice(menu.price)}
                       </p>
                     </div>
                   </div>
@@ -331,7 +373,7 @@ const MenuList = () => {
                               <p className='text-grey600 '>{item.itemName}</p>
 
                               <p className='font-[600] text-primaryColor'>
-                                ₦{item?.price}
+                                {formatPrice(item?.price)}
                               </p>
                             </div>
                           </div>
@@ -371,7 +413,9 @@ const MenuList = () => {
                 <Spacer y={2} />
                 <div>
                   <h3 className='text-[13px] font-[500]'>Total</h3>
-                  <p className='text-[] font-[700]'>₦{calculateTotalPrice()}</p>
+                  <p className='text-[] font-[700]'>
+                    {formatPrice(calculateTotalPrice())}
+                  </p>
                 </div>
               </>
             ) : (
@@ -394,6 +438,7 @@ const MenuList = () => {
           totalPrice={calculateTotalPrice()}
           onOpenChange={onOpenChange}
           isOpen={isOpen}
+          orderDetails={orderDetails}
         />
         <ViewModal
           handleCardClick={handleCardClick}

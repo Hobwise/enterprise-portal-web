@@ -98,3 +98,19 @@ input:-webkit-autofill:focus {
 .custom-pagination-item[data-active='true'] {
   background-color: #5f35d2;
 }
+.loading-text {
+  animation: flash 1.2s ease-in-out infinite;
+  font-size: 14px;
+}
+
+@keyframes flash {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

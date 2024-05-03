@@ -17,15 +17,14 @@ import {
   cn,
   PaginationItemType,
   Pagination,
-  menu,
   Chip,
+  Spacer,
 } from '@nextui-org/react';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { IoIosArrowForward } from 'react-icons/io';
-import { BsCalendar2Check } from 'react-icons/bs';
-import { LiaTimesSolid } from 'react-icons/lia';
-import { FaRegEdit } from 'react-icons/fa';
+
 import { useRouter } from 'next/navigation';
+import { GrFormView } from 'react-icons/gr';
 import {
   availableOptions,
   columns,
@@ -33,48 +32,37 @@ import {
   statusColorMap,
   statusDataMap,
 } from './data';
-import Filters from './filters';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
 
 import moment from 'moment';
-import CancelOrderModal from './cancelOrder';
-import ConfirmOrderModal from './confirmOrder';
+
 import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
+import PaymentCard from './paymentCard';
+import Filters from './filters';
+import ApprovePayment from './approvePayment';
 
 const INITIAL_VISIBLE_COLUMNS = [
-  'name',
-  'amount',
-  'orderID',
-  'placedByPhoneNumber',
-  'status',
+  'totalAmount',
+  'qrName',
+  'reference',
+  'treatedBy',
   'dateCreated',
+  'customer',
+  'status',
   'actions',
 ];
-const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
+const PaymentsList = ({ payments, onOpen, getAllPayments }: any) => {
   const router = useRouter();
   const [filterValue, setFilterValue] = React.useState('');
-  const [singleOrder, setSingleOrder] = React.useState('');
-  const [isOpenCancelOrder, setIsOpenCancelOrder] =
-    React.useState<Boolean>(false);
-  const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
-    React.useState<Boolean>(false);
-  const [filteredMenu, setFilteredMenu] = React.useState(orders[0]?.orders);
-  const {
-    toggleModalDelete,
-    isOpenDelete,
-    setIsOpenDelete,
-    isOpenEdit,
-    toggleModalEdit,
-  } = useGlobalContext();
+  const [singlePayment, setSinglePayment] = React.useState('');
+  const [isOpen, setIsOpen] = React.useState<Boolean>(false);
 
-  const toggleCancelModal = (order: any) => {
-    setSingleOrder(order);
-    setIsOpenCancelOrder(!isOpenCancelOrder);
-  };
-  const toggleConfirmModal = (order: any) => {
-    setSingleOrder(order);
-    setIsOpenConfirmOrder(!isOpenConfirmOrder);
+  const [filteredMenu, setFilteredMenu] = React.useState(payments[0]?.payments);
+
+  const toggleApproveModal = (payment: any) => {
+    setSinglePayment(payment);
+    setIsOpen(!isOpen);
   };
 
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
@@ -89,8 +77,8 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
   };
 
   const handleTabClick = (index) => {
-    const filteredMenu = orders.filter((item) => item.name === index);
-    setFilteredMenu(filteredMenu[0]?.orders);
+    const filteredMenu = payments.filter((item) => item.name === index);
+    setFilteredMenu(filteredMenu[0]?.payments);
   };
 
   const [statusFilter, setStatusFilter] = React.useState('all');
@@ -142,44 +130,43 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
     });
   }, [sortDescriptor, items]);
 
-  const renderCell = React.useCallback((order, columnKey) => {
-    const cellValue = order[columnKey];
-    const options = availableOptions[statusDataMap[order.status]];
+  const renderCell = React.useCallback((payment, columnKey) => {
+    const cellValue = payment[columnKey];
+    const options = availableOptions[statusDataMap[payment.status]];
+
     switch (columnKey) {
-      case 'name':
-        return (
-          <div className='flex text-textGrey text-sm'>{order.placedByName}</div>
-        );
       case 'amount':
         return (
           <div className='text-textGrey text-sm'>
-            <p>{formatPrice(order.totalAmount)}</p>
+            <p>{formatPrice(payment.totalAmount)}</p>
           </div>
         );
-      case 'orderID':
-        return <div className='text-textGrey text-sm'>{order.reference}</div>;
-      case 'placedByPhoneNumber':
+      case 'qrName':
+        return (
+          <div className='flex text-textGrey text-sm'>{payment.qrName}</div>
+        );
+      case 'reference':
+        return <div className='text-textGrey text-sm'>{payment.reference}</div>;
+      case 'treatedBy':
+        return <div className='text-textGrey text-sm'>{payment.treatedBy}</div>;
+      case 'dateCreated':
         return (
           <div className='text-textGrey text-sm'>
-            {order.placedByPhoneNumber}
+            {moment(payment.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
+      case 'customer':
+        return <div className='text-textGrey text-sm'>{payment.customer}</div>;
       case 'status':
         return (
           <Chip
             className='capitalize'
-            color={statusColorMap[order.status]}
+            color={statusColorMap[payment.status]}
             size='sm'
             variant='bordered'
           >
             {statusDataMap[cellValue]}
           </Chip>
-        );
-      case 'dateCreated':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(order.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
         );
 
       case 'actions':
@@ -191,46 +178,18 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
                   <HiOutlineDotsVertical className='text-[22px] ' />
                 </div>
               </DropdownTrigger>
-              <DropdownMenu className='text-black'>
-                {options && options.includes('Update Order') && (
-                  <DropdownItem
-                    onClick={() => {
-                      router.push('/dashboard/orders/place-order');
-                      saveJsonItemToLocalStorage('order', order);
-                    }}
-                    aria-label='update order'
-                  >
-                    <div className={` flex gap-3  items-center text-grey500`}>
-                      <FaRegEdit />
-                      <p>Update order</p>
-                    </div>
-                  </DropdownItem>
-                )}
-                {options && options.includes('Checkout') && (
-                  <DropdownItem
-                    onClick={() => toggleConfirmModal(order)}
-                    aria-label='ccheckout'
-                  >
-                    <div className={`flex gap-3 items-center text-grey500`}>
-                      <BsCalendar2Check />
-                      <p>Checkout</p>
-                    </div>
-                  </DropdownItem>
-                )}
-                {options && options.includes('Cancel Order') && (
-                  <DropdownItem
-                    onClick={() => toggleCancelModal(order)}
-                    aria-label='cancel order'
-                  >
-                    <div
-                      className={` text-danger-500 flex  items-center gap-3 `}
-                    >
-                      <LiaTimesSolid />
-
-                      <p>Cancel order</p>
-                    </div>
-                  </DropdownItem>
-                )}
+              <DropdownMenu aria-label='Approve payment' className='text-black'>
+                <DropdownItem
+                  onClick={() => {
+                    toggleApproveModal(payment);
+                  }}
+                  aria-label='update order'
+                >
+                  <div className={` flex gap-2  items-center text-grey500`}>
+                    <GrFormView className='text-[20px]' />
+                    <p>View</p>
+                  </div>
+                </DropdownItem>
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -274,7 +233,7 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
     return (
       <Filters
         onOpen={onOpen}
-        orders={orders}
+        payments={payments}
         handleTabChange={handleTabChange}
         value={value}
         handleTabClick={handleTabClick}
@@ -332,7 +291,6 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
       );
     }
 
-    // cursor is the default item
     return (
       <button
         key={key}
@@ -385,59 +343,56 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
   }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
 
   return (
-    <section className='border border-primaryGrey rounded-lg'>
-      <Table
-        radius='lg'
-        isCompact
-        removeWrapper
-        allowsSorting
-        aria-label='list of orders'
-        bottomContent={bottomContent}
-        bottomContentPlacement='outside'
-        classNames={getTableClasses()}
-        selectedKeys={selectedKeys}
-        // selectionMode='multiple'
-        sortDescriptor={sortDescriptor}
-        topContent={topContent}
-        topContentPlacement='outside'
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody emptyContent={'No orders found'} items={sortedItems}>
-          {(item) => (
-            <TableRow key={item?.name}>
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <CancelOrderModal
-        getAllOrders={getAllOrders}
-        singleOrder={singleOrder}
-        isOpenCancelOrder={isOpenCancelOrder}
-        toggleCancelModal={toggleCancelModal}
-      />
-      <ConfirmOrderModal
-        getAllOrders={getAllOrders}
-        singleOrder={singleOrder}
-        isOpenConfirmOrder={isOpenConfirmOrder}
-        toggleConfirmModal={toggleConfirmModal}
-      />
-    </section>
+    <>
+      <PaymentCard payments={payments} />
+      <Spacer y={5} />
+      <section className='border border-primaryGrey rounded-lg'>
+        <Table
+          radius='lg'
+          isCompact
+          removeWrapper
+          allowsSorting
+          aria-label='list of payments'
+          bottomContent={bottomContent}
+          bottomContentPlacement='outside'
+          classNames={getTableClasses()}
+          selectedKeys={selectedKeys}
+          // selectionMode='multiple'
+          sortDescriptor={sortDescriptor}
+          topContent={topContent}
+          topContentPlacement='outside'
+          onSelectionChange={setSelectedKeys}
+          onSortChange={setSortDescriptor}
+        >
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === 'actions' ? 'center' : 'start'}
+                allowsSorting={column.sortable}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody emptyContent={'No payments found'} items={sortedItems}>
+            {(item) => (
+              <TableRow key={item?.name}>
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, columnKey)}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        <ApprovePayment
+          singlePayment={singlePayment}
+          isOpen={isOpen}
+          toggleApproveModal={toggleApproveModal}
+        />
+      </section>
+    </>
   );
 };
 
-export default OrdersList;
+export default PaymentsList;

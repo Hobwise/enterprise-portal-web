@@ -161,7 +161,18 @@ export const CustomLoading = () => {
       <div className='animate-bounce'>
         <Image src={hobink} style={{ objectFit: 'cover' }} alt='hobink logo' />
       </div>
-      <p className='text-center text-primaryColor'>Loading...</p>
+      <p className='text-center loading-text text-primaryColor'>Loading...</p>
     </div>
   );
+};
+
+export const formatPrice = (price: any) => {
+  const formatter = new Intl.NumberFormat('en-NG', {
+    style: 'currency',
+    currency: 'NGN',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+
+  return formatter.format(price);
 };

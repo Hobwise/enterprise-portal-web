@@ -2,7 +2,7 @@
 import { createMenuVariety } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { Modal, ModalBody, ModalContent, Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import React, { useState } from 'react';
@@ -82,7 +82,7 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
                   <Spacer y={1} />
                   <p className='text-grey600 text-sm'>{menuItem?.itemName}</p>
                   <Spacer y={1} />
-                  <p className='font-[700]'>₦{menuItem?.price}</p>
+                  <p className='font-[700]'>{formatPrice(menuItem?.price)}</p>
                 </div>
               </div>
               <CustomInput

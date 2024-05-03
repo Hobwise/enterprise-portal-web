@@ -12,6 +12,7 @@ import React from 'react';
 import noImage from '../../../../../public/assets/images/no-image.png';
 import { CheckIcon } from './data';
 import { CustomButton } from '@/components/customButton';
+import { formatPrice } from '@/lib/utils';
 
 const ViewModal = ({
   selectedItems,
@@ -20,8 +21,8 @@ const ViewModal = ({
   toggleVarietyModal,
   handleCardClick,
 }: any) => {
-  // console.log(selectedItems, 'selectedItems');
-  // console.log(selectedMenu, 'selectedMenu');
+  console.log(selectedItems, 'selectedItems');
+  console.log(selectedMenu?.varieties, 'selectedMenu?.varieties');
   return (
     <Modal isOpen={isOpenVariety} onOpenChange={toggleVarietyModal}>
       <ModalContent>
@@ -50,7 +51,9 @@ const ViewModal = ({
                   {selectedMenu?.itemDescription}
                 </p>
                 <Spacer y={2} />
-                <p className=' font-[700] '>₦{selectedMenu?.price}</p>
+                <p className=' font-[700] '>
+                  {formatPrice(selectedMenu?.price)}
+                </p>
                 <Spacer y={2} />
                 <p className='text-grey600 text-sm'>{selectedMenu?.itemName}</p>
                 <Spacer y={3} />
@@ -88,7 +91,7 @@ const ViewModal = ({
                             </p>
                             <Spacer y={1} />
                             <p className='font-[600] text-primaryColor'>
-                              ₦{item?.price}
+                              {formatPrice(item?.price)}
                             </p>
                           </div>
                         </div>
@@ -100,7 +103,7 @@ const ViewModal = ({
                             onClick={() =>
                               handleCardClick({
                                 ...item,
-
+                                isVariety: false,
                                 itemName: selectedMenu.itemName,
                                 menuName: selectedMenu.menuName,
                                 image: selectedMenu.image,
@@ -119,7 +122,7 @@ const ViewModal = ({
                             onClick={() =>
                               handleCardClick({
                                 ...item,
-
+                                isVariety: true,
                                 itemName: selectedMenu.itemName,
                                 menuName: selectedMenu.menuName,
                                 image: selectedMenu.image,
@@ -140,7 +143,12 @@ const ViewModal = ({
                     (selected) => selected.id === selectedMenu.id
                   ) ? (
                     <Chip
-                      onClick={() => handleCardClick(selectedMenu)}
+                      onClick={() =>
+                        handleCardClick({
+                          ...selectedMenu,
+                          isVariety: false,
+                        })
+                      }
                       startContent={<CheckIcon size={18} />}
                       variant='flat'
                       classNames={{
@@ -151,7 +159,12 @@ const ViewModal = ({
                     </Chip>
                   ) : (
                     <CustomButton
-                      onClick={() => handleCardClick(selectedMenu)}
+                      onClick={() =>
+                        handleCardClick({
+                          ...selectedMenu,
+                          isVariety: false,
+                        })
+                      }
                       className='bg-white h-9 w-6  text-black border border-primaryGrey'
                     >
                       Select

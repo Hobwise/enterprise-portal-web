@@ -16,7 +16,7 @@ const LoadingSpinner = () => {
             alt='hobink logo'
           />
         </div>
-        <p className='text-center text-primaryColor'>Loading...</p>
+        <p className='text-center loading-text text-primaryColor'>Loading...</p>
       </div>
     </Container>
   );

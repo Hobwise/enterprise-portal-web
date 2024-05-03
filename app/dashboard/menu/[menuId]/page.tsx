@@ -22,7 +22,7 @@ import { MdCreate } from 'react-icons/md';
 import { useSearchParams } from 'next/navigation';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import Image from 'next/image';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { FaRegEdit } from 'react-icons/fa';
 import {
   editMenuItem,
@@ -195,7 +195,7 @@ const MenuDetails = () => {
             {menuItem?.itemDescription}
           </p>
           <Spacer y={5} />
-          <p className=' font-[700] '>₦{menuItem?.price}</p>
+          <p className=' font-[700] '>{formatPrice(menuItem?.price)}</p>
           <Spacer y={5} />
           <p className='text-grey600 text-sm'>{menuItem?.itemName}</p>
           <Spacer y={10} />
@@ -234,7 +234,9 @@ const MenuDetails = () => {
                           <Spacer y={2} />
                           <p className='text-grey600 text-sm'>{item.unit}</p>
                           <Spacer y={2} />
-                          <p className='font-[700]'>₦{item.price}</p>
+                          <p className='font-[700]'>
+                            {formatPrice(item.price)}
+                          </p>
                         </div>
                         <div className='flex items-center'>
                           <Tooltip color='secondary' content={'Edit'}>
