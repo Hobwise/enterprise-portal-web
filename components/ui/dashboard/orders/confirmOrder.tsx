@@ -5,7 +5,7 @@ import {
 } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Divider,
   Modal,
@@ -66,8 +66,8 @@ const ConfirmOrderModal = ({
 
     if (data?.data?.isSuccessful) {
       notify({
-        title: 'Payment confirmed!',
-        text: 'Payment has been confirmed and order has been closed',
+        title: 'Payment made!',
+        text: 'Payment has been made, awaiting confirmation',
         type: 'success',
       });
       toggleConfirmModal();
@@ -127,7 +127,9 @@ const ConfirmOrderModal = ({
                         backgroundColor='bg-primaryColor'
                       >
                         <div className='flex gap-2 items-center justify-center'>
-                          <p>Checkout ₦{singleOrder.totalAmount} </p>
+                          <p>
+                            Checkout {formatPrice(singleOrder.totalAmount)}{' '}
+                          </p>
                           <HiArrowLongLeft className='text-[22px] rotate-180' />
                         </div>
                       </CustomButton>
@@ -156,7 +158,7 @@ const ConfirmOrderModal = ({
 
                               <div className='text-black w-[150px] grid place-content-center'>
                                 <h3 className='font-[600]'>
-                                  ₦{item?.unitPrice}
+                                  {formatPrice(item?.unitPrice)}
                                 </h3>
                               </div>
                             </div>
@@ -204,7 +206,7 @@ const ConfirmOrderModal = ({
                     <span className='text-black'>Select payment method</span>
                   </div>
                   <p className='text-sm  text-primaryColor xl:mb-8 w-full mb-4'>
-                    ₦{singleOrder.totalAmount}
+                    {formatPrice(singleOrder.totalAmount)}
                   </p>
                 </div>
                 <div className='flex flex-col gap-1 text-black'>
@@ -247,7 +249,7 @@ const ConfirmOrderModal = ({
                     <p className='text-sm text-grey500'>TOTAL ORDER</p>
                     <p className='font-bold text-black text-[20px]'>
                       {' '}
-                      ₦{singleOrder.totalAmount}
+                      {formatPrice(singleOrder.totalAmount)}
                     </p>
                   </div>
                   <MdKeyboardArrowRight />

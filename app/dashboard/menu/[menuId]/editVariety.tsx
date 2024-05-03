@@ -1,5 +1,5 @@
 import { CustomButton } from '@/components/customButton';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Button,
   Modal,
@@ -87,7 +87,7 @@ const EditVariety = ({
         {(onClose) => (
           <>
             <ModalBody>
-              <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
+              <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold mb-4'>
                 Update Variety
               </h2>
 
@@ -111,7 +111,9 @@ const EditVariety = ({
                   <Spacer y={1} />
                   <p className='text-grey600 text-sm'>{menuItem?.itemName}</p>
                   <Spacer y={1} />
-                  <p className='font-[700]'>₦{varietyDetails?.price}</p>
+                  <p className='font-[700]'>
+                    {formatPrice(varietyDetails?.price)}
+                  </p>
                 </div>
               </div>
               <CustomInput
@@ -145,7 +147,7 @@ const EditVariety = ({
                 disabled={loading}
                 type='submit'
               >
-                {loading ? 'Loading' : 'Add variety'}
+                {loading ? 'Loading' : 'Save'}
               </CustomButton>
 
               <Spacer y={4} />

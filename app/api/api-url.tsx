@@ -30,4 +30,7 @@ export const DASHBOARD = {
   completeOrder: 'api/v1/Order/complete',
   // Quick response
   qr: 'api/v1/QuickResponse/by-business',
+  // Payments
+  paymentByBusiness: 'api/v1/Payment/by-business',
+  confirmPayment: 'api/v1/Payment/confirm',
 };

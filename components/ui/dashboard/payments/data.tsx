@@ -1,13 +1,15 @@
 import React from 'react';
 const columns = [
-  { name: 'ID', uid: 'menuID' },
-  { name: 'Name', uid: 'name' },
-  { name: 'amount', uid: 'amount' },
-  { name: 'Order ID', uid: 'orderID' },
-  { name: 'Phone number', uid: 'placedByPhoneNumber' },
-  { name: 'Payment', uid: 'payment' },
-  { name: 'Status', uid: 'status' },
+  { name: 'Amount', uid: 'totalAmount' },
+  { name: 'Table', uid: 'qrName' },
+  //   { name: 'Order ID', uid: 'orderID' },
+  { name: 'Order ID', uid: 'reference' },
+  { name: 'Staff', uid: 'treatedBy' },
   { name: 'Date Created', uid: 'dateCreated' },
+  { name: 'Customer', uid: 'customer' },
+  { name: 'Status', uid: 'status' },
+  { name: 'Payment method', uid: 'paymentMethod' },
+  { name: 'Payment reference', uid: 'paymentReference' },
   { name: '', uid: 'actions' },
 ];
 export const statusColorMap: Record<
@@ -19,19 +21,28 @@ export const statusColorMap: Record<
   2: 'danger',
   3: 'secondary',
 };
+export const paymentMethodMap: Record<
+  number,
+  'Cash' | 'POS' | 'Bank transfer' | 'Checkout'
+> = {
+  0: 'Cash',
+  1: 'POS',
+  2: 'Bank transfer',
+  3: 'Checkout',
+};
 
 export const availableOptions = {
-  open: ['Update Order', 'Checkout', 'Cancel Order'],
-  closed: ['Generate Invoice'],
+  pending: ['Approve payment'],
+  confirmed: [],
   cancelled: [],
-  'awaiting confirmation': ['Generate Invoice'],
+  'awaiting confirmation': ['Generate Invoice', 'Checkout'],
 };
 export const statusDataMap: Record<
   number,
-  'open' | 'closed' | 'cancelled' | 'awaiting confirmation'
+  'pending' | 'confirmed' | 'cancelled' | 'awaiting confirmation'
 > = {
-  0: 'open',
-  1: 'closed',
+  0: 'pending',
+  1: 'confirmed',
   2: 'cancelled',
   3: 'awaiting confirmation',
 };

@@ -25,41 +25,49 @@ import OrdersList from '@/components/ui/dashboard/orders/order';
 import { getOrderByBusiness } from '@/app/api/controllers/dashboard/orders';
 import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
 import { downloadCSV } from '@/lib/downloadToExcel';
+import PaymentsList from '@/components/ui/dashboard/payments/payment';
+import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
+import { getPaymentByBusiness } from '@/app/api/controllers/dashboard/payment';
 
-type OrderItem = {
+interface Payment {
+  id: string;
+  customer: string;
+  reference: string;
+  treatedBy: string;
+  totalAmount: number;
+  orderID: string;
+  qrName: string;
+  paymentMethod: number;
+  paymentReference: string;
+  status: number;
+  dateCreated: string;
+  cooperateID: string;
+  businessID: string;
+}
+
+interface OrderSummary {
   name: string;
-  orders: Array<{
-    id: string;
-    placedByName: string;
-    placedByPhoneNumber: string;
-    reference: string;
-    treatedBy: string;
-    totalAmount: number;
-    qrReference: string;
-    paymentMethod: number;
-    paymentReference: string;
-    status: 0 | 1 | 2 | 3;
-  }>;
-};
-
-type OrderData = Array<OrderItem>;
-const Orders: React.FC = () => {
+  totalAmount: number;
+  payments: Payment[];
+}
+const Payments: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const [orders, setOrders] = useState<OrderData>([]);
+  const [payments, setPayments] = useState<OrderSummary[]>([]);
 
   const [isLoading, setIsLoading] = useState<Boolean>(false);
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const router = useRouter();
 
-  const getAllOrders = async (checkLoading = true) => {
+  const getAllPayments = async (checkLoading = true) => {
     setIsLoading(checkLoading);
-    const data = await getOrderByBusiness(businessInformation[0]?.businessId);
+    const data = await getPaymentByBusiness(businessInformation[0]?.businessId);
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;
-      setOrders(response);
+      console.log(response, 'response');
+      setPayments(response);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -70,7 +78,7 @@ const Orders: React.FC = () => {
   };
 
   useEffect(() => {
-    getAllOrders();
+    getAllPayments();
   }, []);
 
   if (isLoading) {
@@ -95,27 +103,28 @@ const Orders: React.FC = () => {
   }
 
   const getScreens = () => {
-    if (orders.length > 0) {
+    if (payments.length > 0) {
       return (
-        <OrdersList
-          orders={orders}
+        <PaymentsList
+          payments={payments}
           onOpen={onOpen}
-          getAllOrders={getAllOrders}
+          getAllPayments={getAllPayments}
         />
       );
     } else {
-      return <CreateOrder />;
+      return <NoPaymentsScreen />;
     }
   };
 
-  const newArray = orders.flatMap((item) =>
-    item.orders.map((order) => ({
-      placedByName: order.placedByName,
-      reference: order.reference,
-      totalAmount: order.totalAmount,
-      dateCreated: order.dateCreated,
-      paymentReference: order.paymentReference,
-      placedByPhoneNumber: order.placedByPhoneNumber,
+  const newArray = payments.flatMap((item) =>
+    item.payments.map((payment) => ({
+      reference: payment.reference,
+      totalAmount: payment.totalAmount,
+      treatedBy: payment.treatedBy,
+      dateCreated: payment.dateCreated,
+      paymentReference: payment.paymentReference,
+      qrName: payment.qrName,
+      customer: payment.customer,
     }))
   );
   return (
@@ -123,27 +132,27 @@ const Orders: React.FC = () => {
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {orders.length > 0 ? (
+            {payments.length > 0 ? (
               <div className='flex items-center'>
-                <span>All orders</span>
+                <span>All Payment</span>
                 <Chip
                   classNames={{
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {orders[0].orders?.length}
+                  {payments[0].payments?.length}
                 </Chip>
               </div>
             ) : (
-              <span>Orders</span>
+              <span>Payments</span>
             )}
           </div>
           <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
-            Showing all orders
+            Showing all payments
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {orders.length > 0 && (
+          {payments.length > 0 && (
             <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
               <Button
                 onClick={() => downloadCSV(newArray)}
@@ -154,18 +163,8 @@ const Orders: React.FC = () => {
               </Button>
             </ButtonGroup>
           )}
-          {/* <CustomButton
-            // onClick={openAddRoleModal}
-            className='py-2 px-4 md:mb-0 text-black border border-[#D0D5DD] mb-4 '
-            backgroundColor='bg-white'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              <MdOutlineFileDownload className='text-[22px]' />
-              <p>Export csv</p>
-            </div>
-          </CustomButton> */}
 
-          <CustomButton
+          {/* <CustomButton
             onClick={() => router.push('/dashboard/orders/place-order')}
             className='py-2 px-4 mb-0 text-white'
             backgroundColor='bg-primaryColor'
@@ -174,58 +173,13 @@ const Orders: React.FC = () => {
               <IoAddCircleOutline className='text-[22px]' />
               <p>{'Create order'} </p>
             </div>
-          </CustomButton>
+          </CustomButton> */}
         </div>
       </div>
+
       {getScreens()}
-      {/* <Modal isOpen={openModal} onOpenChange={toggleModal}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalBody>Hello world</ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal> */}
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              {/* <ModalBody>
-                <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
-                  Create Menu
-                </h2>
-                <p className='text-sm  text-grey600  xl:w-[231px]  w-full mb-4'>
-                  Create a menu to add item
-                </p>
-                <CustomInput
-                  type='text'
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setName(e.target.value)
-                  }
-                  value={name}
-                  label='Name of menu'
-                  placeholder='E.g Drinks'
-                />
-                <Spacer y={2} />
-
-                <CustomButton
-                  loading={loading}
-                  onClick={handleCreateMenu}
-                  disabled={!name || loading}
-                  type='submit'
-                >
-                  {loading ? 'Loading' : 'Proceed'}
-                </CustomButton>
-
-                <Spacer y={4} />
-              </ModalBody> */}
-            </>
-          )}
-        </ModalContent>
-      </Modal>
     </Container>
   );
 };
 
-export default Orders;
+export default Payments;

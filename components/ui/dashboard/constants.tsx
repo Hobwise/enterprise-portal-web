@@ -6,6 +6,7 @@ import QRCode from '../../../public/assets/icons/qr-code.png';
 import Campaigns from '../../../public/assets/icons/campaigns.png';
 import Reservation from '../../../public/assets/icons/reservation.png';
 import Report from '../../../public/assets/icons/reports.png';
+import Payments from '../../../public/assets/icons/payment.png';
 
 export const SIDENAV_ITEMS: SideNavItem[] = [
   {
@@ -37,6 +38,11 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     title: 'Reservation',
     path: '/dashboard/reservation',
     icon: Reservation,
+  },
+  {
+    title: 'Payments',
+    path: '/dashboard/payments',
+    icon: Payments,
   },
   {
     title: 'Reports',

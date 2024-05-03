@@ -19,8 +19,9 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomTextArea } from '@/components/customTextArea';
 import SelectInput from '@/components/selectInput';
 import { getQR } from '@/app/api/controllers/dashboard/quickResponse';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
+  completeOrder,
   createOrder,
   orderSchema,
 } from '@/app/api/controllers/dashboard/orders';
@@ -52,6 +53,7 @@ const CheckoutModal = ({
   const businessInformation = getJsonItemFromLocalStorage('business');
   const router = useRouter();
   const [response, setResponse] = useState(null);
+  const [orderId, setOrderId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [reference, setReference] = useState('');
@@ -93,26 +95,28 @@ const CheckoutModal = ({
       itemId: item.id,
       quantity: item.count,
       unitPrice: item.price,
+      isVariety: item.isVariety,
     }));
     const payload = {
+      status: 0,
       placedByName: order.placedByName,
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: order.quickResponseID,
       comment: order.comment,
       orderDetails: transformedArray,
     };
-
     const data = await createOrder(businessInformation[0]?.businessId, payload);
-    setLoading(false);
     setResponse(data);
+    setLoading(false);
     if (data?.data?.isSuccessful) {
+      console.log(data.data.data.id, 'place order');
+      setOrderId(data.data.data.id);
       notify({
         title: 'Success!',
         text: 'Order placed',
         type: 'success',
       });
-      // setScreen(2);
-      router.push('/dashboard/orders');
+      setScreen(2);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -122,49 +126,34 @@ const CheckoutModal = ({
     }
   };
 
-  const checkout = () => {
-    const validatedFields = orderSchema.safeParse({
-      placedByName: order?.placedByName,
-      placedByPhoneNumber: order?.placedByPhoneNumber,
-      quickResponseID: order.quickResponseID,
-    });
-    if (!validatedFields.success) {
-      setResponse({ errors: validatedFields.error.flatten().fieldErrors });
-    } else {
-      setScreen(2);
+  const finalizeOrder = async () => {
+    setIsLoading(true);
+    const payload = {
+      treatedBy: order.placedByName,
+      paymentMethod: selectedPaymentMethod,
+      paymentReference: reference,
+      status: 1,
+    };
+
+    const data = await completeOrder(payload, orderId);
+    setIsLoading(false);
+
+    if (data?.data?.isSuccessful) {
+      notify({
+        title: 'Payment made!',
+        text: 'Payment has been made, awaiting confirmation',
+        type: 'success',
+      });
+
+      router.push('/dashboard/orders');
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
     }
   };
-  // const finalizeOrder = async () => {
-  //   setIsLoading(true);
-  //   const payload = {
-  //     treatedBy: order.placedByName,
-  //     paymentMethod: selectedPaymentMethod,
-  //     paymentReference: reference,
-  //     status: 1,
-  //   };
-
-  //   const data = await completeOrder(
-  //     businessInformation[0]?.businessId,
-  //     payload
-  //   );
-  //   setIsLoading(false);
-
-  //   if (data?.data?.isSuccessful) {
-  //     notify({
-  //       title: 'Payment confirmed!',
-  //       text: 'Payment has been confirmed and order has been closed',
-  //       type: 'success',
-  //     });
-
-  //     router.push('/dashboard/orders');
-  //   } else if (data?.data?.error) {
-  //     notify({
-  //       title: 'Error!',
-  //       text: data?.data?.error,
-  //       type: 'error',
-  //     });
-  //   }
-  // };
 
   const getQrID = async () => {
     const data = await getQR(businessInformation[0]?.businessId);
@@ -232,7 +221,7 @@ const CheckoutModal = ({
                         backgroundColor='bg-primaryColor'
                       >
                         <div className='flex gap-2 items-center justify-center'>
-                          <p>Checkout ₦{totalPrice} </p>
+                          <p>Checkout {formatPrice(totalPrice)} </p>
                           <HiArrowLongLeft className='text-[22px] rotate-180' />
                         </div>
                       </CustomButton>
@@ -295,8 +284,9 @@ const CheckoutModal = ({
                                 </Button>
                               </div>
                               <div className='text-black w-[150px] grid place-content-center'>
-                                <h3 className='font-[600]'>₦{item?.price}</h3>
-                                {/* <p className='text-sm'>₦{item?.price}</p> */}
+                                <h3 className='font-[600]'>
+                                  {formatPrice(item?.price)}
+                                </h3>
                               </div>
                             </div>
                             {index !== selectedItems?.length - 1 && (
@@ -360,7 +350,7 @@ const CheckoutModal = ({
                     <span className='text-black'>Select payment method</span>
                   </div>
                   <p className='text-sm  text-primaryColor xl:mb-8 w-full mb-4'>
-                    ₦{totalPrice}
+                    {formatPrice(totalPrice)}
                   </p>
                 </div>
                 <div className='flex flex-col gap-1 text-black'>
@@ -403,7 +393,7 @@ const CheckoutModal = ({
                     <p className='text-sm text-grey500'>TOTAL ORDER</p>
                     <p className='font-bold text-black text-[20px]'>
                       {' '}
-                      ₦{totalPrice}
+                      {formatPrice(totalPrice)}
                     </p>
                   </div>
                   <MdKeyboardArrowRight />
@@ -429,7 +419,7 @@ const CheckoutModal = ({
                   <CustomButton
                     loading={isLoading}
                     disabled={isLoading}
-                    // onClick={completeOrder}
+                    onClick={finalizeOrder}
                     className='text-white w-full h-[50px]'
                   >
                     <div className='flex gap-2 items-center justify-center'>
