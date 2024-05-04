@@ -17,9 +17,14 @@ import {
   Divider,
   Pagination,
   Spacer,
+  Spinner,
   useDisclosure,
 } from '@nextui-org/react';
-import { CheckIcon, SkeletonLoading } from './data';
+import {
+  CheckIcon,
+  MenuSkeletonLoading,
+  SelectedSkeletonLoading,
+} from './data';
 import { FaPlus } from 'react-icons/fa6';
 import { FaMinus } from 'react-icons/fa6';
 import CheckoutModal from './checkoutModal';
@@ -62,9 +67,12 @@ type SelectedItem = {
 
 const MenuList = () => {
   const businessInformation = getJsonItemFromLocalStorage('business');
-  const order = getJsonItemFromLocalStorage('order');
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isLoading, setIsLoading] = useState<Boolean>(false);
+  const [order] = useState<any>(getJsonItemFromLocalStorage('order'));
+
+  const [loading, setLoading] = useState<Boolean>(false);
   const [menus, setMenus] = useState<MenuData>([]);
   const [filteredMenu, setFilteredMenu] = React.useState([]);
   const [value, setValue] = useState('');
@@ -75,6 +83,7 @@ const MenuList = () => {
   const [orderDetails, setOrderDetails] = useState([]);
 
   const getOrderDetails = async () => {
+    setLoading(true);
     const data = await getOrder(order.id);
 
     if (data?.data?.isSuccessful) {
@@ -246,7 +255,7 @@ const MenuList = () => {
         <article className='flex mt-6 gap-3'>
           <div className='xl:max-w-[65%] w-full'>
             {isLoading ? (
-              <SkeletonLoading />
+              <MenuSkeletonLoading />
             ) : (
               <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
                 {items?.map((menu, index) => (
@@ -419,15 +428,21 @@ const MenuList = () => {
                 </div>
               </>
             ) : (
-              <div className='flex flex-col h-full rounded-xl font-[500] justify-center items-center'>
-                <Image
-                  className='w-[50px] h-[50px]'
-                  src={noMenu}
-                  alt='no menu illustration'
-                />
-                <Spacer y={3} />
-                <p>Selected menu(s) will appear here</p>
-              </div>
+              <>
+                {loading ? (
+                  <SelectedSkeletonLoading />
+                ) : (
+                  <div className='flex flex-col h-full rounded-xl font-[500] justify-center items-center'>
+                    <Image
+                      className='w-[50px] h-[50px]'
+                      src={noMenu}
+                      alt='no menu illustration'
+                    />
+                    <Spacer y={3} />
+                    <p>Selected menu(s) will appear here</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </article>
@@ -438,6 +453,7 @@ const MenuList = () => {
           totalPrice={calculateTotalPrice()}
           onOpenChange={onOpenChange}
           isOpen={isOpen}
+          id={order?.id}
           orderDetails={orderDetails}
         />
         <ViewModal

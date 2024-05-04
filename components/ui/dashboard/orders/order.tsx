@@ -185,7 +185,7 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
       case 'actions':
         return (
           <div className='relative flexjustify-center items-center gap-2'>
-            <Dropdown className=''>
+            <Dropdown aria-label='drop down' className=''>
               <DropdownTrigger aria-label='actions'>
                 <div className='cursor-pointer flex justify-center items-center text-black'>
                   <HiOutlineDotsVertical className='text-[22px] ' />
@@ -209,7 +209,7 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
                 {options && options.includes('Checkout') && (
                   <DropdownItem
                     onClick={() => toggleConfirmModal(order)}
-                    aria-label='ccheckout'
+                    aria-label='checkout'
                   >
                     <div className={`flex gap-3 items-center text-grey500`}>
                       <BsCalendar2Check />

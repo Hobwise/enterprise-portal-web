@@ -38,7 +38,7 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
 
     if (data?.data?.isSuccessful) {
       toast.success('Variety successfully added');
-      getMenu();
+      getMenu(false);
       toggleModal();
       setPrice(0);
       setUnit('');

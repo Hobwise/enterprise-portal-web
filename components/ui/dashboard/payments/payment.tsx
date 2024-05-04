@@ -132,10 +132,9 @@ const PaymentsList = ({ payments, onOpen, getAllPayments }: any) => {
 
   const renderCell = React.useCallback((payment, columnKey) => {
     const cellValue = payment[columnKey];
-    const options = availableOptions[statusDataMap[payment.status]];
 
     switch (columnKey) {
-      case 'amount':
+      case 'totalAmount':
         return (
           <div className='text-textGrey text-sm'>
             <p>{formatPrice(payment.totalAmount)}</p>

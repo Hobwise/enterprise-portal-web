@@ -35,7 +35,7 @@ const DeleteVariety = ({
     );
     setLoading(false);
     if (data?.data?.isSuccessful) {
-      getMenu();
+      getMenu(false);
       toggleModalDeleteVariety();
       toast.success('Variety deleted successfully');
     } else if (data?.data?.error) {

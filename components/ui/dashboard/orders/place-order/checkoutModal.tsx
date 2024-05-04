@@ -23,6 +23,7 @@ import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   completeOrder,
   createOrder,
+  editOrder,
   orderSchema,
 } from '@/app/api/controllers/dashboard/orders';
 import { useRouter } from 'next/navigation';
@@ -49,8 +50,11 @@ const CheckoutModal = ({
   totalPrice,
   handleDecrement,
   handleIncrement,
+  orderDetails,
+  id,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
+
   const router = useRouter();
   const [response, setResponse] = useState(null);
   const [orderId, setOrderId] = useState<string>('');
@@ -61,10 +65,10 @@ const CheckoutModal = ({
 
   const [qr, setQr] = useState([]);
   const [order, setOrder] = useState<Order>({
-    placedByName: '',
-    placedByPhoneNumber: '',
-    quickResponseID: '',
-    comment: '',
+    placedByName: orderDetails?.placedByName || '',
+    placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
+    quickResponseID: orderDetails?.quickResponseID || '',
+    comment: orderDetails?.comment || '',
   });
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
@@ -109,7 +113,41 @@ const CheckoutModal = ({
     setResponse(data);
     setLoading(false);
     if (data?.data?.isSuccessful) {
-      console.log(data.data.data.id, 'place order');
+      setOrderId(data.data.data.id);
+      notify({
+        title: 'Success!',
+        text: 'Order placed',
+        type: 'success',
+      });
+      setScreen(2);
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
+  const updateOrder = async () => {
+    setLoading(true);
+    const transformedArray = selectedItems.map((item) => ({
+      itemId: item.id,
+      quantity: item.count,
+      unitPrice: item.price,
+      isVariety: item.isVariety,
+    }));
+    const payload = {
+      status: 0,
+      placedByName: order.placedByName,
+      placedByPhoneNumber: order.placedByPhoneNumber,
+      quickResponseID: order.quickResponseID,
+      comment: order.comment,
+      orderDetails: transformedArray,
+    };
+    const data = await editOrder(id, payload);
+    setResponse(data);
+    setLoading(false);
+    if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
       notify({
         title: 'Success!',
@@ -172,8 +210,18 @@ const CheckoutModal = ({
   };
 
   useEffect(() => {
+    setOrder({
+      placedByName: orderDetails?.placedByName || '',
+      placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
+      quickResponseID: orderDetails?.quickResponseID || '',
+      comment: orderDetails?.comment || '',
+    });
+  }, [orderDetails]);
+
+  useEffect(() => {
     getQrID();
   }, []);
+
   return (
     <Modal
       size={screen === 1 ? '5xl' : 'md'}
@@ -182,11 +230,12 @@ const CheckoutModal = ({
         setScreen(1);
         onOpenChange();
         setReference('');
+
         setOrder({
-          placedByName: '',
-          placedByPhoneNumber: '',
-          quickResponseID: '',
-          comment: '',
+          placedByName: orderDetails?.placedByName || '',
+          placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
+          quickResponseID: orderDetails?.quickResponseID || '',
+          comment: orderDetails?.comment || '',
         });
       }}
     >
@@ -216,7 +265,7 @@ const CheckoutModal = ({
                       <CustomButton
                         loading={loading}
                         disabled={loading}
-                        onClick={placeOrder}
+                        onClick={id ? updateOrder : placeOrder}
                         className='py-2 px-4 mb-0 text-white'
                         backgroundColor='bg-primaryColor'
                       >
@@ -322,9 +371,10 @@ const CheckoutModal = ({
 
                       <SelectInput
                         errorMessage={response?.errors?.quickResponseID?.[0]}
-                        label='Table'
+                        label='Select a table'
                         placeholder='Enter table'
                         name='quickResponseID'
+                        selectedKeys={[order?.quickResponseID]}
                         onChange={handleInputChange}
                         value={order.quickResponseID}
                         contents={qr}
@@ -336,7 +386,7 @@ const CheckoutModal = ({
                         name='comment'
                         onChange={handleInputChange}
                         label='Add comment'
-                        placeholder='Add a comment to this order'
+                        placeholder='Add a comment to this order. (optional)'
                       />
                     </div>
                   </div>
@@ -345,13 +395,21 @@ const CheckoutModal = ({
             )}
             {screen === 2 && (
               <div className='p-5'>
-                <div>
-                  <div className=' text-[18px] leading-8 font-semibold'>
-                    <span className='text-black'>Select payment method</span>
+                <div className='flex justify-between mt-3'>
+                  <div>
+                    <div className=' text-[18px] leading-8 font-semibold'>
+                      <span className='text-black'>Select payment method</span>
+                    </div>
+                    <p className='text-sm  text-primaryColor xl:mb-8 w-full mb-4'>
+                      {formatPrice(totalPrice)}
+                    </p>
                   </div>
-                  <p className='text-sm  text-primaryColor xl:mb-8 w-full mb-4'>
-                    {formatPrice(totalPrice)}
-                  </p>
+                  <CustomButton
+                    onClick={() => router.push('/dashboard/orders')}
+                    className='border border-primaryGrey text-grey500 bg-transparent'
+                  >
+                    Complete later
+                  </CustomButton>
                 </div>
                 <div className='flex flex-col gap-1 text-black'>
                   {paymentMethods.map((item) => (

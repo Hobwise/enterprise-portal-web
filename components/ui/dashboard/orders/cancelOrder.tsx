@@ -19,11 +19,8 @@ const CancelOrderModal = ({
   toggleCancelModal,
   getAllOrders,
 }: any) => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [loading, setLoading] = useState(false);
-
-  const router = useRouter();
 
   const handleCancel = async () => {
     setLoading(true);
@@ -35,11 +32,7 @@ const CancelOrderModal = ({
       status: 2,
     };
 
-    const data = await completeOrder(
-      businessInformation[0]?.businessId,
-      payload,
-      singleOrder.id
-    );
+    const data = await completeOrder(payload, singleOrder.id);
     setLoading(false);
 
     if (data?.data?.isSuccessful) {

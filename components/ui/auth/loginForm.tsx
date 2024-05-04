@@ -37,10 +37,10 @@ const LoginForm = () => {
     setLoading(true);
     const data = await loginUser(loginFormData);
 
-    setLoading(false);
     setResponse(data);
     const businesses = data?.data?.data?.businesses || [];
 
+    setLoading(false);
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage('userInformation', data?.data?.data);
       saveJsonItemToLocalStorage('business', data?.data?.data.businesses);

@@ -31,6 +31,7 @@ const SelectInput = ({
       classNames={{
         label: 'text-[#000] font-[500] text-[14px]',
         base: 'bg-white',
+
         value: 'text-[14px] text-[#000]',
 
         trigger:

@@ -58,7 +58,7 @@ const EditVariety = ({
 
     if (data?.data?.isSuccessful) {
       toast.success('Variety updated successfully ');
-      getMenu();
+      getMenu(false);
       toggleModalEditVariety();
       setPrice('');
       setUnit('');

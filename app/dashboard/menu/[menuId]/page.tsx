@@ -9,6 +9,7 @@ import {
   ModalBody,
   ModalContent,
   Spacer,
+  Spinner,
   Switch,
   Tooltip,
   useDisclosure,
@@ -81,7 +82,6 @@ const MenuDetails = () => {
         toast.error('An error occurred');
       }
     } catch (error) {
-      console.error('Error updating menu item:', error);
       setIsAvailable(!isSelected);
       toast.error('An error occurred');
     }
@@ -91,8 +91,8 @@ const MenuDetails = () => {
     setIsOpen(!isOpen);
   };
 
-  const getMenu = async () => {
-    setIsLoading(true);
+  const getMenu = async (loading = true) => {
+    setIsLoading(loading);
     const data = await getMenuItem(itemId);
     setIsLoading(false);
 
@@ -173,106 +173,124 @@ const MenuDetails = () => {
         </div>
       </div>
       <Spacer y={5} />
-      <div className='flex  xl:flex-row flex-col'>
-        <div className={`h-[564px]  xl:w-1/2 w-full  xl:mt-0 mt-4 `}>
-          <Image
-            src={
-              menuItem?.image
-                ? `data:image/jpeg;base64,${menuItem?.image}`
-                : noImage
-            }
-            width={200}
-            height={200}
-            className={'bg-contain h-full rounded-lg w-full'}
-            aria-label='uploaded image'
-            alt='uploaded image(s)'
-          />
-        </div>
-        <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 '>
-          <h1 className='text-[28px] font-semibold'>{menuItem?.menuName}</h1>
-          <Spacer y={5} />
-          <p className='text-sm font-sm text-grey600 xl:w-[360px] w-full'>
-            {menuItem?.itemDescription}
-          </p>
-          <Spacer y={5} />
-          <p className=' font-[700] '>{formatPrice(menuItem?.price)}</p>
-          <Spacer y={5} />
-          <p className='text-grey600 text-sm'>{menuItem?.itemName}</p>
-          <Spacer y={10} />
 
-          {!menuItem?.varieties && <p className='font-[700]'>Varieties</p>}
-          <Spacer y={1} />
-          {menuItem?.varieties?.length > 0 ? (
-            <div className='border-[#EAECF0] text-sm border rounded-lg '>
-              <div className='flex justify-between border-b border-b-[#EAECF0] p-3 items-center'>
-                <p className='font-[700]'>
-                  Variety{' '}
-                  <span className='text-grey600 font-[500]'>
-                    {menuItem?.varieties?.length}
-                  </span>
-                </p>
-                <div>
-                  <CustomButton
-                    onClick={toggleModal}
-                    className='bg-white text-primaryColor font-[700] flex gap-1'
-                  >
-                    <GoPlus className='text-[20px] font-[700]' />
-                    <span>Create variety</span>
-                  </CustomButton>
+      {isLoading ? (
+        <div
+          className={`loadingContainer bg-white flex flex-col justify-center items-center`}
+        >
+          <div className='animate-bounce'>
+            <Image
+              src={hobink}
+              style={{ objectFit: 'cover' }}
+              alt='hobink logo'
+            />
+          </div>
+          <p className='text-center loading-text text-primaryColor'>
+            Loading...
+          </p>
+        </div>
+      ) : (
+        <div className='flex  xl:flex-row flex-col'>
+          <div className={`h-[564px]  xl:w-1/2 w-full  xl:mt-0 mt-4 `}>
+            <Image
+              src={
+                menuItem?.image
+                  ? `data:image/jpeg;base64,${menuItem?.image}`
+                  : noImage
+              }
+              width={200}
+              height={200}
+              className={'bg-contain h-full rounded-lg w-full'}
+              aria-label='uploaded image'
+              alt='uploaded image(s)'
+            />
+          </div>
+          <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 '>
+            <h1 className='text-[28px] font-semibold'>{menuItem?.menuName}</h1>
+            <Spacer y={5} />
+            <p className='text-sm font-sm text-grey600 xl:w-[360px] w-full'>
+              {menuItem?.itemDescription}
+            </p>
+            <Spacer y={5} />
+            <p className=' font-[700] '>{formatPrice(menuItem?.price)}</p>
+            <Spacer y={5} />
+            <p className='text-grey600 text-sm'>{menuItem?.itemName}</p>
+            <Spacer y={10} />
+
+            {!menuItem?.varieties && <p className='font-[700]'>Varieties</p>}
+            <Spacer y={1} />
+            {menuItem?.varieties?.length > 0 ? (
+              <div className='border-[#EAECF0] text-sm border rounded-lg '>
+                <div className='flex justify-between border-b border-b-[#EAECF0] p-3 items-center'>
+                  <p className='font-[700]'>
+                    Variety{' '}
+                    <span className='text-grey600 font-[500]'>
+                      {menuItem?.varieties?.length}
+                    </span>
+                  </p>
+                  <div>
+                    <CustomButton
+                      onClick={toggleModal}
+                      className='bg-white text-primaryColor font-[700] flex gap-1'
+                    >
+                      <GoPlus className='text-[20px] font-[700]' />
+                      <span>Create variety</span>
+                    </CustomButton>
+                  </div>
+                </div>
+                <div className='h-[250px] overflow-scroll'>
+                  {menuItem?.varieties.map((item, index) => {
+                    return (
+                      <>
+                        <div
+                          key={index}
+                          className='rounded-lg  p-3 text-sm text-black  flex justify-between'
+                        >
+                          <div className='p-1'>
+                            <p className=' font-[700]'>{menuItem?.itemName}</p>
+                            <Spacer y={2} />
+                            <p className='text-grey600 text-sm'>{item.unit}</p>
+                            <Spacer y={2} />
+                            <p className='font-[700]'>
+                              {formatPrice(item.price)}
+                            </p>
+                          </div>
+                          <div className='flex items-center'>
+                            <Tooltip color='secondary' content={'Edit'}>
+                              <span>
+                                <FaRegEdit
+                                  onClick={() => {
+                                    toggleModalEditVariety();
+                                    setVarietyDetails(item);
+                                  }}
+                                  className='text-[20px] text-grey500 mr-4 cursor-pointer'
+                                />
+                              </span>
+                            </Tooltip>
+                            <Tooltip color='danger' content={'Delete'}>
+                              <span>
+                                <RiDeleteBin6Line
+                                  onClick={() => {
+                                    toggleModalDeleteVariety();
+                                    setVarietyDetails(item);
+                                  }}
+                                  className='text-[20px] text-[#dc2626] mr-4 cursor-pointer'
+                                />
+                              </span>
+                            </Tooltip>
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })}
                 </div>
               </div>
-              <div className='h-[250px] overflow-scroll'>
-                {menuItem?.varieties.map((item, index) => {
-                  return (
-                    <>
-                      <div
-                        key={index}
-                        className='rounded-lg  p-3 text-sm text-black  flex justify-between'
-                      >
-                        <div className='p-1'>
-                          <p className=' font-[700]'>{menuItem?.itemName}</p>
-                          <Spacer y={2} />
-                          <p className='text-grey600 text-sm'>{item.unit}</p>
-                          <Spacer y={2} />
-                          <p className='font-[700]'>
-                            {formatPrice(item.price)}
-                          </p>
-                        </div>
-                        <div className='flex items-center'>
-                          <Tooltip color='secondary' content={'Edit'}>
-                            <span>
-                              <FaRegEdit
-                                onClick={() => {
-                                  toggleModalEditVariety();
-                                  setVarietyDetails(item);
-                                }}
-                                className='text-[20px] text-grey500 mr-4 cursor-pointer'
-                              />
-                            </span>
-                          </Tooltip>
-                          <Tooltip color='danger' content={'Delete'}>
-                            <span>
-                              <RiDeleteBin6Line
-                                onClick={() => {
-                                  toggleModalDeleteVariety();
-                                  setVarietyDetails(item);
-                                }}
-                                className='text-[20px] text-[#dc2626] mr-4 cursor-pointer'
-                              />
-                            </span>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    </>
-                  );
-                })}
-              </div>
-            </div>
-          ) : (
-            <p className='text-grey600 text-sm'>No varieties</p>
-          )}
+            ) : (
+              <p className='text-grey600 text-sm'>No varieties</p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
       <VarietyModal
         menuItem={menuItem}
         isOpen={isOpen}

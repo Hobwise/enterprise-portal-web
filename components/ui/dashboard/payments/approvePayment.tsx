@@ -22,7 +22,6 @@ import Success from '../../../../public/assets/images/success.png';
 import hobink from '../../../../public/assets/images/hobink.png';
 
 const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
-  console.log(singlePayment, ' singlePayment');
   const [reference, setReference] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [order, setOrder] = useState([]);
@@ -82,7 +81,14 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
   }, [singlePayment?.orderID]);
   return (
     <>
-      <Modal size='xl' isOpen={isOpen} onOpenChange={toggleApproveModal}>
+      <Modal
+        size='xl'
+        isOpen={isOpen}
+        onOpenChange={() => {
+          setOrder([]);
+          toggleApproveModal();
+        }}
+      >
         <ModalContent>
           {(onClose) => (
             <>

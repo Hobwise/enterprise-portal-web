@@ -91,3 +91,28 @@ export async function createOrder(businessId: string, payload: Order) {
     handleError(error);
   }
 }
+
+export async function editOrder(orderId: string, payload: Order) {
+  const validatedFields = orderSchema.safeParse({
+    placedByName: payload?.placedByName,
+    placedByPhoneNumber: payload?.placedByPhoneNumber,
+    quickResponseID: payload.quickResponseID,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    const data = await api.put(
+      `${DASHBOARD.order}?orderId=${orderId}`,
+      payload
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}

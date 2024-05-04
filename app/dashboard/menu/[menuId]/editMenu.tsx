@@ -120,7 +120,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
 
     if (data?.data?.isSuccessful) {
       toggleModalEdit();
-      getMenu();
+      getMenu(false);
       toast.success('Menu item updated successfully');
       setSelectedImage('');
     } else if (data?.data?.error) {

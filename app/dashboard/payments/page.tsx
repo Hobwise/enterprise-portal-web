@@ -66,7 +66,7 @@ const Payments: React.FC = () => {
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;
-      console.log(response, 'response');
+
       setPayments(response);
     } else if (data?.data?.error) {
       notify({

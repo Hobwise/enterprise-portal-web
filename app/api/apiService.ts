@@ -194,6 +194,7 @@ api.interceptors.response.use(
         text: 'Session timeout',
         type: 'error',
       });
+      window.location.href = '/auth/login';
     }
     return Promise.reject(error);
   }

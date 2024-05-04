@@ -27,7 +27,7 @@ export const CheckIcon = ({ size, height, width, ...props }: any) => {
   );
 };
 
-export const SkeletonLoading = () => {
+export const MenuSkeletonLoading = () => {
   return (
     <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
       {[1, 2, 3, 4, 5, 6].map((item) => (
@@ -48,6 +48,24 @@ export const SkeletonLoading = () => {
             </Skeleton>
           </div>
         </Card>
+      ))}
+    </div>
+  );
+};
+export const SelectedSkeletonLoading = () => {
+  return (
+    <div className='max-w-[300px] w-full mt-6'>
+      {[1, 2].map((item) => (
+        <div className='flex items-center  gap-3 mb-3'>
+          <div>
+            <Skeleton className='flex rounded-md w-20 h-20 animate-pulse' />
+          </div>
+          <div className='w-full flex flex-col gap-2'>
+            <Skeleton className='h-3 w-2/5 rounded-lg animate-pulse' />
+            <Skeleton className='h-3 w-4/5 rounded-lg animate-pulse' />
+            <Skeleton className='h-3 w-3/5 rounded-lg animate-pulse' />
+          </div>
+        </div>
       ))}
     </div>
   );
