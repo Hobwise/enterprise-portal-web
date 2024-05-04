@@ -6,7 +6,11 @@ import React, { useEffect, useState } from 'react';
 import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
 import MenuList from '@/components/ui/dashboard/menu/menu';
 
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import {
+  CustomLoading,
+  getJsonItemFromLocalStorage,
+  notify,
+} from '@/lib/utils';
 import {
   createMenu,
   getMenuByBusiness,
@@ -104,27 +108,6 @@ const Menu: React.FC = () => {
       });
     }
   };
-
-  if (isLoading) {
-    return (
-      <Container>
-        <div
-          className={`loadingContainer bg-white flex flex-col justify-center items-center`}
-        >
-          <div className='animate-bounce'>
-            <Image
-              src={hobink}
-              style={{ objectFit: 'cover' }}
-              alt='hobink logo'
-            />
-          </div>
-          <p className='text-center loading-text text-primaryColor'>
-            Loading...
-          </p>
-        </div>
-      </Container>
-    );
-  }
 
   const getScreens = () => {
     if (menus.length > 0) {
@@ -224,16 +207,8 @@ const Menu: React.FC = () => {
           </CustomButton>
         </div>
       </div>
-      {getScreens()}
-      {/* <Modal isOpen={openModal} onOpenChange={toggleModal}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalBody>Hello world</ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal> */}
+      {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (

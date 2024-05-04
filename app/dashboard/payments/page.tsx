@@ -3,7 +3,11 @@ import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useState } from 'react';
 
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import {
+  CustomLoading,
+  getJsonItemFromLocalStorage,
+  notify,
+} from '@/lib/utils';
 
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
@@ -81,27 +85,6 @@ const Payments: React.FC = () => {
     getAllPayments();
   }, []);
 
-  if (isLoading) {
-    return (
-      <Container>
-        <div
-          className={`loadingContainer bg-white flex flex-col justify-center items-center`}
-        >
-          <div className='animate-bounce'>
-            <Image
-              src={hobink}
-              style={{ objectFit: 'cover' }}
-              alt='hobink logo'
-            />
-          </div>
-          <p className='text-center loading-text loading-text text-primaryColor'>
-            Loading...
-          </p>
-        </div>
-      </Container>
-    );
-  }
-
   const getScreens = () => {
     if (payments.length > 0) {
       return (
@@ -177,7 +160,7 @@ const Payments: React.FC = () => {
         </div>
       </div>
 
-      {getScreens()}
+      {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
     </Container>
   );
 };

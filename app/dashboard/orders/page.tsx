@@ -3,7 +3,11 @@ import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useState } from 'react';
 
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import {
+  CustomLoading,
+  getJsonItemFromLocalStorage,
+  notify,
+} from '@/lib/utils';
 
 import { IoAddCircleOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
@@ -73,27 +77,6 @@ const Orders: React.FC = () => {
     getAllOrders();
   }, []);
 
-  if (isLoading) {
-    return (
-      <Container>
-        <div
-          className={`loadingContainer bg-white flex flex-col justify-center items-center`}
-        >
-          <div className='animate-bounce'>
-            <Image
-              src={hobink}
-              style={{ objectFit: 'cover' }}
-              alt='hobink logo'
-            />
-          </div>
-          <p className='text-center loading-text loading-text text-primaryColor'>
-            Loading...
-          </p>
-        </div>
-      </Container>
-    );
-  }
-
   const getScreens = () => {
     if (orders.length > 0) {
       return (
@@ -154,16 +137,6 @@ const Orders: React.FC = () => {
               </Button>
             </ButtonGroup>
           )}
-          {/* <CustomButton
-            // onClick={openAddRoleModal}
-            className='py-2 px-4 md:mb-0 text-black border border-[#D0D5DD] mb-4 '
-            backgroundColor='bg-white'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              <MdOutlineFileDownload className='text-[22px]' />
-              <p>Export csv</p>
-            </div>
-          </CustomButton> */}
 
           <CustomButton
             onClick={() => router.push('/dashboard/orders/place-order')}
@@ -177,16 +150,8 @@ const Orders: React.FC = () => {
           </CustomButton>
         </div>
       </div>
-      {getScreens()}
-      {/* <Modal isOpen={openModal} onOpenChange={toggleModal}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalBody>Hello world</ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal> */}
+      {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
