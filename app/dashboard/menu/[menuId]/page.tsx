@@ -23,7 +23,11 @@ import { MdCreate } from 'react-icons/md';
 import { useSearchParams } from 'next/navigation';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import Image from 'next/image';
-import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
+import {
+  CustomLoading,
+  formatPrice,
+  getJsonItemFromLocalStorage,
+} from '@/lib/utils';
 import { FaRegEdit } from 'react-icons/fa';
 import {
   editMenuItem,
@@ -175,20 +179,7 @@ const MenuDetails = () => {
       <Spacer y={5} />
 
       {isLoading ? (
-        <div
-          className={`loadingContainer bg-white flex flex-col justify-center items-center`}
-        >
-          <div className='animate-bounce'>
-            <Image
-              src={hobink}
-              style={{ objectFit: 'cover' }}
-              alt='hobink logo'
-            />
-          </div>
-          <p className='text-center loading-text text-primaryColor'>
-            Loading...
-          </p>
-        </div>
+        <CustomLoading />
       ) : (
         <div className='flex  xl:flex-row flex-col'>
           <div className={`h-[564px]  xl:w-1/2 w-full  xl:mt-0 mt-4 `}>

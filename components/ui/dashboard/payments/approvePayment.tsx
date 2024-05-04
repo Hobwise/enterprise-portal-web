@@ -171,6 +171,9 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
                     {order?.length === 0 ? (
                       <div className={`grid h-full place-content-center`}>
                         <Spinner />
+                        <p className='text-center mt-1 text-[14px] text-grey400'>
+                          Fetching order details...
+                        </p>
                       </div>
                     ) : (
                       <>
