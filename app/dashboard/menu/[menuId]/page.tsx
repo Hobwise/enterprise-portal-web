@@ -61,7 +61,7 @@ const MenuDetails = () => {
 
   const itemId = searchParams.get('itemId') || null;
   const [menuItem, setMenuItem] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [varietyDetails, setVarietyDetails] = useState(null);
   const [isAvailable, setIsAvailable] = useState<Boolean>(
     menuItem.isAvailabale

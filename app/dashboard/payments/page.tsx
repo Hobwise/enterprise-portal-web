@@ -59,10 +59,8 @@ const Payments: React.FC = () => {
 
   const [payments, setPayments] = useState<OrderSummary[]>([]);
 
-  const [isLoading, setIsLoading] = useState<Boolean>(false);
+  const [isLoading, setIsLoading] = useState<Boolean>(true);
   const businessInformation = getJsonItemFromLocalStorage('business');
-
-  const router = useRouter();
 
   const getAllPayments = async (checkLoading = true) => {
     setIsLoading(checkLoading);

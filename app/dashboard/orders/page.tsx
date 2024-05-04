@@ -52,7 +52,7 @@ const Orders: React.FC = () => {
 
   const [orders, setOrders] = useState<OrderData>([]);
 
-  const [isLoading, setIsLoading] = useState<Boolean>(false);
+  const [isLoading, setIsLoading] = useState<Boolean>(true);
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const router = useRouter();

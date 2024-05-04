@@ -56,7 +56,7 @@ const Menu: React.FC = () => {
 
   const [menus, setMenus] = useState<MenuData>([]);
 
-  const [isLoading, setIsLoading] = useState<Boolean>(false);
+  const [isLoading, setIsLoading] = useState<Boolean>(true);
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const [name, setName] = useState('');
@@ -64,8 +64,6 @@ const Menu: React.FC = () => {
   const router = useRouter();
 
   const getAllMenus = async () => {
-    setIsLoading(true);
-
     const data = await getMenuByBusiness(businessInformation[0]?.businessId);
     setIsLoading(false);
 
