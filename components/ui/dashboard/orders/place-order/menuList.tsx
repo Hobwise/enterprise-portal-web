@@ -456,14 +456,16 @@ const MenuList = () => {
                 {loading ? (
                   <SelectedSkeletonLoading />
                 ) : (
-                  <div className='flex flex-col h-full rounded-xl font-[500] justify-center items-center'>
+                  <div className='flex flex-col h-full rounded-xl justify-center items-center'>
                     <Image
                       className='w-[50px] h-[50px]'
                       src={noMenu}
                       alt='no menu illustration'
                     />
                     <Spacer y={3} />
-                    <p>Selected menu(s) will appear here</p>
+                    <p className='text-sm text-grey400'>
+                      Selected menu(s) will appear here
+                    </p>
                   </div>
                 )}
               </>
