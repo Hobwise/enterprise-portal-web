@@ -1,44 +1,48 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
+import { useGlobalContext } from '@/hooks/globalProvider';
+import usePagination from '@/hooks/usePagination';
+import { formatPrice } from '@/lib/utils';
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Button,
-  DropdownTrigger,
   Dropdown,
-  DropdownMenu,
   DropdownItem,
-  cn,
-  PaginationItemType,
-  Pagination,
-  menu,
+  DropdownMenu,
+  DropdownTrigger,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
 } from '@nextui-org/react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { IoIosArrowForward } from 'react-icons/io';
+import noImage from '../../../../public/assets/images/no-image.png';
 import { columns } from './data';
 import Filters from './filters';
-import Link from 'next/link';
-import Image from 'next/image';
-import {
-  convertBase64ToImageURL,
-  formatPrice,
-  saveJsonItemToLocalStorage,
-} from '@/lib/utils';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import DeleteMenu from '@/app/dashboard/menu/[menuId]/deleteMenu';
-import EditMenu from '@/app/dashboard/menu/[menuId]/editMenu';
-import noImage from '../../../../public/assets/images/no-image.png';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
 const MenuList = ({ menus, onOpen }: any) => {
-  const [filterValue, setFilterValue] = React.useState('');
   const [filteredMenu, setFilteredMenu] = React.useState(menus[0]?.items);
+  const {
+    bottomContent,
+    headerColumns,
+    setSelectedKeys,
+    sortedItems,
+    selectedKeys,
+    sortDescriptor,
+    setSortDescriptor,
+    filterValue,
+    statusFilter,
+    visibleColumns,
+    onSearchChange,
+    onRowsPerPageChange,
+    classNames,
+    hasSearchFilter,
+  } = usePagination(filteredMenu, columns, INITIAL_VISIBLE_COLUMNS);
   const {
     toggleModalDelete,
     isOpenDelete,
@@ -46,11 +50,6 @@ const MenuList = ({ menus, onOpen }: any) => {
     isOpenEdit,
     toggleModalEdit,
   } = useGlobalContext();
-
-  const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
-  const [visibleColumns, setVisibleColumns] = React.useState(
-    new Set(INITIAL_VISIBLE_COLUMNS)
-  );
 
   const [value, setValue] = useState('');
 
@@ -62,55 +61,6 @@ const MenuList = ({ menus, onOpen }: any) => {
     const filteredMenu = menus.filter((item) => item.name === index);
     setFilteredMenu(filteredMenu[0]?.items);
   };
-
-  const [statusFilter, setStatusFilter] = React.useState('all');
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [sortDescriptor, setSortDescriptor] = React.useState({
-    column: 'price',
-    direction: 'ascending',
-  });
-  const [page, setPage] = React.useState(1);
-
-  const pages = Math.ceil(filteredMenu.length / rowsPerPage);
-
-  const hasSearchFilter = Boolean(filterValue);
-
-  const headerColumns = React.useMemo(() => {
-    if (visibleColumns === 'all') return columns;
-
-    return columns.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
-    );
-  }, [visibleColumns]);
-
-  const filteredItems = React.useMemo(() => {
-    let filteredMenus = [...filteredMenu];
-
-    if (hasSearchFilter) {
-      filteredMenus = filteredMenus.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
-      );
-    }
-
-    return filteredMenus;
-  }, [filteredMenu, filterValue, statusFilter]);
-
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
-
-  const sortedItems = React.useMemo(() => {
-    return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
-
-      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
-    });
-  }, [sortDescriptor, items]);
 
   const renderCell = React.useCallback((menu, columnKey) => {
     const cellValue = menu[columnKey];
@@ -202,36 +152,6 @@ const MenuList = ({ menus, onOpen }: any) => {
     }
   }, []);
 
-  const onNextPage = React.useCallback(() => {
-    if (page < pages) {
-      setPage(page + 1);
-    }
-  }, [page, pages]);
-
-  const onPreviousPage = React.useCallback(() => {
-    if (page > 1) {
-      setPage(page - 1);
-    }
-  }, [page]);
-
-  const onRowsPerPageChange = React.useCallback((e) => {
-    setRowsPerPage(Number(e.target.value));
-    setPage(1);
-  }, []);
-
-  const onSearchChange = React.useCallback((value) => {
-    if (value) {
-      setFilterValue(value);
-      setPage(1);
-    } else {
-      setFilterValue('');
-    }
-  }, []);
-
-  const onClear = React.useCallback(() => {
-    setFilterValue('');
-    setPage(1);
-  }, []);
   const topContent = React.useMemo(() => {
     return (
       <Filters
@@ -252,120 +172,6 @@ const MenuList = ({ menus, onOpen }: any) => {
     hasSearchFilter,
   ]);
 
-  const renderItem = ({
-    ref,
-    key,
-    value,
-    isActive,
-    onNext,
-    onPrevious,
-    setPage,
-    className,
-  }: any) => {
-    if (value === PaginationItemType.NEXT) {
-      return (
-        <button
-          key={key}
-          className={cn(className, 'bg-default-200/50 min-w-8 w-8 h-8')}
-          onClick={onNext}
-        >
-          <IoIosArrowForward />
-        </button>
-      );
-    }
-
-    if (value === PaginationItemType.PREV) {
-      return (
-        <button
-          key={key}
-          className={cn(className, 'bg-default-200/50 min-w-8 w-8 h-8')}
-          onClick={onPrevious}
-        >
-          <IoIosArrowForward className='rotate-180' />
-        </button>
-      );
-    }
-
-    if (value === PaginationItemType.DOTS) {
-      return (
-        <button key={key} className={className}>
-          ...
-        </button>
-      );
-    }
-
-    // cursor is the default item
-    return (
-      <button
-        key={key}
-        ref={ref}
-        className={cn(
-          className,
-          isActive && 'rounded-md text-primaryColor bg-[#EAE5FF] '
-        )}
-        onClick={() => setPage(value)}
-      >
-        {value}
-      </button>
-    );
-  };
-
-  const bottomContent = React.useMemo(() => {
-    return (
-      <div className='py-2 px-2 flex justify-between items-center'>
-        <Pagination
-          disableCursorAnimation
-          showControls
-          page={page}
-          total={pages}
-          onChange={setPage}
-          className='gap-2'
-          radius='full'
-          renderItem={renderItem}
-          variant='light'
-        />
-        <div className='hidden sm:flex w-[30%] justify-end gap-2'>
-          <Button
-            isDisabled={pages === 1}
-            size='sm'
-            variant='flat'
-            onPress={onPreviousPage}
-          >
-            Previous
-          </Button>
-          <Button
-            isDisabled={pages === 1}
-            size='sm'
-            variant='flat'
-            onPress={onNextPage}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    );
-  }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
-
-  const classNames = React.useMemo(
-    () => ({
-      wrapper: ['max-h-[382px]', 'max-w-3xl'],
-      th: ['bg-transparent', 'text-default-500', 'border-b', 'border-divider'],
-      tr: ' border-b border-divider',
-      td: [
-        // changing the rows border radius
-        // first
-        'py-3',
-        'group-data-[first=true]:first:before:rounded-none',
-        'group-data-[first=true]:last:before:rounded-none',
-        // middle
-        'group-data-[middle=true]:before:rounded-none',
-        // last
-        'group-data-[last=true]:first:before:rounded-none',
-        'group-data-[last=true]:last:before:rounded-none',
-      ],
-    }),
-    []
-  );
   return (
     <section>
       <Table
@@ -387,11 +193,11 @@ const MenuList = ({ menus, onOpen }: any) => {
         <TableHeader columns={headerColumns}>
           {(column) => (
             <TableColumn
-              key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
-              allowsSorting={column.sortable}
+              key={column?.uid}
+              align={column?.uid === 'actions' ? 'center' : 'start'}
+              allowsSorting={column?.sortable}
             >
-              {column.name}
+              {column?.name}
             </TableColumn>
           )}
         </TableHeader>

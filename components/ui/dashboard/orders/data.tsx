@@ -36,33 +36,4 @@ export const statusDataMap: Record<
   3: 'awaiting confirmation',
 };
 
-const getTableClasses = () => {
-  return React.useMemo(
-    () => ({
-      wrapper: ['max-h-[382px]', 'max-w-3xl'],
-
-      th: [
-        'bg-transparent',
-        'text-default-500',
-        'border-b',
-        'border-[#E4E7EC]',
-      ],
-      tr: ' border-b border-[#E4E7EC]',
-      td: [
-        // changing the rows border radius
-        // first
-        'py-3',
-        'group-data-[first=true]:first:before:rounded-none',
-        'group-data-[first=true]:last:before:rounded-none',
-        // middle
-        'group-data-[middle=true]:before:rounded-none',
-        // last
-        'group-data-[last=true]:first:before:rounded-none',
-        'group-data-[last=true]:last:before:rounded-none',
-      ],
-    }),
-    []
-  );
-};
-
-export { columns, getTableClasses };
+export { columns };

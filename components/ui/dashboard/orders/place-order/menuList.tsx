@@ -1,39 +1,37 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import Filters from './filter';
 import { getMenuByBusiness } from '@/app/api/controllers/dashboard/menu';
+import { getOrder } from '@/app/api/controllers/dashboard/orders';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
 import {
   clearItemLocalStorage,
   formatPrice,
   getJsonItemFromLocalStorage,
   notify,
 } from '@/lib/utils';
-import Image from 'next/image';
-import noImage from '../../../../../public/assets/images/no-image.png';
-import noMenu from '../../../../../public/assets/images/no-menu.png';
 import {
   Button,
   Chip,
   Divider,
   Pagination,
   Spacer,
-  Spinner,
   useDisclosure,
 } from '@nextui-org/react';
+import Image from 'next/image';
+import React, { useEffect, useState } from 'react';
+import { FaMinus, FaPlus } from 'react-icons/fa6';
+import { HiArrowLongLeft } from 'react-icons/hi2';
+import { IoSearchOutline } from 'react-icons/io5';
+import noImage from '../../../../../public/assets/images/no-image.png';
+import noMenu from '../../../../../public/assets/images/no-menu.png';
+import CheckoutModal from './checkoutModal';
 import {
   CheckIcon,
   MenuSkeletonLoading,
   SelectedSkeletonLoading,
 } from './data';
-import { FaPlus } from 'react-icons/fa6';
-import { FaMinus } from 'react-icons/fa6';
-import CheckoutModal from './checkoutModal';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import { IoSearchOutline } from 'react-icons/io5';
+import Filters from './filter';
 import ViewModal from './view';
-import { getOrder } from '@/app/api/controllers/dashboard/orders';
 
 type MenuItem = {
   name: string;
@@ -81,11 +79,12 @@ const MenuList = () => {
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
+  const [filterValue, setFilterValue] = React.useState('');
 
   const getOrderDetails = async () => {
     setLoading(true);
     const data = await getOrder(order.id);
-
+    setLoading(false);
     if (data?.data?.isSuccessful) {
       const secondArrayIds = menus.flatMap((section) =>
         section.items.map((item) => item.id)
@@ -96,9 +95,10 @@ const MenuList = () => {
       );
 
       const updatedArray = idsInCommon.map((item) => {
-        const { unitPrice, quantity, ...rest } = item;
+        const { unitPrice, quantity, itemID, ...rest } = item;
         return {
           ...rest,
+          id: itemID,
           price: unitPrice,
           count: quantity,
         };
@@ -118,14 +118,28 @@ const MenuList = () => {
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 12;
 
-  const pages = Math.ceil(filteredMenu.length / rowsPerPage);
+  const hasSearchFilter = Boolean(filterValue);
+
+  const filteredItems = React.useMemo(() => {
+    let filteredMenus = [...filteredMenu];
+
+    if (hasSearchFilter) {
+      filteredMenus = filteredMenu.filter((menu) =>
+        menu.itemName.toLowerCase().includes(filterValue.toLowerCase())
+      );
+    }
+
+    return filteredMenus;
+  }, [filteredMenu, filterValue]);
+
+  const pages = Math.ceil(filteredItems.length / rowsPerPage);
 
   const items = React.useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
-    return filteredMenu.slice(start, end);
-  }, [page, filteredMenu]);
+    return filteredItems.slice(start, end);
+  }, [page, filteredItems]);
 
   const handleCardClick = (menuItem: MenuItem) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
@@ -227,6 +241,16 @@ const MenuList = () => {
               classnames={'w-[242px]'}
               label=''
               size='md'
+              value={filterValue}
+              onChange={(e: any) => {
+                const value = e.target.value;
+                if (value) {
+                  setFilterValue(value);
+                  setPage(1);
+                } else {
+                  setFilterValue('');
+                }
+              }}
               isRequired={false}
               startContent={<IoSearchOutline />}
               type='text'

@@ -31,8 +31,6 @@ import {
 } from '@nextui-org/react';
 import { CustomInput } from '@/components/CustomInput';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import hobink from '../../../public/assets/images/hobink.png';
 import { downloadCSV } from '@/lib/downloadToExcel';
 
 type MenuItem = {
@@ -178,16 +176,6 @@ const Menu: React.FC = () => {
               </Button>
             </ButtonGroup>
           )}
-          {/* <CustomButton
-            // onClick={openAddRoleModal}
-            className='py-2 px-4 md:mb-0 text-black border border-[#D0D5DD] mb-4 '
-            backgroundColor='bg-white'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              <MdOutlineFileDownload className='text-[22px]' />
-              <p>Export csv</p>
-            </div>
-          </CustomButton> */}
 
           <CustomButton
             onClick={
