@@ -72,7 +72,7 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
                     }
                     width={20}
                     height={20}
-                    className='object-cover rounded-lg w-32 h-full'
+                    className='object-cover rounded-lg w-32 h-24'
                     aria-label='uploaded image'
                     alt='uploaded image(s)'
                   />
