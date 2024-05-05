@@ -129,7 +129,8 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
                     </div>
                     <MdKeyboardArrowRight />
                   </div>
-                  {singlePayment.paymentMethod === 1 && (
+
+                  {singlePayment.status === 0 && (
                     <>
                       <Spacer y={4} />
                       <CustomInput
@@ -140,29 +141,28 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
                         label='Enter ref'
                         placeholder='Provide payment reference'
                       />
+
+                      <Spacer y={5} />
+                      <div className='flex gap-5'>
+                        <CustomButton
+                          onClick={toggleApproveModal}
+                          className='bg-white h-[50px] w-full border border-primaryGrey'
+                        >
+                          Cancel
+                        </CustomButton>
+                        <CustomButton
+                          loading={isLoading}
+                          disabled={isLoading}
+                          onClick={finalizeOrder}
+                          className='text-white w-full h-[50px]'
+                        >
+                          <div className='flex gap-2 items-center justify-center'>
+                            <p>{'Confirm payment'} </p>
+                            <HiArrowLongLeft className='text-[22px] rotate-180' />
+                          </div>
+                        </CustomButton>
+                      </div>
                     </>
-                  )}
-                  <Spacer y={5} />
-                  {singlePayment.status === 0 && (
-                    <div className='flex gap-5'>
-                      <CustomButton
-                        onClick={toggleApproveModal}
-                        className='bg-white h-[50px] w-full border border-primaryGrey'
-                      >
-                        Cancel
-                      </CustomButton>
-                      <CustomButton
-                        loading={isLoading}
-                        disabled={isLoading}
-                        onClick={finalizeOrder}
-                        className='text-white w-full h-[50px]'
-                      >
-                        <div className='flex gap-2 items-center justify-center'>
-                          <p>{'Confirm payment'} </p>
-                          <HiArrowLongLeft className='text-[22px] rotate-180' />
-                        </div>
-                      </CustomButton>
-                    </div>
                   )}
                   <Spacer y={5} />
                   <div className='overflow-y-scroll h-[200px] w-full rounded-lg border border-[#E4E7EC80] p-2 '>
