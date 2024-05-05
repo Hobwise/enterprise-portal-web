@@ -153,7 +153,8 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
           renderItem={renderItem}
           variant='light'
         />
-        <div className='hidden sm:flex w-[30%] justify-end gap-2'>
+
+        <div className='hidden md:flex w-[30%] justify-end gap-2'>
           <Button
             isDisabled={pages === 1}
             size='sm'
