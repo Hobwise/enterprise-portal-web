@@ -1,49 +1,34 @@
 'use client';
 
-import Container from '@/components/dashboardContainer';
 import {
-  Button,
-  ButtonGroup,
-  Divider,
-  Modal,
-  ModalBody,
-  ModalContent,
-  Spacer,
-  Spinner,
-  Switch,
-  Tooltip,
-  useDisclosure,
-} from '@nextui-org/react';
-import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
-import { IoIosArrowRoundBack } from 'react-icons/io';
-import { FaEdit } from 'react-icons/fa';
-import { RiDeleteBin6Line } from 'react-icons/ri';
-import { MdCreate } from 'react-icons/md';
-import { useSearchParams } from 'next/navigation';
+  editMenuItem,
+  getMenuItem,
+} from '@/app/api/controllers/dashboard/menu';
+import { CustomButton } from '@/components/customButton';
+import Container from '@/components/dashboardContainer';
 import { useGlobalContext } from '@/hooks/globalProvider';
-import Image from 'next/image';
 import {
   CustomLoading,
   formatPrice,
   getJsonItemFromLocalStorage,
 } from '@/lib/utils';
-import { FaRegEdit } from 'react-icons/fa';
-import {
-  editMenuItem,
-  getMenuItem,
-} from '@/app/api/controllers/dashboard/menu';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import VarietyModal from './varietyModal';
+import { Button, ButtonGroup, Spacer, Tooltip } from '@nextui-org/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { FaEdit, FaRegEdit } from 'react-icons/fa';
 import { GoPlus } from 'react-icons/go';
-import DeleteMenu from './deleteMenu';
-import EditMenu from './editMenu';
-import hobink from '../../../../public/assets/images/hobink.png';
-import noImage from '../../../../public/assets/images/no-image.png';
+import { IoIosArrowRoundBack } from 'react-icons/io';
+import { MdCreate } from 'react-icons/md';
+import { RiDeleteBin6Line } from 'react-icons/ri';
 import { toast } from 'react-toastify';
+import noImage from '../../../../public/assets/images/no-image.svg';
+import DeleteMenu from './deleteMenu';
 import DeleteVariety from './deleteVariety';
+import EditMenu from './editMenu';
 import EditVariety from './editVariety';
+import VarietyModal from './varietyModal';
 const MenuDetails = () => {
   const searchParams = useSearchParams();
   const {

@@ -1,8 +1,7 @@
-import React from 'react';
-import { CustomButton } from './customButton';
-import { IoReload } from 'react-icons/io5';
 import Image from 'next/image';
-import noImage from '../../public/assets/images/no-image.png';
+import { IoReload } from 'react-icons/io5';
+import noImage from '../../public/assets/images/no-image.svg';
+import { CustomButton } from './customButton';
 
 const Error = () => {
   return (

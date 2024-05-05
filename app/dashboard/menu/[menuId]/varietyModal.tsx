@@ -6,8 +6,8 @@ import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { Modal, ModalBody, ModalContent, Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import React, { useState } from 'react';
-import noImage from '../../../../public/assets/images/no-image.png';
 import toast from 'react-hot-toast';
+import noImage from '../../../../public/assets/images/no-image.svg';
 
 const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');

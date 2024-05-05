@@ -1,7 +1,5 @@
 import {
-  deleteFile,
   editMenuItem,
-  getMenu,
   payloadMenuItem,
   uploadFile,
 } from '@/app/api/controllers/dashboard/menu';
@@ -24,7 +22,7 @@ import {
 } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
 import Image from 'next/image';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 
@@ -134,7 +132,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
 
   return (
     <Modal
-      size='5xl'
+      size='4xl'
       isOpen={isOpenEdit}
       onOpenChange={() => {
         setMenuItemState({

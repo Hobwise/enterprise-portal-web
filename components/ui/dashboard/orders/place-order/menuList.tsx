@@ -22,7 +22,7 @@ import React, { useEffect, useState } from 'react';
 import { FaMinus, FaPlus } from 'react-icons/fa6';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import { IoSearchOutline } from 'react-icons/io5';
-import noImage from '../../../../../public/assets/images/no-image.png';
+import noImage from '../../../../../public/assets/images/no-image.svg';
 import noMenu from '../../../../../public/assets/images/no-menu.png';
 import CheckoutModal from './checkoutModal';
 import {

@@ -4,22 +4,20 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
+  Divider,
   Modal,
   ModalBody,
-  ModalHeader,
   ModalContent,
   Spacer,
-  Divider,
   Spinner,
 } from '@nextui-org/react';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import { MdKeyboardArrowRight } from 'react-icons/md';
-import noImage from '../../../../public/assets/images/no-image.png';
-import { paymentMethodMap } from './data';
+import noImage from '../../../../public/assets/images/no-image.svg';
 import Success from '../../../../public/assets/images/success.png';
-import hobink from '../../../../public/assets/images/hobink.png';
+import { paymentMethodMap } from './data';
 
 const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
   const [reference, setReference] = useState('');

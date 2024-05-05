@@ -5,7 +5,7 @@ import {
 } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { formatPrice, notify } from '@/lib/utils';
 import {
   Divider,
   Modal,
@@ -16,9 +16,10 @@ import {
   Spinner,
 } from '@nextui-org/react';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import { MdKeyboardArrowRight } from 'react-icons/md';
+import noImage from '../../../../public/assets/images/no-image.svg';
 
 const ConfirmOrderModal = ({
   getAllOrders,
@@ -89,12 +90,13 @@ const ConfirmOrderModal = ({
   }, [singleOrder?.id]);
   return (
     <Modal
-      size={screen === 1 ? '5xl' : 'md'}
+      size={screen === 1 ? '4xl' : 'md'}
       isOpen={isOpenConfirmOrder}
       onOpenChange={() => {
         setScreen(1);
         toggleConfirmModal();
         setReference('');
+        setOrder([]);
       }}
     >
       <ModalContent>
@@ -144,6 +146,9 @@ const ConfirmOrderModal = ({
                       {order.length === 0 ? (
                         <div className={`grid h-full place-content-center`}>
                           <Spinner />
+                          <p className='text-center mt-1 text-[14px] text-grey400'>
+                            Fetching order details...
+                          </p>
                         </div>
                       ) : (
                         <>
@@ -155,6 +160,24 @@ const ConfirmOrderModal = ({
                                   className='flex justify-between'
                                 >
                                   <div className='w-[250px] rounded-lg text-black  flex'>
+                                    <div
+                                      className={`grid place-content-center`}
+                                    >
+                                      <Image
+                                        src={
+                                          item?.image
+                                            ? `data:image/jpeg;base64,${item?.image}`
+                                            : noImage
+                                        }
+                                        width={60}
+                                        height={60}
+                                        className={
+                                          'bg-contain h-[60px] rounded-lg w-[60px]'
+                                        }
+                                        aria-label='uploaded image'
+                                        alt='uploaded image(s)'
+                                      />
+                                    </div>
                                     <div className='p-3 flex  flex-col text-sm justify-center'>
                                       <p className='font-[600]'>
                                         {item.menuName}
@@ -167,7 +190,13 @@ const ConfirmOrderModal = ({
                                       <p className=''>{item.iquantity}</p>
                                     </div>
                                   </div>
-
+                                  <div className='text-black flex items-center text-[12px]'>
+                                    <span>QTY:</span>
+                                    <span className='font-[600]'>
+                                      {' '}
+                                      {item.quantity}
+                                    </span>
+                                  </div>
                                   <div className='text-black w-[150px] grid place-content-center'>
                                     <h3 className='font-[600]'>
                                       {formatPrice(item?.unitPrice)}

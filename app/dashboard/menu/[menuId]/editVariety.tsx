@@ -1,25 +1,12 @@
+import { editMenuVariety } from '@/app/api/controllers/dashboard/menu';
+import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
-import {
-  Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  Spacer,
-} from '@nextui-org/react';
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  deleteMenuItem,
-  deleteVariety,
-  editMenuVariety,
-} from '@/app/api/controllers/dashboard/menu';
-import toast from 'react-hot-toast';
-import { revalidatePath } from 'next/cache';
-import { CustomInput } from '@/components/CustomInput';
+import { Modal, ModalBody, ModalContent, Spacer } from '@nextui-org/react';
 import Image from 'next/image';
-import noImage from '../../../../public/assets/images/no-image.png';
+import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
+import noImage from '../../../../public/assets/images/no-image.svg';
 
 const EditVariety = ({
   isOpenEditVariety,

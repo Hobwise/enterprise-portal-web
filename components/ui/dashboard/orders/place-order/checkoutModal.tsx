@@ -1,5 +1,15 @@
 'use client';
+import {
+  completeOrder,
+  createOrder,
+  editOrder,
+} from '@/app/api/controllers/dashboard/orders';
+import { getQR } from '@/app/api/controllers/dashboard/quickResponse';
+import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
+import { CustomTextArea } from '@/components/customTextArea';
+import SelectInput from '@/components/selectInput';
+import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Button,
   Divider,
@@ -9,25 +19,13 @@ import {
   ModalHeader,
   Spacer,
 } from '@nextui-org/react';
-import React, { useEffect, useState } from 'react';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import { FaPlus } from 'react-icons/fa6';
-import { FaMinus } from 'react-icons/fa6';
-import noImage from '../../../../../public/assets/images/no-image.png';
 import Image from 'next/image';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomTextArea } from '@/components/customTextArea';
-import SelectInput from '@/components/selectInput';
-import { getQR } from '@/app/api/controllers/dashboard/quickResponse';
-import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
-import {
-  completeOrder,
-  createOrder,
-  editOrder,
-  orderSchema,
-} from '@/app/api/controllers/dashboard/orders';
 import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { FaMinus, FaPlus } from 'react-icons/fa6';
+import { HiArrowLongLeft } from 'react-icons/hi2';
 import { MdKeyboardArrowRight } from 'react-icons/md';
+import noImage from '../../../../../public/assets/images/no-image.svg';
 
 interface Order {
   placedByName: string;
@@ -224,7 +222,7 @@ const CheckoutModal = ({
 
   return (
     <Modal
-      size={screen === 1 ? '5xl' : 'md'}
+      size={screen === 1 ? '4xl' : 'md'}
       isOpen={isOpen}
       onOpenChange={() => {
         setScreen(1);

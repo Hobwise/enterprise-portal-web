@@ -1,18 +1,15 @@
+import { CustomButton } from '@/components/customButton';
+import { formatPrice } from '@/lib/utils';
 import {
   Chip,
   Modal,
   ModalBody,
   ModalContent,
-  ModalHeader,
   Spacer,
-  Tooltip,
 } from '@nextui-org/react';
 import Image from 'next/image';
-import React from 'react';
-import noImage from '../../../../../public/assets/images/no-image.png';
+import noImage from '../../../../../public/assets/images/no-image.svg';
 import { CheckIcon } from './data';
-import { CustomButton } from '@/components/customButton';
-import { formatPrice } from '@/lib/utils';
 
 const ViewModal = ({
   selectedItems,

@@ -1,12 +1,10 @@
 'use client';
 import { Chip, Divider, Tab, Tabs } from '@nextui-org/react';
 import Image from 'next/image';
-import React from 'react';
 
-import noImage from '../../../../../public/assets/images/no-image.png';
-import Champagne from '../../../../../public/assets/images/champage.webp';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
+import Champagne from '../../../../../public/assets/images/champage.webp';
 import { menus, togglePreview } from './data';
 
 const Preview = () => {

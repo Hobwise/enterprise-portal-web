@@ -20,7 +20,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
-import noImage from '../../../../public/assets/images/no-image.png';
+import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns } from './data';
 import Filters from './filters';
 
