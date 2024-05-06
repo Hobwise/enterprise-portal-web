@@ -7,36 +7,36 @@ import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
 import MenuList from '@/components/ui/dashboard/menu/menu';
 
 import {
+  createMenu,
+  getMenuByBusiness,
+} from '@/app/api/controllers/dashboard/menu';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
+import { downloadCSV } from '@/lib/downloadToExcel';
+import {
   CustomLoading,
   getJsonItemFromLocalStorage,
   notify,
 } from '@/lib/utils';
 import {
-  createMenu,
-  getMenuByBusiness,
-} from '@/app/api/controllers/dashboard/menu';
-import { IoAddCircleOutline } from 'react-icons/io5';
-import { MdOutlineFileDownload } from 'react-icons/md';
-import { CustomButton } from '@/components/customButton';
-import { IoPhonePortraitOutline } from 'react-icons/io5';
-import {
-  Modal,
-  ModalContent,
-  ModalBody,
-  useDisclosure,
-  Spacer,
-  Chip,
   Button,
   ButtonGroup,
+  Chip,
+  Modal,
+  ModalBody,
+  ModalContent,
+  Spacer,
+  useDisclosure,
 } from '@nextui-org/react';
-import { CustomInput } from '@/components/CustomInput';
 import { useRouter } from 'next/navigation';
-import { downloadCSV } from '@/lib/downloadToExcel';
+import { IoAddCircleOutline, IoPhonePortraitOutline } from 'react-icons/io5';
+import { MdOutlineFileDownload } from 'react-icons/md';
 
 type MenuItem = {
   name: string;
   items: Array<{
     menuID: string;
+    menuName: string;
     itemName: string;
     itemDescription: string;
     price: number;
@@ -112,16 +112,15 @@ const Menu: React.FC = () => {
       return <CreateMenu onOpen={onOpen} />;
     }
   };
+
   const newArray = menus?.map((item) => {
-    const {
-      menuName,
-      itemName,
-      itemDescription,
-      price,
-      currency,
-      isAvailabale,
-      hasVariety,
-    } = item.items[0];
+    const menuName = item?.items[0]?.menuName;
+    const itemName = item?.items[0]?.itemName;
+    const price = item?.items[0]?.price;
+    const itemDescription = item?.items[0]?.itemDescription;
+    const currency = item?.items[0]?.currency;
+    const isAvailabale = item?.items[0]?.isAvailabale;
+    const hasVariety = item?.items[0]?.hasVariety;
     return {
       menuName,
       itemName,
