@@ -4,7 +4,7 @@ import {
   notify,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
-import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios from 'axios';
 import { generateRefreshToken } from './controllers/auth';
 
 export const handleError = (error: any) => {
@@ -195,26 +195,6 @@ api.interceptors.response.use(
         type: 'error',
       });
       window.location.href = '/auth/login';
-    }
-    return Promise.reject(error);
-  }
-);
-
-api.interceptors.response.use(
-  (response) => {
-    if (isTokenExpiring(response)) {
-      // Token is about to expire, refresh the token
-      return refreshToken().then((newToken) => {
-        // Update the token in the request config with the new token
-        response.config.headers.Authorization = `Bearer ${newToken}`;
-        return response;
-      });
-    }
-    return response;
-  },
-  (error) => {
-    if (error.response.status === 401) {
-      // window.location.href = '/auth/login';
     }
     return Promise.reject(error);
   }

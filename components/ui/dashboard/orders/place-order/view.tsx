@@ -53,121 +53,123 @@ const ViewModal = ({
                 <p className='text-grey600 text-sm'>{selectedMenu?.itemName}</p>
                 <Spacer y={3} />
               </div>
-              {selectedMenu?.varieties ? (
-                <>
-                  {selectedMenu?.varieties?.map((item) => {
-                    return (
-                      <div
-                        key={item.id}
-                        className='flex justify-between cursor-pointer'
-                      >
-                        <div className='pb-2 rounded-lg text-black  flex w-full'>
-                          <div>
-                            <Image
-                              src={
-                                selectedMenu?.image
-                                  ? `data:image/jpeg;base64,${selectedMenu?.image}`
-                                  : noImage
+              <div className='h-[200px] overflow-scroll'>
+                {selectedMenu?.varieties ? (
+                  <>
+                    {selectedMenu?.varieties?.map((item) => {
+                      return (
+                        <div
+                          key={item.id}
+                          className='flex justify-between cursor-pointer'
+                        >
+                          <div className='pb-2  rounded-lg text-black  flex w-full'>
+                            <div>
+                              <Image
+                                src={
+                                  selectedMenu?.image
+                                    ? `data:image/jpeg;base64,${selectedMenu?.image}`
+                                    : noImage
+                                }
+                                width={20}
+                                height={20}
+                                className='object-cover rounded-lg w-20 h-20'
+                                aria-label='uploaded image'
+                                alt='uploaded image(s)'
+                              />
+                            </div>
+                            <div className='p-3 flex flex-col text-sm justify-center'>
+                              <p className='font-[600]'>
+                                {selectedMenu.menuName}
+                              </p>
+                              <Spacer y={1} />
+                              <p className='text-grey600 '>
+                                {selectedMenu.itemName}
+                              </p>
+                              <Spacer y={1} />
+                              <p className='font-[600] text-primaryColor'>
+                                {formatPrice(item?.price)}
+                              </p>
+                            </div>
+                          </div>
+                          {selectedItems.find(
+                            (selected) => selected.id === item.id
+                          ) ? (
+                            <Chip
+                              title='remove'
+                              onClick={() =>
+                                handleCardClick({
+                                  ...item,
+                                  isVariety: false,
+                                  itemName: selectedMenu.itemName,
+                                  menuName: selectedMenu.menuName,
+                                  image: selectedMenu.image,
+                                })
                               }
-                              width={20}
-                              height={20}
-                              className='object-cover rounded-lg w-20 h-20'
-                              aria-label='uploaded image'
-                              alt='uploaded image(s)'
-                            />
-                          </div>
-                          <div className='p-3 flex flex-col text-sm justify-center'>
-                            <p className='font-[600]'>
-                              {selectedMenu.menuName}
-                            </p>
-                            <Spacer y={1} />
-                            <p className='text-grey600 '>
-                              {selectedMenu.itemName}
-                            </p>
-                            <Spacer y={1} />
-                            <p className='font-[600] text-primaryColor'>
-                              {formatPrice(item?.price)}
-                            </p>
-                          </div>
+                              startContent={<CheckIcon size={18} />}
+                              variant='flat'
+                              classNames={{
+                                base: 'bg-primaryColor text-white  text-[12px]',
+                              }}
+                            >
+                              Selected
+                            </Chip>
+                          ) : (
+                            <CustomButton
+                              onClick={() =>
+                                handleCardClick({
+                                  ...item,
+                                  isVariety: true,
+                                  itemName: selectedMenu.itemName,
+                                  menuName: selectedMenu.menuName,
+                                  image: selectedMenu.image,
+                                })
+                              }
+                              className='h-9 w-6 text-black bg-white border border-primaryGrey'
+                            >
+                              Select
+                            </CustomButton>
+                          )}
                         </div>
-                        {selectedItems.find(
-                          (selected) => selected.id === item.id
-                        ) ? (
-                          <Chip
-                            title='remove'
-                            onClick={() =>
-                              handleCardClick({
-                                ...item,
-                                isVariety: false,
-                                itemName: selectedMenu.itemName,
-                                menuName: selectedMenu.menuName,
-                                image: selectedMenu.image,
-                              })
-                            }
-                            startContent={<CheckIcon size={18} />}
-                            variant='flat'
-                            classNames={{
-                              base: 'bg-primaryColor text-white  text-[12px]',
-                            }}
-                          >
-                            Selected
-                          </Chip>
-                        ) : (
-                          <CustomButton
-                            onClick={() =>
-                              handleCardClick({
-                                ...item,
-                                isVariety: true,
-                                itemName: selectedMenu.itemName,
-                                menuName: selectedMenu.menuName,
-                                image: selectedMenu.image,
-                              })
-                            }
-                            className='h-9 w-6 text-black bg-white border border-primaryGrey'
-                          >
-                            Select
-                          </CustomButton>
-                        )}
-                      </div>
-                    );
-                  })}
-                </>
-              ) : (
-                <div>
-                  {selectedItems.find(
-                    (selected) => selected.id === selectedMenu.id
-                  ) ? (
-                    <Chip
-                      onClick={() =>
-                        handleCardClick({
-                          ...selectedMenu,
-                          isVariety: false,
-                        })
-                      }
-                      startContent={<CheckIcon size={18} />}
-                      variant='flat'
-                      classNames={{
-                        base: 'bg-primaryColor text-white cursor-pointer text-[12px]',
-                      }}
-                    >
-                      Selected
-                    </Chip>
-                  ) : (
-                    <CustomButton
-                      onClick={() =>
-                        handleCardClick({
-                          ...selectedMenu,
-                          isVariety: false,
-                        })
-                      }
-                      className='bg-white h-9 w-6  text-black border border-primaryGrey'
-                    >
-                      Select
-                    </CustomButton>
-                  )}
-                  <Spacer y={3} />
-                </div>
-              )}
+                      );
+                    })}
+                  </>
+                ) : (
+                  <div>
+                    {selectedItems.find(
+                      (selected) => selected.id === selectedMenu.id
+                    ) ? (
+                      <Chip
+                        onClick={() =>
+                          handleCardClick({
+                            ...selectedMenu,
+                            isVariety: false,
+                          })
+                        }
+                        startContent={<CheckIcon size={18} />}
+                        variant='flat'
+                        classNames={{
+                          base: 'bg-primaryColor text-white cursor-pointer text-[12px]',
+                        }}
+                      >
+                        Selected
+                      </Chip>
+                    ) : (
+                      <CustomButton
+                        onClick={() =>
+                          handleCardClick({
+                            ...selectedMenu,
+                            isVariety: false,
+                          })
+                        }
+                        className='bg-white h-9 w-6  text-black border border-primaryGrey'
+                      >
+                        Select
+                      </CustomButton>
+                    )}
+                    <Spacer y={3} />
+                  </div>
+                )}
+              </div>
             </ModalBody>
           </>
         )}

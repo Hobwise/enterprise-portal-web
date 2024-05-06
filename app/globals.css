@@ -52,6 +52,10 @@ body {
 *::-webkit-scrollbar {
   width: 0;
 }
+/* *::-webkit-scrollbar-thumb {
+  background-color: #eae5ff;
+  border-radius: 10px;
+} */
 .dashboardLogo {
   filter: sepia(100%) saturate(300%) brightness(20%) hue-rotate(180deg);
 }

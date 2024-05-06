@@ -278,7 +278,7 @@ const CheckoutModal = ({
                 </ModalHeader>
                 <ModalBody>
                   <div className='flex lg:flex-row flex-col gap-3 mb-4'>
-                    <div className='lg:w-[60%] max-h-[300px] overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2 '>
+                    <div className='lg:w-[60%] max-h-[300px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2'>
                       {selectedItems?.map((item, index) => {
                         return (
                           <>

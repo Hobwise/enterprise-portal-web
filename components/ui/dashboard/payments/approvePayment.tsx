@@ -4,6 +4,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
+  Chip,
   Divider,
   Modal,
   ModalBody,
@@ -14,7 +15,6 @@ import {
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { HiArrowLongLeft } from 'react-icons/hi2';
-import { MdKeyboardArrowRight } from 'react-icons/md';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import Success from '../../../../public/assets/images/success.png';
 import { paymentMethodMap } from './data';
@@ -80,7 +80,7 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
   return (
     <>
       <Modal
-        size='xl'
+        size='4xl'
         isOpen={isOpen}
         onOpenChange={() => {
           setOrder([]);
@@ -92,146 +92,151 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
             <>
               <ModalBody className='flex justify-center'>
                 <div className='p-5'>
-                  <div>
-                    <div className=' text-[18px] leading-8 font-semibold'>
-                      <span className='text-black'>
-                        Order ID: {singlePayment.reference}
-                      </span>
-                    </div>
-                    <p className='text-sm text-black font-[600] w-full'>
-                      Treated By:{' '}
-                      <span className='text-grey500 font-[500]'>
-                        {singlePayment.treatedBy}
-                      </span>
-                    </p>
-                    <p className='text-sm text-black font-[600] w-full '>
-                      Channel:{' '}
-                      <span className='text-grey500 font-[500]'>
-                        {paymentMethodMap[singlePayment.paymentMethod]}
-                      </span>
-                    </p>
-                    <p className='text-sm text-black font-[600] xl:mb-8 w-full mb-4'>
-                      Table:{' '}
-                      <span className='text-grey500 font-[500]'>
-                        {singlePayment.qrName}
-                      </span>
-                    </p>
-                  </div>
-                  <div
-                    className={`flex items-center gap-2 p-4 rounded-lg justify-between bg-[#EAE5FF80]`}
-                  >
+                  <div className='flex flex-row flex-wrap  justify-between'>
                     <div>
-                      <p className='text-sm text-grey500'>TOTAL ORDER</p>
-                      <p className='font-bold text-black text-[20px]'>
-                        {' '}
-                        {formatPrice(singlePayment.totalAmount)}
-                      </p>
+                      <h2 className='text-[18px] text-black leading-8 font-semibold'>
+                        Order ID: {singlePayment.reference}
+                      </h2>
+
+                      <Chip
+                        classNames={{
+                          base: ` text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
+                        }}
+                      >
+                        {singlePayment.qrName}
+                      </Chip>
                     </div>
-                    <MdKeyboardArrowRight />
+                    <div>
+                      <p className='font-[600] text-sm text-black'>
+                        Total value
+                      </p>
+
+                      <h2 className='text-[18px] text-black leading-8 font-semibold'>
+                        {formatPrice(singlePayment.totalAmount)}
+                      </h2>
+                    </div>
                   </div>
 
-                  {singlePayment.status === 0 && (
-                    <>
-                      <Spacer y={4} />
+                  <Spacer y={5} />
+                  <div className='flex gap-6'>
+                    <div className='overflow-y-scroll max-h-[305px] w-[60%] rounded-lg border border-[#E4E7EC80] p-2 '>
+                      {order?.length === 0 ? (
+                        <div className={`grid h-full place-content-center`}>
+                          <Spinner />
+                          <p className='text-center mt-1 text-[14px] text-grey400'>
+                            Fetching order details...
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          {order?.orderDetails?.map((item, index) => {
+                            return (
+                              <>
+                                <div
+                                  key={item.id}
+                                  className='flex justify-between'
+                                >
+                                  <div className='w-[250px] rounded-lg text-black  flex'>
+                                    <div
+                                      className={`grid place-content-center`}
+                                    >
+                                      <Image
+                                        src={
+                                          item?.image
+                                            ? `data:image/jpeg;base64,${item?.image}`
+                                            : noImage
+                                        }
+                                        width={60}
+                                        height={60}
+                                        className={
+                                          'bg-contain h-[60px] rounded-lg w-[60px]'
+                                        }
+                                        aria-label='uploaded image'
+                                        alt='uploaded image(s)'
+                                      />
+                                    </div>
+                                    <div className='p-3 flex  flex-col text-sm justify-center'>
+                                      <p className='font-[600]'>
+                                        {item.menuName}
+                                      </p>
+                                      <Spacer y={2} />
+                                      <p className='text-grey600'>
+                                        {item.itemName}
+                                      </p>
+
+                                      <p className='text-sm'>
+                                        {item.iquantity}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <div className='text-black flex items-center text-[12px]'>
+                                    <span>QTY:</span>
+                                    <span className='font-[600]'>
+                                      {' '}
+                                      {item.quantity}
+                                    </span>
+                                  </div>
+                                  <div className='text-black w-[150px] grid place-content-center'>
+                                    <h3 className='font-[600]'>
+                                      {formatPrice(item?.unitPrice)}
+                                    </h3>
+                                  </div>
+                                </div>
+                                {index !== order?.orderDetails?.length - 1 && (
+                                  <Divider className='bg-primaryGrey' />
+                                )}
+                              </>
+                            );
+                          })}
+                        </>
+                      )}
+                    </div>
+                    <div className='flex-grow'>
                       <CustomInput
                         type='text'
-                        value={reference}
-                        onChange={(e) => setReference(e.target.value)}
-                        name='itemName'
-                        label='Enter ref'
-                        placeholder='Provide payment reference'
+                        value={paymentMethodMap[singlePayment.paymentMethod]}
+                        disabled={true}
+                        label='Channel'
+                        placeholder='Channel'
                       />
 
-                      <Spacer y={5} />
-                      <div className='flex gap-5'>
-                        <CustomButton
-                          onClick={toggleApproveModal}
-                          className='bg-white h-[50px] w-full border border-primaryGrey'
-                        >
-                          Cancel
-                        </CustomButton>
-                        <CustomButton
-                          loading={isLoading}
-                          disabled={isLoading}
-                          onClick={finalizeOrder}
-                          className='text-white w-full h-[50px]'
-                        >
-                          <div className='flex gap-2 items-center justify-center'>
-                            <p>{'Confirm payment'} </p>
-                            <HiArrowLongLeft className='text-[22px] rotate-180' />
-                          </div>
-                        </CustomButton>
-                      </div>
-                    </>
-                  )}
-                  <Spacer y={5} />
-                  <div className='overflow-y-scroll h-[200px] w-full rounded-lg border border-[#E4E7EC80] p-2 '>
-                    {order?.length === 0 ? (
-                      <div className={`grid h-full place-content-center`}>
-                        <Spinner />
-                        <p className='text-center mt-1 text-[14px] text-grey400'>
-                          Fetching order details...
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        {order?.orderDetails?.map((item, index) => {
-                          return (
-                            <>
-                              <div
-                                key={item.id}
-                                className='flex justify-between'
-                              >
-                                <div className='w-[250px] rounded-lg text-black  flex'>
-                                  <div className={`grid place-content-center`}>
-                                    <Image
-                                      src={
-                                        item?.image
-                                          ? `data:image/jpeg;base64,${item?.image}`
-                                          : noImage
-                                      }
-                                      width={60}
-                                      height={60}
-                                      className={
-                                        'bg-contain h-[60px] rounded-lg w-[60px]'
-                                      }
-                                      aria-label='uploaded image'
-                                      alt='uploaded image(s)'
-                                    />
-                                  </div>
-                                  <div className='p-3 flex  flex-col text-sm justify-center'>
-                                    <p className='font-[600]'>
-                                      {item.menuName}
-                                    </p>
-                                    <Spacer y={2} />
-                                    <p className='text-grey600'>
-                                      {item.itemName}
-                                    </p>
+                      <Spacer y={3} />
+                      <CustomInput
+                        type='text'
+                        value={singlePayment.treatedBy}
+                        disabled={true}
+                        label='Staff'
+                        placeholder='Staff'
+                      />
 
-                                    <p className='text-sm'>{item.iquantity}</p>
-                                  </div>
-                                </div>
-                                <div className='text-black flex items-center text-[12px]'>
-                                  <span>QTY:</span>
-                                  <span className='font-[600]'>
-                                    {' '}
-                                    {item.quantity}
-                                  </span>
-                                </div>
-                                <div className='text-black w-[150px] grid place-content-center'>
-                                  <h3 className='font-[600]'>
-                                    {formatPrice(item?.unitPrice)}
-                                  </h3>
-                                </div>
-                              </div>
-                              {index !== order?.orderDetails?.length - 1 && (
-                                <Divider className='bg-primaryGrey' />
-                              )}
-                            </>
-                          );
-                        })}
-                      </>
-                    )}
+                      <Spacer y={3} />
+                      {singlePayment.status === 0 && (
+                        <>
+                          <CustomInput
+                            type='text'
+                            value={reference}
+                            onChange={(e) => setReference(e.target.value)}
+                            name='itemName'
+                            label='Enter ref'
+                            placeholder='Provide payment reference'
+                          />
+
+                          <Spacer y={5} />
+
+                          <CustomButton
+                            loading={isLoading}
+                            disabled={isLoading}
+                            onClick={finalizeOrder}
+                            className='text-white w-full h-[50px]'
+                          >
+                            <div className='flex gap-2 items-center justify-center'>
+                              <p>{'Confirm payment'} </p>
+                              <HiArrowLongLeft className='text-[22px] rotate-180' />
+                            </div>
+                          </CustomButton>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </ModalBody>
