@@ -1,10 +1,12 @@
 'use client';
 import {
+  clearItemLocalStorage,
   getJsonItemFromLocalStorage,
   notify,
+  removeCookie,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
-import axios, { AxiosError, AxiosRequestConfig } from 'axios';
+import axios, { AxiosError } from 'axios';
 import { generateRefreshToken } from './controllers/auth';
 
 export const handleError = (error: any) => {
@@ -24,15 +26,15 @@ export const handleError = (error: any) => {
 };
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
+const now = Date.now();
 const TOKEN_REFRESH_WINDOW = 5 * 60 * 1000;
 const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
 
 const isTokenExpiring = (response) => {
   return response.headers['x-token-expiring'] === 'true';
 };
-const refreshToken = async (): Promise<string | null> => {
-  const userData = getJsonItemFromLocalStorage<any>('userInformation');
+const refreshToken = async () => {
+  const userData = getJsonItemFromLocalStorage('userInformation');
   if (!userData) return null;
 
   const { token, email } = userData;
@@ -43,7 +45,7 @@ const refreshToken = async (): Promise<string | null> => {
       email,
     });
 
-    const newToken = response.data.jwtToken;
+    const newToken = response?.data?.data?.jwtToken;
 
     const newExpiry = Date.now() + TOKEN_EXPIRY_DURATION;
     saveJsonItemToLocalStorage('userInformation', {
@@ -54,7 +56,6 @@ const refreshToken = async (): Promise<string | null> => {
 
     return newToken;
   } catch (error) {
-    console.error('Error refreshing token:', error);
     return null;
   }
 };
@@ -67,26 +68,25 @@ const api = axios.create({
   },
   timeout,
 });
-
+let refreshInProgress = false;
 api.interceptors.request.use(async (config) => {
   const userData = getJsonItemFromLocalStorage('userInformation');
   const token = userData?.token;
   const cooperateID = userData?.cooperateID;
 
-  // const now = Date.now();
-  // if (
-  //   TOKEN_EXPIRY_DURATION &&
-  //   now >= TOKEN_EXPIRY_DURATION - TOKEN_REFRESH_WINDOW
-  // ) {
-  //   const newToken = await refreshToken();
+  if (
+    userData?.tokenExpiry &&
+    now >= userData?.tokenExpiry - TOKEN_REFRESH_WINDOW &&
+    !refreshInProgress
+  ) {
+    refreshInProgress = true;
+    const newToken = await refreshToken();
+    refreshInProgress = false;
 
-  //   if (newToken) {
-  //     config.headers.Authorization = `Bearer ${newToken}`;
-  //   }
-  // } else {
-  //   config.headers.Authorization = `Bearer ${token}`;
-  // }
-  if (token) {
+    if (newToken) {
+      config.headers.Authorization = `Bearer ${newToken}`;
+    }
+  } else {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
@@ -106,27 +106,16 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
-    const originalRequest = error.config as AxiosRequestConfig & {
-      _retry?: boolean;
-    };
-
-    // if (error.response?.status === 401 && !originalRequest._retry) {
-    //   originalRequest._retry = true;
-
-    //   const newToken = await refreshToken();
-
-    //   if (newToken) {
-    //     originalRequest.headers.Authorization = `Bearer ${newToken}`;
-    //     return api(originalRequest);
-    //   } else {
-    //     notify({
-    //       title: 'Session Expired',
-    //       text: 'Please log in again.',
-    //       type: 'error',
-    //     });
-    //     window.location.href = '/auth/login';
-    //   }
-    // }
+    if (error.response?.status === 401) {
+      notify({
+        title: 'Session Expired',
+        text: 'Please log in again.',
+        type: 'error',
+      });
+      clearItemLocalStorage('userInformation');
+      removeCookie('token');
+      window.location.href = '/auth/login';
+    }
 
     if (error.code === 'ECONNABORTED') {
       notify({
@@ -152,47 +141,7 @@ api.interceptors.response.use(
       });
       return error;
     }
-
-    // if (error.response.status === 401) {
-    //   notify({
-    //     title: 'Error!',
-    //     text: 'Session timeout',
-    //     type: 'error',
-    //   });
-    //   window.location.href = '/auth/login';
-    // }
-
-    // if (error.response?.status === 401 && !originalRequest._retry) {
-    //   originalRequest._retry = true;
-
-    //   const newToken = await refreshToken();
-
-    //   if (newToken) {
-    //     originalRequest.headers.Authorization = `Bearer ${newToken}`;
-    //     return api(originalRequest);
-    //   } else {
-    //     notify({
-    //       title: 'Session Expired',
-    //       text: 'Please log in again.',
-    //       type: 'error',
-    //     });
-    //     window.location.href = '/auth/login';
-    //     return Promise.reject(error);
-    //   }
-    // }
   }
-
-  // (error) => {
-  // if (error.response.status === 401) {
-  //   notify({
-  //     title: 'Error!',
-  //     text: 'Session timeout',
-  //     type: 'error',
-  //   });
-  //   window.location.href = '/auth/login';
-  // }
-  // return Promise.reject(error);
-  // }
 );
 
 export default api;

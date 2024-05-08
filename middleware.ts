@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('token')?.value;
@@ -17,6 +17,7 @@ export const config = {
     '/dashboard/menu/add-menu-item',
     '/dashboard/menu/preview-menu',
     '/dashboard/orders/place-order',
+    '/dashboard/payments',
     '/dashboard/campaigns',
     '/dashboard/orders',
     '/dashboard/qr-code',

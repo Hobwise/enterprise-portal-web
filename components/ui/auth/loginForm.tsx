@@ -1,18 +1,20 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { CustomInput } from '@/components/CustomInput';
-import { Checkbox, Spacer } from '@nextui-org/react';
-import { FaRegEnvelope } from 'react-icons/fa6';
-import { CustomButton } from '@/components/customButton';
-import Link from 'next/link';
 import { loginUser } from '@/app/api/controllers/auth';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
 import {
   notify,
   saveJsonItemToLocalStorage,
   setTokenCookie,
 } from '@/lib/utils';
+import { Spacer } from '@nextui-org/react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { FaRegEnvelope } from 'react-icons/fa6';
 const LoginForm = () => {
+  const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
+
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,10 @@ const LoginForm = () => {
 
     setLoading(false);
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage('userInformation', data?.data?.data);
+      saveJsonItemToLocalStorage('userInformation', {
+        ...data?.data?.data,
+        tokenExpiry: Date.now() + TOKEN_EXPIRY_DURATION,
+      });
       saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
       setTokenCookie('token', data?.data?.data.token);
       router.push(
