@@ -1,20 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { SideNavItem } from './types';
-import { SIDENAV_ITEMS } from './constants';
 import HobinkLogo from '@/components/logo';
-import Image from 'next/image';
-import { Avatar, Divider } from '@nextui-org/react';
-import { FiLogOut } from 'react-icons/fi';
 import {
   clearItemLocalStorage,
   getJsonItemFromLocalStorage,
   removeCookie,
 } from '@/lib/utils';
+import { Avatar, Divider } from '@nextui-org/react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { FiLogOut } from 'react-icons/fi';
+import { SIDENAV_ITEMS } from './constants';
+import { SideNavItem } from './types';
 
 const SideNav = () => {
   const router = useRouter();
@@ -118,7 +118,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
                   <Link
                     key={idx}
                     href={subItem.path}
-                    className={`${
+                    className={`text-white ${
                       subItem.path === pathname ? 'font-bold' : ''
                     }`}
                   >
@@ -132,7 +132,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
       ) : (
         <Link
           href={item.path}
-          className={`flex flex-row space-x-4 items-center py-[13px] px-6 rounded-[4px] transition hover:bg-[#2B3342] ${
+          className={`text-white flex flex-row space-x-4 items-center py-[13px] px-6 rounded-[4px] transition hover:bg-[#2B3342] ${
             item.path === pathname ? 'bg-[#2B3342]' : ''
           }`}
         >
