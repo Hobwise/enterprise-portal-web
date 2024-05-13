@@ -27,6 +27,7 @@ import toast from 'react-hot-toast';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 
 const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
+  console.log(menuItem, ' menuItem');
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +40,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
     price: +menuItem?.price || 0,
     menuID: menuItem?.menuID || '',
     isAvailable: menuItem?.isAvailabale || true,
-    imageReference: '',
+    imageReference: menuItem?.imageReference || '',
   });
   useEffect(() => {
     setMenuItemState({
@@ -48,7 +49,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
       price: +menuItem?.price,
       menuID: menuItem?.menuID,
       isAvailable: menuItem?.isAvailabale || true,
-      imageReference: '',
+      imageReference: menuItem?.imageReference || '',
     });
   }, [menuItem]);
 
@@ -157,7 +158,6 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
               <div className='flex xl:flex-row flex-col'>
                 <div className={`flex-grow xl:h-auto xl:w-1/2 full mt-4`}>
                   <label className='flex xl:my-2 m-0 justify-between  bg-white'>
-                    <p className='font-[500] text-[14px] text-black'>Image</p>
                     <p className='text-[#475467] text-[14px] font-[400]'>
                       Maximum of 3MB
                     </p>
@@ -167,10 +167,13 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                       imageError ? 'border-danger-600' : 'border-[#F5F5F5]'
                     }   text-sm font-[400] text-center`}
                   >
-                    {selectedImage ? (
+                    {selectedImage || menuItemState?.imageReference ? (
                       <>
                         <Image
-                          src={selectedImage}
+                          src={
+                            selectedImage ||
+                            `data:image/jpeg;base64,${menuItem?.image}`
+                          }
                           width={150}
                           height={150}
                           className='object-cover h-full rounded-lg w-full'
@@ -178,7 +181,13 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                           alt='uploaded image(s)'
                         />
                         <span
-                          onClick={() => setSelectedImage('')}
+                          onClick={() => {
+                            setSelectedImage('');
+                            setMenuItemState({
+                              ...menuItemState,
+                              imageReference: '',
+                            });
+                          }}
                           className='text-danger-500 float-left cursor-pointer'
                         >
                           Remove

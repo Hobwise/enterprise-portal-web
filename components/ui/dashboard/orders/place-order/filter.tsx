@@ -1,9 +1,5 @@
 'use client';
-import { CustomButton } from '@/components/customButton';
-import { Chip, ScrollShadow, Tab, Tabs } from '@nextui-org/react';
-import React from 'react';
-
-import { GoPlus } from 'react-icons/go';
+import { Chip, Tab, Tabs } from '@nextui-org/react';
 
 const Filters = ({ menus, handleTabChange, handleTabClick }: any) => {
   return (
@@ -28,7 +24,7 @@ const Filters = ({ menus, handleTabChange, handleTabClick }: any) => {
                 title={
                   <div
                     onClick={() => handleTabClick(menu.name)}
-                    className='flex items-center space-x-2 '
+                    className='flex items-center space-x-2 capitalize'
                   >
                     <span>{menu.name}</span>
 

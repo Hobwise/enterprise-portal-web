@@ -9,29 +9,13 @@ import {
   notify,
 } from '@/lib/utils';
 
-import { IoAddCircleOutline } from 'react-icons/io5';
+import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
 import { MdOutlineFileDownload } from 'react-icons/md';
-import { CustomButton } from '@/components/customButton';
-import { IoPhonePortraitOutline } from 'react-icons/io5';
-import {
-  Modal,
-  ModalContent,
-  useDisclosure,
-  Chip,
-  Button,
-  ButtonGroup,
-} from '@nextui-org/react';
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import hobink from '../../../public/assets/images/hobink.png';
-import OrdersList from '@/components/ui/dashboard/orders/order';
-import { getOrderByBusiness } from '@/app/api/controllers/dashboard/orders';
-import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
-import { downloadCSV } from '@/lib/downloadToExcel';
-import PaymentsList from '@/components/ui/dashboard/payments/payment';
-import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
 import { getPaymentByBusiness } from '@/app/api/controllers/dashboard/payment';
+import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
+import PaymentsList from '@/components/ui/dashboard/payments/payment';
+import { downloadCSV } from '@/lib/downloadToExcel';
 
 interface Payment {
   id: string;
@@ -84,7 +68,7 @@ const Payments: React.FC = () => {
   }, []);
 
   const getScreens = () => {
-    if (payments.length > 0) {
+    if (payments?.length > 0) {
       return (
         <PaymentsList
           payments={payments}
@@ -97,7 +81,7 @@ const Payments: React.FC = () => {
     }
   };
 
-  const newArray = payments.flatMap((item) =>
+  const newArray = payments?.flatMap((item) =>
     item.payments.map((payment) => ({
       reference: payment.reference,
       totalAmount: payment.totalAmount,
@@ -113,7 +97,7 @@ const Payments: React.FC = () => {
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {payments.length > 0 ? (
+            {payments?.length > 0 ? (
               <div className='flex items-center'>
                 <span>All Payment</span>
                 <Chip
@@ -133,7 +117,7 @@ const Payments: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {payments.length > 0 && (
+          {payments?.length > 0 && (
             <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
               <Button
                 onClick={() => downloadCSV(newArray)}

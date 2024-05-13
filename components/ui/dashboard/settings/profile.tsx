@@ -1,4 +1,5 @@
 import { updateUser } from '@/app/api/controllers/auth';
+import { uploadFile } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
@@ -9,11 +10,10 @@ import {
   notify,
 } from '@/lib/utils';
 import { Avatar, Divider, Spacer } from '@nextui-org/react';
-import React, { useState } from 'react';
+import imageCompression from 'browser-image-compression';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { MdOutlineMonochromePhotos } from 'react-icons/md';
-import imageCompression from 'browser-image-compression';
-import { uploadFile } from '@/app/api/controllers/dashboard/menu';
 
 const Profile = () => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
@@ -101,7 +101,7 @@ const Profile = () => {
         <div>
           <h1 className='text-[16px] leading-8 font-semibold'>Profile photo</h1>
           <p className='text-sm  text-grey600 md:mb-7 mb-4'>
-            This email will be displayed on your profile
+            This image will be displayed on your profile
           </p>
         </div>
         <div className='flex items-start xl:justify-center justify-start'>

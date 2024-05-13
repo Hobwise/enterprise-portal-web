@@ -6,6 +6,7 @@ import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice } from '@/lib/utils';
 import {
+  Chip,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -21,7 +22,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import noImage from '../../../../public/assets/images/no-image.svg';
-import { columns } from './data';
+import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
@@ -84,6 +85,16 @@ const MenuList = ({ menus, onOpen }: any) => {
             <div className='ml-5 gap-1 grid place-content-center'>
               <p className='font-bold text-sm'>{menu.menuName}</p>
               <p className='text-sm'>{menu.itemName}</p>
+              {menu.isAvailabale === false && (
+                <Chip
+                  className='capitalize'
+                  color={statusColorMap[menu.isAvailabale]}
+                  size='sm'
+                  variant='bordered'
+                >
+                  {statusDataMap[menu.isAvailabale]}
+                </Chip>
+              )}
             </div>
           </div>
         );

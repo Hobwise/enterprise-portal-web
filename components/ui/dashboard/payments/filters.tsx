@@ -1,6 +1,5 @@
 'use client';
 import { Chip, Tab, Tabs } from '@nextui-org/react';
-import React from 'react';
 
 const Filters = ({
   onOpen,
@@ -30,7 +29,7 @@ const Filters = ({
                 title={
                   <div
                     onClick={() => handleTabClick(payment.name)}
-                    className='flex items-center space-x-2'
+                    className='flex items-center space-x-2 capitalize'
                   >
                     <span>{payment.name}</span>
 

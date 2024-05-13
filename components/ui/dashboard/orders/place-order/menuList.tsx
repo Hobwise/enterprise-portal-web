@@ -219,7 +219,7 @@ const MenuList = () => {
     getAllMenus();
   }, []);
   useEffect(() => {
-    if (order?.id && menus.length > 0) {
+    if (order?.id && menus?.length > 0) {
       getOrderDetails();
     }
   }, [order?.id, menus]);

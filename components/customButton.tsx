@@ -6,6 +6,7 @@ interface ButtonProps {
   backgroundColor?: string;
   className?: string;
   radius?: string;
+  title?: string;
   disabled?: boolean;
   loading?: boolean;
   onClick?: any;
@@ -16,6 +17,7 @@ export const CustomButton = ({
   disabled,
   loading,
   onClick,
+  title,
   type = 'submit',
   backgroundColor = 'bg-primaryColor',
   radius = 'rounded-lg',
@@ -24,6 +26,7 @@ export const CustomButton = ({
   return (
     <Button
       type={type}
+      title={title}
       onClick={onClick}
       isLoading={loading}
       disabled={disabled}

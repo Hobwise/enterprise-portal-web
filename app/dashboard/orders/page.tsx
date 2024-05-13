@@ -9,26 +9,23 @@ import {
   notify,
 } from '@/lib/utils';
 
-import { IoAddCircleOutline } from 'react-icons/io5';
-import { MdOutlineFileDownload } from 'react-icons/md';
 import { CustomButton } from '@/components/customButton';
-import { IoPhonePortraitOutline } from 'react-icons/io5';
 import {
+  Button,
+  ButtonGroup,
+  Chip,
   Modal,
   ModalContent,
   useDisclosure,
-  Chip,
-  Button,
-  ButtonGroup,
 } from '@nextui-org/react';
+import { IoAddCircleOutline } from 'react-icons/io5';
+import { MdOutlineFileDownload } from 'react-icons/md';
 
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import hobink from '../../../public/assets/images/hobink.png';
-import OrdersList from '@/components/ui/dashboard/orders/order';
 import { getOrderByBusiness } from '@/app/api/controllers/dashboard/orders';
 import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
+import OrdersList from '@/components/ui/dashboard/orders/order';
 import { downloadCSV } from '@/lib/downloadToExcel';
+import { useRouter } from 'next/navigation';
 
 type OrderItem = {
   name: string;
@@ -78,7 +75,7 @@ const Orders: React.FC = () => {
   }, []);
 
   const getScreens = () => {
-    if (orders.length > 0) {
+    if (orders?.length > 0) {
       return (
         <OrdersList
           orders={orders}
@@ -91,7 +88,7 @@ const Orders: React.FC = () => {
     }
   };
 
-  const newArray = orders.flatMap((item) =>
+  const newArray = orders?.flatMap((item) =>
     item.orders.map((order) => ({
       placedByName: order.placedByName,
       reference: order.reference,
@@ -106,7 +103,7 @@ const Orders: React.FC = () => {
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {orders.length > 0 ? (
+            {orders?.length > 0 ? (
               <div className='flex items-center'>
                 <span>All orders</span>
                 <Chip
@@ -126,7 +123,7 @@ const Orders: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {orders.length > 0 && (
+          {orders?.length > 0 && (
             <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
               <Button
                 onClick={() => downloadCSV(newArray)}

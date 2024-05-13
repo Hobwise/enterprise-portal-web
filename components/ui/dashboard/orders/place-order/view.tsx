@@ -53,7 +53,7 @@ const ViewModal = ({
                 <p className='text-grey600 text-sm'>{selectedMenu?.itemName}</p>
                 <Spacer y={3} />
               </div>
-              <div className='h-[200px] overflow-scroll'>
+              <div className='max-h-[200px] overflow-scroll'>
                 {selectedMenu?.varieties ? (
                   <>
                     {selectedMenu?.varieties?.map((item) => {
@@ -138,35 +138,33 @@ const ViewModal = ({
                     {selectedItems.find(
                       (selected) => selected.id === selectedMenu.id
                     ) ? (
-                      <Chip
-                        onClick={() =>
+                      <CustomButton
+                        onClick={() => {
                           handleCardClick({
                             ...selectedMenu,
                             isVariety: false,
-                          })
-                        }
-                        startContent={<CheckIcon size={18} />}
-                        variant='flat'
-                        classNames={{
-                          base: 'bg-primaryColor text-white cursor-pointer text-[12px]',
+                          });
+                          toggleVarietyModal();
                         }}
+                        title='remove this item'
+                        className='bg-white h-10  w-full text-danger-500 border border-danger-500'
                       >
-                        Selected
-                      </Chip>
+                        Remove item
+                      </CustomButton>
                     ) : (
                       <CustomButton
-                        onClick={() =>
+                        onClick={() => {
                           handleCardClick({
                             ...selectedMenu,
                             isVariety: false,
-                          })
-                        }
-                        className='bg-white h-9 w-6  text-black border border-primaryGrey'
+                          });
+                          toggleVarietyModal();
+                        }}
+                        className='bg-white h-10  w-full text-black border border-primaryGrey'
                       >
                         Select
                       </CustomButton>
                     )}
-                    <Spacer y={3} />
                   </div>
                 )}
               </div>

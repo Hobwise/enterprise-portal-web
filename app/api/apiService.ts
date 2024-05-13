@@ -60,7 +60,7 @@ const refreshToken = async () => {
   }
 };
 
-const timeout = 15000;
+const timeout = 20000;
 const api = axios.create({
   baseURL,
   headers: {

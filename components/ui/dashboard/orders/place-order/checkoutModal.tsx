@@ -72,14 +72,19 @@ const CheckoutModal = ({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
 
   const handleClick = (methodId: number) => {
-    setSelectedPaymentMethod(methodId);
-    setScreen(3);
+    if (methodId === 3) {
+      router.push('/dashboard/orders');
+    } else {
+      setSelectedPaymentMethod(methodId);
+      setScreen(3);
+    }
   };
 
   const paymentMethods = [
     { text: 'Pay with cash', id: 0 },
     { text: 'Pay with Pos', id: 1 },
     { text: 'Pay with bank transfer', id: 2 },
+    { text: 'Pay Later', id: 3 },
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -242,7 +247,7 @@ const CheckoutModal = ({
           <>
             {screen === 1 && (
               <>
-                <ModalHeader className='flex flex-col gap-1'>
+                <ModalHeader className='flex flex-col mt-5 gap-1'>
                   <div className='flex flex-row flex-wrap  justify-between'>
                     <div>
                       <div className='text-[24px] leading-8 font-semibold'>
@@ -252,7 +257,7 @@ const CheckoutModal = ({
                         Confirm order before checkout
                       </p>
                     </div>
-                    <div className='flex items-center justify-center gap-3'>
+                    <div className='flex gap-3'>
                       <CustomButton
                         onClick={onOpenChange}
                         className='py-2 px-4 mb-0 bg-white border border-primaryGrey'
@@ -402,12 +407,6 @@ const CheckoutModal = ({
                       {formatPrice(totalPrice)}
                     </p>
                   </div>
-                  <CustomButton
-                    onClick={() => router.push('/dashboard/orders')}
-                    className='border border-primaryGrey text-grey500 bg-transparent'
-                  >
-                    Complete later
-                  </CustomButton>
                 </div>
                 <div className='flex flex-col gap-1 text-black'>
                   {paymentMethods.map((item) => (

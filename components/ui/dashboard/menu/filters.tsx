@@ -1,7 +1,6 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
 import { Chip, Tab, Tabs } from '@nextui-org/react';
-import React from 'react';
 
 import { GoPlus } from 'react-icons/go';
 
@@ -29,13 +28,13 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
                   title={
                     <div
                       onClick={() => handleTabClick(menu.name)}
-                      className='flex items-center space-x-2'
+                      className='flex items-center space-x-2 capitalize'
                     >
                       <span>{menu.name}</span>
 
                       <Chip
                         classNames={{
-                          base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
+                          base: `text-xs h-5  w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                         }}
                       >
                         {menu?.items?.length}

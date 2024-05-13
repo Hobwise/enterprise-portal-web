@@ -1,4 +1,3 @@
-import React from 'react';
 const columns = [
   { name: 'ID', uid: 'menuID' },
   { name: '', uid: 'name' },
@@ -7,4 +6,13 @@ const columns = [
   { name: '', uid: 'actions' },
 ];
 
+export const statusDataMap: Record<string, 'available' | 'out of stock'> = {
+  true: 'available',
+  false: 'out of stock',
+};
+
+export const statusColorMap: Record<string, 'success' | 'danger'> = {
+  true: 'success',
+  false: 'danger',
+};
 export { columns };

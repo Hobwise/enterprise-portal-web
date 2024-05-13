@@ -106,7 +106,7 @@ const Menu: React.FC = () => {
   };
 
   const getScreens = () => {
-    if (menus.length > 0) {
+    if (menus?.length > 0) {
       return <MenuList menus={menus} onOpen={onOpen} />;
     } else {
       return <CreateMenu onOpen={onOpen} />;
@@ -136,7 +136,7 @@ const Menu: React.FC = () => {
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {menus.length > 0 ? (
+            {menus?.length > 0 ? (
               <div className='flex items-center'>
                 <span>All menu</span>
                 <Chip
@@ -156,7 +156,7 @@ const Menu: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {menus.length > 0 && (
+          {menus?.length > 0 && (
             <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
               <Button
                 onClick={() => router.push('/dashboard/menu/preview-menu')}
@@ -178,7 +178,7 @@ const Menu: React.FC = () => {
 
           <CustomButton
             onClick={
-              menus.length > 0
+              menus?.length > 0
                 ? () => router.push('/dashboard/menu/add-menu-item')
                 : onOpen
             }
@@ -187,7 +187,7 @@ const Menu: React.FC = () => {
           >
             <div className='flex gap-2 items-center justify-center'>
               <IoAddCircleOutline className='text-[22px]' />
-              <p>{menus.length > 0 ? 'Add menu items' : 'Add menu'} </p>
+              <p>{menus?.length > 0 ? 'Add menu items' : 'Add menu'} </p>
             </div>
           </CustomButton>
         </div>

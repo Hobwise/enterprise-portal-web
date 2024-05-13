@@ -35,14 +35,18 @@ const ConfirmOrderModal = ({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
 
   const handleClick = (methodId: number) => {
-    setSelectedPaymentMethod(methodId);
-    setScreen(3);
+    if (methodId === 3) {
+    } else {
+      setSelectedPaymentMethod(methodId);
+      setScreen(3);
+    }
   };
 
   const paymentMethods = [
     { text: 'Pay with cash', id: 0 },
     { text: 'Pay with Pos', id: 1 },
     { text: 'Pay with bank transfer', id: 2 },
+    { text: 'Pay Later', id: 3 },
   ];
 
   const getOrderDetails = async () => {
@@ -116,7 +120,7 @@ const ConfirmOrderModal = ({
                         Confirm order before checkout
                       </p>
                     </div>
-                    <div className='flex items-center justify-center gap-3'>
+                    <div className='flex  gap-3'>
                       <CustomButton
                         onClick={toggleConfirmModal}
                         className='py-2 px-4 mb-0 bg-white border border-primaryGrey'
