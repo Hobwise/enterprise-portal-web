@@ -24,7 +24,7 @@ const Filters = ({ menus, handleTabChange, handleTabClick }: any) => {
                 title={
                   <div
                     onClick={() => handleTabClick(menu.name)}
-                    className='flex items-center space-x-2 capitalize'
+                    className='flex items-center h-10 space-x-2 capitalize'
                   >
                     <span>{menu.name}</span>
 
