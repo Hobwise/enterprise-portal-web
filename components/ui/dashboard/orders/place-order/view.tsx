@@ -33,7 +33,8 @@ const ViewModal = ({
                 }
                 width={200}
                 height={200}
-                className='bg-contain h-[200px]  rounded-lg w-full'
+                style={{ objectFit: 'cover' }}
+                className='bg-cover h-[200px]  rounded-lg w-full'
                 aria-label='uploaded image'
                 alt='uploaded image(s)'
               />

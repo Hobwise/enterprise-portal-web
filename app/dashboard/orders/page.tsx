@@ -3,11 +3,7 @@ import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useState } from 'react';
 
-import {
-  CustomLoading,
-  getJsonItemFromLocalStorage,
-  notify,
-} from '@/lib/utils';
+import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
 
 import { CustomButton } from '@/components/customButton';
 import {
@@ -22,6 +18,7 @@ import { IoAddCircleOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 
 import { getOrderByBusiness } from '@/app/api/controllers/dashboard/orders';
+import Error from '@/components/error';
 import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
 import OrdersList from '@/components/ui/dashboard/orders/order';
 import { downloadCSV } from '@/lib/downloadToExcel';
@@ -50,23 +47,21 @@ const Orders: React.FC = () => {
   const [orders, setOrders] = useState<OrderData>([]);
 
   const [isLoading, setIsLoading] = useState<Boolean>(true);
+  const [error, setError] = useState<Boolean>(false);
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const router = useRouter();
 
   const getAllOrders = async (checkLoading = true) => {
     setIsLoading(checkLoading);
+    setError(false);
     const data = await getOrderByBusiness(businessInformation[0]?.businessId);
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;
       setOrders(response);
     } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
+      setError(true);
     }
   };
 
@@ -83,6 +78,8 @@ const Orders: React.FC = () => {
           getAllOrders={getAllOrders}
         />
       );
+    } else if (error) {
+      return <Error onClick={() => getAllOrders()} />;
     } else {
       return <CreateOrder />;
     }

@@ -12,23 +12,23 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
           <Tabs
             classNames={{
               tabList:
-                'gap-6  relative rounded-none p-0 w-[70%] xl:w-[100%]  overflow-scroll',
+                'gap-6  relative rounded-none py-0 w-[70%] xl:w-[100%]  overflow-scroll',
               cursor: 'w-full bg-primaryColor',
-              tab: 'max-w-fit px-0 h-10',
-              tabContent: 'group-data-[selected=true]:text-primaryColor',
+              tab: 'max-w-fit px-0 py-0 h-10',
+              tabContent: 'group-data-[selected=true]:text-primaryColor m-0',
             }}
             variant={'underlined'}
             aria-label='menu filter'
-            onChange={handleTabChange}
+            // onChange={handleTabChange}
           >
-            {menus.map((menu: any) => {
+            {menus?.map((menu: any) => {
               return (
                 <Tab
                   key={menu.name}
                   title={
                     <div
                       onClick={() => handleTabClick(menu.name)}
-                      className='flex items-center space-x-2 capitalize'
+                      className='flex items-center h-10 space-x-2 capitalize'
                     >
                       <span>{menu.name}</span>
 

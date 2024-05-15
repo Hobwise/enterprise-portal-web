@@ -3,11 +3,11 @@ import { getMenuByBusiness } from '@/app/api/controllers/dashboard/menu';
 import { getOrder } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
+import Error from '@/components/error';
 import {
   clearItemLocalStorage,
   formatPrice,
   getJsonItemFromLocalStorage,
-  notify,
 } from '@/lib/utils';
 import {
   Button,
@@ -22,6 +22,7 @@ import React, { useEffect, useState } from 'react';
 import { FaMinus, FaPlus } from 'react-icons/fa6';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import { IoSearchOutline } from 'react-icons/io5';
+import { useQuery } from 'react-query';
 import noImage from '../../../../../public/assets/images/no-image.svg';
 import noMenu from '../../../../../public/assets/images/no-menu.png';
 import CheckoutModal from './checkoutModal';
@@ -67,30 +68,40 @@ const MenuList = () => {
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [isLoading, setIsLoading] = useState<Boolean>(false);
+
   const [order] = useState<any>(getJsonItemFromLocalStorage('order'));
 
   const [loading, setLoading] = useState<Boolean>(false);
-  const [menus, setMenus] = useState<MenuData>([]);
-  const [filteredMenu, setFilteredMenu] = React.useState([]);
+
   const [value, setValue] = useState('');
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
+  const [filteredMenu, setFilteredMenu] = React.useState([]);
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
   const [filterValue, setFilterValue] = React.useState('');
 
+  const getAllMenus = async () => {
+    const data = await getMenuByBusiness(businessInformation[0]?.businessId);
+
+    return data?.data?.data;
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery('menus', getAllMenus, {
+    staleTime: 1000 * 60 * 1,
+  });
+
   const getOrderDetails = async () => {
     setLoading(true);
-    const data = await getOrder(order.id);
+    const response = await getOrder(order.id);
     setLoading(false);
-    if (data?.data?.isSuccessful) {
-      const secondArrayIds = menus.flatMap((section) =>
+    if (response?.data?.isSuccessful) {
+      const secondArrayIds = data.flatMap((section) =>
         section.items.map((item) => item.id)
       );
 
-      const idsInCommon = data?.data?.data?.orderDetails.filter((item) =>
+      const idsInCommon = response?.data?.data?.orderDetails.filter((item) =>
         secondArrayIds.includes(item.itemID)
       );
 
@@ -103,10 +114,10 @@ const MenuList = () => {
           count: quantity,
         };
       });
-      setOrderDetails(data?.data?.data);
+      setOrderDetails(response?.data?.data);
       setSelectedItems(updatedArray);
       clearItemLocalStorage('order');
-    } else if (data?.data?.error) {
+    } else if (response?.data?.error) {
     }
   };
 
@@ -124,7 +135,7 @@ const MenuList = () => {
     let filteredMenus = [...filteredMenu];
 
     if (hasSearchFilter) {
-      filteredMenus = filteredMenu.filter((menu) =>
+      filteredMenus = filteredMenu?.filter((menu) =>
         menu.itemName.toLowerCase().includes(filterValue.toLowerCase())
       );
     }
@@ -192,37 +203,18 @@ const MenuList = () => {
   };
 
   const handleTabClick = (index) => {
-    const filteredMenu = menus.filter((item) => item.name === index);
+    const filteredMenu = data.filter((item) => item.name === index);
     setFilteredMenu(filteredMenu[0]?.items);
   };
-  const getAllMenus = async () => {
-    setIsLoading(true);
 
-    const data = await getMenuByBusiness(businessInformation[0]?.businessId);
-    setIsLoading(false);
-
-    if (data?.data?.isSuccessful) {
-      let response = data?.data?.data;
-      response.sort((a: MenuItem, b: MenuItem) => a.name.localeCompare(b.name));
-      setFilteredMenu(response[0]?.items);
-      setMenus(response);
-    } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
+  useEffect(() => {
+    if (data) {
+      setFilteredMenu(data[0]?.items);
     }
-  };
-
-  useEffect(() => {
-    getAllMenus();
-  }, []);
-  useEffect(() => {
-    if (order?.id && menus?.length > 0) {
+    if (order?.id && data?.length > 0) {
       getOrderDetails();
     }
-  }, [order?.id, menus]);
+  }, [order?.id, data]);
 
   return (
     <>
@@ -272,7 +264,7 @@ const MenuList = () => {
 
       <section>
         <Filters
-          menus={menus}
+          menus={data}
           handleTabChange={handleTabChange}
           handleTabClick={handleTabClick}
         />
@@ -280,6 +272,8 @@ const MenuList = () => {
           <div className='xl:max-w-[65%] w-full'>
             {isLoading ? (
               <MenuSkeletonLoading />
+            ) : isError ? (
+              <Error imageWidth='w-16' onClick={() => refetch()} />
             ) : (
               <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
                 {items?.map((menu, index) => (
@@ -341,6 +335,7 @@ const MenuList = () => {
                 ))}
               </div>
             )}
+
             <Spacer y={8} />
 
             <div className='flex gap-2 justify-between items-center'>

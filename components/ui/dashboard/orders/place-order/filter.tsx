@@ -17,7 +17,7 @@ const Filters = ({ menus, handleTabChange, handleTabClick }: any) => {
           aria-label='menu filter'
           onChange={handleTabChange}
         >
-          {menus.map((menu: any) => {
+          {menus?.map((menu: any) => {
             return (
               <Tab
                 key={menu.name}

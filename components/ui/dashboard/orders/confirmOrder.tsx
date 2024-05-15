@@ -43,10 +43,14 @@ const ConfirmOrderModal = ({
   };
 
   const paymentMethods = [
-    { text: 'Pay with cash', id: 0 },
-    { text: 'Pay with Pos', id: 1 },
-    { text: 'Pay with bank transfer', id: 2 },
-    { text: 'Pay Later', id: 3 },
+    { text: 'Pay with cash', subText: ' Accept payment using cash', id: 0 },
+    { text: 'Pay with Pos', subText: ' Accept payment using Pos', id: 1 },
+    {
+      text: 'Pay with bank transfer',
+      subText: 'Accept payment via bank transfer',
+      id: 2,
+    },
+    { text: 'Pay Later', subText: 'Keep this order open', id: 3 },
   ];
 
   const getOrderDetails = async () => {
@@ -108,7 +112,7 @@ const ConfirmOrderModal = ({
           <>
             {screen === 1 && (
               <>
-                <ModalHeader className='flex flex-col gap-1'>
+                <ModalHeader className='flex flex-col mt-3 gap-1'>
                   <div className='flex flex-row flex-wrap  justify-between'>
                     <div>
                       <div className='text-[24px] leading-8 font-semibold'>
@@ -269,9 +273,7 @@ const ConfirmOrderModal = ({
                     >
                       <div>
                         <p className='font-semibold'>{item.text}</p>
-                        <p className='text-sm text-grey500'>
-                          Accept payment using cash
-                        </p>
+                        <p className='text-sm text-grey500'>{item.subText}</p>
                       </div>
                       <MdKeyboardArrowRight />
                     </div>

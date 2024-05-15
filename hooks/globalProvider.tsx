@@ -1,10 +1,7 @@
 'use client';
-import {
-  getMenuByBusiness,
-  getMenuConfiguration,
-} from '@/app/api/controllers/dashboard/menu';
+import { getMenuConfiguration } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 const AppContext = React.createContext();
 
@@ -25,6 +22,7 @@ const AppProvider = ({ children }: any) => {
   const [userData, setUserData] = useState(null);
 
   const [isOpenDelete, setIsOpenDelete] = useState(false);
+
   const [isOpenDeleteVariety, setIsOpenDeleteVariety] = useState(false);
   const [isOpenEditVariety, setIsOpenEditVariety] = useState(false);
   const [isSelectedPreview, setIsSelectedPreview] = useState(true);
@@ -41,6 +39,7 @@ const AppProvider = ({ children }: any) => {
   const toggleModalEdit = () => {
     setIsOpenEdit(!isOpenEdit);
   };
+
   const toggleModalDeleteVariety = () => {
     setIsOpenDeleteVariety(!isOpenDeleteVariety);
   };
@@ -83,6 +82,7 @@ const AppProvider = ({ children }: any) => {
         setIsOpenEditVariety,
         isSelectedPreview,
         setIsSelectedPreview,
+
         handleListItemClick,
         isOpenDelete,
         isOpenEdit,

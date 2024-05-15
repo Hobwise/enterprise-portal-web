@@ -1,36 +1,34 @@
 'use client';
 
-import React from 'react';
-
-import { SlBell } from 'react-icons/sl';
+import useScroll from '@/hooks/use-scroll';
+import { cn } from '@/lib/utils';
+import {
+  Avatar,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Tooltip,
+  useDisclosure,
+} from '@nextui-org/react';
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   usePathname,
   useRouter,
   useSelectedLayoutSegment,
 } from 'next/navigation';
-import { IoChatbubblesOutline } from 'react-icons/io5';
-import useScroll from '@/hooks/use-scroll';
-import { clearItemLocalStorage, cn, removeCookie } from '@/lib/utils';
-import { IoSearchOutline } from 'react-icons/io5';
-import Image from 'next/image';
-import { SIDENAV_ITEMS } from './constants';
-import { CustomInput } from '@/components/CustomInput';
-import { IoIosArrowDown } from 'react-icons/io';
 import { FiLogOut } from 'react-icons/fi';
-import { IoIosSettings } from 'react-icons/io';
-import Orders from '../../../public/assets/icons/order.png';
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  Avatar,
-  Tooltip,
-} from '@nextui-org/react';
+import { IoIosArrowDown, IoIosSettings } from 'react-icons/io';
+import { IoChatbubblesOutline } from 'react-icons/io5';
 import { MdPerson } from 'react-icons/md';
-import Link from 'next/link';
+import { SlBell } from 'react-icons/sl';
 import Menu from '../../../public/assets/icons/menu.png';
+import Orders from '../../../public/assets/icons/order.png';
+import LogoutModal from '../logoutModal';
+import { SIDENAV_ITEMS } from './constants';
 
 const Header = () => {
+  const { isOpen, onOpenChange } = useDisclosure();
   const pathname = usePathname();
   const scrolled = useScroll(5);
   const selectedLayout = useSelectedLayoutSegment();
@@ -164,11 +162,7 @@ const Header = () => {
                       </span>
                     </Link>
                     <div
-                      onClick={() => {
-                        clearItemLocalStorage('userInformation');
-                        removeCookie('token');
-                        router.push('/auth/login');
-                      }}
+                      onClick={onOpenChange}
                       className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md  hover:bg-[#F9FAFB] px-2 py-3 items-center gap-2'
                     >
                       <FiLogOut className='text-[20px]' />
@@ -181,6 +175,7 @@ const Header = () => {
           </div>
         </div>
       </div>
+      <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
     </div>
   );
 };

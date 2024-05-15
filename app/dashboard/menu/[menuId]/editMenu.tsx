@@ -174,6 +174,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                             selectedImage ||
                             `data:image/jpeg;base64,${menuItem?.image}`
                           }
+                          style={{ objectFit: 'cover' }}
                           width={150}
                           height={150}
                           className='object-cover h-full rounded-lg w-full'

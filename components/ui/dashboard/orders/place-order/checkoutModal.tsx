@@ -81,10 +81,14 @@ const CheckoutModal = ({
   };
 
   const paymentMethods = [
-    { text: 'Pay with cash', id: 0 },
-    { text: 'Pay with Pos', id: 1 },
-    { text: 'Pay with bank transfer', id: 2 },
-    { text: 'Pay Later', id: 3 },
+    { text: 'Pay with cash', subText: ' Accept payment using cash', id: 0 },
+    { text: 'Pay with Pos', subText: ' Accept payment using Pos', id: 1 },
+    {
+      text: 'Pay with bank transfer',
+      subText: 'Accept payment via bank transfer',
+      id: 2,
+    },
+    { text: 'Pay Later', subText: 'Keep this order open', id: 3 },
   ];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -421,9 +425,7 @@ const CheckoutModal = ({
                     >
                       <div>
                         <p className='font-semibold'>{item.text}</p>
-                        <p className='text-sm text-grey500'>
-                          Accept payment using cash
-                        </p>
+                        <p className='text-sm text-grey500'>{item.subText}</p>
                       </div>
                       <MdKeyboardArrowRight />
                     </div>

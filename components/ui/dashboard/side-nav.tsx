@@ -3,21 +3,18 @@
 import { useState } from 'react';
 
 import HobinkLogo from '@/components/logo';
-import {
-  clearItemLocalStorage,
-  getJsonItemFromLocalStorage,
-  removeCookie,
-} from '@/lib/utils';
-import { Avatar, Divider } from '@nextui-org/react';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { Avatar, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { FiLogOut } from 'react-icons/fi';
+import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
 import { SideNavItem } from './types';
 
 const SideNav = () => {
-  const router = useRouter();
+  const { isOpen, onOpenChange } = useDisclosure();
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { firstName, lastName, email } = userInformation;
   return (
@@ -58,18 +55,12 @@ const SideNav = () => {
             </span>
             <span className='text-[12px] font-[400]'>{email}</span>
           </div>
-          <div
-            onClick={() => {
-              clearItemLocalStorage('userInformation');
-              removeCookie('token');
-              router.push('/auth/login');
-            }}
-            className='cursor-pointer'
-          >
+          <div onClick={onOpenChange} className='cursor-pointer'>
             <FiLogOut className='text-[20px]' />
           </div>
         </div>
       </div>
+      <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
     </div>
   );
 };

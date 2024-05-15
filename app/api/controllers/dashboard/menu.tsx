@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { DASHBOARD } from '../../api-url';
 import api, { handleError } from '../../apiService';
-import { inputNameValidation } from '../validations';
 
 const menuItemSchema = z.object({
   itemName: z.string().trim().min(1, 'Item name is required'),

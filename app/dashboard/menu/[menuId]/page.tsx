@@ -176,6 +176,7 @@ const MenuDetails = () => {
               }
               width={200}
               height={200}
+              style={{ objectFit: 'cover' }}
               className={'bg-contain h-full rounded-lg w-full'}
               aria-label='uploaded image'
               alt='uploaded image(s)'

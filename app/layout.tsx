@@ -1,11 +1,13 @@
 import { Providers } from '@/utilities/providers';
-import './globals.css';
 import { inter } from '@/utilities/ui-config/fonts';
 import { Toaster } from 'react-hot-toast';
 import { ToastContainer } from 'react-toastify';
+import './globals.css';
 
-import 'react-toastify/dist/ReactToastify.css';
 import { AppProvider } from '@/hooks/globalProvider';
+
+import QueryProvider from '@/hooks/queryProvider';
+import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata = {
   title: 'Welcome to Hobink',
@@ -20,27 +22,29 @@ export default function RootLayout({
   return (
     <html lang='en' className={`${inter.className} `} suppressHydrationWarning>
       <body>
-        <AppProvider>
-          <Providers>
-            {children}
-            <Toaster
-              toastOptions={{
-                duration: 5000,
-                success: {
-                  style: {
-                    border: '2px solid #3a9ea5',
+        <QueryProvider>
+          <AppProvider>
+            <Providers>
+              {children}
+              <Toaster
+                toastOptions={{
+                  duration: 5000,
+                  success: {
+                    style: {
+                      border: '2px solid #3a9ea5',
+                    },
                   },
-                },
-                error: {
-                  style: {
-                    border: '2px solid #eb5757',
+                  error: {
+                    style: {
+                      border: '2px solid #eb5757',
+                    },
                   },
-                },
-              }}
-            />
-            <ToastContainer theme='light' />
-          </Providers>
-        </AppProvider>
+                }}
+              />
+              <ToastContainer theme='light' />
+            </Providers>
+          </AppProvider>{' '}
+        </QueryProvider>
       </body>
     </html>
   );

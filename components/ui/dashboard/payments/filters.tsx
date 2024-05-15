@@ -9,27 +9,27 @@ const Filters = ({
 }: any) => {
   return (
     <>
-      <div className='flex  relative w-full top-4 px-3 py-1 border-b border-primaryGrey justify-between'>
+      <div className='flex  relative w-full top-4 px-3  border-b border-primaryGrey justify-between'>
         <Tabs
           classNames={{
             tabList:
               'gap-6  relative rounded-none p-0 w-[100%]  overflow-scroll',
             cursor: 'w-full bg-primaryColor',
-            tab: 'max-w-fit px-0 h-10',
+            tab: 'max-w-fit px-0 py-0 h-10',
             tabContent: 'group-data-[selected=true]:text-primaryColor',
           }}
           variant={'underlined'}
           aria-label='menu filter'
           onChange={handleTabChange}
         >
-          {payments.map((payment: any) => {
+          {payments?.map((payment: any) => {
             return (
               <Tab
                 key={payment.name}
                 title={
                   <div
                     onClick={() => handleTabClick(payment.name)}
-                    className='flex items-center space-x-2 capitalize'
+                    className='flex items-center h-10 space-x-2 capitalize'
                   >
                     <span>{payment.name}</span>
 

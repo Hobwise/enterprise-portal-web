@@ -3,18 +3,15 @@
 import React, { ReactNode, useEffect, useRef, useState } from 'react';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { useDisclosure } from '@nextui-org/react';
 import { motion, useCycle } from 'framer-motion';
+import { FiLogOut } from 'react-icons/fi';
+import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
 import { SideNavItem } from './types';
-import { Avatar, Divider } from '@nextui-org/react';
-import {
-  clearItemLocalStorage,
-  getJsonItemFromLocalStorage,
-  removeCookie,
-} from '@/lib/utils';
-import { FiLogOut } from 'react-icons/fi';
 
 type MenuItemWithSubMenuProps = {
   item: SideNavItem;
@@ -41,21 +38,21 @@ const sidebar = {
 };
 
 const HeaderMobile = () => {
-  const router = useRouter();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const { firstName, lastName, email } = userInformation;
+
   const pathname = usePathname();
   const containerRef = useRef(null);
   const { height } = useDimensions(containerRef);
-  const [isOpen, toggleOpen] = useCycle(false, true);
+  const [isOpenClass, toggleOpen] = useCycle(false, true);
 
   return (
     <motion.nav
       initial={false}
-      animate={isOpen ? 'open' : 'closed'}
+      animate={isOpenClass ? 'open' : 'closed'}
       custom={height}
       className={`fixed inset-0 z-50 w-full md:hidden ${
-        isOpen ? '' : 'pointer-events-none'
+        isOpenClass ? '' : 'pointer-events-none'
       }`}
       ref={containerRef}
     >
@@ -97,18 +94,15 @@ const HeaderMobile = () => {
       </motion.ul>
       <MenuToggle toggle={toggleOpen} />
       <div
-        onClick={() => {
-          clearItemLocalStorage('userInformation');
-          removeCookie('token');
-          router.push('/auth/login');
-        }}
+        onClick={onOpenChange}
         className={`cursor-pointer  gap-3 text-xl font-bold text-danger-500 ${
-          isOpen ? 'flex ' : 'hidden'
+          isOpenClass ? 'flex ' : 'hidden'
         } items-center absolute bottom-[20%] left-[40px]`}
       >
         <span>Logout</span>
         <FiLogOut />
       </div>
+      <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
     </motion.nav>
   );
 };

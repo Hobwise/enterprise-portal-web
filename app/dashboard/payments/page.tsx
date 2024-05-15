@@ -3,16 +3,13 @@ import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useState } from 'react';
 
-import {
-  CustomLoading,
-  getJsonItemFromLocalStorage,
-  notify,
-} from '@/lib/utils';
+import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
 
 import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
 import { MdOutlineFileDownload } from 'react-icons/md';
 
 import { getPaymentByBusiness } from '@/app/api/controllers/dashboard/payment';
+import Error from '@/components/error';
 import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
 import PaymentsList from '@/components/ui/dashboard/payments/payment';
 import { downloadCSV } from '@/lib/downloadToExcel';
@@ -44,10 +41,12 @@ const Payments: React.FC = () => {
   const [payments, setPayments] = useState<OrderSummary[]>([]);
 
   const [isLoading, setIsLoading] = useState<Boolean>(true);
+  const [error, setError] = useState<Boolean>(false);
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const getAllPayments = async (checkLoading = true) => {
     setIsLoading(checkLoading);
+    setError(false);
     const data = await getPaymentByBusiness(businessInformation[0]?.businessId);
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
@@ -55,11 +54,7 @@ const Payments: React.FC = () => {
 
       setPayments(response);
     } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
+      setError(true);
     }
   };
 
@@ -76,6 +71,8 @@ const Payments: React.FC = () => {
           getAllPayments={getAllPayments}
         />
       );
+    } else if (error) {
+      return <Error onClick={() => getAllPayments()} />;
     } else {
       return <NoPaymentsScreen />;
     }

@@ -1,7 +1,7 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
 import MenuList from '@/components/ui/dashboard/menu/menu';
@@ -12,6 +12,7 @@ import {
 } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
+import Error from '@/components/error';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import {
   CustomLoading,
@@ -31,6 +32,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { IoAddCircleOutline, IoPhonePortraitOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
+import { useQuery } from 'react-query';
 
 type MenuItem = {
   name: string;
@@ -52,36 +54,22 @@ type MenuData = Array<MenuItem>;
 const Menu: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const [menus, setMenus] = useState<MenuData>([]);
-
-  const [isLoading, setIsLoading] = useState<Boolean>(true);
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
   const getAllMenus = async () => {
     const data = await getMenuByBusiness(businessInformation[0]?.businessId);
-    setIsLoading(false);
 
-    if (data?.data?.isSuccessful) {
-      let response = data?.data?.data;
-      response.sort((a: MenuItem, b: MenuItem) => a.name.localeCompare(b.name));
-
-      setMenus(response);
-    } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
-    }
+    return data?.data?.data;
   };
 
-  useEffect(() => {
-    getAllMenus();
-  }, []);
+  const { data, isLoading, isError, refetch } = useQuery('menus', getAllMenus, {
+    staleTime: 1000 * 60 * 1,
+  });
 
   const handleCreateMenu = async () => {
     setLoading(true);
@@ -106,14 +94,16 @@ const Menu: React.FC = () => {
   };
 
   const getScreens = () => {
-    if (menus?.length > 0) {
-      return <MenuList menus={menus} onOpen={onOpen} />;
+    if (data?.length > 0) {
+      return <MenuList menus={data} onOpen={onOpen} />;
+    } else if (isError) {
+      return <Error onClick={() => refetch()} />;
     } else {
       return <CreateMenu onOpen={onOpen} />;
     }
   };
 
-  const newArray = menus?.map((item) => {
+  const newArray = data?.map((item) => {
     const menuName = item?.items[0]?.menuName;
     const itemName = item?.items[0]?.itemName;
     const price = item?.items[0]?.price;
@@ -131,12 +121,17 @@ const Menu: React.FC = () => {
       hasVariety,
     };
   });
+  const totalCount = data?.reduce((accumulator, currentValue) => {
+    const count = Number(currentValue.totalCount);
+    return accumulator + count;
+  }, 0);
+
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {menus?.length > 0 ? (
+            {data?.length > 0 ? (
               <div className='flex items-center'>
                 <span>All menu</span>
                 <Chip
@@ -144,7 +139,7 @@ const Menu: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {menus[0].items?.length}
+                  {totalCount}
                 </Chip>
               </div>
             ) : (
@@ -156,7 +151,7 @@ const Menu: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {menus?.length > 0 && (
+          {data?.length > 0 && (
             <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
               <Button
                 onClick={() => router.push('/dashboard/menu/preview-menu')}
@@ -178,7 +173,7 @@ const Menu: React.FC = () => {
 
           <CustomButton
             onClick={
-              menus?.length > 0
+              data?.length > 0
                 ? () => router.push('/dashboard/menu/add-menu-item')
                 : onOpen
             }
@@ -187,12 +182,12 @@ const Menu: React.FC = () => {
           >
             <div className='flex gap-2 items-center justify-center'>
               <IoAddCircleOutline className='text-[22px]' />
-              <p>{menus?.length > 0 ? 'Add menu items' : 'Add menu'} </p>
+              <p>{data?.length > 0 ? 'Add menu items' : 'Add menu'} </p>
             </div>
           </CustomButton>
         </div>
       </div>
-      {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+      {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
