@@ -5,7 +5,7 @@ import {
 } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import { formatPrice, notify } from '@/lib/utils';
+import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Divider,
   Modal,
@@ -27,7 +27,9 @@ const ConfirmOrderModal = ({
   isOpenConfirmOrder,
   toggleConfirmModal,
 }) => {
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [isLoading, setIsLoading] = useState(false);
+
   const [screen, setScreen] = useState(1);
   const [order, setOrder] = useState([]);
   const [reference, setReference] = useState('');
@@ -65,7 +67,7 @@ const ConfirmOrderModal = ({
   const finalizeOrder = async () => {
     setIsLoading(true);
     const payload = {
-      treatedBy: singleOrder.placedByName,
+      treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
       paymentMethod: selectedPaymentMethod,
       paymentReference: reference,
       status: 1,
@@ -102,6 +104,8 @@ const ConfirmOrderModal = ({
       isOpen={isOpenConfirmOrder}
       onOpenChange={() => {
         setScreen(1);
+        setIsLoading(false);
+        setSelectedPaymentMethod(0);
         toggleConfirmModal();
         setReference('');
         setOrder([]);

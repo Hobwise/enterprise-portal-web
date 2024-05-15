@@ -52,7 +52,7 @@ const CheckoutModal = ({
   id,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
-
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
   const router = useRouter();
   const [response, setResponse] = useState(null);
   const [orderId, setOrderId] = useState<string>('');
@@ -174,7 +174,7 @@ const CheckoutModal = ({
   const finalizeOrder = async () => {
     setIsLoading(true);
     const payload = {
-      treatedBy: order.placedByName,
+      treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
       paymentMethod: selectedPaymentMethod,
       paymentReference: reference,
       status: 1,
@@ -237,7 +237,8 @@ const CheckoutModal = ({
         setScreen(1);
         onOpenChange();
         setReference('');
-
+        setIsLoading(false);
+        setSelectedPaymentMethod(0);
         setOrder({
           placedByName: orderDetails?.placedByName || '',
           placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
