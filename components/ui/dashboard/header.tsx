@@ -13,11 +13,7 @@ import {
 } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  usePathname,
-  useRouter,
-  useSelectedLayoutSegment,
-} from 'next/navigation';
+import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
 import { FiLogOut } from 'react-icons/fi';
 import { IoIosArrowDown, IoIosSettings } from 'react-icons/io';
 import { IoChatbubblesOutline } from 'react-icons/io5';
@@ -35,7 +31,6 @@ const Header = () => {
   const scrolled = useScroll(5);
   const selectedLayout = useSelectedLayoutSegment();
   const navItem = SIDENAV_ITEMS.filter((item) => item.path === pathname)[0];
-  const router = useRouter();
 
   const routeOutsideSidebar = () => {
     if (pathname.includes('settings')) {
@@ -142,7 +137,7 @@ const Header = () => {
                 <div className='flex items-center gap-1 cursor-pointer'>
                   <Avatar
                     size='sm'
-                    src={`data:image/jpeg;base64,${data?.image}`}
+                    src={data?.image && `data:image/jpeg;base64,${data?.image}`}
                   />
                   <IoIosArrowDown />
                 </div>
