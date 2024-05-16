@@ -92,7 +92,6 @@ input:-webkit-autofill:focus {
   padding-left: 20px;
   line-height: 20px;
   padding: 0;
-  padding-top: 25px;
   width: 100%;
   font-weight: 400;
   min-height: 65px !important;
