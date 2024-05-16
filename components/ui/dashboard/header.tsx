@@ -1,5 +1,6 @@
 'use client';
 
+import useUser from '@/hooks/cachedEndpoints/useUser';
 import useScroll from '@/hooks/use-scroll';
 import { cn } from '@/lib/utils';
 import {
@@ -29,6 +30,7 @@ import { SIDENAV_ITEMS } from './constants';
 
 const Header = () => {
   const { isOpen, onOpenChange } = useDisclosure();
+  const { data } = useUser();
   const pathname = usePathname();
   const scrolled = useScroll(5);
   const selectedLayout = useSelectedLayoutSegment();
@@ -140,7 +142,7 @@ const Header = () => {
                 <div className='flex items-center gap-1 cursor-pointer'>
                   <Avatar
                     size='sm'
-                    // src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
+                    src={`data:image/jpeg;base64,${data?.image}`}
                   />
                   <IoIosArrowDown />
                 </div>

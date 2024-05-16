@@ -1,7 +1,6 @@
 import { z } from 'zod';
-import api, { handleError } from '../apiService';
 import { AUTH } from '../api-url';
-import { notify } from '@/lib/utils';
+import api, { handleError } from '../apiService';
 import {
   businessAddressValidation,
   businessNameValidation,
@@ -112,12 +111,11 @@ export async function updateUser(formData: any) {
     businessID: formData.businessID,
     cooperateID: formData.cooperateID,
     isActive: formData.isActive,
+    imageReference: formData.imageReference,
   };
+  console.log(payload, 'payload');
   try {
-    const data = await api.put(
-      `${AUTH.updateUser}?userId=${formData.id}`,
-      payload
-    );
+    const data = await api.put(`${AUTH.user}?userId=${formData.id}`, payload);
 
     return data;
   } catch (error) {
@@ -126,7 +124,7 @@ export async function updateUser(formData: any) {
 }
 export async function confirmEmail(formData: any) {
   try {
-    const data = await api.post(AUTH.registerUser, formData);
+    const data = await api.post(AUTH.user, formData);
 
     return data;
   } catch (error) {
@@ -234,6 +232,15 @@ export async function getBusinessDetails(formData: any) {
     const data = await api.get(AUTH.getBusiness, {
       headers,
     });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function getUser(id: string) {
+  try {
+    const data = await api.get(`${AUTH.user}?userId=${id}`);
 
     return data;
   } catch (error) {

@@ -3,6 +3,7 @@ import { uploadFile } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
+import useUser from '@/hooks/cachedEndpoints/useUser';
 import {
   THREEMB,
   getJsonItemFromLocalStorage,
@@ -11,27 +12,31 @@ import {
 } from '@/lib/utils';
 import { Avatar, Divider, Spacer } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { MdOutlineMonochromePhotos } from 'react-icons/md';
 
 const Profile = () => {
+  const { data, refetch } = useUser();
+
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const businessInformation = getJsonItemFromLocalStorage('business');
+
   const { email, firstName, lastName, role } = userInformation;
 
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
 
   const [selectedImage, setSelectedImage] = useState('');
-  const [imageReference, setImageReference] = useState('');
+  const [triggerUpdateUser, setTriggerUpdateUser] = useState(false);
 
   const [updateUserFormData, setUpdateUserFormData] = useState({
     firstName: firstName,
     lastName: lastName,
     email: email,
-    businessID: businessInformation[0]?.businessID,
+    businessID: businessInformation[0]?.businessId,
     cooperateID: userInformation?.cooperateID,
+    imageReference: data?.imageReference || '',
     isActive: true,
     role: String(role),
     id: userInformation?.id,
@@ -51,7 +56,35 @@ const Profile = () => {
 
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
-      setImageReference(data.data.data);
+
+      setUpdateUserFormData({
+        ...updateUserFormData,
+        imageReference: data.data.data,
+      });
+      setTriggerUpdateUser(true);
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
+
+  const submitFormData = async (loading = true) => {
+    setIsLoading(loading);
+
+    const data = await updateUser(updateUserFormData);
+    setIsLoading(false);
+    setResponse(data);
+    if (data?.data?.isSuccessful) {
+      refetch();
+      loading &&
+        notify({
+          title: 'Success!',
+          text: 'Your profile has been updated',
+          type: 'success',
+        });
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -71,30 +104,15 @@ const Profile = () => {
       const compressedFile = await imageCompression(file, imageCompressOptions);
       const formData = new FormData();
       formData.append('file', compressedFile);
-      menuFileUpload(formData, file);
+      await menuFileUpload(formData, file);
     }
   };
+  useEffect(() => {
+    if (triggerUpdateUser) {
+      submitFormData(false);
+    }
+  }, [triggerUpdateUser]);
 
-  const submitFormData = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    const data = await updateUser(updateUserFormData);
-    setIsLoading(false);
-    setResponse(data);
-    if (data?.data?.isSuccessful) {
-      notify({
-        title: 'Success!',
-        text: 'Your profile has been updated',
-        type: 'success',
-      });
-    } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
-    }
-  };
   return (
     <section>
       <div className='flex xl:flex-row flex-col justify-between'>
@@ -114,13 +132,20 @@ const Profile = () => {
               type='file'
               multiple
               accept='image/*'
-              // onChange={handleFileChange}
+              onChange={handleFileChange}
               className='hidden'
             />
           </label>
         </div>
       </div>
-      <Avatar size='lg' className='h-[120px] w-[120px]' src={selectedImage} />
+      <Avatar
+        size='lg'
+        className='h-[120px] w-[120px]'
+        src={
+          selectedImage ||
+          (data?.image && `data:image/jpeg;base64,${data?.image}`)
+        }
+      />
       <Spacer y={6} />
       <Divider className=' text-secondaryGrey' />
       <Spacer y={6} />

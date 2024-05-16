@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import HobinkLogo from '@/components/logo';
+import useUser from '@/hooks/cachedEndpoints/useUser';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Avatar, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
@@ -17,6 +18,8 @@ const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { firstName, lastName, email } = userInformation;
+  const { data } = useUser();
+
   return (
     <div className='md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex'>
       <div className='flex flex-col  w-full'>
@@ -45,8 +48,8 @@ const SideNav = () => {
             <Avatar
               isBordered
               showFallback={true}
+              src={`data:image/jpeg;base64,${data?.image}`}
               name={firstName}
-              // src='https://i.pravatar.cc/150?u=a042581f4e29026024d'
             />
           </div>
           <div className='flex flex-col '>

@@ -31,23 +31,6 @@ import { useRouter } from 'next/navigation';
 import { IoAddCircleOutline, IoPhonePortraitOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 
-type MenuItem = {
-  name: string;
-  items: Array<{
-    menuID: string;
-    menuName: string;
-    itemName: string;
-    itemDescription: string;
-    price: number;
-    currency: string;
-    isAvailable: boolean;
-    hasVariety: boolean;
-    image: string;
-    varieties: null | any;
-  }>;
-};
-
-type MenuData = Array<MenuItem>;
 const Menu: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
