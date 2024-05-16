@@ -1,27 +1,4 @@
 'use client';
-import { CustomInput } from '@/components/CustomInput';
-import Container from '@/components/dashboardContainer';
-import { Spacer } from '@nextui-org/react';
-import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
-import React, { useEffect, useState } from 'react';
-import { CustomTextArea } from '@/components/customTextArea';
-import SelectInput from '@/components/selectInput';
-import { CustomButton } from '@/components/customButton';
-import { MdOutlineFileDownload } from 'react-icons/md';
-import {
-  Modal,
-  ModalContent,
-  ModalBody,
-  useDisclosure,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import Success from '../../../../public/assets/images/success.png';
-import {
-  THREEMB,
-  getJsonItemFromLocalStorage,
-  imageCompressOptions,
-  notify,
-} from '@/lib/utils';
 import {
   createMenuItem,
   deleteFile,
@@ -29,15 +6,41 @@ import {
   payloadMenuItem,
   uploadFile,
 } from '@/app/api/controllers/dashboard/menu';
-import { useRouter } from 'next/navigation';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
+import { CustomTextArea } from '@/components/customTextArea';
+import Container from '@/components/dashboardContainer';
+import SelectInput from '@/components/selectInput';
+import useMenu from '@/hooks/cachedEndpoints/useMenu';
+import {
+  THREEMB,
+  getJsonItemFromLocalStorage,
+  imageCompressOptions,
+  notify,
+} from '@/lib/utils';
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  Spacer,
+  useDisclosure,
+} from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
-import SelectMenu from './add-mulitple-menuItem/selectMenu';
-import AddMultipleMenu from './add-mulitple-menuItem/addMultipleMenu';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import {
+  MdOutlineAddPhotoAlternate,
+  MdOutlineFileDownload,
+} from 'react-icons/md';
+import Success from '../../../../public/assets/images/success.png';
+import AddMultipleMenu from './add-mulitple-menuItem/addMultipleMenu';
+import SelectMenu from './add-mulitple-menuItem/selectMenu';
 
 const AddItemToMenu = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
+  const { refetch } = useMenu();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState('');
@@ -336,7 +339,10 @@ const AddItemToMenu = () => {
 
                 <div className='flex gap-3'>
                   <CustomButton
-                    onClick={() => router.push('/dashboard/menu')}
+                    onClick={() => {
+                      refetch();
+                      router.push('/dashboard/menu');
+                    }}
                     className='h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 '
                     backgroundColor='bg-white'
                     type='submit'

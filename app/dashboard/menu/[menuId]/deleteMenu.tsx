@@ -1,4 +1,5 @@
-import { CustomButton } from '@/components/customButton';
+import { deleteMenuItem } from '@/app/api/controllers/dashboard/menu';
+import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Button,
@@ -7,13 +8,13 @@ import {
   ModalContent,
   ModalFooter,
 } from '@nextui-org/react';
-import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { deleteMenuItem } from '@/app/api/controllers/dashboard/menu';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 const DeleteMenu = ({ isOpenDelete, toggleModalDelete, menuItem }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
+  const { refetch } = useMenu();
 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -27,6 +28,7 @@ const DeleteMenu = ({ isOpenDelete, toggleModalDelete, menuItem }: any) => {
     if (data?.data?.isSuccessful) {
       toggleModalDelete();
       toast.success('Menu item deleted successfully');
+      refetch();
       router.push('/dashboard/menu');
     } else if (data?.data?.error) {
       notify({

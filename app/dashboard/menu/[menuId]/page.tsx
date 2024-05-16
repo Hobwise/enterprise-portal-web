@@ -52,9 +52,7 @@ const MenuDetails = () => {
   const [menuItem, setMenuItem] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [varietyDetails, setVarietyDetails] = useState(null);
-  const [isAvailable, setIsAvailable] = useState<Boolean>(
-    menuItem.isAvailabale
-  );
+  const [isAvailable, setIsAvailable] = useState<Boolean>(menuItem.isAvailable);
   const handleToggle = async (isSelected: boolean) => {
     setIsAvailable(isSelected);
     try {
@@ -86,7 +84,7 @@ const MenuDetails = () => {
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
-      setIsAvailable(data?.data?.data.isAvailabale);
+      setIsAvailable(data?.data?.data.isAvailable);
       setMenuItem(data?.data?.data);
     } else if (data?.data?.error) {
       //   notify({

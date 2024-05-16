@@ -1,9 +1,9 @@
 'use client';
-import { getMenuByBusiness } from '@/app/api/controllers/dashboard/menu';
 import { getOrder } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
+import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import {
   clearItemLocalStorage,
   formatPrice,
@@ -22,7 +22,6 @@ import React, { useEffect, useState } from 'react';
 import { FaMinus, FaPlus } from 'react-icons/fa6';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import { IoSearchOutline } from 'react-icons/io5';
-import { useQuery } from 'react-query';
 import noImage from '../../../../../public/assets/images/no-image.svg';
 import noMenu from '../../../../../public/assets/images/no-menu.png';
 import CheckoutModal from './checkoutModal';
@@ -44,7 +43,7 @@ type MenuItem = {
     itemDescription: string;
     price: number;
     currency: string;
-    isAvailabale: boolean;
+    isAvailable: boolean;
     hasVariety: boolean;
     image: string;
     isVariety: boolean;
@@ -82,15 +81,7 @@ const MenuList = () => {
   const [orderDetails, setOrderDetails] = useState([]);
   const [filterValue, setFilterValue] = React.useState('');
 
-  const getAllMenus = async () => {
-    const data = await getMenuByBusiness(businessInformation[0]?.businessId);
-
-    return data?.data?.data;
-  };
-
-  const { data, isLoading, isError, refetch } = useQuery('menus', getAllMenus, {
-    staleTime: 1000 * 60 * 1,
-  });
+  const { data, isLoading, isError, refetch } = useMenu();
 
   const getOrderDetails = async () => {
     setLoading(true);

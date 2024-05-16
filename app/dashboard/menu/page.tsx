@@ -6,13 +6,11 @@ import React, { useState } from 'react';
 import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
 import MenuList from '@/components/ui/dashboard/menu/menu';
 
-import {
-  createMenu,
-  getMenuByBusiness,
-} from '@/app/api/controllers/dashboard/menu';
+import { createMenu } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
+import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import {
   CustomLoading,
@@ -32,7 +30,6 @@ import {
 import { useRouter } from 'next/navigation';
 import { IoAddCircleOutline, IoPhonePortraitOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
-import { useQuery } from 'react-query';
 
 type MenuItem = {
   name: string;
@@ -43,7 +40,7 @@ type MenuItem = {
     itemDescription: string;
     price: number;
     currency: string;
-    isAvailabale: boolean;
+    isAvailable: boolean;
     hasVariety: boolean;
     image: string;
     varieties: null | any;
@@ -60,16 +57,7 @@ const Menu: React.FC = () => {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-
-  const getAllMenus = async () => {
-    const data = await getMenuByBusiness(businessInformation[0]?.businessId);
-
-    return data?.data?.data;
-  };
-
-  const { data, isLoading, isError, refetch } = useQuery('menus', getAllMenus, {
-    staleTime: 1000 * 60 * 1,
-  });
+  const { data, isLoading, isError, refetch } = useMenu();
 
   const handleCreateMenu = async () => {
     setLoading(true);
@@ -109,7 +97,7 @@ const Menu: React.FC = () => {
     const price = item?.items[0]?.price;
     const itemDescription = item?.items[0]?.itemDescription;
     const currency = item?.items[0]?.currency;
-    const isAvailabale = item?.items[0]?.isAvailabale;
+    const isAvailable = item?.items[0]?.isAvailable;
     const hasVariety = item?.items[0]?.hasVariety;
     return {
       menuName,
@@ -117,7 +105,7 @@ const Menu: React.FC = () => {
       price,
       itemDescription,
       currency,
-      isAvailabale,
+      isAvailable,
       hasVariety,
     };
   });

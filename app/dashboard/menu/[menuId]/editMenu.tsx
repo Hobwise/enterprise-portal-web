@@ -6,6 +6,7 @@ import {
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
+import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import {
   THREEMB,
   getJsonItemFromLocalStorage,
@@ -27,7 +28,7 @@ import toast from 'react-hot-toast';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 
 const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
-  console.log(menuItem, ' menuItem');
+  const { refetch } = useMenu();
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +40,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
     itemName: menuItem?.itemName || '',
     price: +menuItem?.price || 0,
     menuID: menuItem?.menuID || '',
-    isAvailable: menuItem?.isAvailabale || true,
+    isAvailable: menuItem?.isAvailable,
     imageReference: menuItem?.imageReference || '',
   });
   useEffect(() => {
@@ -48,7 +49,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
       itemName: menuItem?.itemName,
       price: +menuItem?.price,
       menuID: menuItem?.menuID,
-      isAvailable: menuItem?.isAvailabale || true,
+      isAvailable: menuItem?.isAvailable,
       imageReference: menuItem?.imageReference || '',
     });
   }, [menuItem]);
@@ -120,6 +121,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
     if (data?.data?.isSuccessful) {
       toggleModalEdit();
       getMenu(false);
+      refetch();
       toast.success('Menu item updated successfully');
       setSelectedImage('');
     } else if (data?.data?.error) {
@@ -141,7 +143,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
           itemName: menuItem?.itemName || '',
           price: +menuItem?.price || 0,
           menuID: menuItem?.menuID || '',
-          isAvailable: menuItem?.isAvailabale || '',
+          isAvailable: menuItem?.isAvailable || '',
           imageReference: '',
         });
         setSelectedImage('');

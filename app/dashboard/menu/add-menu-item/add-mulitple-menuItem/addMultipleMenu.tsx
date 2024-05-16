@@ -1,27 +1,22 @@
-import { CustomButton } from '@/components/customButton';
-import { Spacer } from '@nextui-org/react';
-import React, { useState } from 'react';
+import { uploadFilemultipleMenuItem } from '@/app/api/controllers/dashboard/menu';
+import useMenu from '@/hooks/cachedEndpoints/useMenu';
+import { THREEMB, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
+  Spacer,
   Table,
-  TableHeader,
-  TableColumn,
   TableBody,
-  TableRow,
   TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
-import {
-  notify,
-  imageCompressOptions,
-  THREEMB,
-  getJsonItemFromLocalStorage,
-} from '@/lib/utils';
-import imageCompression from 'browser-image-compression';
-import { uploadFilemultipleMenuItem } from '@/app/api/controllers/dashboard/menu';
 
 const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
   const router = useRouter();
+  const { refetch } = useMenu();
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState('');
@@ -37,6 +32,7 @@ const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
       toast.success('Upload Successful');
+      refetch();
       router.push('/dashboard/menu');
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);

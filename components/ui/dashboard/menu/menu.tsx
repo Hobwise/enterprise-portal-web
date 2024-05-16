@@ -85,14 +85,14 @@ const MenuList = ({ menus, onOpen }: any) => {
             <div className='ml-5 gap-1 grid place-content-center'>
               <p className='font-bold text-sm'>{menu.menuName}</p>
               <p className='text-sm'>{menu.itemName}</p>
-              {menu.isAvailabale === false && (
+              {menu.isAvailable === false && (
                 <Chip
                   className='capitalize'
-                  color={statusColorMap[menu.isAvailabale]}
+                  color={statusColorMap[menu.isAvailable]}
                   size='sm'
                   variant='bordered'
                 >
-                  {statusDataMap[menu.isAvailabale]}
+                  {statusDataMap[menu.isAvailable]}
                 </Chip>
               )}
             </div>
