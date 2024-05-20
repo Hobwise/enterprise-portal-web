@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
@@ -26,8 +26,27 @@ import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
-const MenuList = ({ menus, onOpen }: any) => {
+const MenuList = ({ menus, onOpen, searchQuery }: any) => {
   const [filteredMenu, setFilteredMenu] = React.useState(menus[0]?.items);
+  useEffect(() => {
+    if (menus && searchQuery) {
+      const filteredData = menus
+        .map((item) => ({
+          ...item,
+          items: item?.items?.filter(
+            (item) =>
+              item?.itemName?.toLowerCase().includes(searchQuery) ||
+              String(item?.price)?.toLowerCase().includes(searchQuery) ||
+              item?.menuName?.toLowerCase().includes(searchQuery) ||
+              item?.itemDescription?.toLowerCase().includes(searchQuery)
+          ),
+        }))
+        .filter((item) => item?.items?.length > 0);
+      setFilteredMenu(filteredData.length > 0 ? filteredData[0].items : []);
+    } else {
+      setFilteredMenu(menus?.[0]?.items);
+    }
+  }, [searchQuery, menus]);
   const {
     bottomContent,
     headerColumns,

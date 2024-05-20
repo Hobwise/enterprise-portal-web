@@ -1,5 +1,4 @@
 import { Select, SelectItem } from '@nextui-org/react';
-import React from 'react';
 
 const SelectInput = ({
   label,
@@ -8,6 +7,7 @@ const SelectInput = ({
   name,
   value,
   onChange,
+  disabled,
   errorMessage,
   selectedKeys,
   defaultSelectedKeys,
@@ -23,6 +23,7 @@ const SelectInput = ({
       defaultSelectedKeys={defaultSelectedKeys}
       selectedKeys={selectedKeys}
       value={value}
+      disabled={disabled}
       errorMessage={errorMessage}
       isInvalid={errorMessage && true}
       onChange={onChange}

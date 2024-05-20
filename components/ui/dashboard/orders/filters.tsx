@@ -1,7 +1,7 @@
 'use client';
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 
-const Filters = ({ onOpen, orders, handleTabChange, handleTabClick }: any) => {
+const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
   return (
     <>
       <div className='flex  relative w-full top-4 px-3  border-b border-primaryGrey justify-between'>

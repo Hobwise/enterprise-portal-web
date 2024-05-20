@@ -156,7 +156,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
 
         <div className='hidden md:flex w-[30%] justify-end gap-2'>
           <Button
-            isDisabled={pages === 1}
+            isdisabled={pages === 1}
             size='sm'
             variant='flat'
             onPress={onPreviousPage}
@@ -164,7 +164,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
             Previous
           </Button>
           <Button
-            isDisabled={pages === 1}
+            isdisabled={pages === 1}
             size='sm'
             variant='flat'
             onPress={onNextPage}

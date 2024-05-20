@@ -206,6 +206,7 @@ const Profile = () => {
         errorMessage={response?.errors?.role?.[0]}
         label={'Role'}
         name='role'
+        disabled={true}
         defaultSelectedKeys={[updateUserFormData.role.toString()]}
         onChange={handleInputChange}
         selectedKeys={[updateUserFormData.role.toString()]}

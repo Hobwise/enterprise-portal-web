@@ -1,74 +1,54 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
+import { CustomLoading } from '@/lib/utils';
 
-import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
-import { MdOutlineFileDownload } from 'react-icons/md';
-
-import { getPaymentByBusiness } from '@/app/api/controllers/dashboard/payment';
+import { CustomInput } from '@/components/CustomInput';
 import Error from '@/components/error';
 import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
 import PaymentsList from '@/components/ui/dashboard/payments/payment';
+import usePayment from '@/hooks/usePayment';
 import { downloadCSV } from '@/lib/downloadToExcel';
+import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
+import { IoSearchOutline } from 'react-icons/io5';
+import { MdOutlineFileDownload } from 'react-icons/md';
 
-interface Payment {
-  id: string;
-  customer: string;
-  reference: string;
-  treatedBy: string;
-  totalAmount: number;
-  orderID: string;
-  qrName: string;
-  paymentMethod: number;
-  paymentReference: string;
-  status: number;
-  dateCreated: string;
-  cooperateID: string;
-  businessID: string;
-}
-
-interface OrderSummary {
-  name: string;
-  totalAmount: number;
-  payments: Payment[];
-}
 const Payments: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { payments, error, isLoading, getAllPayments } = usePayment();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const [payments, setPayments] = useState<OrderSummary[]>([]);
-
-  const [isLoading, setIsLoading] = useState<Boolean>(true);
-  const [error, setError] = useState<Boolean>(false);
-  const businessInformation = getJsonItemFromLocalStorage('business');
-
-  const getAllPayments = async (checkLoading = true) => {
-    setIsLoading(checkLoading);
-    setError(false);
-    const data = await getPaymentByBusiness(businessInformation[0]?.businessId);
-    setIsLoading(false);
-    if (data?.data?.isSuccessful) {
-      let response = data?.data?.data;
-
-      setPayments(response);
-    } else if (data?.data?.error) {
-      setError(true);
-    }
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value.toLowerCase());
   };
 
-  useEffect(() => {
-    getAllPayments();
-  }, []);
+  const filteredItems = useMemo(() => {
+    return payments
+      ?.map((item) => ({
+        ...item,
+        orders: item?.payments?.filter(
+          (item) =>
+            item?.qrName?.toLowerCase().includes(searchQuery) ||
+            String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
+            item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+            item?.reference?.toLowerCase().includes(searchQuery) ||
+            item?.treatedBy?.toLowerCase().includes(searchQuery) ||
+            item?.paymentReference?.toLowerCase().includes(searchQuery) ||
+            item?.customer?.toLowerCase().includes(searchQuery)
+        ),
+      }))
+      .filter((item) => item?.payments?.length > 0);
+  }, [payments, searchQuery]);
 
   const getScreens = () => {
     if (payments?.length > 0) {
       return (
         <PaymentsList
-          payments={payments}
+          payments={filteredItems}
           onOpen={onOpen}
-          getAllPayments={getAllPayments}
+          searchQuery={searchQuery}
         />
       );
     } else if (error) {
@@ -115,15 +95,30 @@ const Payments: React.FC = () => {
         </div>
         <div className='flex items-center gap-3'>
           {payments?.length > 0 && (
-            <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
-              <Button
-                onClick={() => downloadCSV(newArray)}
-                className='flex text-grey600 bg-white'
-              >
-                <MdOutlineFileDownload className='text-[22px]' />
-                <p>Export csv</p>
-              </Button>
-            </ButtonGroup>
+            <>
+              <div>
+                <CustomInput
+                  classnames={'w-[242px]'}
+                  label=''
+                  size='md'
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  isRequired={false}
+                  startContent={<IoSearchOutline />}
+                  type='text'
+                  placeholder='Search here...'
+                />
+              </div>
+              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+                <Button
+                  onClick={() => downloadCSV(newArray)}
+                  className='flex text-grey600 bg-white'
+                >
+                  <MdOutlineFileDownload className='text-[22px]' />
+                  <p>Export csv</p>
+                </Button>
+              </ButtonGroup>
+            </>
           )}
 
           {/* <CustomButton

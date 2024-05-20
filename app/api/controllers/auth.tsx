@@ -113,7 +113,7 @@ export async function updateUser(formData: any) {
     isActive: formData.isActive,
     imageReference: formData.imageReference,
   };
-  console.log(payload, 'payload');
+
   try {
     const data = await api.put(`${AUTH.user}?userId=${formData.id}`, payload);
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Chip,
@@ -13,7 +13,7 @@ import {
   TableCell,
   TableColumn,
   TableHeader,
-  TableRow
+  TableRow,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { BsCalendar2Check } from 'react-icons/bs';
@@ -24,7 +24,7 @@ import {
   availableOptions,
   columns,
   statusColorMap,
-  statusDataMap
+  statusDataMap,
 } from './data';
 import Filters from './filters';
 
@@ -45,7 +45,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'dateCreated',
   'actions',
 ];
-const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
+const OrdersList = ({ orders, getAllOrders, searchQuery }: any) => {
   const router = useRouter();
 
   const [singleOrder, setSingleOrder] = React.useState('');
@@ -54,6 +54,29 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [filteredOrder, setFilteredOrder] = React.useState(orders[0]?.orders);
+
+  useEffect(() => {
+    if (orders && searchQuery) {
+      const filteredData = orders
+        .map((order) => ({
+          ...order,
+          orders: order?.orders?.filter(
+            (item) =>
+              item?.placedByName?.toLowerCase().includes(searchQuery) ||
+              String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
+              item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+              item?.reference?.toLowerCase().includes(searchQuery) ||
+              item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
+              item?.paymentReference?.toLowerCase().includes(searchQuery)
+          ),
+        }))
+        .filter((menu) => menu?.orders?.length > 0);
+      setFilteredOrder(filteredData.length > 0 ? filteredData[0].orders : []);
+    } else {
+      setFilteredOrder(orders?.[0]?.orders);
+    }
+  }, [searchQuery, orders]);
+
   const {
     toggleModalDelete,
     isOpenDelete,
@@ -199,7 +222,6 @@ const OrdersList = ({ orders, onOpen, getAllOrders }: any) => {
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        onOpen={onOpen}
         orders={orders}
         handleTabChange={handleTabChange}
         value={value}

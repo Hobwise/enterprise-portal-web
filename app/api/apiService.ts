@@ -112,9 +112,9 @@ api.interceptors.response.use(
         text: 'Please log in again.',
         type: 'error',
       });
+      window.location.href = '/auth/login';
       clearItemLocalStorage('userInformation');
       removeCookie('token');
-      window.location.href = '/auth/login';
     }
 
     if (error.code === 'ECONNABORTED') {

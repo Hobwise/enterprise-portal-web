@@ -1,80 +1,55 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
-import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
+import { CustomLoading } from '@/lib/utils';
 
+import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import {
-  Button,
-  ButtonGroup,
-  Chip,
-  Modal,
-  ModalContent,
-  useDisclosure,
-} from '@nextui-org/react';
-import { IoAddCircleOutline } from 'react-icons/io5';
-import { MdOutlineFileDownload } from 'react-icons/md';
-
-import { getOrderByBusiness } from '@/app/api/controllers/dashboard/orders';
 import Error from '@/components/error';
 import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
 import OrdersList from '@/components/ui/dashboard/orders/order';
+import useOrder from '@/hooks/useOrder';
 import { downloadCSV } from '@/lib/downloadToExcel';
+import { Button, ButtonGroup, Chip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
+import { IoAddCircleOutline, IoSearchOutline } from 'react-icons/io5';
+import { MdOutlineFileDownload } from 'react-icons/md';
 
-type OrderItem = {
-  name: string;
-  orders: Array<{
-    id: string;
-    placedByName: string;
-    placedByPhoneNumber: string;
-    reference: string;
-    treatedBy: string;
-    totalAmount: number;
-    qrReference: string;
-    paymentMethod: number;
-    paymentReference: string;
-    status: 0 | 1 | 2 | 3;
-  }>;
-};
-
-type OrderData = Array<OrderItem>;
 const Orders: React.FC = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
-  const [orders, setOrders] = useState<OrderData>([]);
-
-  const [isLoading, setIsLoading] = useState<Boolean>(true);
-  const [error, setError] = useState<Boolean>(false);
-  const businessInformation = getJsonItemFromLocalStorage('business');
-
   const router = useRouter();
 
-  const getAllOrders = async (checkLoading = true) => {
-    setIsLoading(checkLoading);
-    setError(false);
-    const data = await getOrderByBusiness(businessInformation[0]?.businessId);
-    setIsLoading(false);
-    if (data?.data?.isSuccessful) {
-      let response = data?.data?.data;
-      setOrders(response);
-    } else if (data?.data?.error) {
-      setError(true);
-    }
+  const { orders, isLoading, error, getAllOrders } = useOrder();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value.toLowerCase());
   };
 
-  useEffect(() => {
-    getAllOrders();
-  }, []);
+  const filteredItems = useMemo(() => {
+    return orders
+      ?.map((order) => ({
+        ...order,
+        orders: order?.orders?.filter(
+          (item) =>
+            item?.placedByName?.toLowerCase().includes(searchQuery) ||
+            String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
+            item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+            item?.reference?.toLowerCase().includes(searchQuery) ||
+            item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
+            item?.paymentReference?.toLowerCase().includes(searchQuery)
+        ),
+      }))
+      .filter((order) => order?.orders?.length > 0);
+  }, [orders, searchQuery]);
 
   const getScreens = () => {
     if (orders?.length > 0) {
       return (
         <OrdersList
-          orders={orders}
-          onOpen={onOpen}
+          orders={filteredItems}
+          searchQuery={searchQuery}
           getAllOrders={getAllOrders}
         />
       );
@@ -85,16 +60,18 @@ const Orders: React.FC = () => {
     }
   };
 
-  const newArray = orders?.flatMap((item) =>
-    item.orders.map((order) => ({
-      placedByName: order.placedByName,
-      reference: order.reference,
-      totalAmount: order.totalAmount,
-      dateCreated: order.dateCreated,
-      paymentReference: order.paymentReference,
-      placedByPhoneNumber: order.placedByPhoneNumber,
-    }))
-  );
+  const newArray = useMemo(() => {
+    return orders?.flatMap((item) =>
+      item.orders.map((order) => ({
+        placedByName: order.placedByName,
+        reference: order.reference,
+        totalAmount: order.totalAmount,
+        dateCreated: order.dateCreated,
+        paymentReference: order.paymentReference,
+        placedByPhoneNumber: order.placedByPhoneNumber,
+      }))
+    );
+  }, [orders]);
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
@@ -121,15 +98,30 @@ const Orders: React.FC = () => {
         </div>
         <div className='flex items-center gap-3'>
           {orders?.length > 0 && (
-            <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
-              <Button
-                onClick={() => downloadCSV(newArray)}
-                className='flex text-grey600 bg-white'
-              >
-                <MdOutlineFileDownload className='text-[22px]' />
-                <p>Export csv</p>
-              </Button>
-            </ButtonGroup>
+            <>
+              <div>
+                <CustomInput
+                  classnames={'w-[242px]'}
+                  label=''
+                  size='md'
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  isRequired={false}
+                  startContent={<IoSearchOutline />}
+                  type='text'
+                  placeholder='Search here...'
+                />
+              </div>
+              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+                <Button
+                  onClick={() => downloadCSV(newArray)}
+                  className='flex text-grey600 bg-white'
+                >
+                  <MdOutlineFileDownload className='text-[22px]' />
+                  <p>Export csv</p>
+                </Button>
+              </ButtonGroup>
+            </>
           )}
 
           <CustomButton
@@ -145,44 +137,6 @@ const Orders: React.FC = () => {
         </div>
       </div>
       {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
-
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              {/* <ModalBody>
-                <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
-                  Create Menu
-                </h2>
-                <p className='text-sm  text-grey600  xl:w-[231px]  w-full mb-4'>
-                  Create a menu to add item
-                </p>
-                <CustomInput
-                  type='text'
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setName(e.target.value)
-                  }
-                  value={name}
-                  label='Name of menu'
-                  placeholder='E.g Drinks'
-                />
-                <Spacer y={2} />
-
-                <CustomButton
-                  loading={loading}
-                  onClick={handleCreateMenu}
-                  disabled={!name || loading}
-                  type='submit'
-                >
-                  {loading ? 'Loading' : 'Proceed'}
-                </CustomButton>
-
-                <Spacer y={4} />
-              </ModalBody> */}
-            </>
-          )}
-        </ModalContent>
-      </Modal>
     </Container>
   );
 };

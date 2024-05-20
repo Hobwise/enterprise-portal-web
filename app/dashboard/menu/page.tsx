@@ -1,7 +1,7 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
 import MenuList from '@/components/ui/dashboard/menu/menu';
@@ -28,7 +28,12 @@ import {
   useDisclosure,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
-import { IoAddCircleOutline, IoPhonePortraitOutline } from 'react-icons/io5';
+import {
+  IoAddCircleOutline,
+  IoPhonePortraitOutline,
+  IoSearchOutline,
+} from 'react-icons/io5';
+
 import { MdOutlineFileDownload } from 'react-icons/md';
 
 const Menu: React.FC = () => {
@@ -42,12 +47,16 @@ const Menu: React.FC = () => {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useMenu();
 
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value.toLowerCase());
+  };
+
   const handleCreateMenu = async () => {
     setLoading(true);
-
     const data = await createMenu(businessInformation[0]?.businessId, { name });
     setLoading(false);
-
     if (data?.data?.isSuccessful) {
       notify({
         title: 'Success!',
@@ -64,9 +73,30 @@ const Menu: React.FC = () => {
     }
   };
 
+  const filteredItems = useMemo(() => {
+    return data
+      ?.map((item) => ({
+        ...item,
+        items: item?.items?.filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(searchQuery) ||
+            String(item?.price)?.toLowerCase().includes(searchQuery) ||
+            item?.menuName?.toLowerCase().includes(searchQuery) ||
+            item?.itemDescription?.toLowerCase().includes(searchQuery)
+        ),
+      }))
+      .filter((menu) => menu?.items?.length > 0);
+  }, [data, searchQuery]);
+
   const getScreens = () => {
     if (data?.length > 0) {
-      return <MenuList menus={data} onOpen={onOpen} />;
+      return (
+        <MenuList
+          menus={filteredItems}
+          onOpen={onOpen}
+          searchQuery={searchQuery}
+        />
+      );
     } else if (isError) {
       return <Error onClick={() => refetch()} />;
     } else {
@@ -123,23 +153,38 @@ const Menu: React.FC = () => {
         </div>
         <div className='flex items-center gap-3'>
           {data?.length > 0 && (
-            <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
-              <Button
-                onClick={() => router.push('/dashboard/menu/preview-menu')}
-                className='flex text-grey600 bg-white'
-              >
-                <IoPhonePortraitOutline />
-                <p>Preview menu</p>
-              </Button>
+            <>
+              <div>
+                <CustomInput
+                  classnames={'w-[242px]'}
+                  label=''
+                  size='md'
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  isRequired={false}
+                  startContent={<IoSearchOutline />}
+                  type='text'
+                  placeholder='Search here...'
+                />
+              </div>
+              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+                <Button
+                  onClick={() => router.push('/dashboard/menu/preview-menu')}
+                  className='flex text-grey600 bg-white'
+                >
+                  <IoPhonePortraitOutline />
+                  <p>Preview menu</p>
+                </Button>
 
-              <Button
-                onClick={() => downloadCSV(newArray)}
-                className='flex text-grey600 bg-white'
-              >
-                <MdOutlineFileDownload className='text-[22px]' />
-                <p>Export csv</p>
-              </Button>
-            </ButtonGroup>
+                <Button
+                  onClick={() => downloadCSV(newArray)}
+                  className='flex text-grey600 bg-white'
+                >
+                  <MdOutlineFileDownload className='text-[22px]' />
+                  <p>Export csv</p>
+                </Button>
+              </ButtonGroup>
+            </>
           )}
 
           <CustomButton

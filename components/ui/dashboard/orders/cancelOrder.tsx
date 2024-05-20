@@ -1,3 +1,7 @@
+import { completeOrder } from '@/app/api/controllers/dashboard/orders';
+import { CustomButton } from '@/components/customButton';
+import useOrder from '@/hooks/useOrder';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Modal,
   ModalBody,
@@ -6,21 +10,17 @@ import {
   Spacer,
 } from '@nextui-org/react';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import noMenu from '../../../../public/assets/images/no-menu.png';
-import { CustomButton } from '@/components/customButton';
-import { completeOrder } from '@/app/api/controllers/dashboard/orders';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
 
 const CancelOrderModal = ({
   isOpenCancelOrder,
   singleOrder,
   toggleCancelModal,
-  getAllOrders,
 }: any) => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [loading, setLoading] = useState(false);
+  const { getAllOrders } = useOrder();
 
   const handleCancel = async () => {
     setLoading(true);
@@ -43,6 +43,7 @@ const CancelOrderModal = ({
       });
 
       toggleCancelModal();
+
       window.location.reload();
     } else if (data?.data?.error) {
       notify({

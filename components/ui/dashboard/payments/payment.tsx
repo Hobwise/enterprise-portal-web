@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Chip,
@@ -39,13 +39,36 @@ const INITIAL_VISIBLE_COLUMNS = [
   'status',
   'actions',
 ];
-const PaymentsList = ({ payments, onOpen, getAllPayments }: any) => {
+const PaymentsList = ({ payments, onOpen, searchQuery }: any) => {
   const [singlePayment, setSinglePayment] = React.useState('');
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
 
-  const [filteredPayment, setFilteredMenu] = React.useState(
+  const [filteredPayment, setFilteredPayment] = React.useState(
     payments[0]?.payments
   );
+
+  useEffect(() => {
+    if (payments && searchQuery) {
+      const filteredData = payments
+        .map((payment) => ({
+          ...payment,
+          payments: payment?.payments?.filter(
+            (item) =>
+              item?.qrName?.toLowerCase().includes(searchQuery) ||
+              String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
+              item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+              item?.reference?.toLowerCase().includes(searchQuery) ||
+              item?.treatedBy?.toLowerCase().includes(searchQuery) ||
+              item?.paymentReference?.toLowerCase().includes(searchQuery) ||
+              item?.customer?.toLowerCase().includes(searchQuery)
+          ),
+        }))
+        .filter((payment) => payment?.orders?.length > 0);
+      setFilteredPayment(filteredData.length > 0 ? filteredData[0].orders : []);
+    } else {
+      setFilteredPayment(payments?.[0]?.payments);
+    }
+  }, [searchQuery, payments]);
   const {
     bottomContent,
     headerColumns,
@@ -76,7 +99,7 @@ const PaymentsList = ({ payments, onOpen, getAllPayments }: any) => {
 
   const handleTabClick = (index) => {
     const filteredMenu = payments.filter((item) => item.name === index);
-    setFilteredMenu(filteredMenu[0]?.payments);
+    setFilteredPayment(filteredMenu[0]?.payments);
   };
 
   const renderCell = React.useCallback((payment, columnKey) => {

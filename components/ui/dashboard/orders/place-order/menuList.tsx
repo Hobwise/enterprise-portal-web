@@ -64,8 +64,6 @@ type SelectedItem = {
 };
 
 const MenuList = () => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
-
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [order] = useState<any>(getJsonItemFromLocalStorage('order'));
