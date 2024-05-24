@@ -91,13 +91,29 @@ const CheckoutModal = ({
     { text: 'Pay Later', subText: 'Keep this order open', id: 3 },
   ];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setResponse(null);
-    const { name, value } = e.target;
-    setOrder((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setResponse(null);
+  //   const { name, value } = e.target;
+  //   setOrder((prevFormData) => ({
+  //     ...prevFormData,
+  //     [name]: value,
+  //   }));
+  // };
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    if (name === 'placedByPhoneNumber') {
+      if (/^\d{0,11}$/.test(value)) {
+        setOrder((prevOrder) => ({
+          ...prevOrder,
+          [name]: value,
+        }));
+      }
+    } else {
+      setOrder((prevOrder) => ({
+        ...prevOrder,
+        [name]: value,
+      }));
+    }
   };
 
   const placeOrder = async () => {
@@ -231,6 +247,7 @@ const CheckoutModal = ({
 
   return (
     <Modal
+      isDismissable={false}
       size={screen === 1 ? '4xl' : 'md'}
       isOpen={isOpen}
       onOpenChange={() => {

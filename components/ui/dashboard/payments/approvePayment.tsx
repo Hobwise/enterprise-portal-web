@@ -2,6 +2,7 @@ import { getOrder } from '@/app/api/controllers/dashboard/orders';
 import { confirmPayment } from '@/app/api/controllers/dashboard/payment';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
+import usePayment from '@/hooks/cachedEndpoints/usePayment';
 import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Chip,
@@ -20,6 +21,7 @@ import Success from '../../../../public/assets/images/success.png';
 import { paymentMethodMap } from './data';
 
 const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
+  const { refetch } = usePayment();
   const [reference, setReference] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [order, setOrder] = useState([]);
@@ -47,11 +49,7 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
-      //   notify({
-      //     title: 'Payment confirmed!',
-      //     text: 'Payment has been confirmed and order has been closed',
-      //     type: 'success',
-      //   });
+      refetch();
       toggleApproveModal();
       toggleSuccessModal();
     } else if (data?.data?.error) {
@@ -80,6 +78,7 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
   return (
     <>
       <Modal
+        isDismissable={false}
         size='4xl'
         isOpen={isOpen}
         onOpenChange={() => {
@@ -263,7 +262,6 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
                 <CustomButton
                   className='text-white h-[49px]  flex-grow w-full'
                   onClick={() => {
-                    window.location.reload();
                     toggleSuccessModal();
                   }}
                   type='submit'

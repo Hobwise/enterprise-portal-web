@@ -5,6 +5,7 @@ import {
 } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
+import useOrder from '@/hooks/cachedEndpoints/useOrder';
 import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Divider,
@@ -22,14 +23,13 @@ import { MdKeyboardArrowRight } from 'react-icons/md';
 import noImage from '../../../../public/assets/images/no-image.svg';
 
 const ConfirmOrderModal = ({
-  getAllOrders,
   singleOrder,
   isOpenConfirmOrder,
   toggleConfirmModal,
 }) => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [isLoading, setIsLoading] = useState(false);
-
+  const { refetch } = useOrder();
   const [screen, setScreen] = useState(1);
   const [order, setOrder] = useState([]);
   const [reference, setReference] = useState('');
@@ -83,7 +83,7 @@ const ConfirmOrderModal = ({
         type: 'success',
       });
       toggleConfirmModal();
-      window.location.reload();
+      refetch();
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -100,11 +100,13 @@ const ConfirmOrderModal = ({
   }, [singleOrder?.id]);
   return (
     <Modal
+      isDismissable={false}
       size={screen === 1 ? '4xl' : 'md'}
       isOpen={isOpenConfirmOrder}
       onOpenChange={() => {
         setScreen(1);
         setIsLoading(false);
+        refetch();
         setSelectedPaymentMethod(0);
         toggleConfirmModal();
         setReference('');

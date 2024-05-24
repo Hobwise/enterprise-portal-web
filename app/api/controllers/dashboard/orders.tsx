@@ -40,6 +40,26 @@ export async function getOrderByBusiness(businessId: string) {
     handleError(error);
   }
 }
+export async function getOrderByBusinessPaginated(
+  businessId: string,
+  PageNumber: number,
+  PageSize: number
+) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(
+      `${DASHBOARD.orderByPaged}?PageNumber=${PageNumber}?PageSize=${PageSize}`,
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function getOrder(orderId: string) {
   const headers = { orderId };
 

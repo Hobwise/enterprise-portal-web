@@ -19,7 +19,6 @@ import { useRouter } from 'next/navigation';
 import { BsCalendar2Check } from 'react-icons/bs';
 import { FaRegEdit } from 'react-icons/fa';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { LiaTimesSolid } from 'react-icons/lia';
 import {
   availableOptions,
   columns,
@@ -33,6 +32,7 @@ import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
 import moment from 'moment';
+import { RiDeleteBin6Line } from 'react-icons/ri';
 import CancelOrderModal from './cancelOrder';
 import ConfirmOrderModal from './confirmOrder';
 
@@ -45,7 +45,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'dateCreated',
   'actions',
 ];
-const OrdersList = ({ orders, getAllOrders, searchQuery }: any) => {
+const OrdersList = ({ orders, searchQuery }: any) => {
   const router = useRouter();
 
   const [singleOrder, setSingleOrder] = React.useState('');
@@ -204,7 +204,7 @@ const OrdersList = ({ orders, getAllOrders, searchQuery }: any) => {
                     <div
                       className={` text-danger-500 flex  items-center gap-3 `}
                     >
-                      <LiaTimesSolid />
+                      <RiDeleteBin6Line className='text-[18px]' />
 
                       <p>Cancel order</p>
                     </div>
@@ -279,13 +279,11 @@ const OrdersList = ({ orders, getAllOrders, searchQuery }: any) => {
         </TableBody>
       </Table>
       <CancelOrderModal
-        getAllOrders={getAllOrders}
         singleOrder={singleOrder}
         isOpenCancelOrder={isOpenCancelOrder}
         toggleCancelModal={toggleCancelModal}
       />
       <ConfirmOrderModal
-        getAllOrders={getAllOrders}
         singleOrder={singleOrder}
         isOpenConfirmOrder={isOpenConfirmOrder}
         toggleConfirmModal={toggleConfirmModal}

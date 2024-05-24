@@ -21,6 +21,7 @@ export const config = {
     '/dashboard/campaigns',
     '/dashboard/orders',
     '/dashboard/qr-code',
+    '/dashboard/qr-code/create-qr',
     '/dashboard/reports',
     '/dashboard/reservation',
     '/dashboard/settings',

@@ -23,13 +23,16 @@ export const DASHBOARD = {
   menuVariety: 'api/v1/Menu/item-variety',
   // orders
   orderByBusiness: 'api/v1/Order/by-business',
+  orderByPaged: 'api/v1/Order/paged',
   orderByReference: 'api/v1/Order/by-reference',
   order: 'api/v1/Order',
   placeOrder: 'api/v1/Order/place',
   completeOrder: 'api/v1/Order/complete',
-  // Quick response
-  qr: 'api/v1/QuickResponse/by-business',
+
   // Payments
   paymentByBusiness: 'api/v1/Payment/by-business',
   confirmPayment: 'api/v1/Payment/confirm',
+  // Quick response
+  qrByBusiness: 'api/v1/QuickResponse/detail-by-business',
+  qr: 'api/v1/QuickResponse',
 };

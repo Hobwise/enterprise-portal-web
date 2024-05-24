@@ -18,7 +18,7 @@ const LogoutModal = ({ isOpen, onOpenChange }: any) => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+    <Modal isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange}>
       <ModalContent>
         {(onClose) => (
           <>

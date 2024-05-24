@@ -1,6 +1,6 @@
 import { completeOrder } from '@/app/api/controllers/dashboard/orders';
 import { CustomButton } from '@/components/customButton';
-import useOrder from '@/hooks/useOrder';
+import useOrder from '@/hooks/cachedEndpoints/useOrder';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Modal,
@@ -20,7 +20,7 @@ const CancelOrderModal = ({
 }: any) => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [loading, setLoading] = useState(false);
-  const { getAllOrders } = useOrder();
+  const { refetch } = useOrder();
 
   const handleCancel = async () => {
     setLoading(true);
@@ -44,7 +44,7 @@ const CancelOrderModal = ({
 
       toggleCancelModal();
 
-      window.location.reload();
+      refetch();
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -75,8 +75,7 @@ const CancelOrderModal = ({
               <div className='flex gap-5'>
                 <CustomButton
                   className='bg-white text-black border border-primaryGrey flex-grow'
-                  //   onClick={handleCreateMenu}
-
+                  onClick={() => toggleCancelModal()}
                   type='submit'
                 >
                   No, leave it open

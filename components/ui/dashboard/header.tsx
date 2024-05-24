@@ -21,6 +21,7 @@ import { MdPerson } from 'react-icons/md';
 import { SlBell } from 'react-icons/sl';
 import Menu from '../../../public/assets/icons/menu.png';
 import Orders from '../../../public/assets/icons/order.png';
+import QRCode from '../../../public/assets/icons/qr-code.png';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
 
@@ -44,23 +45,20 @@ const Header = () => {
     ) {
       return {
         title: 'Menu',
-        icon: (
-          <Image
-            src={Menu}
-            className={'dashboardLogo'}
-            alt='add item to menu'
-          />
-        ),
+        icon: <Image src={Menu} className={'dashboardLogo'} alt='menu logo' />,
       };
     } else if (pathname.includes('place-order')) {
       return {
         title: 'Orders',
         icon: (
-          <Image
-            src={Orders}
-            className={'dashboardLogo'}
-            alt='add item to menu'
-          />
+          <Image src={Orders} className={'dashboardLogo'} alt='order logo' />
+        ),
+      };
+    } else if (pathname.includes('create-qr')) {
+      return {
+        title: 'QR Code',
+        icon: (
+          <Image src={QRCode} className={'dashboardLogo'} alt='Qr code logo' />
         ),
       };
     }

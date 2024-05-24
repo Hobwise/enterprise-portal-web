@@ -9,7 +9,7 @@ import { CustomInput } from '@/components/CustomInput';
 import Error from '@/components/error';
 import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
 import PaymentsList from '@/components/ui/dashboard/payments/payment';
-import usePayment from '@/hooks/usePayment';
+import usePayment from '@/hooks/cachedEndpoints/usePayment';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
 import { IoSearchOutline } from 'react-icons/io5';
@@ -17,7 +17,7 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 
 const Payments: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const { payments, error, isLoading, getAllPayments } = usePayment();
+  const { data, isLoading, isError, refetch } = usePayment();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -25,7 +25,7 @@ const Payments: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return payments
+    return data
       ?.map((item) => ({
         ...item,
         orders: item?.payments?.filter(
@@ -40,10 +40,10 @@ const Payments: React.FC = () => {
         ),
       }))
       .filter((item) => item?.payments?.length > 0);
-  }, [payments, searchQuery]);
+  }, [data, searchQuery]);
 
   const getScreens = () => {
-    if (payments?.length > 0) {
+    if (data?.length > 0) {
       return (
         <PaymentsList
           payments={filteredItems}
@@ -51,15 +51,15 @@ const Payments: React.FC = () => {
           searchQuery={searchQuery}
         />
       );
-    } else if (error) {
-      return <Error onClick={() => getAllPayments()} />;
+    } else if (isError) {
+      return <Error onClick={() => refetch()} />;
     } else {
       return <NoPaymentsScreen />;
     }
   };
 
-  const newArray = payments?.flatMap((item) =>
-    item.payments.map((payment) => ({
+  const newArray = data?.flatMap((item) =>
+    item?.payments?.map((payment) => ({
       reference: payment.reference,
       totalAmount: payment.totalAmount,
       treatedBy: payment.treatedBy,
@@ -74,7 +74,7 @@ const Payments: React.FC = () => {
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {payments?.length > 0 ? (
+            {data?.length > 0 ? (
               <div className='flex items-center'>
                 <span>All Payment</span>
                 <Chip
@@ -82,7 +82,7 @@ const Payments: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {payments[0].payments?.length}
+                  {data[0].payments?.length}
                 </Chip>
               </div>
             ) : (
@@ -94,7 +94,7 @@ const Payments: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {payments?.length > 0 && (
+          {data?.length > 0 && (
             <>
               <div>
                 <CustomInput

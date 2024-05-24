@@ -10,7 +10,7 @@ import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
 import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
 import OrdersList from '@/components/ui/dashboard/orders/order';
-import useOrder from '@/hooks/useOrder';
+import useOrder from '@/hooks/cachedEndpoints/useOrder';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import { Button, ButtonGroup, Chip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
@@ -20,7 +20,7 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 const Orders: React.FC = () => {
   const router = useRouter();
 
-  const { orders, isLoading, error, getAllOrders } = useOrder();
+  const { data, isLoading, isError, refetch } = useOrder();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -28,7 +28,7 @@ const Orders: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return orders
+    return data
       ?.map((order) => ({
         ...order,
         orders: order?.orders?.filter(
@@ -42,26 +42,20 @@ const Orders: React.FC = () => {
         ),
       }))
       .filter((order) => order?.orders?.length > 0);
-  }, [orders, searchQuery]);
+  }, [data, searchQuery]);
 
   const getScreens = () => {
-    if (orders?.length > 0) {
-      return (
-        <OrdersList
-          orders={filteredItems}
-          searchQuery={searchQuery}
-          getAllOrders={getAllOrders}
-        />
-      );
-    } else if (error) {
-      return <Error onClick={() => getAllOrders()} />;
+    if (data?.length > 0) {
+      return <OrdersList orders={filteredItems} searchQuery={searchQuery} />;
+    } else if (isError) {
+      return <Error onClick={() => refetch()} />;
     } else {
       return <CreateOrder />;
     }
   };
 
   const newArray = useMemo(() => {
-    return orders?.flatMap((item) =>
+    return data?.flatMap((item) =>
       item.orders.map((order) => ({
         placedByName: order.placedByName,
         reference: order.reference,
@@ -71,13 +65,13 @@ const Orders: React.FC = () => {
         placedByPhoneNumber: order.placedByPhoneNumber,
       }))
     );
-  }, [orders]);
+  }, [data]);
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {orders?.length > 0 ? (
+            {data?.length > 0 ? (
               <div className='flex items-center'>
                 <span>All orders</span>
                 <Chip
@@ -85,7 +79,7 @@ const Orders: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {orders[0].orders?.length}
+                  {data[0].orders?.length}
                 </Chip>
               </div>
             ) : (
@@ -97,7 +91,7 @@ const Orders: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {orders?.length > 0 && (
+          {data?.length > 0 && (
             <>
               <div>
                 <CustomInput
