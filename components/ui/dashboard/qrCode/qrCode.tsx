@@ -53,8 +53,8 @@ const QrList = ({ qr, searchQuery }: any) => {
         ?.filter(
           (item) =>
             item?.name?.toLowerCase().includes(searchQuery) ||
-            item?.allOrdersCount?.toLowerCase().includes(searchQuery) ||
-            item?.openOrdersCount?.toLowerCase().includes(searchQuery) ||
+            item?.allOrdersCount?.includes(searchQuery) ||
+            item?.openOrdersCount?.includes(searchQuery) ||
             item?.dateCreated?.toLowerCase().includes(searchQuery)
         )
         .filter((item) => Object.keys(item).length > 0);
