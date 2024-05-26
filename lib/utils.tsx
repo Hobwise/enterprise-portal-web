@@ -1,9 +1,11 @@
 'use client';
 import { clsx, type ClassValue } from 'clsx';
-import { toast } from 'react-toastify';
-import { twMerge } from 'tailwind-merge';
+import download from 'downloadjs';
+import { toPng } from 'html-to-image';
 import cookie from 'js-cookie';
 import Image from 'next/image';
+import { toast } from 'react-toastify';
+import { twMerge } from 'tailwind-merge';
 import hobink from '../public/assets/images/hobink.png';
 
 export const cn = (...inputs: ClassValue[]) => {
@@ -176,3 +178,22 @@ export const formatPrice = (price: any) => {
 
   return formatter.format(price);
 };
+
+export const downloadQRImage = async (qrObject, qrRef) => {
+  if (qrRef.current === null) {
+    return;
+  }
+
+  const dataUrl = await toPng(qrRef.current);
+  download(dataUrl, `${qrObject?.name}-qr-code.png`);
+};
+// export const downloadQRpdf = async (qrObject, qrRef) => {
+//   if (qrRef.current === null) {
+//     return;
+//   }
+//   const canvas = await html2canvas(qrRef.current);
+//   const dataUrl = canvas.toDataURL('image/png');
+//   const pdf = new jsPDF();
+//   pdf.addImage(dataUrl, 'PNG', 10, 10, 180, 180);
+//   pdf.save(`${qrObject?.name}-qr-code.pdf`);
+// };

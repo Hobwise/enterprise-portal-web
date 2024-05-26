@@ -1,8 +1,6 @@
 import { CustomButton } from '@/components/customButton';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { downloadQRImage, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Modal, ModalBody, ModalContent, Spacer } from '@nextui-org/react';
-import download from 'downloadjs';
-import { toPng } from 'html-to-image';
 import { useRef } from 'react';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import QRCode from 'react-qr-code';
@@ -21,14 +19,6 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const business = getJsonItemFromLocalStorage('business');
 
-  const downloadQR = async () => {
-    if (qrRef.current === null) {
-      return;
-    }
-
-    const dataUrl = await toPng(qrRef.current);
-    download(dataUrl, `${qrObject?.name}-qr-code.png`);
-  };
   return (
     <Modal
       isDismissable={false}
@@ -42,13 +32,15 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
           <>
             <ModalBody className='p-6'>
               <Spacer y={3} />
-              <div ref={qrRef} className='flex justify-center'>
+
+              <div ref={qrRef} className='flex justify-center p-4 bg-white'>
                 <QRCode
                   size={256}
                   style={{
-                    height: 'auto',
-                    maxWidth: '50%',
-                    width: '100%',
+                    height: 256,
+                    width: 256,
+                    maxWidth: '100%',
+                    maxHeight: '100%',
                   }}
                   value={`https://hobink-corporate-web.vercel.app/create-order?businessID=${business[0]?.businessId}&cooperateID=${userInformation?.cooperateID}&id=${qrObject?.id}`}
                   viewBox={`0 0 256 256`}
@@ -57,7 +49,10 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
 
               <Spacer y={4} />
               <div className='flex flex-col gap-2'>
-                <CustomButton onClick={downloadQR} type='submit'>
+                <CustomButton
+                  onClick={() => downloadQRImage(qrObject, qrRef)}
+                  type='submit'
+                >
                   <div className='flex gap-2 items-center justify-center'>
                     <MdOutlineFileDownload className='text-[22px]' />
                     <p>Download QR</p>
