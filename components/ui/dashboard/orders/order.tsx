@@ -32,7 +32,7 @@ import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
 import moment from 'moment';
-import { RiDeleteBin6Line } from 'react-icons/ri';
+import { LiaTimesSolid } from 'react-icons/lia';
 import CancelOrderModal from './cancelOrder';
 import ConfirmOrderModal from './confirmOrder';
 
@@ -204,7 +204,7 @@ const OrdersList = ({ orders, searchQuery }: any) => {
                     <div
                       className={` text-danger-500 flex  items-center gap-3 `}
                     >
-                      <RiDeleteBin6Line className='text-[18px]' />
+                      <LiaTimesSolid />
 
                       <p>Cancel order</p>
                     </div>
