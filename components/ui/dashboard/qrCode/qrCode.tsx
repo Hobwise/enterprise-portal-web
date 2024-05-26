@@ -25,6 +25,7 @@ import { RiDeleteBin6Line } from 'react-icons/ri';
 import { columns } from './data';
 import DeleteQRModal from './deleteModal';
 import EditQrModal from './editQrModal';
+import ViewQrModal from './viewQrModal';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'name',
@@ -41,6 +42,7 @@ const QrList = ({ qr, searchQuery }: any) => {
 
   const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
   const [isOpenEdit, setIsOpenEdit] = React.useState<Boolean>(false);
+  const [isOpenView, setIsOpenView] = React.useState<Boolean>(false);
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [filteredQr, setFilteredQr] = React.useState(qr);
@@ -50,6 +52,9 @@ const QrList = ({ qr, searchQuery }: any) => {
   };
   const toggleQRmodalEdit = () => {
     setIsOpenEdit(!isOpenEdit);
+  };
+  const toggleQRmodalView = () => {
+    setIsOpenView(!isOpenView);
   };
 
   useEffect(() => {
@@ -122,12 +127,13 @@ const QrList = ({ qr, searchQuery }: any) => {
                 <DropdownItem
                   onClick={() => {
                     saveJsonItemToLocalStorage('qr', qr);
+                    toggleQRmodalView();
                   }}
-                  aria-label='Download QR'
+                  aria-label='View QR'
                 >
                   <div className={` flex gap-3  items-center text-grey500`}>
                     <MdOutlineFileDownload className='text-[18px]' />
-                    <p>Download QR</p>
+                    <p>View QR</p>
                   </div>
                 </DropdownItem>
 
@@ -214,6 +220,11 @@ const QrList = ({ qr, searchQuery }: any) => {
         isOpenEdit={isOpenEdit}
         setIsOpenEdit={setIsOpenEdit}
         toggleQRmodalEdit={toggleQRmodalEdit}
+      />
+      <ViewQrModal
+        isOpenView={isOpenView}
+        setIsOpenView={setIsOpenView}
+        toggleQRmodalView={toggleQRmodalView}
       />
     </section>
   );

@@ -13,7 +13,6 @@ import {
   Spacer,
 } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
-import QRCode from 'react-qr-code';
 
 interface Table {
   name: string;
@@ -35,7 +34,7 @@ const EditQrModal: React.FC<EditQrModalProps> = ({
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [name, setName] = useState<string>(qrObject?.name || '');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [qrURL, setQrURL] = useState<Table | null>(null);
+
   const { refetch } = useQR();
 
   const editQR = async () => {
@@ -48,12 +47,13 @@ const EditQrModal: React.FC<EditQrModalProps> = ({
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
       refetch();
-      setQrURL(data.data.data);
+
       notify({
         title: 'Success!',
         text: 'QR updated successfully',
         type: 'success',
       });
+      toggleQRmodalEdit();
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -66,7 +66,6 @@ const EditQrModal: React.FC<EditQrModalProps> = ({
   useEffect(() => {
     if (isOpenEdit) {
       setName(qrObject?.name || '');
-      setQrURL(null);
     }
   }, [isOpenEdit, qrObject?.name, qrObject?.id]);
 
@@ -77,7 +76,6 @@ const EditQrModal: React.FC<EditQrModalProps> = ({
         toggleQRmodalEdit();
         if (!isOpen) {
           setName(qrObject?.name || '');
-          setQrURL(null);
         }
       }}
     >
@@ -104,23 +102,7 @@ const EditQrModal: React.FC<EditQrModalProps> = ({
                   This will help you identify where the orders are coming from.
                 </label>
                 <Spacer y={8} />
-                {qrURL && (
-                  <>
-                    <div className='flex justify-center'>
-                      <QRCode
-                        size={256}
-                        style={{
-                          height: 'auto',
-                          maxWidth: '50%',
-                          width: '100%',
-                        }}
-                        value={`https://hobink-corporate-web.vercel.app/create-order?businessID=${qrURL?.businessID}&cooperateID=${qrURL?.cooperateID}&id=${qrURL?.id}`}
-                        viewBox={`0 0 256 256`}
-                      />
-                    </div>
-                    <Spacer y={8} />
-                  </>
-                )}
+
                 <CustomButton
                   loading={isLoading}
                   onClick={editQR}

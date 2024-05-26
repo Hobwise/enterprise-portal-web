@@ -41,7 +41,7 @@ const QRform = () => {
     }
 
     const dataUrl = await toPng(qrRef.current);
-    download(dataUrl, 'qr-code.png');
+    download(dataUrl, `${qrURL?.name}-qr-code.png`);
   };
 
   const addQR = async () => {
@@ -52,7 +52,6 @@ const QRform = () => {
       refetch();
       onOpenChange();
       setQrURL(data.data.data);
-      console.log(data.data.data, 'qr response');
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
