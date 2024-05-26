@@ -11,16 +11,38 @@ import {
   Spacer,
   useDisclosure,
 } from '@nextui-org/react';
-import { useState } from 'react';
+import download from 'downloadjs';
+import { toPng } from 'html-to-image';
+import { useRef, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import QRCode from 'react-qr-code';
+
+interface Table {
+  name: string;
+  cooperateID: string;
+  businessID: string;
+  id: string;
+}
+
 const QRform = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { refetch } = useQR();
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState('');
+  const [qrURL, setQrURL] = useState<Table | null>(null);
+
+  const qrRef = useRef<HTMLDivElement>(null);
+
+  const downloadQR = async () => {
+    if (qrRef.current === null) {
+      return;
+    }
+
+    const dataUrl = await toPng(qrRef.current);
+    download(dataUrl, 'qr-code.png');
+  };
 
   const addQR = async () => {
     setIsLoading(true);
@@ -29,6 +51,8 @@ const QRform = () => {
     if (data?.data?.isSuccessful) {
       refetch();
       onOpenChange();
+      setQrURL(data.data.data);
+      console.log(data.data.data, 'qr response');
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -53,7 +77,7 @@ const QRform = () => {
         This will help you identify where the orders are coming from.
       </label>
       <Spacer y={8} />
-      <p className='font-semibold'>QR Code</p>
+      {/* <p className='font-semibold'>QR Code</p>
       <Spacer y={2} />
       <div className='flex justify-center'>
         <QRCode
@@ -63,11 +87,11 @@ const QRform = () => {
             maxWidth: '40%',
             width: '100%',
           }}
-          value={''}
+          value={`http://localhost:3000/dashboard/orders/create-orders?businessID=${qrURL?.businessID}?cooperateID=${qrURL?.cooperateID}?id=${qrURL?.id}`}
           viewBox={`0 0 256 256`}
         />
       </div>
-      <Spacer y={10} />
+      <Spacer y={10} /> */}
       <CustomButton
         loading={isLoading}
         onClick={addQR}
@@ -91,7 +115,7 @@ const QRform = () => {
             <>
               <ModalBody className='p-6'>
                 <Spacer y={3} />
-                <div className='flex justify-center'>
+                <div ref={qrRef} className='flex justify-center'>
                   <QRCode
                     size={256}
                     style={{
@@ -99,7 +123,7 @@ const QRform = () => {
                       maxWidth: '50%',
                       width: '100%',
                     }}
-                    value={''}
+                    value={`https://hobink-corporate-web.vercel.app/dashboard/orders/create-orders?businessID=${qrURL?.businessID}&cooperateID=${qrURL?.cooperateID}&id=${qrURL?.id}`}
                     viewBox={`0 0 256 256`}
                   />
                 </div>
@@ -114,11 +138,7 @@ const QRform = () => {
                 </div>
                 <Spacer y={0} />
                 <div className='flex flex-col gap-2'>
-                  <CustomButton
-                    // onClick={addQR}
-
-                    type='submit'
-                  >
+                  <CustomButton onClick={downloadQR} type='submit'>
                     <div className='flex gap-2 items-center justify-center'>
                       <MdOutlineFileDownload className='text-[22px]' />
                       <p>Download QR</p>

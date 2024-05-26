@@ -24,6 +24,7 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import { columns } from './data';
 import DeleteQRModal from './deleteModal';
+import EditQrModal from './editQrModal';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'name',
@@ -39,12 +40,16 @@ const QrList = ({ qr, searchQuery }: any) => {
   const [singleOrder, setSingleOrder] = React.useState('');
 
   const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
+  const [isOpenEdit, setIsOpenEdit] = React.useState<Boolean>(false);
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [filteredQr, setFilteredQr] = React.useState(qr);
 
   const toggleQRmodalModal = () => {
     setIsOpenDelete(!isOpenDelete);
+  };
+  const toggleQRmodalEdit = () => {
+    setIsOpenEdit(!isOpenEdit);
   };
 
   useEffect(() => {
@@ -116,8 +121,7 @@ const QrList = ({ qr, searchQuery }: any) => {
               <DropdownMenu className='text-black'>
                 <DropdownItem
                   onClick={() => {
-                    router.push('/dashboard/orders/place-order');
-                    saveJsonItemToLocalStorage('order', qr);
+                    saveJsonItemToLocalStorage('qr', qr);
                   }}
                   aria-label='Download QR'
                 >
@@ -128,7 +132,10 @@ const QrList = ({ qr, searchQuery }: any) => {
                 </DropdownItem>
 
                 <DropdownItem
-                  onClick={() => toggleConfirmModal(qr)}
+                  onClick={() => {
+                    saveJsonItemToLocalStorage('qr', qr);
+                    toggleQRmodalEdit();
+                  }}
                   aria-label='Edit QR'
                 >
                   <div className={`flex gap-3 items-center text-grey500`}>
@@ -203,12 +210,11 @@ const QrList = ({ qr, searchQuery }: any) => {
         setIsOpenDelete={setIsOpenDelete}
         toggleQRmodalModal={toggleQRmodalModal}
       />
-      {/* <ConfirmOrderModal
-        getAllOrders={getAllOrders}
-        singleOrder={singleOrder}
-        isOpenConfirmOrder={isOpenConfirmOrder}
-        toggleConfirmModal={toggleConfirmModal}
-      /> */}
+      <EditQrModal
+        isOpenEdit={isOpenEdit}
+        setIsOpenEdit={setIsOpenEdit}
+        toggleQRmodalEdit={toggleQRmodalEdit}
+      />
     </section>
   );
 };
