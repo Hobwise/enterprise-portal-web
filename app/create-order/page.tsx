@@ -22,8 +22,8 @@ const CreateOrder = () => {
 
   const baseString = 'data:image/jpeg;base64,';
   return (
-    <main className='grid place-content-center h-screen'>
-      <article className='xl:block relative bg-white   overflow-scroll  w-[320px] border-[8px]  border-black rounded-[40px]  shadow-lg'>
+    <main className='grid place-content-center '>
+      <article className='xl:block relative bg-white h-screen   overflow-scroll  md:w-[320px] w-full border-[8px]  border-black md:rounded-[40px] rounded-none  shadow-lg'>
         {backgroundColor && (
           <div
             style={{ backgroundColor: backgroundColor }}
