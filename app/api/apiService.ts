@@ -7,6 +7,7 @@ import {
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
 import axios, { AxiosError } from 'axios';
+import { useRouter } from 'next/navigation';
 import { generateRefreshToken } from './controllers/auth';
 
 export const handleError = (error: any) => {
@@ -32,6 +33,17 @@ const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
 
 const isTokenExpiring = (response) => {
   return response.headers['x-token-expiring'] === 'true';
+};
+const logout = () => {
+  const router = useRouter();
+  notify({
+    title: 'Session Expired',
+    text: 'Please log in again.',
+    type: 'error',
+  });
+  clearItemLocalStorage('userInformation');
+  removeCookie('token');
+  router.push('/auth/login');
 };
 const refreshToken = async () => {
   const userData = getJsonItemFromLocalStorage('userInformation');
@@ -102,19 +114,11 @@ api.interceptors.request.use(async (config) => {
 
   return config;
 });
-
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      notify({
-        title: 'Session Expired',
-        text: 'Please log in again.',
-        type: 'error',
-      });
-      window.location.href = '/auth/login';
-      clearItemLocalStorage('userInformation');
-      removeCookie('token');
+      logout();
     }
 
     if (error.code === 'ECONNABORTED') {

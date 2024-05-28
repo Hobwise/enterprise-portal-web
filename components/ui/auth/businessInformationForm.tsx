@@ -1,16 +1,17 @@
 'use client';
+import { createBusiness } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
-import SelectInput from '@/components/selectInput';
-import { Spacer } from '@nextui-org/react';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { CustomButton } from '@/components/customButton';
+import SelectInput from '@/components/selectInput';
 import {
   getJsonItemFromLocalStorage,
   notify,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
-import { createBusiness } from '@/app/api/controllers/auth';
+import { Spacer } from '@nextui-org/react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import States from '../../../lib/cities.json';
 
 const BusinessInformationForm = () => {
   const router = useRouter();
@@ -30,6 +31,8 @@ const BusinessInformationForm = () => {
     primaryBrandColour: '',
     secondaryBrandColour: '',
     logoImageReference: '',
+    state: '',
+    city: '',
   });
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
@@ -43,11 +46,13 @@ const BusinessInformationForm = () => {
 
   const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
+
     setLoading(true);
     const data = await createBusiness({
       ...businessFormData,
       businessCategory: +businessFormData.businessCategory,
     });
+
     setLoading(false);
     setResponse(data);
     if (data?.data?.isSuccessful) {
@@ -67,6 +72,26 @@ const BusinessInformationForm = () => {
     }
   };
 
+  const getStates = () => {
+    return States.map((state) => ({
+      label: state.name,
+      value: state.name,
+    }));
+  };
+
+  const getCities = () => {
+    const state = States.find((state) => state.name === businessFormData.state);
+
+    if (state) {
+      return state?.cities.map((city) => ({
+        label: city,
+        value: city,
+      }));
+    } else {
+      return [];
+    }
+  };
+
   return (
     <form onSubmit={submitFormData} autoComplete='off'>
       <CustomInput
@@ -78,7 +103,7 @@ const BusinessInformationForm = () => {
         value={businessFormData.name}
         placeholder='Name of your business'
       />
-      <Spacer y={6} />
+      <Spacer y={4} />
       <CustomInput
         type='text'
         name='address'
@@ -86,9 +111,31 @@ const BusinessInformationForm = () => {
         onChange={handleInputChange}
         value={businessFormData.address}
         label='Business address'
-        placeholder='Where is your business located'
+        placeholder='Where is your business located '
       />
-      <Spacer y={6} />
+      <Spacer y={4} />
+      <SelectInput
+        errorMessage={response?.errors?.state?.[0]}
+        label={'Business state'}
+        name='state'
+        onChange={handleInputChange}
+        value={businessFormData.state}
+        placeholder={'Select a state'}
+        contents={getStates()}
+      />
+
+      <Spacer y={4} />
+      <SelectInput
+        errorMessage={response?.errors?.city?.[0]}
+        label={'Business city'}
+        name='city'
+        onChange={handleInputChange}
+        value={businessFormData.city}
+        placeholder={'Select a city'}
+        contents={getCities()}
+      />
+
+      <Spacer y={4} />
       <SelectInput
         errorMessage={response?.errors?.businessCategory?.[0]}
         label={'Business category'}

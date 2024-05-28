@@ -339,8 +339,8 @@ const AddItemToMenu = () => {
 
                 <div className='flex gap-3'>
                   <CustomButton
-                    onClick={() => {
-                      refetch();
+                    onClick={async () => {
+                      await refetch();
                       router.push('/dashboard/menu');
                     }}
                     className='h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 '

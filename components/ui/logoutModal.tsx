@@ -1,9 +1,5 @@
 'use client';
-import {
-  clearItemLocalStorage,
-  getJsonItemFromLocalStorage,
-  removeCookie,
-} from '@/lib/utils';
+import { clearItemLocalStorage, removeCookie } from '@/lib/utils';
 import {
   Button,
   Modal,
@@ -15,7 +11,6 @@ import { useRouter } from 'next/navigation';
 import { PiSealWarningDuotone } from 'react-icons/pi';
 const LogoutModal = ({ isOpen, onOpenChange }: any) => {
   const router = useRouter();
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
 
   return (
     <Modal isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange}>

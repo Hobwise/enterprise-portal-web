@@ -60,6 +60,8 @@ const businessSchema = z.object({
   businessCategory: z
     .number()
     .min(1, { message: 'Please select your business category' }),
+  state: z.string().trim().min(1, { message: 'Select a state' }),
+  city: z.string().trim().min(1, { message: 'Select a city' }),
 });
 
 export async function createUser(formData: any) {
@@ -136,6 +138,8 @@ export async function createBusiness(formData: any) {
     name: formData.name,
     businessCategory: formData.businessCategory,
     address: formData.address,
+    state: formData.state,
+    city: formData.city,
   });
 
   if (!validatedFields.success) {

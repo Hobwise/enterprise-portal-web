@@ -4,21 +4,46 @@ import { useState } from 'react';
 
 import HobinkLogo from '@/components/logo';
 import useUser from '@/hooks/cachedEndpoints/useUser';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { Avatar, Divider, useDisclosure } from '@nextui-org/react';
+import {
+  getJsonItemFromLocalStorage,
+  saveJsonItemToLocalStorage,
+} from '@/lib/utils';
+import {
+  Avatar,
+  Divider,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Skeleton,
+  useDisclosure,
+} from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FiLogOut } from 'react-icons/fi';
+import { GoPlus } from 'react-icons/go';
+import { IoIosArrowDown } from 'react-icons/io';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
 import { SideNavItem } from './types';
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const { firstName, lastName, email } = userInformation;
-  const { data } = useUser();
+
+  const { data, isLoading } = useUser();
+
+  const business = getJsonItemFromLocalStorage('business');
+
+  const toggleBtwBusiness = (businessInfo: any) => {
+    const exists = business?.some(
+      (comparisonItem) => comparisonItem.businessId === businessInfo.businessId
+    );
+    if (!exists) {
+      saveJsonItemToLocalStorage('business', [businessInfo]);
+      window.location.reload();
+    }
+  };
 
   return (
     <div className='md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex'>
@@ -41,27 +66,106 @@ const SideNav = () => {
           </div>
         </div>
 
-        <Divider className='bg-[#27272A]  w-[80%] mx-auto h-[1px]' />
+        <Divider className='bg-[#27272A]  w-[90%] mx-auto h-[1px]' />
+        <Dropdown
+          style={{
+            width: '245px',
+          }}
+          classNames={{
+            content: 'bg-[#2B3342] mb-3',
+          }}
+        >
+          <DropdownTrigger>
+            {isLoading ? (
+              <div className='w-full flex items-center gap-3  mt-7 px-5'>
+                <div>
+                  <Skeleton className='animate-pulse flex rounded-full w-12 h-12' />
+                </div>
+                <div className='w-full flex flex-col gap-2 '>
+                  <Skeleton className='animate-pulse h-3 w-3/5 rounded-lg' />
+                  <Skeleton className='animate-pulse h-3 w-4/5 rounded-lg' />
+                </div>
+              </div>
+            ) : (
+              <div className='flex cursor-pointer justify-center items-center mt-7 gap-4 w-full '>
+                <div>
+                  <Avatar
+                    isBordered
+                    showFallback={true}
+                    name={business[0]?.businessName}
+                  />
+                </div>
+                <div className='flex flex-col w-[45%]'>
+                  <span className='text-[14px] font-[600]'>
+                    {business[0]?.businessName}
+                  </span>
+                  <div className='text-[12px]  font-[400] pr-5'>
+                    {' '}
+                    {business[0]?.city}
+                  </div>
+                </div>
+                <div className='cursor-pointer'>
+                  <IoIosArrowDown className='text-[20px]' />
+                </div>
+              </div>
+            )}
+          </DropdownTrigger>
+          <DropdownMenu
+            variant='light'
+            aria-label='Dropdown menu to switch businesses'
+          >
+            {data?.businesses?.map((item: any) => {
+              return (
+                <DropdownItem
+                  classNames={{
+                    base: 'hover:bg-none max-h-[100px] overflow-scroll',
+                  }}
+                  key={item.businessId}
+                  onClick={() => toggleBtwBusiness(item)}
+                >
+                  <div className='flex gap-3'>
+                    <Avatar showFallback={true} name={item?.businessName} />
+                    <div className='flex flex-col'>
+                      <span className='font-[500] text-[14px]'>
+                        {item?.businessName}
+                      </span>
 
-        <div className='flex justify-center items-center h-[17%]  gap-4 w-full'>
-          <div>
-            <Avatar
-              isBordered
-              showFallback={true}
-              src={`data:image/jpeg;base64,${data?.image}`}
-              name={firstName}
-            />
-          </div>
-          <div className='flex flex-col '>
-            <span className='text-[14px] font-[600]'>
-              {firstName} {lastName}
-            </span>
-            <span className='text-[12px] font-[400]'>{email}</span>
-          </div>
-          <div onClick={onOpenChange} className='cursor-pointer'>
-            <FiLogOut className='text-[20px]' />
-          </div>
-        </div>
+                      <span className=''>{item?.city}</span>
+                    </div>
+                  </div>
+                </DropdownItem>
+              );
+            })}
+
+            <DropdownItem
+              key='add another business'
+
+              // onClick={onOpenChange}
+            >
+              <div className='flex items-center gap-3 '>
+                <div className='p-2 rounded-md bg-[#7182A3]'>
+                  <GoPlus className='text-[20px] font-[700]' />
+                </div>
+                <span className='font-[500] text-[14px]'>
+                  Add another business
+                </span>
+              </div>
+            </DropdownItem>
+            <DropdownItem
+              key='logout'
+              className='text-danger'
+              color='danger'
+              onClick={onOpenChange}
+            >
+              <div className='flex items-center gap-3 '>
+                <div className='p-2 rounded-md'>
+                  <FiLogOut className='text-[20px]' />
+                </div>
+                <span className='font-[500] text-[14px]'>Logout</span>
+              </div>
+            </DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
       </div>
       <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
     </div>

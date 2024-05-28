@@ -1,14 +1,14 @@
 'use client';
-import React, { useState } from 'react';
+import { getBusinessDetails } from '@/app/api/controllers/auth';
 import {
   getInitials,
   getJsonItemFromLocalStorage,
   notify,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
-import { getBusinessDetails } from '@/app/api/controllers/auth';
 import { Spinner } from '@nextui-org/react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 const SelectBusinessForm = () => {
   const router = useRouter();
   const [business, setBusiness] = useState(null);
