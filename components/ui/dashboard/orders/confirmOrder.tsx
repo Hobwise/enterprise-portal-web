@@ -19,6 +19,7 @@ import {
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { HiArrowLongLeft } from 'react-icons/hi2';
+import { IoIosArrowRoundBack } from 'react-icons/io';
 import { MdKeyboardArrowRight } from 'react-icons/md';
 import noImage from '../../../../public/assets/images/no-image.svg';
 
@@ -288,58 +289,67 @@ const ConfirmOrderModal = ({
               </div>
             )}
             {screen === 3 && (
-              <div className='p-5'>
-                <div>
-                  <div className=' text-[18px] leading-8 font-semibold'>
-                    <span className='text-black'>Confirm payment</span>
-                  </div>
-                  <p className='text-sm  text-grey500 xl:mb-8 w-full mb-4'>
-                    confirm that customer has paid for order
-                  </p>
-                </div>
+              <>
                 <div
-                  className={`flex items-center gap-2 p-4 rounded-lg justify-between bg-[#EAE5FF80]`}
+                  onClick={() => setScreen(2)}
+                  className={`p-4 cursor-pointer text-black flex items-center`}
                 >
+                  <IoIosArrowRoundBack className='text-2xl' />
+                  <span className='text-sm '>Back</span>
+                </div>
+                <div className='px-5 pb-5'>
                   <div>
-                    <p className='text-sm text-grey500'>TOTAL ORDER</p>
-                    <p className='font-bold text-black text-[20px]'>
-                      {' '}
-                      {formatPrice(singleOrder.totalAmount)}
+                    <div className=' text-[18px] leading-8 font-semibold'>
+                      <span className='text-black'>Confirm payment</span>
+                    </div>
+                    <p className='text-sm  text-grey500 xl:mb-8 w-full mb-4'>
+                      confirm that customer has paid for order
                     </p>
                   </div>
-                  <MdKeyboardArrowRight />
-                </div>
-                <Spacer y={4} />
-                <CustomInput
-                  type='text'
-                  // defaultValue={menuItem?.itemName}
-                  value={reference}
-                  onChange={(e) => setReference(e.target.value)}
-                  name='itemName'
-                  label='Enter ref'
-                  placeholder='Provide payment reference'
-                />
-                <Spacer y={5} />
-                <div className='flex gap-5'>
-                  <CustomButton
-                    onClick={toggleConfirmModal}
-                    className='bg-white h-[50px] w-full border border-primaryGrey'
+                  <div
+                    className={`flex items-center gap-2 p-4 rounded-lg justify-between bg-[#EAE5FF80]`}
                   >
-                    Cancel
-                  </CustomButton>
-                  <CustomButton
-                    loading={isLoading}
-                    disabled={isLoading}
-                    onClick={finalizeOrder}
-                    className='text-white w-full h-[50px]'
-                  >
-                    <div className='flex gap-2 items-center justify-center'>
-                      <p>{'Confirm payment'} </p>
-                      <HiArrowLongLeft className='text-[22px] rotate-180' />
+                    <div>
+                      <p className='text-sm text-grey500'>TOTAL ORDER</p>
+                      <p className='font-bold text-black text-[20px]'>
+                        {' '}
+                        {formatPrice(singleOrder.totalAmount)}
+                      </p>
                     </div>
-                  </CustomButton>
-                </div>
-              </div>
+                    <MdKeyboardArrowRight />
+                  </div>
+                  <Spacer y={4} />
+                  <CustomInput
+                    type='text'
+                    // defaultValue={menuItem?.itemName}
+                    value={reference}
+                    onChange={(e) => setReference(e.target.value)}
+                    name='itemName'
+                    label='Enter ref'
+                    placeholder='Provide payment reference'
+                  />
+                  <Spacer y={5} />
+                  <div className='flex gap-5'>
+                    <CustomButton
+                      onClick={toggleConfirmModal}
+                      className='bg-white h-[50px] w-full border border-primaryGrey'
+                    >
+                      Cancel
+                    </CustomButton>
+                    <CustomButton
+                      loading={isLoading}
+                      disabled={isLoading}
+                      onClick={finalizeOrder}
+                      className='text-white w-full h-[50px]'
+                    >
+                      <div className='flex gap-2 items-center justify-center'>
+                        <p>{'Confirm payment'} </p>
+                        <HiArrowLongLeft className='text-[22px] rotate-180' />
+                      </div>
+                    </CustomButton>
+                  </div>
+                </div>{' '}
+              </>
             )}
           </>
         )}

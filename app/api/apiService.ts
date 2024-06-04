@@ -1,4 +1,4 @@
-'use client';
+// 'use client';
 import {
   clearItemLocalStorage,
   getJsonItemFromLocalStorage,
@@ -7,7 +7,9 @@ import {
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
 import axios, { AxiosError } from 'axios';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/router';
+import { redirect } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { generateRefreshToken } from './controllers/auth';
 
 export const handleError = (error: any) => {
@@ -31,19 +33,11 @@ const now = Date.now();
 const TOKEN_REFRESH_WINDOW = 5 * 60 * 1000;
 const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
 
-const isTokenExpiring = (response) => {
-  return response.headers['x-token-expiring'] === 'true';
-};
 const logout = () => {
-  const router = useRouter();
-  notify({
-    title: 'Session Expired',
-    text: 'Please log in again.',
-    type: 'error',
-  });
+  toast.error('Session Expired, please log in again.');
   clearItemLocalStorage('userInformation');
   removeCookie('token');
-  router.push('/auth/login');
+  redirect('/auth/login');
 };
 const refreshToken = async () => {
   const userData = getJsonItemFromLocalStorage('userInformation');
