@@ -22,6 +22,7 @@ import { SlBell } from 'react-icons/sl';
 import Menu from '../../../public/assets/icons/menu.png';
 import Orders from '../../../public/assets/icons/order.png';
 import QRCode from '../../../public/assets/icons/qr-code.png';
+import Reservation from '../../../public/assets/icons/reservation.png';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
 
@@ -59,6 +60,17 @@ const Header = () => {
         title: 'QR Code',
         icon: (
           <Image src={QRCode} className={'dashboardLogo'} alt='Qr code logo' />
+        ),
+      };
+    } else if (pathname.includes('reservation/')) {
+      return {
+        title: 'Reservation',
+        icon: (
+          <Image
+            src={Reservation}
+            className={'dashboardLogo'}
+            alt='Reservation logo'
+          />
         ),
       };
     }

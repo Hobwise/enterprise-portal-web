@@ -1,17 +1,14 @@
 'use client';
+import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
 import {
-  createMenuItem,
-  deleteFile,
-  getMenu,
-  payloadMenuItem,
-  uploadFile,
-} from '@/app/api/controllers/dashboard/menu';
+  createReservations,
+  payloadReservationItem,
+} from '@/app/api/controllers/dashboard/reservations';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
 import Container from '@/components/dashboardContainer';
-import SelectInput from '@/components/selectInput';
-import useMenu from '@/hooks/cachedEndpoints/useMenu';
+import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import {
   THREEMB,
   getJsonItemFromLocalStorage,
@@ -28,70 +25,42 @@ import {
 import imageCompression from 'browser-image-compression';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import {
-  MdOutlineAddPhotoAlternate,
-  MdOutlineFileDownload,
-} from 'react-icons/md';
+import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import Success from '../../../../public/assets/images/success.png';
-import AddMultipleMenu from './add-mulitple-menuItem/addMultipleMenu';
-import SelectMenu from './add-mulitple-menuItem/selectMenu';
 
-const AddItemToMenu = () => {
+const AddNewReservation = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const { refetch } = useMenu();
+  const { refetch } = useReservation();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMenu, setSelectedMenu] = useState('');
-
   const [imageError, setImageError] = useState('');
   const [response, setResponse] = useState(null);
   const [selectedImage, setSelectedImage] = useState('');
-  const [activeScreen, setActiveScreen] = useState(1);
-  const [isOpenMultipleMenu, setIsOpenMultipleMenu] = useState(false);
 
-  const toggleMultipleMenu = () => {
-    setIsOpenMultipleMenu(!isOpenMultipleMenu);
-  };
-
-  const [menu, setMenu] = useState([]);
-  const [menuItem, setMenuItem] = useState<payloadMenuItem>({
-    itemDescription: '',
-    itemName: '',
-    price: 0,
-    menuID: '',
-    isAvailable: true,
-    imageReference: '',
-  });
+  const [reservationPayload, setReservationPayload] =
+    useState<payloadReservationItem>({
+      reservationName: '',
+      reservationDescription: '',
+      reservationFee: 0,
+      minimumSpend: 0,
+      reservationRequirement: '',
+      quantity: '',
+      imageReference: '',
+    });
 
   const businessInformation = getJsonItemFromLocalStorage('business');
-  const getMenuName = async () => {
-    const data = await getMenu(businessInformation[0]?.businessId);
 
-    if (data?.data?.isSuccessful) {
-      const newData = data?.data?.data.map((item) => ({
-        ...item,
-        label: item.name,
-        value: item.id,
-      }));
-
-      setMenu(newData);
-    } else if (data?.data?.error) {
-      //   notify({
-      //     title: 'Error!',
-      //     text: data?.data?.error,
-      //     type: 'error',
-      //   });
-    }
-  };
-
-  const menuFileUpload = async (formData: FormData, file) => {
+  const menuFileUpload = async (formData: FormData, file: any) => {
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
     setImageError('');
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
-      setMenuItem({ ...menuItem, imageReference: data.data.data });
+      setReservationPayload({
+        ...reservationPayload,
+        imageReference: data.data.data,
+      });
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
       notify({
@@ -104,7 +73,7 @@ const AddItemToMenu = () => {
   const removeUploadedFile = async () => {
     const data = await deleteFile(
       businessInformation[0]?.businessId,
-      menuItem.imageReference
+      reservationPayload.imageReference
     );
 
     if (data?.data?.isSuccessful) {
@@ -137,30 +106,40 @@ const AddItemToMenu = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = e.target;
-    setMenuItem((prevFormData) => ({
+    setReservationPayload((prevFormData) => ({
       ...prevFormData,
       [name]: value,
     }));
   };
-  const postMenuItem = async () => {
+
+  const reservationRequirement = () => {
+    if (reservationPayload.reservationFee) {
+      return 0;
+    } else if (reservationPayload.minimumSpend) {
+      return 1;
+    } else if (
+      reservationPayload.minimumSpend &&
+      reservationPayload.reservationFee
+    ) {
+      return 3;
+    } else {
+      return 2;
+    }
+  };
+  const postReservation = async () => {
     // if (!selectedImage) {
     //   return setImageError('Upload an image');
     // }
 
     setIsLoading(true);
-    const payload = {
-      menuID: menuItem.menuID,
-      itemName: menuItem.itemName,
-      itemDescription: menuItem.itemDescription,
-      price: +menuItem.price,
-      isAvailable: menuItem.isAvailable,
-      imageReference: menuItem.imageReference,
-    };
 
-    const data = await createMenuItem(
-      businessInformation[0]?.businessId,
-      payload
-    );
+    const data = await createReservations(businessInformation[0]?.businessId, {
+      ...reservationPayload,
+      reservationFee: Number(reservationPayload.reservationFee),
+      minimumSpend: Number(reservationPayload.minimumSpend),
+      reservationRequirement: reservationRequirement(),
+      quantity: Number(reservationPayload.quantity),
+    });
 
     setResponse(data);
 
@@ -168,11 +147,13 @@ const AddItemToMenu = () => {
 
     if (data?.data?.isSuccessful) {
       onOpen();
-      setMenuItem({
-        itemDescription: '',
-        itemName: '',
-        price: 0,
-        menuID: '',
+      setReservationPayload({
+        reservationName: '',
+        reservationDescription: '',
+        reservationFee: 0,
+        minimumSpend: 0,
+        reservationRequirement: '',
+        quantity: '',
         imageReference: '',
       });
       // setSelectedFile();
@@ -186,81 +167,89 @@ const AddItemToMenu = () => {
     }
   };
 
-  useEffect(() => {
-    getMenuName();
-  }, []);
   return (
     <Container>
       <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
         <div>
-          <h1 className='text-[24px] leading-8 font-semibold'>Add menu item</h1>
+          <h1 className='text-[24px] leading-8 font-semibold'>
+            {' '}
+            Create a new reservation
+          </h1>
           <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
-            Add an item to your menu.
+            Setup a new reservation.
           </p>
         </div>
-        <CustomButton
-          onClick={toggleMultipleMenu}
-          className='py-2 px-4 md:mb-0 text-black border border-[#D0D5DD] mb-4 '
-          backgroundColor='bg-white'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <MdOutlineFileDownload className='text-[22px]' />
-            <p> Add multiple items</p>
-          </div>
-        </CustomButton>
       </div>
       <div className='flex xl:flex-row flex-col'>
         <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
           <CustomInput
             type='text'
-            value={menuItem.itemName}
-            errorMessage={response?.errors?.itemName?.[0]}
+            value={reservationPayload.reservationName}
+            errorMessage={response?.errors?.reservationName?.[0]}
             onChange={handleInputChange}
-            name='itemName'
-            label='Name of item'
-            placeholder='E.g Drinks'
+            name='reservationName'
+            label='Name of reservation'
+            placeholder='name of reservation'
           />
           <Spacer y={6} />
           <CustomTextArea
-            value={menuItem.itemDescription}
-            name='itemDescription'
+            value={reservationPayload.reservationDescription}
+            name='reservationDescription'
             onChange={handleInputChange}
-            label='Add a description'
-            placeholder=''
+            label='Add a description for this reservation'
+            placeholder='Add a description'
           />
+          <Spacer y={6} />
+          <div className='flex gap-6'>
+            <CustomInput
+              type='number'
+              startContent={<div>₦</div>}
+              name='reservationFee'
+              errorMessage={response?.errors?.reservationFee?.[0]}
+              onChange={handleInputChange}
+              value={`${reservationPayload.reservationFee}`}
+              label='Reservation fee'
+              placeholder='Reservation fee'
+            />
+
+            <CustomInput
+              type='number'
+              startContent={<div>₦</div>}
+              name='minimumSpend'
+              errorMessage={response?.errors?.minimumSpend?.[0]}
+              onChange={handleInputChange}
+              value={`${reservationPayload.minimumSpend}`}
+              label='Minimum spend'
+              placeholder='Minimum spend'
+            />
+          </div>
           <Spacer y={6} />
           <CustomInput
-            type='text'
-            name='price'
-            startContent={<div>₦</div>}
-            errorMessage={response?.errors?.price?.[0]}
+            type='number'
+            name='quantity'
+            errorMessage={response?.errors?.quantity?.[0]}
             onChange={handleInputChange}
-            value={`${menuItem.price}`}
-            label='Add a price'
-            placeholder='Add a price'
-          />
-          <Spacer y={6} />
-          <SelectInput
-            errorMessage={response?.errors?.menuID?.[0]}
-            label={'Select a menu'}
-            name='menuID'
-            onChange={handleInputChange}
-            value={menuItem.menuID}
-            placeholder={'Select...'}
-            contents={menu}
+            value={`${reservationPayload.quantity}`}
+            label={'Quantity'}
+            placeholder={'Quantity'}
           />
         </div>
         <div
           className={`flex-grow xl:h-auto xl:w-1/2 full Xl:p-8 p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
         >
-          <label className='flex xl:m-4 m-0 justify-between  bg-white'>
-            <p className='font-[500] text-[14px]'>Image</p>
+          <label className='flex xl:mx-4 xl:my-2 m-0 justify-between  bg-white'>
+            <div>
+              <p className='font-[500] text-[14px]'>Image</p>
+              <p className=' text-grey400 text-[12px]'>
+                Add an image to this campaign
+              </p>
+            </div>
             <p className='text-[#475467] text-[14px] font-[400]'>
               Maximum of 3MB
             </p>
           </label>
           <div
-            className={`xl:h-[calc(100%-4.5rem)] bg-[#F9F8FF] h-[200px] border  xl:m-4 mt-2 rounded-md ${
+            className={`xl:h-[calc(100%-5rem)] bg-[#F9F8FF] h-[200px] border  xl:m-4 mt-2 rounded-md ${
               imageError ? 'border-danger-600' : 'border-[#F5F5F5]'
             }   text-sm font-[400] text-center`}
           >
@@ -294,9 +283,9 @@ const AddItemToMenu = () => {
                   </div>
                   <input
                     title='upload an image'
-                    alt='upload a menu'
+                    alt='upload a reservation'
                     type='file'
-                    id='menu-upload'
+                    id='reservation-upload'
                     accept='image/*'
                     onChange={(event) => handleImageChange(event)}
                     className='h-[100%] opacity-0 cursor-pointer absolute top-0'
@@ -314,12 +303,12 @@ const AddItemToMenu = () => {
       <Spacer y={1} />
       <div className='flex justify-end'>
         <CustomButton
-          className='w-32  text-white'
+          className='w-36  text-white'
           loading={isLoading}
-          onClick={postMenuItem}
+          onClick={postReservation}
           type='submit'
         >
-          {isLoading ? 'Loading' : 'Add to menu'}
+          {isLoading ? 'Loading' : 'Add Reservation'}
         </CustomButton>
       </div>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -335,27 +324,27 @@ const AddItemToMenu = () => {
                   Fantastic!
                 </h2>
                 <h3 className='text-sm text-center text-grey600     mb-4'>
-                  Your item has been added to the menu
+                  Your reservation has been created
                 </h3>
 
                 <div className='flex gap-3'>
                   <CustomButton
                     onClick={async () => {
                       await refetch();
-                      router.push('/dashboard/menu');
+                      router.push('/dashboard/reservation');
                     }}
                     className='h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 '
                     backgroundColor='bg-white'
                     type='submit'
                   >
-                    View menu
+                    View reservations
                   </CustomButton>
                   <CustomButton
                     className='text-white h-[49px]  flex-grow w-full'
                     onClick={onClose}
                     type='submit'
                   >
-                    Add another item
+                    Add another reservation
                   </CustomButton>
                 </div>
 
@@ -365,37 +354,8 @@ const AddItemToMenu = () => {
           )}
         </ModalContent>
       </Modal>
-      <Modal
-        size='xl'
-        isOpen={isOpenMultipleMenu}
-        onOpenChange={() => {
-          setActiveScreen(1);
-          setSelectedMenu('');
-          toggleMultipleMenu();
-        }}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalBody>
-                {activeScreen === 1 && (
-                  <SelectMenu
-                    setActiveScreen={setActiveScreen}
-                    setSelectedMenu={setSelectedMenu}
-                    selectedMenu={selectedMenu}
-                    toggleMultipleMenu={toggleMultipleMenu}
-                  />
-                )}
-                {activeScreen === 2 && (
-                  <AddMultipleMenu selectedMenu={selectedMenu} />
-                )}
-              </ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
     </Container>
   );
 };
 
-export default AddItemToMenu;
+export default AddNewReservation;

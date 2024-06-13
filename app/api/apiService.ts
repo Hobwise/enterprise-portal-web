@@ -8,7 +8,6 @@ import {
 } from '@/lib/utils';
 import axios, { AxiosError } from 'axios';
 // import { useRouter } from 'next/router';
-import { redirect } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { generateRefreshToken } from './controllers/auth';
 
@@ -35,9 +34,9 @@ const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
 
 const logout = () => {
   toast.error('Session Expired, please log in again.');
+  window.location.href = '/auth/login';
   clearItemLocalStorage('userInformation');
   removeCookie('token');
-  redirect('/auth/login');
 };
 const refreshToken = async () => {
   const userData = getJsonItemFromLocalStorage('userInformation');

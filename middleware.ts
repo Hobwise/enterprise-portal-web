@@ -24,6 +24,7 @@ export const config = {
     '/dashboard/qr-code/create-qr',
     '/dashboard/reports',
     '/dashboard/reservation',
+    '/dashboard/reservation/create-reservation',
     '/dashboard/settings',
     '/auth/business-information',
     '/auth/select-business',

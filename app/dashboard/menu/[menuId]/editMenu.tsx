@@ -135,7 +135,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
 
   return (
     <Modal
-      size='4xl'
+      size='5xl'
       isOpen={isOpenEdit}
       onOpenChange={() => {
         setMenuItemState({
@@ -157,15 +157,15 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
               <h1 className='text-center text-xl mt-3 font-[600] text-black'>
                 Edit menu items
               </h1>
-              <div className='flex xl:flex-row flex-col'>
-                <div className={`flex-grow xl:h-auto xl:w-1/2 full mt-4`}>
+              <div className='flex xl:flex-row flex-col gap-6'>
+                <div className={`flex-grow xl:h-auto xl:w-1/2 w-full `}>
                   <label className='flex xl:my-2 m-0 justify-between  bg-white'>
                     <p className='text-[#475467] text-[14px] font-[400]'>
                       Maximum of 3MB
                     </p>
                   </label>
                   <div
-                    className={`xl:h-[calc(100%-3.8rem)] h-[200px] border   mt-2 rounded-md ${
+                    className={`xl:h-[calc(100%-2rem)] bg-[#F9F8FF] h-[200px] border   mt-2 rounded-md ${
                       imageError ? 'border-danger-600' : 'border-[#F5F5F5]'
                     }   text-sm font-[400] text-center`}
                   >
@@ -200,7 +200,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                       <div className='flex flex-col h-full justify-center items-center'>
                         <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
                           <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                          <span className='text-black'>
+                          <span className='text-black px-4'>
                             Drag and drop files to upload or{' '}
                             <span className='text-primaryColor'>
                               click here
@@ -225,7 +225,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                     </span>
                   </div>
                 </div>
-                <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 '>
+                <div className='flex-grow  xl:w-1/2 w-full mt-3'>
                   <CustomInput
                     type='text'
                     // defaultValue={menuItem?.itemName}

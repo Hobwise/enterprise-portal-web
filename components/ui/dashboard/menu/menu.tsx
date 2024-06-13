@@ -153,26 +153,6 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
                     View
                   </Link>
                 </DropdownItem>
-                {/* <DropdownItem
-                  onClick={() => {
-                    saveJsonItemToLocalStorage('menuItem', menu);
-                    toggleModalEdit();
-                  }}
-                  aria-label='edit'
-                >
-                  Edit
-                </DropdownItem> */}
-                {/* <DropdownItem
-                  aria-label='delete'
-                  onClick={() => {
-                    toggleModalDelete();
-                    console.log(menu.id, 'cellValue');
-                    // setFilteredMenu(menu);
-                    // saveJsonItemToLocalStorage('menuItem', menu);
-                  }}
-                >
-                  Delete
-                </DropdownItem> */}
               </DropdownMenu>
             </Dropdown>
           </div>
