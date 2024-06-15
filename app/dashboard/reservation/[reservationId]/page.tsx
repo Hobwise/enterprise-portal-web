@@ -2,12 +2,17 @@
 
 import { getReservation } from '@/app/api/controllers/dashboard/reservations';
 import Container from '@/components/dashboardContainer';
+import Error from '@/components/error';
+import useTextCopy from '@/hooks/useTextCopy';
+import { CustomLoading, formatPrice } from '@/lib/utils';
 import {
-  CustomLoading,
-  formatPrice,
-  getJsonItemFromLocalStorage,
-} from '@/lib/utils';
-import { Button, ButtonGroup, Spacer } from '@nextui-org/react';
+  Button,
+  ButtonGroup,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+  Spacer,
+} from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -17,36 +22,49 @@ import { IoIosArrowRoundBack } from 'react-icons/io';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import { VscCopy } from 'react-icons/vsc';
 import noImage from '../../../../public/assets/images/no-image.svg';
+import Booking from './booking';
+import DeleteReservation from './deleteReservation';
+import EditReservation from './editReservation';
 
 const ReservationDetails = () => {
   const searchParams = useSearchParams();
 
-  const businessInformation = getJsonItemFromLocalStorage('business');
-  const [isOpen, setIsOpen] = useState(false);
-
+  const [isError, setIsError] = useState(false);
+  const [isOpenDelete, setIsOpenDelete] = useState(false);
+  const [isOpenEdit, setIsOpenEdit] = useState(false);
   const reservationId = searchParams.get('reservationId') || null;
   const [reservationItem, setReservationItem] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const getMenu = async (loading = true) => {
+  const toggleModalDelete = () => {
+    setIsOpenDelete(!isOpenDelete);
+  };
+  const toggleModalEdit = () => {
+    setIsOpenEdit(!isOpenEdit);
+  };
+  const getSingleReservation = async (loading = true) => {
     setIsLoading(loading);
     const data = await getReservation(reservationId);
     setIsLoading(false);
-    console.log(data, 'data');
+
     if (data?.data?.isSuccessful) {
       setReservationItem(data?.data?.data);
     } else if (data?.data?.error) {
-      //   notify({
-      //     title: 'Error!',
-      //     text: data?.data?.error,
-      //     type: 'error',
-      //   });
+      setIsError(true);
     }
   };
 
   useEffect(() => {
-    getMenu();
+    getSingleReservation();
   }, []);
+
+  if (isError) {
+    return <Error onClick={() => getSingleReservation()} />;
+  }
+
+  const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
+    'https://hobink-corporate-web.vercel.app/create-reservation'
+  );
 
   return (
     <Container>
@@ -61,21 +79,32 @@ const ReservationDetails = () => {
         <div className='gap-6 lg:flex block'>
           <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
             <Button
-              //   onClick={toggleModalEdit}
+              onClick={toggleModalEdit}
               className='flex text-grey600 bg-white'
             >
               <FaEdit className='text-[18px]' />
               <p>Edit</p>
             </Button>
+
+            <Popover isOpen={isOpen} onOpenChange={(open) => setIsOpen(open)}>
+              <PopoverTrigger>
+                <Button
+                  onClick={handleCopyClick}
+                  className='flex text-grey600 bg-white'
+                >
+                  <VscCopy />
+                  <p>Copy link</p>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent>
+                <div className='text-small text-black'>
+                  Reservation url copied!
+                </div>
+              </PopoverContent>
+            </Popover>
+
             <Button
-              //   onClick={toggleModal}
-              className='flex text-grey600 bg-white'
-            >
-              <VscCopy />
-              <p>Copy link</p>
-            </Button>
-            <Button
-              //   onClick={toggleModalDelete}
+              onClick={toggleModalDelete}
               className='flex text-grey600 bg-white'
             >
               <RiDeleteBin6Line className='text-[18px]' />
@@ -88,9 +117,9 @@ const ReservationDetails = () => {
       {isLoading ? (
         <CustomLoading />
       ) : (
-        <section>
+        <section className='flex flex-col flex-grow'>
           <div className='flex lg:flex-row flex-col gap-3 justify-between '>
-            <div className='space-y-2'>
+            <div className='space-y-2 lg:w-[500px] w-full'>
               <h2 className='text-black font-[600] text-[28px]'>
                 {reservationItem?.reservationName}
               </h2>
@@ -121,15 +150,35 @@ const ReservationDetails = () => {
                 }
                 width={60}
                 height={60}
-                style={{ objectFit: 'cover' }}
-                className={'bg-contain h-[100px] rounded-lg w-[159px]'}
+                style={{
+                  objectFit: reservationItem?.image ? 'cover' : 'contain',
+                }}
+                className={'bg-contain border  h-[100px] rounded-lg w-[159px]'}
                 aria-label='reservation image'
                 alt='reservation image'
               />
             </div>
           </div>
+          <Spacer y={5} />
+          <Booking
+            isLoading={isLoading}
+            isError={isError}
+            reservationItem={reservationItem}
+            getSingleReservation={getSingleReservation}
+          />
         </section>
       )}
+      <DeleteReservation
+        reservationItem={reservationItem}
+        isOpenDelete={isOpenDelete}
+        toggleModalDelete={toggleModalDelete}
+      />
+      <EditReservation
+        getReservation={getSingleReservation}
+        reservationItem={reservationItem}
+        isOpenEdit={isOpenEdit}
+        toggleModalEdit={toggleModalEdit}
+      />
     </Container>
   );
 };

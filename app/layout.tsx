@@ -32,11 +32,13 @@ export default function RootLayout({
                   success: {
                     style: {
                       border: '2px solid #3a9ea5',
+                      boxShadow: 'none',
                     },
                   },
                   error: {
                     style: {
                       border: '2px solid #eb5757',
+                      boxShadow: 'none',
                     },
                   },
                 }}

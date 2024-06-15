@@ -5,7 +5,14 @@ import React, { useMemo, useState } from 'react';
 
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import { Button, ButtonGroup, Chip } from '@nextui-org/react';
+import {
+  Button,
+  ButtonGroup,
+  Chip,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { IoSearchOutline } from 'react-icons/io5';
 
@@ -13,6 +20,7 @@ import Error from '@/components/error';
 import CreateReservation from '@/components/ui/dashboard/reservations/createReservations';
 import ReservationList from '@/components/ui/dashboard/reservations/reservation';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
+import useTextCopy from '@/hooks/useTextCopy';
 import { CustomLoading } from '@/lib/utils';
 import { IoMdAdd } from 'react-icons/io';
 import { VscCopy } from 'react-icons/vsc';
@@ -54,18 +62,9 @@ const Reservation: React.FC = () => {
       return <CreateReservation />;
     }
   };
-
-  // const newArray = data?.map((item) => {
-  //   return {
-  //     allOrder: item.allOrdersCount,
-  //     openOrder: item.openOrdersCount,
-
-  //     dateCreated: item.dateCreated,
-
-  //     name: item.name,
-  //   };
-  // });
-
+  const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
+    'https://hobink-corporate-web.vercel.app/create-reservation'
+  );
   return (
     <Container>
       <div className='flex flex-row flex-wrap xl:mb-8 mb-4 justify-between'>
@@ -106,13 +105,25 @@ const Reservation: React.FC = () => {
                 />
               </div>
               <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-xl'>
-                <Button
-                  // onClick={() => downloadCSV(newArray)}
-                  className='flex text-grey600 bg-white'
+                <Popover
+                  isOpen={isOpen}
+                  onOpenChange={(open) => setIsOpen(open)}
                 >
-                  <VscCopy />
-                  <p>Copy link</p>
-                </Button>
+                  <PopoverTrigger>
+                    <Button
+                      onClick={handleCopyClick}
+                      className='flex text-grey600 bg-white'
+                    >
+                      <VscCopy />
+                      <p>Copy link</p>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <div className='text-small text-black'>
+                      Reservation url copied!
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </ButtonGroup>
             </>
           )}

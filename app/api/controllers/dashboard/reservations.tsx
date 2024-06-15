@@ -44,8 +44,7 @@ export async function createReservations(
   const validatedFields = reservationSchema.safeParse({
     reservationName: payload?.reservationName,
     reservationDescription: payload?.reservationDescription,
-    // reservationFee: payload?.reservationFee,
-    // minimumSpend: payload.minimumSpend,
+
     quantity: payload.quantity,
   });
 
@@ -70,6 +69,48 @@ export async function getReservation(reservationId: string) {
   const headers = reservationId ? { reservationId } : {};
   try {
     const data = await api.get(DASHBOARD.reservation, { headers });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function deleteReservation(reservationId: string) {
+  const headers = reservationId ? { reservationId } : {};
+  try {
+    const data = await api.delete(DASHBOARD.reservation, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function editReservations(
+  businessId: string,
+  payload: payloadReservationItem,
+  reservationId: string
+) {
+  const validatedFields = reservationSchema.safeParse({
+    reservationName: payload?.reservationName,
+    reservationDescription: payload?.reservationDescription,
+
+    quantity: payload.quantity,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const headers = businessId ? { businessId, reservationId } : {};
+
+  try {
+    const data = await api.put(DASHBOARD.reservation, payload, {
+      headers,
+    });
 
     return data;
   } catch (error) {
