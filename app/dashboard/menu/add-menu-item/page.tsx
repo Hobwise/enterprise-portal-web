@@ -13,6 +13,7 @@ import Container from '@/components/dashboardContainer';
 import SelectInput from '@/components/selectInput';
 import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import {
+  SmallLoader,
   THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
@@ -44,7 +45,7 @@ const AddItemToMenu = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState('');
-
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [imageError, setImageError] = useState('');
   const [response, setResponse] = useState(null);
   const [selectedImage, setSelectedImage] = useState('');
@@ -87,7 +88,9 @@ const AddItemToMenu = () => {
   };
 
   const menuFileUpload = async (formData: FormData, file) => {
+    setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
+    setIsLoadingImage(false);
     setImageError('');
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
@@ -285,12 +288,18 @@ const AddItemToMenu = () => {
               <>
                 <div className='flex flex-col h-full justify-center items-center'>
                   <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
-                    <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                    <span>
-                      Drag and drop files to upload or{' '}
-                      <span className='text-primaryColor'>click here</span> to
-                      browse
-                    </span>
+                    {isLoadingImage ? (
+                      <SmallLoader />
+                    ) : (
+                      <>
+                        <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
+                        <span>
+                          Drag and drop files to upload or{' '}
+                          <span className='text-primaryColor'>click here</span>{' '}
+                          to browse
+                        </span>
+                      </>
+                    )}
                   </div>
                   <input
                     title='upload an image'

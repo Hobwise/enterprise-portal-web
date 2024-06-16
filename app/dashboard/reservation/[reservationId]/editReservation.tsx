@@ -8,6 +8,7 @@ import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import {
+  SmallLoader,
   THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
@@ -38,6 +39,7 @@ const EditReservation = ({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
   const [imageError, setImageError] = useState('');
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   const [reservationState, setReservationState] =
     useState<payloadReservationItem>({
@@ -69,7 +71,9 @@ const EditReservation = ({
   };
 
   const menuFileUpload = async (formData: FormData, file) => {
+    setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
+    setIsLoadingImage(false);
     setImageError('');
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
@@ -152,7 +156,6 @@ const EditReservation = ({
       });
     }
   };
-  console.log(reservationState, 'reservationState?.imageReference');
 
   return (
     <Modal
@@ -220,14 +223,20 @@ const EditReservation = ({
                     ) : (
                       <div className='flex flex-col h-full justify-center items-center'>
                         <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
-                          <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                          <span className='text-black px-4'>
-                            Drag and drop files to upload or{' '}
-                            <span className='text-primaryColor'>
-                              click here
-                            </span>{' '}
-                            to browse
-                          </span>
+                          {isLoadingImage ? (
+                            <SmallLoader />
+                          ) : (
+                            <>
+                              <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
+                              <span>
+                                Drag and drop files to upload or{' '}
+                                <span className='text-primaryColor'>
+                                  click here
+                                </span>{' '}
+                                to browse
+                              </span>
+                            </>
+                          )}
                         </div>
                         <input
                           title='upload an image'

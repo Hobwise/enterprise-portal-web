@@ -1,25 +1,26 @@
 'use client';
-import React, { useEffect, useState } from 'react';
-import { FaList } from 'react-icons/fa';
-import { FaSquare } from 'react-icons/fa6';
-import { PiSquaresFourFill } from 'react-icons/pi';
-import { Chip, Divider, Spacer, Switch } from '@nextui-org/react';
+import {
+  createMenuConfiguration,
+  uploadFile,
+} from '@/app/api/controllers/dashboard/menu';
 import { CustomButton } from '@/components/customButton';
-import { SketchPicker } from 'react-color';
-import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import {
+  SmallLoader,
   THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
 } from '@/lib/utils';
-import toast from 'react-hot-toast';
-import {
-  createMenuConfiguration,
-  uploadFile,
-} from '@/app/api/controllers/dashboard/menu';
+import { Chip, Divider, Spacer, Switch } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
+import React, { useEffect, useState } from 'react';
+import { SketchPicker } from 'react-color';
+import toast from 'react-hot-toast';
+import { FaList } from 'react-icons/fa';
+import { FaSquare } from 'react-icons/fa6';
+import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
+import { PiSquaresFourFill } from 'react-icons/pi';
 import { CheckIcon } from '../../orders/place-order/data';
 
 interface Column {
@@ -48,6 +49,7 @@ const Layout: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState('');
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
 
   const handleChangeColor = (color: any) => {
     setBackgroundColor(color.hex);
@@ -99,7 +101,9 @@ const Layout: React.FC = () => {
     }
   };
   const menuFileUpload = async (formData: FormData, file) => {
+    setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
+    setIsLoadingImage(false);
     setImageError('');
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
@@ -320,12 +324,20 @@ const Layout: React.FC = () => {
           <label className='font-[500]'>Upload image</label>
           <div className='flex relative flex-col p-3 mt-2 h-[calc(100%-2rem)]  border border-dashed rounded-lg justify-center items-center'>
             <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
-              <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-              <span className='text-black'>
-                Drag and drop files to upload or{' '}
-                <span className='text-primaryColor'>click here</span> to browse
-              </span>
+              {isLoadingImage ? (
+                <SmallLoader />
+              ) : (
+                <>
+                  <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
+                  <span>
+                    Drag and drop files to upload or{' '}
+                    <span className='text-primaryColor'>click here</span> to
+                    browse
+                  </span>
+                </>
+              )}
             </div>
+
             <input
               title='upload an image'
               alt='upload a menu'

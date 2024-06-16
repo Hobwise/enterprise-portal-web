@@ -1,12 +1,12 @@
 'use client';
 import { getBusinessDetails } from '@/app/api/controllers/auth';
 import {
+  SmallLoader,
   getInitials,
   getJsonItemFromLocalStorage,
   notify,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
-import { Spinner } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 const SelectBusinessForm = () => {
@@ -64,12 +64,7 @@ const SelectBusinessForm = () => {
                 } h-[64px]`}
               >
                 {isLoading && item.businessName === business?.businessName ? (
-                  <Spinner
-                    classNames={{
-                      base: 'text-primaryColor',
-                    }}
-                    size='sm'
-                  />
+                  <SmallLoader />
                 ) : (
                   getInitials(item.businessName)
                 )}

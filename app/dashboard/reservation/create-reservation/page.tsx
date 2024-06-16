@@ -10,10 +10,15 @@ import { CustomTextArea } from '@/components/customTextArea';
 import Container from '@/components/dashboardContainer';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import {
+  SmallLoader,
   THREEMB,
+  clearItemLocalStorage,
+  getFromLocalStorage,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
+  saveJsonItemToLocalStorage,
+  saveToLocalStorage,
 } from '@/lib/utils';
 import {
   Modal,
@@ -24,36 +29,45 @@ import {
 } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import Success from '../../../../public/assets/images/success.png';
 
 const AddNewReservation = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const getReservationSavedToDraft = getJsonItemFromLocalStorage(
+    'saveReservationToDraft'
+  );
+  const selectedImageSavedToDraft = getFromLocalStorage('selectedImage');
   const { refetch } = useReservation();
-  const router = useRouter();
+  const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState('');
   const [response, setResponse] = useState(null);
-  const [selectedImage, setSelectedImage] = useState('');
+  const [selectedImage, setSelectedImage] = useState(
+    selectedImageSavedToDraft || ''
+  );
 
   const [reservationPayload, setReservationPayload] =
     useState<payloadReservationItem>({
-      reservationName: '',
-      reservationDescription: '',
-      reservationFee: 0,
-      minimumSpend: 0,
-      reservationRequirement: '',
-      quantity: '',
-      imageReference: '',
+      reservationName: getReservationSavedToDraft?.reservationName || '',
+      reservationDescription:
+        getReservationSavedToDraft?.reservationDescription || '',
+      reservationFee: getReservationSavedToDraft?.reservationFee || 0,
+      minimumSpend: getReservationSavedToDraft?.minimumSpend || 0,
+      reservationRequirement:
+        getReservationSavedToDraft?.reservationRequirement || '',
+      quantity: getReservationSavedToDraft?.quantity || '',
+      imageReference: getReservationSavedToDraft?.imageReference || '',
     });
 
   const businessInformation = getJsonItemFromLocalStorage('business');
 
   const menuFileUpload = async (formData: FormData, file: any) => {
+    setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
+    setIsLoadingImage(false);
     setImageError('');
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
@@ -147,6 +161,8 @@ const AddNewReservation = () => {
 
     if (data?.data?.isSuccessful) {
       onOpen();
+      clearItemLocalStorage('saveReservationToDraft');
+      clearItemLocalStorage('selectedImage');
       setReservationPayload({
         reservationName: '',
         reservationDescription: '',
@@ -166,6 +182,27 @@ const AddNewReservation = () => {
       });
     }
   };
+
+  const saveToDraft = () => {
+    saveJsonItemToLocalStorage('saveReservationToDraft', reservationPayload);
+    saveToLocalStorage('selectedImage', selectedImage);
+    toast.success('Saved to draft!');
+  };
+
+  useEffect(() => {
+    setReservationPayload({
+      reservationName: getReservationSavedToDraft?.reservationName || '',
+      reservationDescription:
+        getReservationSavedToDraft?.reservationDescription || '',
+      reservationFee: getReservationSavedToDraft?.reservationFee || 0,
+      minimumSpend: getReservationSavedToDraft?.minimumSpend || 0,
+      reservationRequirement:
+        getReservationSavedToDraft?.reservationRequirement || '',
+      quantity: getReservationSavedToDraft?.quantity || '',
+      imageReference: getReservationSavedToDraft?.imageReference || '',
+    });
+    setSelectedImage(selectedImageSavedToDraft || '');
+  }, []);
 
   return (
     <Container>
@@ -274,12 +311,18 @@ const AddNewReservation = () => {
               <>
                 <div className='flex flex-col h-full justify-center items-center'>
                   <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
-                    <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                    <span>
-                      Drag and drop files to upload or{' '}
-                      <span className='text-primaryColor'>click here</span> to
-                      browse
-                    </span>
+                    {isLoadingImage ? (
+                      <SmallLoader />
+                    ) : (
+                      <>
+                        <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
+                        <span>
+                          Drag and drop files to upload or{' '}
+                          <span className='text-primaryColor'>click here</span>{' '}
+                          to browse
+                        </span>
+                      </>
+                    )}
                   </div>
                   <input
                     title='upload an image'
@@ -301,7 +344,14 @@ const AddNewReservation = () => {
         </div>
       </div>
       <Spacer y={1} />
-      <div className='flex justify-end'>
+      <div className='flex justify-end gap-3'>
+        <CustomButton
+          className='w-32  text-black bg-transparent border rounded-lg border-grey500'
+          onClick={saveToDraft}
+          type='submit'
+        >
+          {'Save to draft'}
+        </CustomButton>
         <CustomButton
           className='w-36  text-white'
           loading={isLoading}
