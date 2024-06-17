@@ -28,6 +28,7 @@ import { VscCopy } from 'react-icons/vsc';
 const Reservation: React.FC = () => {
   const router = useRouter();
   const business = getJsonItemFromLocalStorage('business');
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { data, isLoading, isError, refetch } = useReservation();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -64,7 +65,7 @@ const Reservation: React.FC = () => {
     }
   };
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${business.businessName}`
+    `https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${business.businessName}&businessId=${business.id}&cooperateID=${userInformation.cooperateID}`
   );
   return (
     <Container>
