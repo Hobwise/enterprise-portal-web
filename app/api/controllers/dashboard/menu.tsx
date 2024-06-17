@@ -82,7 +82,7 @@ export async function getMenuByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
   try {
-    const data = await api.get(DASHBOARD.getMenuByBusiness, {
+    const data = await api.post(DASHBOARD.getMenuByBusiness, {
       headers,
     });
 

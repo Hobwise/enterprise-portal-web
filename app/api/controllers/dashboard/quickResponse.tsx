@@ -8,7 +8,7 @@ export async function getQR(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
   try {
-    const data = await api.get(DASHBOARD.qrByBusiness, {
+    const data = await api.post(DASHBOARD.qrByBusiness, {
       headers,
     });
 

@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { DASHBOARD } from '../../api-url';
 import api, { handleError } from '../../apiService';
 
@@ -6,7 +5,7 @@ export async function getPaymentByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
   try {
-    const data = await api.get(DASHBOARD.paymentByBusiness, {
+    const data = await api.post(DASHBOARD.paymentByBusiness, {
       headers,
     });
 

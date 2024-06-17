@@ -21,12 +21,13 @@ import CreateReservation from '@/components/ui/dashboard/reservations/createRese
 import ReservationList from '@/components/ui/dashboard/reservations/reservation';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import useTextCopy from '@/hooks/useTextCopy';
-import { CustomLoading } from '@/lib/utils';
+import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { IoMdAdd } from 'react-icons/io';
 import { VscCopy } from 'react-icons/vsc';
 
 const Reservation: React.FC = () => {
   const router = useRouter();
+  const business = getJsonItemFromLocalStorage('business');
   const { data, isLoading, isError, refetch } = useReservation();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -63,7 +64,7 @@ const Reservation: React.FC = () => {
     }
   };
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    'https://hobink-corporate-web.vercel.app/create-reservation'
+    `https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${business.businessName}`
   );
   return (
     <Container>
