@@ -7,8 +7,16 @@ type payloadQr = {
 export async function getQR(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
+  const payload = [
+    {
+      status: 'All',
+      page: 1,
+      pageSize: 10,
+    },
+  ];
+
   try {
-    const data = await api.post(DASHBOARD.qrByBusiness, {
+    const data = await api.get(DASHBOARD.qrByBusiness, {
       headers,
     });
 

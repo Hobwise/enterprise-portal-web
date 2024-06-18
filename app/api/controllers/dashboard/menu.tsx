@@ -84,7 +84,7 @@ export async function getMenuByBusiness(businessId: string) {
     {
       menuId: '1ceaa4f9-855c-4666-b6b8-0cef3d35552b',
       page: 1,
-      pageSize: 1,
+      pageSize: 10,
     },
   ];
 

@@ -27,15 +27,24 @@ export const orderSchema = z.object({
     }),
   quickResponseID: z.string().trim().min(1, 'Select a Table'),
 });
+
 export async function getOrderByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
+  const payload = [
+    {
+      status: 'All',
+      page: 1,
+      pageSize: 10,
+    },
+  ];
+
   try {
-    const data = await api.post(DASHBOARD.orderByBusiness, {
+    const response = await api.post(DASHBOARD.orderByBusiness, payload, {
       headers,
     });
 
-    return data;
+    return response.data;
   } catch (error) {
     handleError(error);
   }

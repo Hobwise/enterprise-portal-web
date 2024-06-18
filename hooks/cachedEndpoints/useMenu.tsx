@@ -69,6 +69,7 @@ const useMenu = () => {
     const responseData = await getMenuByBusiness(
       businessInformation[0]?.businessId
     );
+
     return responseData?.data?.data as MenuData[];
   };
 

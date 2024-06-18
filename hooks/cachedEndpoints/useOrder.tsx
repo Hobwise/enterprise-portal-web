@@ -28,7 +28,8 @@ const useOrder = () => {
     const responseData = await getOrderByBusiness(
       businessInformation[0]?.businessId
     );
-    return responseData?.data?.data as OrderData[];
+
+    return responseData?.data as OrderData[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<OrderData[]>(

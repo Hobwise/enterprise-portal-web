@@ -4,8 +4,16 @@ import api, { handleError } from '../../apiService';
 export async function getPaymentByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
+  const payload = [
+    {
+      status: 'All',
+      page: 1,
+      pageSize: 10,
+    },
+  ];
+
   try {
-    const data = await api.post(DASHBOARD.paymentByBusiness, {
+    const data = await api.post(DASHBOARD.paymentByBusiness, payload, {
       headers,
     });
 
