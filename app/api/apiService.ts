@@ -76,8 +76,10 @@ const api = axios.create({
 let refreshInProgress = false;
 api.interceptors.request.use(async (config) => {
   const userData = getJsonItemFromLocalStorage('userInformation');
+  const business = getJsonItemFromLocalStorage('business');
   const token = userData?.token;
   const cooperateID = userData?.cooperateID;
+  const businessId = business?.businessId;
 
   if (
     userData?.tokenExpiry &&
@@ -97,6 +99,9 @@ api.interceptors.request.use(async (config) => {
 
   if (cooperateID) {
     config.headers['cooperateId'] = cooperateID;
+  }
+  if (businessId) {
+    config.headers['businessId'] = businessId;
   }
 
   const isMultipartFormData =

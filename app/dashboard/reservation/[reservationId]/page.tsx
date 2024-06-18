@@ -130,13 +130,17 @@ const ReservationDetails = () => {
                 <div className='flex gap-2  text-[14px] font-[400]'>
                   <p className='text-[#3D424A]'>RESERVATION FEE</p>
                   <p className='text-[#3D424A] font-bold'>
-                    {formatPrice(reservationItem?.reservationFee)}
+                    {reservationItem?.reservationFee
+                      ? formatPrice(reservationItem?.reservationFee)
+                      : formatPrice(0)}
                   </p>
                 </div>
                 <div className='flex gap-2  text-[14px] font-[400]'>
                   <p className='text-[#3D424A]'>MINIMUM SPEND</p>
                   <p className='text-[#3D424A] font-bold'>
-                    {formatPrice(reservationItem?.minimumSpend)}
+                    {reservationItem?.minimumSpend
+                      ? formatPrice(reservationItem?.minimumSpend)
+                      : formatPrice(0)}
                   </p>
                 </div>
               </div>

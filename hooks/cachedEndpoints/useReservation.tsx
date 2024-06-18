@@ -13,7 +13,7 @@ const useReservation = () => {
     const responseData = await getReservations(
       businessInformation[0]?.businessId
     );
-    return responseData?.data?.data as payloadReservationItem[];
+    return responseData?.data?.data?.reservations as payloadReservationItem[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<

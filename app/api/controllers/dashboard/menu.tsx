@@ -80,9 +80,16 @@ export async function uploadFilemultipleMenuItem(
 }
 export async function getMenuByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
+  const payload = [
+    {
+      menuId: '1ceaa4f9-855c-4666-b6b8-0cef3d35552b',
+      page: 1,
+      pageSize: 1,
+    },
+  ];
 
   try {
-    const data = await api.post(DASHBOARD.getMenuByBusiness, {
+    const data = await api.post(DASHBOARD.getMenuByBusiness, payload, {
       headers,
     });
 

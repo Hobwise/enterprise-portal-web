@@ -28,7 +28,7 @@ export async function getReservations(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
   try {
-    const data = await api.post(DASHBOARD.reservationsByBusiness, {
+    const data = await api.get(DASHBOARD.reservationsByBusiness, {
       headers,
     });
 

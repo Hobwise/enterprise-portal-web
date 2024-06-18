@@ -30,6 +30,7 @@ const Reservation: React.FC = () => {
   const business = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { data, isLoading, isError, refetch } = useReservation();
+  console.log(data, 'datat');
 
   const [searchQuery, setSearchQuery] = useState('');
 
