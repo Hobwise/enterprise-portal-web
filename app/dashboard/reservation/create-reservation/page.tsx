@@ -29,6 +29,7 @@ import {
 } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
@@ -36,6 +37,7 @@ import Success from '../../../../public/assets/images/success.png';
 
 const AddNewReservation = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const router = useRouter();
   const getReservationSavedToDraft = getJsonItemFromLocalStorage(
     'saveReservationToDraft'
   );
@@ -232,6 +234,7 @@ const AddNewReservation = () => {
           <CustomTextArea
             value={reservationPayload.reservationDescription}
             name='reservationDescription'
+            errorMessage={response?.errors?.reservationDescription?.[0]}
             onChange={handleInputChange}
             label='Add a description for this reservation'
             placeholder='Add a description'
