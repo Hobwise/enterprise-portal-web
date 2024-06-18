@@ -82,7 +82,7 @@ export async function getMenuByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
   const payload = [
     {
-      menuId: '1ceaa4f9-855c-4666-b6b8-0cef3d35552b',
+      menuId: '',
       page: 1,
       pageSize: 10,
     },
