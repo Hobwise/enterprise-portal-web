@@ -19,7 +19,6 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
             }}
             variant={'underlined'}
             aria-label='menu filter'
-            // onChange={handleTabChange}
           >
             {menus?.map((menu: any) => {
               return (
@@ -37,7 +36,7 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
                           base: `text-xs h-5  w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                         }}
                       >
-                        {menu?.items?.length}
+                        {menu?.totalCount}
                       </Chip>
                     </div>
                   }

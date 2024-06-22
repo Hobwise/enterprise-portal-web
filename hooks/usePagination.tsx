@@ -2,11 +2,14 @@
 import { Button, Pagination, PaginationItemType, cn } from '@nextui-org/react';
 import React from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
+import { useGlobalContext } from './globalProvider';
 
 const usePagination = (arrayToMap, columns, visibleColumn) => {
-  const [page, setPage] = React.useState(1);
+  const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
+
+  const refinedArrayToMap = arrayToMap ? arrayToMap?.totalPages : 1;
   const [filterValue, setFilterValue] = React.useState('');
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
+
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(
@@ -73,7 +76,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
     );
   };
 
-  const pages = Math.ceil(arrayToMap?.length / rowsPerPage);
+  // const pages = Math.ceil(arrayToMap?.length / rowsPerPage);
   const hasSearchFilter = Boolean(filterValue);
 
   const headerColumns = React.useMemo(() => {
@@ -84,40 +87,11 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
     );
   }, [visibleColumns]);
 
-  const filteredItems = React.useMemo(() => {
-    let filteredMenus = [...arrayToMap];
-
-    if (hasSearchFilter) {
-      filteredMenus = filteredMenus.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase())
-      );
-    }
-
-    return filteredMenus;
-  }, [arrayToMap, filterValue, statusFilter]);
-
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems, rowsPerPage]);
-
-  const sortedItems = React.useMemo(() => {
-    return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
-
-      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
-    });
-  }, [sortDescriptor, items]);
-
   const onNextPage = React.useCallback(() => {
-    if (page < pages) {
+    if (page < refinedArrayToMap) {
       setPage(page + 1);
     }
-  }, [page, pages]);
+  }, [page, refinedArrayToMap]);
 
   const onPreviousPage = React.useCallback(() => {
     if (page > 1) {
@@ -146,7 +120,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
           disableCursorAnimation
           showControls
           page={page}
-          total={pages}
+          total={refinedArrayToMap}
           onChange={setPage}
           className='gap-2'
           radius='full'
@@ -156,7 +130,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
 
         <div className='hidden md:flex w-[30%] justify-end gap-2'>
           <Button
-            isDisabled={pages === 1}
+            isDisabled={refinedArrayToMap === 1}
             size='sm'
             variant='flat'
             onPress={onPreviousPage}
@@ -164,7 +138,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
             Previous
           </Button>
           <Button
-            isDisabled={pages === 1}
+            isDisabled={refinedArrayToMap === 1}
             size='sm'
             variant='flat'
             onPress={onNextPage}
@@ -174,7 +148,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
         </div>
       </div>
     );
-  }, [selectedKeys, items.length, page, pages, hasSearchFilter]);
+  }, [selectedKeys, page, refinedArrayToMap, hasSearchFilter]);
 
   const onClear = React.useCallback(() => {
     setFilterValue('');
@@ -205,7 +179,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
     headerColumns,
     setSelectedKeys,
     selectedKeys,
-    sortedItems,
+
     sortDescriptor,
     setSortDescriptor,
     filterValue,

@@ -1,7 +1,7 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
 import MenuList from '@/components/ui/dashboard/menu/menu';
@@ -34,6 +34,7 @@ import {
   IoSearchOutline,
 } from 'react-icons/io5';
 
+import { useGlobalContext } from '@/hooks/globalProvider';
 import { MdOutlineFileDownload } from 'react-icons/md';
 
 const Menu: React.FC = () => {
@@ -46,6 +47,11 @@ const Menu: React.FC = () => {
 
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useMenu();
+  const { setPage } = useGlobalContext();
+
+  useEffect(() => {
+    setPage(1);
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -94,6 +100,7 @@ const Menu: React.FC = () => {
         <MenuList
           menus={filteredItems}
           onOpen={onOpen}
+          refetch={refetch}
           searchQuery={searchQuery}
         />
       );
@@ -126,7 +133,7 @@ const Menu: React.FC = () => {
     const count = Number(currentValue.totalCount);
     return accumulator + count;
   }, 0);
-
+  // {tableTotalCount(data)}
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>

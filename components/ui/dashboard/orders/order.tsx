@@ -45,7 +45,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'dateCreated',
   'actions',
 ];
-const OrdersList = ({ orders, searchQuery }: any) => {
+const OrdersList = ({ orders, searchQuery, refetch }: any) => {
   const router = useRouter();
 
   const [singleOrder, setSingleOrder] = React.useState('');
@@ -54,6 +54,14 @@ const OrdersList = ({ orders, searchQuery }: any) => {
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [filteredOrder, setFilteredOrder] = React.useState(orders[0]?.orders);
+
+  const handleTabClick = (index) => {
+    setPage(1);
+    const filteredOrder = orders.filter((item) => item.name === index);
+    setTableStatus(filteredOrder[0]?.name);
+
+    setFilteredOrder(filteredOrder[0]?.orders);
+  };
 
   useEffect(() => {
     if (orders && searchQuery) {
@@ -71,7 +79,7 @@ const OrdersList = ({ orders, searchQuery }: any) => {
           ),
         }))
         .filter((menu) => menu?.orders?.length > 0);
-      setFilteredOrder(filteredData.length > 0 ? filteredData[0].orders : []);
+      setFilteredOrder(filteredData?.length > 0 ? filteredData[0]?.orders : []);
     } else {
       setFilteredOrder(orders?.[0]?.orders);
     }
@@ -83,12 +91,22 @@ const OrdersList = ({ orders, searchQuery }: any) => {
     setIsOpenDelete,
     isOpenEdit,
     toggleModalEdit,
+    page,
+    rowsPerPage,
+    setTableStatus,
+    tableStatus,
+    setPage,
   } = useGlobalContext();
+
+  const matchingObject = orders?.find(
+    (category) => category?.name === tableStatus
+  );
+  const matchingObjectArray = matchingObject ? matchingObject?.orders : [];
   const {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-    sortedItems,
+
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -99,7 +117,7 @@ const OrdersList = ({ orders, searchQuery }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(filteredOrder, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
   const toggleCancelModal = (order: any) => {
     setSingleOrder(order);
@@ -114,11 +132,6 @@ const OrdersList = ({ orders, searchQuery }: any) => {
 
   const handleTabChange = (index) => {
     setValue(index);
-  };
-
-  const handleTabClick = (index) => {
-    const filteredOrder = orders.filter((item) => item.name === index);
-    setFilteredOrder(filteredOrder[0]?.orders);
   };
 
   const renderCell = React.useCallback((order, columnKey) => {
@@ -234,9 +247,13 @@ const OrdersList = ({ orders, searchQuery }: any) => {
     visibleColumns,
     onSearchChange,
     onRowsPerPageChange,
-    filteredOrder.length,
+    filteredOrder?.length,
     hasSearchFilter,
   ]);
+
+  useEffect(() => {
+    refetch();
+  }, [page, rowsPerPage, tableStatus]);
 
   return (
     <section className='border border-primaryGrey rounded-lg'>
@@ -268,7 +285,7 @@ const OrdersList = ({ orders, searchQuery }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No orders found'} items={sortedItems}>
+        <TableBody emptyContent={'No orders found'} items={matchingObjectArray}>
           {(item) => (
             <TableRow key={item?.name}>
               {(columnKey) => (

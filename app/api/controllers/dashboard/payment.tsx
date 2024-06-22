@@ -1,14 +1,19 @@
 import { DASHBOARD } from '../../api-url';
 import api, { handleError } from '../../apiService';
 
-export async function getPaymentByBusiness(businessId: string) {
+export async function getPaymentByBusiness(
+  businessId: string,
+  page: any,
+  rowsPerPage: any,
+  tableStatus: any
+) {
   const headers = businessId ? { businessId } : {};
 
   const payload = [
     {
-      status: 'All',
-      page: 1,
-      pageSize: 10,
+      status: tableStatus || 'All',
+      page: page || 1,
+      pageSize: rowsPerPage || 10,
     },
   ];
 

@@ -1,24 +1,29 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { CustomLoading } from '@/lib/utils';
+import { CustomLoading, tableTotalCount } from '@/lib/utils';
 
 import { CustomInput } from '@/components/CustomInput';
 import Error from '@/components/error';
 import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
 import PaymentsList from '@/components/ui/dashboard/payments/payment';
 import usePayment from '@/hooks/cachedEndpoints/usePayment';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import { downloadCSV } from '@/lib/downloadToExcel';
-import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
+import { Button, ButtonGroup, Chip } from '@nextui-org/react';
 import { IoSearchOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 
 const Payments: React.FC = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { data, isLoading, isError, refetch } = usePayment();
   const [searchQuery, setSearchQuery] = useState('');
+  const { setPage } = useGlobalContext();
+
+  useEffect(() => {
+    setPage(1);
+  }, []);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -47,7 +52,7 @@ const Payments: React.FC = () => {
       return (
         <PaymentsList
           payments={filteredItems}
-          onOpen={onOpen}
+          refetch={refetch}
           searchQuery={searchQuery}
         />
       );
@@ -82,7 +87,7 @@ const Payments: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data[0].payments?.length}
+                  {tableTotalCount(data)}
                 </Chip>
               </div>
             ) : (
@@ -120,17 +125,6 @@ const Payments: React.FC = () => {
               </ButtonGroup>
             </>
           )}
-
-          {/* <CustomButton
-            onClick={() => router.push('/dashboard/orders/place-order')}
-            className='py-2 px-4 mb-0 text-white'
-            backgroundColor='bg-primaryColor'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              <IoAddCircleOutline className='text-[22px]' />
-              <p>{'Create order'} </p>
-            </div>
-          </CustomButton> */}
         </div>
       </div>
 

@@ -14,7 +14,7 @@ const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
             tabContent: 'group-data-[selected=true]:text-primaryColor',
           }}
           variant={'underlined'}
-          aria-label='menu filter'
+          aria-label='order filter'
           onChange={handleTabChange}
         >
           {orders?.map((order: any) => {
@@ -33,7 +33,7 @@ const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
                         base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                       }}
                     >
-                      {order?.orders?.length}
+                      {order?.totalCount}
                     </Chip>
                   </div>
                 }

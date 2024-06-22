@@ -1,12 +1,7 @@
 'use client';
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 
-const Filters = ({
-  onOpen,
-  payments,
-  handleTabChange,
-  handleTabClick,
-}: any) => {
+const Filters = ({ payments, handleTabChange, handleTabClick }: any) => {
   return (
     <>
       <div className='flex  relative w-full top-4 px-3  border-b border-primaryGrey justify-between'>
@@ -19,7 +14,7 @@ const Filters = ({
             tabContent: 'group-data-[selected=true]:text-primaryColor',
           }}
           variant={'underlined'}
-          aria-label='menu filter'
+          aria-label='payment filter'
           onChange={handleTabChange}
         >
           {payments?.map((payment: any) => {
@@ -38,7 +33,7 @@ const Filters = ({
                         base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                       }}
                     >
-                      {payment?.payments?.length}
+                      {payment?.totalCount}
                     </Chip>
                   </div>
                 }

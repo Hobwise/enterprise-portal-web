@@ -45,6 +45,7 @@
 import { getMenuByBusiness } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
+import { useGlobalContext } from '../globalProvider';
 
 type MenuData = {
   name: string;
@@ -63,21 +64,27 @@ type MenuData = {
 };
 
 const useMenu = () => {
+  const { page, rowsPerPage, tableStatus } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
 
-  const getAllMenus = async () => {
+  const getAllMenus = async ({ queryKey }) => {
+    const [_key, { page, rowsPerPage, tableStatus }] = queryKey;
     const responseData = await getMenuByBusiness(
-      businessInformation[0]?.businessId
+      businessInformation[0]?.businessId,
+      page,
+      rowsPerPage,
+      tableStatus
     );
 
     return responseData?.data?.data as MenuData[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<MenuData[]>(
-    'menus',
+    ['menus', { page, rowsPerPage, tableStatus }],
     getAllMenus,
     {
       staleTime: 1000 * 60 * 1,
+      keepPreviousData: true,
     }
   );
 

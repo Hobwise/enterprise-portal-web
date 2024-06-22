@@ -2,6 +2,7 @@
 import { getPaymentByBusiness } from '@/app/api/controllers/dashboard/payment';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
+import { useGlobalContext } from '../globalProvider';
 
 interface Payment {
   id: string;
@@ -26,18 +27,27 @@ interface OrderSummary {
 }
 
 const usePayment = () => {
+  const { page, rowsPerPage, tableStatus } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
 
-  const getAllPayments = async () => {
+  const getAllPayments = async ({ queryKey }) => {
+    const [_key, { page, rowsPerPage, tableStatus }] = queryKey;
     const responseData = await getPaymentByBusiness(
-      businessInformation[0]?.businessId
+      businessInformation[0]?.businessId,
+      page,
+      rowsPerPage,
+      tableStatus
     );
     return responseData?.data?.data as OrderSummary[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<OrderSummary[]>(
-    'payments',
-    getAllPayments
+    ['payments', { page, rowsPerPage, tableStatus }],
+
+    getAllPayments,
+    {
+      keepPreviousData: true,
+    }
   );
 
   return {

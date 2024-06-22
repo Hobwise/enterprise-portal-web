@@ -1,9 +1,9 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-import { CustomLoading } from '@/lib/utils';
+import { CustomLoading, tableTotalCount } from '@/lib/utils';
 
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
@@ -11,6 +11,7 @@ import Error from '@/components/error';
 import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
 import OrdersList from '@/components/ui/dashboard/orders/order';
 import useOrder from '@/hooks/cachedEndpoints/useOrder';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import { Button, ButtonGroup, Chip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
@@ -21,7 +22,14 @@ const Orders: React.FC = () => {
   const router = useRouter();
 
   const { data, isLoading, isError, refetch } = useOrder();
+
   const [searchQuery, setSearchQuery] = useState('');
+
+  const { setPage } = useGlobalContext();
+
+  useEffect(() => {
+    setPage(1);
+  }, []);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -46,7 +54,13 @@ const Orders: React.FC = () => {
 
   const getScreens = () => {
     if (data?.length > 0) {
-      return <OrdersList orders={filteredItems} searchQuery={searchQuery} />;
+      return (
+        <OrdersList
+          orders={filteredItems}
+          refetch={refetch}
+          searchQuery={searchQuery}
+        />
+      );
     } else if (isError) {
       return <Error onClick={() => refetch()} />;
     } else {
@@ -66,6 +80,7 @@ const Orders: React.FC = () => {
       }))
     );
   }, [data]);
+
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
@@ -79,7 +94,7 @@ const Orders: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data[0].orders?.length}
+                  {tableTotalCount(data)}
                 </Chip>
               </div>
             ) : (

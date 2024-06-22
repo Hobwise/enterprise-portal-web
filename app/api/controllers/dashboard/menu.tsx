@@ -78,16 +78,21 @@ export async function uploadFilemultipleMenuItem(
     handleError(error);
   }
 }
-export async function getMenuByBusiness(businessId: string) {
+export async function getMenuByBusiness(
+  businessId: string,
+  page: any,
+  rowsPerPage: any,
+  tableStatus: any
+) {
   const headers = businessId ? { businessId } : {};
+
   const payload = [
     {
-      menuId: '',
-      page: 1,
-      pageSize: 10,
+      menuId: tableStatus || '',
+      page: page || 1,
+      pageSize: rowsPerPage || 10,
     },
   ];
-
   try {
     const data = await api.post(DASHBOARD.getMenuByBusiness, payload, {
       headers,

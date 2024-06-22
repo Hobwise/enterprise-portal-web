@@ -23,6 +23,7 @@ import { columns, statusColorMap, statusDataMap } from './data';
 
 import moment from 'moment';
 
+import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice } from '@/lib/utils';
 import ApprovePayment from './approvePayment';
@@ -39,7 +40,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'status',
   'actions',
 ];
-const PaymentsList = ({ payments, onOpen, searchQuery }: any) => {
+const PaymentsList = ({ payments, searchQuery, refetch }: any) => {
   const [singlePayment, setSinglePayment] = React.useState('');
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
 
@@ -69,11 +70,20 @@ const PaymentsList = ({ payments, onOpen, searchQuery }: any) => {
       setFilteredPayment(payments?.[0]?.payments);
     }
   }, [searchQuery, payments]);
+
+  const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
+    useGlobalContext();
+
+  const matchingObject = payments?.find(
+    (category) => category?.name === tableStatus
+  );
+  const matchingObjectArray = matchingObject ? matchingObject?.orders : [];
+
   const {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-    sortedItems,
+
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -84,7 +94,7 @@ const PaymentsList = ({ payments, onOpen, searchQuery }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(filteredPayment, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
   const toggleApproveModal = (payment: any) => {
     setSinglePayment(payment);
@@ -98,8 +108,10 @@ const PaymentsList = ({ payments, onOpen, searchQuery }: any) => {
   };
 
   const handleTabClick = (index) => {
-    const filteredMenu = payments.filter((item) => item.name === index);
-    setFilteredPayment(filteredMenu[0]?.payments);
+    setPage(1);
+    const filteredPayment = payments.filter((item) => item.name === index);
+    setTableStatus(filteredPayment[0]?.name);
+    setFilteredPayment(filteredPayment[0]?.payments);
   };
 
   const renderCell = React.useCallback((payment, columnKey) => {
@@ -173,7 +185,6 @@ const PaymentsList = ({ payments, onOpen, searchQuery }: any) => {
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        onOpen={onOpen}
         payments={payments}
         handleTabChange={handleTabChange}
         value={value}
@@ -189,6 +200,10 @@ const PaymentsList = ({ payments, onOpen, searchQuery }: any) => {
     filteredPayment.length,
     hasSearchFilter,
   ]);
+
+  useEffect(() => {
+    refetch();
+  }, [page, rowsPerPage, tableStatus]);
 
   return (
     <>
@@ -223,7 +238,10 @@ const PaymentsList = ({ payments, onOpen, searchQuery }: any) => {
               </TableColumn>
             )}
           </TableHeader>
-          <TableBody emptyContent={'No payments found'} items={sortedItems}>
+          <TableBody
+            emptyContent={'No payments found'}
+            items={matchingObjectArray}
+          >
             {(item) => (
               <TableRow key={item?.name}>
                 {(columnKey) => (

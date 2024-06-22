@@ -28,14 +28,19 @@ export const orderSchema = z.object({
   quickResponseID: z.string().trim().min(1, 'Select a Table'),
 });
 
-export async function getOrderByBusiness(businessId: string) {
+export async function getOrderByBusiness(
+  businessId: string,
+  page: any,
+  rowsPerPage: any,
+  tableStatus: any
+) {
   const headers = businessId ? { businessId } : {};
 
   const payload = [
     {
-      status: 'All',
-      page: 1,
-      pageSize: 10,
+      status: tableStatus || 'All',
+      page: page || 1,
+      pageSize: rowsPerPage || 10,
     },
   ];
 

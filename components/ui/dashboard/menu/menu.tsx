@@ -26,7 +26,7 @@ import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
-const MenuList = ({ menus, onOpen, searchQuery }: any) => {
+const MenuList = ({ menus, onOpen, searchQuery, refetch }: any) => {
   const [filteredMenu, setFilteredMenu] = React.useState(menus[0]?.items);
   useEffect(() => {
     if (menus && searchQuery) {
@@ -47,11 +47,39 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
       setFilteredMenu(menus?.[0]?.items);
     }
   }, [searchQuery, menus]);
+
+  useEffect(() => {
+    if (tableStatus === 'All') {
+      setTableStatus(filteredMenu[0]?.id);
+    }
+    console.log(tableStatus, 'tableStatus ');
+  }, []);
+
+  const {
+    toggleModalDelete,
+    isOpenDelete,
+    setIsOpenDelete,
+    isOpenEdit,
+    toggleModalEdit,
+    page,
+    rowsPerPage,
+    setTableStatus,
+    tableStatus,
+    setPage,
+  } = useGlobalContext();
+
+  const matchingObject = menus?.find(
+    (category) => category?.id === tableStatus
+  );
+
+  const matchingObjectArray = matchingObject
+    ? matchingObject?.items
+    : filteredMenu;
   const {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-    sortedItems,
+
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -62,14 +90,7 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(filteredMenu, columns, INITIAL_VISIBLE_COLUMNS);
-  const {
-    toggleModalDelete,
-    isOpenDelete,
-    setIsOpenDelete,
-    isOpenEdit,
-    toggleModalEdit,
-  } = useGlobalContext();
+  } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
   const [value, setValue] = useState('');
 
@@ -78,7 +99,10 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
   };
 
   const handleTabClick = (index) => {
+    setPage(1);
     const filteredMenu = menus.filter((item) => item.name === index);
+
+    setTableStatus(filteredMenu[0]?.id);
     setFilteredMenu(filteredMenu[0]?.items);
   };
 
@@ -182,6 +206,10 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
     hasSearchFilter,
   ]);
 
+  useEffect(() => {
+    refetch();
+  }, [page, rowsPerPage, tableStatus]);
+
   return (
     <section>
       <Table
@@ -211,7 +239,10 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No menu items found'} items={sortedItems}>
+        <TableBody
+          emptyContent={'No menu items found'}
+          items={matchingObjectArray}
+        >
           {(item) => (
             <TableRow key={item?.name}>
               {(columnKey) => (

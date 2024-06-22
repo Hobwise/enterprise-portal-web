@@ -221,3 +221,7 @@ export const SmallLoader = () => {
     </svg>
   );
 };
+
+export const tableTotalCount = (data: any) => {
+  return data?.reduce((sum, category) => sum + category.totalCount, 0);
+};
