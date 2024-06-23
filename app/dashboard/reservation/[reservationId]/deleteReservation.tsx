@@ -1,6 +1,6 @@
 import { deleteReservation } from '@/app/api/controllers/dashboard/reservations';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { notify } from '@/lib/utils';
 import {
   Button,
   Modal,
@@ -17,8 +17,6 @@ const DeleteReservation = ({
   toggleModalDelete,
   reservationItem,
 }: any) => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
-
   const { refetch } = useReservation();
 
   const [loading, setLoading] = useState(false);

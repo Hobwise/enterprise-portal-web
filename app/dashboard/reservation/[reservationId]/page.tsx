@@ -29,13 +29,10 @@ import EditReservation from './editReservation';
 
 const ReservationDetails = () => {
   const searchParams = useSearchParams();
-
-  // const [isError, setIsError] = useState(false);
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const reservationId = searchParams.get('reservationId') || null;
-  // const [reservationItem, setReservationItem] = useState<any>(null);
-  // const [isLoading, setIsLoading] = useState(true);
+
   const { data, isLoading, isError, refetch } =
     useSingleReservation(reservationId);
 
