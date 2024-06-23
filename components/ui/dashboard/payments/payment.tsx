@@ -40,7 +40,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'status',
   'actions',
 ];
-const PaymentsList = ({ payments, searchQuery, refetch }: any) => {
+const PaymentsList = ({ payments, searchQuery }: any) => {
   const [singlePayment, setSinglePayment] = React.useState('');
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
 
@@ -200,10 +200,6 @@ const PaymentsList = ({ payments, searchQuery, refetch }: any) => {
     filteredPayment.length,
     hasSearchFilter,
   ]);
-
-  useEffect(() => {
-    refetch();
-  }, [page, rowsPerPage, tableStatus]);
 
   return (
     <>

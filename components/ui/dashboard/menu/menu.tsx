@@ -26,8 +26,24 @@ import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
-const MenuList = ({ menus, onOpen, searchQuery, refetch }: any) => {
+const MenuList = ({ menus, onOpen, searchQuery }: any) => {
   const [filteredMenu, setFilteredMenu] = React.useState(menus[0]?.items);
+  const {
+    toggleModalDelete,
+    isOpenDelete,
+    setIsOpenDelete,
+    isOpenEdit,
+    toggleModalEdit,
+    page,
+    rowsPerPage,
+    setTableStatus,
+    tableStatus,
+    setPage,
+  } = useGlobalContext();
+  useEffect(() => {
+    setTableStatus(menus[0]?.id);
+  }, []);
+
   useEffect(() => {
     if (menus && searchQuery) {
       const filteredData = menus
@@ -47,26 +63,6 @@ const MenuList = ({ menus, onOpen, searchQuery, refetch }: any) => {
       setFilteredMenu(menus?.[0]?.items);
     }
   }, [searchQuery, menus]);
-
-  useEffect(() => {
-    if (tableStatus === 'All') {
-      setTableStatus(filteredMenu[0]?.id);
-    }
-    console.log(tableStatus, 'tableStatus ');
-  }, []);
-
-  const {
-    toggleModalDelete,
-    isOpenDelete,
-    setIsOpenDelete,
-    isOpenEdit,
-    toggleModalEdit,
-    page,
-    rowsPerPage,
-    setTableStatus,
-    tableStatus,
-    setPage,
-  } = useGlobalContext();
 
   const matchingObject = menus?.find(
     (category) => category?.id === tableStatus
@@ -205,10 +201,6 @@ const MenuList = ({ menus, onOpen, searchQuery, refetch }: any) => {
     filteredMenu.length,
     hasSearchFilter,
   ]);
-
-  useEffect(() => {
-    refetch();
-  }, [page, rowsPerPage, tableStatus]);
 
   return (
     <section>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { memo, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import {
   Chip,
@@ -45,7 +45,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'dateCreated',
   'actions',
 ];
-const OrdersList = ({ orders, searchQuery, refetch }: any) => {
+const OrdersList = ({ orders, searchQuery }: any) => {
   const router = useRouter();
 
   const [singleOrder, setSingleOrder] = React.useState('');
@@ -304,4 +304,4 @@ const OrdersList = ({ orders, searchQuery, refetch }: any) => {
   );
 };
 
-export default memo(OrdersList);
+export default OrdersList;

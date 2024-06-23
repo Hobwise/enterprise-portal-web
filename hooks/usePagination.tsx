@@ -116,7 +116,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
   const bottomContent = (
     <div className='py-2 px-2 flex justify-between items-center'>
       <div className='text-[14px] text-grey600'>
-        Page {arrayToMap.currentPage} of {arrayToMap.totalPages}
+        Page {arrayToMap?.currentPage} of {arrayToMap?.totalPages}
       </div>
       <Pagination
         disableCursorAnimation
@@ -133,7 +133,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
       <div className='hidden md:flex w-[30%] justify-end gap-2'>
         <Button
           isDisabled={
-            refinedArrayToMap === 1 || arrayToMap.hasPrevious === false
+            refinedArrayToMap === 1 || arrayToMap?.hasPrevious === false
           }
           size='sm'
           variant='flat'
@@ -142,7 +142,7 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
           Previous
         </Button>
         <Button
-          isDisabled={refinedArrayToMap === 1 || arrayToMap.hasNext === false}
+          isDisabled={refinedArrayToMap === 1 || arrayToMap?.hasNext === false}
           size='sm'
           variant='flat'
           onPress={onNextPage}
