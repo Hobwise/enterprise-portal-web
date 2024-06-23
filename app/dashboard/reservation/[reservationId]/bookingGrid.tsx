@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 
+import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import {
   Chip,
@@ -25,11 +26,19 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 const BookingGrid = ({ data }: any) => {
   //   console.log(data, 'data');
+
+  const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
+    useGlobalContext();
+
+  const matchingObject = data?.find(
+    (category) => category?.name === tableStatus
+  );
+  const matchingObjectArray = matchingObject ? matchingObject?.orders : [];
   const {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-    sortedItems,
+
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -40,7 +49,7 @@ const BookingGrid = ({ data }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
   const [value, setValue] = useState('');
   const [filteredBookings, setFilteredBookings] = React.useState(
@@ -51,7 +60,9 @@ const BookingGrid = ({ data }: any) => {
   };
 
   const handleTabClick = (index) => {
+    setPage(1);
     const filteredBookings = data.filter((item) => item.name === index);
+    setTableStatus(filteredOrder[0]?.name);
     setFilteredBookings(filteredBookings[0]?.bookings);
   };
 
@@ -147,7 +158,7 @@ const BookingGrid = ({ data }: any) => {
         isCompact
         removeWrapper
         allowsSorting
-        aria-label='list of orders'
+        aria-label='list of bookings'
         bottomContent={bottomContent}
         bottomContentPlacement='outside'
         classNames={classNames}
@@ -170,7 +181,10 @@ const BookingGrid = ({ data }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No bookings found'} items={sortedItems}>
+        <TableBody
+          emptyContent={'No bookings found'}
+          items={matchingObjectArray}
+        >
           {(item) => (
             <TableRow key={item?.name}>
               {(columnKey) => (

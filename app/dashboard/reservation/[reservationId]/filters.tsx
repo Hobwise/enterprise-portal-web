@@ -33,7 +33,7 @@ const Filters = ({ bookings, handleTabChange, handleTabClick }: any) => {
                         base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                       }}
                     >
-                      {booking?.bookings?.length}
+                      {booking?.totalCount}
                     </Chip>
                   </div>
                 }

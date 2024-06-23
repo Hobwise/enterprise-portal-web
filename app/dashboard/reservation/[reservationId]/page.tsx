@@ -1,8 +1,9 @@
 'use client';
 
-import { getReservation } from '@/app/api/controllers/dashboard/reservations';
 import Container from '@/components/dashboardContainer';
 import Error from '@/components/error';
+import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import useTextCopy from '@/hooks/useTextCopy';
 import { CustomLoading, formatPrice } from '@/lib/utils';
 import {
@@ -29,12 +30,21 @@ import EditReservation from './editReservation';
 const ReservationDetails = () => {
   const searchParams = useSearchParams();
 
-  const [isError, setIsError] = useState(false);
+  // const [isError, setIsError] = useState(false);
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const reservationId = searchParams.get('reservationId') || null;
-  const [reservationItem, setReservationItem] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [reservationItem, setReservationItem] = useState<any>(null);
+  // const [isLoading, setIsLoading] = useState(true);
+  const { data, isLoading, isError, refetch } =
+    useSingleReservation(reservationId);
+
+  const { setPage, setTableStatus } = useGlobalContext();
+
+  useEffect(() => {
+    setTableStatus('All');
+    setPage(1);
+  }, []);
 
   const toggleModalDelete = () => {
     setIsOpenDelete(!isOpenDelete);
@@ -42,24 +52,25 @@ const ReservationDetails = () => {
   const toggleModalEdit = () => {
     setIsOpenEdit(!isOpenEdit);
   };
-  const getSingleReservation = async (loading = true) => {
-    setIsLoading(loading);
-    const data = await getReservation(reservationId);
-    setIsLoading(false);
+  // const getSingleReservation = async (loading = true) => {
+  //   setIsLoading(loading);
+  //   const data = await getReservation(reservationId);
+  //   setIsLoading(false);
 
-    if (data?.data?.isSuccessful) {
-      setReservationItem(data?.data?.data);
-    } else if (data?.data?.error) {
-      setIsError(true);
-    }
-  };
+  //   if (data?.data?.isSuccessful) {
+  //     console.log(data?.data?.data, 'reservation item');
+  //     setReservationItem(data?.data?.data);
+  //   } else if (data?.data?.error) {
+  //     setIsError(true);
+  //   }
+  // };
 
-  useEffect(() => {
-    getSingleReservation();
-  }, []);
+  // useEffect(() => {
+  //   getSingleReservation();
+  // }, []);
 
   if (isError) {
-    return <Error onClick={() => getSingleReservation()} />;
+    return <Error onClick={() => refetch()} />;
   }
 
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
@@ -121,25 +132,25 @@ const ReservationDetails = () => {
           <div className='flex lg:flex-row flex-col gap-3 justify-between '>
             <div className='space-y-2 lg:w-[500px] w-full'>
               <h2 className='text-black font-[600] text-[28px]'>
-                {reservationItem?.reservationName}
+                {data?.reservationName}
               </h2>
               <p className='text-[#3D424A] text-[14px] font-[400]'>
-                {reservationItem?.reservationDescription}
+                {data?.reservationDescription}
               </p>
               <div className='flex lg:gap-3 gap-0 lg:flex-row flex-col'>
                 <div className='flex gap-2  text-[14px] font-[400]'>
                   <p className='text-[#3D424A]'>RESERVATION FEE</p>
                   <p className='text-[#3D424A] font-bold'>
-                    {reservationItem?.reservationFee
-                      ? formatPrice(reservationItem?.reservationFee)
+                    {data?.reservationFee
+                      ? formatPrice(data?.reservationFee)
                       : formatPrice(0)}
                   </p>
                 </div>
                 <div className='flex gap-2  text-[14px] font-[400]'>
                   <p className='text-[#3D424A]'>MINIMUM SPEND</p>
                   <p className='text-[#3D424A] font-bold'>
-                    {reservationItem?.minimumSpend
-                      ? formatPrice(reservationItem?.minimumSpend)
+                    {data?.minimumSpend
+                      ? formatPrice(data?.minimumSpend)
                       : formatPrice(0)}
                   </p>
                 </div>
@@ -148,14 +159,14 @@ const ReservationDetails = () => {
             <div>
               <Image
                 src={
-                  reservationItem?.image
-                    ? `data:image/jpeg;base64,${reservationItem?.image}`
+                  data?.image
+                    ? `data:image/jpeg;base64,${data?.image}`
                     : noImage
                 }
                 width={60}
                 height={60}
                 style={{
-                  objectFit: reservationItem?.image ? 'cover' : 'contain',
+                  objectFit: data?.image ? 'cover' : 'contain',
                 }}
                 className={'bg-contain border  h-[100px] rounded-lg w-[159px]'}
                 aria-label='reservation image'
@@ -167,19 +178,19 @@ const ReservationDetails = () => {
           <Booking
             isLoading={isLoading}
             isError={isError}
-            reservationItem={reservationItem}
-            getSingleReservation={getSingleReservation}
+            reservationItem={data}
+            getSingleReservation={refetch}
           />
         </section>
       )}
       <DeleteReservation
-        reservationItem={reservationItem}
+        reservationItem={data}
         isOpenDelete={isOpenDelete}
         toggleModalDelete={toggleModalDelete}
       />
       <EditReservation
-        getReservation={getSingleReservation}
-        reservationItem={reservationItem}
+        getReservation={refetch}
+        reservationItem={data}
         isOpenEdit={isOpenEdit}
         toggleModalEdit={toggleModalEdit}
       />

@@ -20,6 +20,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { GrFormView } from 'react-icons/gr';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns } from './data';
@@ -178,7 +179,10 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
                       },
                     }}
                   >
-                    View reservation
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <GrFormView className='text-[20px]' />
+                      <p>View more</p>
+                    </div>
                   </Link>
                 </DropdownItem>
 
