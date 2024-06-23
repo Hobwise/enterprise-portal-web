@@ -52,22 +52,6 @@ const ReservationDetails = () => {
   const toggleModalEdit = () => {
     setIsOpenEdit(!isOpenEdit);
   };
-  // const getSingleReservation = async (loading = true) => {
-  //   setIsLoading(loading);
-  //   const data = await getReservation(reservationId);
-  //   setIsLoading(false);
-
-  //   if (data?.data?.isSuccessful) {
-  //     console.log(data?.data?.data, 'reservation item');
-  //     setReservationItem(data?.data?.data);
-  //   } else if (data?.data?.error) {
-  //     setIsError(true);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   getSingleReservation();
-  // }, []);
 
   if (isError) {
     return <Error onClick={() => refetch()} />;

@@ -38,5 +38,6 @@ export const DASHBOARD = {
   qr: 'api/v1/QuickResponse',
   // Reservations
   reservationsByBusiness: 'api/v1/Reservation/by-business',
-  reservation: 'api/v1/Reservation/fetch',
+  reservation: 'api/v1/Reservation',
+  singleReservation: 'api/v1/Reservation/fetch',
 };

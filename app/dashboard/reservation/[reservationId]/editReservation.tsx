@@ -144,7 +144,7 @@ const EditReservation = ({
 
     if (data?.data?.isSuccessful) {
       toggleModalEdit();
-      getReservation(false);
+      getReservation();
       refetch();
       toast.success('Reservation updated successfully');
       setSelectedImage('');
@@ -178,7 +178,7 @@ const EditReservation = ({
         {(onClose) => (
           <>
             <ModalBody>
-              <h1 className='text-center text-xl mt-3 font-[600] text-black'>
+              <h1 className=' text-xl mt-3 font-[600] text-black'>
                 Edit Reservation
               </h1>
               <div className='flex xl:flex-row flex-col gap-6'>
@@ -313,7 +313,7 @@ const EditReservation = ({
             </ModalBody>
             <ModalFooter>
               <CustomButton
-                className='w-32 mb-3 text-white'
+                className='w-32 mb-3 font-bold text-white'
                 loading={isLoading}
                 onClick={updateReservation}
                 type='submit'

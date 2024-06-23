@@ -84,7 +84,9 @@ export async function getReservation(
   ];
   const headers = reservationId ? { reservationId } : {};
   try {
-    const data = await api.post(DASHBOARD.reservation, payload, { headers });
+    const data = await api.post(DASHBOARD.singleReservation, payload, {
+      headers,
+    });
 
     return data;
   } catch (error) {
