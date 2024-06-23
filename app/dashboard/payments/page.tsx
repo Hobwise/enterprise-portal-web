@@ -49,7 +49,7 @@ const Payments: React.FC = () => {
   }, [data, searchQuery]);
 
   const getScreens = () => {
-    if (data?.length > 0) {
+    if (data?.[0]?.payments.length > 0) {
       return (
         <PaymentsList
           payments={filteredItems}
@@ -75,12 +75,13 @@ const Payments: React.FC = () => {
       customer: payment.customer,
     }))
   );
+
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {data?.length > 0 ? (
+            {data?.[0]?.payments.length > 0 ? (
               <div className='flex items-center'>
                 <span>All Payment</span>
                 <Chip
@@ -100,7 +101,7 @@ const Payments: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {data?.length > 0 && (
+          {data?.[0]?.payments.length > 0 && (
             <>
               <div>
                 <CustomInput

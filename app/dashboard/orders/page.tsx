@@ -54,7 +54,7 @@ const Orders: React.FC = () => {
   }, [data, searchQuery]);
 
   const getScreens = () => {
-    if (data?.length > 0) {
+    if (data[0]?.orders.length > 0) {
       return (
         <OrdersList
           orders={filteredItems}
@@ -87,7 +87,7 @@ const Orders: React.FC = () => {
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {data?.length > 0 ? (
+            {data[0]?.orders.length > 0 ? (
               <div className='flex items-center'>
                 <span>All orders</span>
                 <Chip
@@ -107,7 +107,7 @@ const Orders: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {data?.length > 0 && (
+          {data[0]?.orders.length > 0 && (
             <>
               <div>
                 <CustomInput
