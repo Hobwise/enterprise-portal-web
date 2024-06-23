@@ -33,7 +33,8 @@ const BookingGrid = ({ data }: any) => {
   const matchingObject = data?.find(
     (category) => category?.name === tableStatus
   );
-  const matchingObjectArray = matchingObject ? matchingObject?.orders : [];
+  const matchingObjectArray = matchingObject ? matchingObject?.bookings : [];
+  console.log(matchingObjectArray, 'matchingObjectArray');
   const {
     bottomContent,
     headerColumns,
@@ -62,7 +63,7 @@ const BookingGrid = ({ data }: any) => {
   const handleTabClick = (index) => {
     setPage(1);
     const filteredBookings = data.filter((item) => item.name === index);
-    setTableStatus(filteredOrder[0]?.name);
+    setTableStatus(filteredBookings[0]?.name);
     setFilteredBookings(filteredBookings[0]?.bookings);
   };
 
@@ -93,35 +94,29 @@ const BookingGrid = ({ data }: any) => {
         return (
           <div className=' text-textGrey text-sm'>
             <p className='font-bold'>
-              {data?.bookings[0]?.firstName} {data?.bookings[0]?.lastName}
+              {data?.firstName} {data?.lastName}
             </p>
-            <p>{data?.bookings[0]?.phoneNumber}</p>
+            <p>{data?.phoneNumber}</p>
           </div>
         );
 
       case 'reference':
-        return (
-          <div className='text-textGrey text-sm'>
-            {data?.bookings[0]?.reference}
-          </div>
-        );
+        return <div className='text-textGrey text-sm'>{data?.reference}</div>;
       case 'bookingDateTime':
         return (
           <div className='text-textGrey text-sm'>
-            {moment(data?.bookings[0]?.bookingDateTime).format(
-              'MMMM Do YYYY, h:mm:ss a'
-            )}
+            {moment(data?.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
       case 'status':
         return (
           <Chip
             className='capitalize'
-            color={statusColorMap[data?.bookings[0]?.bookingStatus]}
+            color={statusColorMap[data?.bookingStatus]}
             size='sm'
             variant='bordered'
           >
-            {statusDataMap[data?.bookings[0]?.bookingStatus]}
+            {statusDataMap[data?.bookingStatus]}
           </Chip>
         );
 
@@ -186,7 +181,7 @@ const BookingGrid = ({ data }: any) => {
           items={matchingObjectArray}
         >
           {(item) => (
-            <TableRow key={item?.name}>
+            <TableRow key={item?.reference}>
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

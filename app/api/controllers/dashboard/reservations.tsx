@@ -69,10 +69,22 @@ export async function createReservations(
     handleError(error);
   }
 }
-export async function getReservation(reservationId: string) {
+export async function getReservation(
+  reservationId: string,
+  page: any,
+  rowsPerPage: any,
+  tableStatus: any
+) {
+  const payload = [
+    {
+      status: tableStatus || 'All',
+      page: page || 1,
+      pageSize: rowsPerPage || 10,
+    },
+  ];
   const headers = reservationId ? { reservationId } : {};
   try {
-    const data = await api.get(DASHBOARD.reservation, { headers });
+    const data = await api.post(DASHBOARD.reservation, payload, { headers });
 
     return data;
   } catch (error) {
