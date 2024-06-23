@@ -4,7 +4,7 @@ import React from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useGlobalContext } from './globalProvider';
 
-const usePagination = (arrayToMap, columns, visibleColumn) => {
+const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
 
   const refinedArrayToMap = arrayToMap ? arrayToMap?.totalPages : 1;

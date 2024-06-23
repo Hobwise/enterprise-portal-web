@@ -82,13 +82,13 @@ export async function getMenuByBusiness(
   businessId: string,
   page: any,
   rowsPerPage: any,
-  tableStatus: any
+  menuIdTable: any
 ) {
   const headers = businessId ? { businessId } : {};
 
   const payload = [
     {
-      menuId: tableStatus || '',
+      menuId: menuIdTable || '',
       page: page || 1,
       pageSize: rowsPerPage || 10,
     },

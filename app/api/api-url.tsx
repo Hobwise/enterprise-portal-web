@@ -34,6 +34,7 @@ export const DASHBOARD = {
   confirmPayment: 'api/v1/Payment/confirm',
   // Quick response
   qrByBusiness: 'api/v1/QuickResponse/detail-by-business',
+  qrAllBy: 'api/v1/QuickResponse/by-business',
   qr: 'api/v1/QuickResponse',
   // Reservations
   reservationsByBusiness: 'api/v1/Reservation/by-business',

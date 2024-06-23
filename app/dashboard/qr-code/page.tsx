@@ -22,9 +22,10 @@ const QRCode: React.FC = () => {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useQR();
 
-  const { setPage } = useGlobalContext();
+  const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
+    setTableStatus('All');
     setPage(1);
   }, []);
 

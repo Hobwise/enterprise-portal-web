@@ -33,7 +33,7 @@ const Filters = ({ menus, handleTabChange, handleTabClick }: any) => {
                         base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                       }}
                     >
-                      {menu?.items?.length}
+                      {menu?.totalCount}
                     </Chip>
                   </div>
                 }

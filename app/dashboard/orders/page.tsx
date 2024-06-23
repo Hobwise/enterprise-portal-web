@@ -25,9 +25,10 @@ const Orders: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { setPage } = useGlobalContext();
+  const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
+    setTableStatus('All');
     setPage(1);
   }, []);
 

@@ -4,7 +4,7 @@ import {
   createOrder,
   editOrder,
 } from '@/app/api/controllers/dashboard/orders';
-import { getQR } from '@/app/api/controllers/dashboard/quickResponse';
+import { getQRByBusiness } from '@/app/api/controllers/dashboard/quickResponse';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
@@ -101,6 +101,7 @@ const CheckoutModal = ({
   //   }));
   // };
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setResponse(null);
     const { name, value } = event.target;
     if (name === 'placedByPhoneNumber') {
       if (/^\d{0,11}$/.test(value)) {
@@ -218,7 +219,7 @@ const CheckoutModal = ({
   };
 
   const getQrID = async () => {
-    const data = await getQR(businessInformation[0]?.businessId);
+    const data = await getQRByBusiness(businessInformation[0]?.businessId);
 
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;

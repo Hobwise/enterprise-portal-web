@@ -47,9 +47,10 @@ const Menu: React.FC = () => {
 
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useMenu();
-  const { setPage } = useGlobalContext();
+  const { setPage, setMenuIdTable } = useGlobalContext();
 
   useEffect(() => {
+    // setMenuIdTable(data[0].id);
     setPage(1);
   }, []);
 

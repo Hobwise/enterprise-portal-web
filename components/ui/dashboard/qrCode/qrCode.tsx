@@ -20,8 +20,8 @@ import {
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
 import { FaRegEdit } from 'react-icons/fa';
+import { GrFormView } from 'react-icons/gr';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { MdOutlineFileDownload } from 'react-icons/md';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import { columns } from './data';
 import DeleteQRModal from './deleteModal';
@@ -134,8 +134,8 @@ const QrList = ({ qr, searchQuery, data }: any) => {
                   }}
                   aria-label='View QR'
                 >
-                  <div className={` flex gap-3  items-center text-grey500`}>
-                    <MdOutlineFileDownload className='text-[18px]' />
+                  <div className={` flex gap-2  items-center text-grey500`}>
+                    <GrFormView className='text-[20px]' />
                     <p>View QR</p>
                   </div>
                 </DropdownItem>

@@ -4,6 +4,8 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
 import useMenu from '@/hooks/cachedEndpoints/useMenu';
+import { useGlobalContext } from '@/hooks/globalProvider';
+import usePagination from '@/hooks/usePagination';
 import {
   clearItemLocalStorage,
   formatPrice,
@@ -13,12 +15,11 @@ import {
   Button,
   Chip,
   Divider,
-  Pagination,
   Spacer,
   useDisclosure,
 } from '@nextui-org/react';
 import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FaMinus, FaPlus } from 'react-icons/fa6';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import { IoSearchOutline } from 'react-icons/io5';
@@ -67,34 +68,64 @@ const MenuList = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [order] = useState<any>(getJsonItemFromLocalStorage('order'));
+  const { data, isLoading, isError, refetch } = useMenu();
+  const [filterValue, setFilterValue] = React.useState('');
+
+  const filteredItems = useMemo(() => {
+    return data
+      ?.map((item) => ({
+        ...item,
+        items: item?.items?.filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(filterValue) ||
+            String(item?.price)?.toLowerCase().includes(filterValue) ||
+            item?.menuName?.toLowerCase().includes(filterValue) ||
+            item?.itemDescription?.toLowerCase().includes(filterValue)
+        ),
+      }))
+      .filter((menu) => menu?.items?.length > 0);
+  }, [data, filterValue]);
 
   const [loading, setLoading] = useState<Boolean>(false);
 
   const [value, setValue] = useState('');
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
-  const [filteredMenu, setFilteredMenu] = React.useState([]);
+  const [filteredMenu, setFilteredMenu] = React.useState(data?.[0]?.items);
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
-  const [filterValue, setFilterValue] = React.useState('');
+  const { page, setPage, rowsPerPage, menuIdTable, setMenuIdTable } =
+    useGlobalContext();
 
-  const { data, isLoading, isError, refetch } = useMenu();
+  useEffect(() => {
+    setMenuIdTable(data?.[0]?.id);
+  }, []);
 
   const getOrderDetails = async () => {
     setLoading(true);
     const response = await getOrder(order.id);
+
     setLoading(false);
     if (response?.data?.isSuccessful) {
       const secondArrayIds = data.flatMap((section) =>
         section.items.map((item) => item.id)
       );
 
-      const idsInCommon = response?.data?.data?.orderDetails.filter((item) =>
-        secondArrayIds.includes(item.itemID)
-      );
+      // const idsInCommon = response?.data?.data?.orderDetails.filter((item) =>
+      //   secondArrayIds.includes(item.itemID)
+      // );
 
-      const updatedArray = idsInCommon.map((item) => {
+      // const updatedArray = idsInCommon.map((item) => {
+      //   const { unitPrice, quantity, itemID, ...rest } = item;
+      //   return {
+      //     ...rest,
+      //     id: itemID,
+      //     price: unitPrice,
+      //     count: quantity,
+      //   };
+      // });
+      const updatedArray = response?.data?.data.orderDetails.map((item) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
         return {
           ...rest,
@@ -103,8 +134,10 @@ const MenuList = () => {
           count: quantity,
         };
       });
+
       setOrderDetails(response?.data?.data);
       setSelectedItems(updatedArray);
+
       clearItemLocalStorage('order');
     } else if (response?.data?.error) {
     }
@@ -115,31 +148,38 @@ const MenuList = () => {
     setIsOpenVariety(!isOpenVariety);
   };
 
-  const [page, setPage] = React.useState(1);
-  const rowsPerPage = 12;
+  const matchingObject = filteredItems?.find(
+    (category) => category?.id === menuIdTable
+  );
 
-  const hasSearchFilter = Boolean(filterValue);
+  const matchingObjectArray = matchingObject
+    ? matchingObject?.items
+    : filteredMenu;
+  const {
+    bottomContent,
 
-  const filteredItems = React.useMemo(() => {
-    let filteredMenus = [...filteredMenu];
+    // filterValue,
+  } = usePagination(matchingObject);
 
-    if (hasSearchFilter) {
-      filteredMenus = filteredMenu?.filter((menu) =>
-        menu.itemName.toLowerCase().includes(filterValue.toLowerCase())
-      );
+  useEffect(() => {
+    if (filteredItems && filterValue) {
+      const filteredData = filteredItems
+        .map((item) => ({
+          ...item,
+          items: item?.items?.filter(
+            (item) =>
+              item?.itemName?.toLowerCase().includes(filterValue) ||
+              String(item?.price)?.toLowerCase().includes(filterValue) ||
+              item?.menuName?.toLowerCase().includes(filterValue) ||
+              item?.itemDescription?.toLowerCase().includes(filterValue)
+          ),
+        }))
+        .filter((item) => item?.items?.length > 0);
+      setFilteredMenu(filteredData.length > 0 ? filteredData[0].items : []);
+    } else {
+      setFilteredMenu(filteredItems?.[0]?.items);
     }
-
-    return filteredMenus;
-  }, [filteredMenu, filterValue]);
-
-  const pages = Math.ceil(filteredItems.length / rowsPerPage);
-
-  const items = React.useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems]);
+  }, [filterValue, filteredItems]);
 
   const handleCardClick = (menuItem: MenuItem) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
@@ -192,7 +232,9 @@ const MenuList = () => {
   };
 
   const handleTabClick = (index) => {
-    const filteredMenu = data.filter((item) => item.name === index);
+    setPage(1);
+    const filteredMenu = filteredItems.filter((item) => item.name === index);
+    setMenuIdTable(filteredMenu[0]?.id);
     setFilteredMenu(filteredMenu[0]?.items);
   };
 
@@ -264,8 +306,8 @@ const MenuList = () => {
             ) : isError ? (
               <Error imageWidth='w-16' onClick={() => refetch()} />
             ) : (
-              <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
-                {items?.map((menu, index) => (
+              <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4'>
+                {matchingObjectArray?.map((menu, index) => (
                   <div
                     title='select menu'
                     onClick={() => toggleVarietyModal(menu)}
@@ -326,8 +368,9 @@ const MenuList = () => {
             )}
 
             <Spacer y={8} />
+            {!isLoading && bottomContent}
 
-            <div className='flex gap-2 justify-between items-center'>
+            {/* <div className='flex gap-2 justify-between items-center'>
               <Button
                 size='sm'
                 variant='faded'
@@ -352,7 +395,7 @@ const MenuList = () => {
               >
                 Next
               </Button>
-            </div>
+            </div> */}
           </div>
 
           <div className='hidden xl:block max-h-[360px] overflow-scroll bg-[#F7F6FA] p-4 rounded-lg flex-grow'>

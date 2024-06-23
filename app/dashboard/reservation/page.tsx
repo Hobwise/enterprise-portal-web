@@ -32,9 +32,10 @@ const Reservation: React.FC = () => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { data, isLoading, isError, refetch } = useReservation();
 
-  const { setPage } = useGlobalContext();
+  const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
+    setTableStatus('All');
     setPage(1);
   }, []);
 

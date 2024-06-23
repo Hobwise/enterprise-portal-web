@@ -19,9 +19,10 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 const Payments: React.FC = () => {
   const { data, isLoading, isError, refetch } = usePayment();
   const [searchQuery, setSearchQuery] = useState('');
-  const { setPage } = useGlobalContext();
+  const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
+    setTableStatus('All');
     setPage(1);
   }, []);
 

@@ -24,6 +24,7 @@ import { HiOutlineDotsVertical } from 'react-icons/hi';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
+import { GrFormView } from 'react-icons/gr';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
 const MenuList = ({ menus, onOpen, searchQuery }: any) => {
@@ -36,12 +37,12 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
     toggleModalEdit,
     page,
     rowsPerPage,
-    setTableStatus,
-    tableStatus,
+    menuIdTable,
+    setMenuIdTable,
     setPage,
   } = useGlobalContext();
   useEffect(() => {
-    setTableStatus(menus[0]?.id);
+    setMenuIdTable(menus[0]?.id);
   }, []);
 
   useEffect(() => {
@@ -65,7 +66,7 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
   }, [searchQuery, menus]);
 
   const matchingObject = menus?.find(
-    (category) => category?.id === tableStatus
+    (category) => category?.id === menuIdTable
   );
 
   const matchingObjectArray = matchingObject
@@ -98,7 +99,7 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
     setPage(1);
     const filteredMenu = menus.filter((item) => item.name === index);
 
-    setTableStatus(filteredMenu[0]?.id);
+    setMenuIdTable(filteredMenu[0]?.id);
     setFilteredMenu(filteredMenu[0]?.items);
   };
 
@@ -170,7 +171,10 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
                       },
                     }}
                   >
-                    View
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <GrFormView className='text-[20px]' />
+                      <p>View more</p>
+                    </div>
                   </Link>
                 </DropdownItem>
               </DropdownMenu>

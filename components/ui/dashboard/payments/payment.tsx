@@ -170,7 +170,7 @@ const PaymentsList = ({ payments, searchQuery }: any) => {
                 >
                   <div className={` flex gap-2  items-center text-grey500`}>
                     <GrFormView className='text-[20px]' />
-                    <p>View</p>
+                    <p>View more</p>
                   </div>
                 </DropdownItem>
               </DropdownMenu>

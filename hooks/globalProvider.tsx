@@ -35,6 +35,7 @@ const AppProvider = ({ children }: any) => {
   const [page, setPage] = React.useState(1);
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [tableStatus, setTableStatus] = React.useState('All');
+  const [menuIdTable, setMenuIdTable] = React.useState('');
 
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const toggleModalDelete = () => {
@@ -106,6 +107,8 @@ const AppProvider = ({ children }: any) => {
         setRowsPerPage,
         tableStatus,
         setTableStatus,
+        menuIdTable,
+        setMenuIdTable,
       }}
     >
       {children}
