@@ -5,20 +5,26 @@ import {
 } from '@/app/api/controllers/dashboard/reservations';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
+import { useGlobalContext } from '../globalProvider';
 
 const useReservation = () => {
+  const { page, rowsPerPage } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
 
-  const getAllReservation = async () => {
+  const getAllReservation = async ({ queryKey }) => {
     const responseData = await getReservations(
-      businessInformation[0]?.businessId
+      businessInformation[0]?.businessId,
+      page,
+      rowsPerPage
     );
-    return responseData?.data?.data?.reservations as payloadReservationItem[];
+    return responseData?.data?.data as payloadReservationItem[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<
     payloadReservationItem[]
-  >('reservation', getAllReservation);
+  >(['reservation', { page, rowsPerPage }], getAllReservation, {
+    keepPreviousData: true,
+  });
 
   return {
     data,

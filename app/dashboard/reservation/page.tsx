@@ -1,7 +1,7 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
@@ -20,6 +20,7 @@ import Error from '@/components/error';
 import CreateReservation from '@/components/ui/dashboard/reservations/createReservations';
 import ReservationList from '@/components/ui/dashboard/reservations/reservation';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import useTextCopy from '@/hooks/useTextCopy';
 import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { IoMdAdd } from 'react-icons/io';
@@ -30,7 +31,12 @@ const Reservation: React.FC = () => {
   const business = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { data, isLoading, isError, refetch } = useReservation();
-  console.log(data, 'datat');
+
+  const { setPage } = useGlobalContext();
+
+  useEffect(() => {
+    setPage(1);
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -39,7 +45,7 @@ const Reservation: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data
+    return data?.reservations
       ?.filter(
         (item) =>
           item?.reservationName?.toLowerCase().includes(searchQuery) ||
@@ -52,9 +58,10 @@ const Reservation: React.FC = () => {
   }, [data, searchQuery]);
 
   const getScreens = () => {
-    if (data?.length > 0) {
+    if (data?.reservations?.length > 0) {
       return (
         <ReservationList
+          data={data}
           reservation={filteredItems}
           searchQuery={searchQuery}
         />
@@ -76,13 +83,13 @@ const Reservation: React.FC = () => {
             <div className='flex items-center'>
               <span>Reservation</span>
 
-              {data?.length > 0 && (
+              {data?.reservations?.length > 0 && (
                 <Chip
                   classNames={{
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data?.length}
+                  {data?.totalCount}
                 </Chip>
               )}
             </div>
@@ -92,7 +99,7 @@ const Reservation: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {data?.length > 0 && (
+          {data?.reservations?.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -131,7 +138,7 @@ const Reservation: React.FC = () => {
             </>
           )}
 
-          {data?.length > 0 && (
+          {data?.reservations?.length > 0 && (
             <CustomButton
               onClick={() =>
                 router.push('/dashboard/reservation/create-reservation')

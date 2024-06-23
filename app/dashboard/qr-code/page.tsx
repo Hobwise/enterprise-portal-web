@@ -1,7 +1,7 @@
 'use client';
 import Container from '../../../components/dashboardContainer';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
@@ -15,11 +15,18 @@ import Error from '@/components/error';
 import CreateQRcode from '@/components/ui/dashboard/qrCode/createQR';
 import QrList from '@/components/ui/dashboard/qrCode/qrCode';
 import useQR from '@/hooks/cachedEndpoints/useQRcode';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import { MdOutlineFileDownload } from 'react-icons/md';
 
 const QRCode: React.FC = () => {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useQR();
+
+  const { setPage } = useGlobalContext();
+
+  useEffect(() => {
+    setPage(1);
+  }, []);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -28,7 +35,7 @@ const QRCode: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data
+    return data?.quickResponses
       ?.filter(
         (item) =>
           item?.name?.toLowerCase().includes(searchQuery) ||
@@ -40,8 +47,10 @@ const QRCode: React.FC = () => {
   }, [data, searchQuery]);
 
   const getScreens = () => {
-    if (data?.length > 0) {
-      return <QrList qr={filteredItems} searchQuery={searchQuery} />;
+    if (data?.quickResponses?.length > 0) {
+      return (
+        <QrList qr={filteredItems} searchQuery={searchQuery} data={data} />
+      );
     } else if (isError) {
       return <Error onClick={() => refetch()} />;
     } else {
@@ -49,7 +58,7 @@ const QRCode: React.FC = () => {
     }
   };
 
-  const newArray = data?.map((item) => {
+  const newArray = data?.quickResponses.map((item) => {
     return {
       allOrder: item.allOrdersCount,
       openOrder: item.openOrdersCount,
@@ -65,7 +74,7 @@ const QRCode: React.FC = () => {
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {data?.length > 0 ? (
+            {data?.quickResponses?.length > 0 ? (
               <div className='flex items-center'>
                 <span>Quick response</span>
                 <Chip
@@ -73,7 +82,7 @@ const QRCode: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data?.length}
+                  {data?.totalCount}
                 </Chip>
               </div>
             ) : (
@@ -85,7 +94,7 @@ const QRCode: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {data?.length > 0 && (
+          {data?.quickResponses?.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -112,7 +121,7 @@ const QRCode: React.FC = () => {
             </>
           )}
 
-          {data?.length > 0 && (
+          {data?.quickResponses?.length > 0 && (
             <CustomButton
               onClick={() => router.push('/dashboard/qr-code/create-qr')}
               className='py-2 px-4 md:mb-0 mb-4 text-white'

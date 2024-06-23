@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 
+import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice } from '@/lib/utils';
 import {
@@ -35,7 +36,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'actions',
 ];
 
-const ReservationList = ({ reservation, searchQuery }: any) => {
+const ReservationList = ({ reservation, searchQuery, data }: any) => {
   const router = useRouter();
 
   const [singleOrder, setSingleOrder] = React.useState('');
@@ -45,8 +46,9 @@ const ReservationList = ({ reservation, searchQuery }: any) => {
   const [isOpenView, setIsOpenView] = React.useState<Boolean>(false);
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
-  const [filteredReservation, setFilteredReservation] =
-    React.useState(reservation);
+  const [filteredReservation, setFilteredReservation] = React.useState(
+    data?.reservations
+  );
 
   const toggleReservationModalModal = () => {
     setIsOpenDelete(!isOpenDelete);
@@ -76,22 +78,19 @@ const ReservationList = ({ reservation, searchQuery }: any) => {
     }
   }, [searchQuery, reservation]);
 
+  const { page, rowsPerPage } = useGlobalContext();
+
   const {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-    sortedItems,
+
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
+
     classNames,
-    hasSearchFilter,
-  } = usePagination(filteredReservation, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
 
   const toggleCancelModal = (order: any) => {
     setSingleOrder(order);
@@ -212,7 +211,7 @@ const ReservationList = ({ reservation, searchQuery }: any) => {
         isCompact
         removeWrapper
         allowsSorting
-        aria-label='list of orders'
+        aria-label='list of reservations'
         bottomContent={bottomContent}
         bottomContentPlacement='outside'
         classNames={classNames}
@@ -234,7 +233,10 @@ const ReservationList = ({ reservation, searchQuery }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No reservation found'} items={sortedItems}>
+        <TableBody
+          emptyContent={'No reservation found'}
+          items={filteredReservation}
+        >
           {(item) => (
             <TableRow key={item?.name}>
               {(columnKey) => (

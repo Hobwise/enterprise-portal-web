@@ -113,42 +113,45 @@ const usePagination = (arrayToMap, columns, visibleColumn) => {
     }
   }, []);
 
-  const bottomContent = React.useMemo(() => {
-    return (
-      <div className='py-2 px-2 flex justify-between items-center'>
-        <Pagination
-          disableCursorAnimation
-          showControls
-          page={page}
-          total={refinedArrayToMap}
-          onChange={setPage}
-          className='gap-2'
-          radius='full'
-          renderItem={renderItem}
-          variant='light'
-        />
-
-        <div className='hidden md:flex w-[30%] justify-end gap-2'>
-          <Button
-            isDisabled={refinedArrayToMap === 1}
-            size='sm'
-            variant='flat'
-            onPress={onPreviousPage}
-          >
-            Previous
-          </Button>
-          <Button
-            isDisabled={refinedArrayToMap === 1}
-            size='sm'
-            variant='flat'
-            onPress={onNextPage}
-          >
-            Next
-          </Button>
-        </div>
+  const bottomContent = (
+    <div className='py-2 px-2 flex justify-between items-center'>
+      <div className='text-[14px] text-grey600'>
+        Page {arrayToMap.currentPage} of {arrayToMap.totalPages}
       </div>
-    );
-  }, [selectedKeys, page, refinedArrayToMap, hasSearchFilter]);
+      <Pagination
+        disableCursorAnimation
+        // showControls
+        page={page}
+        total={refinedArrayToMap}
+        onChange={setPage}
+        className='gap-2'
+        radius='full'
+        renderItem={renderItem}
+        variant='light'
+      />
+
+      <div className='hidden md:flex w-[30%] justify-end gap-2'>
+        <Button
+          isDisabled={
+            refinedArrayToMap === 1 || arrayToMap.hasPrevious === false
+          }
+          size='sm'
+          variant='flat'
+          onPress={onPreviousPage}
+        >
+          Previous
+        </Button>
+        <Button
+          isDisabled={refinedArrayToMap === 1 || arrayToMap.hasNext === false}
+          size='sm'
+          variant='flat'
+          onPress={onNextPage}
+        >
+          Next
+        </Button>
+      </div>
+    </div>
+  );
 
   const onClear = React.useCallback(() => {
     setFilterValue('');

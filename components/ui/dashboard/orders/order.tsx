@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 
 import {
   Chip,
@@ -106,7 +106,6 @@ const OrdersList = ({ orders, searchQuery, refetch }: any) => {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -251,10 +250,6 @@ const OrdersList = ({ orders, searchQuery, refetch }: any) => {
     hasSearchFilter,
   ]);
 
-  useEffect(() => {
-    refetch();
-  }, [page, rowsPerPage, tableStatus]);
-
   return (
     <section className='border border-primaryGrey rounded-lg'>
       <Table
@@ -309,4 +304,4 @@ const OrdersList = ({ orders, searchQuery, refetch }: any) => {
   );
 };
 
-export default OrdersList;
+export default memo(OrdersList);

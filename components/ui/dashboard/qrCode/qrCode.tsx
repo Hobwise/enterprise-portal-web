@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 
+import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { saveJsonItemToLocalStorage } from '@/lib/utils';
 import {
@@ -35,7 +36,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'dateCreated',
   'actions',
 ];
-const QrList = ({ qr, searchQuery }: any) => {
+const QrList = ({ qr, searchQuery, data }: any) => {
   const router = useRouter();
 
   const [singleOrder, setSingleOrder] = React.useState('');
@@ -45,7 +46,7 @@ const QrList = ({ qr, searchQuery }: any) => {
   const [isOpenView, setIsOpenView] = React.useState<Boolean>(false);
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
-  const [filteredQr, setFilteredQr] = React.useState(qr);
+  const [filteredQr, setFilteredQr] = React.useState(data?.quickResponses);
 
   const toggleQRmodalModal = () => {
     setIsOpenDelete(!isOpenDelete);
@@ -74,11 +75,13 @@ const QrList = ({ qr, searchQuery }: any) => {
     }
   }, [searchQuery, qr]);
 
+  const { page, rowsPerPage } = useGlobalContext();
+
   const {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-    sortedItems,
+
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -89,7 +92,7 @@ const QrList = ({ qr, searchQuery }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(filteredQr, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
 
   const toggleCancelModal = (order: any) => {
     setSingleOrder(order);
@@ -201,7 +204,7 @@ const QrList = ({ qr, searchQuery }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No qr found'} items={sortedItems}>
+        <TableBody emptyContent={'No qr found'} items={filteredQr}>
           {(item) => (
             <TableRow key={item?.name}>
               {(columnKey) => (

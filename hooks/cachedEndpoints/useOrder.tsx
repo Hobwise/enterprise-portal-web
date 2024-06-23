@@ -42,6 +42,7 @@ const useOrder = () => {
   const { data, isLoading, isError, refetch } = useQuery<OrderData[]>(
     ['orders', { page, rowsPerPage, tableStatus }],
     getAllOrders,
+
     {
       keepPreviousData: true,
     }

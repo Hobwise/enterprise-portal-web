@@ -4,16 +4,8 @@ import api, { handleError } from '../../apiService';
 type payloadQr = {
   name: string;
 };
-export async function getQR(businessId: string) {
-  const headers = businessId ? { businessId } : {};
-
-  const payload = [
-    {
-      status: 'All',
-      page: 1,
-      pageSize: 10,
-    },
-  ];
+export async function getQR(businessId: string, page: any, pageSize: any) {
+  const headers = businessId ? { businessId, page, pageSize } : {};
 
   try {
     const data = await api.get(DASHBOARD.qrByBusiness, {
