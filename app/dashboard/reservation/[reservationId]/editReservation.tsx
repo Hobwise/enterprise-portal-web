@@ -181,7 +181,7 @@ const EditReservation = ({
               <h1 className=' text-xl mt-3 font-[600] text-black'>
                 Edit Reservation
               </h1>
-              <div className='flex xl:flex-row flex-col gap-6'>
+              <div className='flex xl:flex-row flex-col gap-6 lg:h-[450px] h-full'>
                 <div className={`flex-grow xl:h-auto xl:w-1/2 w-full `}>
                   <label className='flex xl:my-2 m-0 justify-between  bg-white'>
                     <p className='text-[#475467] text-[14px] font-[400]'>
@@ -222,13 +222,13 @@ const EditReservation = ({
                       </>
                     ) : (
                       <div className='flex flex-col h-full justify-center items-center'>
-                        <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
+                        <div className='flex flex-col mt-0 text-black text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
                           {isLoadingImage ? (
                             <SmallLoader />
                           ) : (
                             <>
                               <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                              <span>
+                              <span className='text-black'>
                                 Drag and drop files to upload or{' '}
                                 <span className='text-primaryColor'>
                                   click here

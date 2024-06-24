@@ -158,10 +158,10 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
         {(onClose) => (
           <>
             <ModalBody>
-              <h1 className='text-center text-xl mt-3 font-[600] text-black'>
+              <h1 className='text-xl mt-3 font-[600] text-black'>
                 Edit menu items
               </h1>
-              <div className='flex xl:flex-row flex-col gap-6'>
+              <div className='flex xl:flex-row flex-col gap-6 lg:h-[450px] h-full'>
                 <div className={`flex-grow xl:h-auto xl:w-1/2 w-full `}>
                   <label className='flex xl:my-2 m-0 justify-between  bg-white'>
                     <p className='text-[#475467] text-[14px] font-[400]'>
@@ -208,7 +208,7 @@ const EditMenu = ({ isOpenEdit, toggleModalEdit, menuItem, getMenu }: any) => {
                           ) : (
                             <>
                               <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                              <span>
+                              <span className='text-black'>
                                 Drag and drop files to upload or{' '}
                                 <span className='text-primaryColor'>
                                   click here

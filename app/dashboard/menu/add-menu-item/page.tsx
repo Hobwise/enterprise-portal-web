@@ -293,7 +293,7 @@ const AddItemToMenu = () => {
                     ) : (
                       <>
                         <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                        <span>
+                        <span className='text-black'>
                           Drag and drop files to upload or{' '}
                           <span className='text-primaryColor'>click here</span>{' '}
                           to browse

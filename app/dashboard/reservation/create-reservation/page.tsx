@@ -313,13 +313,13 @@ const AddNewReservation = () => {
             ) : (
               <>
                 <div className='flex flex-col h-full justify-center items-center'>
-                  <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
+                  <div className='flex flex-col mt-0 text-black text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
                     {isLoadingImage ? (
                       <SmallLoader />
                     ) : (
                       <>
                         <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                        <span>
+                        <span className='text-black'>
                           Drag and drop files to upload or{' '}
                           <span className='text-primaryColor'>click here</span>{' '}
                           to browse

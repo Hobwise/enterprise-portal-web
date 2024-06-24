@@ -119,7 +119,7 @@ const ReservationDetails = () => {
         <section className='flex flex-col flex-grow'>
           <div className='flex lg:flex-row flex-col gap-3 justify-between '>
             <div className='space-y-2 lg:w-[500px] w-full'>
-              <h2 className='text-black font-[600] text-[28px]'>
+              <h2 className='text-black font-[600]  text-[28px]'>
                 {data?.reservationName}
               </h2>
               <p className='text-[#3D424A] text-[14px] font-[400]'>
