@@ -35,7 +35,7 @@ const SingleReservationComponent = () => {
         {reservationId ? null : (
           <BackButton
             color='text-black'
-            url={`/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
+            url={`https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
           />
         )}
       </div>
@@ -84,10 +84,10 @@ const SingleReservationComponent = () => {
         onClick={() => {
           reservationId
             ? router.push(
-                `/reservation/select-reservation/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
+                `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
               )
             : router.push(
-                `/reservation/select-reservation/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+                `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
               );
         }}
       >

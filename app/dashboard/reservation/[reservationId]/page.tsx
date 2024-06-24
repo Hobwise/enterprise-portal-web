@@ -62,7 +62,7 @@ const ReservationDetails = () => {
   }
 
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `http://localhost:3000/reservation/select-reservation/single-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}&reservationId=${reservationId}`
+    `https://hobink-corporate-web.vercel.app/reservation/select-reservation/single-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}&reservationId=${reservationId}`
   );
 
   return (

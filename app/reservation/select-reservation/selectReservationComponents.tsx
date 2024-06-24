@@ -84,7 +84,7 @@ const SelectReservationComponents = () => {
                   saveJsonItemToLocalStorage('singleReservation', reservation);
                   saveToLocalStorage('businessName', businessName);
                   router.push(
-                    `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+                    `https://hobink-corporate-web.vercel.app/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
                   );
                 }}
                 key={reservation.reservationName}

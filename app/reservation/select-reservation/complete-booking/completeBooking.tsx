@@ -23,6 +23,8 @@ const CompleteBookingComponent = () => {
   let businessName = searchParams.get('businessName');
   let businessId = searchParams.get('businessId');
   let cooperateID = searchParams.get('cooperateID');
+  let reservationId = searchParams.get('reservationId');
+
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
@@ -86,7 +88,7 @@ const CompleteBookingComponent = () => {
       });
       setTimeNdate(now(getLocalTimeZone()));
       router.push(
-        `/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+        `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
       );
       saveJsonItemToLocalStorage('bookingDetails', data?.data?.data);
     } else if (data?.data?.error) {
@@ -98,11 +100,12 @@ const CompleteBookingComponent = () => {
     <>
       <div className='flex justify-between items-center'>
         <h1 className='text-2xl  text-black'>{businessName}</h1>
-
-        <BackButton
-          color='text-black'
-          url={`/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
-        />
+        {reservationId ? null : (
+          <BackButton
+            color='text-black'
+            url={`https://hobink-corporate-web.vercel.app/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
+          />
+        )}
       </div>
       <div className='mt-7 mb-12'>
         <h2 className='text-xl text-black font-bold'>Complete Booking</h2>
