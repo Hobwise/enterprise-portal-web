@@ -40,4 +40,6 @@ export const DASHBOARD = {
   reservationsByBusiness: 'api/v1/Reservation/by-business',
   reservation: 'api/v1/Reservation',
   singleReservation: 'api/v1/Reservation/fetch',
+  // Bookings
+  bookings: 'api/v1/Booking',
 };

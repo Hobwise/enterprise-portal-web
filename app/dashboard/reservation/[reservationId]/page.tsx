@@ -5,7 +5,11 @@ import Error from '@/components/error';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import useTextCopy from '@/hooks/useTextCopy';
-import { CustomLoading, formatPrice } from '@/lib/utils';
+import {
+  CustomLoading,
+  formatPrice,
+  getJsonItemFromLocalStorage,
+} from '@/lib/utils';
 import {
   Button,
   ButtonGroup,
@@ -29,6 +33,9 @@ import EditReservation from './editReservation';
 
 const ReservationDetails = () => {
   const searchParams = useSearchParams();
+  const business = getJsonItemFromLocalStorage('business');
+
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const reservationId = searchParams.get('reservationId') || null;
@@ -55,7 +62,7 @@ const ReservationDetails = () => {
   }
 
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    'https://hobink-corporate-web.vercel.app/create-reservation'
+    `http://localhost:3000/reservation/select-reservation/single-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}&reservationId=${reservationId}`
   );
 
   return (

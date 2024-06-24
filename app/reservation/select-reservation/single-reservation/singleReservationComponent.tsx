@@ -1,28 +1,43 @@
 'use client';
 import BackButton from '@/components/backButton';
 import { CustomButton } from '@/components/customButton';
+import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
+import { Spinner } from '@nextui-org/react';
 import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import noImage from '../../../../public/assets/images/no-image.svg';
 
 const SingleReservationComponent = () => {
-  const getSingleReservation = getJsonItemFromLocalStorage('singleReservation');
-
+  const singleReservation = getJsonItemFromLocalStorage('singleReservation');
+  const router = useRouter();
   const searchParams = useSearchParams();
   let businessName = searchParams.get('businessName');
   let businessId = searchParams.get('businessId');
   let cooperateID = searchParams.get('cooperateID');
-  console.log(getSingleReservation, 'SingleReservation');
+  let reservationId = searchParams.get('reservationId');
+
+  const { data, isLoading } = useSingleReservation(reservationId);
+
+  if (isLoading) {
+    return (
+      <div className='loadingContainer flex flex-col justify-center items-center'>
+        <Spinner />
+      </div>
+    );
+  }
+  const getSingleReservation = reservationId ? data : singleReservation;
+
   return (
     <>
       <div className='flex justify-between items-center'>
         <h1 className='text-2xl  text-black'>{businessName}</h1>
-
-        <BackButton
-          color='text-black'
-          url={`/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
-        />
+        {reservationId ? null : (
+          <BackButton
+            color='text-black'
+            url={`/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
+          />
+        )}
       </div>
       <div className='mt-7 mb-2'>
         <h2 className='text-xl text-black font-bold'>Reservations</h2>
@@ -65,7 +80,19 @@ const SingleReservationComponent = () => {
           </div>
         )}
       </div>
-      <CustomButton>Select this reservation</CustomButton>
+      <CustomButton
+        onClick={() => {
+          reservationId
+            ? router.push(
+                `/reservation/select-reservation/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
+              )
+            : router.push(
+                `/reservation/select-reservation/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+              );
+        }}
+      >
+        Select this reservation
+      </CustomButton>
     </>
   );
 };

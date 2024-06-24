@@ -74,7 +74,7 @@ const Reservation: React.FC = () => {
     }
   };
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${business.businessName}&businessId=${business.id}&cooperateID=${userInformation.cooperateID}`
+    `https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
   );
   return (
     <Container>

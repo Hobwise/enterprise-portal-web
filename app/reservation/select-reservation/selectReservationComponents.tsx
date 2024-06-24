@@ -1,4 +1,5 @@
 'use client';
+import { DASHBOARD } from '@/app/api/api-url';
 import Error from '@/components/error';
 import { saveJsonItemToLocalStorage, saveToLocalStorage } from '@/lib/utils';
 import { Divider, Pagination, Spinner } from '@nextui-org/react';
@@ -22,21 +23,26 @@ const SelectReservationComponents = () => {
   const rowsPerPage = 10;
 
   const pages = useMemo(() => {
-    return reservationData?.count
-      ? Math.ceil(reservationData.count / rowsPerPage)
+    return reservationData?.totalCount
+      ? Math.ceil(reservationData.totalCount / rowsPerPage)
       : 0;
-  }, [reservationData?.count, rowsPerPage]);
+  }, [reservationData?.totalCount, rowsPerPage]);
 
   const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
   const reservation = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${baseURL}api/v1/Reservation/by-business`, {
-        headers: {
-          cooperateId: cooperateID,
-          businessId: businessId,
-        },
-      });
+      const response = await fetch(
+        `${baseURL}${DASHBOARD.reservationsByBusiness}`,
+        {
+          headers: {
+            cooperateId: cooperateID,
+            businessId: businessId,
+            page: page,
+            pageSize: rowsPerPage,
+          },
+        }
+      );
 
       const data = await response.json();
 
@@ -53,9 +59,9 @@ const SelectReservationComponents = () => {
 
   useEffect(() => {
     reservation();
-  }, []);
+  }, [page]);
   return (
-    <>
+    <div className='h-screen p-4'>
       <h1 className='text-2xl  text-black '>{businessName}</h1>
       <div className='mt-7 mb-2'>
         <h2 className='text-xl text-black font-bold'>Reservations</h2>
@@ -65,59 +71,63 @@ const SelectReservationComponents = () => {
 
       <br />
       {isLoading ? (
-        <div className='grid place-content-center'>
+        <div className='loadingContainer flex flex-col justify-center items-center'>
           <Spinner />
         </div>
       ) : (
-        <div className=''>
-          {reservationData?.map((reservation, index) => (
-            <div
-              title='select reservation'
-              onClick={() => {
-                saveJsonItemToLocalStorage('singleReservation', reservation);
-                saveToLocalStorage('businessName', businessName);
-                router.push(
-                  `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
-                );
-              }}
-              key={reservation.reservationName}
-              className={'relative cursor-pointer flex gap-3 mb-2'}
-            >
-              <Image
-                width={60}
-                height={60}
-                src={
-                  reservation?.image
-                    ? `data:image/jpeg;base64,${reservation?.image}`
-                    : noImage
-                }
-                alt={index + reservation.reservationName}
-                className='w-[60px] h-[60px] rounded-lg border border-primaryGrey mb-2 bg-cover'
-              />
-              <div className='text-black'>
-                <h3 className=' font-[500]'>{reservation.reservationName}</h3>
-                <p className='text-gray-600 text-[14px] font-[400]'>
-                  {reservation.reservationDescription}
-                </p>
+        <>
+          <div className='w-full h-[70%]  overflow-scroll'>
+            {reservationData?.reservations?.map((reservation, index) => (
+              <div
+                title='select reservation'
+                onClick={() => {
+                  saveJsonItemToLocalStorage('singleReservation', reservation);
+                  saveToLocalStorage('businessName', businessName);
+                  router.push(
+                    `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+                  );
+                }}
+                key={reservation.reservationName}
+                className={'relative cursor-pointer  flex gap-3 mb-2'}
+              >
+                <Image
+                  width={60}
+                  height={60}
+                  src={
+                    reservation?.image
+                      ? `data:image/jpeg;base64,${reservation?.image}`
+                      : noImage
+                  }
+                  alt={index + reservation.reservationName}
+                  className='w-[60px] h-[60px] rounded-lg border border-primaryGrey mb-2 bg-cover'
+                />
+                <div className='text-black'>
+                  <h3 className='font-[500]'>{reservation.reservationName}</h3>
+                  <p className='text-gray-600 text-[14px] font-[400]'>
+                    {reservation.reservationDescription}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+          <>
+            {reservationData?.totalCount > 10 ? (
+              <div className='flex w-full mt-4 justify-center'>
+                <Pagination
+                  isCompact
+                  showControls
+                  showShadow
+                  color='primary'
+                  page={page}
+                  total={pages}
+                  onChange={(page) => setPage(page)}
+                />
+              </div>
+            ) : null}
+          </>
+        </>
       )}
-      {reservationData.length > 10 ? (
-        <div className='flex w-full justify-center'>
-          <Pagination
-            isCompact
-            showControls
-            showShadow
-            color='primary'
-            page={page}
-            total={pages}
-            onChange={(page) => setPage(page)}
-          />
-        </div>
-      ) : null}
-    </>
+    </div>
   );
 };
 

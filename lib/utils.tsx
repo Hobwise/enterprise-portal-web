@@ -225,3 +225,19 @@ export const SmallLoader = () => {
 export const tableTotalCount = (data: any) => {
   return data?.reduce((sum, category) => sum + category.totalCount, 0);
 };
+
+export const formatDateTime = (dateData) => {
+  const date = new Date(
+    Date.UTC(
+      dateData.year,
+      dateData.month - 1,
+      dateData.day,
+      dateData.hour - Math.floor(dateData.offset / 3600000),
+      dateData.minute - (dateData.offset % 3600000) / 60000,
+      dateData.second,
+      dateData.millisecond
+    )
+  );
+
+  return date.toISOString();
+};

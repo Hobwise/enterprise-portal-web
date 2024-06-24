@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 
-const useTextCopy = ({ textToCopy }: any) => {
+const useTextCopy = (textToCopy: any) => {
   const [isOpen, setIsOpen] = useState(false);
   const handleCopyClick = () => {
     navigator.clipboard.writeText(textToCopy);
