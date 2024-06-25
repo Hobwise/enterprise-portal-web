@@ -1,3 +1,4 @@
+import { Spinner } from '@nextui-org/react';
 import { Suspense } from 'react';
 import SelectReservationComponents from './selectReservationComponents';
 
@@ -9,7 +10,13 @@ const reservations = () => {
   return (
     <main className='items-center h-screen bg-white  flex flex-col'>
       <section className='lg:w-[360px] w-full'>
-        <Suspense>
+        <Suspense
+          fallback={
+            <div className='loadingContainer flex flex-col justify-center items-center'>
+              <Spinner />
+            </div>
+          }
+        >
           <SelectReservationComponents />
         </Suspense>
       </section>
