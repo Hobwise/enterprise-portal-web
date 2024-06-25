@@ -52,7 +52,7 @@ const SingleReservationComponent = () => {
             : noImage
         }
         alt={'reservation image'}
-        className='lg:w-full w-[343px] h-[343px] rounded-lg border border-primaryGrey  mb-2 bg-cover'
+        className='w-full  h-[343px] rounded-lg border border-primaryGrey  mb-2 bg-cover'
       />
       <div className='py-3'>
         <p className='font-bold text-[18px] text-black'>
