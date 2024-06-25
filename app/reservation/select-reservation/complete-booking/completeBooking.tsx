@@ -24,7 +24,7 @@ const CompleteBookingComponent = () => {
   let businessId = searchParams.get('businessId');
   let cooperateID = searchParams.get('cooperateID');
   let reservationId = searchParams.get('reservationId');
-
+  console.log(reservationId, 'rereservationId');
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
@@ -36,7 +36,7 @@ const CompleteBookingComponent = () => {
     email: '',
     phoneNumber: '',
 
-    id: getSingleReservation.id,
+    id: reservationId ? reservationId : getSingleReservation.id,
   });
 
   const formSubmit = () => {
@@ -69,7 +69,7 @@ const CompleteBookingComponent = () => {
       phoneNumber: bookings.phoneNumber,
       bookingDateTime: formatDateTime(timeNdate),
     };
-    console.log(payload, 'payload');
+
     setIsLoading(true);
     const data = await createBooking(businessId, payload);
 
