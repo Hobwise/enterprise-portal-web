@@ -25,6 +25,11 @@ import {
 import moment from 'moment';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 
+import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
+import useBookings from '@/hooks/cachedEndpoints/useBookings';
+import { notify } from '@/lib/utils';
+import { CiCalendar } from 'react-icons/ci';
+import { IoCheckmark } from 'react-icons/io5';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -44,7 +49,7 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
   const [filteredBooking, setFilteredBooking] = React.useState(
     bookings[0]?.bookings
   );
-
+  const { refetch } = useBookings();
   const { page, rowsPerPage, tableStatus, setTableStatus, setPage } =
     useGlobalContext();
 
@@ -104,6 +109,25 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
     setValue(index);
   };
 
+  const updateBookingStatus = async (status, id) => {
+    const data = await postBookingStatus(id, status);
+
+    if (data?.data?.isSuccessful) {
+      notify({
+        title: 'Success!',
+        text: 'Operation successful',
+        type: 'success',
+      });
+      refetch();
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
+
   const renderCell = React.useCallback((booking, columnKey) => {
     const cellValue = booking[columnKey];
 
@@ -147,22 +171,48 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu className='text-black'>
-                <DropdownItem aria-label='view'>
-                  {/* <Link
-                    className='flex w-full'
-                    href={{
-                      pathname: `/dashboard/reservation/${booking?.reservationName}`,
-                      query: {
-                        reservationId: booking?.id,
-                      },
-                    }}
+                {booking?.bookingStatus === 1 && (
+                  <DropdownItem
+                    aria-label='admit'
+                    onClick={() =>
+                      updateBookingStatus(booking?.bookingStatus, booking?.id)
+                    }
                   >
                     <div className={` flex gap-2  items-center text-grey500`}>
-                      <GrFormView className='text-[20px]' />
-                      <p>View more</p>
+                      <IoCheckmark className='text-[20px]' />
+                      <p>Admit</p>
                     </div>
-                  </Link> */}
-                </DropdownItem>
+                  </DropdownItem>
+                )}
+                {booking?.bookingStatus === 0 && (
+                  <DropdownItem
+                    aria-label='accept booking'
+                    onClick={() =>
+                      updateBookingStatus(booking?.bookingStatus, booking?.id)
+                    }
+                  >
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <IoCheckmark className='text-[20px]' />
+
+                      <p>Accept booking</p>
+                    </div>
+                  </DropdownItem>
+                )}
+
+                {booking?.bookingStatus === 2 && (
+                  <DropdownItem
+                    aria-label='close booking'
+                    onClick={() =>
+                      updateBookingStatus(booking?.bookingStatus, booking?.id)
+                    }
+                  >
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <CiCalendar className='text-[20px]' />
+
+                      <p>Close booking</p>
+                    </div>
+                  </DropdownItem>
+                )}
               </DropdownMenu>
             </Dropdown>
           </div>

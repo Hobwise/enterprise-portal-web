@@ -3,12 +3,7 @@ import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import {
-  CustomLoading,
-  getJsonItemFromLocalStorage,
-  notify,
-  tableTotalCount,
-} from '@/lib/utils';
+import { CustomLoading, notify, tableTotalCount } from '@/lib/utils';
 
 import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
 import { CustomInput } from '@/components/CustomInput';
@@ -119,7 +114,6 @@ const Bookings: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
   const [completedBooking, setCompletedBooking] = useState<any>(null);
-  const businessInformation = getJsonItemFromLocalStorage('business');
 
   const updateBookingStatus = async () => {
     setLoading(true);
