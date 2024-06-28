@@ -90,7 +90,9 @@ const Bookings: React.FC = () => {
     } else if (isError) {
       return <Error onClick={() => refetch()} />;
     } else {
-      return <CreateReservation />;
+      return (
+        <CreateReservation showCreateBookingModal={showCreateBookingModal} />
+      );
     }
   };
 
