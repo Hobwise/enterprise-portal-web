@@ -241,3 +241,8 @@ export const formatDateTime = (dateData) => {
 
   return date.toISOString();
 };
+
+export const numberOnlyInput = (value: any) => {
+  // const regex = /^[0-9]*$/;
+  return value.replace(/[^0-9]/g, '');
+};

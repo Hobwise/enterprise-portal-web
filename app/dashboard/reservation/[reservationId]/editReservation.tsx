@@ -276,7 +276,7 @@ const EditReservation = ({
                   <Spacer y={6} />
                   <div className='flex gap-6'>
                     <CustomInput
-                      type='number'
+                      type='text'
                       startContent={<div className='text-black'>₦</div>}
                       name='reservationFee'
                       errorMessage={response?.errors?.reservationFee?.[0]}
@@ -287,7 +287,7 @@ const EditReservation = ({
                     />
 
                     <CustomInput
-                      type='number'
+                      type='text'
                       startContent={<div className='text-black'>₦</div>}
                       name='minimumSpend'
                       errorMessage={response?.errors?.minimumSpend?.[0]}
@@ -299,7 +299,7 @@ const EditReservation = ({
                   </div>
                   <Spacer y={6} />
                   <CustomInput
-                    type='number'
+                    type='text'
                     name='quantity'
                     errorMessage={response?.errors?.quantity?.[0]}
                     onChange={handleInputChange}

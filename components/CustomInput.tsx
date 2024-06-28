@@ -1,14 +1,9 @@
 'use client';
 
-import { IoEyeOutline, IoEyeOffOutline } from 'react-icons/io5';
+import { IoEyeOffOutline, IoEyeOutline } from 'react-icons/io5';
 
+import { Input } from '@nextui-org/react';
 import { useState } from 'react';
-import {
-  Input,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@nextui-org/react';
 
 interface CustomInputProps {
   type?: string;

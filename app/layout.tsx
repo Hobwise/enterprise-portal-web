@@ -10,7 +10,7 @@ import QueryProvider from '@/hooks/queryProvider';
 import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata = {
-  title: 'Welcome to Hobink',
+  title: 'Hobink',
   description: 'Streamline your business processes',
 };
 

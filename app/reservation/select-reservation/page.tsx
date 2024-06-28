@@ -3,7 +3,7 @@ import { Suspense } from 'react';
 import SelectReservationComponents from './selectReservationComponents';
 
 export const metadata = {
-  title: 'Welcome to Hobink | Reservation',
+  title: 'Hobink | Reservation',
   description: 'Select a reservation and complete bookings',
 };
 const reservations = () => {

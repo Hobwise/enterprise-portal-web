@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Welcome to Hobink',
+  title: 'Hobink',
   description: 'Streamline your business processes',
 };
 
