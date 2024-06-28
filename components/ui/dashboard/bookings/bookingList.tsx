@@ -142,8 +142,6 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
           </div>
         );
 
-      //   case 'id':
-      //     return <div className='text-textGrey text-sm'>{booking?.id}</div>;
       case 'bookingDateTime':
         return (
           <div className='text-textGrey text-sm'>

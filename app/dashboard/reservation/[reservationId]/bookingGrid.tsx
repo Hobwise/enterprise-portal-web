@@ -18,12 +18,18 @@ import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = [
+  'reservationName',
   'firstName',
+  'lastName',
+  'id',
+  'emailAddress',
+  'phoneNumber',
   'reference',
   'bookingDateTime',
   'bookingStatus',
   'actions',
 ];
+
 const BookingGrid = ({ data }: any) => {
   //   console.log(data, 'data');
 
@@ -100,15 +106,13 @@ const BookingGrid = ({ data }: any) => {
           </div>
         );
 
-      case 'reference':
-        return <div className='text-textGrey text-sm'>{data?.reference}</div>;
       case 'bookingDateTime':
         return (
           <div className='text-textGrey text-sm'>
             {moment(data?.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
-      case 'status':
+      case 'bookingStatus':
         return (
           <Chip
             className='capitalize'
@@ -120,27 +124,6 @@ const BookingGrid = ({ data }: any) => {
           </Chip>
         );
 
-      //   case 'actions':
-      //     return (
-      //       <div className='relative flexjustify-center items-center gap-2'>
-      //         <Dropdown aria-label='drop down' className=''>
-      //           <DropdownTrigger aria-label='actions'>
-      //             <div className='cursor-pointer flex justify-center items-center text-black'>
-      //               <HiOutlineDotsVertical className='text-[22px] ' />
-      //             </div>
-      //           </DropdownTrigger>
-      //           <DropdownMenu className='text-black'>
-      //             <DropdownItem onClick={() => {}} aria-label='delete QR'>
-      //               <div className={` text-danger-500 flex  items-center gap-3 `}>
-      //                 <RiDeleteBin6Line />
-
-      //                 <p>Delete QR</p>
-      //               </div>
-      //             </DropdownItem>
-      //           </DropdownMenu>
-      //         </Dropdown>
-      //       </div>
-      //     );
       default:
         return cellValue;
     }
