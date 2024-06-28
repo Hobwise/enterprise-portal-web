@@ -21,7 +21,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'firstName',
   'reference',
   'bookingDateTime',
-  'status',
+  'bookingStatus',
   'actions',
 ];
 const BookingGrid = ({ data }: any) => {
@@ -34,7 +34,7 @@ const BookingGrid = ({ data }: any) => {
     (category) => category?.name === tableStatus
   );
   const matchingObjectArray = matchingObject ? matchingObject?.bookings : [];
-  console.log(matchingObjectArray, 'matchingObjectArray');
+
   const {
     bottomContent,
     headerColumns,

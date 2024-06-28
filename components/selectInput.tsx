@@ -1,5 +1,14 @@
 import { Select, SelectItem } from '@nextui-org/react';
 
+export const selectClassNames = {
+  label: 'text-[#000] bg-transparent font-[500] text-[14px]',
+  base: 'bg-white',
+
+  value: 'text-[14px] text-[#000]',
+
+  trigger:
+    'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
+};
 const SelectInput = ({
   label,
   contents,
@@ -29,15 +38,7 @@ const SelectInput = ({
       onChange={onChange}
       radius='lg'
       placeholder={placeholder}
-      classNames={{
-        label: 'text-[#000] font-[500] text-[14px]',
-        base: 'bg-white',
-
-        value: 'text-[14px] text-[#000]',
-
-        trigger:
-          'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
-      }}
+      classNames={selectClassNames}
     >
       {contents.map((content: any) => (
         <SelectItem

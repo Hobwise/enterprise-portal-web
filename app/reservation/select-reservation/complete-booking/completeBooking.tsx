@@ -24,7 +24,7 @@ const CompleteBookingComponent = () => {
   let businessId = searchParams.get('businessId');
   let cooperateID = searchParams.get('cooperateID');
   let reservationId = searchParams.get('reservationId');
-  console.log(reservationId, 'rereservationId');
+
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setIsSelected] = useState(false);

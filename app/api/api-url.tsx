@@ -42,4 +42,7 @@ export const DASHBOARD = {
   singleReservation: 'api/v1/Reservation/fetch',
   // Bookings
   bookings: 'api/v1/Booking',
+  bookingsByBusiness: 'api/v1/Booking/by-business',
+  bookingsByRef: 'api/v1/Booking/by-ref',
+  updateStatus: 'api/v1/Booking/update-status',
 };

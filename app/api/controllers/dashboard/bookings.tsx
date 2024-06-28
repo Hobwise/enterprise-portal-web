@@ -15,6 +15,7 @@ interface Bookings {
 export const bookingsSchema = z.object({
   firstName: inputNameValidation('First name'),
   lastName: inputNameValidation('Last name'),
+  reservationId: z.string().trim().min(1, 'Select a reservation'),
   emailAddress: emailValidation(),
   phoneNumber: z
     .string()
@@ -30,6 +31,7 @@ export async function createBooking(businessId: any, payload: Bookings) {
     lastName: payload?.lastName,
     emailAddress: payload.emailAddress,
     phoneNumber: payload.phoneNumber,
+    reservationId: payload.reservationId,
     // bookingDateTime: payload. bookingDateTime,
   });
 
@@ -44,6 +46,64 @@ export async function createBooking(businessId: any, payload: Bookings) {
     const data = await api.post(DASHBOARD.bookings, payload, {
       headers,
     });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getBookingsByBusiness(
+  businessId: string,
+  page: any,
+  rowsPerPage: any,
+  tableStatus: any
+) {
+  const headers = businessId ? { businessId } : {};
+
+  const payload = [
+    {
+      status: tableStatus || 'All',
+      page: page || 1,
+      pageSize: rowsPerPage || 10,
+    },
+  ];
+
+  try {
+    const data = await api.post(DASHBOARD.bookingsByBusiness, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getBookingByRef(businessId: string, bookingId: string) {
+  const headers = businessId ? { businessId, bookingId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.bookingsByRef, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function postBookingStatus(bookingId: string, status: number) {
+  const headers = { status, bookingId };
+
+  try {
+    const data = await api.post(
+      DASHBOARD.updateStatus,
+      {},
+      {
+        headers,
+      }
+    );
 
     return data;
   } catch (error) {
