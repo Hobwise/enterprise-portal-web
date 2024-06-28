@@ -26,14 +26,14 @@ const BookingDetails = ({
         return 'Accept this booking';
       case 1:
         return 'Admit customer';
-      case 4:
+      case 2:
         return 'Close this booking';
       default:
         return 'Admit';
     }
   };
 
-  const shouldShowButton = ![3, 5, 6, 2].includes(
+  const shouldShowButton = ![3, 5, 6, 4].includes(
     bookingDetails?.bookingStatus
   );
   return (
