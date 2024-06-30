@@ -130,11 +130,7 @@ const Menu: React.FC = () => {
       hasVariety,
     };
   });
-  const totalCount = data?.reduce((accumulator, currentValue) => {
-    const count = Number(currentValue.totalCount);
-    return accumulator + count;
-  }, 0);
-  // {tableTotalCount(data)}
+
   return (
     <Container>
       <div className='flex flex-row flex-wrap  justify-between'>
@@ -148,7 +144,7 @@ const Menu: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {totalCount}
+                  {data[0]?.totalCount}
                 </Chip>
               </div>
             ) : (

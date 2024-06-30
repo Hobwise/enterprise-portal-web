@@ -1,12 +1,22 @@
 'use client';
-import { DASHBOARD } from '@/app/api/api-url';
 import Error from '@/components/error';
+import { columns } from '@/components/ui/dashboard/reservations/data';
+import useReservation from '@/hooks/cachedEndpoints/useReservation';
+import usePagination from '@/hooks/usePagination';
 import { saveJsonItemToLocalStorage, saveToLocalStorage } from '@/lib/utils';
-import { Divider, Pagination, Spinner } from '@nextui-org/react';
+import { Divider, Spinner } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
 import noImage from '../../../public/assets/images/no-image.svg';
+
+const INITIAL_VISIBLE_COLUMNS = [
+  'reservationName',
+  'reservationDescription',
+  'reservationFee',
+  'quantity',
+  'minimumSpend',
+  'actions',
+];
 
 const SelectReservationComponents = () => {
   const searchParams = useSearchParams();
@@ -15,51 +25,18 @@ const SelectReservationComponents = () => {
   let cooperateID = searchParams.get('cooperateID');
   const router = useRouter();
 
-  const [error, setError] = useState(false);
-  const [page, setPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [reservationData, setReservationData] = useState([]);
+  const { data, isLoading, isError, refetch } = useReservation();
 
-  const rowsPerPage = 10;
+  const { bottomContent } = usePagination(
+    data,
+    columns,
+    INITIAL_VISIBLE_COLUMNS
+  );
 
-  const pages = useMemo(() => {
-    return reservationData?.totalCount
-      ? Math.ceil(reservationData.totalCount / rowsPerPage)
-      : 0;
-  }, [reservationData?.totalCount, rowsPerPage]);
-
-  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
-  const reservation = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(
-        `${baseURL}${DASHBOARD.reservationsByBusiness}`,
-        {
-          headers: {
-            cooperateId: cooperateID,
-            businessId: businessId,
-            page: page,
-            pageSize: rowsPerPage,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      setReservationData(data?.data);
-      setIsLoading(false);
-    } catch (error) {
-      setError(true);
-    }
-  };
-
-  if (error) {
-    return <Error onClick={() => reservation()} />;
+  if (isError) {
+    return <Error onClick={() => refetch()} />;
   }
 
-  useEffect(() => {
-    reservation();
-  }, [page]);
   return (
     <div className='h-screen p-4'>
       <h1 className='text-2xl  text-black '>{businessName}</h1>
@@ -77,7 +54,7 @@ const SelectReservationComponents = () => {
       ) : (
         <>
           <div className='w-full h-[70%]  overflow-scroll'>
-            {reservationData?.reservations?.map((reservation, index) => (
+            {data?.reservations?.map((reservation, index) => (
               <div
                 title='select reservation'
                 onClick={() => {
@@ -110,21 +87,7 @@ const SelectReservationComponents = () => {
               </div>
             ))}
           </div>
-          <>
-            {reservationData?.totalCount > 10 ? (
-              <div className='flex w-full mt-4 justify-center'>
-                <Pagination
-                  isCompact
-                  showControls
-                  showShadow
-                  color='primary'
-                  page={page}
-                  total={pages}
-                  onChange={(page) => setPage(page)}
-                />
-              </div>
-            ) : null}
-          </>
+          <>{bottomContent}</>
         </>
       )}
     </div>

@@ -27,7 +27,7 @@ import { HiOutlineDotsVertical } from 'react-icons/hi';
 
 import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
 import useBookings from '@/hooks/cachedEndpoints/useBookings';
-import { notify } from '@/lib/utils';
+import { notify, submitBookingStatus } from '@/lib/utils';
 import { CiCalendar } from 'react-icons/ci';
 import { IoCheckmark } from 'react-icons/io5';
 import Filters from './filters';
@@ -173,7 +173,10 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                   <DropdownItem
                     aria-label='admit'
                     onClick={() =>
-                      updateBookingStatus(booking?.bookingStatus, booking?.id)
+                      updateBookingStatus(
+                        booking?.bookingStatus,
+                        submitBookingStatus(booking?.id)
+                      )
                     }
                   >
                     <div className={` flex gap-2  items-center text-grey500`}>
@@ -186,7 +189,10 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                   <DropdownItem
                     aria-label='accept booking'
                     onClick={() =>
-                      updateBookingStatus(booking?.bookingStatus, booking?.id)
+                      updateBookingStatus(
+                        booking?.bookingStatus,
+                        submitBookingStatus(booking?.id)
+                      )
                     }
                   >
                     <div className={` flex gap-2  items-center text-grey500`}>
@@ -201,7 +207,10 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                   <DropdownItem
                     aria-label='close booking'
                     onClick={() =>
-                      updateBookingStatus(booking?.bookingStatus, booking?.id)
+                      updateBookingStatus(
+                        booking?.bookingStatus,
+                        submitBookingStatus(booking?.id)
+                      )
                     }
                   >
                     <div className={` flex gap-2  items-center text-grey500`}>

@@ -4,6 +4,7 @@ import {
   statusDataMap,
 } from '@/app/dashboard/reservation/[reservationId]/data';
 import { CustomButton } from '@/components/customButton';
+import { submitBookingStatus } from '@/lib/utils';
 import {
   Chip,
   Modal,
@@ -36,6 +37,7 @@ const BookingDetails = ({
   const shouldShowButton = ![3, 5, 6, 4].includes(
     bookingDetails?.bookingStatus
   );
+
   return (
     <Modal
       isDismissable={false}
@@ -62,9 +64,11 @@ const BookingDetails = ({
                   {statusDataMap[bookingDetails?.bookingStatus]}
                 </Chip>
               </div>
-              <p className='text-sm  text-grey600  mb-4'>
-                Booking for {bookingDetails.reservationId}
-              </p>
+              {bookingDetails.reference && (
+                <p className='text-sm  text-grey600  mb-4'>
+                  Booking for {bookingDetails.reference}
+                </p>
+              )}
               <div>
                 <p className='font-[400] text-grey500 text-[14px]'>NAME</p>
                 <p className='font-[500] text-black '>
@@ -77,7 +81,7 @@ const BookingDetails = ({
                   RESERVATION
                 </p>
                 <p className='font-[500] text-black '>
-                  {bookingDetails.reservation}{' '}
+                  {bookingDetails.reservation?.reservationName}
                 </p>
               </div>
               <Spacer y={1} />
@@ -93,14 +97,32 @@ const BookingDetails = ({
               {shouldShowButton && (
                 <>
                   <Spacer y={2} />
-                  <CustomButton
-                    loading={isLoading}
-                    onClick={updateBookingStatus}
-                    disabled={isLoading}
-                    type='submit'
-                  >
-                    {isLoading ? 'Processing...' : getButtonText()}
-                  </CustomButton>
+                  <div className='flex gap-3'>
+                    <CustomButton
+                      className='flex-grow h-[54px] text-white'
+                      loading={isLoading}
+                      onClick={() =>
+                        updateBookingStatus(
+                          submitBookingStatus(bookingDetails?.bookingStatus)
+                        )
+                      }
+                      disabled={isLoading}
+                      type='submit'
+                    >
+                      {isLoading ? 'Processing...' : getButtonText()}
+                    </CustomButton>
+                    {bookingDetails?.bookingStatus === 0 && (
+                      <CustomButton
+                        backgroundColor='bg-transparent'
+                        className='border-grey500 border text-grey500 h-[54px] flex-grow'
+                        onClick={() => updateBookingStatus(3, false)}
+                        disabled={isLoading}
+                        type='submit'
+                      >
+                        {'Decline'}
+                      </CustomButton>
+                    )}
+                  </div>
                 </>
               )}
 

@@ -3,7 +3,7 @@ import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { CustomLoading, tableTotalCount } from '@/lib/utils';
+import { CustomLoading } from '@/lib/utils';
 
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
@@ -95,7 +95,7 @@ const Orders: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {tableTotalCount(data)}
+                  {data[0]?.totalCount}
                 </Chip>
               </div>
             ) : (

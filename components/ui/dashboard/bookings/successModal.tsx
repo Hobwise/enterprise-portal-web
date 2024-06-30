@@ -33,11 +33,7 @@ const SuccessModal = ({
                 <span className='font-[600] text-black'>
                   {bookingDetails.firstName} {bookingDetails.lastName}.
                 </span>{' '}
-                Booking ID{' '}
-                <span className='font-[600] text-black'>
-                  {bookingDetails.reference}
-                </span>{' '}
-                has been sent to{' '}
+                Confirmation email has been sent to has been sent to{' '}
                 <span className='font-[600] text-black'>
                   {bookingDetails.emailAddress}
                 </span>

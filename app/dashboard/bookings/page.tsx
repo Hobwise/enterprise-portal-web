@@ -3,7 +3,7 @@ import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { CustomLoading, notify, tableTotalCount } from '@/lib/utils';
+import { CustomLoading, notify } from '@/lib/utils';
 
 import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
 import { CustomInput } from '@/components/CustomInput';
@@ -117,12 +117,12 @@ const Bookings: React.FC = () => {
   const [bookingDetails, setBookingDetails] = useState<any>(null);
   const [completedBooking, setCompletedBooking] = useState<any>(null);
 
-  const updateBookingStatus = async () => {
-    setLoading(true);
-    const data = await postBookingStatus(
-      bookingId,
-      bookingDetails?.bookingStatus
-    );
+  const updateBookingStatus = async (
+    id: number,
+    checkingLoading: boolean = true
+  ) => {
+    setLoading(checkingLoading);
+    const data = await postBookingStatus(bookingId, id);
     setLoading(false);
     if (data?.data?.isSuccessful) {
       notify({
@@ -155,7 +155,7 @@ const Bookings: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {tableTotalCount(data)}
+                  {data[0]?.totalCount}
                 </Chip>
               </div>
             ) : (

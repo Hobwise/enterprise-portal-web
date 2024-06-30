@@ -19,14 +19,10 @@ import {
 } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { GrFormView } from 'react-icons/gr';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns } from './data';
-// import DeleteQRModal from './deleteModal';
-// import EditQrModal from './editQrModal';
-// import ViewQrModal from './viewQrModal';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'reservationName',
@@ -38,28 +34,9 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 const ReservationList = ({ reservation, searchQuery, data }: any) => {
-  const router = useRouter();
-
-  const [singleOrder, setSingleOrder] = React.useState('');
-
-  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
-  const [isOpenEdit, setIsOpenEdit] = React.useState<Boolean>(false);
-  const [isOpenView, setIsOpenView] = React.useState<Boolean>(false);
-  const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
-    React.useState<Boolean>(false);
   const [filteredReservation, setFilteredReservation] = React.useState(
     data?.reservations
   );
-
-  const toggleReservationModalModal = () => {
-    setIsOpenDelete(!isOpenDelete);
-  };
-  const toggleReservationModalEdit = () => {
-    setIsOpenEdit(!isOpenEdit);
-  };
-  const toggleReservationModalView = () => {
-    setIsOpenView(!isOpenView);
-  };
 
   useEffect(() => {
     if (reservation && searchQuery) {
@@ -93,17 +70,11 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
     classNames,
   } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
 
-  const toggleCancelModal = (order: any) => {
-    setSingleOrder(order);
-    setIsOpenCancelOrder(!isOpenCancelOrder);
-  };
-  const toggleConfirmModal = (order: any) => {
-    setSingleOrder(order);
-    setIsOpenConfirmOrder(!isOpenConfirmOrder);
-  };
-
   const renderCell = React.useCallback((reservation, columnKey) => {
     const cellValue = reservation[columnKey];
+
+    const showMinimumSpend = reservation.minimumSpend > 0;
+    const showReservationFee = reservation.reservationFee > 0;
 
     switch (columnKey) {
       case 'reservationName':
@@ -129,21 +100,21 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
                 {reservation.reservationName}
               </p>
 
-              <div>
-                <p className=' text-sm'>Reservation Fee</p>
-                <p className='font-bold text-sm'>
-                  {formatPrice(reservation.reservationFee)}
-                </p>
-              </div>
-
-              {/* {reservation.minimumSpend > 0 && (
+              {showReservationFee ? (
+                <div>
+                  <p className='text-sm'>Reservation Fee</p>
+                  <p className='font-bold text-sm'>
+                    {formatPrice(reservation.reservationFee)}
+                  </p>
+                </div>
+              ) : showMinimumSpend ? (
                 <div>
                   <p className='text-sm'>Minimum Spend</p>
                   <p className='font-bold text-sm'>
                     {formatPrice(reservation.minimumSpend)}
                   </p>
                 </div>
-              )} */}
+              ) : null}
             </div>
           </div>
         );
@@ -185,20 +156,6 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
                     </div>
                   </Link>
                 </DropdownItem>
-
-                {/* <DropdownItem
-                  onClick={() => {
-                    toggleReservationModalModal();
-                    saveJsonItemToLocalStorage('reservation', reservation);
-                  }}
-                  aria-label='delete reservation'
-                >
-                  <div className={` text-danger-500 flex  items-center gap-3 `}>
-                    <RiDeleteBin6Line />
-
-                    <p>Delete Reservation</p>
-                  </div>
-                </DropdownItem> */}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -250,21 +207,6 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
           )}
         </TableBody>
       </Table>
-      {/* <DeleteQRModal
-        isOpenDelete={isOpenDelete}
-        setIsOpenDelete={setIsOpenDelete}
-        toggleQRmodalModal={toggleQRmodalModal}
-      />
-      <EditQrModal
-        isOpenEdit={isOpenEdit}
-        setIsOpenEdit={setIsOpenEdit}
-        toggleQRmodalEdit={toggleQRmodalEdit}
-      />
-      <ViewQrModal
-        isOpenView={isOpenView}
-        setIsOpenView={setIsOpenView}
-        toggleQRmodalView={toggleQRmodalView}
-      /> */}
     </section>
   );
 };

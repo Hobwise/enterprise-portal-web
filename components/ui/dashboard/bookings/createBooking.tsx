@@ -34,6 +34,7 @@ const CreateBooking = ({
   setCompletedBooking,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { data } = useReservation();
   const { refetch } = useBookings();
 
@@ -84,7 +85,8 @@ const CreateBooking = ({
     setIsLoading(true);
     const data = await createBooking(
       businessInformation[0]?.businessId,
-      payload
+      payload,
+      userInformation.cooperateID
     );
 
     setResponse(data);

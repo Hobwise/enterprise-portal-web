@@ -246,3 +246,13 @@ export const numberOnlyInput = (value: any) => {
   // const regex = /^[0-9]*$/;
   return value.replace(/[^0-9]/g, '');
 };
+
+export const submitBookingStatus = (id: number) => {
+  if (id === 0) {
+    return 1;
+  } else if (id === 1) {
+    return 0;
+  } else if (id === 2) {
+    return 2;
+  }
+};

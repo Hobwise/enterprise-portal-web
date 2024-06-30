@@ -25,7 +25,11 @@ export const bookingsSchema = z.object({
       message: 'Phone number must only contain digits',
     }),
 });
-export async function createBooking(businessId: any, payload: Bookings) {
+export async function createBooking(
+  businessId: any,
+  payload: Bookings,
+  cooperateID: null
+) {
   const validatedFields = bookingsSchema.safeParse({
     firstName: payload?.firstName,
     lastName: payload?.lastName,
@@ -40,7 +44,7 @@ export async function createBooking(businessId: any, payload: Bookings) {
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const headers = businessId ? { businessId } : {};
+  const headers = businessId ? { businessId, cooperateID } : {};
 
   try {
     const data = await api.post(DASHBOARD.bookings, payload, {
@@ -80,8 +84,11 @@ export async function getBookingsByBusiness(
   }
 }
 
-export async function getBookingByRef(businessId: string, bookingId: string) {
-  const headers = businessId ? { businessId, bookingId } : {};
+export async function getBookingByRef(
+  businessId: string,
+  bookingReferenceId: string
+) {
+  const headers = businessId ? { businessId, bookingReferenceId } : {};
 
   try {
     const data = await api.get(DASHBOARD.bookingsByRef, {

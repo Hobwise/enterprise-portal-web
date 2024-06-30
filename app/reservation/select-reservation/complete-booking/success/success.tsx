@@ -7,19 +7,26 @@ import {
 } from '@/lib/utils';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
 import Success from '../../../../../public/assets/images/success.png';
 const SuccessComponent = () => {
   const searchParams = useSearchParams();
   let businessName = searchParams.get('businessName');
   let businessId = searchParams.get('businessId');
   let cooperateID = searchParams.get('cooperateID');
+  let reservationId = searchParams.get('reservationId');
   const router = useRouter();
+
+  const homeRouteWithoutReservationId = router.push(
+    `/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+  );
+  const homeRouteWithReservationId = router.push(
+    `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+  );
   const bookingDetails = getJsonItemFromLocalStorage('bookingDetails');
 
-  useEffect(() => {
-    clearItemLocalStorage('singleReservation');
-  }, []);
+  // useEffect(() => {
+  //   clearItemLocalStorage('singleReservation');
+  // }, []);
 
   return (
     <>
@@ -35,11 +42,7 @@ const SuccessComponent = () => {
         <span className='font-[600] text-black'>
           {bookingDetails.firstName} {bookingDetails.lastName}.
         </span>{' '}
-        Booking ID{' '}
-        <span className='font-[600] text-black'>
-          {bookingDetails.reference}
-        </span>{' '}
-        has been sent to{' '}
+        Confirmation email has been sent to{' '}
         <span className='font-[600] text-black'>
           {bookingDetails.emailAddress}
         </span>
@@ -51,7 +54,10 @@ const SuccessComponent = () => {
             // router.push(
             //   `/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
             // );
-            window.close();
+            reservationId
+              ? homeRouteWithReservationId
+              : homeRouteWithoutReservationId;
+            // window.close();
             clearItemLocalStorage('bookingDetails');
           }}
           className='h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 '

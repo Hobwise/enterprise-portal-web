@@ -25,11 +25,19 @@ const CompleteBookingComponent = () => {
   let cooperateID = searchParams.get('cooperateID');
   let reservationId = searchParams.get('reservationId');
 
+  const router = useRouter();
+
+  const succesRouteWithReservationId = router.push(
+    `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
+  );
+  const succesRouteWithoutReservationId = router.push(
+    `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+  );
+
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
   const [timeNdate, setTimeNdate] = useState(now(getLocalTimeZone()));
-  const router = useRouter();
   const [bookings, setBookings] = useState<any>({
     firstName: '',
     lastName: '',
@@ -71,7 +79,7 @@ const CompleteBookingComponent = () => {
     };
 
     setIsLoading(true);
-    const data = await createBooking(businessId, payload);
+    const data = await createBooking(businessId, payload, cooperateID);
 
     setResponse(data);
 
@@ -87,9 +95,9 @@ const CompleteBookingComponent = () => {
         id: '',
       });
       setTimeNdate(now(getLocalTimeZone()));
-      router.push(
-        `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
-      );
+      reservationId
+        ? succesRouteWithReservationId
+        : succesRouteWithoutReservationId;
       saveJsonItemToLocalStorage('bookingDetails', data?.data?.data);
     } else if (data?.data?.error) {
       toast.error(data?.data?.error);
