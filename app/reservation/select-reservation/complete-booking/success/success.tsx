@@ -16,12 +16,6 @@ const SuccessComponent = () => {
   let reservationId = searchParams.get('reservationId');
   const router = useRouter();
 
-  const homeRouteWithoutReservationId = router.push(
-    `/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
-  );
-  const homeRouteWithReservationId = router.push(
-    `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
-  );
   const bookingDetails = getJsonItemFromLocalStorage('bookingDetails');
 
   // useEffect(() => {
@@ -51,13 +45,14 @@ const SuccessComponent = () => {
       <div className='flex gap-3'>
         <CustomButton
           onClick={async () => {
-            // router.push(
-            //   `/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
-            // );
             reservationId
-              ? homeRouteWithReservationId
-              : homeRouteWithoutReservationId;
-            // window.close();
+              ? router.push(
+                  `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+                )
+              : router.push(
+                  `/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+                );
+
             clearItemLocalStorage('bookingDetails');
           }}
           className='h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 '

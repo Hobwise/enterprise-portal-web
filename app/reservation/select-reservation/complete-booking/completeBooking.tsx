@@ -27,10 +27,6 @@ const CompleteBookingComponent = () => {
 
   const router = useRouter();
 
-  // const succesRouteWithReservationId =
-
-  // const succesRouteWithoutReservationId =
-
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
