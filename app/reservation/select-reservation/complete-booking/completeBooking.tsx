@@ -27,12 +27,9 @@ const CompleteBookingComponent = () => {
 
   const router = useRouter();
 
-  const succesRouteWithReservationId = router.push(
-    `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
-  );
-  const succesRouteWithoutReservationId = router.push(
-    `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
-  );
+  // const succesRouteWithReservationId =
+
+  // const succesRouteWithoutReservationId =
 
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -96,8 +93,12 @@ const CompleteBookingComponent = () => {
       });
       setTimeNdate(now(getLocalTimeZone()));
       reservationId
-        ? succesRouteWithReservationId
-        : succesRouteWithoutReservationId;
+        ? router.push(
+            `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
+          )
+        : router.push(
+            `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+          );
       saveJsonItemToLocalStorage('bookingDetails', data?.data?.data);
     } else if (data?.data?.error) {
       toast.error(data?.data?.error);
