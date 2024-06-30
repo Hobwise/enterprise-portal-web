@@ -94,6 +94,11 @@ const CreateBooking = ({
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
+      refetch();
+      setTimeNdate(now(getLocalTimeZone()));
+      closeCreateBookingModal();
+      showSuccessModal();
+      setCompletedBooking(data?.data?.data);
       setBookings({
         firstName: '',
         lastName: '',
@@ -102,11 +107,6 @@ const CreateBooking = ({
 
         id: '',
       });
-      refetch();
-      setTimeNdate(now(getLocalTimeZone()));
-      closeCreateBookingModal();
-      showSuccessModal();
-      setCompletedBooking(data?.data?.data);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',

@@ -79,14 +79,6 @@ const CompleteBookingComponent = () => {
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
-      setBookings({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-
-        id: '',
-      });
       setTimeNdate(now(getLocalTimeZone()));
       reservationId
         ? router.push(
@@ -96,6 +88,14 @@ const CompleteBookingComponent = () => {
             `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
           );
       saveJsonItemToLocalStorage('bookingDetails', data?.data?.data);
+      setBookings({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: '',
+
+        id: '',
+      });
     } else if (data?.data?.error) {
       toast.error(data?.data?.error);
     }
