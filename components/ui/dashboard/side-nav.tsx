@@ -181,14 +181,6 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
     setSubMenuOpen(!subMenuOpen);
   };
 
-  function checkPathname(path = 'order') {
-    // Lowercase both pathname and target string for case-insensitive comparison
-    const lowerPathname = pathname.toLowerCase();
-    const lowerTarget = path.toLowerCase();
-
-    // Check for exact match or presence within the path (considering "dashboard/orders")
-    return lowerPathname === lowerTarget || lowerPathname.includes(lowerTarget);
-  }
   return (
     <div>
       {item.submenu ? (

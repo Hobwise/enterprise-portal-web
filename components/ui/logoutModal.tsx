@@ -1,5 +1,5 @@
 'use client';
-import { clearItemLocalStorage, removeCookie } from '@/lib/utils';
+import { removeCookie } from '@/lib/utils';
 import {
   Button,
   Modal,
@@ -30,7 +30,8 @@ const LogoutModal = ({ isOpen, onOpenChange }: any) => {
               <div className='flex gap-4 mb-4'>
                 <Button
                   className='flex-grow'
-                  color='primary'
+                  color='default'
+                  variant='bordered'
                   onPress={onOpenChange}
                 >
                   Cancel
@@ -38,7 +39,7 @@ const LogoutModal = ({ isOpen, onOpenChange }: any) => {
                 <Button
                   className='flex-grow'
                   onClick={() => {
-                    clearItemLocalStorage('userInformation');
+                    localStorage.clear();
                     removeCookie('token');
                     router.push('/auth/login');
                   }}

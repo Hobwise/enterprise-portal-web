@@ -19,12 +19,8 @@ import { IoIosArrowDown, IoIosSettings } from 'react-icons/io';
 import { IoChatbubblesOutline } from 'react-icons/io5';
 import { MdPerson } from 'react-icons/md';
 import { SlBell } from 'react-icons/sl';
-import Menu from '../../../public/assets/icons/menu.png';
-import Orders from '../../../public/assets/icons/order.png';
-import QRCode from '../../../public/assets/icons/qr-code.png';
-import Reservation from '../../../public/assets/icons/reservation.png';
 import LogoutModal from '../logoutModal';
-import { SIDENAV_ITEMS } from './constants';
+import { SIDENAV_ITEMS, headerRouteMapping } from './constants';
 
 const Header = () => {
   const { isOpen, onOpenChange } = useDisclosure();
@@ -35,44 +31,10 @@ const Header = () => {
   const navItem = SIDENAV_ITEMS.filter((item) => item.path === pathname)[0];
 
   const routeOutsideSidebar = () => {
-    if (pathname.includes('settings')) {
-      return {
-        title: 'Settings',
-        icon: <IoIosSettings className='text-[20px] dashboardLogo' />,
-      };
-    } else if (
-      pathname.includes('add-menu-item') ||
-      pathname.includes('menu/')
-    ) {
-      return {
-        title: 'Menu',
-        icon: <Image src={Menu} className={'dashboardLogo'} alt='menu logo' />,
-      };
-    } else if (pathname.includes('place-order')) {
-      return {
-        title: 'Orders',
-        icon: (
-          <Image src={Orders} className={'dashboardLogo'} alt='order logo' />
-        ),
-      };
-    } else if (pathname.includes('create-qr')) {
-      return {
-        title: 'QR Code',
-        icon: (
-          <Image src={QRCode} className={'dashboardLogo'} alt='Qr code logo' />
-        ),
-      };
-    } else if (pathname.includes('reservation/')) {
-      return {
-        title: 'Reservation',
-        icon: (
-          <Image
-            src={Reservation}
-            className={'dashboardLogo'}
-            alt='Reservation logo'
-          />
-        ),
-      };
+    for (const [key, value] of Object.entries(headerRouteMapping)) {
+      if (pathname.includes(key)) {
+        return value;
+      }
     }
   };
 

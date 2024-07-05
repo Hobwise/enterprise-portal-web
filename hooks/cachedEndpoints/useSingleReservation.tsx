@@ -6,7 +6,7 @@ import {
 import { useQuery } from 'react-query';
 import { useGlobalContext } from '../globalProvider';
 
-const useSingleReservation = (reservationId: string) => {
+const useSingleReservation = (reservationId: any) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
 
   const getSingleReservation = async ({ queryKey }) => {

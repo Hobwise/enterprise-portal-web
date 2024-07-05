@@ -58,7 +58,11 @@ const ReservationDetails = () => {
   };
 
   if (isError) {
-    return <Error onClick={() => refetch()} />;
+    return (
+      <Container>
+        <Error onClick={() => refetch()} />
+      </Container>
+    );
   }
 
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(

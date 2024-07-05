@@ -60,7 +60,11 @@ const DeleteReservation = ({
                 >
                   Delete
                 </Button>
-                <Button color='primary' onPress={toggleModalDelete}>
+                <Button
+                  color='default'
+                  variant='bordered'
+                  onPress={toggleModalDelete}
+                >
                   Close
                 </Button>
               </div>

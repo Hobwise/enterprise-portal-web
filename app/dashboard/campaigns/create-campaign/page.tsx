@@ -1,18 +1,20 @@
 'use client';
-import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
 import {
-  createReservations,
-  payloadReservationItem,
-} from '@/app/api/controllers/dashboard/reservations';
+  createCampaign,
+  payloadCampaignItem,
+} from '@/app/api/controllers/dashboard/campaigns';
+import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
+
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
 import Container from '@/components/dashboardContainer';
-import useReservation from '@/hooks/cachedEndpoints/useReservation';
+import useCampaign from '@/hooks/cachedEndpoints/useCampaign';
 import {
   SmallLoader,
   THREEMB,
   clearItemLocalStorage,
+  formatDateTime,
   getFromLocalStorage,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
@@ -20,6 +22,13 @@ import {
   saveJsonItemToLocalStorage,
   saveToLocalStorage,
 } from '@/lib/utils';
+import {
+  getLocalTimeZone,
+  now,
+  parseZonedDateTime,
+  today,
+} from '@internationalized/date';
+import { DatePicker } from '@nextui-org/date-picker';
 import {
   Modal,
   ModalBody,
@@ -35,14 +44,19 @@ import toast from 'react-hot-toast';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import Success from '../../../../public/assets/images/success.png';
 
-const AddNewReservation = () => {
+const AddNewCampaign = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const router = useRouter();
-  const getReservationSavedToDraft = getJsonItemFromLocalStorage(
-    'saveReservationToDraft'
+  const getCampaignSavedToDraft = getJsonItemFromLocalStorage(
+    'saveCampaignToDraft'
   );
-  const selectedImageSavedToDraft = getFromLocalStorage('selectedImage');
-  const { refetch } = useReservation();
+  const getStartDateTime = getFromLocalStorage('saveStartDateTime') || '';
+  const getEndDateTime = getFromLocalStorage('saveEndDateTime') || '';
+  const selectedImageSavedToDraft = getFromLocalStorage(
+    'selectedImageCampaign'
+  );
+
+  const { refetch } = useCampaign();
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState('');
@@ -50,19 +64,35 @@ const AddNewReservation = () => {
   const [selectedImage, setSelectedImage] = useState(
     selectedImageSavedToDraft || ''
   );
+  const [startDateTime, setStartDateTime] = useState(
+    getStartDateTime
+      ? parseZonedDateTime(getStartDateTime)
+      : now(getLocalTimeZone())
+  );
+  const [endDateTime, setEndDateTime] = useState(
+    getEndDateTime
+      ? parseZonedDateTime(getEndDateTime)
+      : now(getLocalTimeZone())
+  );
 
-  const [reservationPayload, setReservationPayload] =
-    useState<payloadReservationItem>({
-      reservationName: getReservationSavedToDraft?.reservationName || '',
-      reservationDescription:
-        getReservationSavedToDraft?.reservationDescription || '',
-      reservationFee: getReservationSavedToDraft?.reservationFee || 0,
-      minimumSpend: getReservationSavedToDraft?.minimumSpend || 0,
-      reservationRequirement:
-        getReservationSavedToDraft?.reservationRequirement || '',
-      quantity: getReservationSavedToDraft?.quantity || '',
-      imageReference: getReservationSavedToDraft?.imageReference || '',
-    });
+  const [campaignPayload, setCampaignPayload] = useState<payloadCampaignItem>({
+    campaignName: getCampaignSavedToDraft?.campaignName || '',
+    campaignDescription: getCampaignSavedToDraft?.campaignDescription || '',
+
+    dressCode: getCampaignSavedToDraft?.dressCode || '',
+    isActive: getCampaignSavedToDraft?.isActive || true,
+    imageReference: getCampaignSavedToDraft?.imageReference || '',
+  });
+
+  const formSubmit = () => {
+    return (
+      campaignPayload.campaignName &&
+      campaignPayload.campaignDescription &&
+      campaignPayload.dressCode &&
+      startDateTime &&
+      endDateTime
+    );
+  };
 
   const businessInformation = getJsonItemFromLocalStorage('business');
 
@@ -73,8 +103,8 @@ const AddNewReservation = () => {
     setImageError('');
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
-      setReservationPayload({
-        ...reservationPayload,
+      setCampaignPayload({
+        ...campaignPayload,
         imageReference: data.data.data,
       });
     } else if (data?.data?.error) {
@@ -89,12 +119,12 @@ const AddNewReservation = () => {
   const removeUploadedFile = async () => {
     const data = await deleteFile(
       businessInformation[0]?.businessId,
-      reservationPayload.imageReference
+      campaignPayload.imageReference
     );
 
     if (data?.data?.isSuccessful) {
       setSelectedImage('');
-      clearItemLocalStorage('selectedImage');
+      clearItemLocalStorage('selectedImageCampaign');
       toast.success('Image removed');
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
@@ -123,40 +153,27 @@ const AddNewReservation = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = e.target;
-    setReservationPayload((prevFormData) => ({
+    setCampaignPayload((prevFormData) => ({
       ...prevFormData,
       [name]: value,
     }));
   };
 
-  const reservationRequirement = () => {
-    if (reservationPayload.reservationFee) {
-      return 0;
-    } else if (reservationPayload.minimumSpend) {
-      return 1;
-    } else if (
-      reservationPayload.minimumSpend &&
-      reservationPayload.reservationFee
-    ) {
-      return 3;
-    } else {
-      return 2;
-    }
-  };
-  const postReservation = async () => {
-    // if (!selectedImage) {
-    //   return setImageError('Upload an image');
-    // }
-
+  const postCampaign = async () => {
     setIsLoading(true);
-
-    const data = await createReservations(businessInformation[0]?.businessId, {
-      ...reservationPayload,
-      reservationFee: Number(reservationPayload.reservationFee),
-      minimumSpend: Number(reservationPayload.minimumSpend),
-      reservationRequirement: reservationRequirement(),
-      quantity: Number(reservationPayload.quantity),
-    });
+    const payload = {
+      campaignName: campaignPayload.campaignName,
+      campaignDescription: campaignPayload.campaignDescription,
+      dressCode: campaignPayload.dressCode,
+      isActive: campaignPayload.isActive,
+      imageReference: campaignPayload.imageReference,
+      startDateTime: formatDateTime(startDateTime),
+      endDateTime: formatDateTime(endDateTime),
+    };
+    const data = await createCampaign(
+      businessInformation[0]?.businessId,
+      payload
+    );
 
     setResponse(data);
 
@@ -164,18 +181,20 @@ const AddNewReservation = () => {
 
     if (data?.data?.isSuccessful) {
       onOpen();
-      clearItemLocalStorage('saveReservationToDraft');
-      clearItemLocalStorage('selectedImage');
-      setReservationPayload({
-        reservationName: '',
-        reservationDescription: '',
-        reservationFee: 0,
-        minimumSpend: 0,
-        reservationRequirement: '',
-        quantity: '',
+      clearItemLocalStorage('saveCampaignToDraft');
+      clearItemLocalStorage('selectedImageCampaign');
+      clearItemLocalStorage('saveStartDateTime');
+      clearItemLocalStorage('saveEndDateTime');
+      setStartDateTime(now(getLocalTimeZone()));
+      setEndDateTime(now(getLocalTimeZone()));
+      setCampaignPayload({
+        campaignName: '',
+        campaignDescription: '',
+        dressCode: '',
+        isActive: true,
         imageReference: '',
       });
-      // setSelectedFile();
+
       setSelectedImage('');
     } else if (data?.data?.error) {
       notify({
@@ -187,23 +206,30 @@ const AddNewReservation = () => {
   };
 
   const saveToDraft = () => {
-    saveJsonItemToLocalStorage('saveReservationToDraft', reservationPayload);
-    saveToLocalStorage('selectedImage', selectedImage);
-    toast.success('Saved to draft!');
+    saveJsonItemToLocalStorage('saveCampaignToDraft', campaignPayload);
+    saveToLocalStorage('selectedImageCampaign', selectedImage);
+    saveToLocalStorage('saveStartDateTime', startDateTime);
+    saveToLocalStorage('saveEndDateTime', endDateTime);
   };
 
   useEffect(() => {
-    setReservationPayload({
-      reservationName: getReservationSavedToDraft?.reservationName || '',
-      reservationDescription:
-        getReservationSavedToDraft?.reservationDescription || '',
-      reservationFee: getReservationSavedToDraft?.reservationFee || 0,
-      minimumSpend: getReservationSavedToDraft?.minimumSpend || 0,
-      reservationRequirement:
-        getReservationSavedToDraft?.reservationRequirement || '',
-      quantity: getReservationSavedToDraft?.quantity || '',
-      imageReference: getReservationSavedToDraft?.imageReference || '',
+    setCampaignPayload({
+      campaignName: getCampaignSavedToDraft?.campaignName || '',
+      campaignDescription: getCampaignSavedToDraft?.campaignDescription || '',
+      dressCode: getCampaignSavedToDraft?.dressCode || '',
+      isActive: getCampaignSavedToDraft?.isActive || true,
+      imageReference: getCampaignSavedToDraft?.imageReference || '',
     });
+    setStartDateTime(
+      getStartDateTime
+        ? parseZonedDateTime(getStartDateTime)
+        : now(getLocalTimeZone())
+    );
+    setEndDateTime(
+      getEndDateTime
+        ? parseZonedDateTime(getEndDateTime)
+        : now(getLocalTimeZone())
+    );
     setSelectedImage(selectedImageSavedToDraft || '');
   }, []);
 
@@ -213,10 +239,10 @@ const AddNewReservation = () => {
         <div>
           <h1 className='text-[24px] leading-8 font-semibold'>
             {' '}
-            Create a new reservation
+            Create a new campaign
           </h1>
           <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
-            Setup a new reservation.
+            Setup a new campaign.
           </p>
         </div>
       </div>
@@ -224,55 +250,67 @@ const AddNewReservation = () => {
         <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
           <CustomInput
             type='text'
-            value={reservationPayload.reservationName}
-            errorMessage={response?.errors?.reservationName?.[0]}
+            value={campaignPayload.campaignName}
+            errorMessage={response?.errors?.campaignName?.[0]}
             onChange={handleInputChange}
-            name='reservationName'
-            label='Name of reservation'
-            placeholder='name of reservation'
+            name='campaignName'
+            label='Title of campaign'
+            placeholder='Title of campaign'
           />
           <Spacer y={6} />
           <CustomTextArea
-            value={reservationPayload.reservationDescription}
-            name='reservationDescription'
-            errorMessage={response?.errors?.reservationDescription?.[0]}
+            value={campaignPayload.campaignDescription}
+            name='campaignDescription'
+            errorMessage={response?.errors?.campaignDescription?.[0]}
             onChange={handleInputChange}
-            label='Add a description for this reservation'
+            label='Add a description for this campaign'
             placeholder='Add a description'
           />
           <Spacer y={6} />
-          <div className='flex gap-6'>
-            <CustomInput
-              type='text'
-              startContent={<div>₦</div>}
-              name='reservationFee'
-              errorMessage={response?.errors?.reservationFee?.[0]}
-              onChange={handleInputChange}
-              value={`${reservationPayload.reservationFee}`}
-              label='Reservation fee'
-              placeholder='Reservation fee'
+          <div>
+            <label className='font-[500] text-black text-[14px] pb-1'>
+              Campaign start
+            </label>
+            <DatePicker
+              variant='bordered'
+              hideTimeZone
+              size='lg'
+              radius='sm'
+              errorMessage={response?.errors?.startDateTime?.[0]}
+              value={startDateTime}
+              onChange={setStartDateTime}
+              showMonthAndYearPickers
+              minValue={today(getLocalTimeZone())}
+              defaultValue={now(getLocalTimeZone())}
             />
-
-            <CustomInput
-              type='text'
-              startContent={<div>₦</div>}
-              name='minimumSpend'
-              errorMessage={response?.errors?.minimumSpend?.[0]}
-              onChange={handleInputChange}
-              value={`${reservationPayload.minimumSpend}`}
-              label='Minimum spend'
-              placeholder='Minimum spend'
+          </div>
+          <Spacer y={6} />
+          <div>
+            <label className='font-[500] text-black text-[14px] pb-1'>
+              Campaign end
+            </label>
+            <DatePicker
+              variant='bordered'
+              hideTimeZone
+              size='lg'
+              radius='sm'
+              errorMessage={response?.errors?.endDateTime?.[0]}
+              value={endDateTime}
+              onChange={setEndDateTime}
+              showMonthAndYearPickers
+              minValue={startDateTime}
+              defaultValue={startDateTime}
             />
           </div>
           <Spacer y={6} />
           <CustomInput
             type='text'
-            name='quantity'
-            errorMessage={response?.errors?.quantity?.[0]}
+            name='dressCode'
+            errorMessage={response?.errors?.dressCode?.[0]}
             onChange={handleInputChange}
-            value={`${reservationPayload.quantity}`}
-            label={'Quantity'}
-            placeholder={'Quantity'}
+            value={`${campaignPayload.dressCode}`}
+            label={'Dress code'}
+            placeholder={'Dress code'}
           />
         </div>
         <div
@@ -330,9 +368,9 @@ const AddNewReservation = () => {
                   </div>
                   <input
                     title='upload an image'
-                    alt='upload a reservation'
+                    alt='upload a campaign'
                     type='file'
-                    id='reservation-upload'
+                    id='campaign-upload'
                     accept='image/*'
                     onChange={(event) => handleImageChange(event)}
                     className='h-[100%] opacity-0 cursor-pointer absolute top-0'
@@ -349,20 +387,25 @@ const AddNewReservation = () => {
       </div>
       <Spacer y={1} />
       <div className='flex justify-end gap-3'>
+        {formSubmit() && (
+          <CustomButton
+            className='w-52 h-[50px] text-black bg-transparent border rounded-lg border-grey500'
+            onClick={() => {
+              router.push('/dashboard/campaigns/preview-campaign');
+              saveToDraft();
+            }}
+            type='submit'
+          >
+            {'Preview campaign'}
+          </CustomButton>
+        )}
         <CustomButton
-          className='w-32  text-black bg-transparent border rounded-lg border-grey500'
-          onClick={saveToDraft}
-          type='submit'
-        >
-          {'Save to draft'}
-        </CustomButton>
-        <CustomButton
-          className='w-36  text-white'
+          className='w-58 h-[50px] text-white'
           loading={isLoading}
-          onClick={postReservation}
+          onClick={postCampaign}
           type='submit'
         >
-          {isLoading ? 'Loading' : 'Add Reservation'}
+          {isLoading ? 'Loading' : 'Schedule this campaign'}
         </CustomButton>
       </div>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -378,27 +421,27 @@ const AddNewReservation = () => {
                   Fantastic!
                 </h2>
                 <h3 className='text-sm text-center text-grey600     mb-4'>
-                  Your reservation has been created
+                  Your campaign has been created
                 </h3>
 
                 <div className='flex gap-3'>
                   <CustomButton
                     onClick={async () => {
                       await refetch();
-                      router.push('/dashboard/reservation');
+                      router.push('/dashboard/campaigns');
                     }}
                     className='h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 '
                     backgroundColor='bg-white'
                     type='submit'
                   >
-                    View reservations
+                    View campaigns
                   </CustomButton>
                   <CustomButton
                     className='text-white h-[49px]  flex-grow w-full'
                     onClick={onClose}
                     type='submit'
                   >
-                    Add another reservation
+                    Add another campaign
                   </CustomButton>
                 </div>
 
@@ -412,4 +455,4 @@ const AddNewReservation = () => {
   );
 };
 
-export default AddNewReservation;
+export default AddNewCampaign;

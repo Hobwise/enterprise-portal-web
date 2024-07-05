@@ -1,4 +1,5 @@
 'use client';
+import { parseZonedDateTime } from '@internationalized/date';
 import { clsx, type ClassValue } from 'clsx';
 import download from 'downloadjs';
 import { toPng } from 'html-to-image';
@@ -255,4 +256,23 @@ export const submitBookingStatus = (id: number) => {
   } else if (id === 2) {
     return 2;
   }
+};
+
+export const formatDateTime2 = (inputDate: string) => {
+  const zonedDateTime = parseZonedDateTime(inputDate);
+
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+    timeZone: 'Africa/Lagos',
+  });
+
+  const formattedDate = formatter.format(zonedDateTime.toDate());
+
+  return formattedDate;
 };

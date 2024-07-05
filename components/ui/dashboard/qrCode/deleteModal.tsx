@@ -64,7 +64,11 @@ const DeleteQRModal = ({ isOpenDelete, toggleQRmodalModal }: any) => {
                 >
                   Delete
                 </Button>
-                <Button color='primary' onPress={toggleQRmodalModal}>
+                <Button
+                  color='default'
+                  variant='bordered'
+                  onPress={toggleQRmodalModal}
+                >
                   Close
                 </Button>
               </div>

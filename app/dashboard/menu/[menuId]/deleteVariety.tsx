@@ -1,4 +1,4 @@
-import { CustomButton } from '@/components/customButton';
+import { deleteVariety } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Button,
@@ -7,14 +7,8 @@ import {
   ModalContent,
   ModalFooter,
 } from '@nextui-org/react';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import {
-  deleteMenuItem,
-  deleteVariety,
-} from '@/app/api/controllers/dashboard/menu';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
-import { revalidatePath } from 'next/cache';
 
 const DeleteVariety = ({
   isOpenDeleteVariety,
@@ -68,7 +62,11 @@ const DeleteVariety = ({
                 >
                   Delete
                 </Button>
-                <Button color='primary' onPress={toggleModalDeleteVariety}>
+                <Button
+                  color='default'
+                  variant='bordered'
+                  onPress={toggleModalDeleteVariety}
+                >
                   Close
                 </Button>
               </div>

@@ -1,6 +1,5 @@
 // 'use client';
 import {
-  clearItemLocalStorage,
   getJsonItemFromLocalStorage,
   notify,
   removeCookie,
@@ -35,7 +34,7 @@ const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
 const logout = () => {
   toast.error('Session Expired, please log in again.');
   window.location.href = '/auth/login';
-  clearItemLocalStorage('userInformation');
+  localStorage.clear();
   removeCookie('token');
 };
 const refreshToken = async () => {

@@ -45,4 +45,7 @@ export const DASHBOARD = {
   bookingsByBusiness: 'api/v1/Booking/by-business',
   bookingsByRef: 'api/v1/Booking/by-ref',
   updateStatus: 'api/v1/Booking/update-status',
+  //Campaigns
+  campaignsByBusiness: 'api/v1/Campaign/by-business',
+  campaigns: 'api/v1/Campaign',
 };

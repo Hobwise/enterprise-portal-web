@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
-import { formatPrice } from '@/lib/utils';
+import { saveJsonItemToLocalStorage } from '@/lib/utils';
 import {
   Dropdown,
   DropdownItem,
@@ -17,44 +17,46 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
+import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
-import { GrFormView } from 'react-icons/gr';
+import { useRouter } from 'next/navigation';
+import { FaRegEdit } from 'react-icons/fa';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
+import { LuEye } from 'react-icons/lu';
+import { RiDeleteBin6Line } from 'react-icons/ri';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns } from './data';
+import DeleteCampaignModal from './deleteCampaign';
 
 const INITIAL_VISIBLE_COLUMNS = [
-  'reservationName',
-  'reservationDescription',
-  'reservationFee',
-  'quantity',
-  'minimumSpend',
+  'campaignName',
+  'campaignDescription',
+  'startDateTime',
+  'image',
   'actions',
 ];
 
-const ReservationList = ({ reservation, searchQuery, data }: any) => {
-  const [filteredReservation, setFilteredReservation] = React.useState(
-    data?.reservations
+const CampaignList = ({ campaign, searchQuery, data }: any) => {
+  const [filteredCampaigns, setFilteredCampaigns] = React.useState(
+    data?.campaigns
   );
 
   useEffect(() => {
-    if (reservation && searchQuery) {
-      const filteredData = reservation
+    if (campaign && searchQuery) {
+      const filteredData = campaign
         ?.filter(
           (item) =>
-            item?.reservationName?.toLowerCase().includes(searchQuery) ||
-            String(item?.reservationFee)?.toLowerCase().includes(searchQuery) ||
-            String(item?.minimumSpend)?.toLowerCase().includes(searchQuery) ||
-            String(item?.quantity)?.toLowerCase().includes(searchQuery) ||
-            item?.reservationDescription?.toLowerCase().includes(searchQuery)
+            item?.campaignName?.toLowerCase().includes(searchQuery) ||
+            item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
+            item?.dressCode?.toLowerCase().includes(searchQuery)
         )
         .filter((item) => Object.keys(item).length > 0);
-      setFilteredReservation(filteredData.length > 0 ? filteredData : []);
+      setFilteredCampaigns(filteredData.length > 0 ? filteredData : []);
     } else {
-      setFilteredReservation(reservation);
+      setFilteredCampaigns(campaign);
     }
-  }, [searchQuery, reservation]);
+  }, [searchQuery, campaign]);
 
   const { page, rowsPerPage } = useGlobalContext();
 
@@ -70,62 +72,40 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
     classNames,
   } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
 
-  const renderCell = React.useCallback((reservation, columnKey) => {
-    const cellValue = reservation[columnKey];
+  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
 
-    const showMinimumSpend = reservation.minimumSpend > 0;
-    const showReservationFee = reservation.reservationFee > 0;
+  const toggleCampaignModal = () => {
+    setIsOpenDelete(!isOpenDelete);
+  };
+  const router = useRouter();
+
+  const renderCell = React.useCallback((campaign, columnKey) => {
+    const cellValue = campaign[columnKey];
 
     switch (columnKey) {
-      case 'reservationName':
+      case 'image':
         return (
-          //   <div className='flex text-textGrey text-sm'>{reservation.name}</div>
           <div className='flex '>
             <Image
-              className='h-[60px] w-[60px] bg-cover rounded-lg'
-              width={60}
+              className='h-[60px] w-[120px] bg-cover rounded-lg'
+              width={120}
               height={60}
-              alt='menu'
-              aria-label='menu'
+              alt='campaign'
+              aria-label='campaign'
               src={
-                reservation.image
-                  ? `data:image/jpeg;base64,${reservation.image}`
+                campaign?.image
+                  ? `data:image/jpeg;base64,${campaign?.image}`
                   : noImage
               }
             />
-
-            <div className='ml-5 gap-1 grid place-content-center'>
-              <p className='font-bold text-sm mb-1'>
-                {reservation.reservationName}
-              </p>
-
-              {showReservationFee ? (
-                <div>
-                  <p className='text-sm'>Reservation Fee</p>
-                  <p className='font-bold text-sm'>
-                    {formatPrice(reservation.reservationFee)}
-                  </p>
-                </div>
-              ) : showMinimumSpend ? (
-                <div>
-                  <p className='text-sm'>Minimum Spend</p>
-                  <p className='font-bold text-sm'>
-                    {formatPrice(reservation.minimumSpend)}
-                  </p>
-                </div>
-              ) : null}
-            </div>
           </div>
         );
-
-      case 'quantity':
-        return (
-          <div className='text-textGrey text-sm'>{reservation.quantity}</div>
-        );
-      case 'reservationDescription':
+      case 'campaignDescription':
+        return <div className='w-[300px]'>{campaign.campaignDescription}</div>;
+      case 'startDateTime':
         return (
           <div className='text-textGrey text-sm'>
-            {reservation.reservationDescription}
+            {moment(campaign?.startDateTime).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
 
@@ -139,21 +119,48 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu className='text-black'>
-                <DropdownItem aria-label='view'>
+                <DropdownItem aria-label='preview campaign'>
                   <Link
                     className='flex w-full'
                     href={{
-                      pathname: `/dashboard/reservation/${reservation.reservationName}`,
+                      pathname: `/dashboard/campaigns/${campaign.id}`,
                       query: {
-                        reservationId: reservation.id,
+                        campaignId: campaign.id,
                       },
                     }}
                   >
                     <div className={` flex gap-2  items-center text-grey500`}>
-                      <GrFormView className='text-[20px]' />
-                      <p>View more</p>
+                      <LuEye />
+                      <p>Preview campaign</p>
                     </div>
                   </Link>
+                </DropdownItem>
+                <DropdownItem
+                  aria-label='edit campaign'
+                  // onClick={() => {
+                  //   saveJsonItemToLocalStorage('campaign', campaign);
+                  //   router.push('/dashboard/campaigns/edit-campaign');
+                  // }}
+                >
+                  <div className={` flex gap-2  items-center text-grey500`}>
+                    <FaRegEdit />
+
+                    <p>Edit campaign</p>
+                  </div>
+                </DropdownItem>
+
+                <DropdownItem
+                  aria-label='delete campaign'
+                  onClick={() => {
+                    toggleCampaignModal();
+                    saveJsonItemToLocalStorage('campaign', campaign);
+                  }}
+                >
+                  <div className={` flex gap-2  items-center text-grey500`}>
+                    <RiDeleteBin6Line />
+
+                    <p>Delete campaign</p>
+                  </div>
                 </DropdownItem>
               </DropdownMenu>
             </Dropdown>
@@ -171,7 +178,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
         isCompact
         removeWrapper
         allowsSorting
-        aria-label='list of reservations'
+        aria-label='list of campaign'
         bottomContent={bottomContent}
         bottomContentPlacement='outside'
         classNames={classNames}
@@ -193,12 +200,9 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody
-          emptyContent={'No reservation found'}
-          items={filteredReservation}
-        >
+        <TableBody emptyContent={'No campaign found'} items={filteredCampaigns}>
           {(item) => (
-            <TableRow key={item?.name}>
+            <TableRow key={item?.id}>
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}
@@ -206,8 +210,14 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
           )}
         </TableBody>
       </Table>
+
+      <DeleteCampaignModal
+        isOpenDelete={isOpenDelete}
+        setIsOpenDelete={setIsOpenDelete}
+        toggleCampaignModal={toggleCampaignModal}
+      />
     </section>
   );
 };
 
-export default ReservationList;
+export default CampaignList;

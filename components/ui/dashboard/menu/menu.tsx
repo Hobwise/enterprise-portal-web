@@ -20,11 +20,11 @@ import {
 } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { GrFormView } from 'react-icons/gr';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
-import { GrFormView } from 'react-icons/gr';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
 const MenuList = ({ menus, onOpen, searchQuery }: any) => {
@@ -115,7 +115,6 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
               width={60}
               height={60}
               alt='menu'
-              unoptimized
               aria-label='menu'
               src={
                 menu.image ? `data:image/jpeg;base64,${menu.image}` : noImage

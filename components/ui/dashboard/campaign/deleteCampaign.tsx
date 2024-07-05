@@ -1,6 +1,11 @@
-import { deleteMenuItem } from '@/app/api/controllers/dashboard/menu';
-import useMenu from '@/hooks/cachedEndpoints/useMenu';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+'use client';
+import { removeCampaign } from '@/app/api/controllers/dashboard/campaigns';
+import useCampaign from '@/hooks/cachedEndpoints/useCampaign';
+import {
+  clearItemLocalStorage,
+  getJsonItemFromLocalStorage,
+  notify,
+} from '@/lib/utils';
 import {
   Button,
   Modal,
@@ -8,28 +13,27 @@ import {
   ModalContent,
   ModalFooter,
 } from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-const DeleteMenu = ({ isOpenDelete, toggleModalDelete, menuItem }: any) => {
+const DeleteCampaignModal = ({ isOpenDelete, toggleCampaignModal }: any) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const { refetch } = useCampaign();
   const businessInformation = getJsonItemFromLocalStorage('business');
-  const { refetch } = useMenu();
+  const campaignObject = getJsonItemFromLocalStorage('campaign');
 
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const removeMenuItem = async () => {
-    setLoading(true);
-    const data = await deleteMenuItem(
+  const deleteCampaign = async () => {
+    setIsLoading(true);
+    const data = await removeCampaign(
       businessInformation[0]?.businessId,
-      menuItem?.id
+      campaignObject?.id
     );
-    setLoading(false);
+    setIsLoading(false);
     if (data?.data?.isSuccessful) {
-      toggleModalDelete();
-      toast.success('Menu item deleted successfully');
       refetch();
-      router.push('/dashboard/menu');
+      toggleCampaignModal();
+      toast.success('Campaign deleted successfully');
+      clearItemLocalStorage('campaign');
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -39,22 +43,22 @@ const DeleteMenu = ({ isOpenDelete, toggleModalDelete, menuItem }: any) => {
     }
   };
   return (
-    <Modal isOpen={isOpenDelete} onOpenChange={toggleModalDelete}>
+    <Modal isOpen={isOpenDelete} onOpenChange={toggleCampaignModal}>
       <ModalContent>
         {(onClose) => (
           <>
             <ModalBody>
               <div className='flex justify-center'>
                 <div className='text-black text-center mt-8 xl:w-[80%] w-full mb-2 font-[700]'>
-                  Are you sure you want to delete this menu item?
+                  Are you sure you want to delete this campaign?
                 </div>
               </div>
             </ModalBody>
             <ModalFooter>
               <div className='flex justify-center w-full gap-4 mb-4'>
                 <Button
-                  onClick={removeMenuItem}
-                  disabled={loading}
+                  onClick={deleteCampaign}
+                  disabled={isLoading}
                   color='danger'
                   variant='flat'
                 >
@@ -63,7 +67,7 @@ const DeleteMenu = ({ isOpenDelete, toggleModalDelete, menuItem }: any) => {
                 <Button
                   color='default'
                   variant='bordered'
-                  onPress={toggleModalDelete}
+                  onPress={toggleCampaignModal}
                 >
                   Close
                 </Button>
@@ -76,4 +80,4 @@ const DeleteMenu = ({ isOpenDelete, toggleModalDelete, menuItem }: any) => {
   );
 };
 
-export default DeleteMenu;
+export default DeleteCampaignModal;

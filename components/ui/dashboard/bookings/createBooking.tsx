@@ -11,7 +11,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from '@/lib/utils';
-import { getLocalTimeZone, now } from '@internationalized/date';
+import { getLocalTimeZone, now, today } from '@internationalized/date';
 import { DatePicker } from '@nextui-org/date-picker';
 import {
   Modal,
@@ -104,7 +104,6 @@ const CreateBooking = ({
         lastName: '',
         email: '',
         phoneNumber: '',
-
         id: '',
       });
     } else if (data?.data?.error) {
@@ -123,9 +122,8 @@ const CreateBooking = ({
           className='h-[60px] w-[60px] bg-cover rounded-lg'
           width={60}
           height={60}
-          alt='menu'
-          unoptimized
-          aria-label='menu'
+          alt='reservation'
+          aria-label='reservation'
           src={
             reservation.image
               ? `data:image/jpeg;base64,${reservation.image}`
@@ -251,7 +249,7 @@ const CreateBooking = ({
                     value={timeNdate}
                     onChange={setTimeNdate}
                     showMonthAndYearPickers
-                    minValue={now(getLocalTimeZone())}
+                    minValue={today(getLocalTimeZone())}
                     defaultValue={now(getLocalTimeZone())}
                   />
                 </div>

@@ -8,7 +8,7 @@ import {
   getJsonItemFromLocalStorage,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
-import { getLocalTimeZone, now } from '@internationalized/date';
+import { getLocalTimeZone, now, today } from '@internationalized/date';
 import { DatePicker } from '@nextui-org/date-picker';
 import { Checkbox, Spacer } from '@nextui-org/react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -173,7 +173,7 @@ const CompleteBookingComponent = () => {
             value={timeNdate}
             onChange={setTimeNdate}
             showMonthAndYearPickers
-            minValue={now(getLocalTimeZone())}
+            minValue={today(getLocalTimeZone())}
             defaultValue={now(getLocalTimeZone())}
           />
         </div>
