@@ -293,7 +293,7 @@ export const formatDateTime2 = (inputDate: string) => {
 // };
 
 export const reverseFormatDateTime = (formattedDate) => {
-  const dateString = formattedDate.endsWith('Z')
+  const dateString = formattedDate?.endsWith('Z')
     ? formattedDate
     : formattedDate + 'Z';
 
