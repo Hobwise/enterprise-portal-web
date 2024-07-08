@@ -1,7 +1,7 @@
 'use client';
 import {
-  createCampaign,
   payloadCampaignItem,
+  updateCampaign,
 } from '@/app/api/controllers/dashboard/campaigns';
 import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
 
@@ -14,17 +14,15 @@ import {
   SmallLoader,
   THREEMB,
   clearItemLocalStorage,
-  formatDateTime,
-  getFromLocalStorage,
+  formatDateTimeForPayload,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
-  saveJsonItemToLocalStorage,
-  saveToLocalStorage,
+  reverseFormatDateTime,
 } from '@/lib/utils';
-import { getLocalTimeZone, now, today } from '@internationalized/date';
 import { DatePicker } from '@nextui-org/date-picker';
 import {
+  Button,
   Modal,
   ModalBody,
   ModalContent,
@@ -36,6 +34,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { IoIosArrowRoundBack } from 'react-icons/io';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import Success from '../../../../public/assets/images/success.png';
 
@@ -44,10 +43,8 @@ const EditCampaign = () => {
   const router = useRouter();
   const getCampaignSavedToDraft = getJsonItemFromLocalStorage('campaign');
 
-  const selectedImageSavedToDraft = getFromLocalStorage(
-    'selectedImageCampaign'
-  );
-  console.log(getCampaignSavedToDraft, 'getCampaignSavedToDraft');
+  const startDate = `${getCampaignSavedToDraft?.startDateTime}Z`;
+  const endDate = `${getCampaignSavedToDraft?.endDateTime}Z`;
 
   const { refetch } = useCampaign();
   const [isLoadingImage, setIsLoadingImage] = useState(false);
@@ -55,17 +52,14 @@ const EditCampaign = () => {
   const [imageError, setImageError] = useState('');
   const [response, setResponse] = useState(null);
   const [selectedImage, setSelectedImage] = useState(
-    selectedImageSavedToDraft || ''
+    getCampaignSavedToDraft.image || ''
   );
+
   const [startDateTime, setStartDateTime] = useState(
-    getCampaignSavedToDraft.startDateTime
-      ? getCampaignSavedToDraft.startDateTime
-      : now(getLocalTimeZone())
+    reverseFormatDateTime(startDate)
   );
   const [endDateTime, setEndDateTime] = useState(
-    getCampaignSavedToDraft.endDateTime
-      ? getCampaignSavedToDraft.endDateTime
-      : now(getLocalTimeZone())
+    reverseFormatDateTime(endDate)
   );
 
   const [campaignPayload, setCampaignPayload] = useState<payloadCampaignItem>({
@@ -76,16 +70,6 @@ const EditCampaign = () => {
     isActive: getCampaignSavedToDraft?.isActive || true,
     imageReference: getCampaignSavedToDraft?.imageReference || '',
   });
-
-  const formSubmit = () => {
-    return (
-      campaignPayload.campaignName &&
-      campaignPayload.campaignDescription &&
-      campaignPayload.dressCode &&
-      startDateTime &&
-      endDateTime
-    );
-  };
 
   const businessInformation = getJsonItemFromLocalStorage('business');
 
@@ -160,12 +144,14 @@ const EditCampaign = () => {
       dressCode: campaignPayload.dressCode,
       isActive: campaignPayload.isActive,
       imageReference: campaignPayload.imageReference,
-      startDateTime: formatDateTime(startDateTime),
-      endDateTime: formatDateTime(endDateTime),
+      startDateTime: formatDateTimeForPayload(startDateTime),
+      endDateTime: formatDateTimeForPayload(endDateTime),
     };
-    const data = await createCampaign(
+
+    const data = await updateCampaign(
       businessInformation[0]?.businessId,
-      payload
+      payload,
+      getCampaignSavedToDraft.id
     );
 
     setResponse(data);
@@ -174,21 +160,6 @@ const EditCampaign = () => {
 
     if (data?.data?.isSuccessful) {
       onOpen();
-      clearItemLocalStorage('saveCampaignToDraft');
-      clearItemLocalStorage('selectedImageCampaign');
-      clearItemLocalStorage('saveStartDateTime');
-      clearItemLocalStorage('saveEndDateTime');
-      setStartDateTime(now(getLocalTimeZone()));
-      setEndDateTime(now(getLocalTimeZone()));
-      setCampaignPayload({
-        campaignName: '',
-        campaignDescription: '',
-        dressCode: '',
-        isActive: true,
-        imageReference: '',
-      });
-
-      setSelectedImage('');
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -196,13 +167,6 @@ const EditCampaign = () => {
         type: 'error',
       });
     }
-  };
-
-  const saveToDraft = () => {
-    saveJsonItemToLocalStorage('saveCampaignToDraft', campaignPayload);
-    saveToLocalStorage('selectedImageCampaign', selectedImage);
-    saveToLocalStorage('saveStartDateTime', startDateTime);
-    saveToLocalStorage('saveEndDateTime', endDateTime);
   };
 
   useEffect(() => {
@@ -213,22 +177,13 @@ const EditCampaign = () => {
       isActive: getCampaignSavedToDraft?.isActive || true,
       imageReference: getCampaignSavedToDraft?.imageReference || '',
     });
-    setStartDateTime(
-      getCampaignSavedToDraft.getStartDateTime
-        ? getCampaignSavedToDraft.getStartDateTime
-        : now(getLocalTimeZone())
-    );
-    setEndDateTime(
-      getCampaignSavedToDraft.endDateTime
-        ? getCampaignSavedToDraft.endDateTime
-        : now(getLocalTimeZone())
-    );
-    setSelectedImage(selectedImageSavedToDraft || '');
+    setStartDateTime(reverseFormatDateTime(startDate));
+    setEndDateTime(reverseFormatDateTime(endDate));
   }, []);
 
   return (
     <Container>
-      <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
+      <div className='flex  justify-between '>
         <div>
           <h1 className='text-[24px] leading-8 font-semibold'>
             {' '}
@@ -238,6 +193,14 @@ const EditCampaign = () => {
             Edit a campaign.
           </p>
         </div>
+        <Button
+          onClick={() => router.back()}
+          className='flex text-grey600 bg-white'
+        >
+          <IoIosArrowRoundBack className='text-[22px]' />
+
+          <p>Go back</p>
+        </Button>
       </div>
       <div className='flex xl:flex-row flex-col'>
         <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
@@ -273,8 +236,8 @@ const EditCampaign = () => {
               value={startDateTime}
               onChange={setStartDateTime}
               showMonthAndYearPickers
-              minValue={today(getLocalTimeZone())}
-              defaultValue={now(getLocalTimeZone())}
+              // minValue={startDateTime}
+              defaultValue={startDateTime}
             />
           </div>
           <Spacer y={6} />
@@ -292,7 +255,7 @@ const EditCampaign = () => {
               onChange={setEndDateTime}
               showMonthAndYearPickers
               minValue={startDateTime}
-              defaultValue={startDateTime}
+              defaultValue={endDateTime}
             />
           </div>
           <Spacer y={6} />
@@ -380,18 +343,6 @@ const EditCampaign = () => {
       </div>
       <Spacer y={1} />
       <div className='flex justify-end gap-3'>
-        {formSubmit() && (
-          <CustomButton
-            className='w-52 h-[50px] text-black bg-transparent border rounded-lg border-grey500'
-            onClick={() => {
-              router.push('/dashboard/campaigns/preview-campaign');
-              saveToDraft();
-            }}
-            type='submit'
-          >
-            {'Preview campaign'}
-          </CustomButton>
-        )}
         <CustomButton
           className='w-58 h-[50px] text-white'
           loading={isLoading}
@@ -414,7 +365,7 @@ const EditCampaign = () => {
                   Fantastic!
                 </h2>
                 <h3 className='text-sm text-center text-grey600     mb-4'>
-                  Your campaign has been created
+                  Your campaign has been updated
                 </h3>
 
                 <div className='flex gap-3'>
@@ -428,13 +379,6 @@ const EditCampaign = () => {
                     type='submit'
                   >
                     View campaigns
-                  </CustomButton>
-                  <CustomButton
-                    className='text-white h-[49px]  flex-grow w-full'
-                    onClick={onClose}
-                    type='submit'
-                  >
-                    Add another campaign
                   </CustomButton>
                 </div>
 

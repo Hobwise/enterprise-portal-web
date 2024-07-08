@@ -137,10 +137,10 @@ const CampaignList = ({ campaign, searchQuery, data }: any) => {
                 </DropdownItem>
                 <DropdownItem
                   aria-label='edit campaign'
-                  // onClick={() => {
-                  //   saveJsonItemToLocalStorage('campaign', campaign);
-                  //   router.push('/dashboard/campaigns/edit-campaign');
-                  // }}
+                  onClick={() => {
+                    saveJsonItemToLocalStorage('campaign', campaign);
+                    router.push('/dashboard/campaigns/edit-campaign');
+                  }}
                 >
                   <div className={` flex gap-2  items-center text-grey500`}>
                     <FaRegEdit />

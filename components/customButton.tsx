@@ -30,6 +30,7 @@ export const CustomButton = ({
       onClick={onClick}
       isLoading={loading}
       disabled={disabled}
+      aria-label='submit button'
       spinner={
         <svg
           className='animate-spin h-5 w-5 text-current'

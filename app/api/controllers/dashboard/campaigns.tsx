@@ -98,3 +98,34 @@ export async function getCampaign(campaignId: string, businessId: string) {
     handleError(error);
   }
 }
+
+export async function updateCampaign(
+  businessId: string,
+  payload: payloadCampaignItem,
+  campaignId: string
+) {
+  const validatedFields = camapaignSchema.safeParse({
+    campaignName: payload?.campaignName,
+    campaignDescription: payload?.campaignDescription,
+    startDateTime: payload?.startDateTime,
+    endDateTime: payload?.endDateTime,
+    dressCode: payload?.dressCode,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const headers = businessId ? { businessId, campaignId } : {};
+
+  try {
+    const data = await api.put(DASHBOARD.campaigns, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}

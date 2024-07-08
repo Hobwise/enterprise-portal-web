@@ -1,5 +1,9 @@
 'use client';
-import { parseZonedDateTime } from '@internationalized/date';
+import {
+  CalendarDateTime,
+  parseAbsolute,
+  parseZonedDateTime,
+} from '@internationalized/date';
 import { clsx, type ClassValue } from 'clsx';
 import download from 'downloadjs';
 import { toPng } from 'html-to-image';
@@ -275,4 +279,47 @@ export const formatDateTime2 = (inputDate: string) => {
   const formattedDate = formatter.format(zonedDateTime.toDate());
 
   return formattedDate;
+};
+
+// export const reverseFormatDateTime = (formattedDate) => {
+//   const dateString = formattedDate.endsWith('Z')
+//     ? formattedDate
+//     : formattedDate + 'Z';
+
+//   const parsedDate = parseAbsolute(dateString, 'UTC');
+//   const calendarDateTime = toCalendarDateTime(parsedDate, 'UTC');
+
+//   return calendarDateTime;
+// };
+
+export const reverseFormatDateTime = (formattedDate) => {
+  const dateString = formattedDate.endsWith('Z')
+    ? formattedDate
+    : formattedDate + 'Z';
+
+  const parsedDate = parseAbsolute(dateString, 'UTC');
+  const { year, month, day, hour, minute, second, millisecond } = parsedDate;
+
+  return new CalendarDateTime(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second,
+    millisecond
+  );
+};
+export const formatDateTimeForPayload = (dateTime) => {
+  const { year, month, day, hour, minute, second, millisecond } = dateTime;
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(
+    2,
+    '0'
+  )}T${String(hour).padStart(2, '0')}:${String(minute).padStart(
+    2,
+    '0'
+  )}:${String(second).padStart(2, '0')}.${String(millisecond).padStart(
+    3,
+    '0'
+  )}`;
 };
