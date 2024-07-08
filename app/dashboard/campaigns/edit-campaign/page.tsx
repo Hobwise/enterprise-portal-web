@@ -56,7 +56,7 @@ const EditCampaign = () => {
   const [imageError, setImageError] = useState('');
   const [response, setResponse] = useState(null);
   const [selectedImage, setSelectedImage] = useState(
-    getCampaignSavedToDraft.image || ''
+    `data:image/jpeg;base64,${getCampaignSavedToDraft.image}` || ''
   );
 
   const [startDateTime, setStartDateTime] = useState(startDate);
