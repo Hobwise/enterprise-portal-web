@@ -8,7 +8,6 @@ import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
-import Container from '@/components/dashboardContainer';
 import useCampaign from '@/hooks/cachedEndpoints/useCampaign';
 import {
   SmallLoader,
@@ -182,7 +181,7 @@ const EditCampaign = () => {
   }, []);
 
   return (
-    <Container>
+    <>
       <div className='flex  justify-between '>
         <div>
           <h1 className='text-[24px] leading-8 font-semibold'>
@@ -388,7 +387,7 @@ const EditCampaign = () => {
           )}
         </ModalContent>
       </Modal>
-    </Container>
+    </>
   );
 };
 

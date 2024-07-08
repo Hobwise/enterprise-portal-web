@@ -1,4 +1,3 @@
-import Container from '@/components/dashboardContainer';
 import QRform from '@/components/ui/dashboard/qrCode/QRform';
 
 export const metadata = {
@@ -7,7 +6,7 @@ export const metadata = {
 };
 const CreateQrPage = () => {
   return (
-    <Container>
+    <>
       <main className=' flex flex-col justify-center items-center'>
         <section className='max-w-[448px] w-full'>
           <div>
@@ -21,7 +20,7 @@ const CreateQrPage = () => {
           <QRform />
         </section>
       </main>
-    </Container>
+    </>
   );
 };
 

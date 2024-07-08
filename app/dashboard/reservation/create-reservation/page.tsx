@@ -7,7 +7,6 @@ import {
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
-import Container from '@/components/dashboardContainer';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import {
   SmallLoader,
@@ -208,7 +207,7 @@ const AddNewReservation = () => {
   }, []);
 
   return (
-    <Container>
+    <>
       <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
         <div>
           <h1 className='text-[24px] leading-8 font-semibold'>
@@ -408,7 +407,7 @@ const AddNewReservation = () => {
           )}
         </ModalContent>
       </Modal>
-    </Container>
+    </>
   );
 };
 

@@ -1,5 +1,3 @@
-import Container from '@/components/dashboardContainer';
-
 import React from 'react';
 
 export const metadata = {
@@ -8,11 +6,7 @@ export const metadata = {
 };
 
 const Dashboard: React.FC = () => {
-  return (
-    <Container>
-      <span className='font-bold text-4xl'>Home</span>
-    </Container>
-  );
+  return <span className='font-bold text-4xl'>Home</span>;
 };
 
 export default Dashboard;

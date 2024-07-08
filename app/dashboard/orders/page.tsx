@@ -1,5 +1,4 @@
 'use client';
-import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -83,7 +82,7 @@ const Orders: React.FC = () => {
   }, [data]);
 
   return (
-    <Container>
+    <>
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
@@ -147,7 +146,7 @@ const Orders: React.FC = () => {
         </div>
       </div>
       {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
-    </Container>
+    </>
   );
 };
 

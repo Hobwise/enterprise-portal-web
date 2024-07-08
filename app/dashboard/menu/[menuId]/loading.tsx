@@ -1,11 +1,9 @@
-import Container from '@/components/dashboardContainer';
 import Image from 'next/image';
-import React from 'react';
 import hobink from '../../../../public/assets/images/hobink.png';
 
 const LoadingSpinner = () => {
   return (
-    <Container>
+    <>
       <div
         className={`loadingContainer bg-white flex flex-col justify-center items-center`}
       >
@@ -18,7 +16,7 @@ const LoadingSpinner = () => {
         </div>
         <p className='text-center loading-text text-primaryColor'>Loading...</p>
       </div>
-    </Container>
+    </>
   );
 };
 

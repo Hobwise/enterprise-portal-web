@@ -1,5 +1,4 @@
 'use client';
-import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -143,7 +142,7 @@ const Bookings: React.FC = () => {
   };
 
   return (
-    <Container>
+    <>
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
@@ -238,7 +237,7 @@ const Bookings: React.FC = () => {
         showSuccessModal={showSuccessModal}
         closeSuccessModal={closeSuccessModal}
       />
-    </Container>
+    </>
   );
 };
 

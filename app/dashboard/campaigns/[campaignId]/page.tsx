@@ -1,5 +1,4 @@
 'use client';
-import Container from '@/components/dashboardContainer';
 import Error from '@/components/error';
 import useSingleCampaign from '@/hooks/cachedEndpoints/useSingleCampaign';
 import { CustomLoading } from '@/lib/utils';
@@ -17,21 +16,13 @@ const PreviewCampaign = () => {
   const { data, isLoading, isError, refetch } = useSingleCampaign(campaignId);
 
   if (isError) {
-    return (
-      <Container>
-        <Error onClick={() => refetch()} />
-      </Container>
-    );
+    return <Error onClick={() => refetch()} />;
   }
   if (isLoading) {
-    return (
-      <Container>
-        <CustomLoading />
-      </Container>
-    );
+    return <CustomLoading />;
   }
   return (
-    <Container>
+    <>
       <div className='flex flex-col min-h-[700px] h-[85vh]'>
         <div className='flex-grow-0 flex justify-between'>
           <div>
@@ -91,7 +82,7 @@ const PreviewCampaign = () => {
           </div>
         </section>
       </div>
-    </Container>
+    </>
   );
 };
 

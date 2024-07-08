@@ -1,6 +1,4 @@
-import Container from '@/components/dashboardContainer';
 import MenuList from '@/components/ui/dashboard/orders/place-order/menuList';
-import React from 'react';
 
 export const metadata = {
   title: 'Hobink | Place Order',
@@ -8,11 +6,7 @@ export const metadata = {
 };
 
 const PlaceOrder = () => {
-  return (
-    <Container>
-      <MenuList />
-    </Container>
-  );
+  return <MenuList />;
 };
 
 export default PlaceOrder;

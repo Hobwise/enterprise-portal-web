@@ -8,7 +8,6 @@ import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
-import Container from '@/components/dashboardContainer';
 import useCampaign from '@/hooks/cachedEndpoints/useCampaign';
 import {
   SmallLoader,
@@ -234,7 +233,7 @@ const AddNewCampaign = () => {
   }, []);
 
   return (
-    <Container>
+    <>
       <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
         <div>
           <h1 className='text-[24px] leading-8 font-semibold'>
@@ -451,7 +450,7 @@ const AddNewCampaign = () => {
           )}
         </ModalContent>
       </Modal>
-    </Container>
+    </>
   );
 };
 

@@ -5,7 +5,6 @@ import {
   getMenuItem,
 } from '@/app/api/controllers/dashboard/menu';
 import { CustomButton } from '@/components/customButton';
-import Container from '@/components/dashboardContainer';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import {
   CustomLoading,
@@ -100,7 +99,7 @@ const MenuDetails = () => {
   }, []);
 
   return (
-    <Container>
+    <>
       <div className='xl:flex block justify-between'>
         <Link
           href={'/dashboard/menu'}
@@ -296,7 +295,7 @@ const MenuDetails = () => {
         isOpenEdit={isOpenEdit}
         toggleModalEdit={toggleModalEdit}
       />
-    </Container>
+    </>
   );
 };
 

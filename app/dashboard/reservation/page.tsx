@@ -1,5 +1,4 @@
 'use client';
-import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -77,7 +76,7 @@ const Reservation: React.FC = () => {
     `https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
   );
   return (
-    <Container>
+    <>
       <div className='flex flex-row flex-wrap xl:mb-8 mb-4 justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
@@ -158,7 +157,7 @@ const Reservation: React.FC = () => {
       </div>
 
       {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
-    </Container>
+    </>
   );
 };
 

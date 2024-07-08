@@ -66,6 +66,8 @@ type SelectedItem = {
 
 const MenuList = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { page, setPage, rowsPerPage, menuIdTable, setMenuIdTable } =
+    useGlobalContext();
 
   const [order] = useState<any>(getJsonItemFromLocalStorage('order'));
   const { data, isLoading, isError, refetch } = useMenu();
@@ -86,21 +88,20 @@ const MenuList = () => {
       .filter((menu) => menu?.items?.length > 0);
   }, [data, filterValue]);
 
+  console.log(filteredItems?.[0]?.id, 'data?.[0]?.id');
+  useEffect(() => {
+    setMenuIdTable(filteredItems?.[0]?.id);
+  }, []);
+  console.log(menuIdTable, 'menuIdTable');
   const [loading, setLoading] = useState<Boolean>(false);
 
   const [value, setValue] = useState('');
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
-  const [filteredMenu, setFilteredMenu] = React.useState(data?.[0]?.items);
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [orderDetails, setOrderDetails] = useState([]);
-  const { page, setPage, rowsPerPage, menuIdTable, setMenuIdTable } =
-    useGlobalContext();
-
-  useEffect(() => {
-    setMenuIdTable(data?.[0]?.id);
-  }, []);
+  const [filteredMenu, setFilteredMenu] = React.useState(data?.[0]?.items);
 
   const getOrderDetails = async () => {
     setLoading(true);
@@ -369,33 +370,6 @@ const MenuList = () => {
 
             <Spacer y={8} />
             {!isLoading && bottomContent}
-
-            {/* <div className='flex gap-2 justify-between items-center'>
-              <Button
-                size='sm'
-                variant='faded'
-                className='text-black'
-                color='secondary'
-                onPress={() => setPage((prev) => (prev > 1 ? prev - 1 : prev))}
-              >
-                Previous
-              </Button>
-              <Pagination
-                isCompact
-                page={page}
-                total={pages}
-                onChange={setPage}
-              />
-              <Button
-                size='sm'
-                variant='faded'
-                className='text-black'
-                color='secondary'
-                onPress={() => setPage((prev) => (prev < 10 ? prev + 1 : prev))}
-              >
-                Next
-              </Button>
-            </div> */}
           </div>
 
           <div className='hidden xl:block max-h-[360px] overflow-scroll bg-[#F7F6FA] p-4 rounded-lg flex-grow'>

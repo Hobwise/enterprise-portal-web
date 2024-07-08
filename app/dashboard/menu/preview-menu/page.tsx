@@ -1,6 +1,4 @@
-import Container from '@/components/dashboardContainer';
 import Link from 'next/link';
-import React from 'react';
 import { IoIosArrowRoundBack } from 'react-icons/io';
 
 import Layout from '@/components/ui/dashboard/menu/preview-menu/layout';
@@ -12,7 +10,7 @@ export const metadata = {
 };
 const PreviewMenu = () => {
   return (
-    <Container>
+    <>
       <Link
         href={'/dashboard/menu'}
         className={`cursor-pointer text-primaryColor flex gap-2 mb-3 text-sm items-center`}
@@ -24,7 +22,7 @@ const PreviewMenu = () => {
         <Layout />
         <Preview />
       </section>
-    </Container>
+    </>
   );
 };
 

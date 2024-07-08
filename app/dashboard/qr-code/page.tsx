@@ -1,5 +1,4 @@
 'use client';
-import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -71,7 +70,7 @@ const QRCode: React.FC = () => {
   });
 
   return (
-    <Container>
+    <>
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
@@ -138,7 +137,7 @@ const QRCode: React.FC = () => {
       </div>
       {/* <CreateQRcode /> */}
       {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
-    </Container>
+    </>
   );
 };
 

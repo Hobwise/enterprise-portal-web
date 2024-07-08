@@ -1,5 +1,4 @@
 'use client';
-import Container from '../../../components/dashboardContainer';
 
 import React, { useEffect, useMemo, useState } from 'react';
 
@@ -77,7 +76,7 @@ const Payments: React.FC = () => {
   );
 
   return (
-    <Container>
+    <>
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
@@ -131,7 +130,7 @@ const Payments: React.FC = () => {
       </div>
 
       {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
-    </Container>
+    </>
   );
 };
 

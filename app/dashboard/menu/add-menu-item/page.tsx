@@ -9,7 +9,6 @@ import {
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
-import Container from '@/components/dashboardContainer';
 import SelectInput from '@/components/selectInput';
 import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import {
@@ -193,7 +192,7 @@ const AddItemToMenu = () => {
     getMenuName();
   }, []);
   return (
-    <Container>
+    <>
       <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
         <div>
           <h1 className='text-[24px] leading-8 font-semibold'>Add menu item</h1>
@@ -403,7 +402,7 @@ const AddItemToMenu = () => {
           )}
         </ModalContent>
       </Modal>
-    </Container>
+    </>
   );
 };
 

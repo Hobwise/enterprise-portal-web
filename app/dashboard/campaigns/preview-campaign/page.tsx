@@ -1,5 +1,3 @@
-import Container from '@/components/dashboardContainer';
-
 import React from 'react';
 import Preview from './preview-campaign';
 
@@ -10,7 +8,7 @@ export const metadata = {
 
 const PreviewCampaign: React.FC = () => {
   return (
-    <Container>
+    <>
       <div className='flex flex-col min-h-[700px] h-[85vh]'>
         <div className='flex-grow-0'>
           <h1 className='font-[600] text-2xl'>Preview campaign</h1>
@@ -20,7 +18,7 @@ const PreviewCampaign: React.FC = () => {
         </div>
         <Preview />
       </div>
-    </Container>
+    </>
   );
 };
 

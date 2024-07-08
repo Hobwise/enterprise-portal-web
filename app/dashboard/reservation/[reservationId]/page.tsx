@@ -1,6 +1,5 @@
 'use client';
 
-import Container from '@/components/dashboardContainer';
 import Error from '@/components/error';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { useGlobalContext } from '@/hooks/globalProvider';
@@ -58,11 +57,7 @@ const ReservationDetails = () => {
   };
 
   if (isError) {
-    return (
-      <Container>
-        <Error onClick={() => refetch()} />
-      </Container>
-    );
+    return <Error onClick={() => refetch()} />;
   }
 
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
@@ -70,7 +65,7 @@ const ReservationDetails = () => {
   );
 
   return (
-    <Container>
+    <>
       <div className='lg:flex block justify-between'>
         <Link
           href={'/dashboard/reservation'}
@@ -186,7 +181,7 @@ const ReservationDetails = () => {
         isOpenEdit={isOpenEdit}
         toggleModalEdit={toggleModalEdit}
       />
-    </Container>
+    </>
   );
 };
 
