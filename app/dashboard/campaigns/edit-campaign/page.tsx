@@ -19,6 +19,7 @@ import {
   notify,
   reverseFormatDateTime,
 } from '@/lib/utils';
+import { getLocalTimeZone, today } from '@internationalized/date';
 import { DatePicker } from '@nextui-org/date-picker';
 import {
   Button,
@@ -42,8 +43,12 @@ const EditCampaign = () => {
   const router = useRouter();
   const getCampaignSavedToDraft = getJsonItemFromLocalStorage('campaign');
 
-  const startDate = `${getCampaignSavedToDraft?.startDateTime}Z`;
-  const endDate = `${getCampaignSavedToDraft?.endDateTime}Z`;
+  const startDate = getCampaignSavedToDraft?.startDateTime
+    ? reverseFormatDateTime(`${getCampaignSavedToDraft?.startDateTime}`)
+    : today(getLocalTimeZone());
+  const endDate = getCampaignSavedToDraft?.endDateTime
+    ? reverseFormatDateTime(`${getCampaignSavedToDraft?.endDateTime}`)
+    : today(getLocalTimeZone());
 
   const { refetch } = useCampaign();
   const [isLoadingImage, setIsLoadingImage] = useState(false);
@@ -54,12 +59,8 @@ const EditCampaign = () => {
     getCampaignSavedToDraft.image || ''
   );
 
-  const [startDateTime, setStartDateTime] = useState(
-    reverseFormatDateTime(startDate)
-  );
-  const [endDateTime, setEndDateTime] = useState(
-    reverseFormatDateTime(endDate)
-  );
+  const [startDateTime, setStartDateTime] = useState(startDate);
+  const [endDateTime, setEndDateTime] = useState(endDate);
 
   const [campaignPayload, setCampaignPayload] = useState<payloadCampaignItem>({
     campaignName: getCampaignSavedToDraft?.campaignName || '',
@@ -176,8 +177,8 @@ const EditCampaign = () => {
       isActive: getCampaignSavedToDraft?.isActive || true,
       imageReference: getCampaignSavedToDraft?.imageReference || '',
     });
-    setStartDateTime(reverseFormatDateTime(startDate));
-    setEndDateTime(reverseFormatDateTime(endDate));
+    setStartDateTime(startDate);
+    setEndDateTime(endDate);
   }, []);
 
   return (

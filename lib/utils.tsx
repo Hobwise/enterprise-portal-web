@@ -281,23 +281,15 @@ export const formatDateTime2 = (inputDate: string) => {
   return formattedDate;
 };
 
-// export const reverseFormatDateTime = (formattedDate) => {
-//   const dateString = formattedDate.endsWith('Z')
-//     ? formattedDate
-//     : formattedDate + 'Z';
-
-//   const parsedDate = parseAbsolute(dateString, 'UTC');
-//   const calendarDateTime = toCalendarDateTime(parsedDate, 'UTC');
-
-//   return calendarDateTime;
-// };
-
 export const reverseFormatDateTime = (formattedDate) => {
+  if (formattedDate === undefined) {
+    return null;
+  }
   const dateString = formattedDate?.endsWith('Z')
     ? formattedDate
     : formattedDate + 'Z';
-
   const parsedDate = parseAbsolute(dateString, 'UTC');
+
   const { year, month, day, hour, minute, second, millisecond } = parsedDate;
 
   return new CalendarDateTime(
@@ -310,6 +302,7 @@ export const reverseFormatDateTime = (formattedDate) => {
     millisecond
   );
 };
+
 export const formatDateTimeForPayload = (dateTime) => {
   const { year, month, day, hour, minute, second, millisecond } = dateTime;
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(
