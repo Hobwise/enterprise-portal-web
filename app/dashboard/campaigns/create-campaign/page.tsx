@@ -305,7 +305,6 @@ const AddNewCampaign = () => {
           <CustomInput
             type='text'
             name='dressCode'
-            errorMessage={response?.errors?.dressCode?.[0]}
             onChange={handleInputChange}
             value={`${campaignPayload.dressCode}`}
             label={'Dress code'}

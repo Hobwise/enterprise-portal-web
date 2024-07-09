@@ -51,7 +51,6 @@ export async function createCampaign(
     campaignDescription: payload?.campaignDescription,
     startDateTime: payload?.startDateTime,
     endDateTime: payload?.endDateTime,
-    dressCode: payload?.dressCode,
   });
 
   if (!validatedFields.success) {
@@ -109,7 +108,6 @@ export async function updateCampaign(
     campaignDescription: payload?.campaignDescription,
     startDateTime: payload?.startDateTime,
     endDateTime: payload?.endDateTime,
-    dressCode: payload?.dressCode,
   });
 
   if (!validatedFields.success) {

@@ -11,7 +11,9 @@ const PaymentCard = ({ payments }: any) => {
           </p>
 
           <h4 className='font-bold text-[20px] '>
-            {formatPrice(payments[0]?.totalAmount) || formatPrice(0)}
+            {payments[0]?.totalAmount
+              ? formatPrice(payments[0]?.totalAmount)
+              : formatPrice(0)}
           </h4>
         </CardBody>
       </Card>
@@ -22,7 +24,9 @@ const PaymentCard = ({ payments }: any) => {
           </p>
 
           <h4 className='font-bold text-[20px]'>
-            {formatPrice(payments[1]?.totalAmount) || formatPrice(0)}
+            {payments[1]?.totalAmount
+              ? formatPrice(payments[1]?.totalAmount)
+              : formatPrice(0)}
           </h4>
         </CardBody>
       </Card>
@@ -33,7 +37,9 @@ const PaymentCard = ({ payments }: any) => {
           </p>
 
           <h4 className='font-bold text-[20px]'>
-            {formatPrice(payments[2]?.totalAmount) || formatPrice(0)}
+            {payments[2]?.totalAmount
+              ? formatPrice(payments[2]?.totalAmount)
+              : formatPrice(0)}
           </h4>
         </CardBody>
       </Card>
