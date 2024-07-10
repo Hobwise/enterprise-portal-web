@@ -97,7 +97,7 @@ const HeaderMobile = () => {
         onClick={onOpenChange}
         className={`cursor-pointer  gap-3 text-xl font-bold text-danger-500 ${
           isOpenClass ? 'flex ' : 'hidden'
-        } items-center absolute bottom-[20%] left-[40px]`}
+        } items-center absolute bottom-[30px] left-[40px]`}
       >
         <span>Logout</span>
         <FiLogOut />

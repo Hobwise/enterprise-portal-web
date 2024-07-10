@@ -13,19 +13,18 @@ import CampaignList from '@/components/ui/dashboard/campaign/campaignList';
 import CreateCampaign from '@/components/ui/dashboard/campaign/createCampaign';
 import useCampaign from '@/hooks/cachedEndpoints/useCampaign';
 import { useGlobalContext } from '@/hooks/globalProvider';
-import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
+import { CustomLoading } from '@/lib/utils';
 import { IoMdAdd } from 'react-icons/io';
 
 const Compaigns: React.FC = () => {
   const router = useRouter();
-  const business = getJsonItemFromLocalStorage('business');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+
   const { data, isLoading, isError, refetch } = useCampaign();
 
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All');
+    setTableStatus('All Campaigns');
     setPage(1);
   }, []);
 
@@ -36,23 +35,26 @@ const Compaigns: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data?.campaigns
-      ?.filter(
-        (item) =>
-          item?.campaignName?.toLowerCase().includes(searchQuery) ||
-          item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
-          item?.dressCode?.toLowerCase().includes(searchQuery)
-      )
-      .filter((item) => Object.keys(item).length > 0);
+    return data
+      ?.map((item) => ({
+        ...item,
+        campaigns: item?.campaigns?.filter(
+          (item) =>
+            item?.campaignName?.toLowerCase().includes(searchQuery) ||
+            item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
+            item?.dressCode?.toLowerCase().includes(searchQuery)
+        ),
+      }))
+      .filter((item) => item?.campaigns?.length > 0);
   }, [data, searchQuery]);
 
   const getScreens = () => {
-    if (data?.campaigns?.length > 0) {
+    if (data?.[0]?.campaigns?.length > 0) {
       return (
         <CampaignList
-          data={data}
-          campaign={filteredItems}
+          campaigns={filteredItems}
           searchQuery={searchQuery}
+          refetch={refetch}
         />
       );
     } else if (isError) {
@@ -70,13 +72,13 @@ const Compaigns: React.FC = () => {
             <div className='flex items-center'>
               <span>Campaigns</span>
 
-              {data?.campaigns?.length > 0 && (
+              {data?.[0]?.campaigns?.length > 0 && (
                 <Chip
                   classNames={{
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data?.totalCount}
+                  {data?.[0]?.totalCount}
                 </Chip>
               )}
             </div>
@@ -86,7 +88,7 @@ const Compaigns: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {data?.campaigns?.length > 0 && (
+          {data?.[0]?.campaigns?.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -104,7 +106,7 @@ const Compaigns: React.FC = () => {
             </>
           )}
 
-          {data?.campaigns?.length > 0 && (
+          {data?.[0]?.campaigns?.length > 0 && (
             <CustomButton
               onClick={() =>
                 router.push('/dashboard/campaigns/create-campaign')

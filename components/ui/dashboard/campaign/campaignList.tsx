@@ -1,11 +1,17 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
+import { repeatCampaign } from '@/app/api/controllers/dashboard/campaigns';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
-import { saveJsonItemToLocalStorage } from '@/lib/utils';
 import {
+  getJsonItemFromLocalStorage,
+  notify,
+  saveJsonItemToLocalStorage,
+} from '@/lib/utils';
+import {
+  Chip,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -21,44 +27,66 @@ import moment from 'moment';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
 import { FaRegEdit } from 'react-icons/fa';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { LuEye } from 'react-icons/lu';
+import { PiRepeat } from 'react-icons/pi';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns } from './data';
 import DeleteCampaignModal from './deleteCampaign';
+import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'campaignName',
   'campaignDescription',
   'startDateTime',
   'image',
+  'isActive',
   'actions',
 ];
 
-const CampaignList = ({ campaign, searchQuery, data }: any) => {
+const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
+  const businessInformation = getJsonItemFromLocalStorage('business');
   const [filteredCampaigns, setFilteredCampaigns] = React.useState(
-    data?.campaigns
+    campaigns[0]?.campaigns
   );
 
   useEffect(() => {
-    if (campaign && searchQuery) {
-      const filteredData = campaign
-        ?.filter(
-          (item) =>
-            item?.campaignName?.toLowerCase().includes(searchQuery) ||
-            item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
-            item?.dressCode?.toLowerCase().includes(searchQuery)
-        )
-        .filter((item) => Object.keys(item).length > 0);
-      setFilteredCampaigns(filteredData.length > 0 ? filteredData : []);
+    if (campaigns && searchQuery) {
+      const filteredData = campaigns
+        .map((campaign) => ({
+          ...campaign,
+          campaigns: campaign?.campaigns?.filter(
+            (item) =>
+              item?.campaignName?.toLowerCase().includes(searchQuery) ||
+              item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
+              item?.dressCode?.toLowerCase().includes(searchQuery)
+          ),
+        }))
+        .filter((campaign) => campaign?.campaigns?.length > 0);
+      setFilteredCampaigns(
+        filteredData.length > 0 ? filteredData[0].campaigns : []
+      );
     } else {
-      setFilteredCampaigns(campaign);
+      setFilteredCampaigns(campaigns?.[0]?.campaigns);
     }
-  }, [searchQuery, campaign]);
+  }, [searchQuery, campaigns]);
 
-  const { page, rowsPerPage } = useGlobalContext();
+  const { setTableStatus, tableStatus, setPage } = useGlobalContext();
+
+  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
+
+  const toggleCampaignModal = () => {
+    setIsOpenDelete(!isOpenDelete);
+  };
+  const router = useRouter();
+
+  const matchingObject = campaigns?.find(
+    (category) => category?.name === tableStatus
+  );
+  const matchingObjectArray = matchingObject ? matchingObject?.campaigns : [];
 
   const {
     bottomContent,
@@ -68,16 +96,36 @@ const CampaignList = ({ campaign, searchQuery, data }: any) => {
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
-
+    filterValue,
+    statusFilter,
+    visibleColumns,
+    onSearchChange,
+    onRowsPerPageChange,
     classNames,
-  } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
+    hasSearchFilter,
+  } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
-  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
-
-  const toggleCampaignModal = () => {
-    setIsOpenDelete(!isOpenDelete);
+  const handleTabClick = (index) => {
+    setPage(1);
+    const filteredCampaigns = campaigns.filter((item) => item.name === index);
+    setTableStatus(filteredCampaigns[0]?.name);
+    setFilteredCampaigns(filteredCampaigns[0]?.campaigns);
   };
-  const router = useRouter();
+
+  const restartCampaign = async (campaign: any) => {
+    const data = await repeatCampaign(campaign.id);
+
+    if (data?.data?.isSuccessful) {
+      refetch();
+      toast.success('Campaign repeated successfully');
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
 
   const renderCell = React.useCallback((campaign, columnKey) => {
     const cellValue = campaign[columnKey];
@@ -101,11 +149,24 @@ const CampaignList = ({ campaign, searchQuery, data }: any) => {
           </div>
         );
       case 'campaignDescription':
-        return <div className='w-[300px]'>{campaign.campaignDescription}</div>;
+        return <div className='w-[200px]'>{campaign.campaignDescription}</div>;
       case 'startDateTime':
         return (
           <div className='text-textGrey text-sm'>
             {moment(campaign?.startDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
+        );
+      case 'isActive':
+        return (
+          <div className='text-textGrey text-sm'>
+            <Chip
+              className='capitalize border-none gap-1 text-default-600'
+              color={campaign.isActive ? 'success' : 'danger'}
+              size='sm'
+              variant='dot'
+            >
+              {campaign.isActive ? 'Active' : 'Inactive'}
+            </Chip>
           </div>
         );
 
@@ -134,6 +195,15 @@ const CampaignList = ({ campaign, searchQuery, data }: any) => {
                       <p>Preview campaign</p>
                     </div>
                   </Link>
+                </DropdownItem>
+                <DropdownItem
+                  aria-label='repeat campaign'
+                  onClick={() => restartCampaign(campaign)}
+                >
+                  <div className={` flex gap-2  items-center text-grey500`}>
+                    <PiRepeat />
+                    <p>Repeat campaign</p>
+                  </div>
                 </DropdownItem>
                 <DropdownItem
                   aria-label='edit campaign'
@@ -171,6 +241,31 @@ const CampaignList = ({ campaign, searchQuery, data }: any) => {
     }
   }, []);
 
+  const [value, setValue] = useState('');
+
+  const handleTabChange = (index) => {
+    setValue(index);
+  };
+
+  const topContent = React.useMemo(() => {
+    return (
+      <Filters
+        campaigns={campaigns}
+        handleTabChange={handleTabChange}
+        value={value}
+        handleTabClick={handleTabClick}
+      />
+    );
+  }, [
+    filterValue,
+    statusFilter,
+    visibleColumns,
+    onSearchChange,
+    onRowsPerPageChange,
+    filteredCampaigns.length,
+    hasSearchFilter,
+  ]);
+
   return (
     <section className='border border-primaryGrey rounded-lg'>
       <Table
@@ -184,6 +279,7 @@ const CampaignList = ({ campaign, searchQuery, data }: any) => {
         classNames={classNames}
         selectedKeys={selectedKeys}
         // selectionMode='multiple'
+        topContent={topContent}
         sortDescriptor={sortDescriptor}
         topContentPlacement='outside'
         onSelectionChange={setSelectedKeys}
@@ -200,7 +296,10 @@ const CampaignList = ({ campaign, searchQuery, data }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No campaign found'} items={filteredCampaigns}>
+        <TableBody
+          emptyContent={'No campaign found'}
+          items={matchingObjectArray}
+        >
           {(item) => (
             <TableRow key={item?.id}>
               {(columnKey) => (

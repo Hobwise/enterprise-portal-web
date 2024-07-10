@@ -20,19 +20,26 @@ const camapaignSchema = z.object({
     .min(1, 'Reservation description is required'),
   startDateTime: z.string().trim().min(3, 'Campaign start date is required'),
   endDateTime: z.string().trim().min(3, 'Campaign end date is required'),
-
-  dressCode: z.string().trim().min(1, 'Dress code is required'),
 });
 
 export async function getCampaigns(
   businessId: string,
   page: any,
-  pageSize: any
+  rowsPerPage: any,
+  tableStatus: any
 ) {
-  const headers = businessId ? { businessId, page, pageSize } : {};
+  const headers = businessId ? { businessId } : {};
+
+  const payload = [
+    {
+      status: tableStatus || 'All',
+      page: page || 1,
+      pageSize: rowsPerPage || 10,
+    },
+  ];
 
   try {
-    const data = await api.get(DASHBOARD.campaignsByBusiness, {
+    const data = await api.post(DASHBOARD.campaignsByBusiness, payload, {
       headers,
     });
 
@@ -121,6 +128,17 @@ export async function updateCampaign(
     const data = await api.put(DASHBOARD.campaigns, payload, {
       headers,
     });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function repeatCampaign(campaignId: string) {
+  const headers = { campaignId };
+  try {
+    const data = await api.put(DASHBOARD.repeatCampaigns, {}, { headers });
 
     return data;
   } catch (error) {

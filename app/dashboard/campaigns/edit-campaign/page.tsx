@@ -27,6 +27,7 @@ import {
   ModalBody,
   ModalContent,
   Spacer,
+  Switch,
   useDisclosure,
 } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
@@ -56,7 +57,9 @@ const EditCampaign = () => {
   const [imageError, setImageError] = useState('');
   const [response, setResponse] = useState(null);
   const [selectedImage, setSelectedImage] = useState(
-    `data:image/jpeg;base64,${getCampaignSavedToDraft.image}` || ''
+    getCampaignSavedToDraft.image
+      ? `data:image/jpeg;base64,${getCampaignSavedToDraft.image}`
+      : ''
   );
 
   const [startDateTime, setStartDateTime] = useState(startDate);
@@ -135,7 +138,9 @@ const EditCampaign = () => {
       [name]: value,
     }));
   };
-
+  const handleToggle = async (isSelected: boolean) => {
+    setCampaignPayload({ ...campaignPayload, isActive: isSelected });
+  };
   const postCampaign = async () => {
     setIsLoading(true);
     const payload = {
@@ -267,6 +272,37 @@ const EditCampaign = () => {
             label={'Dress code'}
             placeholder={'Dress code'}
           />
+          <Spacer y={6} />
+          <div className='bg-primaryGrey inline-flex px-4 py-2 rounded-lg  gap-3 items-center'>
+            <span
+              className={
+                !campaignPayload.isActive ? 'text-primaryColor' : 'text-grey600'
+              }
+            >
+              Inactive
+            </span>
+
+            <Switch
+              classNames={{
+                wrapper: `m-0 ${
+                  campaignPayload.isActive ? '!bg-primaryColor' : 'bg-[#E4E7EC]'
+                } `,
+              }}
+              name='isAvailable'
+              defaultChecked={campaignPayload.isActive}
+              onChange={(e) => handleToggle(e.target.checked)}
+              isSelected={campaignPayload.isActive}
+              aria-label='Toggle availability'
+            />
+
+            <span
+              className={
+                campaignPayload.isActive ? 'text-primaryColor' : 'text-grey600'
+              }
+            >
+              Active
+            </span>
+          </div>
         </div>
         <div
           className={`flex-grow xl:h-auto xl:w-1/2 full Xl:p-8 p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}

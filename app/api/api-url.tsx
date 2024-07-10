@@ -48,4 +48,5 @@ export const DASHBOARD = {
   //Campaigns
   campaignsByBusiness: 'api/v1/Campaign/by-business',
   campaigns: 'api/v1/Campaign',
+  repeatCampaigns: 'api/v1/Campaign/restart',
 };
