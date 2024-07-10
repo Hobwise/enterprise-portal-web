@@ -149,7 +149,7 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
           </div>
         );
       case 'campaignDescription':
-        return <div className='w-[200px]'>{campaign.campaignDescription}</div>;
+        return <div className='w-[250px]'>{campaign.campaignDescription}</div>;
       case 'startDateTime':
         return (
           <div className='text-textGrey text-sm'>

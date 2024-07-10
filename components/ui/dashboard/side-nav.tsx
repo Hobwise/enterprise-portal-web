@@ -82,8 +82,8 @@ const SideNav = () => {
                   <Skeleton className='animate-pulse flex rounded-full w-12 h-12' />
                 </div>
                 <div className='w-full flex flex-col gap-2 '>
-                  <Skeleton className='animate-pulse h-3 w-3/5 rounded-lg' />
-                  <Skeleton className='animate-pulse h-3 w-4/5 rounded-lg' />
+                  <Skeleton className='animate-pulse h-2 w-3/5 rounded-lg' />
+                  <Skeleton className='animate-pulse h-2 w-4/5 rounded-lg' />
                 </div>
               </div>
             ) : (

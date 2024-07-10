@@ -51,8 +51,6 @@ const EditCampaign = () => {
     ? reverseFormatDateTime(`${getCampaignSavedToDraft?.endDateTime}`)
     : today(getLocalTimeZone());
 
-  console.log(getCampaignSavedToDraft, 'getCampaignSavedToDraft');
-
   const { refetch } = useCampaign();
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
