@@ -51,6 +51,8 @@ const EditCampaign = () => {
     ? reverseFormatDateTime(`${getCampaignSavedToDraft?.endDateTime}`)
     : today(getLocalTimeZone());
 
+  console.log(getCampaignSavedToDraft, 'getCampaignSavedToDraft');
+
   const { refetch } = useCampaign();
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -70,7 +72,7 @@ const EditCampaign = () => {
     campaignDescription: getCampaignSavedToDraft?.campaignDescription || '',
 
     dressCode: getCampaignSavedToDraft?.dressCode || '',
-    isActive: getCampaignSavedToDraft?.isActive || true,
+    isActive: getCampaignSavedToDraft?.isActive,
     imageReference: getCampaignSavedToDraft?.imageReference || '',
   });
 
@@ -179,7 +181,7 @@ const EditCampaign = () => {
       campaignName: getCampaignSavedToDraft?.campaignName || '',
       campaignDescription: getCampaignSavedToDraft?.campaignDescription || '',
       dressCode: getCampaignSavedToDraft?.dressCode || '',
-      isActive: getCampaignSavedToDraft?.isActive || true,
+      isActive: getCampaignSavedToDraft?.isActive,
       imageReference: getCampaignSavedToDraft?.imageReference || '',
     });
     setStartDateTime(startDate);
