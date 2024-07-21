@@ -1,12 +1,7 @@
+'use client';
 import SettingsComponent from '@/components/ui/dashboard/settings/settings';
 import { Spacer } from '@nextui-org/react';
 import React from 'react';
-
-export const metadata = {
-  title: 'Hobink | settings',
-  description:
-    'Take a look at your polices and the new policy to see what is covered',
-};
 
 const Settings: React.FC = () => {
   return (
