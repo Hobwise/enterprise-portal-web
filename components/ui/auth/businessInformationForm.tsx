@@ -33,6 +33,8 @@ const BusinessInformationForm = () => {
     logoImageReference: '',
     state: '',
     city: '',
+    contactEmailAddress: '',
+    contactPhoneNumber: '',
   });
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
@@ -104,6 +106,28 @@ const BusinessInformationForm = () => {
         placeholder='Name of your business'
       />
       <Spacer y={4} />
+
+      <div className='flex flex-col md:flex-row  gap-3'>
+        <CustomInput
+          type='email'
+          name='contactEmailAddress'
+          errorMessage={response?.errors?.contactEmailAddress?.[0]}
+          onChange={handleInputChange}
+          value={businessFormData.contactEmailAddress}
+          label='Business email'
+          placeholder='hobink@gmail.com'
+        />
+        <CustomInput
+          type='text'
+          name='contactPhoneNumber'
+          errorMessage={response?.errors?.contactPhoneNumber?.[0]}
+          onChange={handleInputChange}
+          value={businessFormData.contactPhoneNumber}
+          label='Business phone number'
+          placeholder='09034545454'
+        />
+      </div>
+      <Spacer y={4} />
       <CustomInput
         type='text'
         name='address'
@@ -113,28 +137,29 @@ const BusinessInformationForm = () => {
         label='Business address'
         placeholder='Where is your business located '
       />
-      <Spacer y={4} />
-      <SelectInput
-        errorMessage={response?.errors?.state?.[0]}
-        label={'Business state'}
-        name='state'
-        onChange={handleInputChange}
-        value={businessFormData.state}
-        placeholder={'Select a state'}
-        contents={getStates()}
-      />
 
       <Spacer y={4} />
-      <SelectInput
-        errorMessage={response?.errors?.city?.[0]}
-        label={'Business city'}
-        name='city'
-        onChange={handleInputChange}
-        value={businessFormData.city}
-        placeholder={'Select a city'}
-        contents={getCities()}
-      />
+      <div className='flex flex-col md:flex-row  gap-3'>
+        <SelectInput
+          errorMessage={response?.errors?.state?.[0]}
+          label={'Business state'}
+          name='state'
+          onChange={handleInputChange}
+          value={businessFormData.state}
+          placeholder={'Select a state'}
+          contents={getStates()}
+        />
 
+        <SelectInput
+          errorMessage={response?.errors?.city?.[0]}
+          label={'Business city'}
+          name='city'
+          onChange={handleInputChange}
+          value={businessFormData.city}
+          placeholder={'Select a city'}
+          contents={getCities()}
+        />
+      </div>
       <Spacer y={4} />
       <SelectInput
         errorMessage={response?.errors?.businessCategory?.[0]}

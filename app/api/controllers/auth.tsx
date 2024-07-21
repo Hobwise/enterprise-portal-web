@@ -62,6 +62,14 @@ const businessSchema = z.object({
     .min(1, { message: 'Please select your business category' }),
   state: z.string().trim().min(1, { message: 'Select a state' }),
   city: z.string().trim().min(1, { message: 'Select a city' }),
+  contactEmailAddress: emailValidation(),
+  contactPhoneNumber: z
+    .string()
+    .length(11, 'Phone number must be 11 digits long')
+    .startsWith('0', 'Phone number must start with 0')
+    .refine((value) => /^\d+$/.test(value), {
+      message: 'Phone number must only contain digits',
+    }),
 });
 
 export async function createUser(formData: any) {
@@ -140,6 +148,8 @@ export async function createBusiness(formData: any) {
     address: formData.address,
     state: formData.state,
     city: formData.city,
+    contactEmailAddress: formData.contactEmailAddress,
+    contactPhoneNumber: formData.contactPhoneNumber,
   });
 
   if (!validatedFields.success) {
@@ -172,6 +182,7 @@ export async function loginUser(formData: any) {
 
     return data;
   } catch (error) {
+    console.log(error, 'errorr');
     handleError(error);
   }
 }

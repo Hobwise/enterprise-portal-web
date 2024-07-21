@@ -7,6 +7,7 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import download from 'downloadjs';
 import { toPng } from 'html-to-image';
+import html2pdf from 'html2pdf.js';
 import cookie from 'js-cookie';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
@@ -315,4 +316,52 @@ export const formatDateTimeForPayload = (dateTime) => {
     3,
     '0'
   )}`;
+};
+
+export const saveAsPDF = (invoiceRef: any) => {
+  const element = invoiceRef.current;
+  const options = {
+    margin: 1,
+    filename: 'invoice.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+  };
+
+  html2pdf().from(element).set(options).save();
+};
+
+export const printPDF = (invoiceRef: any) => {
+  const element = invoiceRef.current;
+  const options = {
+    margin: 1,
+    filename: 'invoice.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+  };
+
+  html2pdf()
+    .from(element)
+    .set(options)
+    .output('blob')
+    .then((blob) => {
+      const url = URL.createObjectURL(blob);
+      const iframe = document.createElement('iframe');
+      iframe.style.position = 'fixed';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.top = '0';
+      iframe.style.left = '0';
+      iframe.style.zIndex = '10000';
+      iframe.src = url;
+      document.body.appendChild(iframe);
+      iframe.onload = () => {
+        iframe.contentWindow.print();
+        iframe.contentWindow.onafterprint = () => {
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+        };
+      };
+    });
 };

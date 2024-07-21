@@ -17,7 +17,6 @@ import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
 import { FiLogOut } from 'react-icons/fi';
 import { IoIosArrowDown, IoIosSettings } from 'react-icons/io';
 import { IoChatbubblesOutline } from 'react-icons/io5';
-import { MdPerson } from 'react-icons/md';
 import { SlBell } from 'react-icons/sl';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS, headerRouteMapping } from './constants';
@@ -104,7 +103,7 @@ const Header = () => {
                 <IoChatbubblesOutline className='text-[#494E58]  h-5 w-5 cursor-pointer' />
               </span>
             </Tooltip>
-            <Popover placement='bottom'>
+            <Popover showArrow={true} placement='bottom'>
               <PopoverTrigger>
                 <div className='flex items-center gap-1 cursor-pointer'>
                   <Avatar
@@ -117,17 +116,17 @@ const Header = () => {
               <PopoverContent>
                 <div className='flex items-center w-[218px] p-1 gap-2'>
                   <div className='flex flex-col   w-full'>
-                    <div className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md  hover:bg-[#F9FAFB] px-2 py-3 items-center gap-2'>
+                    {/* <div className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md  hover:bg-[#F9FAFB] px-2 py-3 items-center gap-2'>
                       <MdPerson className='text-[20px]' />
                       <span className='  text-sm font-md'>Profile</span>
-                    </div>
+                    </div> */}
                     <Link
                       href={'/dashboard/settings'}
                       className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md  hover:bg-[#F9FAFB] px-2 py-3 items-center gap-2'
                     >
                       <IoIosSettings className='text-[20px]' />
                       <span className='  text-sm font-md'>
-                        Account Settings
+                        Account settings
                       </span>
                     </Link>
                     <div

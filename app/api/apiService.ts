@@ -10,19 +10,38 @@ import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import { generateRefreshToken } from './controllers/auth';
 
-export const handleError = (error: any) => {
-  if (!error.response.data.title) {
-    notify({
-      title: 'Error!',
-      text: error.response.data.error.responseDescription,
-      type: 'error',
-    });
-  } else {
-    notify({
-      title: 'Error!',
-      text: 'An error occured, please try again',
-      type: 'error',
-    });
+// export const handleError = (error: any) => {
+//   if (!error.response.data.title) {
+//     notify({
+//       title: 'Error!',
+
+//       text: error.response.data.error.responseDescription,
+//       type: 'error',
+//     });
+//   } else {
+//     notify({
+//       title: 'Error!',
+//       text: 'An error occured, please try again',
+//       type: 'error',
+//     });
+//   }
+// };
+
+export const handleError = (error: any, showError: boolean = true) => {
+  if (showError) {
+    if (!error.response.data.title) {
+      notify({
+        title: 'Error!',
+        text: error.response.data.error.responseDescription,
+        type: 'error',
+      });
+    } else {
+      notify({
+        title: 'Error!',
+        text: 'An error occurred, please try again',
+        type: 'error',
+      });
+    }
   }
 };
 
@@ -127,13 +146,14 @@ api.interceptors.response.use(
       return error;
     }
     if (error.code === 'ERR_BAD_REQUEST') {
-      notify({
-        title: 'Error',
-        text: error.response.data.error.responseDescription,
-        type: 'error',
-      });
+      handleError(error, true);
       return error;
     }
+    // if (error.code === 'ERR_BAD_REQUEST') {
+    //   console.log(error, 'error');
+    //   handleError(error);
+    //   return error;
+    // }
     if (error.code === 'ERR_NETWORK') {
       notify({
         title: 'Network Timeout!',

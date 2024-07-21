@@ -29,6 +29,7 @@ const DeleteQRModal = ({ isOpenDelete, toggleQRmodalModal }: any) => {
       qrObject?.id
     );
     setIsLoading(false);
+
     if (data?.data?.isSuccessful) {
       toggleQRmodalModal();
       toast.success('QR deleted successfully');

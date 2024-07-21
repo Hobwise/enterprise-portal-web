@@ -18,6 +18,7 @@ const ViewModal = ({
   toggleVarietyModal,
   handleCardClick,
 }: any) => {
+  console.log(selectedMenu?.varieties, 'selectedMenu?.varieties');
   return (
     <Modal isOpen={isOpenVariety} onOpenChange={toggleVarietyModal}>
       <ModalContent>
@@ -47,12 +48,54 @@ const ViewModal = ({
                   {selectedMenu?.itemDescription}
                 </p>
                 <Spacer y={2} />
-                <p className=' font-[700] '>
-                  {formatPrice(selectedMenu?.price)}
-                </p>
-                <Spacer y={2} />
-                <p className='text-grey600 text-sm'>{selectedMenu?.itemName}</p>
-                <Spacer y={3} />
+                <div className='flex text-sm justify-between'>
+                  <div>
+                    <p className=' font-[700] '>
+                      {formatPrice(selectedMenu?.price)}
+                    </p>
+                    <Spacer y={1} />
+                    <p className='text-grey600 text-sm'>
+                      {selectedMenu?.itemName}
+                    </p>
+                    <Spacer y={3} />
+                  </div>
+                  {selectedMenu?.varieties && (
+                    <div>
+                      {selectedItems.find(
+                        (selected) => selected.id === selectedMenu.id
+                      ) ? (
+                        <Chip
+                          title='remove'
+                          onClick={() =>
+                            handleCardClick({
+                              ...selectedMenu,
+                              isVariety: false,
+                            })
+                          }
+                          startContent={<CheckIcon size={18} />}
+                          variant='flat'
+                          classNames={{
+                            base: 'bg-primaryColor cursor-pointer text-white  text-[12px]',
+                          }}
+                        >
+                          Selected
+                        </Chip>
+                      ) : (
+                        <CustomButton
+                          onClick={() =>
+                            handleCardClick({
+                              ...selectedMenu,
+                              isVariety: false,
+                            })
+                          }
+                          className='h-8 w-4 text-black bg-white border border-primaryGrey'
+                        >
+                          Select
+                        </CustomButton>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className='max-h-[200px] overflow-scroll'>
                 {selectedMenu?.varieties ? (
@@ -61,7 +104,7 @@ const ViewModal = ({
                       return (
                         <div
                           key={item.id}
-                          className='flex justify-between cursor-pointer'
+                          className='flex justify-between text-sm cursor-pointer'
                         >
                           <div className='pb-2  rounded-lg text-black  flex w-full'>
                             <div>
@@ -79,17 +122,17 @@ const ViewModal = ({
                               />
                             </div>
                             <div className='p-3 flex flex-col text-sm justify-center'>
-                              <p className='font-[600]'>
+                              <span className='font-[600]'>
                                 {selectedMenu.menuName}
-                              </p>
-                              <Spacer y={1} />
-                              <p className='text-grey600 '>
+                              </span>
+
+                              <span className='text-grey600 '>
                                 {selectedMenu.itemName}
-                              </p>
-                              <Spacer y={1} />
-                              <p className='font-[600] text-primaryColor'>
+                              </span>
+
+                              <span className='font-[600] text-primaryColor'>
                                 {formatPrice(item?.price)}
-                              </p>
+                              </span>
                             </div>
                           </div>
                           {selectedItems.find(
@@ -125,7 +168,7 @@ const ViewModal = ({
                                   image: selectedMenu.image,
                                 })
                               }
-                              className='h-9 w-6 text-black bg-white border border-primaryGrey'
+                              className='h-8 text-sm w-4 text-black bg-white border border-primaryGrey'
                             >
                               Select
                             </CustomButton>

@@ -1,20 +1,20 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Spacer } from '@nextui-org/react';
+import { AUTH } from '@/app/api/api-url';
+import api from '@/app/api/apiService';
+import { confirmEmail } from '@/app/api/controllers/auth';
 import { CustomButton } from '@/components/customButton';
-import OtpInput from 'react-otp-input';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import {
   notify,
   saveJsonItemToLocalStorage,
   setTokenCookie,
 } from '@/lib/utils';
-import { confirmEmail } from '@/app/api/controllers/auth';
-import { AUTH } from '@/app/api/api-url';
-import api from '@/app/api/apiService';
-import { IoMdRefresh } from 'react-icons/io';
+import { Spacer } from '@nextui-org/react';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { useGlobalContext } from '@/hooks/globalProvider';
+import { IoMdRefresh } from 'react-icons/io';
+import OtpInput from 'react-otp-input';
 const ConfirmEmailForm = () => {
   const { userData } = useGlobalContext();
   const router = useRouter();

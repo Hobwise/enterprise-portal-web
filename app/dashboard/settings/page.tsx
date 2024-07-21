@@ -3,7 +3,7 @@ import { Spacer } from '@nextui-org/react';
 import React from 'react';
 
 export const metadata = {
-  title: 'Settings page',
+  title: 'Hobink | settings',
   description:
     'Take a look at your polices and the new policy to see what is covered',
 };
@@ -16,7 +16,7 @@ const Settings: React.FC = () => {
         Take a look at your polices and the new policy to see what is covered
       </p>
       <Spacer y={8} />
-      <section className='flex xl:flex-row flex-col xl:w-[862px] w-full gap-3'>
+      <section className='flex xl:flex-row flex-col xl:max-w-[80%] w-full gap-3 '>
         <SettingsComponent />
       </section>
     </>

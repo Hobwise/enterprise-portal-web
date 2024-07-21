@@ -84,7 +84,11 @@ const ReservationDetails = () => {
               <p>Edit</p>
             </Button>
 
-            <Popover isOpen={isOpen} onOpenChange={(open) => setIsOpen(open)}>
+            <Popover
+              showArrow={true}
+              isOpen={isOpen}
+              onOpenChange={(open) => setIsOpen(open)}
+            >
               <PopoverTrigger>
                 <Button
                   onClick={handleCopyClick}

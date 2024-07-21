@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
+import { useGlobalContext } from '@/hooks/globalProvider';
 import {
   Chip,
   Dropdown,
@@ -19,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { BsCalendar2Check } from 'react-icons/bs';
 import { FaRegEdit } from 'react-icons/fa';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
+import { TbFileInvoice } from 'react-icons/tb';
 import {
   availableOptions,
   columns,
@@ -27,14 +29,13 @@ import {
 } from './data';
 import Filters from './filters';
 
-import { useGlobalContext } from '@/hooks/globalProvider';
-
 import usePagination from '@/hooks/usePagination';
 import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
 import moment from 'moment';
 import { LiaTimesSolid } from 'react-icons/lia';
 import CancelOrderModal from './cancelOrder';
 import ConfirmOrderModal from './confirmOrder';
+import InvoiceModal from './invoice';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'name',
@@ -51,6 +52,7 @@ const OrdersList = ({ orders, searchQuery }: any) => {
   const [singleOrder, setSingleOrder] = React.useState('');
   const [isOpenCancelOrder, setIsOpenCancelOrder] =
     React.useState<Boolean>(false);
+  const [isOpenInvoice, setIsOpenInvoice] = React.useState<Boolean>(false);
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [filteredOrder, setFilteredOrder] = React.useState(orders[0]?.orders);
@@ -126,6 +128,10 @@ const OrdersList = ({ orders, searchQuery }: any) => {
     setSingleOrder(order);
     setIsOpenConfirmOrder(!isOpenConfirmOrder);
   };
+  const toggleInvoiceModal = (order: any) => {
+    setSingleOrder(order);
+    setIsOpenInvoice(!isOpenInvoice);
+  };
 
   const [value, setValue] = useState('');
 
@@ -183,6 +189,15 @@ const OrdersList = ({ orders, searchQuery }: any) => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu className='text-black'>
+                <DropdownItem
+                  onClick={() => toggleInvoiceModal(order)}
+                  aria-label='Generate invoice'
+                >
+                  <div className={`  flex gap-3  items-center text-grey500`}>
+                    <TbFileInvoice className='text-[18px]' />
+                    <p>Generate invoice</p>
+                  </div>
+                </DropdownItem>
                 {options && options.includes('Update Order') && (
                   <DropdownItem
                     onClick={() => {
@@ -299,6 +314,11 @@ const OrdersList = ({ orders, searchQuery }: any) => {
         singleOrder={singleOrder}
         isOpenConfirmOrder={isOpenConfirmOrder}
         toggleConfirmModal={toggleConfirmModal}
+      />
+      <InvoiceModal
+        singleOrder={singleOrder}
+        isOpenInvoice={isOpenInvoice}
+        toggleInvoiceModal={toggleInvoiceModal}
       />
     </section>
   );

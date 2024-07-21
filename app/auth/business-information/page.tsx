@@ -3,7 +3,7 @@ import BusinessInformationForm from '@/components/ui/auth/businessInformationFor
 import { Spacer } from '@nextui-org/react';
 
 export const metadata = {
-  title: 'Provide us your business information',
+  title: 'Hobink | Provide us your business information',
   description: 'Streamline your business processes',
 };
 

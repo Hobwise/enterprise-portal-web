@@ -116,6 +116,7 @@ const Reservation: React.FC = () => {
               </div>
               <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-xl'>
                 <Popover
+                  showArrow={true}
                   isOpen={isOpen}
                   onOpenChange={(open) => setIsOpen(open)}
                 >
