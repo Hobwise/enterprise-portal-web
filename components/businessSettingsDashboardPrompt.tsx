@@ -1,5 +1,5 @@
 'use client';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, saveToLocalStorage } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { toast } from 'react-toastify';
@@ -12,7 +12,7 @@ const Msg = () => {
       <div>
         <span
           onClick={() => {
-            history.pushState({ prompt: true }, '/dashboard/settings');
+            saveToLocalStorage('businessSettingPrompt', true);
             router.push('/dashboard/settings');
           }}
           className='text-primaryColor font-[500]'

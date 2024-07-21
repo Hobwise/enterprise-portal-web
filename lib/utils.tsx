@@ -332,7 +332,8 @@ export const saveAsPDF = async (invoiceRef: any) => {
   html2pdf().from(element).set(options).save();
 };
 
-export const printPDF = (invoiceRef: any) => {
+export const printPDF = async (invoiceRef: any) => {
+  const html2pdf = (await import('html2pdf.js/dist/html2pdf.min.js')).default;
   const element = invoiceRef.current;
   const options = {
     margin: 1,

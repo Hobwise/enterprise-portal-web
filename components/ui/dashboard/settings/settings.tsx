@@ -1,4 +1,5 @@
 'use client';
+import { getFromLocalStorage } from '@/lib/utils';
 import React, { useState } from 'react';
 import BusinessSettings from './business-settings/businessSettings';
 import BusinessProfile from './businessProfile';
@@ -14,11 +15,11 @@ interface ListItemProps {
 const li =
   'hover:bg-secondaryGrey text-[14px] font-[600] xl:p-3 px-4 py-2 xl:rounded-[4px] rounded-[6px] transition-all cursor-pointer';
 
-const dashboardSettingUpdatePrompt = history.state;
 const SettingsComponent: React.FC = () => {
+  const businessSettingPrompt = getFromLocalStorage('businessSettingPrompt');
   // const [activeScreen, setActiveScreen] = useState<number>(4);
   const [activeScreen, setActiveScreen] = useState<number>(
-    dashboardSettingUpdatePrompt.prompt ? 4 : 1
+    businessSettingPrompt ? 4 : 1
   );
 
   const handleListItemClick = (screenNumber: number) => {

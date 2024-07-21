@@ -5,7 +5,11 @@ import CustomImageUpload from '@/components/CustomUpload';
 import { CustomButton } from '@/components/customButton';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import useUploadFile from '@/hooks/useUploadFile';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import {
+  clearItemLocalStorage,
+  getJsonItemFromLocalStorage,
+  notify,
+} from '@/lib/utils';
 import { Spacer } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -104,6 +108,7 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
       // secondaryBrandColour: '',
       // logoImageReference: '',
       //   });
+      clearItemLocalStorage('businessSettingPrompt');
       setActiveScreen(3);
     } else if (response?.data?.error) {
       notify({

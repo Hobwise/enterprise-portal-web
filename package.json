@@ -39,8 +39,10 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/draft-js": "^0.11.18",
     "@types/node": "20.11.20",
     "@types/react": "^18.2.59",
+    "@types/react-draft-wysiwyg": "^1.13.8",
     "autoprefixer": "^10.0.1",
     "eslint-config-next": "14.0.4",
     "postcss": "^8",

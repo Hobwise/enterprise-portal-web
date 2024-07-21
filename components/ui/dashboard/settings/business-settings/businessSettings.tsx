@@ -22,6 +22,7 @@ export default function BusinessSettings({ setActiveScreen }: any) {
     {
       id: 'Update business',
       label: 'Update business',
+
       content: <UpdateBusiness setActiveScreen={setActiveScreen} />,
     },
     {
@@ -32,6 +33,7 @@ export default function BusinessSettings({ setActiveScreen }: any) {
     {
       id: 'Terms and condition',
       label: 'Terms and condition',
+
       content: <TermsCondition />,
     },
   ];

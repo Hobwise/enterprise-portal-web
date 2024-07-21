@@ -1,5 +1,4 @@
 'use client';
-
 import { createTermsAndCondition } from '@/app/api/controllers/dashboard/settings';
 import { CustomButton } from '@/components/customButton';
 import useTermsAndCondition from '@/hooks/cachedEndpoints/useTermsAndConditions';
@@ -13,11 +12,16 @@ import {
   useDisclosure,
 } from '@nextui-org/react';
 import { EditorState, convertFromRaw, convertToRaw } from 'draft-js';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import { Editor } from 'react-draft-wysiwyg';
 import '../../../../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
 import Success from '../../../../../public/assets/images/success.png';
+
+const Editor = dynamic(
+  () => import('react-draft-wysiwyg').then((mod) => mod.Editor),
+  { ssr: false }
+);
 
 const TermsCondition = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -34,7 +38,7 @@ const TermsCondition = () => {
     setIsOpenPreview(!isOpenPreview);
   };
 
-  const onEditorStateChange = (editorState: EditorState) => {
+  const onEditorStateChange = (editorState) => {
     setEditorState(editorState);
   };
 
@@ -43,10 +47,7 @@ const TermsCondition = () => {
     return JSON.stringify(convertToRaw(contentState));
   };
 
-  const submitFormData = async (
-    e: { preventDefault: () => void },
-    isPublished: boolean
-  ) => {
+  const submitFormData = async (e, isPublished) => {
     e.preventDefault();
     const editorText = getEditorContent();
 
@@ -103,6 +104,7 @@ const TermsCondition = () => {
       setEditorState(EditorState.createWithContent(contentState));
     }
   }, [data]);
+
   return (
     <section>
       <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
