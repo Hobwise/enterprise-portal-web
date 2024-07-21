@@ -1,3 +1,4 @@
+'use client';
 const BusinessProfile = () => {
   return <div>BusinessProfile</div>;
 };
