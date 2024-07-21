@@ -7,7 +7,7 @@ import {
 import { clsx, type ClassValue } from 'clsx';
 import download from 'downloadjs';
 import { toPng } from 'html-to-image';
-import html2pdf from 'html2pdf.js';
+
 import cookie from 'js-cookie';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
@@ -318,7 +318,8 @@ export const formatDateTimeForPayload = (dateTime) => {
   )}`;
 };
 
-export const saveAsPDF = (invoiceRef: any) => {
+export const saveAsPDF = async (invoiceRef: any) => {
+  const html2pdf = (await import('html2pdf.js/dist/html2pdf.min.js')).default;
   const element = invoiceRef.current;
   const options = {
     margin: 1,
