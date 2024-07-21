@@ -88,11 +88,10 @@ const MenuList = () => {
       .filter((menu) => menu?.items?.length > 0);
   }, [data, filterValue]);
 
-  console.log(filteredItems?.[0]?.id, 'data?.[0]?.id');
   useEffect(() => {
     setMenuIdTable(filteredItems?.[0]?.id);
   }, []);
-  console.log(menuIdTable, 'menuIdTable');
+
   const [loading, setLoading] = useState<Boolean>(false);
 
   const [value, setValue] = useState('');

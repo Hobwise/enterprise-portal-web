@@ -93,7 +93,7 @@ const useUploadFile = () => {
       setImageReferences((prev) => ({ ...prev, [type]: '' }));
     }
   };
-  console.log(selectedImages, 'SelectedImages');
+
   const handleImageChange = async (event: any, type: string) => {
     if (event.target.files) {
       const file = event.target.files[0];

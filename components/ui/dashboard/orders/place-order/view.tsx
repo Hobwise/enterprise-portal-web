@@ -18,7 +18,6 @@ const ViewModal = ({
   toggleVarietyModal,
   handleCardClick,
 }: any) => {
-  console.log(selectedMenu?.varieties, 'selectedMenu?.varieties');
   return (
     <Modal isOpen={isOpenVariety} onOpenChange={toggleVarietyModal}>
       <ModalContent>

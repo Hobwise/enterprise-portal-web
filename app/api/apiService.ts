@@ -149,11 +149,7 @@ api.interceptors.response.use(
       handleError(error, true);
       return error;
     }
-    // if (error.code === 'ERR_BAD_REQUEST') {
-    //   console.log(error, 'error');
-    //   handleError(error);
-    //   return error;
-    // }
+
     if (error.code === 'ERR_NETWORK') {
       notify({
         title: 'Network Timeout!',

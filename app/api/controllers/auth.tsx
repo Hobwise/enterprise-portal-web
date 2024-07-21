@@ -182,7 +182,6 @@ export async function loginUser(formData: any) {
 
     return data;
   } catch (error) {
-    console.log(error, 'errorr');
     handleError(error);
   }
 }

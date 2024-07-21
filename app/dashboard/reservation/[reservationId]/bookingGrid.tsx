@@ -31,8 +31,6 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 const BookingGrid = ({ data }: any) => {
-  //   console.log(data, 'data');
-
   const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
     useGlobalContext();
 

@@ -16,10 +16,10 @@ const li =
 
 const dashboardSettingUpdatePrompt = history.state;
 const SettingsComponent: React.FC = () => {
-  const [activeScreen, setActiveScreen] = useState<number>(4);
-  // const [activeScreen, setActiveScreen] = useState<number>(
-  //   dashboardSettingUpdatePrompt.prompt ? 4 : 1
-  // );
+  // const [activeScreen, setActiveScreen] = useState<number>(4);
+  const [activeScreen, setActiveScreen] = useState<number>(
+    dashboardSettingUpdatePrompt.prompt ? 4 : 1
+  );
 
   const handleListItemClick = (screenNumber: number) => {
     setActiveScreen(screenNumber);
