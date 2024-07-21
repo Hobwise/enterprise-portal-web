@@ -1,3 +1,4 @@
+'use client';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Tab, Tabs } from '@nextui-org/react';
 import EmailTemplate from './emailTemplate';
