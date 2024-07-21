@@ -1,5 +1,4 @@
 'use client';
-
 import { updateBusiness } from '@/app/api/controllers/dashboard/settings';
 import { CustomInput } from '@/components/CustomInput';
 import CustomImageUpload from '@/components/CustomUpload';

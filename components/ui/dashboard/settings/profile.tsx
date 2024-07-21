@@ -1,3 +1,4 @@
+'use client';
 import { updateUser } from '@/app/api/controllers/auth';
 import { uploadFile } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
