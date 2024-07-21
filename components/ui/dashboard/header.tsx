@@ -103,7 +103,7 @@ const Header = () => {
                 <IoChatbubblesOutline className='text-[#494E58]  h-5 w-5 cursor-pointer' />
               </span>
             </Tooltip>
-            <Popover showArrow={true} placement='bottom'>
+            <Popover placement='bottom'>
               <PopoverTrigger>
                 <div className='flex items-center gap-1 cursor-pointer'>
                   <Avatar

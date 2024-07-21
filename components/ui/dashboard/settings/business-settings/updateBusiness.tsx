@@ -10,13 +10,13 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from '@/lib/utils';
-import { Spacer } from '@nextui-org/react';
+import { Spacer, Spinner } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 const UpdateBusiness = ({ setActiveScreen }: any) => {
-  const { data, refetch } = useGetBusiness();
-  const [isLoading, setIsLoading] = useState(false);
+  const { data, refetch, isLoading } = useGetBusiness();
+  const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const businessInformation = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
@@ -76,7 +76,7 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
   const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
-    setIsLoading(true);
+    setLoading(true);
 
     const response = await updateBusiness(
       {
@@ -94,7 +94,7 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
       businessInformation[0]?.businessId
     );
 
-    setIsLoading(false);
+    setLoading(false);
     setResponse(response);
 
     if (response?.data?.isSuccessful) {
@@ -119,6 +119,14 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className={`flex flex-col  items-center my-10`}>
+        <Spinner size='lg' />
+      </div>
+    );
+  }
+
   return (
     <section>
       <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
@@ -131,8 +139,8 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
           </p>
         </div>
         <CustomButton
-          loading={isLoading}
-          disabled={isLoading}
+          loading={loading}
+          disabled={loading}
           onClick={submitFormData}
           className='py-2 px-4 md:mb-0 mb-4 text-white'
           backgroundColor='bg-primaryColor'
