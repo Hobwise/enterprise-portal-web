@@ -46,7 +46,7 @@ export default function BusinessSettings({ setActiveScreen }: any) {
       <Tabs
         size='lg'
         fullWidth={true}
-        selectedKey={tabs[businessProfileNavigate].id}
+        defaultSelectedKey={tabs[businessProfileNavigate].id}
         className='w-full mb-2'
         aria-label='Business settings tab'
         items={tabs}
