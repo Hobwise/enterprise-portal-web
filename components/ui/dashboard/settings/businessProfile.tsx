@@ -73,7 +73,10 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
           </p>
         </div>
         <CustomButton
-          onClick={() => setActiveScreen(4)}
+          onClick={() => {
+            setBusinessProfileNavigate(0);
+            setActiveScreen(4);
+          }}
           className='py-2 px-4 md:mb-0 mb-4 text-white'
           backgroundColor='bg-primaryColor'
         >
