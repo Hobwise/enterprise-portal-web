@@ -6,11 +6,12 @@ import { CustomButton } from '@/components/customButton';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import useUploadFile from '@/hooks/useUploadFile';
 import {
+  SmallLoader,
   clearItemLocalStorage,
   getJsonItemFromLocalStorage,
   notify,
 } from '@/lib/utils';
-import { Spacer, Spinner } from '@nextui-org/react';
+import { Spacer } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -122,7 +123,7 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
   if (isLoading) {
     return (
       <div className={`flex flex-col  items-center my-10`}>
-        <Spinner size='lg' />
+        <SmallLoader />
       </div>
     );
   }

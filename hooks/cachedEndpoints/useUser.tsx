@@ -13,8 +13,7 @@ const useUser = () => {
 
   const { data, isLoading, isError, refetch } = useQuery<any>(
     'user',
-    fetchUser,
-    { staleTime: 3600000 }
+    fetchUser
   );
 
   return { data, isLoading, isError, refetch };

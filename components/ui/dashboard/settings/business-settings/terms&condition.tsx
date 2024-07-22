@@ -100,7 +100,7 @@ const TermsCondition = () => {
 
   useEffect(() => {
     if (data?.content) {
-      const contentState = convertFromRaw(JSON.parse(data.content));
+      const contentState = convertFromRaw(JSON.parse(data?.content));
       setEditorState(EditorState.createWithContent(contentState));
     }
   }, [data]);
