@@ -143,10 +143,10 @@ const EditReservation = ({
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
+      toast.success('Reservation updated successfully');
       toggleModalEdit();
       getReservation();
       refetch();
-      toast.success('Reservation updated successfully');
       setSelectedImage('');
     } else if (data?.data?.error) {
       notify({
