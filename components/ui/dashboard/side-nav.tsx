@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import HobinkLogo from '@/components/logo';
+import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import useUser from '@/hooks/cachedEndpoints/useUser';
 import {
   getJsonItemFromLocalStorage,
@@ -32,6 +33,7 @@ const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
 
   const { data, isLoading } = useUser();
+  const { data: businessDetails } = useGetBusiness();
 
   const business = getJsonItemFromLocalStorage('business');
 
@@ -91,6 +93,7 @@ const SideNav = () => {
                 <div>
                   <Avatar
                     isBordered
+                    src={`data:image/jpeg;base64,${businessDetails?.logoImage}`}
                     showFallback={true}
                     name={business[0]?.businessName}
                   />
@@ -123,8 +126,12 @@ const SideNav = () => {
                   key={item.businessId}
                   onClick={() => toggleBtwBusiness(item)}
                 >
-                  <div className='flex gap-3'>
-                    <Avatar showFallback={true} name={item?.businessName} />
+                  <div className='flex items-center gap-3'>
+                    <Avatar
+                      showFallback={true}
+                      src={`data:image/jpeg;base64,${businessDetails?.logoImage}`}
+                      name={item?.businessName}
+                    />
                     <div className='flex flex-col'>
                       <span className='font-[500] text-[14px]'>
                         {item?.businessName}

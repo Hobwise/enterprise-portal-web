@@ -1,5 +1,5 @@
 'use client';
-import { getFromLocalStorage } from '@/lib/utils';
+import { getFromLocalStorage, getJsonItemFromLocalStorage } from '@/lib/utils';
 import React, { useState } from 'react';
 import BusinessSettings from './business-settings/businessSettings';
 import BusinessProfile from './businessProfile';
@@ -17,6 +17,7 @@ const li =
 
 const SettingsComponent: React.FC = () => {
   const businessSettingPrompt = getFromLocalStorage('businessSettingPrompt');
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
   // const [activeScreen, setActiveScreen] = useState<number>(4);
   const [activeScreen, setActiveScreen] = useState<number>(
     businessSettingPrompt ? 4 : 1
@@ -26,19 +27,28 @@ const SettingsComponent: React.FC = () => {
     setActiveScreen(screenNumber);
   };
 
-  const listItems: ListItemProps[] = [
+  const { role } = userInformation;
+
+  const baseListItems: ListItemProps[] = [
     { title: 'Profile', screenNumber: 1 },
     { title: 'Password', screenNumber: 2 },
     { title: 'Business profile', screenNumber: 3 },
     { title: 'Business settings', screenNumber: 4 },
-
     { title: 'Team', screenNumber: 5 },
     { title: 'Roles and Privileges', screenNumber: 6 },
   ];
 
+  const listItems: ListItemProps[] = baseListItems.filter(
+    (item) => !(role === 1 && item.title === 'Roles and Privileges')
+  );
+
   return (
     <>
-      <article className='border max-h-[336px]  border-secondaryGrey w-full xl:w-[284px] p-3 rounded-[8px]'>
+      <article
+        className={`border ${
+          role === 1 ? 'max-h-[270px]' : 'max-h-[320px]'
+        }   border-secondaryGrey w-full xl:w-[284px] p-3 rounded-[8px]`}
+      >
         <ul className='flex xl:flex-col flex-row xl:gap-1 gap-3'>
           {listItems.map((item) => (
             <li
@@ -58,7 +68,9 @@ const SettingsComponent: React.FC = () => {
       <article className='border w-full border-secondaryGrey p-6 rounded-[8px]'>
         {activeScreen === 1 && <Profile />}
         {activeScreen === 2 && <Password />}
-        {activeScreen === 3 && <BusinessProfile />}
+        {activeScreen === 3 && (
+          <BusinessProfile setActiveScreen={setActiveScreen} />
+        )}
         {activeScreen === 4 && (
           <BusinessSettings setActiveScreen={setActiveScreen} />
         )}

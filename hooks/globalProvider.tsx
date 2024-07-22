@@ -22,6 +22,8 @@ const AppProvider = ({ children }: any) => {
   const [userData, setUserData] = useState(null);
 
   const [isOpenDelete, setIsOpenDelete] = useState(false);
+  const [businessProfileNavigate, setBusinessProfileNavigate] =
+    useState<number>(0);
 
   const [isOpenDeleteVariety, setIsOpenDeleteVariety] = useState(false);
   const [isOpenEditVariety, setIsOpenEditVariety] = useState(false);
@@ -87,7 +89,8 @@ const AppProvider = ({ children }: any) => {
         setIsOpenEditVariety,
         isSelectedPreview,
         setIsSelectedPreview,
-
+        businessProfileNavigate,
+        setBusinessProfileNavigate,
         handleListItemClick,
         isOpenDelete,
         isOpenEdit,

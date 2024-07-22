@@ -12,7 +12,7 @@ import cookie from 'js-cookie';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
 import { twMerge } from 'tailwind-merge';
-import hobink from '../public/assets/images/hobink.png';
+import LoadingAvatar from '../public/assets/images/loadingAvatar.svg';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -164,12 +164,25 @@ export const imageCompressOptions = {
 export const CustomLoading = () => {
   return (
     <div
-      className={`loadingContainer bg-white flex flex-col justify-center items-center`}
+      className={`absolute top-0 left-0 w-full h-full  flex flex-col justify-center items-center`}
     >
       <div className='animate-bounce'>
-        <Image src={hobink} style={{ objectFit: 'cover' }} alt='hobink logo' />
+        <Image
+          src={LoadingAvatar}
+          style={{ objectFit: 'cover' }}
+          alt='hobink logo'
+          className='w-[60px] h-[60px]'
+        />
       </div>
-      <p className='text-center loading-text text-primaryColor'>Loading...</p>
+      <div className='leading-tight flex flex-col text-center'>
+        <span className=' font-[600] text-[24px]   text-black'>
+          Hang on a Sec!
+        </span>
+
+        <span className='text-sm font-[400]   w-[10px] text-[#475367] '>
+          Just a moment...
+        </span>
+      </div>
     </div>
   );
 };

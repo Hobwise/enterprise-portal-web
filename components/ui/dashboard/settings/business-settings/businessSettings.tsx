@@ -1,4 +1,5 @@
 'use client';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Tab, Tabs } from '@nextui-org/react';
 import EmailTemplate from './emailTemplate';
@@ -6,6 +7,8 @@ import TermsCondition from './terms&condition';
 import UpdateBusiness from './updateBusiness';
 
 export default function BusinessSettings({ setActiveScreen }: any) {
+  const { businessProfileNavigate, setBusinessProfileNavigate } =
+    useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business') || [];
   const showBusinessSettings = businessInformation[0]?.primaryColor === '';
 
@@ -43,6 +46,7 @@ export default function BusinessSettings({ setActiveScreen }: any) {
       <Tabs
         size='lg'
         fullWidth={true}
+        selectedKey={tabs[businessProfileNavigate].id}
         className='w-full mb-2'
         aria-label='Business settings tab'
         items={tabs}

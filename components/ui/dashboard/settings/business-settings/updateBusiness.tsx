@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 const UpdateBusiness = ({ setActiveScreen }: any) => {
-  const { data, refetch, isLoading } = useGetBusiness();
+  const { data, isLoading } = useGetBusiness();
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -181,8 +181,7 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
             removeUploadedFile={() =>
               removeUploadedFile(
                 'resistrationCertificateImageReference',
-                data?.resistrationCertificateImageReference,
-                refetch
+                data?.resistrationCertificateImageReference
               )
             }
             referenceId={data?.resistrationCertificateImageReference}
@@ -228,8 +227,7 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
             removeUploadedFile={() =>
               removeUploadedFile(
                 'identificationImageReference',
-                data?.identificationImageReference,
-                refetch
+                data?.identificationImageReference
               )
             }
             isLoadingImage={isLoadingImage['identificationImageReference']}
@@ -305,11 +303,7 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
             handleImageChange={handleImageChange}
             selectedImage={selectedImages['logoImageReference']}
             removeUploadedFile={() =>
-              removeUploadedFile(
-                'logoImageReference',
-                data?.logoImageReference,
-                refetch
-              )
+              removeUploadedFile('logoImageReference', data?.logoImageReference)
             }
             isLoadingImage={isLoadingImage['logoImageReference']}
             errorMessage={response?.errors?.logoImageReference?.[0]}

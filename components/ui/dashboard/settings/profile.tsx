@@ -3,7 +3,6 @@ import { updateUser } from '@/app/api/controllers/auth';
 import { uploadFile } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import SelectInput from '@/components/selectInput';
 import useUser from '@/hooks/cachedEndpoints/useUser';
 import {
   THREEMB,
@@ -203,29 +202,15 @@ const Profile = () => {
       />
 
       <Spacer y={6} />
-      <SelectInput
-        errorMessage={response?.errors?.role?.[0]}
-        label={'Role'}
+      <CustomInput
+        type='text'
         name='role'
         disabled={true}
-        defaultSelectedKeys={[updateUserFormData.role.toString()]}
+        errorMessage={response?.errors?.role?.[0]}
         onChange={handleInputChange}
-        selectedKeys={[updateUserFormData.role.toString()]}
+        value={updateUserFormData.role === '0' ? 'Admin' : 'Staff'}
+        label={'Role'}
         placeholder={'Role'}
-        contents={[
-          {
-            label: 'Admin',
-            value: 0,
-          },
-          {
-            label: 'Operator',
-            value: 1,
-          },
-          {
-            label: 'Owner',
-            value: 2,
-          },
-        ]}
       />
     </section>
   );
