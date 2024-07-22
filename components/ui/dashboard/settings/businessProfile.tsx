@@ -91,7 +91,7 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
       <article className='bg-white border border-[#F0F2F5] rounded-lg p-3 md:p-6 mb-6'>
         <div className='flex gap-3 items-center text-black mb-4'>
           <Avatar
-            size='md'
+            size='lg'
             showFallback={true}
             src={`data:image/jpeg;base64,${data?.logoImage}`}
             name={businessInformation[0]?.businessName}
@@ -106,7 +106,7 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
             </span>
           </div>
         </div>
-        <Divider />
+        <Divider className='bg-primaryGrey' />
         <Details
           text1='Address'
           text2={`${data?.address} ${data?.city} ${data?.state}`}
