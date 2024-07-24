@@ -5,7 +5,7 @@ import BusinessSettings from './business-settings/businessSettings';
 import BusinessProfile from './businessProfile';
 import Password from './password';
 import Profile from './profile';
-import RolePrivileges from './rolePrivileges';
+import Roles from './rolesAndPrivileges/roles';
 
 interface ListItemProps {
   title: string;
@@ -74,7 +74,7 @@ const SettingsComponent: React.FC = () => {
         {activeScreen === 4 && (
           <BusinessSettings setActiveScreen={setActiveScreen} />
         )}
-        {activeScreen === 6 && <RolePrivileges />}
+        {activeScreen === 6 && <Roles />}
       </article>
     </>
   );

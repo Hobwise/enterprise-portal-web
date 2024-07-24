@@ -9,8 +9,17 @@ import {
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { PiSealWarningDuotone } from 'react-icons/pi';
+import { useQueryClient } from 'react-query';
 const LogoutModal = ({ isOpen, onOpenChange }: any) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  const handleLogout = async () => {
+    queryClient.clear();
+    localStorage.clear();
+    removeCookie('token');
+    router.push('/auth/login');
+  };
 
   return (
     <Modal isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -38,11 +47,7 @@ const LogoutModal = ({ isOpen, onOpenChange }: any) => {
                 </Button>
                 <Button
                   className='flex-grow'
-                  onClick={() => {
-                    localStorage.clear();
-                    removeCookie('token');
-                    router.push('/auth/login');
-                  }}
+                  onClick={() => handleLogout()}
                   color='danger'
                   variant='bordered'
                 >

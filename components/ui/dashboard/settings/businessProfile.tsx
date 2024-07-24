@@ -14,6 +14,7 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
   const { setBusinessProfileNavigate } = useGlobalContext();
 
   const businessInformation = getJsonItemFromLocalStorage('business') || [];
+  const userInformation = getJsonItemFromLocalStorage('userInformation') || [];
 
   const Details = ({ text1, text2 }: { text1: string; text2: any }) => {
     const [changeIcon, setChangeIcon] = useState(false);
@@ -61,6 +62,7 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
       return 'Hotel';
     }
   };
+
   return (
     <section>
       <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
@@ -72,21 +74,23 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
             Update your business profile
           </p>
         </div>
-        <CustomButton
-          onClick={() => {
-            setBusinessProfileNavigate(0);
-            setActiveScreen(4);
-          }}
-          className='py-2 px-4 md:mb-0 mb-4 text-white'
-          backgroundColor='bg-primaryColor'
-        >
-          <div className='flex gap-1 items-center justify-center'>
-            <span>
-              <TbEdit className='text-[18px]' />
-            </span>
-            <span> Update</span>
-          </div>
-        </CustomButton>
+        {userInformation.role === 0 && (
+          <CustomButton
+            onClick={() => {
+              setBusinessProfileNavigate(0);
+              setActiveScreen(4);
+            }}
+            className='py-2 px-4 md:mb-0 mb-4 text-white'
+            backgroundColor='bg-primaryColor'
+          >
+            <div className='flex gap-1 items-center justify-center'>
+              <span>
+                <TbEdit className='text-[18px]' />
+              </span>
+              <span> Update</span>
+            </div>
+          </CustomButton>
+        )}
       </div>
       <article className='bg-white border border-[#F0F2F5] rounded-lg p-3 md:p-6 mb-6'>
         <div className='flex gap-3 items-center text-black mb-4'>
@@ -111,6 +115,10 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
           text1='Address'
           text2={`${data?.address} ${data?.city} ${data?.state}`}
         />
+        <Divider className='bg-[#F0F2F5]' />
+        <Details text1='Email address' text2={data?.contactEmailAddress} />
+        <Divider className='bg-[#F0F2F5]' />
+        <Details text1='Phone number' text2={data?.contactPhoneNumber} />
         <Divider className='bg-[#F0F2F5]' />
         <Details text1='Category' text2={businessCategories()} />
         <Divider className='bg-[#F0F2F5]' />

@@ -3,6 +3,7 @@ import { updateBusiness } from '@/app/api/controllers/dashboard/settings';
 import { CustomInput } from '@/components/CustomInput';
 import CustomImageUpload from '@/components/CustomUpload';
 import { CustomButton } from '@/components/customButton';
+import SelectInput from '@/components/selectInput';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import useUploadFile from '@/hooks/useUploadFile';
 import {
@@ -14,9 +15,11 @@ import {
 import { Spacer } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import States from '../../../../../lib/cities.json';
 
 const UpdateBusiness = ({ setActiveScreen }: any) => {
   const { data, isLoading } = useGetBusiness();
+
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -36,6 +39,14 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
     state: data?.state || businessInformation[0]?.state,
     city: data?.city || businessInformation[0]?.city,
     name: data?.name || businessInformation[0]?.businessName,
+    contactEmailAddress:
+      data?.contactEmailAddress ||
+      businessInformation[0]?.businessContactEmail ||
+      '',
+    contactPhoneNumber:
+      data?.contactPhoneNumber ||
+      businessInformation[0]?.businessContactNumber ||
+      '',
   });
 
   useEffect(() => {
@@ -54,6 +65,14 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
         state: data?.state || businessInformation[0]?.state || '',
         city: data?.city || businessInformation[0]?.city || '',
         name: data?.name || businessInformation[0]?.businessName || '',
+        contactEmailAddress:
+          data?.contactEmailAddress ||
+          businessInformation[0]?.contactEmailAddress ||
+          '',
+        contactPhoneNumber:
+          data?.contactPhoneNumber ||
+          businessInformation[0]?.contactPhoneNumber ||
+          '',
       });
     }
   }, [data]);
@@ -127,6 +146,27 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
       </div>
     );
   }
+  const getStates = () => {
+    return States.map((state) => ({
+      label: state.name,
+      value: state.name,
+    }));
+  };
+
+  const getCities = () => {
+    const state = States.find(
+      (state) => state.name === businessSettingFormData.state
+    );
+
+    if (state) {
+      return state?.cities.map((city) => ({
+        label: city,
+        value: city,
+      }));
+    } else {
+      return [];
+    }
+  };
 
   return (
     <section>
@@ -150,6 +190,60 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
         </CustomButton>
       </div>
       <form autoComplete='off'>
+        <CustomInput
+          errorMessage={response?.errors?.address?.[0]}
+          value={businessSettingFormData?.address}
+          onChange={handleInputChange}
+          name='address'
+          type='text'
+          label='Business address'
+          placeholder='Enter your business address'
+        />
+        <Spacer y={6} />
+
+        <SelectInput
+          errorMessage={response?.errors?.state?.[0]}
+          label={'Business state'}
+          name='state'
+          onChange={handleInputChange}
+          value={businessSettingFormData.state}
+          selectedKeys={[businessSettingFormData.state]}
+          placeholder={'Select a state'}
+          contents={getStates()}
+        />
+
+        <Spacer y={6} />
+        <SelectInput
+          errorMessage={response?.errors?.city?.[0]}
+          label={'Business city'}
+          name='city'
+          onChange={handleInputChange}
+          selectedKeys={[businessSettingFormData?.city]}
+          value={businessSettingFormData.city}
+          placeholder={'Select a city'}
+          contents={getCities()}
+        />
+        <Spacer y={6} />
+        <CustomInput
+          errorMessage={response?.errors?.contactEmailAddress?.[0]}
+          value={businessSettingFormData?.contactEmailAddress}
+          onChange={handleInputChange}
+          name='contactEmailAddress'
+          type='text'
+          label='Business email address'
+          placeholder='Enter your business email address'
+        />
+        <Spacer y={6} />
+        <CustomInput
+          errorMessage={response?.errors?.contactPhoneNumber?.[0]}
+          value={businessSettingFormData?.contactPhoneNumber}
+          onChange={handleInputChange}
+          name='contactPhoneNumber'
+          type='text'
+          label='Business phone number'
+          placeholder='Enter your business phone number'
+        />
+        <Spacer y={6} />
         <CustomInput
           errorMessage={response?.errors?.resistrationNumber?.[0]}
           value={businessSettingFormData?.resistrationNumber}

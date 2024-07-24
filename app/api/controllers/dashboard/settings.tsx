@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { AUTH, DASHBOARD } from '../../api-url';
 import api, { handleError } from '../../apiService';
+import { businessAddressValidation, emailValidation } from '../validations';
 
 type termsNcondition = {
   content: string;
@@ -28,16 +29,27 @@ const businessSettingSchema = z.object({
     .trim()
     .min(1, 'Means of identification is required'),
   logoImageReference: z.string().trim().min(1, 'Business logo is required'),
-  primaryBrandColour: z
+  address: businessAddressValidation(),
+  state: z.string().trim().min(1, { message: 'Select a state' }),
+  city: z.string().trim().min(1, { message: 'Select a city' }),
+  contactEmailAddress: emailValidation(),
+  contactPhoneNumber: z
     .string()
-    .trim()
-    .min(1, 'Primary brand color is required')
-    .regex(hexColorRegex, 'Invalid hex color code'),
-  secondaryBrandColour: z
-    .string()
-    .trim()
-    .min(1, 'Secondary brand color is required')
-    .regex(hexColorRegex, 'Invalid hex color code'),
+    .length(11, 'Phone number must be 11 digits long')
+    .startsWith('0', 'Phone number must start with 0')
+    .refine((value) => /^\d+$/.test(value), {
+      message: 'Phone number must only contain digits',
+    }),
+  // primaryBrandColour: z
+  //   .string()
+  //   .trim()
+  //   .min(1, 'Primary brand color is required')
+  //   .regex(hexColorRegex, 'Invalid hex color code'),
+  // secondaryBrandColour: z
+  //   .string()
+  //   .trim()
+  //   .min(1, 'Secondary brand color is required')
+  //   .regex(hexColorRegex, 'Invalid hex color code'),
 });
 
 export async function getRoleByBusiness(businessId: string) {
@@ -61,9 +73,15 @@ export async function updateBusiness(formData: any, businessId: string) {
       formData.resistrationCertificateImageReference,
     nin: formData.nin,
     identificationImageReference: formData.identificationImageReference,
-    primaryBrandColour: formData.primaryBrandColour,
-    secondaryBrandColour: formData.secondaryBrandColour,
     logoImageReference: formData.logoImageReference,
+    primaryBrandColour: formData.primaryBrandColour,
+    address: formData.address,
+    state: formData.state,
+    city: formData.city,
+    contactEmailAddress: formData.contactEmailAddress,
+    contactPhoneNumber: formData.contactPhoneNumber,
+    // secondaryBrandColour: formData.secondaryBrandColour,
+    // logoImageReference: formData.logoImageReference,
   });
 
   if (!validatedFields.success) {
@@ -142,4 +160,22 @@ export async function getFile(referenceId: string) {
 
     return data;
   } catch (error) {}
+}
+
+export async function getBusinesByCooperate(
+  businessId: string,
+  page: any,
+  pageSize: any
+) {
+  const headers = businessId ? { businessId, page, pageSize } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.getBusinessByCooperate, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
 }

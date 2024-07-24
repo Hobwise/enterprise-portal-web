@@ -238,9 +238,7 @@ export async function changePassword(formData: any) {
   }
 }
 export async function getBusinessDetails(formData: any) {
-  const headers = formData.businessId
-    ? { businessId: formData.businessId }
-    : {};
+  const headers = formData.id ? { businessId: formData.id } : {};
 
   try {
     const data = await api.get(AUTH.getBusiness, {
@@ -255,6 +253,19 @@ export async function getBusinessDetails(formData: any) {
 export async function getUser(id: string) {
   try {
     const data = await api.get(`${AUTH.user}?userId=${id}`);
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function getRoleCount(businessId: string, cooperateId: string) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(
+      `${AUTH.getRoleCount}?cooperateId=${cooperateId}&businessId=${businessId}`
+    );
 
     return data;
   } catch (error) {

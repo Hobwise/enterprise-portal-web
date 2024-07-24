@@ -33,6 +33,7 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
     if (value === PaginationItemType.NEXT) {
       return (
         <button
+          title='next'
           key={key}
           className={cn(className, 'bg-default-200/50 min-w-8 w-8 h-8')}
           onClick={onNext}
@@ -46,6 +47,7 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
       return (
         <button
           key={key}
+          title='previous'
           className={cn(className, 'bg-default-200/50 min-w-8 w-8 h-8')}
           onClick={onPrevious}
         >

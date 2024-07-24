@@ -208,7 +208,7 @@ const Profile = () => {
         disabled={true}
         errorMessage={response?.errors?.role?.[0]}
         onChange={handleInputChange}
-        value={updateUserFormData.role === '0' ? 'Admin' : 'Staff'}
+        value={updateUserFormData.role === '0' ? 'Manager' : 'Staff'}
         label={'Role'}
         placeholder={'Role'}
       />

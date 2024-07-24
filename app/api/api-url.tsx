@@ -8,6 +8,7 @@ export const AUTH = {
   forgetPassword: 'api/v1/User/forget-password',
   changePassword: 'api/v1/User/change-password',
   getBusiness: 'api/v1/Business/configuration',
+  getRoleCount: 'api/v1/User/role-count',
 };
 export const DASHBOARD = {
   // settings
@@ -15,6 +16,7 @@ export const DASHBOARD = {
   termAndCondition: 'api/v1/TermAndCondition',
   getTermAndCondition: 'api/v1/TermAndCondition/by-business',
   getBusiness: 'api/v1/Business',
+  getBusinessByCooperate: 'api/v1/Business/by-cooperate',
   getFile: 'api/v1/File/retrieve',
   // menu
   getMenu: 'api/v1/Menu',
