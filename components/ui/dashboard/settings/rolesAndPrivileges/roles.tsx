@@ -4,10 +4,6 @@ import { CustomButton } from '@/components/customButton';
 import useRoleCount from '@/hooks/cachedEndpoints/useRoleCount';
 import { SmallLoader, getJsonItemFromLocalStorage } from '@/lib/utils';
 import {
-  Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
   Table,
   TableBody,
   TableCell,
@@ -17,7 +13,6 @@ import {
   useDisclosure,
 } from '@nextui-org/react';
 import { useCallback } from 'react';
-import { GrFormView } from 'react-icons/gr';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { TbEdit } from 'react-icons/tb';
 import AssignPermission from './assignPermission';
@@ -39,26 +34,21 @@ const Roles = () => {
       case 'actions':
         return (
           <div className='inline-flex p-0.5 gap-2 border border-primaryGrey rounded-md '>
-            <Dropdown aria-label='drop down'>
-              <DropdownTrigger aria-label='actions'>
-                <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
-                  <HiOutlineDotsVertical />
-                </span>
-              </DropdownTrigger>
-              <DropdownMenu className='text-black inline-flex'>
+            {/* <Dropdown aria-label='drop down'> */}
+            {/* <DropdownTrigger aria-label='actions'> */}
+            <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
+              <HiOutlineDotsVertical />
+            </span>
+            {/* </DropdownTrigger> */}
+            {/* <DropdownMenu className='text-black inline-flex'>
                 <DropdownItem aria-label='View role'>
                   <div className={` flex gap-2  items-center text-grey500`}>
                     <GrFormView className='text-[20px]' />
                     <p>View </p>
                   </div>
                 </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-            {/* <Tooltip className='text-black text-xs' content='View'>
-              <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
-                <HiOutlineDotsVertical />
-              </span>
-            </Tooltip> */}
+              </DropdownMenu> */}
+            {/* </Dropdown> */}
           </div>
         );
       default:
@@ -95,31 +85,33 @@ const Roles = () => {
           <SmallLoader />
         </div>
       ) : (
-        <Table aria-label='Roles table'>
-          <TableHeader columns={columns}>
-            {(column) => (
-              <TableColumn
-                align={column.uid === 'actions' ? 'center' : 'start'}
-                key={column.uid}
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            loadingContent={<SmallLoader />}
-            emptyContent={'No data to display.'}
-            items={data}
-          >
-            {(item) => (
-              <TableRow key={item?.role}>
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <div className='border border-primaryGrey flex flex-col gap-2 rounded-lg'>
+          <Table removeWrapper={true} shadow='none' aria-label='Roles table'>
+            <TableHeader columns={columns}>
+              {(column) => (
+                <TableColumn
+                  align={column.uid === 'actions' ? 'center' : 'start'}
+                  key={column.uid}
+                >
+                  {column.name}
+                </TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              loadingContent={<SmallLoader />}
+              emptyContent={'No data to display.'}
+              items={data}
+            >
+              {(item) => (
+                <TableRow key={item?.role}>
+                  {(columnKey) => (
+                    <TableCell>{renderCell(item, columnKey)}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       )}
       <AssignPermission isOpen={isOpen} onOpenChange={onOpenChange} />
     </section>

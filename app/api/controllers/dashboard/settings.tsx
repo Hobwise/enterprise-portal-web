@@ -56,7 +56,7 @@ export async function getRoleByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
   try {
-    const data = await api.post(DASHBOARD.getRoleByBusiness, {
+    const data = await api.get(DASHBOARD.getRoleByBusiness, {
       headers,
     });
 
