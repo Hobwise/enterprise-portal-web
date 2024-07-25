@@ -5,6 +5,7 @@ import CustomImageUpload from '@/components/CustomUpload';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
+import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
 import useUploadFile from '@/hooks/useUploadFile';
 import {
   SmallLoader,
@@ -19,6 +20,7 @@ import States from '../../../../../lib/cities.json';
 
 const UpdateBusiness = ({ setActiveScreen }: any) => {
   const { data, isLoading } = useGetBusiness();
+  const { refetch } = useGetBusinessByCooperate();
 
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
@@ -128,6 +130,7 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
       // secondaryBrandColour: '',
       // logoImageReference: '',
       //   });
+      refetch();
       clearItemLocalStorage('businessSettingPrompt');
       setActiveScreen(3);
     } else if (response?.data?.error) {

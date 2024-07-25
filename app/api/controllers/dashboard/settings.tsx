@@ -162,12 +162,8 @@ export async function getFile(referenceId: string) {
   } catch (error) {}
 }
 
-export async function getBusinesByCooperate(
-  businessId: string,
-  page: any,
-  pageSize: any
-) {
-  const headers = businessId ? { businessId, page, pageSize } : {};
+export async function getBusinesByCooperate(businessId: string) {
+  const headers = businessId ? { businessId } : {};
 
   try {
     const data = await api.get(DASHBOARD.getBusinessByCooperate, {

@@ -1,5 +1,3 @@
-import React from 'react';
-
 import HobinkLogo from '@/components/logo';
 
 import BackButton from '@/components/backButton';
@@ -17,7 +15,7 @@ const SelectBusiness = () => {
         <BackButton url='/auth/login' />
       </div>
       <HobinkLogo />
-      <section className='md:w-[556px] w-full bg-white text-black lg:p-12 py-12 px-6  md:rounded-2xl rounded-lg'>
+      <section className='md:w-[556px] w-full bg-white  text-black lg:p-12 py-12 px-6  md:rounded-2xl rounded-lg'>
         <h2 className='text-[28px] w-full  leading-8 mb-2 text-center font-bold '>
           Select a business
         </h2>

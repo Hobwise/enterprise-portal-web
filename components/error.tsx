@@ -6,7 +6,7 @@ import { CustomButton } from './customButton';
 
 const Error = ({ onClick, imageWidth = 'w-32' }: any) => {
   return (
-    <div className='flex flex-col justify-center items-center flex-grow'>
+    <div className='flex flex-col justify-center items-center text-black flex-grow'>
       <Image
         src={noImage}
         width={20}

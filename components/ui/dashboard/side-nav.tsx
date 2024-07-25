@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import HobinkLogo from '@/components/logo';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
-import useUser from '@/hooks/cachedEndpoints/useUser';
+import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
 import {
   getJsonItemFromLocalStorage,
   saveJsonItemToLocalStorage,
@@ -32,8 +32,8 @@ import { SideNavItem } from './types';
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
 
-  const { data, isLoading } = useUser();
-  const { data: businessDetails } = useGetBusiness();
+  const { data: businessDetails, isLoading } = useGetBusiness();
+  const { data: businessDetailsList } = useGetBusinessByCooperate();
 
   const business = getJsonItemFromLocalStorage('business');
 
@@ -103,8 +103,8 @@ const SideNav = () => {
                     {business[0]?.businessName}
                   </span>
                   <div className='text-[12px]  font-[400] pr-5'>
-                    {' '}
                     {business[0]?.city}
+                    {business[0]?.city && ','} {business[0]?.state}
                   </div>
                 </div>
                 <div className='cursor-pointer'>
@@ -117,7 +117,7 @@ const SideNav = () => {
             variant='light'
             aria-label='Dropdown menu to switch businesses'
           >
-            {data?.businesses?.map((item: any) => {
+            {businessDetailsList?.map((item: any) => {
               return (
                 <DropdownItem
                   classNames={{
@@ -129,12 +129,12 @@ const SideNav = () => {
                   <div className='flex items-center gap-3'>
                     <Avatar
                       showFallback={true}
-                      src={`data:image/jpeg;base64,${businessDetails?.logoImage}`}
-                      name={item?.businessName}
+                      src={`data:image/jpeg;base64,${item?.logoImage}`}
+                      name={item?.name}
                     />
                     <div className='flex flex-col'>
                       <span className='font-[500] text-[14px]'>
-                        {item?.businessName}
+                        {item?.name}
                       </span>
 
                       <span className=''>{item?.city}</span>

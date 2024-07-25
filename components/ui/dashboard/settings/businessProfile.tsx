@@ -26,7 +26,7 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
       }, 2000);
     }, [text2]);
     return (
-      <div className='flex justify-between text-black items-center py-4'>
+      <div className='flex justify-between text-black gap-3 items-center py-4'>
         <div>
           <p className='text-xs font-[400] text-grey500'>{text1}</p>
           <p className='text-sm font-[500]'>{text2}</p>
@@ -113,7 +113,7 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
         <Divider className='bg-primaryGrey' />
         <Details
           text1='Address'
-          text2={`${data?.address} ${data?.city} ${data?.state}`}
+          text2={`${data?.address}, ${data?.city}, ${data?.state}`}
         />
         <Divider className='bg-[#F0F2F5]' />
         <Details text1='Email address' text2={data?.contactEmailAddress} />
