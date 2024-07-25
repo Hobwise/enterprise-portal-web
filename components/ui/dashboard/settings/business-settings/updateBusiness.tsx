@@ -203,49 +203,51 @@ const UpdateBusiness = ({ setActiveScreen }: any) => {
           placeholder='Enter your business address'
         />
         <Spacer y={6} />
+        <div className='flex flex-col md:flex-row  gap-3'>
+          <SelectInput
+            errorMessage={response?.errors?.state?.[0]}
+            label={'Business state'}
+            name='state'
+            onChange={handleInputChange}
+            value={businessSettingFormData.state}
+            selectedKeys={[businessSettingFormData.state]}
+            placeholder={'Select a state'}
+            contents={getStates()}
+          />
 
-        <SelectInput
-          errorMessage={response?.errors?.state?.[0]}
-          label={'Business state'}
-          name='state'
-          onChange={handleInputChange}
-          value={businessSettingFormData.state}
-          selectedKeys={[businessSettingFormData.state]}
-          placeholder={'Select a state'}
-          contents={getStates()}
-        />
+          <SelectInput
+            errorMessage={response?.errors?.city?.[0]}
+            label={'Business city'}
+            name='city'
+            onChange={handleInputChange}
+            selectedKeys={[businessSettingFormData?.city]}
+            value={businessSettingFormData.city}
+            placeholder={'Select a city'}
+            contents={getCities()}
+          />
+        </div>
+        <Spacer y={6} />
+        <div className='flex flex-col md:flex-row  gap-3'>
+          <CustomInput
+            errorMessage={response?.errors?.contactEmailAddress?.[0]}
+            value={businessSettingFormData?.contactEmailAddress}
+            onChange={handleInputChange}
+            name='contactEmailAddress'
+            type='text'
+            label='Business email address'
+            placeholder='Enter your business email address'
+          />
 
-        <Spacer y={6} />
-        <SelectInput
-          errorMessage={response?.errors?.city?.[0]}
-          label={'Business city'}
-          name='city'
-          onChange={handleInputChange}
-          selectedKeys={[businessSettingFormData?.city]}
-          value={businessSettingFormData.city}
-          placeholder={'Select a city'}
-          contents={getCities()}
-        />
-        <Spacer y={6} />
-        <CustomInput
-          errorMessage={response?.errors?.contactEmailAddress?.[0]}
-          value={businessSettingFormData?.contactEmailAddress}
-          onChange={handleInputChange}
-          name='contactEmailAddress'
-          type='text'
-          label='Business email address'
-          placeholder='Enter your business email address'
-        />
-        <Spacer y={6} />
-        <CustomInput
-          errorMessage={response?.errors?.contactPhoneNumber?.[0]}
-          value={businessSettingFormData?.contactPhoneNumber}
-          onChange={handleInputChange}
-          name='contactPhoneNumber'
-          type='text'
-          label='Business phone number'
-          placeholder='Enter your business phone number'
-        />
+          <CustomInput
+            errorMessage={response?.errors?.contactPhoneNumber?.[0]}
+            value={businessSettingFormData?.contactPhoneNumber}
+            onChange={handleInputChange}
+            name='contactPhoneNumber'
+            type='text'
+            label='Business phone number'
+            placeholder='Enter your business phone number'
+          />
+        </div>
         <Spacer y={6} />
         <CustomInput
           errorMessage={response?.errors?.resistrationNumber?.[0]}
