@@ -106,7 +106,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
     }));
   };
 
-  console.log(menuRoleSetting, 'data by business');
+  // console.log(menuRoleSetting, 'data by business');
   const renderCell = useCallback((role, permission, columnKey) => {
     const cellValue = permission[columnKey];
     const isChecked = menuRoleSetting[role][cellValue];
@@ -119,10 +119,11 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
             <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
               <Checkbox
                 size='sm'
-                isSelected={isChecked}
-                onChange={(e) =>
-                  handleCheckboxChange(role, cellValue, e.target.checked)
-                }
+                isSelected={true}
+                disabled={true}
+                // onChange={(e) =>
+                //   handleCheckboxChange(role, cellValue, e.target.checked)
+                // }
                 className='rounded-md'
                 color='primary'
               />
