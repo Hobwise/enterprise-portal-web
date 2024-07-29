@@ -12,26 +12,6 @@ import { useEffect } from 'react';
 import { CiWarning } from 'react-icons/ci';
 import { CustomButton } from './customButton';
 
-const Msg = () => {
-  const router = useRouter();
-  return (
-    <div className='w-full text-black'>
-      <p className='font-bold text-[17px] pb-1'>Complete your profile!</p>
-      <div>
-        <span
-          onClick={() => {
-            saveToLocalStorage('businessSettingPrompt', true);
-            router.push('/dashboard/settings');
-          }}
-          className='text-primaryColor font-[500]'
-        >
-          Click here
-        </span>{' '}
-        to access profile settings and update your business information.
-      </div>
-    </div>
-  );
-};
 const BusinessSettingsDashboardPrompt = () => {
   const { data } = useGetBusiness();
   const router = useRouter();
