@@ -7,66 +7,54 @@ export const columns = [
 export const menuOption = [
   {
     id: 1,
-
-    actions: 'Can view menu',
+    actions: 'canViewMenu',
   },
   {
     id: 2,
-
-    actions: 'Can create menu',
+    actions: 'canCreateMenu',
   },
   {
     id: 3,
-
-    actions: 'Can edit menu',
+    actions: 'canEditMenu',
   },
   {
     id: 4,
-
-    actions: 'Can delete menu',
+    actions: 'canDeleteMenu',
   },
 ];
 export const campaignOption = [
   {
     id: 1,
-
-    actions: 'Can view campaigns',
+    actions: 'canViewCampaign',
   },
   {
     id: 2,
-
-    actions: 'Can create campaigns',
+    actions: 'canCreateCampaign',
   },
   {
     id: 3,
-
-    actions: 'Can edit campaigns',
+    actions: 'canEditCampaign',
   },
   {
     id: 4,
-
-    actions: 'Can delete campaigns',
+    actions: 'canDeleteCampaign',
   },
 ];
 export const reservationsOption = [
   {
     id: 1,
-
-    actions: 'Can view reservations',
+    actions: 'canViewReservation',
   },
   {
     id: 2,
-
-    actions: 'Can create reservations',
+    actions: 'canCreateReservation',
   },
   {
     id: 3,
-
-    actions: 'Can edit reservations',
+    actions: 'canEditReservation',
   },
   {
     id: 4,
-
-    actions: 'Can delete reservations',
+    actions: 'canDeleteReservation',
   },
 ];

@@ -38,11 +38,23 @@ const SideNav = () => {
   const business = getJsonItemFromLocalStorage('business');
 
   const toggleBtwBusiness = (businessInfo: any) => {
-    const exists = business?.some(
-      (comparisonItem) => comparisonItem.businessId === businessInfo.businessId
+    const exists = businessDetailsList?.some(
+      (comparisonItem) => comparisonItem.id === businessInfo.businessId
     );
+    const transformedArray = [businessInfo].map((item) => ({
+      businessId: item.id,
+      businessAddress: item.address,
+      state: item.state,
+      city: item.city,
+      businessName: item.name,
+      primaryColor: item.primaryBrandColour,
+      secondaryColor: item.secondaryBrandColour,
+      businessContactEmail: item.contactEmailAddress,
+      businessContactNumber: item.contactPhoneNumber,
+    }));
+
     if (!exists) {
-      saveJsonItemToLocalStorage('business', [businessInfo]);
+      saveJsonItemToLocalStorage('business', transformedArray);
       window.location.reload();
     }
   };

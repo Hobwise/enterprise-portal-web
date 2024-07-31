@@ -13,6 +13,7 @@ export const AUTH = {
 export const DASHBOARD = {
   // settings
   getRoleByBusiness: 'api/v1/User/role-by-business',
+  configureRole: 'api/v1/User/role-configure',
   termAndCondition: 'api/v1/TermAndCondition',
   getTermAndCondition: 'api/v1/TermAndCondition/by-business',
   getBusiness: 'api/v1/Business',

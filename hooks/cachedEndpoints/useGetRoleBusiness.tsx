@@ -8,7 +8,7 @@ const useGetRoleByBusiness = () => {
 
   const fetchRoleByBusiness = async () => {
     const responseData = getRoleByBusiness(business[0]?.businessId);
-    return responseData?.data?.data as any;
+    return responseData as any;
   };
 
   const { data, isLoading, isError, refetch } = useQuery<any>(

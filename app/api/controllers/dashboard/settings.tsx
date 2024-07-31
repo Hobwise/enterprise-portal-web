@@ -175,3 +175,15 @@ export async function getBusinesByCooperate(businessId: string) {
     handleError(error);
   }
 }
+
+export async function configureRole(businessId: string, payload: any) {
+  const headers = businessId ? { businessId: businessId } : {};
+
+  try {
+    const data = await api.post(DASHBOARD.configureRole, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {}
+}

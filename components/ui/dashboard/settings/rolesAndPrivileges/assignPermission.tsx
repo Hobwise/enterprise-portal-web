@@ -1,14 +1,15 @@
 'use client';
+import { configureRole } from '@/app/api/controllers/dashboard/settings';
 import useGetRoleByBusiness from '@/hooks/cachedEndpoints/useGetRoleBusiness';
 import { SmallLoader, getJsonItemFromLocalStorage } from '@/lib/utils';
 import {
-  Checkbox,
   Modal,
   ModalBody,
   ModalContent,
   ScrollShadow,
   Spacer,
   Spinner,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -17,6 +18,7 @@ import {
   TableRow,
 } from '@nextui-org/react';
 import { useCallback, useEffect, useState } from 'react';
+import { useMutation, useQueryClient } from 'react-query';
 import {
   campaignOption,
   columns,
@@ -26,6 +28,8 @@ import {
 
 const AssignPermission = ({ isOpen, onOpenChange }: any) => {
   const { data, isLoading: roleLoading } = useGetRoleByBusiness();
+
+  console.log(data?.data?.data, 'datattttt');
 
   const businessInformation = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
@@ -81,6 +85,40 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
     },
   });
 
+  const queryClient = useQueryClient();
+  const mutation = useMutation(
+    (newRoleSettings) => assignPermission(newRoleSettings),
+    {
+      onMutate: async (newRoleSettings) => {
+        await queryClient.cancelQueries('roleSettings');
+
+        const previousRoleSettings = queryClient.getQueryData('roleSettings');
+
+        queryClient.setQueryData('roleSettings', newRoleSettings);
+
+        return { previousRoleSettings };
+      },
+      onError: (err, newRoleSettings, context) => {
+        queryClient.setQueryData('roleSettings', context.previousRoleSettings);
+      },
+      onSettled: () => {
+        queryClient.invalidateQueries('roleSettings');
+      },
+    }
+  );
+
+  const assignPermission = async (newRoleSettings: any) => {
+    const data = await configureRole(
+      businessInformation[0]?.businessId,
+      newRoleSettings
+    );
+
+    if (data?.data?.isSuccessful) {
+    } else if (data?.data?.error) {
+      console.log(data?.data?.error, 'errrrrrrrror');
+    }
+  };
+
   useEffect(() => {
     if (data) {
       setMenuRoleSettings({
@@ -96,68 +134,68 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
     }
   }, [data]);
 
-  const handleCheckboxChange = (role, key, value) => {
-    setMenuRoleSettings((prevSettings) => ({
-      ...prevSettings,
+  const handleCheckboxChange = (role: string, key: string, value: boolean) => {
+    const newRoleSettings = {
+      ...menuRoleSetting,
       [role]: {
-        ...prevSettings[role],
+        ...menuRoleSetting[role],
         [key]: value,
       },
-    }));
+    };
+    setMenuRoleSettings(newRoleSettings);
+    mutation.mutate(newRoleSettings);
   };
 
-  // console.log(menuRoleSetting, 'data by business');
-  const renderCell = useCallback((role, permission, columnKey) => {
-    const cellValue = permission[columnKey];
-    const isChecked = menuRoleSetting[role][cellValue];
+  const humanizeKey = (key: string): string => {
+    return key
+      .replace(/([A-Z])/g, ' $1')
+      .replace(/^./, (str) => str.toUpperCase());
+  };
 
-    console.log(isChecked, 'isChecked');
-    switch (columnKey) {
-      case 'manager':
-        return (
-          <div className='grid place-content-center gap-2'>
-            <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
-              <Checkbox
-                size='sm'
-                isSelected={true}
-                disabled={true}
-                // onChange={(e) =>
-                //   handleCheckboxChange(role, cellValue, e.target.checked)
-                // }
-                className='rounded-md'
-                color='primary'
-              />
-            </span>
-          </div>
-        );
-      case 'staff':
-        return (
-          <div className='grid place-content-center gap-2'>
-            <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
-              <Checkbox
-                isSelected={isChecked}
-                onChange={(e) =>
-                  handleCheckboxChange(role, cellValue, e.target.checked)
-                }
-                size='sm'
-                className='rounded-md'
-                color='primary'
-              />
-            </span>
-          </div>
-        );
-      case 'actions':
-        return (
-          <div className='w-[230px] flex items-center gap-2'>
-            <span className='text-sm text-[#5F6D7E] cursor-pointer active:opacity-50'>
-              {permission.actions}
-            </span>
-          </div>
-        );
-      default:
-        return cellValue;
-    }
-  }, []);
+  const renderCell = useCallback(
+    (role, permission, columnKey) => {
+      const cellValue = permission.actions;
+
+      const isChecked = menuRoleSetting[role][cellValue];
+
+      switch (columnKey) {
+        case 'manager':
+          return (
+            <div className='grid place-content-center gap-2'>
+              <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
+                <Switch size='sm' color='primary' isDisabled defaultSelected />
+              </span>
+            </div>
+          );
+        case 'staff':
+          return (
+            <div className='grid place-content-center gap-2'>
+              <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
+                <Switch
+                  checked={isChecked}
+                  onChange={(e) =>
+                    handleCheckboxChange(role, cellValue, e.target.checked)
+                  }
+                  size='sm'
+                  color='primary'
+                />
+              </span>
+            </div>
+          );
+        case 'actions':
+          return (
+            <div className='w-[230px] flex items-center gap-2'>
+              <span className='text-sm text-[#5F6D7E] cursor-pointer active:opacity-50'>
+                {humanizeKey(permission.actions)}
+              </span>
+            </div>
+          );
+        default:
+          return cellValue;
+      }
+    },
+    [menuRoleSetting]
+  );
 
   return (
     <Modal
@@ -181,7 +219,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                   <SmallLoader />
                 </div>
               ) : (
-                <ScrollShadow className='w-full h-[400px]'>
+                <ScrollShadow size={5} className='w-full h-[400px]'>
                   <>
                     <span className='text-[#5F35D2] font-[700] -mb-3 px-3 text-[13px]'>
                       MENU
