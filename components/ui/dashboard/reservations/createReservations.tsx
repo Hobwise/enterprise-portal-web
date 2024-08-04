@@ -1,5 +1,6 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
+import useGetRoleByBusiness from '@/hooks/cachedEndpoints/useGetRoleBusiness';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,6 +9,9 @@ import NoBooking from '../../../../public/assets/images/no-booking.png';
 
 const CreateReservation = () => {
   const router = useRouter();
+  const { data: permission } = useGetRoleByBusiness();
+  const canCreateReservation =
+    permission?.data?.data?.userRole?.canCreateReservation;
   return (
     <section>
       <Spacer y={14} />
@@ -19,19 +23,21 @@ const CreateReservation = () => {
           Create QR codes so that customers can start booking
         </p>
         <Spacer y={5} />
-        <CustomButton
-          onClick={() =>
-            router.push('/dashboard/reservation/create-reservation')
-          }
-          className='py-2 px-4 md:mb-0 mb-4 text-white'
-          backgroundColor='bg-primaryColor'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <IoMdAdd className='text-[22px]' />
+        {canCreateReservation && (
+          <CustomButton
+            onClick={() =>
+              router.push('/dashboard/reservation/create-reservation')
+            }
+            className='py-2 px-4 md:mb-0 mb-4 text-white'
+            backgroundColor='bg-primaryColor'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <IoMdAdd className='text-[22px]' />
 
-            <p>Create reservation</p>
-          </div>
-        </CustomButton>
+              <p>Create reservation</p>
+            </div>
+          </CustomButton>
+        )}
       </div>
     </section>
   );

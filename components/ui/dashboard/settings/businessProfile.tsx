@@ -121,13 +121,17 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
         <Details text1='Phone number' text2={data?.contactPhoneNumber} />
         <Divider className='bg-[#F0F2F5]' />
         <Details text1='Category' text2={businessCategories()} />
-        <Divider className='bg-[#F0F2F5]' />
-        <Details
-          text1='CAC Registration Number'
-          text2={data?.resistrationNumber}
-        />
-        <Divider className='bg-[#F0F2F5]' />
-        <Details text1='NIN' text2={data?.nin} />
+        {userInformation.role === 0 && (
+          <>
+            <Divider className='bg-[#F0F2F5]' />
+            <Details
+              text1='CAC Registration Number'
+              text2={data?.resistrationNumber}
+            />
+            <Divider className='bg-[#F0F2F5]' />
+            <Details text1='NIN' text2={data?.nin} />
+          </>
+        )}
       </article>
       <article className='bg-white border border-[#F0F2F5] rounded-lg px-3 md:px-6 py-2 mb-6'>
         <Details
@@ -148,17 +152,19 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
               Your terms and conditions for your services
             </p>
           </div>
-          <div>
-            <CustomButton
-              onClick={() => {
-                setActiveScreen(4);
-                setBusinessProfileNavigate(2);
-              }}
-              className=' text-black bg-transparent border rounded-lg border-grey500'
-            >
-              View
-            </CustomButton>
-          </div>
+          {userInformation.role === 0 && (
+            <div>
+              <CustomButton
+                onClick={() => {
+                  setActiveScreen(4);
+                  setBusinessProfileNavigate(2);
+                }}
+                className=' text-black bg-transparent border rounded-lg border-grey500'
+              >
+                View
+              </CustomButton>
+            </div>
+          )}
         </div>
       </article>
       <article className='bg-white border border-[#F0F2F5] rounded-lg px-3 md:px-6 py-2 mb-6'>
@@ -169,17 +175,19 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
               Customize emails that your customers receive
             </p>
           </div>
-          <div>
-            <CustomButton
-              onClick={() => {
-                setActiveScreen(4);
-                setBusinessProfileNavigate(1);
-              }}
-              className=' text-black bg-transparent border rounded-lg border-grey500'
-            >
-              View
-            </CustomButton>
-          </div>
+          {userInformation.role === 0 && (
+            <div>
+              <CustomButton
+                onClick={() => {
+                  setActiveScreen(4);
+                  setBusinessProfileNavigate(1);
+                }}
+                className=' text-black bg-transparent border rounded-lg border-grey500'
+              >
+                View
+              </CustomButton>
+            </div>
+          )}
         </div>
       </article>
     </section>

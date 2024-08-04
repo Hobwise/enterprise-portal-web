@@ -3,13 +3,10 @@
 import React, { useEffect, useState } from 'react';
 
 import { repeatCampaign } from '@/app/api/controllers/dashboard/campaigns';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
-import {
-  getJsonItemFromLocalStorage,
-  notify,
-  saveJsonItemToLocalStorage,
-} from '@/lib/utils';
+import { notify, saveJsonItemToLocalStorage } from '@/lib/utils';
 import {
   Chip,
   Dropdown,
@@ -48,10 +45,12 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
   const [filteredCampaigns, setFilteredCampaigns] = React.useState(
     campaigns[0]?.campaigns
   );
+
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
 
   useEffect(() => {
     if (campaigns && searchQuery) {
@@ -209,33 +208,38 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
                     <p>Repeat campaign</p>
                   </div>
                 </DropdownItem>
-                <DropdownItem
-                  aria-label='edit campaign'
-                  onClick={() => {
-                    saveJsonItemToLocalStorage('campaign', campaign);
-                    router.push('/dashboard/campaigns/edit-campaign');
-                  }}
-                >
-                  <div className={` flex gap-2  items-center text-grey500`}>
-                    <FaRegEdit />
+                {managerRolePermissions?.canEditCampaign &&
+                  userRolePermissions?.canEditCampaign !== false && (
+                    <DropdownItem
+                      aria-label='edit campaign'
+                      onClick={() => {
+                        saveJsonItemToLocalStorage('campaign', campaign);
+                        router.push('/dashboard/campaigns/edit-campaign');
+                      }}
+                    >
+                      <div className={` flex gap-2  items-center text-grey500`}>
+                        <FaRegEdit />
 
-                    <p>Edit campaign</p>
-                  </div>
-                </DropdownItem>
+                        <p>Edit campaign</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                {managerRolePermissions?.canDeleteCampaign &&
+                  userRolePermissions?.canDeleteCampaign !== false && (
+                    <DropdownItem
+                      aria-label='delete campaign'
+                      onClick={() => {
+                        toggleCampaignModal();
+                        saveJsonItemToLocalStorage('campaign', campaign);
+                      }}
+                    >
+                      <div className={` flex gap-2  items-center text-grey500`}>
+                        <RiDeleteBin6Line />
 
-                <DropdownItem
-                  aria-label='delete campaign'
-                  onClick={() => {
-                    toggleCampaignModal();
-                    saveJsonItemToLocalStorage('campaign', campaign);
-                  }}
-                >
-                  <div className={` flex gap-2  items-center text-grey500`}>
-                    <RiDeleteBin6Line />
-
-                    <p>Delete campaign</p>
-                  </div>
-                </DropdownItem>
+                        <p>Delete campaign</p>
+                      </div>
+                    </DropdownItem>
+                  )}
               </DropdownMenu>
             </Dropdown>
           </div>

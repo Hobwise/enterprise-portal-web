@@ -8,7 +8,6 @@ import {
   ModalContent,
   ScrollShadow,
   Spacer,
-  Spinner,
   Switch,
   Table,
   TableBody,
@@ -18,7 +17,6 @@ import {
   TableRow,
 } from '@nextui-org/react';
 import { useCallback, useEffect, useState } from 'react';
-import { useMutation, useQueryClient } from 'react-query';
 import {
   campaignOption,
   columns,
@@ -27,14 +25,11 @@ import {
 } from '../data';
 
 const AssignPermission = ({ isOpen, onOpenChange }: any) => {
-  const { data, isLoading: roleLoading } = useGetRoleByBusiness();
-
-  console.log(data?.data?.data, 'datattttt');
-
+  const { data, isLoading: roleLoading, refetch } = useGetRoleByBusiness();
   const businessInformation = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const [isLoading, setIsLoading] = useState(false);
-  const [menuRoleSetting, setMenuRoleSettings] = useState({
+
+  const initialState = {
     userRole: {
       cooperateId: userInformation.cooperateID,
       businessId: businessInformation[0].businessId,
@@ -83,70 +78,46 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
       canDeleteBusiness: true,
       canViewMessages: true,
     },
-  });
-
-  const queryClient = useQueryClient();
-  const mutation = useMutation(
-    (newRoleSettings) => assignPermission(newRoleSettings),
-    {
-      onMutate: async (newRoleSettings) => {
-        await queryClient.cancelQueries('roleSettings');
-
-        const previousRoleSettings = queryClient.getQueryData('roleSettings');
-
-        queryClient.setQueryData('roleSettings', newRoleSettings);
-
-        return { previousRoleSettings };
-      },
-      onError: (err, newRoleSettings, context) => {
-        queryClient.setQueryData('roleSettings', context.previousRoleSettings);
-      },
-      onSettled: () => {
-        queryClient.invalidateQueries('roleSettings');
-      },
-    }
-  );
-
-  const assignPermission = async (newRoleSettings: any) => {
-    const data = await configureRole(
-      businessInformation[0]?.businessId,
-      newRoleSettings
-    );
-
-    if (data?.data?.isSuccessful) {
-    } else if (data?.data?.error) {
-      console.log(data?.data?.error, 'errrrrrrrror');
-    }
   };
 
+  const [menuRoleSetting, setMenuRoleSettings] = useState(initialState);
+
   useEffect(() => {
-    if (data) {
-      setMenuRoleSettings({
-        userRole: {
-          ...menuRoleSetting.userRole,
-          ...data.userRole,
-        },
-        managerRole: {
-          ...menuRoleSetting.managerRole,
-          ...data.managerRole,
-        },
-      });
+    if (data?.data?.data) {
+      setMenuRoleSettings(data.data.data);
     }
   }, [data]);
 
-  const handleCheckboxChange = (role: string, key: string, value: boolean) => {
-    const newRoleSettings = {
-      ...menuRoleSetting,
+  const handleCheckboxChange = (role, key, value) => {
+    setMenuRoleSettings((prevSettings) => ({
+      ...prevSettings,
       [role]: {
-        ...menuRoleSetting[role],
+        ...prevSettings[role],
         [key]: value,
       },
-    };
-    setMenuRoleSettings(newRoleSettings);
-    mutation.mutate(newRoleSettings);
+    }));
   };
 
-  const humanizeKey = (key: string): string => {
+  const assignPermission = async () => {
+    const response = await configureRole(
+      businessInformation[0]?.businessId,
+      menuRoleSetting
+    );
+
+    if (response?.data?.isSuccessful) {
+      refetch();
+      console.log('Permission assigned successfully');
+    } else if (response?.data?.error) {
+      console.log(response?.data?.error, 'errrrrrrrror');
+    }
+  };
+
+  const handleModalClose = () => {
+    assignPermission();
+    onOpenChange();
+  };
+
+  const humanizeKey = (key) => {
     return key
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, (str) => str.toUpperCase());
@@ -155,24 +126,21 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
   const renderCell = useCallback(
     (role, permission, columnKey) => {
       const cellValue = permission.actions;
-
       const isChecked = menuRoleSetting[role][cellValue];
 
       switch (columnKey) {
         case 'manager':
           return (
             <div className='grid place-content-center gap-2'>
-              <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
-                <Switch size='sm' color='primary' isDisabled defaultSelected />
-              </span>
+              <Switch isDisabled size='sm' defaultSelected color='primary' />
             </div>
           );
         case 'staff':
           return (
             <div className='grid place-content-center gap-2'>
-              <span className='text-lg text-default-400 cursor-pointer active:opacity-50'>
+              <span className='cursor-pointer '>
                 <Switch
-                  checked={isChecked}
+                  defaultSelected={isChecked}
                   onChange={(e) =>
                     handleCheckboxChange(role, cellValue, e.target.checked)
                   }
@@ -202,7 +170,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
       size='2xl'
       isDismissable={false}
       isOpen={isOpen}
-      onOpenChange={() => onOpenChange()}
+      onOpenChange={handleModalClose}
     >
       <ModalContent>
         {(onClose) => (
@@ -224,6 +192,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                     <span className='text-[#5F35D2] font-[700] -mb-3 px-3 text-[13px]'>
                       MENU
                     </span>
+
                     <div className='border border-primaryGrey flex flex-col gap-2 rounded-lg'>
                       <Table
                         radius='none'
@@ -247,17 +216,13 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                             </TableColumn>
                           )}
                         </TableHeader>
-                        <TableBody
-                          isLoading={isLoading}
-                          loadingContent={<Spinner label='Loading...' />}
-                          items={menuOption}
-                        >
+                        <TableBody items={menuOption}>
                           {(item) => (
-                            <TableRow className='text-[#5F6D7E]' key={item.id}>
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
                               {(columnKey) => (
                                 <TableCell>
                                   {renderCell(
-                                    item.role === 'manager'
+                                    item?.role === 'manager'
                                       ? 'managerRole'
                                       : 'userRole',
                                     item,
@@ -296,17 +261,13 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                             </TableColumn>
                           )}
                         </TableHeader>
-                        <TableBody
-                          isLoading={isLoading}
-                          loadingContent={<Spinner label='Loading...' />}
-                          items={campaignOption}
-                        >
+                        <TableBody items={campaignOption}>
                           {(item) => (
-                            <TableRow className='text-[#5F6D7E]' key={item.id}>
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
                               {(columnKey) => (
                                 <TableCell>
                                   {renderCell(
-                                    item.role === 'manager'
+                                    item?.role === 'manager'
                                       ? 'managerRole'
                                       : 'userRole',
                                     item,
@@ -345,17 +306,13 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                             </TableColumn>
                           )}
                         </TableHeader>
-                        <TableBody
-                          isLoading={isLoading}
-                          loadingContent={<Spinner label='Loading...' />}
-                          items={reservationsOption}
-                        >
+                        <TableBody items={reservationsOption}>
                           {(item) => (
-                            <TableRow className='text-[#5F6D7E]' key={item.id}>
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
                               {(columnKey) => (
                                 <TableCell>
                                   {renderCell(
-                                    item.role === 'manager'
+                                    item?.role === 'manager'
                                       ? 'managerRole'
                                       : 'userRole',
                                     item,

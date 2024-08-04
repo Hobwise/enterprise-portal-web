@@ -1,3 +1,4 @@
+'use client';
 import Image from 'next/image';
 import { IoIosSettings } from 'react-icons/io';
 import Booking from '../../../public/assets/icons/bookings.png';

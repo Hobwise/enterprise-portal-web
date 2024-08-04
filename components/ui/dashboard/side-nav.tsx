@@ -5,6 +5,7 @@ import { useState } from 'react';
 import HobinkLogo from '@/components/logo';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import {
   getJsonItemFromLocalStorage,
   saveJsonItemToLocalStorage,
@@ -35,11 +36,14 @@ const SideNav = () => {
   const { data: businessDetails, isLoading } = useGetBusiness();
   const { data: businessDetailsList } = useGetBusinessByCooperate();
 
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
+
   const business = getJsonItemFromLocalStorage('business');
 
   const toggleBtwBusiness = (businessInfo: any) => {
     const exists = businessDetailsList?.some(
-      (comparisonItem) => comparisonItem.id === businessInfo.businessId
+      (comparisonItem: any) => comparisonItem.id === businessInfo.businessId
     );
     const transformedArray = [businessInfo].map((item) => ({
       businessId: item.id,
@@ -59,6 +63,36 @@ const SideNav = () => {
     }
   };
 
+  const shouldExcludeItem = (
+    managerPermission?: boolean,
+    userPermission?: boolean
+  ): boolean => {
+    return managerPermission === true && userPermission === false;
+  };
+
+  const filteredItems = SIDENAV_ITEMS.filter((item: SideNavItem) => {
+    if (
+      (item.title === 'Menu' &&
+        shouldExcludeItem(
+          managerRolePermissions?.canViewMenu,
+          userRolePermissions?.canViewMenu
+        )) ||
+      (item.title === 'Campaigns' &&
+        shouldExcludeItem(
+          managerRolePermissions?.canViewCampaign,
+          userRolePermissions?.canViewCampaign
+        )) ||
+      (item.title === 'Reservation' &&
+        shouldExcludeItem(
+          managerRolePermissions?.canViewReservation,
+          userRolePermissions?.canViewReservation
+        ))
+    ) {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div className='md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex'>
       <div className='flex flex-col  w-full'>
@@ -74,7 +108,7 @@ const SideNav = () => {
           </Link>
 
           <div className='flex flex-col space-y-2  md:px-2 '>
-            {SIDENAV_ITEMS.map((item, idx) => {
+            {filteredItems.map((item, idx) => {
               return <MenuItem key={idx} item={item} />;
             })}
           </div>

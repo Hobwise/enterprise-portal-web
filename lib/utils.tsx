@@ -179,7 +179,7 @@ export const CustomLoading = () => {
           Hang on a Sec!
         </span>
 
-        <span className='text-sm font-[400]   w-[10px] text-[#475367] '>
+        <span className='text-sm font-[400]    text-[#475367] '>
           Just a moment...
         </span>
       </div>

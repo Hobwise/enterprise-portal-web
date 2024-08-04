@@ -18,6 +18,7 @@ import { IoSearchOutline } from 'react-icons/io5';
 import Error from '@/components/error';
 import CreateReservation from '@/components/ui/dashboard/reservations/createReservations';
 import ReservationList from '@/components/ui/dashboard/reservations/reservation';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import useTextCopy from '@/hooks/useTextCopy';
@@ -27,6 +28,10 @@ import { VscCopy } from 'react-icons/vsc';
 
 const Reservation: React.FC = () => {
   const router = useRouter();
+
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
+
   const business = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { data, isLoading, isError, refetch } = useReservation();
@@ -139,21 +144,26 @@ const Reservation: React.FC = () => {
             </>
           )}
 
-          {data?.reservations?.length > 0 && (
-            <CustomButton
-              onClick={() =>
-                router.push('/dashboard/reservation/create-reservation')
-              }
-              className='py-2 px-4 md:mb-0 mb-4 text-white'
-              backgroundColor='bg-primaryColor'
-            >
-              <div className='flex gap-2 items-center justify-center'>
-                <IoMdAdd className='text-[22px]' />
+          {managerRolePermissions?.canCreateReservation &&
+            userRolePermissions?.canCreateReservation !== false && (
+              <>
+                {data?.reservations?.length > 0 && (
+                  <CustomButton
+                    onClick={() =>
+                      router.push('/dashboard/reservation/create-reservation')
+                    }
+                    className='py-2 px-4 md:mb-0 mb-4 text-white'
+                    backgroundColor='bg-primaryColor'
+                  >
+                    <div className='flex gap-2 items-center justify-center'>
+                      <IoMdAdd className='text-[22px]' />
 
-                <p>Add reservation</p>
-              </div>
-            </CustomButton>
-          )}
+                      <p>Add reservation</p>
+                    </div>
+                  </CustomButton>
+                )}
+              </>
+            )}
         </div>
       </div>
 

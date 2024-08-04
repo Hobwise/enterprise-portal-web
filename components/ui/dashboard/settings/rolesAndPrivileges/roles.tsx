@@ -100,7 +100,7 @@ const Roles = () => {
             <TableBody
               loadingContent={<SmallLoader />}
               emptyContent={'No data to display.'}
-              items={data}
+              items={data || []}
             >
               {(item) => (
                 <TableRow key={item?.role}>

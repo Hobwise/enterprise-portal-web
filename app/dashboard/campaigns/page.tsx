@@ -12,12 +12,16 @@ import Error from '@/components/error';
 import CampaignList from '@/components/ui/dashboard/campaign/campaignList';
 import CreateCampaign from '@/components/ui/dashboard/campaign/createCampaign';
 import useCampaign from '@/hooks/cachedEndpoints/useCampaign';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { CustomLoading } from '@/lib/utils';
 import { IoMdAdd } from 'react-icons/io';
 
 const Compaigns: React.FC = () => {
   const router = useRouter();
+
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
 
   const { data, isLoading, isError, refetch } = useCampaign();
 
@@ -106,21 +110,26 @@ const Compaigns: React.FC = () => {
             </>
           )}
 
-          {data?.[0]?.campaigns?.length > 0 && (
-            <CustomButton
-              onClick={() =>
-                router.push('/dashboard/campaigns/create-campaign')
-              }
-              className='py-2 px-4 md:mb-0 mb-4 text-white'
-              backgroundColor='bg-primaryColor'
-            >
-              <div className='flex gap-2 items-center justify-center'>
-                <IoMdAdd className='text-[22px]' />
+          {managerRolePermissions?.canCreateCampaign &&
+            userRolePermissions?.canCreateCampaign !== false && (
+              <>
+                {data?.[0]?.campaigns?.length > 0 && (
+                  <CustomButton
+                    onClick={() =>
+                      router.push('/dashboard/campaigns/create-campaign')
+                    }
+                    className='py-2 px-4 md:mb-0 mb-4 text-white'
+                    backgroundColor='bg-primaryColor'
+                  >
+                    <div className='flex gap-2 items-center justify-center'>
+                      <IoMdAdd className='text-[22px]' />
 
-                <p>Add campaign</p>
-              </div>
-            </CustomButton>
-          )}
+                      <p>Add campaign</p>
+                    </div>
+                  </CustomButton>
+                )}
+              </>
+            )}
         </div>
       </div>
 

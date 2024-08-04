@@ -1,10 +1,13 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 
 import { GoPlus } from 'react-icons/go';
 
 const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
   return (
     <>
       <div className='flex relative top-3  w-full border-b border-divider justify-between'>
@@ -45,13 +48,16 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
             })}
           </Tabs>
         </div>
-        <CustomButton
-          onClick={onOpen}
-          className='bg-white text-primaryColor  flex gap-1'
-        >
-          <GoPlus className='text-[20px]' />
-          <span>Create new menu</span>
-        </CustomButton>
+        {managerRolePermissions?.canCreateMenu &&
+          userRolePermissions?.canCreateMenu !== false && (
+            <CustomButton
+              onClick={onOpen}
+              className='bg-white text-primaryColor  flex gap-1'
+            >
+              <GoPlus className='text-[20px]' />
+              <span>Create new menu</span>
+            </CustomButton>
+          )}
       </div>
     </>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import Error from '@/components/error';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import useTextCopy from '@/hooks/useTextCopy';
@@ -33,6 +34,9 @@ import EditReservation from './editReservation';
 const ReservationDetails = () => {
   const searchParams = useSearchParams();
   const business = getJsonItemFromLocalStorage('business');
+
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
 
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [isOpenDelete, setIsOpenDelete] = useState(false);
@@ -76,13 +80,16 @@ const ReservationDetails = () => {
         </Link>
         <div className='gap-6 lg:flex block'>
           <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
-            <Button
-              onClick={toggleModalEdit}
-              className='flex text-grey600 bg-white'
-            >
-              <FaEdit className='text-[18px]' />
-              <p>Edit</p>
-            </Button>
+            {managerRolePermissions?.canEditReservation &&
+              userRolePermissions?.canEditReservation !== false && (
+                <Button
+                  onClick={toggleModalEdit}
+                  className='flex text-grey600 bg-white'
+                >
+                  <FaEdit className='text-[18px]' />
+                  <p>Edit</p>
+                </Button>
+              )}
 
             <Popover
               showArrow={true}
@@ -104,14 +111,16 @@ const ReservationDetails = () => {
                 </div>
               </PopoverContent>
             </Popover>
-
-            <Button
-              onClick={toggleModalDelete}
-              className='flex text-grey600 bg-white'
-            >
-              <RiDeleteBin6Line className='text-[18px]' />
-              <p>Delete</p>
-            </Button>
+            {managerRolePermissions?.canDeleteReservation &&
+              userRolePermissions?.canDeleteReservation !== false && (
+                <Button
+                  onClick={toggleModalDelete}
+                  className='flex text-grey600 bg-white'
+                >
+                  <RiDeleteBin6Line className='text-[18px]' />
+                  <p>Delete</p>
+                </Button>
+              )}
           </ButtonGroup>
         </div>
       </div>

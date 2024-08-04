@@ -1,5 +1,6 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,6 +9,9 @@ import NoOrder from '../../../../public/assets/images/no-order.png';
 
 const CreateCampaign = () => {
   const router = useRouter();
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
+
   return (
     <section>
       <Spacer y={14} />
@@ -19,17 +23,22 @@ const CreateCampaign = () => {
           Create a campaign to share special offers with your customers
         </p>
         <Spacer y={5} />
-        <CustomButton
-          onClick={() => router.push('/dashboard/campaigns/create-campaign')}
-          className='py-2 px-4 md:mb-0 mb-4 text-white'
-          backgroundColor='bg-primaryColor'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <IoMdAdd className='text-[22px]' />
+        {managerRolePermissions?.canCreateCampaign &&
+          userRolePermissions?.canCreateCampaign !== false && (
+            <CustomButton
+              onClick={() =>
+                router.push('/dashboard/campaigns/create-campaign')
+              }
+              className='py-2 px-4 md:mb-0 mb-4 text-white'
+              backgroundColor='bg-primaryColor'
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                <IoMdAdd className='text-[22px]' />
 
-            <p>Create campaign</p>
-          </div>
-        </CustomButton>
+                <p>Create campaign</p>
+              </div>
+            </CustomButton>
+          )}
       </div>
     </section>
   );

@@ -1,5 +1,6 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
+import useGetRoleByBusiness from '@/hooks/cachedEndpoints/useGetRoleBusiness';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
@@ -10,6 +11,9 @@ import NoBooking from '../../../../public/assets/images/no-booking.png';
 const CreateReservation = ({ showCreateBookingModal }: any) => {
   const router = useRouter();
   const { data } = useReservation();
+  const { data: permission } = useGetRoleByBusiness();
+  const canCreateReservation =
+    permission?.data?.data?.userRole?.canCreateReservation;
 
   return (
     <section>
@@ -24,22 +28,26 @@ const CreateReservation = ({ showCreateBookingModal }: any) => {
             : 'Create a booking for the customers.'}
         </p>
         <Spacer y={5} />
-        <CustomButton
-          onClick={() =>
-            data?.totalCount === 0
-              ? router.push('/dashboard/reservation/create-reservation')
-              : showCreateBookingModal()
-          }
-          className='py-2 px-4 md:mb-0 mb-4 text-white'
-          backgroundColor='bg-primaryColor'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <IoMdAdd className='text-[22px]' />
-            <p>
-              {data?.totalCount === 0 ? 'Create reservation' : 'Create booking'}
-            </p>
-          </div>
-        </CustomButton>
+        {canCreateReservation && (
+          <CustomButton
+            onClick={() =>
+              data?.totalCount === 0
+                ? router.push('/dashboard/reservation/create-reservation')
+                : showCreateBookingModal()
+            }
+            className='py-2 px-4 md:mb-0 mb-4 text-white'
+            backgroundColor='bg-primaryColor'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <IoMdAdd className='text-[22px]' />
+              <p>
+                {data?.totalCount === 0
+                  ? 'Create reservation'
+                  : 'Create booking'}
+              </p>
+            </div>
+          </CustomButton>
+        )}
       </div>
     </section>
   );

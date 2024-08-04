@@ -5,6 +5,7 @@ import {
   getMenuItem,
 } from '@/app/api/controllers/dashboard/menu';
 import { CustomButton } from '@/components/customButton';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import {
   CustomLoading,
@@ -46,6 +47,9 @@ const MenuDetails = () => {
   } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [isOpen, setIsOpen] = useState(false);
+
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
 
   const itemId = searchParams.get('itemId') || null;
   const [menuItem, setMenuItem] = useState([]);
@@ -133,28 +137,37 @@ const MenuDetails = () => {
             </span>
           </div> */}
           <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
-            <Button
-              onClick={toggleModalEdit}
-              className='flex text-grey600 bg-white'
-            >
-              <FaEdit className='text-[18px]' />
-              <p>Edit</p>
-            </Button>
-            <Button
-              onClick={toggleModal}
-              className='flex text-grey600 bg-white'
-            >
-              <MdCreate className='text-[18px]' />
+            {managerRolePermissions?.canEditMenu &&
+              userRolePermissions?.canEditMenu !== false && (
+                <>
+                  <Button
+                    onClick={toggleModalEdit}
+                    className='flex text-grey600 bg-white'
+                  >
+                    <FaEdit className='text-[18px]' />
+                    <p>Edit</p>
+                  </Button>
+                  <Button
+                    onClick={toggleModal}
+                    className='flex text-grey600 bg-white'
+                  >
+                    <MdCreate className='text-[18px]' />
 
-              <p> Create Variety</p>
-            </Button>
-            <Button
-              onClick={toggleModalDelete}
-              className='flex text-grey600 bg-white'
-            >
-              <RiDeleteBin6Line className='text-[18px]' />
-              <p>Delete</p>
-            </Button>
+                    <p> Create Variety</p>
+                  </Button>
+                </>
+              )}
+
+            {managerRolePermissions?.canDeleteMenu &&
+              userRolePermissions?.canDeleteMenu !== false && (
+                <Button
+                  onClick={toggleModalDelete}
+                  className='flex text-grey600 bg-white'
+                >
+                  <RiDeleteBin6Line className='text-[18px]' />
+                  <p>Delete</p>
+                </Button>
+              )}
           </ButtonGroup>
         </div>
       </div>
@@ -202,15 +215,18 @@ const MenuDetails = () => {
                       {menuItem?.varieties?.length}
                     </span>
                   </p>
-                  <div>
-                    <CustomButton
-                      onClick={toggleModal}
-                      className='bg-white text-primaryColor font-[700] flex gap-1'
-                    >
-                      <GoPlus className='text-[20px] font-[700]' />
-                      <span>Create variety</span>
-                    </CustomButton>
-                  </div>
+                  {managerRolePermissions?.canEditMenu &&
+                    userRolePermissions?.canEditMenu !== false && (
+                      <div>
+                        <CustomButton
+                          onClick={toggleModal}
+                          className='bg-white text-primaryColor font-[700] flex gap-1'
+                        >
+                          <GoPlus className='text-[20px] font-[700]' />
+                          <span>Create variety</span>
+                        </CustomButton>
+                      </div>
+                    )}
                 </div>
                 <div className='h-[250px] overflow-scroll'>
                   {menuItem?.varieties.map((item, index) => {

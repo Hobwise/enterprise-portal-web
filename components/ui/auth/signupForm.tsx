@@ -1,13 +1,13 @@
 'use client';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { CustomInput } from '@/components/CustomInput';
-import { Spacer, Tooltip } from '@nextui-org/react';
-import { FaRegEnvelope } from 'react-icons/fa6';
-import { CustomButton } from '@/components/customButton';
 import { createUser } from '@/app/api/controllers/auth';
-import { notify } from '@/lib/utils';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
+import { notify } from '@/lib/utils';
+import { Spacer, Tooltip } from '@nextui-org/react';
+import { useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { FaRegEnvelope } from 'react-icons/fa6';
 const SignupForm = () => {
   const router = useRouter();
   const { setUserData } = useGlobalContext();
@@ -20,7 +20,7 @@ const SignupForm = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'admin',
+    role: 0,
     isActive: false,
   });
 

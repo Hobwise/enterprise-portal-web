@@ -1,11 +1,14 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import { IoMdAdd } from 'react-icons/io';
 import NoMenu from '../../../../public/assets/images/no-menu.png';
 
 const CreateMenu = ({ onOpen }: any) => {
+  const { ...userRolePermissions } = usePermission();
+  const { ...managerRolePermissions } = usePermission();
   return (
     <section>
       <Spacer y={14} />
@@ -17,17 +20,20 @@ const CreateMenu = ({ onOpen }: any) => {
           Start adding items to your menu so your customers can place orders
         </p>
         <Spacer y={5} />
-        <CustomButton
-          onClick={onOpen}
-          className='py-2 px-4 md:mb-0 mb-4 text-white'
-          backgroundColor='bg-primaryColor'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <IoMdAdd className='text-[22px]' />
+        {managerRolePermissions?.canCreateMenu &&
+          userRolePermissions?.canCreateMenu !== false && (
+            <CustomButton
+              onClick={onOpen}
+              className='py-2 px-4 md:mb-0 mb-4 text-white'
+              backgroundColor='bg-primaryColor'
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                <IoMdAdd className='text-[22px]' />
 
-            <p>Add a menu</p>
-          </div>
-        </CustomButton>
+                <p>Add a menu</p>
+              </div>
+            </CustomButton>
+          )}
       </div>
     </section>
   );

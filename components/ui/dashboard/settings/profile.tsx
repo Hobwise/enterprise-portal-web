@@ -115,7 +115,7 @@ const Profile = () => {
 
   return (
     <section>
-      <div className='flex xl:flex-row flex-col justify-between'>
+      <div className='flex md:flex-row flex-col justify-between'>
         <div>
           <h1 className='text-[16px] leading-8 font-semibold'>Profile photo</h1>
           <p className='text-sm  text-grey600 md:mb-7 mb-4'>

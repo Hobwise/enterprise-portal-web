@@ -39,14 +39,20 @@ const SettingsComponent: React.FC = () => {
   ];
 
   const listItems: ListItemProps[] = baseListItems.filter(
-    (item) => !(role === 1 && item.title === 'Roles and Privileges')
+    (item) =>
+      !(
+        role === 1 &&
+        (item.title === 'Roles and Privileges' ||
+          item.title === 'Business settings' ||
+          item.title === 'Team')
+      )
   );
 
   return (
     <>
       <article
         className={`border ${
-          role === 1 ? 'max-h-[270px]' : 'max-h-[320px]'
+          role === 1 ? 'max-h-[175px]' : 'max-h-[320px]'
         }   border-secondaryGrey w-full xl:w-[284px] p-3 rounded-[8px]`}
       >
         <ul className='flex xl:flex-col flex-row xl:gap-1 gap-3'>
