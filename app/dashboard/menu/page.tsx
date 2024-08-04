@@ -40,7 +40,7 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 const Menu: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const { userRolePermissions, managerRolePermissions } = usePermission();
+  const { userRolePermissions, role } = usePermission();
 
   const businessInformation = getJsonItemFromLocalStorage('business');
 
@@ -193,23 +193,22 @@ const Menu: React.FC = () => {
             </>
           )}
 
-          {managerRolePermissions?.canCreateMenu &&
-            userRolePermissions?.canCreateMenu !== false && (
-              <CustomButton
-                onClick={
-                  data?.length > 0
-                    ? () => router.push('/dashboard/menu/add-menu-item')
-                    : onOpen
-                }
-                className='py-2 px-4 md:mb-0 mb-4 text-white'
-                backgroundColor='bg-primaryColor'
-              >
-                <div className='flex gap-2 items-center justify-center'>
-                  <IoAddCircleOutline className='text-[22px]' />
-                  <p>{data?.length > 0 ? 'Add menu items' : 'Add menu'} </p>
-                </div>
-              </CustomButton>
-            )}
+          {role === 0 && userRolePermissions?.canCreateMenu === true && (
+            <CustomButton
+              onClick={
+                data?.length > 0
+                  ? () => router.push('/dashboard/menu/add-menu-item')
+                  : onOpen
+              }
+              className='py-2 px-4 md:mb-0 mb-4 text-white'
+              backgroundColor='bg-primaryColor'
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                <IoAddCircleOutline className='text-[22px]' />
+                <p>{data?.length > 0 ? 'Add menu items' : 'Add menu'} </p>
+              </div>
+            </CustomButton>
+          )}
         </div>
       </div>
       {isLoading ? <CustomLoading /> : <>{getScreens()} </>}

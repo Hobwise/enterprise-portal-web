@@ -49,7 +49,7 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
     campaigns[0]?.campaigns
   );
 
-  const { userRolePermissions, managerRolePermissions } = usePermission();
+  const { userRolePermissions, role } = usePermission();
 
   useEffect(() => {
     if (campaigns && searchQuery) {
@@ -207,38 +207,38 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
                     <p>Repeat campaign</p>
                   </div>
                 </DropdownItem>
-                {managerRolePermissions?.canEditCampaign &&
-                  userRolePermissions?.canEditCampaign !== false && (
-                    <DropdownItem
-                      aria-label='edit campaign'
-                      onClick={() => {
-                        saveJsonItemToLocalStorage('campaign', campaign);
-                        router.push('/dashboard/campaigns/edit-campaign');
-                      }}
-                    >
-                      <div className={` flex gap-2  items-center text-grey500`}>
-                        <FaRegEdit />
+                {(role === 0 ||
+                  userRolePermissions?.canEditCampaign === true) && (
+                  <DropdownItem
+                    aria-label='edit campaign'
+                    onClick={() => {
+                      saveJsonItemToLocalStorage('campaign', campaign);
+                      router.push('/dashboard/campaigns/edit-campaign');
+                    }}
+                  >
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <FaRegEdit />
 
-                        <p>Edit campaign</p>
-                      </div>
-                    </DropdownItem>
-                  )}
-                {managerRolePermissions?.canDeleteCampaign &&
-                  userRolePermissions?.canDeleteCampaign !== false && (
-                    <DropdownItem
-                      aria-label='delete campaign'
-                      onClick={() => {
-                        toggleCampaignModal();
-                        saveJsonItemToLocalStorage('campaign', campaign);
-                      }}
-                    >
-                      <div className={` flex gap-2  items-center text-grey500`}>
-                        <RiDeleteBin6Line />
+                      <p>Edit campaign</p>
+                    </div>
+                  </DropdownItem>
+                )}
+                {(role === 0 ||
+                  userRolePermissions?.canDeleteCampaign === true) && (
+                  <DropdownItem
+                    aria-label='delete campaign'
+                    onClick={() => {
+                      toggleCampaignModal();
+                      saveJsonItemToLocalStorage('campaign', campaign);
+                    }}
+                  >
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <RiDeleteBin6Line />
 
-                        <p>Delete campaign</p>
-                      </div>
-                    </DropdownItem>
-                  )}
+                      <p>Delete campaign</p>
+                    </div>
+                  </DropdownItem>
+                )}
               </DropdownMenu>
             </Dropdown>
           </div>

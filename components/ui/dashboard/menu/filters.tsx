@@ -6,7 +6,7 @@ import { Chip, Tab, Tabs } from '@nextui-org/react';
 import { GoPlus } from 'react-icons/go';
 
 const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
-  const { userRolePermissions, managerRolePermissions } = usePermission();
+  const { userRolePermissions, role } = usePermission();
 
   return (
     <>
@@ -48,16 +48,15 @@ const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
             })}
           </Tabs>
         </div>
-        {managerRolePermissions?.canCreateMenu &&
-          userRolePermissions?.canCreateMenu !== false && (
-            <CustomButton
-              onClick={onOpen}
-              className='bg-white text-primaryColor  flex gap-1'
-            >
-              <GoPlus className='text-[20px]' />
-              <span>Create new menu</span>
-            </CustomButton>
-          )}
+        {(role === 0 || userRolePermissions?.canCreateMenu === true) && (
+          <CustomButton
+            onClick={onOpen}
+            className='bg-white text-primaryColor  flex gap-1'
+          >
+            <GoPlus className='text-[20px]' />
+            <span>Create new menu</span>
+          </CustomButton>
+        )}
       </div>
     </>
   );

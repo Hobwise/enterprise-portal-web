@@ -48,7 +48,7 @@ const MenuDetails = () => {
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [isOpen, setIsOpen] = useState(false);
 
-  const { userRolePermissions, managerRolePermissions } = usePermission();
+  const { userRolePermissions, role } = usePermission();
 
   const itemId = searchParams.get('itemId') || null;
   const [menuItem, setMenuItem] = useState([]);
@@ -136,37 +136,35 @@ const MenuDetails = () => {
             </span>
           </div> */}
           <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
-            {managerRolePermissions?.canEditMenu &&
-              userRolePermissions?.canEditMenu !== false && (
-                <>
-                  <Button
-                    onClick={toggleModalEdit}
-                    className='flex text-grey600 bg-white'
-                  >
-                    <FaEdit className='text-[18px]' />
-                    <p>Edit</p>
-                  </Button>
-                  <Button
-                    onClick={toggleModal}
-                    className='flex text-grey600 bg-white'
-                  >
-                    <MdCreate className='text-[18px]' />
-
-                    <p> Create Variety</p>
-                  </Button>
-                </>
-              )}
-
-            {managerRolePermissions?.canDeleteMenu &&
-              userRolePermissions?.canDeleteMenu !== false && (
+            {(role === 0 || userRolePermissions?.canEditMenu === true) && (
+              <>
                 <Button
-                  onClick={toggleModalDelete}
+                  onClick={toggleModalEdit}
                   className='flex text-grey600 bg-white'
                 >
-                  <RiDeleteBin6Line className='text-[18px]' />
-                  <p>Delete</p>
+                  <FaEdit className='text-[18px]' />
+                  <p>Edit</p>
                 </Button>
-              )}
+                <Button
+                  onClick={toggleModal}
+                  className='flex text-grey600 bg-white'
+                >
+                  <MdCreate className='text-[18px]' />
+
+                  <p> Create Variety</p>
+                </Button>
+              </>
+            )}
+
+            {(role === 0 || userRolePermissions?.canDeleteMenu === true) && (
+              <Button
+                onClick={toggleModalDelete}
+                className='flex text-grey600 bg-white'
+              >
+                <RiDeleteBin6Line className='text-[18px]' />
+                <p>Delete</p>
+              </Button>
+            )}
           </ButtonGroup>
         </div>
       </div>
@@ -214,18 +212,18 @@ const MenuDetails = () => {
                       {menuItem?.varieties?.length}
                     </span>
                   </p>
-                  {managerRolePermissions?.canEditMenu &&
-                    userRolePermissions?.canEditMenu !== false && (
-                      <div>
-                        <CustomButton
-                          onClick={toggleModal}
-                          className='bg-white text-primaryColor font-[700] flex gap-1'
-                        >
-                          <GoPlus className='text-[20px] font-[700]' />
-                          <span>Create variety</span>
-                        </CustomButton>
-                      </div>
-                    )}
+                  {(role === 0 ||
+                    userRolePermissions?.canEditMenu === true) && (
+                    <div>
+                      <CustomButton
+                        onClick={toggleModal}
+                        className='bg-white text-primaryColor font-[700] flex gap-1'
+                      >
+                        <GoPlus className='text-[20px] font-[700]' />
+                        <span>Create variety</span>
+                      </CustomButton>
+                    </div>
+                  )}
                 </div>
                 <div className='h-[250px] overflow-scroll'>
                   {menuItem?.varieties.map((item, index) => {

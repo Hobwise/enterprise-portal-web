@@ -20,7 +20,7 @@ import { IoMdAdd } from 'react-icons/io';
 const Compaigns: React.FC = () => {
   const router = useRouter();
 
-  const { userRolePermissions, managerRolePermissions } = usePermission();
+  const { userRolePermissions, role } = usePermission();
 
   const { data, isLoading, isError, refetch } = useCampaign();
 
@@ -109,26 +109,25 @@ const Compaigns: React.FC = () => {
             </>
           )}
 
-          {managerRolePermissions?.canCreateCampaign &&
-            userRolePermissions?.canCreateCampaign !== false && (
-              <>
-                {data?.[0]?.campaigns?.length > 0 && (
-                  <CustomButton
-                    onClick={() =>
-                      router.push('/dashboard/campaigns/create-campaign')
-                    }
-                    className='py-2 px-4 md:mb-0 mb-4 text-white'
-                    backgroundColor='bg-primaryColor'
-                  >
-                    <div className='flex gap-2 items-center justify-center'>
-                      <IoMdAdd className='text-[22px]' />
+          {(role === 0 || userRolePermissions?.canCreateCampaign === true) && (
+            <>
+              {data?.[0]?.campaigns?.length > 0 && (
+                <CustomButton
+                  onClick={() =>
+                    router.push('/dashboard/campaigns/create-campaign')
+                  }
+                  className='py-2 px-4 md:mb-0 mb-4 text-white'
+                  backgroundColor='bg-primaryColor'
+                >
+                  <div className='flex gap-2 items-center justify-center'>
+                    <IoMdAdd className='text-[22px]' />
 
-                      <p>Add campaign</p>
-                    </div>
-                  </CustomButton>
-                )}
-              </>
-            )}
+                    <p>Add campaign</p>
+                  </div>
+                </CustomButton>
+              )}
+            </>
+          )}
         </div>
       </div>
 
