@@ -7,8 +7,8 @@ import { IoMdAdd } from 'react-icons/io';
 import NoMenu from '../../../../public/assets/images/no-menu.png';
 
 const CreateMenu = ({ onOpen }: any) => {
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
+
   return (
     <section>
       <Spacer y={14} />

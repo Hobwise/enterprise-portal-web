@@ -36,8 +36,7 @@ const SideNav = () => {
   const { data: businessDetails, isLoading } = useGetBusiness();
   const { data: businessDetailsList } = useGetBusinessByCooperate();
 
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, role } = usePermission();
 
   const business = getJsonItemFromLocalStorage('business');
 
@@ -63,33 +62,25 @@ const SideNav = () => {
     }
   };
 
-  const shouldExcludeItem = (
-    managerPermission?: boolean,
-    userPermission?: boolean
-  ): boolean => {
-    return managerPermission === true && userPermission === false;
-  };
-
-  const filteredItems = SIDENAV_ITEMS.filter((item: SideNavItem) => {
+  const filteredItems = SIDENAV_ITEMS.filter((item) => {
     if (
-      (item.title === 'Menu' &&
-        shouldExcludeItem(
-          managerRolePermissions?.canViewMenu,
-          userRolePermissions?.canViewMenu
-        )) ||
-      (item.title === 'Campaigns' &&
-        shouldExcludeItem(
-          managerRolePermissions?.canViewCampaign,
-          userRolePermissions?.canViewCampaign
-        )) ||
-      (item.title === 'Reservation' &&
-        shouldExcludeItem(
-          managerRolePermissions?.canViewReservation,
-          userRolePermissions?.canViewReservation
-        ))
-    ) {
+      item.title === 'Menu' &&
+      role === 1 &&
+      userRolePermissions?.canViewMenu === false
+    )
       return false;
-    }
+    if (
+      item.title === 'Campaigns' &&
+      role === 1 &&
+      userRolePermissions?.canViewCampaign === false
+    )
+      return false;
+    if (
+      item.title === 'Reservation' &&
+      role === 1 &&
+      userRolePermissions?.canViewReservation === false
+    )
+      return false;
     return true;
   });
 

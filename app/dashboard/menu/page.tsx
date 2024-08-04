@@ -40,8 +40,7 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 const Menu: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
 
   const businessInformation = getJsonItemFromLocalStorage('business');
 

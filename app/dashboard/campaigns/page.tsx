@@ -20,8 +20,7 @@ import { IoMdAdd } from 'react-icons/io';
 const Compaigns: React.FC = () => {
   const router = useRouter();
 
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
 
   const { data, isLoading, isError, refetch } = useCampaign();
 

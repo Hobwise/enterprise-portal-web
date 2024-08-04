@@ -35,8 +35,7 @@ const ReservationDetails = () => {
   const searchParams = useSearchParams();
   const business = getJsonItemFromLocalStorage('business');
 
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
 
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [isOpenDelete, setIsOpenDelete] = useState(false);

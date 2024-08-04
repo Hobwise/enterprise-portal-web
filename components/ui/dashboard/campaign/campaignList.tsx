@@ -49,8 +49,7 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
     campaigns[0]?.campaigns
   );
 
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
 
   useEffect(() => {
     if (campaigns && searchQuery) {

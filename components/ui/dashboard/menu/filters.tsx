@@ -6,8 +6,8 @@ import { Chip, Tab, Tabs } from '@nextui-org/react';
 import { GoPlus } from 'react-icons/go';
 
 const Filters = ({ onOpen, menus, handleTabChange, handleTabClick }: any) => {
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
+
   return (
     <>
       <div className='flex relative top-3  w-full border-b border-divider justify-between'>

@@ -48,8 +48,7 @@ const MenuDetails = () => {
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [isOpen, setIsOpen] = useState(false);
 
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
 
   const itemId = searchParams.get('itemId') || null;
   const [menuItem, setMenuItem] = useState([]);

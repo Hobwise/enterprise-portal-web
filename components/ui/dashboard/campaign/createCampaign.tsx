@@ -9,8 +9,7 @@ import NoOrder from '../../../../public/assets/images/no-order.png';
 
 const CreateCampaign = () => {
   const router = useRouter();
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
 
   return (
     <section>

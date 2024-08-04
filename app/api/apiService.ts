@@ -6,26 +6,9 @@ import {
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
 import axios, { AxiosError } from 'axios';
-// import { useRouter } from 'next/router';
+
 import toast from 'react-hot-toast';
 import { generateRefreshToken } from './controllers/auth';
-
-// export const handleError = (error: any) => {
-//   if (!error.response.data.title) {
-//     notify({
-//       title: 'Error!',
-
-//       text: error.response.data.error.responseDescription,
-//       type: 'error',
-//     });
-//   } else {
-//     notify({
-//       title: 'Error!',
-//       text: 'An error occured, please try again',
-//       type: 'error',
-//     });
-//   }
-// };
 
 export const handleError = (error: any, showError: boolean = true) => {
   if (showError) {
@@ -136,28 +119,36 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       logout();
     }
-
-    if (error.code === 'ECONNABORTED') {
-      notify({
-        title: 'Network Timeout',
-        text: 'The request took too long. Please try again later.',
-        type: 'error',
-      });
-      return error;
-    }
     if (error.code === 'ERR_BAD_REQUEST') {
       handleError(error, true);
       return error;
+    } else {
+      handleError(error);
     }
 
-    if (error.code === 'ERR_NETWORK') {
-      notify({
-        title: 'Network Timeout!',
-        text: 'Check your network and try again',
-        type: 'error',
-      });
-      return error;
-    }
+    //   if (error.code === 'ECONNABORTED') {
+    //     notify({
+    //       title: 'Network Timeout',
+    //       text: 'The request took too long. Please try again later.',
+    //       type: 'error',
+    //     });
+    //     return error;
+    //   }
+    //   if (error.code === 'ERR_BAD_REQUEST') {
+    //     handleError(error, true);
+    //     return error;
+    //   } else {
+    //     handleError(error);
+    //   }
+
+    //   if (error.code === 'ERR_NETWORK') {
+    //     notify({
+    //       title: 'Network Timeout!',
+    //       text: 'Check your network and try again',
+    //       type: 'error',
+    //     });
+    //     return error;
+    //   }
   }
 );
 

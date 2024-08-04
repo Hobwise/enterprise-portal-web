@@ -29,8 +29,7 @@ import { VscCopy } from 'react-icons/vsc';
 const Reservation: React.FC = () => {
   const router = useRouter();
 
-  const { ...userRolePermissions } = usePermission();
-  const { ...managerRolePermissions } = usePermission();
+  const { userRolePermissions, managerRolePermissions } = usePermission();
 
   const business = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
