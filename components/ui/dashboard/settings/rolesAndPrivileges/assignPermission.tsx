@@ -124,7 +124,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
       .replace(/([A-Z])/g, ' $1')
       .replace(/^./, (str) => str.toUpperCase());
   };
-  console.log(menuRoleSetting, 'menuRoleSetting');
+
   const renderCell = useCallback(
     (role, permission, columnKey) => {
       const cellValue = permission.actions;
