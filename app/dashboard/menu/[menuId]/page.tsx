@@ -105,6 +105,7 @@ const MenuDetails = () => {
     <>
       <div className='xl:flex block justify-between'>
         <Link
+          prefetch={true}
           href={'/dashboard/menu'}
           className={`cursor-pointer text-primaryColor flex gap-2 xl:mb-0 mb-2 text-sm items-center`}
         >

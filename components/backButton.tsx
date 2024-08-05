@@ -14,6 +14,7 @@ const BackButton: React.FC<BackButtonProps> = ({
 }) => {
   return (
     <Link
+      prefetch={true}
       href={url}
       className={`p-4 cursor-pointer ${color} flex items-center`}
     >

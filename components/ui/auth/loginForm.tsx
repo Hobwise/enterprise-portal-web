@@ -99,6 +99,7 @@ const LoginForm = () => {
          
         </Checkbox> */}
         <Link
+          prefetch={true}
           className='text-primaryColor text-sm'
           href='/auth/forget-password'
         >

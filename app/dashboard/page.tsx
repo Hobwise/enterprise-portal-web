@@ -1,3 +1,4 @@
+import OrdersOverview from '@/components/ui/dashboard/home/OrdersOverview';
 import React from 'react';
 
 export const metadata = {
@@ -6,7 +7,11 @@ export const metadata = {
 };
 
 const Dashboard: React.FC = () => {
-  return <span className='font-bold text-4xl'>Home</span>;
+  return (
+    <span className='flex md:flex-row flex-col gap-3'>
+      <OrdersOverview />
+    </span>
+  );
 };
 
 export default Dashboard;

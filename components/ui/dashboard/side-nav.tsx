@@ -89,6 +89,7 @@ const SideNav = () => {
       <div className='flex flex-col  w-full'>
         <div className='h-[83%] scrollbarstyles overflow-y-scroll'>
           <Link
+            prefetch={true}
             href='/dashboard'
             className='flex flex-row  items-center justify-center md:justify-start md:px-8 md:py-10   w-full'
           >
@@ -250,6 +251,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
               {item.subMenuItems?.map((subItem, idx) => {
                 return (
                   <Link
+                    prefetch={true}
                     key={idx}
                     href={subItem.path}
                     className={`text-white ${

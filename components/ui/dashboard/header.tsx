@@ -5,9 +5,10 @@ import useScroll from '@/hooks/use-scroll';
 import { cn } from '@/lib/utils';
 import {
   Avatar,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
   Tooltip,
   useDisclosure,
 } from '@nextui-org/react';
@@ -103,8 +104,8 @@ const Header = () => {
                 <IoChatbubblesOutline className='text-[#494E58]  h-5 w-5 cursor-pointer' />
               </span>
             </Tooltip>
-            <Popover placement='bottom'>
-              <PopoverTrigger>
+            <Dropdown placement='bottom-end'>
+              <DropdownTrigger>
                 <div className='flex items-center gap-1 cursor-pointer'>
                   <Avatar
                     size='sm'
@@ -112,34 +113,29 @@ const Header = () => {
                   />
                   <IoIosArrowDown />
                 </div>
-              </PopoverTrigger>
-              <PopoverContent>
-                <div className='flex items-center w-[218px] p-1 gap-2'>
-                  <div className='flex flex-col   w-full'>
-                    {/* <div className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md  hover:bg-[#F9FAFB] px-2 py-3 items-center gap-2'>
-                      <MdPerson className='text-[20px]' />
-                      <span className='  text-sm font-md'>Profile</span>
-                    </div> */}
-                    <Link
-                      href={'/dashboard/settings'}
-                      className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md  hover:bg-[#F9FAFB] px-2 py-3 items-center gap-2'
-                    >
-                      <IoIosSettings className='text-[20px]' />
-                      <span className='  text-sm font-md'>
-                        Account settings
-                      </span>
-                    </Link>
-                    <div
-                      onClick={onOpenChange}
-                      className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md  hover:bg-[#F9FAFB] px-2 py-3 items-center gap-2'
-                    >
-                      <FiLogOut className='text-[20px]' />
-                      <span className='  text-sm font-md'> Log out</span>
-                    </div>
+              </DropdownTrigger>
+              <DropdownMenu aria-label='settings Actions' variant='flat'>
+                <DropdownItem key=' Account settings'>
+                  <Link
+                    prefetch={true}
+                    href={'/dashboard/settings'}
+                    className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2'
+                  >
+                    <IoIosSettings className='text-[20px]' />
+                    <span className='  text-sm font-md'>Account settings</span>
+                  </Link>
+                </DropdownItem>
+                <DropdownItem key='logout'>
+                  <div
+                    onClick={onOpenChange}
+                    className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2'
+                  >
+                    <FiLogOut className='text-[20px]' />
+                    <span className='  text-sm font-md'> Log out</span>
                   </div>
-                </div>
-              </PopoverContent>
-            </Popover>
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
           </div>
         </div>
       </div>

@@ -74,6 +74,7 @@ const HeaderMobile = () => {
               ) : (
                 <MenuItem>
                   <Link
+                    prefetch={true}
                     href={item?.path}
                     onClick={() => toggleOpen()}
                     className={`flex w-full text-white text-xl ${
@@ -196,6 +197,7 @@ const MenuItemWithSubMenu: React.FC<MenuItemWithSubMenuProps> = ({
               return (
                 <MenuItem key={subIdx}>
                   <Link
+                    prefetch={true}
                     href={subItem.path}
                     onClick={() => toggleOpen()}
                     className={` ${

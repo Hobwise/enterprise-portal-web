@@ -71,6 +71,7 @@ const ReservationDetails = () => {
     <>
       <div className='lg:flex block justify-between'>
         <Link
+          prefetch={true}
           href={'/dashboard/reservation'}
           className={`cursor-pointer text-primaryColor flex gap-2 lg:mb-0 mb-2 text-sm items-center`}
         >

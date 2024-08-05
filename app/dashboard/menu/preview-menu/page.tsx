@@ -12,6 +12,7 @@ const PreviewMenu = () => {
   return (
     <>
       <Link
+        prefetch={true}
         href={'/dashboard/menu'}
         className={`cursor-pointer text-primaryColor flex gap-2 mb-3 text-sm items-center`}
       >
