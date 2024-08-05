@@ -265,6 +265,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
         </>
       ) : (
         <Link
+          prefetch={true}
           href={item.path}
           className={`text-white flex flex-row space-x-4 items-center py-[13px] px-6 rounded-[4px] transition hover:bg-[#2B3342] ${
             item.path === pathname ? 'bg-[#2B3342]' : ''

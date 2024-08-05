@@ -11,6 +11,7 @@ import toast from 'react-hot-toast';
 import { generateRefreshToken } from './controllers/auth';
 
 export const handleError = (error: any, showError: boolean = true) => {
+  console.log(error, 'error check');
   if (showError) {
     if (!error.response.data.title) {
       notify({
@@ -18,6 +19,20 @@ export const handleError = (error: any, showError: boolean = true) => {
         text: error.response.data.error.responseDescription,
         type: 'error',
       });
+    } else if (error.code === 'ECONNABORTED') {
+      notify({
+        title: 'Network Timeout',
+        text: 'The request took too long. Please try again later.',
+        type: 'error',
+      });
+      return error;
+    } else if (error.code === 'ERR_NETWORK') {
+      notify({
+        title: 'Network Timeout!',
+        text: 'Check your network and try again',
+        type: 'error',
+      });
+      return error;
     } else {
       notify({
         title: 'Error!',
@@ -120,7 +135,7 @@ api.interceptors.response.use(
       logout();
     }
     if (error.code === 'ERR_BAD_REQUEST') {
-      handleError(error, true);
+      handleError(error);
       return error;
     } else {
       handleError(error);

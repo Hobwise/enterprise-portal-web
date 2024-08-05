@@ -184,6 +184,7 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
               <DropdownMenu className='text-black'>
                 <DropdownItem aria-label='preview campaign'>
                   <Link
+                    prefetch={true}
                     className='flex w-full'
                     href={{
                       pathname: `/dashboard/campaigns/${campaign.id}`,

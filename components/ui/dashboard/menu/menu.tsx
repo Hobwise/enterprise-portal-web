@@ -162,6 +162,7 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
               <DropdownMenu className='text-black'>
                 <DropdownItem aria-label='view'>
                   <Link
+                    prefetch={true}
                     className='flex w-full'
                     href={{
                       pathname: `/dashboard/menu/${menu.itemName}`,

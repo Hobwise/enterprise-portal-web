@@ -141,6 +141,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
               <DropdownMenu className='text-black'>
                 <DropdownItem aria-label='view'>
                   <Link
+                    prefetch={true}
                     className='flex w-full'
                     href={{
                       pathname: `/dashboard/reservation/${reservation.reservationName}`,
