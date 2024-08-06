@@ -38,7 +38,7 @@ const SideNav = () => {
 
   const { userRolePermissions, role } = usePermission();
 
-  const business = getJsonItemFromLocalStorage('business');
+  const business = getJsonItemFromLocalStorage('business') || [];
 
   const toggleBtwBusiness = (businessInfo: any) => {
     const exists = businessDetailsList?.some(
