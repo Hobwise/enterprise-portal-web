@@ -48,6 +48,9 @@ const usePayment = () => {
     getAllPayments,
     {
       keepPreviousData: true,
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
     }
   );
 

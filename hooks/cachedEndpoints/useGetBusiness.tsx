@@ -13,7 +13,12 @@ const useGetBusiness = () => {
 
   const { data, refetch, isLoading, isError } = useQuery<any>(
     'getBusiness',
-    getBusiness
+    getBusiness,
+    {
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
+    }
   );
 
   return { data, isLoading, isError, refetch };

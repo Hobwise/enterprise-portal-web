@@ -19,6 +19,9 @@ const useGetFile = ({ imageRef }: UseGetFileProps) => {
     retrieveFile,
     {
       enabled: !!imageRef,
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
     }
   );
 

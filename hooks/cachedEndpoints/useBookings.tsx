@@ -49,6 +49,9 @@ const useBookings = () => {
     getAllBookings,
     {
       keepPreviousData: true,
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
     }
   );
 

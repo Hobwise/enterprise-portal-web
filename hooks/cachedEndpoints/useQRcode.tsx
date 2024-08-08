@@ -30,6 +30,9 @@ const useQR = () => {
     getAllQRcode,
     {
       keepPreviousData: true,
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
     }
   );
 

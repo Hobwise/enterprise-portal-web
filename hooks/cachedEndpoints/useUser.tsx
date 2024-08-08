@@ -13,7 +13,12 @@ const useUser = () => {
 
   const { data, isLoading, isError, refetch } = useQuery<any>(
     'user',
-    fetchUser
+    fetchUser,
+    {
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
+    }
   );
 
   return { data, isLoading, isError, refetch };

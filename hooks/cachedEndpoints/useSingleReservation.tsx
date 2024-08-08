@@ -26,6 +26,9 @@ const useSingleReservation = (reservationId: any) => {
     getSingleReservation,
     {
       keepPreviousData: true,
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
     }
   );
 

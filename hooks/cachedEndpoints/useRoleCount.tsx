@@ -17,7 +17,12 @@ const useRoleCount = () => {
 
   const { data, isLoading, isError, refetch } = useQuery<any>(
     'roleCount',
-    fetchRoleCount
+    fetchRoleCount,
+    {
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
+    }
   );
 
   return { data, isLoading, isError, refetch };

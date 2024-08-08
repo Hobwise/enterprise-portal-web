@@ -181,17 +181,17 @@ const EditReservation = ({
               <h1 className=' text-xl mt-3 font-[600] text-black'>
                 Edit Reservation
               </h1>
-              <div className='flex xl:flex-row flex-col gap-6 lg:h-[450px] h-full'>
-                <div className={`flex-grow xl:h-auto xl:w-1/2 w-full `}>
+              <div className='flex lg:flex-row flex-col gap-6 lg:h-[450px] h-full'>
+                <div className={`flex-grow xl:h-auto lg:w-1/2 w-full `}>
                   <label className='flex xl:my-2 m-0 justify-between  bg-white'>
                     <p className='text-[#475467] text-[14px] font-[400]'>
                       Maximum of 3MB
                     </p>
                   </label>
                   <div
-                    className={`xl:h-[calc(100%-2rem)] bg-[#F9F8FF] h-[200px] border   mt-2 rounded-md ${
+                    className={`lg:h-[calc(100%-2rem)] bg-[#F9F8FF] h-[200px] border   mt-2 rounded-md ${
                       imageError ? 'border-danger-600' : 'border-[#F5F5F5]'
-                    }   text-sm font-[400] text-center`}
+                    }   text-sm font-[400] text-center relative`}
                   >
                     {selectedImage || reservationState?.imageReference ? (
                       <>
@@ -245,7 +245,7 @@ const EditReservation = ({
                           id='menu-upload'
                           accept='image/*'
                           onChange={(event) => handleImageChange(event)}
-                          className='h-[100%] opacity-0 cursor-pointer absolute top-0'
+                          className='h-full w-full opacity-0 cursor-pointer absolute top-0'
                         />
                       </div>
                     )}
@@ -255,7 +255,7 @@ const EditReservation = ({
                     </span>
                   </div>
                 </div>
-                <div className='flex-grow  xl:w-1/2 w-full mt-3'>
+                <div className='flex-grow  lg:w-1/2 w-full mt-3'>
                   <CustomInput
                     type='text'
                     value={reservationState.reservationName}

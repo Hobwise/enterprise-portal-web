@@ -24,6 +24,9 @@ const useReservation = () => {
     payloadReservationItem[]
   >(['reservation', { page, rowsPerPage }], getAllReservation, {
     keepPreviousData: true,
+    refetchOnWindowFocus: false,
+    refetchInterval: false,
+    refetchIntervalInBackground: false,
   });
 
   return {

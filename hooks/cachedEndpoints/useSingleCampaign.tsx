@@ -18,7 +18,12 @@ const useSingleCampaign = (campaignId: any) => {
 
   const { data, isLoading, isError, refetch } = useQuery<payloadCampaignItem[]>(
     'useSingleCampaign',
-    getSingleReservation
+    getSingleReservation,
+    {
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
+    }
   );
 
   return {

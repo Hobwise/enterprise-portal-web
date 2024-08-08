@@ -207,8 +207,8 @@ const EditCampaign = () => {
           <p>Go back</p>
         </Button>
       </div>
-      <div className='flex xl:flex-row flex-col'>
-        <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
+      <div className='flex lg:flex-row flex-col'>
+        <div className='flex-grow lg:w-1/2 w-full lg:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
           <CustomInput
             type='text'
             value={campaignPayload.campaignName}
@@ -305,7 +305,7 @@ const EditCampaign = () => {
           </div>
         </div>
         <div
-          className={`flex-grow xl:h-auto xl:w-1/2 full Xl:p-8 p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
+          className={`flex-grow xl:h-auto lg:w-1/2 full Xl:p-8 p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
         >
           <label className='flex xl:mx-4 xl:my-2 m-0 justify-between  bg-white'>
             <div>
@@ -319,9 +319,9 @@ const EditCampaign = () => {
             </p>
           </label>
           <div
-            className={`xl:h-[calc(100%-5rem)] bg-[#F9F8FF] h-[200px] border  xl:m-4 mt-2 rounded-md ${
+            className={`lg:h-[calc(100%-5rem)] bg-[#F9F8FF] h-[200px] border  xl:m-4 mt-2 rounded-md ${
               imageError ? 'border-danger-600' : 'border-[#F5F5F5]'
-            }   text-sm font-[400] text-center`}
+            }   text-sm font-[400] text-center relative`}
           >
             {selectedImage ? (
               <>
@@ -364,7 +364,7 @@ const EditCampaign = () => {
                     id='campaign-upload'
                     accept='image/*'
                     onChange={(event) => handleImageChange(event)}
-                    className='h-[100%] opacity-0 cursor-pointer absolute top-0'
+                    className='h-full w-full opacity-0 cursor-pointer absolute top-0'
                   />
                 </div>
               </>

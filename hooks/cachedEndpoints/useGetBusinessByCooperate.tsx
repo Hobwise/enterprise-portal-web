@@ -15,7 +15,12 @@ const useGetBusinessByCooperate = () => {
 
   const { data, isLoading, isError, refetch } = useQuery<any>(
     'businessByCooperate',
-    getAllBusinessByCooperate
+    getAllBusinessByCooperate,
+    {
+      refetchOnWindowFocus: false,
+      refetchInterval: false,
+      refetchIntervalInBackground: false,
+    }
   );
 
   return {

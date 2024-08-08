@@ -72,7 +72,6 @@ const OrdersOverview = () => {
     chartArea: { width: '100%', height: '100%' },
     colors: ['#9747FF', '#421CAC'],
     areaOpacity: 0.3,
-
     backgroundColor: 'transparent',
     series: {
       0: {
@@ -86,8 +85,8 @@ const OrdersOverview = () => {
 
   return (
     <section className='w-full'>
-      <article className='flex md:gap-6 gap-3 xl:flex-row flex-col'>
-        <div className='border border-primaryGrey xl:w-[70%] w-full rounded-xl'>
+      <article className='flex md:gap-6 gap-3 lg:flex-row flex-col'>
+        <div className='border border-primaryGrey lg:w-[70%] w-full rounded-xl'>
           <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
             <span className='font-[600]'>Overview</span>
             <Dropdown>
@@ -119,7 +118,7 @@ const OrdersOverview = () => {
             <div className='flex gap-12 flex-wrap'>
               <div className='flex flex-col'>
                 <span className='text-[13px] font-[500] text-[#4A4C4F]'>
-                  Total orders:
+                  Total orders
                 </span>
                 <span className='flex gap-4'>
                   <span className='text-[24px] font-[600]'>3,456</span>
@@ -131,14 +130,14 @@ const OrdersOverview = () => {
               <div className='flex flex-col'>
                 <div className='text-[13px] flex items-center gap-1 font-[500] text-[#4A4C4F]'>
                   <div className='h-2 w-2 rounded-full bg-primaryColor' />
-                  <span> Processed orders:</span>
+                  <span> Processed orders</span>
                 </div>
                 <span className='text-[24px] font-[600]'> 1,586</span>
               </div>
               <div className='flex flex-col'>
                 <div className='text-[13px] flex  items-center gap-1 font-[500] text-[#4A4C4F]'>
                   <div className='h-2 w-2 rounded-full bg-success-800' />
-                  <span>Pending orders:</span>
+                  <span>Pending orders</span>
                 </div>
                 <span className='text-[24px] font-[600]'>1,896</span>
               </div>
@@ -163,7 +162,7 @@ const OrdersOverview = () => {
                 ↑ 20% since last month
               </p>
             </div>
-            <div className='mt-10'>
+            <div className='lg:mt-10 mt-0'>
               <Chart
                 chartType='AreaChart'
                 width='100%'

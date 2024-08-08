@@ -20,6 +20,7 @@ import {
   saveToLocalStorage,
 } from '@/lib/utils';
 import {
+  Button,
   Modal,
   ModalBody,
   ModalContent,
@@ -31,6 +32,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
+import { IoIosArrowRoundBack } from 'react-icons/io';
 import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
 import Success from '../../../../public/assets/images/success.png';
 
@@ -208,7 +210,7 @@ const AddNewReservation = () => {
 
   return (
     <>
-      <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
+      <div className='flex  justify-between '>
         <div>
           <h1 className='text-[24px] leading-8 font-semibold'>
             {' '}
@@ -218,9 +220,16 @@ const AddNewReservation = () => {
             Setup a new reservation.
           </p>
         </div>
+        <Button
+          onClick={() => router.back()}
+          className=' text-grey600 bg-white'
+        >
+          <IoIosArrowRoundBack className='text-[22px]' />
+          <p>Go back</p>
+        </Button>
       </div>
-      <div className='flex xl:flex-row flex-col'>
-        <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
+      <div className='flex lg:flex-row flex-col'>
+        <div className='flex-grow lg:w-1/2 w-full lg:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
           <CustomInput
             type='text'
             value={reservationPayload.reservationName}
@@ -275,7 +284,7 @@ const AddNewReservation = () => {
           />
         </div>
         <div
-          className={`flex-grow xl:h-auto xl:w-1/2 full Xl:p-8 p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
+          className={`flex-grow xl:h-auto lg:w-1/2 full  p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
         >
           <label className='flex xl:mx-4 xl:my-2 m-0 justify-between  bg-white'>
             <div>
@@ -289,9 +298,9 @@ const AddNewReservation = () => {
             </p>
           </label>
           <div
-            className={`xl:h-[calc(100%-5rem)] bg-[#F9F8FF] h-[200px] border  xl:m-4 mt-2 rounded-md ${
+            className={`lg:h-[calc(100%-5rem)] bg-[#F9F8FF] h-[200px] border  xl:m-4 mt-2 rounded-md ${
               imageError ? 'border-danger-600' : 'border-[#F5F5F5]'
-            }   text-sm font-[400] text-center`}
+            }   text-sm font-[400] text-center relative`}
           >
             {selectedImage ? (
               <>
@@ -334,7 +343,7 @@ const AddNewReservation = () => {
                     id='reservation-upload'
                     accept='image/*'
                     onChange={(event) => handleImageChange(event)}
-                    className='h-[100%] opacity-0 cursor-pointer absolute top-0'
+                    className='h-full w-full opacity-0 cursor-pointer absolute top-0'
                   />
                 </div>
               </>
