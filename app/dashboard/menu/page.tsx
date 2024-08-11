@@ -157,7 +157,7 @@ const Menu: React.FC = () => {
             Show all menu items
           </p>
         </div>
-        <div className='flex items-center gap-3'>
+        <div className='flex items-center flex-wrap gap-3'>
           {data?.length > 0 && (
             <>
               <div>

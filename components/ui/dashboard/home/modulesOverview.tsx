@@ -1,19 +1,35 @@
 'use client';
 
 import { formatPrice } from '@/lib/utils';
+import moment from 'moment';
 import Image from 'next/image';
-import Link from 'next/link';
 import Chart from 'react-google-charts';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
-import Chandon from '../../../../public/assets/images/no-image.svg';
+import { default as noImage } from '../../../../public/assets/images/no-image.svg';
+import SkeletonLoaderModules from './skeletonLoadingModules';
 
-const ModulesOverview = () => {
-  const pieData = [
+const ModulesOverview = ({ response, isLoading }: any) => {
+  const pieData = response && [
     ['Payment Method', 'Amount'],
-    ['PoS', 30],
-    ['Cash', 20],
-    ['Transfer', 25],
-    ['Others', 25],
+    ...response?.paymentDetails?.paymentMethodCounts.map((item) => {
+      let paymentMethod;
+
+      switch (item.paymentMethod) {
+        case 'Pos':
+          paymentMethod = 'PoS';
+          break;
+        case 'BankTransfer':
+          paymentMethod = 'Transfer';
+          break;
+        case 'CheckOut':
+          paymentMethod = 'Others';
+          break;
+        default:
+          paymentMethod = item.paymentMethod;
+      }
+
+      return [paymentMethod, item.count];
+    }),
   ];
 
   const pieOptions = {
@@ -32,76 +48,9 @@ const ModulesOverview = () => {
     chartArea: { width: '90%', height: '90%' },
   };
 
-  const tableData = [
-    ['Table', 'QR'],
-    ['Table 1', 70],
-    ['Table 2', 80],
-    ['Table 3', 65],
-    ['Table 4', 90],
-    ['Table 5', 50],
-    ['VIP 1', 85],
-    ['VIP 2', 60],
-  ];
-
-  const tableOptions = {
-    legend: { position: 'none' },
-    hAxis: {
-      minValue: 0,
-      maxValue: 100,
-      textPosition: 'out',
-      gridlines: { color: 'transparent' },
-      baselineColor: 'transparent',
-    },
-    vAxis: {
-      textPosition: 'none',
-
-      textStyle: {
-        fontSize: 14,
-
-        color: '#4A4C4F',
-      },
-    },
-
-    // vAxis: { textPosition: 'none', gridlines: { color: 'transparent' } },
-    bar: { groupWidth: '30%', cornerRadius: 8 },
-    colors: ['#6F52ED'],
-    chartArea: { width: '100%', height: '100%' },
-  };
-
-  const bestSellers = [
-    {
-      product: 'Moet & Chandon',
-      type: 'Drinks',
-      price: '2500000',
-    },
-    {
-      product: 'Moet & Chandon',
-      type: 'Drinks',
-      price: '2500000',
-    },
-    {
-      product: 'Moet & Chandon',
-      type: 'Drinks',
-      price: '2500000',
-    },
-    {
-      product: 'Moet & Chandon',
-      type: 'Drinks',
-      price: '2500000',
-    },
-  ];
-  const campaigns = [
-    {
-      title: 'Ladies Night',
-      desc: 'Karaoke, drinks and chill for the ladies every week. ',
-      startDate: 'Apr 17',
-    },
-    {
-      title: 'Ladies Night',
-      desc: 'Karaoke, drinks and chill for the ladies every week. ',
-      startDate: 'Apr 17',
-    },
-  ];
+  if (isLoading) {
+    return <SkeletonLoaderModules />;
+  }
 
   return (
     <section className='w-full'>
@@ -114,111 +63,185 @@ const ModulesOverview = () => {
                   <span className='font-[600]'>Payments</span>
                 </div>
                 <div className=''>
-                  <div className='w-[230px] h-[150px] mx-auto'>
-                    <Chart
-                      chartType='PieChart'
-                      width='100%'
-                      height='100%'
-                      data={pieData}
-                      options={pieOptions}
-                    />
-                  </div>
+                  {response?.paymentDetails?.paymentMethodCounts.some(
+                    (item) => item.count !== 0
+                  ) ? (
+                    <div className='w-[230px] h-[150px] mx-auto'>
+                      <Chart
+                        chartType='PieChart'
+                        width='100%'
+                        height='100%'
+                        data={pieData}
+                        options={pieOptions}
+                      />
+                    </div>
+                  ) : (
+                    <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
+                      No record found, change filter
+                    </div>
+                  )}
                 </div>
               </div>
               <div className='border  flex-grow border-primaryGrey rounded-xl'>
                 <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                   <span className='font-[600]'>Bookings</span>
                 </div>
-                <div className='p-6 flex h-[150px] items-center space-x-6'>
-                  <div className='flex flex-col'>
-                    <span className='text-[13px] font-[500] space-y-1 text-[#4A4C4F]'>
-                      Accepted
-                    </span>
-                    <span className='text-[24px] font-[600]'>64</span>
-                    <span className='text-success-500 flex items-center font-[400]'>
-                      <IoArrowUpCircleOutline /> <span> 2.5%</span>
-                    </span>
+                {response &&
+                Object.values(response?.bookingDetails).some(
+                  (value) => value !== 0
+                ) ? (
+                  <div className='p-6 flex h-[150px] items-center space-x-6'>
+                    <div className='flex flex-col'>
+                      <span className='text-[13px] font-[500] space-y-1 text-[#4A4C4F]'>
+                        Accepted
+                      </span>
+                      <span className='text-[24px] font-[600]'>
+                        {response?.bookingDetails.accepted}
+                      </span>
+                      <span
+                        className={`${
+                          parseInt(
+                            response?.bookingDetails.acceptedPercentageChange
+                          ) <= 0
+                            ? 'text-danger-500'
+                            : 'text-success-500'
+                        } flex items-center font-[400]`}
+                      >
+                        <IoArrowUpCircleOutline
+                          className={`${
+                            parseInt(
+                              response?.bookingDetails.acceptedPercentageChange
+                            ) <= 0 && 'rotate-180'
+                          }`}
+                        />{' '}
+                        <span>
+                          {' '}
+                          {response?.bookingDetails.acceptedPercentageChange}%
+                        </span>
+                      </span>
+                    </div>
+                    <div className='flex flex-col'>
+                      <span className='text-[13px] font-[500] text-[#4A4C4F]'>
+                        Closed
+                      </span>
+                      <span className='text-[24px] font-[600]'>
+                        {response?.bookingDetails.closed}
+                      </span>
+                      <span
+                        className={`${
+                          parseInt(
+                            response?.bookingDetails.closedPercentageChange
+                          ) <= 0
+                            ? `text-danger-500`
+                            : `text-success-500`
+                        } flex items-center font-[400]`}
+                      >
+                        <IoArrowUpCircleOutline
+                          className={`${
+                            parseInt(
+                              response?.bookingDetails.closedPercentageChange
+                            ) <= 0 && 'rotate-180'
+                          }`}
+                        />{' '}
+                        <span>
+                          {response?.bookingDetails.closedPercentageChange}%
+                        </span>
+                      </span>
+                    </div>
                   </div>
-                  <div className='flex flex-col'>
-                    <span className='text-[13px] font-[500] text-[#4A4C4F]'>
-                      Closed
-                    </span>
-                    <span className='text-[24px] font-[600]'>64</span>
-                    <span className='text-success-500 flex items-center font-[400]'>
-                      <IoArrowUpCircleOutline /> <span> 2.5%</span>
-                    </span>
+                ) : (
+                  <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
+                    No record found, change filter
                   </div>
-                </div>
+                )}
               </div>
             </div>
             <div className='border flex-grow border-primaryGrey rounded-xl'>
               <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                 <span className='font-[600]'>Campaigns</span>
               </div>
-              <div className='p-4 space-y-3'>
-                {campaigns.map((item, index) => (
-                  <div key={index} className='flex gap-4 '>
-                    <Image
-                      className='h-[60px] w-[60px] bg-cover rounded-lg'
-                      width={60}
-                      height={60}
-                      alt='menu'
-                      aria-label='menu'
-                      src={Chandon}
-                      // src={
-                      //   menu.image ? `data:image/jpeg;base64,${menu.image}` : noImage
-                      // }
-                    />
+              {response?.campaigns.length === 0 || response === undefined ? (
+                <div className='flex my-10 justify-center items-center text-sm px-1  text-grey500'>
+                  No record found, change filter
+                </div>
+              ) : (
+                <div className='p-4 space-y-3 overflow-scroll h-[170px]'>
+                  {response?.campaigns.map((item, index) => (
+                    <div key={index} className='flex gap-4 '>
+                      <Image
+                        className='h-[60px] w-[60px] bg-cover rounded-lg'
+                        width={60}
+                        height={60}
+                        alt='menu'
+                        aria-label='menu'
+                        src={
+                          item.image
+                            ? `data:image/jpeg;base64,${item.image}`
+                            : noImage
+                        }
+                      />
 
-                    <div className='flex lg:flex-row justify-between lg:items-center items-start w-full flex-col lg:gap-4 gap-0'>
-                      <div className=' gap-1 grid place-content-center'>
-                        <p className='font-bold text-sm'>{item.title}</p>
-                        <p className=' text-sm'>{item.desc}</p>
-                      </div>
-                      <div className=' gap-1 '>
-                        <p className='font-bold text-sm'>Start</p>
-                        <p className=' text-sm'>{item.startDate}</p>
+                      <div className='flex lg:flex-row justify-between lg:items-center items-start w-full flex-col lg:gap-4 gap-0'>
+                        <div className=' gap-1 grid place-content-center'>
+                          <p className='font-bold text-sm'>
+                            {item.campaignName}
+                          </p>
+                          <p className=' text-sm'>{item.campaignDescription}</p>
+                        </div>
+                        <div className=' gap-1 '>
+                          <p className='font-bold text-sm'>Start</p>
+                          <p className=' text-sm'>
+                            {moment(item.startDateTime).format('MMM DD')}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-                <Link
+                  ))}
+                  {/* <Link
                   className='grid place-content-center text-sm text-primaryColor w-full'
                   href='/dashboard/campaigns'
                 >
                   View more campaigns
-                </Link>
-              </div>
+                </Link> */}
+                </div>
+              )}
             </div>
           </div>
           <div className='border flex-grow border-primaryGrey rounded-xl'>
             <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
               <span className='font-[600]'>Best sellers</span>
             </div>
-            <div className='p-3 space-y-4'>
-              {bestSellers.map((item, index) => (
-                <div key={index} className='flex gap-4 justify-between'>
-                  <div className=' gap-1 grid place-content-center'>
-                    <p className='font-bold text-sm'>{item.product}</p>
-                    <p className=' text-sm'>{item.type}</p>
-                    <p className='font-bold text-sm'>
-                      {formatPrice(item.price)}
-                    </p>
+            {response?.bestSellers.length === 0 || response === undefined ? (
+              <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
+                No record found, change filter
+              </div>
+            ) : (
+              <div className='p-3 space-y-4 overflow-scroll h-[400px]'>
+                {response?.bestSellers.map((item: any) => (
+                  <div key={item.itemID} className='flex gap-4 justify-between'>
+                    <div className=' gap-1 grid place-content-center'>
+                      <p className='font-bold text-sm'>{item.menu}</p>
+                      <p className=' text-sm'>{item.itemName}</p>
+                      <p className='font-bold text-sm'>
+                        {formatPrice(item.price)}
+                      </p>
+                    </div>
+                    <Image
+                      className='h-[60px]  w-[60px] bg-cover rounded-lg'
+                      width={60}
+                      height={60}
+                      alt='menu'
+                      aria-label='menu'
+                      src={
+                        item.image
+                          ? `data:image/jpeg;base64,${item.image}`
+                          : noImage
+                      }
+                    />
                   </div>
-                  <Image
-                    className='h-[60px]  w-[60px] bg-cover rounded-lg'
-                    width={60}
-                    height={60}
-                    alt='menu'
-                    aria-label='menu'
-                    src={Chandon}
-                    // src={
-                    //   menu.image ? `data:image/jpeg;base64,${menu.image}` : noImage
-                    // }
-                  />
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div className='border flex-grow border-primaryGrey p-3 rounded-xl'>
@@ -226,25 +249,32 @@ const ModulesOverview = () => {
             <div className='h-2 w-2 rounded-full bg-success-800' />
             <span className='font-[600]'>QR Code</span>
           </div>
-          <div className='p-3'>
-            <div className='w-full max-w-[300px]  relative'>
-              <h1 className='text-[28px] font-bold text-[#4A4C4F] mb-4'>7</h1>
-              <Chart
-                chartType='BarChart'
-                width='100%'
-                height='300px'
-                data={tableData}
-                options={tableOptions}
-              />
-              <div className='absolute top-12 space-y-6'>
-                {tableData.slice(1).map((item) => (
-                  <div className='text-black text-sm'>
-                    <p>{item[0]}</p>
-                  </div>
-                ))}
+          {response?.quickResponseDetails.quickResponseRecord.length > 0 ? (
+            <div className=''>
+              <div className='w-full max-w-[300px]  relative overflow-scroll h-[400px]'>
+                <h1 className='text-[28px] font-bold text-[#4A4C4F] mb-4'>
+                  {response?.quickResponseDetails.totalQuickResponse}
+                </h1>
+                {response?.quickResponseDetails.quickResponseRecord.map(
+                  (item, index) => (
+                    <div key={index} className=' mb-2'>
+                      <span className='flex-1 text-sm'>
+                        {item.quickResponseName}
+                      </span>
+                      <div
+                        className='h-2 max-w-full rounded-full bg-[#5F35D2]'
+                        style={{ width: `${item.count}%` }}
+                      ></div>
+                    </div>
+                  )
+                )}
               </div>
             </div>
-          </div>
+          ) : (
+            <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
+              No record found, change filter
+            </div>
+          )}
         </div>
       </article>
     </section>

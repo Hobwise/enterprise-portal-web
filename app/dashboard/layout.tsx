@@ -4,6 +4,11 @@ import BusinessSettingsDashboardPrompt from '@/components/businessSettingsDashbo
 import Container from '@/components/dashboardContainer';
 import 'react-toastify/dist/ReactToastify.css';
 
+export const metadata = {
+  title: 'Hobink | Dashboard',
+  description: 'Streamline your business processes',
+};
+
 export default function DashboardLayout({
   children,
 }: {

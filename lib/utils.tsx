@@ -330,6 +330,31 @@ export const formatDateTimeForPayload = (dateTime) => {
     '0'
   )}`;
 };
+export const formatDateTimeForPayload2 = (dateTime) => {
+  const {
+    year,
+    month,
+    day,
+    hour = 0,
+    minute = 0,
+    second = 0,
+    millisecond = 0,
+  } = dateTime;
+
+  const datePart = `${year}-${String(month).padStart(2, '0')}-${String(
+    day
+  ).padStart(2, '0')}`;
+
+  const timePart = `T${String(hour).padStart(2, '0')}:${String(minute).padStart(
+    2,
+    '0'
+  )}:${String(second).padStart(2, '0')}.${String(millisecond).padStart(
+    3,
+    '0'
+  )}`;
+
+  return datePart + timePart;
+};
 
 export const saveAsPDF = async (invoiceRef: any) => {
   const html2pdf = (await import('html2pdf.js/dist/html2pdf.min.js')).default;

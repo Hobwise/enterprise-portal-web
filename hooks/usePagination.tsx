@@ -161,13 +161,15 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
   }, []);
   const classNames = React.useMemo(
     () => ({
+      table: 'w-full overflow-x-scroll',
       wrapper: ['max-h-[382px]', 'max-w-3xl'],
       th: ['bg-transparent', 'text-default-500', 'border-b', 'border-divider'],
-      tr: ' border-b border-divider',
+      tr: 'border-b border-divider',
       td: [
         // changing the rows border radius
         // first
         'py-3',
+
         'group-data-[first=true]:first:before:rounded-none',
         'group-data-[first=true]:last:before:rounded-none',
         // middle

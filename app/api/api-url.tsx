@@ -56,4 +56,6 @@ export const DASHBOARD = {
   campaignsByBusiness: 'api/v1/Campaign/by-business',
   campaigns: 'api/v1/Campaign',
   repeatCampaigns: 'api/v1/Campaign/restart',
+  //Dashboard
+  dashboard: 'api/v1/DashboardReportManager',
 };
