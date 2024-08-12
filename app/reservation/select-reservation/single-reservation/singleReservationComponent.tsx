@@ -3,10 +3,10 @@ import BackButton from '@/components/backButton';
 import { CustomButton } from '@/components/customButton';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
-import { Spinner } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import noImage from '../../../../public/assets/images/no-image.svg';
+import SplashScreen from '../../splash-screen';
 
 const SingleReservationComponent = () => {
   const singleReservation = getJsonItemFromLocalStorage('singleReservation');
@@ -20,11 +20,7 @@ const SingleReservationComponent = () => {
   const { data, isLoading } = useSingleReservation(reservationId);
 
   if (isLoading) {
-    return (
-      <div className='loadingContainer flex flex-col justify-center items-center'>
-        <Spinner />
-      </div>
-    );
+    return <SplashScreen />;
   }
   const getSingleReservation = reservationId ? data : singleReservation;
 

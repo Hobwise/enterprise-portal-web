@@ -45,13 +45,14 @@ const SuccessComponent = () => {
       <div className='flex gap-3'>
         <CustomButton
           onClick={async () => {
-            reservationId
-              ? router.push(
-                  `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
-                )
-              : router.push(
-                  `/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
-                );
+            // reservationId
+            //   ? router.push(
+            //       `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+            //     )
+            //   :
+            router.push(
+              `/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+            );
 
             clearItemLocalStorage('bookingDetails');
           }}
