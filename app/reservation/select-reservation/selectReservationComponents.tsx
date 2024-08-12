@@ -26,7 +26,10 @@ const SelectReservationComponents = () => {
   let cooperateID = searchParams.get('cooperateID');
   const router = useRouter();
 
-  const { data, isLoading, isError, refetch } = useReservation();
+  const { data, isLoading, isError, refetch } = useReservation(
+    businessId,
+    cooperateID
+  );
 
   const { bottomContent } = usePagination(
     data,
@@ -35,7 +38,7 @@ const SelectReservationComponents = () => {
   );
 
   if (isError) {
-    return <Error onClick={() => refetch()} />;
+    return <Error imageHeight={'h-32'} onClick={() => refetch()} />;
   }
   if (isLoading) {
     return <SplashScreen />;

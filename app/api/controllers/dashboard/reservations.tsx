@@ -27,9 +27,10 @@ const reservationSchema = z.object({
 export async function getReservations(
   businessId: string,
   page: any,
-  pageSize: any
+  pageSize: any,
+  cooperateID?: any
 ) {
-  const headers = businessId ? { businessId, page, pageSize } : {};
+  const headers = businessId ? { businessId, page, pageSize, cooperateID } : {};
 
   try {
     const data = await api.get(DASHBOARD.reservationsByBusiness, {

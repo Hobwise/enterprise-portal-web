@@ -7,13 +7,14 @@ import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
 import { useGlobalContext } from '../globalProvider';
 
-const useReservation = () => {
+const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const { page, rowsPerPage } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
-
+  const businessId = businessInformation[0]?.businessId || businessIdOutsideApp;
   const getAllReservation = async ({ queryKey }) => {
     const responseData = await getReservations(
-      businessInformation[0]?.businessId,
+      businessId,
+      cooperateID,
       page,
       rowsPerPage
     );
