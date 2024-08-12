@@ -311,8 +311,11 @@ const CheckoutModal = ({
                       {selectedItems?.map((item, index) => {
                         return (
                           <>
-                            <div key={item.id} className='flex justify-between'>
-                              <div className='py-3 w-[250px] rounded-lg text-black  flex'>
+                            <div
+                              key={item.id}
+                              className='flex justify-between gap-2'
+                            >
+                              <div className='py-3 w-[250px] rounded-lg  text-black  flex'>
                                 <Image
                                   src={
                                     item?.image
@@ -332,9 +335,15 @@ const CheckoutModal = ({
                                   <p className='text-grey600'>
                                     {item.itemName}
                                   </p>
+                                  <Spacer y={2} />
+                                  <div className='text-black md:w-[150px] md:hidden w-auto grid'>
+                                    <h3 className='font-[600]'>
+                                      {formatPrice(item?.price)}
+                                    </h3>
+                                  </div>
                                 </div>
                               </div>
-                              <div className='flex items-center'>
+                              <div className='flex  items-center'>
                                 <Button
                                   onClick={() => handleDecrement(item.id)}
                                   isIconOnly
@@ -359,7 +368,7 @@ const CheckoutModal = ({
                                   <FaPlus />
                                 </Button>
                               </div>
-                              <div className='text-black w-[150px] grid place-content-center'>
+                              <div className='text-black md:w-[150px] hidden w-auto md:grid place-content-center'>
                                 <h3 className='font-[600]'>
                                   {formatPrice(item?.price)}
                                 </h3>
