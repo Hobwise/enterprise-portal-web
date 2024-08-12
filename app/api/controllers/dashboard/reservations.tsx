@@ -92,7 +92,7 @@ export async function getReservation(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 
