@@ -140,7 +140,7 @@ const CompleteBookingComponent = () => {
         <CustomInput
           type='text'
           value={bookings.email}
-          errorMessage={response?.errors?.email?.[0]}
+          errorMessage={response?.errors?.emailAddress?.[0]}
           onChange={handleInputChange}
           name='email'
           endContent={<MdOutlineMailOutline className='text-grey500' />}

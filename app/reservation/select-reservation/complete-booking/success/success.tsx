@@ -34,11 +34,11 @@ const SuccessComponent = () => {
       <h3 className='text-sm text-center text-grey600  mb-4'>
         You have successfully made a booking for{' '}
         <span className='font-[600] text-black'>
-          {bookingDetails.firstName} {bookingDetails.lastName}.
+          {bookingDetails?.firstName} {bookingDetails?.lastName}.
         </span>{' '}
         Confirmation email has been sent to{' '}
         <span className='font-[600] text-black'>
-          {bookingDetails.emailAddress}
+          {bookingDetails?.emailAddress}
         </span>
       </h3>
 

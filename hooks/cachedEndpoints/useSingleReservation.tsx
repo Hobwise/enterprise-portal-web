@@ -25,6 +25,7 @@ const useSingleReservation = (reservationId: any) => {
     ['singleReservation', { page, rowsPerPage, tableStatus }],
     getSingleReservation,
     {
+      enabled: !!reservationId,
       keepPreviousData: true,
       refetchOnWindowFocus: false,
       refetchInterval: false,

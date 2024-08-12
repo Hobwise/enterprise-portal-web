@@ -11,7 +11,6 @@ import toast from 'react-hot-toast';
 import { generateRefreshToken } from './controllers/auth';
 
 export const handleError = (error: any, showError: boolean = true) => {
-  console.log(error, 'error check');
   if (showError) {
     if (!error.response.data.title) {
       notify({
