@@ -28,9 +28,9 @@ export async function getReservations(
   businessId: string,
   page: any,
   pageSize: any,
-  cooperateID?: any
+  cooperateId?: any
 ) {
-  const headers = businessId ? { businessId, page, pageSize, cooperateID } : {};
+  const headers = businessId ? { cooperateId, businessId, page, pageSize } : {};
 
   try {
     const data = await api.get(DASHBOARD.reservationsByBusiness, {

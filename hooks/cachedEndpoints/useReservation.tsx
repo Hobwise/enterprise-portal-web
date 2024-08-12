@@ -10,13 +10,15 @@ import { useGlobalContext } from '../globalProvider';
 const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const { page, rowsPerPage } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
-  const businessId = businessInformation[0]?.businessId || businessIdOutsideApp;
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : businessIdOutsideApp;
   const getAllReservation = async ({ queryKey }) => {
     const responseData = await getReservations(
       businessId,
-      cooperateID,
       page,
-      rowsPerPage
+      rowsPerPage,
+      cooperateID
     );
     return responseData?.data?.data as payloadReservationItem[];
   };
