@@ -70,12 +70,12 @@ export async function createReservations(
     handleError(error);
   }
 }
+
 export async function getReservation(
   reservationId: string,
   page: any,
   rowsPerPage: any,
-  tableStatus: any,
-  cooperateID?: any
+  tableStatus: any
 ) {
   const payload = [
     {
@@ -84,7 +84,7 @@ export async function getReservation(
       pageSize: rowsPerPage || 10,
     },
   ];
-  const headers = reservationId ? { reservationId, cooperateID } : {};
+  const headers = reservationId ? { reservationId } : {};
   try {
     const data = await api.post(DASHBOARD.singleReservation, payload, {
       headers,

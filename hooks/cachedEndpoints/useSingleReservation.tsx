@@ -6,7 +6,7 @@ import {
 import { useQuery } from 'react-query';
 import { useGlobalContext } from '../globalProvider';
 
-const useSingleReservation = (reservationId: any, cooperateID?: any) => {
+const useSingleReservation = (reservationId: any) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
 
   const getSingleReservation = async ({ queryKey }) => {
@@ -14,8 +14,7 @@ const useSingleReservation = (reservationId: any, cooperateID?: any) => {
       reservationId,
       page,
       rowsPerPage,
-      tableStatus,
-      cooperateID
+      tableStatus
     );
     return responseData?.data?.data as payloadReservationItem[];
   };
