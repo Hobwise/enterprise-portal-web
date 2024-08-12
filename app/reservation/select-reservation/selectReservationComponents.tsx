@@ -91,6 +91,7 @@ const SelectReservationComponents = () => {
           ))}
         </div>
         <>{bottomContent}</>
+        <br />
       </>
     </div>
   );

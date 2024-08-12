@@ -17,7 +17,7 @@ const SingleReservationComponent = () => {
   let cooperateID = searchParams.get('cooperateID');
   let reservationId = searchParams.get('reservationId');
 
-  const { data, isLoading } = useSingleReservation(reservationId);
+  const { data, isLoading } = useSingleReservation(reservationId, cooperateID);
 
   if (isLoading) {
     return (
