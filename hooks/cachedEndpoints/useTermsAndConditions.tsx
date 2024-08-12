@@ -3,13 +3,19 @@ import { getTermsAndCondition } from '@/app/api/controllers/dashboard/settings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
 
-const useTermsAndCondition = (isAdmin: boolean) => {
+const useTermsAndCondition = (
+  isAdmin: boolean,
+  cooperateId?: any,
+  businessId?: any
+) => {
   const business = getJsonItemFromLocalStorage('business');
 
+  const businessIdOutsideApp = business ? business[0]?.businessId : businessId;
   const fetchTermsAndCondition = async () => {
     const responseData = await getTermsAndCondition(
-      business[0].businessId,
-      isAdmin
+      businessIdOutsideApp,
+      isAdmin,
+      cooperateId
     );
     return responseData?.data?.data as any;
   };

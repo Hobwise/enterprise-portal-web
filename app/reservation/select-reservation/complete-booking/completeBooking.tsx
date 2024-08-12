@@ -3,6 +3,7 @@ import { createBooking } from '@/app/api/controllers/dashboard/bookings';
 import { CustomInput } from '@/components/CustomInput';
 import BackButton from '@/components/backButton';
 import { CustomButton } from '@/components/customButton';
+import useTermsAndCondition from '@/hooks/cachedEndpoints/useTermsAndConditions';
 import {
   formatDateTime,
   getJsonItemFromLocalStorage,
@@ -10,21 +11,37 @@ import {
 } from '@/lib/utils';
 import { getLocalTimeZone, now, today } from '@internationalized/date';
 import { DatePicker } from '@nextui-org/date-picker';
-import { Checkbox, Spacer } from '@nextui-org/react';
+import {
+  Checkbox,
+  Modal,
+  ModalBody,
+  ModalContent,
+  Spacer,
+  useDisclosure,
+} from '@nextui-org/react';
+import { EditorState, convertFromRaw } from 'draft-js';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { MdOutlineMailOutline, MdOutlinePhone } from 'react-icons/md';
 
-const CompleteBookingComponent = () => {
-  const getSingleReservation = getJsonItemFromLocalStorage('singleReservation');
+const Editor = dynamic(
+  () => import('react-draft-wysiwyg').then((mod) => mod.Editor),
+  { ssr: false }
+);
 
+const CompleteBookingComponent = () => {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const getSingleReservation = getJsonItemFromLocalStorage('singleReservation');
+  const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const searchParams = useSearchParams();
   let businessName = searchParams.get('businessName');
   let businessId = searchParams.get('businessId');
   let cooperateID = searchParams.get('cooperateID');
   let reservationId = searchParams.get('reservationId');
 
+  const { data } = useTermsAndCondition(false, cooperateID, businessId);
   const router = useRouter();
 
   const [response, setResponse] = useState(null);
@@ -100,6 +117,13 @@ const CompleteBookingComponent = () => {
       toast.error(data?.data?.error);
     }
   };
+
+  useEffect(() => {
+    if (data?.content) {
+      const contentState = convertFromRaw(JSON.parse(data?.content));
+      setEditorState(EditorState.createWithContent(contentState));
+    }
+  }, [data]);
 
   return (
     <>
@@ -186,7 +210,7 @@ const CompleteBookingComponent = () => {
           />
           <div className='text-black text-[14px]'>
             I accept the{' '}
-            <span className='text-primaryColor cursor-pointer'>
+            <span onClick={onOpen} className='text-primaryColor cursor-pointer'>
               terms and condition
             </span>
           </div>
@@ -202,6 +226,25 @@ const CompleteBookingComponent = () => {
           {isLoading ? 'Loading' : 'Proceed to checkout'}
         </CustomButton>
       </form>
+
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalBody>
+                <h2 className='text-[20px]  font-[600] mt-3 text-black '>
+                  Terms and Conditions
+                </h2>
+
+                <div className='text-black text-sm'>
+                  <Editor editorState={editorState} toolbarHidden readOnly />
+                </div>
+                <Spacer y={4} />
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </>
   );
 };

@@ -119,9 +119,10 @@ export async function createTermsAndCondition(
 }
 export async function getTermsAndCondition(
   businessId: string,
-  isAdmin: boolean
+  isAdmin: boolean,
+  cooperateId?: any
 ) {
-  const headers = businessId ? { businessId, isAdmin } : {};
+  const headers = businessId ? { cooperateId, businessId, isAdmin } : {};
 
   try {
     const data = await api.get(DASHBOARD.getTermAndCondition, {
