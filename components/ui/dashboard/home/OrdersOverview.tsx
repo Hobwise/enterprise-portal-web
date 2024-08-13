@@ -13,6 +13,7 @@ import { Chart } from 'react-google-charts';
 import { BsArrowUpShort } from 'react-icons/bs';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { MdKeyboardArrowDown } from 'react-icons/md';
+import EmptyOverview from './emptyOverview';
 import SkeletonLoaderOrder from './skeletonLoadingOrders';
 
 const OrdersOverview = ({
@@ -143,9 +144,11 @@ const OrdersOverview = ({
           <div className='p-3 '>
             {response?.orderDetails.orderPartitions.length === 0 ||
             response === undefined ? (
-              <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
-                No record found, change filter
-              </div>
+              <EmptyOverview
+                title='active orders'
+                buttonText='Place order'
+                href='/dashboard/orders'
+              />
             ) : (
               <>
                 <div className='flex gap-12 flex-wrap'>

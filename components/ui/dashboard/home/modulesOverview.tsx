@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Chart from 'react-google-charts';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { default as noImage } from '../../../../public/assets/images/no-image.svg';
+import EmptyOverview from './emptyOverview';
 import SkeletonLoaderModules from './skeletonLoadingModules';
 
 const ModulesOverview = ({ response, isLoading }: any) => {
@@ -76,9 +77,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                       />
                     </div>
                   ) : (
-                    <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
-                      No record found, change filter
-                    </div>
+                    <EmptyOverview title='payments' />
                   )}
                 </div>
               </div>
@@ -150,9 +149,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                     </div>
                   </div>
                 ) : (
-                  <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
-                    No record found, change filter
-                  </div>
+                  <EmptyOverview title='active bookings' />
                 )}
               </div>
             </div>
@@ -161,9 +158,11 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 <span className='font-[600]'>Campaigns</span>
               </div>
               {response?.campaigns.length === 0 || response === undefined ? (
-                <div className='flex my-10 justify-center items-center text-sm px-1  text-grey500'>
-                  No record found, change filter
-                </div>
+                <EmptyOverview
+                  title='active campaigns'
+                  buttonText='Start a campaign'
+                  href='/dashboard/campaigns/create-campaign'
+                />
               ) : (
                 <div className='p-4 space-y-3 overflow-scroll h-[170px]'>
                   {response?.campaigns.map((item, index) => (
@@ -212,9 +211,11 @@ const ModulesOverview = ({ response, isLoading }: any) => {
               <span className='font-[600]'>Best sellers</span>
             </div>
             {response?.bestSellers.length === 0 || response === undefined ? (
-              <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
-                No record found, change filter
-              </div>
+              <EmptyOverview
+                title='active menus'
+                buttonText='Create menu'
+                href='/dashboard/menu'
+              />
             ) : (
               <div className='p-3 space-y-4 overflow-scroll h-[400px]'>
                 {response?.bestSellers.map((item: any) => (
@@ -271,9 +272,11 @@ const ModulesOverview = ({ response, isLoading }: any) => {
               </div>
             </div>
           ) : (
-            <div className='flex my-10 justify-center items-center text-sm px-1 text-grey500'>
-              No record found, change filter
-            </div>
+            <EmptyOverview
+              title='active QR codes'
+              buttonText='Create QR'
+              href='/dashboard/qr-code/create-qr'
+            />
           )}
         </div>
       </article>
