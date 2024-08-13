@@ -30,7 +30,7 @@ const EmptyOverview = ({
         <div className='justify-center items-center flex'>
           <Link
             href={href}
-            className={`text-white bg-primaryColor hover:opacity-80 transition-all  font-[700]  flex justify-center items-center rounded-lg py-2 px-4 text-sm gap-1`}
+            className={`text-white bg-primaryColor hover:opacity-80 transition-all  font-[700]  flex justify-center items-center rounded-lg py-2 px-3 text-sm gap-1`}
           >
             <GoPlus className='text-[20px] font-[700]' />
             <span>{buttonText}</span>
