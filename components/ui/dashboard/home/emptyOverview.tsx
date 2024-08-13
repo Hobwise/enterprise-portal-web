@@ -20,7 +20,7 @@ const EmptyOverview = ({
           src={noImage}
           width={20}
           height={20}
-          className='object-cover rounded-lg w-12 h-12'
+          className='object-cover rounded-lg w-[55px] h-[55px]'
           aria-label='empty overview'
           alt='empty overview'
         />
@@ -30,7 +30,7 @@ const EmptyOverview = ({
         <div className='justify-center items-center flex'>
           <Link
             href={href}
-            className={`text-white bg-primaryColor hover:opacity-80 transition-all  font-[700]  flex justify-center items-center rounded-full py-2 px-4 text-xs gap-1`}
+            className={`text-white bg-primaryColor hover:opacity-80 transition-all  font-[700]  flex justify-center items-center rounded-full py-2 px-4 text-sm gap-1`}
           >
             <GoPlus className='text-[20px] font-[700]' />
             <span>{buttonText}</span>

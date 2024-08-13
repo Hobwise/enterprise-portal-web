@@ -107,9 +107,10 @@ const Dashboard: React.FC = () => {
                   maxValue={today(getLocalTimeZone())}
                   value={value}
                   onChange={setValue}
+                  visibleMonths={2}
                   variant='faded'
                   pageBehavior='single'
-                  label='Select range'
+                  label='Select date range'
                   showMonthAndYearPickers
                   labelPlacement='outside'
                 />

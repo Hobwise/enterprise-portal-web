@@ -107,9 +107,8 @@ const OrdersOverview = ({
             <span className='font-[600]'>Overview</span>
             {selectedValue === 'Custom date' && (
               <p className='text-default-500 text-sm'>
-                Selected date:{' '}
                 {value.start && moment(value?.start).format('MMMM Do YYYY')}
-                {' -- '}
+                {' - '}
                 {value.end && moment(value?.end).format('MMMM Do YYYY')}
               </p>
             )}
