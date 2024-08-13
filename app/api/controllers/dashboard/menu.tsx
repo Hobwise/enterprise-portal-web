@@ -21,7 +21,7 @@ export async function getMenu(businessId: string) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 
@@ -272,6 +272,18 @@ export async function deleteVariety(businessId: string, itemId: string) {
         headers,
       }
     );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function deleteMenu(businessId: string, menuId: string) {
+  const headers = businessId ? { businessId } : {};
+  try {
+    const data = await api.delete(`${DASHBOARD.getMenu}?menuId=${menuId}`, {
+      headers,
+    });
 
     return data;
   } catch (error) {

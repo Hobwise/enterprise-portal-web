@@ -27,7 +27,7 @@ import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
-const MenuList = ({ menus, onOpen, searchQuery }: any) => {
+const MenuList = ({ menus, onOpen, onOpenViewMenu, searchQuery }: any) => {
   const [filteredMenu, setFilteredMenu] = React.useState(menus[0]?.items);
   const {
     toggleModalDelete,
@@ -190,6 +190,7 @@ const MenuList = ({ menus, onOpen, searchQuery }: any) => {
     return (
       <Filters
         onOpen={onOpen}
+        onOpenViewMenu={onOpenViewMenu}
         menus={menus}
         handleTabChange={handleTabChange}
         value={value}

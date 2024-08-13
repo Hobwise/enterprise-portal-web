@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
 import MenuList from '@/components/ui/dashboard/menu/menu';
 
-import { createMenu } from '@/app/api/controllers/dashboard/menu';
+import { createMenu, deleteMenu } from '@/app/api/controllers/dashboard/menu';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
@@ -23,7 +23,9 @@ import {
   Modal,
   ModalBody,
   ModalContent,
+  ScrollShadow,
   Spacer,
+  Tooltip,
   useDisclosure,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
@@ -33,14 +35,23 @@ import {
   IoSearchOutline,
 } from 'react-icons/io5';
 
+import useAllMenus from '@/hooks/cachedEndpoints/useAllMenus';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
+import toast from 'react-hot-toast';
 import { MdOutlineFileDownload } from 'react-icons/md';
+import { RiDeleteBin6Line } from 'react-icons/ri';
 
 const Menu: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
+
+  const onOpenChangeViewMenu = () => {
+    setIsOpenViewMenu(!isOpenViewMenu);
+  };
 
   const { userRolePermissions, role } = usePermission();
+  const { data: allMenus, refetch: getMenu } = useAllMenus();
 
   const businessInformation = getJsonItemFromLocalStorage('business');
 
@@ -103,6 +114,7 @@ const Menu: React.FC = () => {
         <MenuList
           menus={filteredItems}
           onOpen={onOpen}
+          onOpenViewMenu={onOpenChangeViewMenu}
           refetch={refetch}
           searchQuery={searchQuery}
         />
@@ -132,6 +144,18 @@ const Menu: React.FC = () => {
       hasVariety,
     };
   });
+
+  const removeMenu = async (id: string) => {
+    setLoading(true);
+    const data = await deleteMenu(businessInformation[0]?.businessId, id);
+    setLoading(false);
+    if (data?.data?.isSuccessful) {
+      getMenu();
+      toast.success('Menu deleted successfully');
+    } else if (data?.data?.error) {
+      toast.error(data?.data?.error);
+    }
+  };
 
   return (
     <>
@@ -243,6 +267,44 @@ const Menu: React.FC = () => {
                 >
                   {loading ? 'Loading' : 'Proceed'}
                 </CustomButton>
+
+                <Spacer y={4} />
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      <Modal isOpen={isOpenViewMenu} onOpenChange={onOpenChangeViewMenu}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalBody>
+                <h2 className='text-[24px] leading-3 mt-8 mb-2 text-black font-semibold'>
+                  All menus
+                </h2>
+
+                <ScrollShadow size={5} className='w-full max-h-[350px]'>
+                  {allMenus?.map((item: any) => {
+                    return (
+                      <div
+                        className=' text-black flex justify-between text-sm border-b border-primaryGrey py-3'
+                        key={item.id}
+                      >
+                        <p>{item.name}</p>
+                        <Tooltip color='danger' content={'Delete'}>
+                          <span>
+                            <RiDeleteBin6Line
+                              onClick={() => {
+                                removeMenu(item.id);
+                              }}
+                              className='text-[18px] text-[#dc2626] mr-4 cursor-pointer'
+                            />
+                          </span>
+                        </Tooltip>
+                      </div>
+                    );
+                  })}
+                </ScrollShadow>
 
                 <Spacer y={4} />
               </ModalBody>
