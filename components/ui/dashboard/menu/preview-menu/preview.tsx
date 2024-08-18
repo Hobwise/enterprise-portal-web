@@ -16,16 +16,15 @@ const Preview = () => {
     imageReference,
     selectedTextColor,
   } = useGlobalContext();
-
+  console.log(backgroundColor, 'backgroundColor');
   const baseString = 'data:image/jpeg;base64,';
   return (
-    <article className='xl:block relative overflow-scroll hidden w-[320px] border-[8px]  border-black rounded-[40px] h-[684px] shadow-lg'>
-      {backgroundColor && (
-        <div
-          style={{ backgroundColor: backgroundColor }}
-          className={`absolute h-full w-full`}
-        />
-      )}
+    <article
+      style={{
+        backgroundColor: backgroundColor || 'white',
+      }}
+      className='xl:block relative  hidden w-[320px] border-[8px] overflow-scroll  border-black rounded-[40px] h-[684px] shadow-lg'
+    >
       {selectedImage.length > baseString.length && (
         <Image
           fill
@@ -70,6 +69,7 @@ const Preview = () => {
           })}
         </Tabs>
       </div>
+
       <div className={`${togglePreview(activeTile)?.main} relative  px-4`}>
         {[1, 2, 3, 4].map((item) => {
           return (
@@ -79,7 +79,7 @@ const Preview = () => {
                   activeTile === 'List Right' &&
                   isSelectedPreview &&
                   'flex-row-reverse'
-                } flex  my-4`}
+                } flex  my-4 `}
               >
                 {isSelectedPreview && (
                   <div className={togglePreview(activeTile)?.imageContainer}>
@@ -136,6 +136,7 @@ const Preview = () => {
           );
         })}
       </div>
+
       <div className='flex mt-6 gap-3 px-4'>
         <CustomButton className='flex-grow w-full bg-white border border-[#E4E7EC] rounded-lg'>
           Previous

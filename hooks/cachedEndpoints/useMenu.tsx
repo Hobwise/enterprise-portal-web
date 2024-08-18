@@ -20,17 +20,21 @@ type MenuData = {
   }>;
 };
 
-const useMenu = () => {
+const useMenu = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const { page, rowsPerPage, menuIdTable } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : businessIdOutsideApp;
 
   const getAllMenus = async ({ queryKey }) => {
     const [_key, { page, rowsPerPage, menuIdTable }] = queryKey;
     const responseData = await getMenuByBusiness(
-      businessInformation[0]?.businessId,
+      businessId,
       page,
       rowsPerPage,
-      menuIdTable
+      menuIdTable,
+      cooperateID
     );
 
     return responseData?.data?.data as MenuData[];

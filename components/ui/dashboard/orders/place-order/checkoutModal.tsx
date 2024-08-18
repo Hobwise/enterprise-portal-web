@@ -51,6 +51,8 @@ const CheckoutModal = ({
   handleIncrement,
   orderDetails,
   id,
+  closeModal = false,
+  setSelectedItems,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
@@ -207,8 +209,8 @@ const CheckoutModal = ({
         text: 'Payment has been made, awaiting confirmation',
         type: 'success',
       });
-
-      router.push('/dashboard/orders');
+      closeModal && setSelectedItems([]);
+      closeModal ? onOpenChange() : router.push('/dashboard/orders');
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',

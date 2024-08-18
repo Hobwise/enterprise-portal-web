@@ -79,7 +79,7 @@ const Layout: React.FC = () => {
       backgroudStyle: imageReference ? 0 : 1,
       useBackground: isSelectedPreview,
       backgroundColour: backgroundColor,
-      imageRef: imageReference,
+      imageRef: imageReference ? imageReference : '',
       textColour: selectedTextColor,
     };
 

@@ -82,9 +82,10 @@ export async function getMenuByBusiness(
   businessId: string,
   page: any,
   rowsPerPage: any,
-  menuIdTable: any
+  menuIdTable: any,
+  cooperateID?: string
 ) {
-  const headers = businessId ? { businessId } : {};
+  const headers = businessId ? { businessId, cooperateID } : {};
 
   const payload = [
     {
@@ -136,8 +137,11 @@ export async function createMenuConfiguration(
     handleError(error);
   }
 }
-export async function getMenuConfiguration(businessId: string) {
-  const headers = businessId ? { businessId } : {};
+export async function getMenuConfiguration(
+  businessId: string,
+  cooperateID?: string
+) {
+  const headers = businessId ? { businessId, cooperateID } : {};
 
   try {
     const data = await api.get(DASHBOARD.menuConfiguration, {

@@ -1,14 +1,5 @@
 'use client';
-import {
-  Button,
-  Card,
-  Pagination,
-  PaginationItemType,
-  Skeleton,
-  cn,
-} from '@nextui-org/react';
-import React from 'react';
-import { IoIosArrowForward } from 'react-icons/io';
+import { Card, Skeleton } from '@nextui-org/react';
 export const CheckIcon = ({ size, height, width, ...props }: any) => {
   return (
     <svg
@@ -30,7 +21,7 @@ export const CheckIcon = ({ size, height, width, ...props }: any) => {
 export const MenuSkeletonLoading = () => {
   return (
     <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
-      {[1, 2, 3, 4, 5, 6].map((item) => (
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => (
         <Card
           key={item}
           className='space-y-2 p-2 shadow-none border-none'
