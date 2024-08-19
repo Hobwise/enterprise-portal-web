@@ -138,7 +138,8 @@ const CheckoutModal = ({
       comment: order.comment,
       orderDetails: transformedArray,
     };
-    const data = await createOrder(businessInformation[0]?.businessId, payload);
+    const id = businessId ? businessId : businessInformation[0]?.businessId;
+    const data = await createOrder(id, payload, cooperateID);
     setResponse(data);
     setLoading(false);
     if (data?.data?.isSuccessful) {

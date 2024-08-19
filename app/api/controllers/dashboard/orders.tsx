@@ -82,7 +82,11 @@ export async function completeOrder(payload: any, orderId: string) {
   }
 }
 
-export async function createOrder(businessId: string, payload: Order) {
+export async function createOrder(
+  businessId: string,
+  payload: Order,
+  cooperateID?: string
+) {
   const validatedFields = orderSchema.safeParse({
     placedByName: payload?.placedByName,
     placedByPhoneNumber: payload?.placedByPhoneNumber,
@@ -94,7 +98,7 @@ export async function createOrder(businessId: string, payload: Order) {
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const headers = businessId ? { businessId } : {};
+  const headers = businessId ? { businessId, cooperateID } : {};
 
   try {
     const data = await api.post(DASHBOARD.placeOrder, payload, {
