@@ -295,18 +295,20 @@ const CreateOrder = () => {
         <>{bottomContent}</>
       </article>
 
-      <CheckoutModal
-        handleDecrement={handleDecrement}
-        handleIncrement={handleIncrement}
-        selectedItems={selectedItems}
-        totalPrice={calculateTotalPrice()}
-        onOpenChange={onOpenChange}
-        isOpen={isOpen}
-        closeModal={true}
-        businessId={businessId}
-        cooperateID={cooperateID}
-        setSelectedItems={setSelectedItems}
-      />
+      {isOpen && (
+        <CheckoutModal
+          handleDecrement={handleDecrement}
+          handleIncrement={handleIncrement}
+          selectedItems={selectedItems}
+          totalPrice={calculateTotalPrice()}
+          onOpenChange={onOpenChange}
+          isOpen={isOpen}
+          closeModal={true}
+          businessId={businessId}
+          cooperateID={cooperateID}
+          setSelectedItems={setSelectedItems}
+        />
+      )}
 
       <ViewModal
         handleCardClick={handleCardClick}
