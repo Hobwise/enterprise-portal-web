@@ -17,8 +17,11 @@ export async function getQR(businessId: string, page: any, pageSize: any) {
     handleError(error);
   }
 }
-export async function getQRByBusiness(businessId: string) {
-  const headers = businessId ? { businessId } : {};
+export async function getQRByBusiness(
+  businessId: string,
+  cooperateID?: string
+) {
+  const headers = businessId ? { businessId, cooperateID } : {};
 
   try {
     const data = await api.get(DASHBOARD.qrAllBy, {

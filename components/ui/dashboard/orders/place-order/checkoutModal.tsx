@@ -53,6 +53,8 @@ const CheckoutModal = ({
   id,
   closeModal = false,
   setSelectedItems,
+  businessId,
+  cooperateID,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
@@ -221,7 +223,9 @@ const CheckoutModal = ({
   };
 
   const getQrID = async () => {
-    const data = await getQRByBusiness(businessInformation[0]?.businessId);
+    const id = businessId ? businessId : businessInformation[0]?.businessId;
+
+    const data = await getQRByBusiness(id, cooperateID);
 
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;

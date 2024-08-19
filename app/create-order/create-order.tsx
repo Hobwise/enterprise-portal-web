@@ -303,6 +303,8 @@ const CreateOrder = () => {
         onOpenChange={onOpenChange}
         isOpen={isOpen}
         closeModal={true}
+        businessId={businessId}
+        cooperateID={cooperateID}
         setSelectedItems={setSelectedItems}
       />
 
