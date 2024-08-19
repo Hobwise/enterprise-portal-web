@@ -31,6 +31,9 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
 
   return (
     <Modal
+      classNames={{
+        body: 'px-1 md:px-6',
+      }}
       isDismissable={false}
       isOpen={isOpenView}
       onOpenChange={() => {
