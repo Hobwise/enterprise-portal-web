@@ -1,13 +1,12 @@
-import { Spacer } from '@nextui-org/react';
-import Image from 'next/image';
-import React from 'react';
-import confirmEmailLogo from '../../../public/assets/images/confirmEmailImage.png';
+import BackButton from '@/components/backButton';
 import HobinkLogo from '@/components/logo';
 import ConfirmEmailForm from '@/components/ui/auth/confirmEmailForm';
-import BackButton from '@/components/backButton';
+import { Spacer } from '@nextui-org/react';
+import Image from 'next/image';
+import confirmEmailLogo from '../../../public/assets/images/confirmEmailImage.png';
 
 export const metadata = {
-  title: 'Confirm your email',
+  title: 'Hobink | Confirm your email',
   description: 'Streamline your business processes',
 };
 const ConfirmEmail = () => {

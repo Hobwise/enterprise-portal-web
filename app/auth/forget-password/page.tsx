@@ -1,12 +1,11 @@
-import React from 'react';
+import BackButton from '@/components/backButton';
 import HobinkLogo from '@/components/logo';
 import EntryPoint from '@/components/ui/auth/forget-password/EntryPoint';
-import BackButton from '@/components/backButton';
-import Background from '../../../public/assets/images/nightlife-party-with-drinks-bar 1.png';
 import Image from 'next/image';
+import Background from '../../../public/assets/images/nightlife-party-with-drinks-bar 1.png';
 
 export const metadata = {
-  title: 'Create account',
+  title: 'Hobink | Create account',
   description: 'Streamline your business processes',
 };
 const ForgetPassword = () => {

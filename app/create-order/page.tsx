@@ -1,7 +1,7 @@
 'use client';
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 
 import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
@@ -41,7 +41,6 @@ const CreateOrder = () => {
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
-  const [orderDetails, setOrderDetails] = useState([]);
 
   const { data, isLoading, isError, refetch } = useMenu(
     businessId,
@@ -172,144 +171,148 @@ const CreateOrder = () => {
 
   const baseString = 'data:image/jpeg;base64,';
   return (
-    <main className='grid place-content-center '>
-      <article
-        style={{
-          backgroundColor: menuConfig?.backgroundColour || 'white',
-        }}
-        className='xl:block relative  h-screen   overflow-scroll  xl:w-[320px] w-full xl:rounded-[40px] rounded-none  shadow-lg'
-      >
-        {menuConfig?.image.length > baseString.length && (
-          <Image
-            fill
-            className='absolute backdrop-brightness-125 bg-cover opacity-25'
-            src={baseString + menuConfig?.image}
-            alt='background'
-          />
-        )}
-
-        <div className='p-4 pt-6 flex justify-between'>
-          <div>
-            <h1 className='text-[28px] font-[700] text-black relative '>
-              Menu
-            </h1>
-            <p className='text-sm  text-grey600  w-full '>
-              {selectedItems.length > 0
-                ? `${selectedItems.length} items selected`
-                : 'Select items from the menu'}
-            </p>
-          </div>
-          <CustomButton
-            onClick={selectedItems.length > 0 ? onOpen : {}}
-            className='py-2 px-4 mb-0 text-white'
-            backgroundColor='bg-primaryColor'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              <p>{'Proceed'} </p>
-              <HiArrowLongLeft className='text-[22px] rotate-180' />
-            </div>
-          </CustomButton>
-        </div>
-        {topContent}
-
-        <div
-          className={`${
-            togglePreview(convertActiveTile(menuConfig?.layout))?.main
-          } relative  px-4`}
+    <Suspense>
+      <main className='grid place-content-center '>
+        <article
+          style={{
+            backgroundColor: menuConfig?.backgroundColour || 'white',
+          }}
+          className='xl:block relative  h-screen   overflow-scroll  xl:w-[320px] w-full xl:rounded-[40px] rounded-none  shadow-lg'
         >
-          {matchingObjectArray?.map((item) => {
-            const isSelected =
-              selectedItems.find((selected) => selected.id === item.id) ||
-              selectedItems.some((menu) =>
-                item.varieties?.some((variety) => variety.id === menu.id)
-              );
+          {menuConfig?.image.length > baseString.length && (
+            <Image
+              fill
+              className='absolute backdrop-brightness-125 bg-cover opacity-25'
+              src={baseString + menuConfig?.image}
+              alt='background'
+            />
+          )}
 
-            return (
-              <>
-                <div
-                  onClick={() => toggleVarietyModal(item)}
-                  key={item.menuID}
-                  className={`${
-                    togglePreview(convertActiveTile(menuConfig?.layout))
-                      ?.container
-                  } ${
-                    convertActiveTile(menuConfig?.layout) === 'List Right' &&
-                    menuConfig?.useBackground &&
-                    'flex-row-reverse'
-                  } flex  my-4`}
-                >
-                  {menuConfig?.useBackground && (
-                    <div
-                      className={
-                        togglePreview(convertActiveTile(menuConfig?.layout))
-                          ?.imageContainer
-                      }
-                    >
-                      <Image
-                        className={`bg-cover rounded-lg ${
-                          togglePreview(convertActiveTile(menuConfig?.layout))
-                            ?.imageClass
-                        }`}
-                        width={60}
-                        height={60}
-                        src={item.image ? `${baseString}${item.image}` : noMenu}
-                        alt='menu'
-                      />
-                    </div>
-                  )}
+          <div className='p-4 pt-6 flex justify-between'>
+            <div>
+              <h1 className='text-[28px] font-[700] text-black relative '>
+                Menu
+              </h1>
+              <p className='text-sm  text-grey600  w-full '>
+                {selectedItems.length > 0
+                  ? `${selectedItems.length} items selected`
+                  : 'Select items from the menu'}
+              </p>
+            </div>
+            <CustomButton
+              onClick={selectedItems.length > 0 ? onOpen : {}}
+              className='py-2 px-4 mb-0 text-white'
+              backgroundColor='bg-primaryColor'
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                <p>{'Proceed'} </p>
+                <HiArrowLongLeft className='text-[22px] rotate-180' />
+              </div>
+            </CustomButton>
+          </div>
+          {topContent}
+
+          <div
+            className={`${
+              togglePreview(convertActiveTile(menuConfig?.layout))?.main
+            } relative  px-4`}
+          >
+            {matchingObjectArray?.map((item) => {
+              const isSelected =
+                selectedItems.find((selected) => selected.id === item.id) ||
+                selectedItems.some((menu) =>
+                  item.varieties?.some((variety) => variety.id === menu.id)
+                );
+
+              return (
+                <>
                   <div
-                    style={{
-                      color: menuConfig?.textColour,
-                    }}
-                    className={`text-[14px]  ${
+                    onClick={() => toggleVarietyModal(item)}
+                    key={item.menuID}
+                    className={`${
                       togglePreview(convertActiveTile(menuConfig?.layout))
-                        ?.textContainer
-                    } flex flex-col justify-center`}
+                        ?.container
+                    } ${
+                      convertActiveTile(menuConfig?.layout) === 'List Right' &&
+                      menuConfig?.useBackground &&
+                      'flex-row-reverse'
+                    } flex  my-4`}
                   >
-                    <p className='font-[700]'>{item.menuName}</p>
-                    <p className='text-[13px]'>{formatPrice(item.price)}</p>
-                    <p className='text-[13px]'>{item.itemDescription}</p>
-                    {isSelected && (
-                      <Chip
-                        startContent={<CheckIcon size={18} />}
-                        variant='flat'
-                        classNames={{
-                          base: 'bg-primaryColor text-white text-[10px] mt-1',
-                        }}
+                    {menuConfig?.useBackground && (
+                      <div
+                        className={
+                          togglePreview(convertActiveTile(menuConfig?.layout))
+                            ?.imageContainer
+                        }
                       >
-                        Selected
-                      </Chip>
+                        <Image
+                          className={`bg-cover rounded-lg ${
+                            togglePreview(convertActiveTile(menuConfig?.layout))
+                              ?.imageClass
+                          }`}
+                          width={60}
+                          height={60}
+                          src={
+                            item.image ? `${baseString}${item.image}` : noMenu
+                          }
+                          alt='menu'
+                        />
+                      </div>
                     )}
+                    <div
+                      style={{
+                        color: menuConfig?.textColour,
+                      }}
+                      className={`text-[14px]  ${
+                        togglePreview(convertActiveTile(menuConfig?.layout))
+                          ?.textContainer
+                      } flex flex-col justify-center`}
+                    >
+                      <p className='font-[700]'>{item.menuName}</p>
+                      <p className='text-[13px]'>{formatPrice(item.price)}</p>
+                      <p className='text-[13px]'>{item.itemDescription}</p>
+                      {isSelected && (
+                        <Chip
+                          startContent={<CheckIcon size={18} />}
+                          variant='flat'
+                          classNames={{
+                            base: 'bg-primaryColor text-white text-[10px] mt-1',
+                          }}
+                        >
+                          Selected
+                        </Chip>
+                      )}
+                    </div>
                   </div>
-                </div>
-                {togglePreview(convertActiveTile(menuConfig?.layout))
-                  ?.divider && <Divider className='text-[#E4E7EC] h-[1px]' />}
-              </>
-            );
-          })}
-        </div>
-        <>{bottomContent}</>
-      </article>
+                  {togglePreview(convertActiveTile(menuConfig?.layout))
+                    ?.divider && <Divider className='text-[#E4E7EC] h-[1px]' />}
+                </>
+              );
+            })}
+          </div>
+          <>{bottomContent}</>
+        </article>
 
-      <CheckoutModal
-        handleDecrement={handleDecrement}
-        handleIncrement={handleIncrement}
-        selectedItems={selectedItems}
-        totalPrice={calculateTotalPrice()}
-        onOpenChange={onOpenChange}
-        isOpen={isOpen}
-        closeModal={true}
-        setSelectedItems={setSelectedItems}
-      />
+        <CheckoutModal
+          handleDecrement={handleDecrement}
+          handleIncrement={handleIncrement}
+          selectedItems={selectedItems}
+          totalPrice={calculateTotalPrice()}
+          onOpenChange={onOpenChange}
+          isOpen={isOpen}
+          closeModal={true}
+          setSelectedItems={setSelectedItems}
+        />
 
-      <ViewModal
-        handleCardClick={handleCardClick}
-        selectedMenu={selectedMenu}
-        isOpenVariety={isOpenVariety}
-        toggleVarietyModal={toggleVarietyModal}
-        selectedItems={selectedItems}
-      />
-    </main>
+        <ViewModal
+          handleCardClick={handleCardClick}
+          selectedMenu={selectedMenu}
+          isOpenVariety={isOpenVariety}
+          toggleVarietyModal={toggleVarietyModal}
+          selectedItems={selectedItems}
+        />
+      </main>
+    </Suspense>
   );
 };
 

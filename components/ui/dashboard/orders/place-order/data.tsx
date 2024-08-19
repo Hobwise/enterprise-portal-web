@@ -20,7 +20,7 @@ export const CheckIcon = ({ size, height, width, ...props }: any) => {
 
 export const MenuSkeletonLoading = () => {
   return (
-    <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-4'>
+    <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4'>
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((item) => (
         <Card
           key={item}

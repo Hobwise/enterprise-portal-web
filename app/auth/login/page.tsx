@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Background from '../../../public/assets/images/nightlife-party-with-drinks-bar 1.png';
 
 export const metadata = {
-  title: 'Log in to Hobink',
+  title: 'Hobink | Log in to Hobink',
   description: 'Streamline your business processes',
 };
 

@@ -1,3 +1,4 @@
+'use client';
 import { CustomButton } from '@/components/customButton';
 import { downloadQRImage, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Modal, ModalBody, ModalContent, Spacer } from '@nextui-org/react';
@@ -18,6 +19,15 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
   const qrObject = getJsonItemFromLocalStorage('qr');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const business = getJsonItemFromLocalStorage('business');
+
+  // const params = {
+  //   businessID: business[0]?.businessId,
+  //   cooperateID: userInformation?.cooperateID,
+  //   id: qrObject?.id,
+  // };
+  // const encrypted = encrypt(JSON.stringify(params));
+  // console.log(encrypted, 'encedyigk');
+  // const shortIdentifier = encrypted.content.substring(0, 10);
 
   return (
     <Modal

@@ -32,8 +32,10 @@ import Filters from './filters';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
 import moment from 'moment';
+import { FaCommentDots } from 'react-icons/fa6';
 import { LiaTimesSolid } from 'react-icons/lia';
 import CancelOrderModal from './cancelOrder';
+import Comment from './comment';
 import ConfirmOrderModal from './confirmOrder';
 import InvoiceModal from './invoice';
 
@@ -55,6 +57,7 @@ const OrdersList = ({ orders, searchQuery }: any) => {
   const [isOpenInvoice, setIsOpenInvoice] = React.useState<Boolean>(false);
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
+  const [isOpenComment, setIsOpenComment] = React.useState<Boolean>(false);
   const [filteredOrder, setFilteredOrder] = React.useState(orders[0]?.orders);
 
   const handleTabClick = (index) => {
@@ -124,6 +127,10 @@ const OrdersList = ({ orders, searchQuery }: any) => {
     setSingleOrder(order);
     setIsOpenCancelOrder(!isOpenCancelOrder);
   };
+  const toggleCommentModal = (order: any) => {
+    setSingleOrder(order);
+    setIsOpenComment(!isOpenComment);
+  };
   const toggleConfirmModal = (order: any) => {
     setSingleOrder(order);
     setIsOpenConfirmOrder(!isOpenConfirmOrder);
@@ -145,7 +152,18 @@ const OrdersList = ({ orders, searchQuery }: any) => {
     switch (columnKey) {
       case 'name':
         return (
-          <div className='flex text-textGrey text-sm'>{order.placedByName}</div>
+          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
+            <span>{order.placedByName}</span>
+            {order.comment && (
+              <div
+                title={'view comment'}
+                onClick={() => toggleCommentModal(order)}
+                className=' cursor-pointer'
+              >
+                <FaCommentDots className='text-primaryColor' />
+              </div>
+            )}
+          </div>
         );
       case 'amount':
         return (
@@ -305,6 +323,11 @@ const OrdersList = ({ orders, searchQuery }: any) => {
           )}
         </TableBody>
       </Table>
+      <Comment
+        toggleCommentModal={toggleCommentModal}
+        singleOrder={singleOrder}
+        isOpenComment={isOpenComment}
+      />
       <CancelOrderModal
         singleOrder={singleOrder}
         isOpenCancelOrder={isOpenCancelOrder}

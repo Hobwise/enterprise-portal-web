@@ -4,7 +4,7 @@ import BackButton from '@/components/backButton';
 import SelectBusinessForm from '@/components/ui/auth/selectBusinessForm';
 
 export const metadata = {
-  title: 'Select a business to login to the dashboard',
+  title: 'Hobink | Select business',
   description: 'Streamline your business processes',
 };
 
