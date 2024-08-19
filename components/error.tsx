@@ -26,7 +26,7 @@ const Error = ({
         onClick={onClick}
         className='bg-white border px-10 py-4 border-primaryColor rounded-full text-primaryColor'
       >
-        <div className='flex items-center gap-3'>
+        <div className='flex items-center gap-2'>
           <p>Retry</p>
           <IoReload />
         </div>
