@@ -258,6 +258,7 @@ const CheckoutModal = ({
     <Modal
       classNames={{
         body: 'px-1 md:px-6',
+        header: 'px-3 md:px-6',
       }}
       isDismissable={false}
       size={screen === 1 ? '4xl' : 'md'}
