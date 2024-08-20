@@ -181,7 +181,7 @@ const CreateOrder = () => {
         style={{
           backgroundColor: menuConfig?.backgroundColour || 'white',
         }}
-        className='xl:block relative  h-screen   overflow-scroll  xl:w-[320px] w-full xl:rounded-[40px] rounded-none  shadow-lg'
+        className='xl:block relative  h-screen   overflow-scroll    shadow-lg'
       >
         {menuConfig?.image.length > baseString.length && (
           <Image
@@ -268,7 +268,7 @@ const CreateOrder = () => {
                     className={`text-[14px]  ${
                       togglePreview(convertActiveTile(menuConfig?.layout))
                         ?.textContainer
-                    } flex flex-col justify-center`}
+                    } flex flex-col justify-center w-[70%]`}
                   >
                     <p className='font-[700]'>{item.menuName}</p>
                     <p className='text-[13px]'>{formatPrice(item.price)}</p>

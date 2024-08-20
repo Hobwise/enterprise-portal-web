@@ -8,7 +8,7 @@ const Filters = ({
 }: any) => {
   return (
     <>
-      <div className='flex relative top-3  w-full border-b border-divider px-2 justify-between'>
+      <div className='flex relative top-3  w-full border-b border-divider px-3 justify-between'>
         <Tabs
           classNames={{
             tabList: 'gap-x-6  relative rounded-none py-0 flex flex-wrap',
