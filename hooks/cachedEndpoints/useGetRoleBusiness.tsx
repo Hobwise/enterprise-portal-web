@@ -16,8 +16,6 @@ const useGetRoleByBusiness = () => {
     fetchRoleByBusiness,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

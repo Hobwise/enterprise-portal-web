@@ -1,24 +1,21 @@
 'use client';
-import { getRoleCount } from '@/app/api/controllers/auth';
+import { getNotificationCount } from '@/app/api/controllers/dashboard/settings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
 
-const useRoleCount = () => {
+const useNotificationCount = () => {
   const business = getJsonItemFromLocalStorage('business');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
 
-  const fetchRoleCount = async () => {
-    const responseData = await getRoleCount(
-      business[0].businessId,
-      userInformation.cooperateID
-    );
+  const fetchNotificationCount = async () => {
+    const responseData = await getNotificationCount(business[0]?.businessId);
     return responseData?.data?.data as any;
   };
 
   const { data, isLoading, isError, refetch } = useQuery<any>(
-    'roleCount',
-    fetchRoleCount,
+    'notificationCount',
+    fetchNotificationCount,
     {
+      staleTime: 60000,
       refetchOnWindowFocus: false,
     }
   );
@@ -26,4 +23,4 @@ const useRoleCount = () => {
   return { data, isLoading, isError, refetch };
 };
 
-export default useRoleCount;
+export default useNotificationCount;

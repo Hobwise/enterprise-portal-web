@@ -26,8 +26,7 @@ const useDashboardReport = (
     fetchDashboardReport,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
+     
       ...options,
     }
   );

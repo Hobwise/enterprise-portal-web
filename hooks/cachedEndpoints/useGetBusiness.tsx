@@ -16,8 +16,6 @@ const useGetBusiness = () => {
     getBusiness,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

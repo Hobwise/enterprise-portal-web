@@ -50,8 +50,6 @@ const useBookings = () => {
     {
       keepPreviousData: true,
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

@@ -18,8 +18,6 @@ const useGetBusinessByCooperate = () => {
     getAllBusinessByCooperate,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

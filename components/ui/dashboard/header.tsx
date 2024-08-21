@@ -1,15 +1,20 @@
 'use client';
 
+import useNotificationCount from '@/hooks/cachedEndpoints/useNotificationCount';
+import useNotification from '@/hooks/cachedEndpoints/useNotifications';
 import useUser from '@/hooks/cachedEndpoints/useUser';
 import useScroll from '@/hooks/use-scroll';
 import { cn } from '@/lib/utils';
 import {
   Avatar,
+  Badge,
   Dropdown,
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  Tooltip,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   useDisclosure,
 } from '@nextui-org/react';
 import Image from 'next/image';
@@ -21,9 +26,13 @@ import { IoChatbubblesOutline } from 'react-icons/io5';
 import { SlBell } from 'react-icons/sl';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS, headerRouteMapping } from './constants';
+import Notifications from './notifications/notifications';
 
 const Header = () => {
   const { isOpen, onOpenChange } = useDisclosure();
+  const { data: notificationCount } = useNotificationCount();
+  const { data: notifications } = useNotification();
+
   const { data } = useUser();
   const pathname = usePathname();
   const scrolled = useScroll(5);
@@ -84,26 +93,30 @@ const Header = () => {
             placeholder='Search here...'
           /> */}
           <div className='flex items-center space-x-4'>
-            <Tooltip
-              placement='bottom'
-              color='foreground'
-              showArrow={true}
-              content='Notification'
-            >
-              <span>
-                <SlBell className='text-[#494E58] h-5 w-5 cursor-pointer' />
-              </span>
-            </Tooltip>
-            <Tooltip
-              color='foreground'
-              placement='bottom'
-              showArrow={true}
-              content='Messages'
-            >
-              <span>
-                <IoChatbubblesOutline className='text-[#494E58]  h-5 w-5 cursor-pointer' />
-              </span>
-            </Tooltip>
+            <Popover placement='bottom'>
+              <PopoverTrigger>
+                <Badge
+                  className='cursor-pointer'
+                  content={notificationCount || 0}
+                  size='sm'
+                  color='danger'
+                >
+                  <PopoverTrigger>
+                    <SlBell className='text-[#494E58] h-5 w-5 cursor-pointer' />
+                  </PopoverTrigger>
+                </Badge>
+              </PopoverTrigger>
+              {notifications?.length > 0 && (
+                <PopoverContent className=''>
+                  <Notifications data={notifications} />
+                </PopoverContent>
+              )}
+            </Popover>
+
+            <span>
+              <IoChatbubblesOutline className='text-[#494E58]  h-5 w-5 cursor-pointer' />
+            </span>
+
             <Dropdown placement='bottom-end'>
               <DropdownTrigger>
                 <div className='flex items-center gap-1 cursor-pointer'>

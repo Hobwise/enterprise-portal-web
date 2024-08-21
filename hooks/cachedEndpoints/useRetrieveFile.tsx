@@ -20,8 +20,6 @@ const useGetFile = ({ imageRef }: UseGetFileProps) => {
     {
       enabled: !!imageRef,
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

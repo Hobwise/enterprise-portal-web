@@ -31,8 +31,6 @@ const useCampaign = () => {
     {
       keepPreviousData: true,
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

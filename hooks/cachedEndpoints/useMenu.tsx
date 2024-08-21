@@ -45,8 +45,7 @@ const useMenu = (businessIdOutsideApp?: any, cooperateID?: any) => {
     getAllMenus,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
+
       keepPreviousData: true,
     }
   );

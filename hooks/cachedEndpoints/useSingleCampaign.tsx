@@ -21,8 +21,6 @@ const useSingleCampaign = (campaignId: any) => {
     getSingleReservation,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

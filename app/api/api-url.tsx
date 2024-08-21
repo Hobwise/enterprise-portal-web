@@ -16,6 +16,8 @@ export const DASHBOARD = {
   configureRole: 'api/v1/User/role-configure',
   termAndCondition: 'api/v1/TermAndCondition',
   getTermAndCondition: 'api/v1/TermAndCondition/by-business',
+  notificationCount: 'api/v1/Notification/UnReadCount',
+  notifications: 'api/v1/Notification/by-business',
   getBusiness: 'api/v1/Business',
   getBusinessByCooperate: 'api/v1/Business/by-cooperate',
   getFile: 'api/v1/File/retrieve',

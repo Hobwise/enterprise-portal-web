@@ -25,6 +25,7 @@ export const config = {
     '/dashboard/orders',
     '/dashboard/qr-code',
     '/dashboard/qr-code/create-qr',
+    '/dashboard/notifications',
     '/dashboard/reports',
     '/dashboard/reservation',
     '/dashboard/reservation/create-reservation',

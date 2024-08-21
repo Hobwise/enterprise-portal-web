@@ -28,8 +28,6 @@ const useSingleReservation = (reservationId: any) => {
       enabled: !!reservationId,
       keepPreviousData: true,
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

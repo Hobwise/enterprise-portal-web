@@ -31,8 +31,6 @@ const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
     getMenuConfig,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

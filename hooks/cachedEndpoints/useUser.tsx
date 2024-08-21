@@ -16,8 +16,6 @@ const useUser = () => {
     fetchUser,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

@@ -174,8 +174,8 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                     aria-label='admit'
                     onClick={() =>
                       updateBookingStatus(
-                        booking?.bookingStatus,
-                        submitBookingStatus(booking?.id)
+                        submitBookingStatus(booking?.bookingStatus),
+                        booking?.id
                       )
                     }
                   >
@@ -190,8 +190,8 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                     aria-label='accept booking'
                     onClick={() =>
                       updateBookingStatus(
-                        booking?.bookingStatus,
-                        submitBookingStatus(booking?.id)
+                        submitBookingStatus(booking?.bookingStatus),
+                        booking?.id
                       )
                     }
                   >
@@ -208,8 +208,8 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                     aria-label='close booking'
                     onClick={() =>
                       updateBookingStatus(
-                        booking?.bookingStatus,
-                        submitBookingStatus(booking?.id)
+                        submitBookingStatus(booking?.bookingStatus),
+                        booking?.id
                       )
                     }
                   >

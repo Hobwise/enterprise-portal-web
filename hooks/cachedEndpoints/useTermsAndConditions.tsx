@@ -25,8 +25,6 @@ const useTermsAndCondition = (
     fetchTermsAndCondition,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 

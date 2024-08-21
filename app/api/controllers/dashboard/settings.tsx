@@ -134,6 +134,32 @@ export async function getTermsAndCondition(
     handleError(error, false);
   }
 }
+export async function getNotificationCount(businessId: string) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.notificationCount, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+export async function getNotification(businessId: string) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.notifications, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
 
 export async function getBusinessByBusinessId(businessId: string) {
   const headers = businessId ? { businessId: businessId } : {};

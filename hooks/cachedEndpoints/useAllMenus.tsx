@@ -16,8 +16,6 @@ const useAllMenus = () => {
     fetchMenus,
     {
       refetchOnWindowFocus: false,
-      refetchInterval: false,
-      refetchIntervalInBackground: false,
     }
   );
 
