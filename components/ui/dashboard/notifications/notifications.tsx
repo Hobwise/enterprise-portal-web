@@ -81,7 +81,7 @@ const Notifications = ({
           return (
             <div key={notif.id}>
               <div
-                className={`${backgroundColorClass} flex gap-3 cursor-pointer rounded-sm  p-3 text-xs`}
+                className={`${backgroundColorClass} flex gap-3 cursor-pointer rounded-md  p-3 text-xs`}
               >
                 <div>
                   <Avatar
