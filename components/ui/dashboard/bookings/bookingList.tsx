@@ -111,7 +111,6 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
 
   const updateBookingStatus = async (status, id) => {
     const data = await postBookingStatus(id, status);
-
     if (data?.data?.isSuccessful) {
       notify({
         title: 'Success!',

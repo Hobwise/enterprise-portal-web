@@ -20,6 +20,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
+import { useState } from 'react';
 import { FiLogOut } from 'react-icons/fi';
 import { IoIosArrowDown, IoIosSettings } from 'react-icons/io';
 import { IoChatbubblesOutline } from 'react-icons/io5';
@@ -29,9 +30,19 @@ import { SIDENAV_ITEMS, headerRouteMapping } from './constants';
 import Notifications from './notifications/notifications';
 
 const Header = () => {
+  const page = 1;
+
+  const [pageSize, setPageSize] = useState(10);
+
   const { isOpen, onOpenChange } = useDisclosure();
-  const { data: notificationCount } = useNotificationCount();
-  const { data: notifications } = useNotification();
+  const { data: notificationCount, refetch: refetchCount } =
+    useNotificationCount();
+  const {
+    data: notifData,
+    isLoading,
+    isError,
+    refetch,
+  } = useNotification(page, pageSize);
 
   const { data } = useUser();
   const pathname = usePathname();
@@ -44,6 +55,12 @@ const Header = () => {
       if (pathname.includes(key)) {
         return value;
       }
+    }
+  };
+
+  const loadMore = () => {
+    if (notifData?.hasNext) {
+      setPageSize((prevSize) => prevSize + 10);
     }
   };
 
@@ -97,7 +114,7 @@ const Header = () => {
               <PopoverTrigger>
                 <Badge
                   className='cursor-pointer'
-                  content={notificationCount || 0}
+                  content={notificationCount}
                   size='sm'
                   color='danger'
                 >
@@ -106,9 +123,16 @@ const Header = () => {
                   </PopoverTrigger>
                 </Badge>
               </PopoverTrigger>
-              {notifications?.length > 0 && (
+              {notifData?.notifications?.length > 0 && (
                 <PopoverContent className=''>
-                  <Notifications data={notifications} />
+                  <Notifications
+                    notifData={notifData}
+                    refetch={refetch}
+                    loadMore={loadMore}
+                    isLoading={isLoading}
+                    isError={isError}
+                    refetchCount={refetchCount}
+                  />
                 </PopoverContent>
               )}
             </Popover>

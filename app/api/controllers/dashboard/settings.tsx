@@ -147,11 +147,54 @@ export async function getNotificationCount(businessId: string) {
     handleError(error, false);
   }
 }
-export async function getNotification(businessId: string) {
+
+export async function postMarkAsRead(notificationId: string) {
+  const headers = notificationId ? { notificationId } : {};
+
+  try {
+    const data = await api.post(
+      DASHBOARD.markAsRead,
+      {},
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+export async function postMarkAllAsRead(businessId: string) {
   const headers = businessId ? { businessId } : {};
 
   try {
-    const data = await api.get(DASHBOARD.notifications, {
+    const data = await api.post(
+      DASHBOARD.markAllAsRead,
+      {},
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+export async function getNotification(
+  businessId: string,
+  page: number,
+  pageSize: number
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    page: page,
+    pageSize: pageSize,
+  };
+
+  try {
+    const data = await api.post(DASHBOARD.notifications, payload, {
       headers,
     });
 

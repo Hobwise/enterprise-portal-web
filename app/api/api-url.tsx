@@ -18,6 +18,8 @@ export const DASHBOARD = {
   getTermAndCondition: 'api/v1/TermAndCondition/by-business',
   notificationCount: 'api/v1/Notification/UnReadCount',
   notifications: 'api/v1/Notification/by-business',
+  markAsRead: 'api/v1/Notification/MarkAsRead',
+  markAllAsRead: 'api/v1/Notification/MarkAllAsRead',
   getBusiness: 'api/v1/Business',
   getBusinessByCooperate: 'api/v1/Business/by-cooperate',
   getFile: 'api/v1/File/retrieve',

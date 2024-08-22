@@ -59,7 +59,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
         <div className='lg:w-[70%] flex flex-col lg:flex-row lg:gap-5 gap-3 w-full'>
           <div className='flex lg:w-[70%] w-full flex-col lg:gap-5 gap-3'>
             <div className='flex xl:flex-row flex-col lg:gap-5 gap-3'>
-              <div className='border border-primaryGrey rounded-xl flex-grow'>
+              <div className='border border-primaryGrey rounded-xl lg:w-[300px] w-full flex-grow'>
                 <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                   <span className='font-[600]'>Payments</span>
                 </div>
@@ -90,6 +90,35 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                   (value) => value !== 0
                 ) ? (
                   <div className='p-6 flex h-[150px] items-center space-x-6'>
+                    <div className='flex flex-col'>
+                      <span className='text-[13px] font-[500] space-y-1 text-[#4A4C4F]'>
+                        Total
+                      </span>
+                      <span className='text-[24px] font-[600]'>
+                        {response?.bookingDetails.total}
+                      </span>
+                      <span
+                        className={`${
+                          parseInt(
+                            response?.bookingDetails.toatlPercentageChange
+                          ) <= 0
+                            ? 'text-danger-500'
+                            : 'text-success-500'
+                        } flex items-center font-[400]`}
+                      >
+                        <IoArrowUpCircleOutline
+                          className={`${
+                            parseInt(
+                              response?.bookingDetails.toatlPercentageChange
+                            ) <= 0 && 'rotate-180'
+                          }`}
+                        />{' '}
+                        <span>
+                          {' '}
+                          {response?.bookingDetails.toatlPercentageChange}%
+                        </span>
+                      </span>
+                    </div>
                     <div className='flex flex-col'>
                       <span className='text-[13px] font-[500] space-y-1 text-[#4A4C4F]'>
                         Accepted

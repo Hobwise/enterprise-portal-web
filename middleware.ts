@@ -28,6 +28,7 @@ export const config = {
     '/dashboard/notifications',
     '/dashboard/reports',
     '/dashboard/reservation',
+    '/dashboard/bookings',
     '/dashboard/reservation/create-reservation',
     '/dashboard/settings',
     '/auth/business-information',

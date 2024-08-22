@@ -30,7 +30,7 @@ const Payments: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data
+    return data?.paymentComposites
       ?.map((item) => ({
         ...item,
         orders: item?.payments?.filter(
@@ -45,10 +45,10 @@ const Payments: React.FC = () => {
         ),
       }))
       .filter((item) => item?.payments?.length > 0);
-  }, [data, searchQuery]);
+  }, [data?.paymentComposites, searchQuery]);
 
   const getScreens = () => {
-    if (data?.[0]?.payments.length > 0) {
+    if (data?.paymentComposites?.[0]?.payments.length > 0) {
       return (
         <PaymentsList
           payments={filteredItems}
@@ -63,7 +63,7 @@ const Payments: React.FC = () => {
     }
   };
 
-  const newArray = data?.flatMap((item) =>
+  const newArray = data?.paymentComposites?.flatMap((item) =>
     item?.payments?.map((payment) => ({
       reference: payment.reference,
       totalAmount: payment.totalAmount,
@@ -80,7 +80,7 @@ const Payments: React.FC = () => {
       <div className='flex flex-row flex-wrap  justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
-            {data?.[0]?.payments.length > 0 ? (
+            {data?.paymentComposites?.[0]?.payments.length > 0 ? (
               <div className='flex items-center'>
                 <span>All Payment</span>
                 <Chip
@@ -88,7 +88,7 @@ const Payments: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data[0]?.totalCount}
+                  {data?.paymentComposites[0]?.totalCount}
                 </Chip>
               </div>
             ) : (
@@ -100,7 +100,7 @@ const Payments: React.FC = () => {
           </p>
         </div>
         <div className='flex items-center gap-3'>
-          {data?.[0]?.payments.length > 0 && (
+          {data?.paymentComposites?.[0]?.payments.length > 0 && (
             <>
               <div>
                 <CustomInput
