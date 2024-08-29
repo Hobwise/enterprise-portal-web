@@ -27,13 +27,13 @@ const OrdersOverview = ({
   value,
 }: any) => {
   const transformedData = response && [
-    ['Month', 'Processed orders', 'Pending orders'],
+    ['Month', 'Total orders'],
     ...response?.orderDetails?.orderPartitions?.map((item: any) => [
       item.partitionName,
       item.count,
-      0,
     ]),
   ];
+
   const curveData = response && [
     ['Month', 'Amount'],
     ...response?.paymentDetails?.paymentPartitions?.map((item: any) => [
@@ -42,15 +42,32 @@ const OrdersOverview = ({
     ]),
   ];
 
-  // function getSortedUniqueCounts(data) {
-  //   const counts = data?.map((item) => item.count);
+  const getChartConfig = () => {
+    const totalCount = response?.orderDetails?.orderPartitions.reduce(
+      (acc, item) => acc + item.count,
+      0
+    );
 
-  //   const uniqueCounts = [...new Set(counts)];
-
-  //   const sortedCounts = uniqueCounts.sort((a, b) => a - b);
-
-  //   return sortedCounts;
-  // }
+    if (totalCount <= 100) {
+      return {
+        minValue: 0,
+        maxValue: 100,
+        ticks: [0, 25, 50, 75, 100],
+      };
+    } else if (totalCount <= 500) {
+      return {
+        minValue: 0,
+        maxValue: 500,
+        ticks: [0, 100, 250, 375, 500],
+      };
+    } else {
+      return {
+        minValue: 0,
+        maxValue: 1000,
+        ticks: [0, 250, 500, 750, 1000],
+      };
+    }
+  };
 
   const options = {
     colors: ['#5F35D2', '#005E2B'],
@@ -59,10 +76,10 @@ const OrdersOverview = ({
     vAxis: {
       gridlines: { color: 'transparent' },
       baselineColor: 'transparent',
-      minValue: 0,
-      maxValue: 1000,
-      // ticks: getSortedUniqueCounts(response?.orderDetails?.orderPartitions),
-      ticks: [0, 250, 500, 750, 1000],
+      minValue: getChartConfig().minValue,
+      maxValue: getChartConfig().maxValue,
+
+      ticks: getChartConfig().ticks,
     },
     bar: { groupWidth: '35%' },
     series: {
