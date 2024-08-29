@@ -1,23 +1,25 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { GoPlus } from 'react-icons/go';
-import noImage from '../../../../public/assets/images/no-image.svg';
+import noImage from '../../../../public/assets/images/no-menu.png';
 
 const EmptyOverview = ({
   title,
   buttonText,
   href,
+  image,
 }: {
   title: string;
   buttonText?: string;
   href?: any;
   buttonWidth?: string;
+  image?: any;
 }) => {
   return (
     <div className=' my-10 grid place-content-center gap-2 text-sm px-1 text-grey500'>
       <div className='w-full grid place-content-center'>
         <Image
-          src={noImage}
+          src={image || noImage}
           width={20}
           height={20}
           className='object-cover rounded-lg w-[55px] h-[55px]'

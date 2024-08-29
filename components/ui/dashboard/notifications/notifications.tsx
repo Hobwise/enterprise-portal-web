@@ -5,7 +5,9 @@ import {
 } from '@/app/api/controllers/dashboard/settings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Avatar, Divider } from '@nextui-org/react';
+import moment from 'moment';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { IoCheckmarkDoneOutline } from 'react-icons/io5';
 
 const Notifications = ({
@@ -19,46 +21,56 @@ const Notifications = ({
   const business = getJsonItemFromLocalStorage('business');
   const router = useRouter();
 
+  const [expandedMessages, setExpandedMessages] = useState<string[]>([]);
+
   const markAsRead = async (id: string) => {
     await postMarkAsRead(id);
     refetch();
     refetchCount();
   };
+
   const markAsAllRead = async () => {
     await postMarkAllAsRead(business[0].businessId);
     refetch();
     refetchCount();
+    setExpandedMessages([]);
   };
 
-  const buttonText = (eventType: string) => {
-    const lowerCaseEventType = eventType.toLowerCase();
-    if (lowerCaseEventType.includes('order')) {
-      return 'View order';
-    } else if (lowerCaseEventType.includes('booking')) {
-      return 'View booking';
-    } else if (lowerCaseEventType.includes('reservation')) {
-      return 'View reservation';
-    } else if (lowerCaseEventType.includes('campaign')) {
-      return 'View campaign';
+  const toggleReadMore = (id: string) => {
+    if (expandedMessages.includes(id)) {
+      setExpandedMessages((prev) => prev.filter((msgId) => msgId !== id));
+    } else {
+      // First expand the message
+      setExpandedMessages((prev) => [...prev, id]);
+      // Then mark as read without causing a rerender
+      if (
+        !notifData.notifications.find((notif: any) => notif.id === id).isRead
+      ) {
+        markAsRead(id);
+      }
     }
-    return 'View';
   };
-  const navigateToPage = (eventType: string) => {
-    let page = '';
 
-    if (eventType.toLowerCase().includes('order')) {
-      page = '/dashboard/orders';
-    } else if (eventType.toLowerCase().includes('booking')) {
-      page = 'dashboard/bookings';
-    } else if (eventType.toLowerCase().includes('reservation')) {
-      page = '/dashboard/reservation';
-    } else if (eventType.toLowerCase().includes('campaign')) {
-      page = '/dashboard/campaigns';
-    }
+  const getRelativeTime = (dateTime: string) => {
+    return moment(dateTime)
+      .fromNow(true)
+      .replace('minutes', 'm')
+      .replace('minute', 'm')
+      .replace('hours', 'hrs')
+      .replace('an hour', '1hr')
+      .replace('hour', 'hr')
+      .replace('days', 'd')
+      .replace('day', 'd')
+      .replace(/\s/g, '');
+  };
 
-    if (page) {
-      router.push(page);
-    }
+  const truncateMessage = (
+    message: string,
+    isExpanded: boolean,
+    isRead: boolean
+  ) => {
+    if (isRead || isExpanded) return message;
+    return message.length > 50 ? `${message.slice(0, 50)}...` : message;
   };
 
   return (
@@ -78,6 +90,9 @@ const Notifications = ({
           const backgroundColorClass = !notif.isRead
             ? 'bg-[#EAE5FF]'
             : 'bg-white';
+
+          const isExpanded = expandedMessages.includes(notif.id);
+
           return (
             <div key={notif.id}>
               <div
@@ -95,22 +110,32 @@ const Notifications = ({
                   />
                 </div>
                 <div className='flex justify-center flex-col space-y-1'>
-                  <span className='font-[600]'>{notif.eventType}</span>
+                  <div className='flex justify-between'>
+                    <span className='font-[600]'>{notif.eventType}</span>
+                    <span className='text-xs text-grey500'>
+                      {getRelativeTime(notif.dateUpdated)}
+                    </span>
+                  </div>
                   <span className='flex justify-center '>
                     <span className='border-l-3 border-primaryGrey h-4 pr-2' />
-                    <span className='text-grey500'>{notif.message}</span>
+                    <div className='text-grey500 '>
+                      <span>
+                        {truncateMessage(
+                          notif.message,
+                          isExpanded,
+                          notif.isRead
+                        )}{' '}
+                        {!notif.isRead && !isExpanded && (
+                          <span
+                            onClick={() => toggleReadMore(notif.id)}
+                            className='text-primaryColor cursor-pointer text-xs'
+                          >
+                            {'Read more'}
+                          </span>
+                        )}
+                      </span>
+                    </div>
                   </span>
-                  <div className='mt-1 ml-2'>
-                    <button
-                      onClick={() => {
-                        navigateToPage(notif.eventType);
-                        markAsRead(notif.id);
-                      }}
-                      className='bg-secondaryColor outline-none border-none text-white text-xs p-2 rounded-md '
-                    >
-                      {buttonText(notif.eventType)}
-                    </button>
-                  </div>
                 </div>
               </div>
               <Divider className='my-2 bg-primaryGrey' />

@@ -6,6 +6,9 @@ import Image from 'next/image';
 import Chart from 'react-google-charts';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { default as noImage } from '../../../../public/assets/images/no-image.svg';
+import NoOrder from '../../../../public/assets/images/no-order.png';
+import NoPayment from '../../../../public/assets/images/no-payment.png';
+import NoQR from '../../../../public/assets/images/no-qr.png';
 import EmptyOverview from './emptyOverview';
 import SkeletonLoaderModules from './skeletonLoadingModules';
 
@@ -77,7 +80,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                       />
                     </div>
                   ) : (
-                    <EmptyOverview title='payments' />
+                    <EmptyOverview image={NoPayment} title='payments' />
                   )}
                 </div>
               </div>
@@ -188,6 +191,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
               </div>
               {response?.campaigns.length === 0 || response === undefined ? (
                 <EmptyOverview
+                  image={NoOrder}
                   title='active campaigns'
                   buttonText='Start a campaign'
                   href='/dashboard/campaigns/create-campaign'
@@ -302,6 +306,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
             </div>
           ) : (
             <EmptyOverview
+              image={NoQR}
               title='active QR codes'
               buttonText='Create QR'
               href='/dashboard/qr-code/create-qr'

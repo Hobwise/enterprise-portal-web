@@ -8,12 +8,13 @@ const Filters = ({
 }: any) => {
   return (
     <>
-      <div className='flex relative top-3  w-full border-b border-divider px-3 justify-between'>
+      <div className='flex -mt-6  w-full border-b border-divider px-3 justify-between'>
         <Tabs
           classNames={{
-            tabList: 'gap-x-6  relative rounded-none py-0 flex flex-wrap',
+            base: 'overflow-scroll relative top-6',
+            tabList: 'gap-x-4 ',
             cursor: 'w-full bg-primaryColor',
-            tab: 'max-w-fit px-0 py-0 h-10',
+            tab: 'max-w-fit px-0 py-0 h-10 ',
             tabContent: 'group-data-[selected=true]:text-primaryColor m-0',
           }}
           variant={'underlined'}

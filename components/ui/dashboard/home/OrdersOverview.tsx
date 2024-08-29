@@ -13,6 +13,7 @@ import { Chart } from 'react-google-charts';
 import { BsArrowUpShort } from 'react-icons/bs';
 import { IoArrowUpCircleOutline } from 'react-icons/io5';
 import { MdKeyboardArrowDown } from 'react-icons/md';
+import NoOrder from '../../../../public/assets/images/no-order.png';
 import EmptyOverview from './emptyOverview';
 import SkeletonLoaderOrder from './skeletonLoadingOrders';
 
@@ -144,6 +145,7 @@ const OrdersOverview = ({
             {response?.orderDetails.orderPartitions.length === 0 ||
             response === undefined ? (
               <EmptyOverview
+                image={NoOrder}
                 title='active orders'
                 buttonText='Place order'
                 href='/dashboard/orders'

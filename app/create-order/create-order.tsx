@@ -270,9 +270,9 @@ const CreateOrder = () => {
                         ?.textContainer
                     } flex flex-col justify-center w-[70%]`}
                   >
-                    <p className='font-[700]'>{item.menuName}</p>
+                    <p className='font-[700]'>{item.itemName}</p>
+                    <p className='text-[13px]'>{item.menuName}</p>
                     <p className='text-[13px]'>{formatPrice(item.price)}</p>
-                    <p className='text-[13px]'>{item.itemDescription}</p>
                     {isSelected && (
                       <Chip
                         startContent={<CheckIcon size={18} />}
