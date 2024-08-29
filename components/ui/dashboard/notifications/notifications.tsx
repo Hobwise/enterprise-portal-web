@@ -52,6 +52,22 @@ const Notifications = ({
   };
 
   const getRelativeTime = (dateTime: string) => {
+    const now = moment();
+    const diffInSeconds = now.diff(moment(dateTime), 'seconds');
+    const diffInMinutes = now.diff(moment(dateTime), 'minutes');
+    const diffInHours = now.diff(moment(dateTime), 'hours');
+
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds}s`;
+    }
+
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes}m`;
+    }
+
+    if (diffInHours < 24) {
+      return `${diffInHours}hr${diffInHours > 1 ? 's' : ''}`;
+    }
     return moment(dateTime)
       .fromNow(true)
       .replace('minutes', 'm')
