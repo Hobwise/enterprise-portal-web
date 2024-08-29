@@ -15,7 +15,7 @@ const useNotificationCount = () => {
     'notificationCount',
     fetchNotificationCount,
     {
-      staleTime: 60000,
+      refetchInterval: 60000,
       refetchOnWindowFocus: false,
     }
   );
