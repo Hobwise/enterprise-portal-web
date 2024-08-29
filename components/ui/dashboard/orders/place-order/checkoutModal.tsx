@@ -258,7 +258,7 @@ const CheckoutModal = ({
     <div className=''>
       <Modal
         classNames={{
-          base: 'overflow-scroll h-full',
+          base: 'md:overflow-none overflow-scroll h-full md:h-auto',
           body: 'px-1 md:px-6',
           header: 'px-3 md:px-6',
         }}
