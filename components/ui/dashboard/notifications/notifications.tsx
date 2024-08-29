@@ -144,7 +144,10 @@ const Notifications = ({
         })}
         {notifData.hasNext && (
           <div className='flex justify-center text-sm'>
-            <p onClick={loadMore} className='text-primaryColor cursor-pointer'>
+            <p
+              onClick={loadMore}
+              className='text-primaryColor text-xs cursor-pointer'
+            >
               {isLoading ? 'Loading...' : 'Load More'}
             </p>
             {isError && (
