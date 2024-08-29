@@ -8,6 +8,16 @@ import {
   DropdownMenu,
   DropdownTrigger,
 } from '@nextui-org/react';
+import {
+  CategoryScale,
+  Chart as ChartJS,
+  Filler,
+  LineElement,
+  LinearScale,
+  PointElement,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
 import moment from 'moment';
 import { Chart } from 'react-google-charts';
 import { BsArrowUpShort } from 'react-icons/bs';
@@ -34,13 +44,39 @@ const OrdersOverview = ({
     ]),
   ];
 
-  const curveData = response && [
-    ['Month', 'Amount'],
-    ...response?.paymentDetails?.paymentPartitions?.map((item: any) => [
-      item.partitionName,
-      item.count,
-    ]),
-  ];
+  const getCurveChartConfig = () => {
+    const labels = response?.paymentDetails?.paymentPartitions.map(
+      (item) => item.partitionName
+    );
+    const counts = response?.paymentDetails?.paymentPartitions.map(
+      (item) => item.count
+    );
+    return {
+      label: labels,
+      data: counts,
+    };
+  };
+
+  const curveData = {
+    labels: getCurveChartConfig().label,
+    datasets: [
+      {
+        label: 'Wave-like Data',
+        data: getCurveChartConfig().data,
+        borderColor: '#9747FF',
+        backgroundColor: 'rgba(151, 71, 255, 0.3)',
+        tension: 0.4,
+        fill: true,
+      },
+    ],
+  };
+  ChartJS.register(
+    LineElement,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    Filler
+  );
 
   const getChartConfig = () => {
     const totalCount = response?.orderDetails?.orderPartitions.reduce(
@@ -90,27 +126,18 @@ const OrdersOverview = ({
   };
 
   const curveOptions = {
-    title: '',
-    hAxis: {
-      textPosition: 'none',
-      baselineColor: 'none',
-      gridlines: { color: 'transparent' },
-      minorGridlines: { color: 'transparent' },
+    scales: {
+      x: { display: false },
+      y: { display: false },
     },
-    vAxis: { textPosition: 'none', gridlines: { color: 'transparent' } },
-    legend: { position: 'none' },
-    chartArea: { width: '100%', height: '100%' },
-    colors: ['#9747FF', '#421CAC'],
-    areaOpacity: 0.3,
-    backgroundColor: 'transparent',
-    series: {
-      0: {
-        lineWidth: 2,
-        curveType: 'function',
+    elements: {
+      point: {
+        radius: 0,
       },
     },
-    interpolateNulls: true,
-    enableInteractivity: true,
+    plugins: {
+      legend: { display: false },
+    },
   };
 
   if (isLoading) {
@@ -259,13 +286,8 @@ const OrdersOverview = ({
             response?.paymentDetails.paymentPartitions.length === 0 ? (
               ''
             ) : (
-              <div className='lg:mt-10 mt-0'>
-                <Chart
-                  chartType='AreaChart'
-                  width='100%'
-                  data={curveData}
-                  options={curveOptions}
-                />
+              <div className='relative top-6'>
+                <Line data={curveData} options={curveOptions} />;
               </div>
             )}
           </div>

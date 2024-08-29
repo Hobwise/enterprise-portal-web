@@ -36,9 +36,9 @@ const useNotification = (page: number, pageSize: number) => {
     ['notification', page, pageSize],
     fetchNotification,
     {
-      staleTime: 60000,
       refetchOnWindowFocus: false,
       keepPreviousData: true,
+      refetchInterval: 60000,
     }
   );
 
