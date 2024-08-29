@@ -250,7 +250,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 href='/dashboard/menu'
               />
             ) : (
-              <div className='p-3 space-y-4 overflow-scroll h-[400px]'>
+              <div className='p-3 space-y-4 overflow-scroll lg:h-[400px] h-[200px]'>
                 {response?.bestSellers.map((item: any) => (
                   <div key={item.itemID} className='flex gap-4 justify-between'>
                     <div className=' gap-1 grid place-content-center'>
