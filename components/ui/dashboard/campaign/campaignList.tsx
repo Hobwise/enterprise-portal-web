@@ -12,6 +12,7 @@ import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
+  DropdownSection,
   DropdownTrigger,
   Table,
   TableBody,
@@ -34,6 +35,7 @@ import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns } from './data';
 import DeleteCampaignModal from './deleteCampaign';
 import Filters from './filters';
+import RepeatCampaignModal from './repeatCampaign';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'campaignName',
@@ -75,9 +77,15 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
   const { setTableStatus, tableStatus, setPage } = useGlobalContext();
 
   const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
+  const [isOpenRepeat, setIsOpenRepeat] = React.useState<Boolean>(false);
+  const [singleCampaign, setSingleCampaign] = React.useState<Boolean>({});
 
   const toggleCampaignModal = () => {
     setIsOpenDelete(!isOpenDelete);
+  };
+  const toggleRepeatModal = (campaign?: any) => {
+    setSingleCampaign(campaign);
+    setIsOpenRepeat(!isOpenRepeat);
   };
   const router = useRouter();
 
@@ -109,13 +117,15 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
     setTableStatus(filteredCampaigns[0]?.name);
     setFilteredCampaigns(filteredCampaigns[0]?.campaigns);
   };
-
+  const [isLoading, setIsLoading] = useState(false);
   const restartCampaign = async (campaign: any) => {
+    setIsLoading(true);
     const data = await repeatCampaign(campaign.id);
-
+    setIsLoading(false);
     if (data?.data?.isSuccessful) {
       refetch();
       toast.success('Campaign repeated successfully');
+      toggleRepeatModal();
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -182,64 +192,68 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu className='text-black'>
-                <DropdownItem aria-label='preview campaign'>
-                  <Link
-                    prefetch={true}
-                    className='flex w-full'
-                    href={{
-                      pathname: `/dashboard/campaigns/${campaign.id}`,
-                      query: {
-                        campaignId: campaign.id,
-                      },
-                    }}
-                  >
-                    <div className={` flex gap-2  items-center text-grey500`}>
-                      <LuEye />
-                      <p>Preview campaign</p>
-                    </div>
-                  </Link>
-                </DropdownItem>
-                <DropdownItem
-                  aria-label='repeat campaign'
-                  onClick={() => restartCampaign(campaign)}
-                >
-                  <div className={` flex gap-2  items-center text-grey500`}>
-                    <PiRepeat />
-                    <p>Repeat campaign</p>
-                  </div>
-                </DropdownItem>
-                {(role === 0 ||
-                  userRolePermissions?.canEditCampaign === true) && (
-                  <DropdownItem
-                    aria-label='edit campaign'
-                    onClick={() => {
-                      saveJsonItemToLocalStorage('campaign', campaign);
-                      router.push('/dashboard/campaigns/edit-campaign');
-                    }}
-                  >
-                    <div className={` flex gap-2  items-center text-grey500`}>
-                      <FaRegEdit />
-
-                      <p>Edit campaign</p>
-                    </div>
+                <DropdownSection>
+                  <DropdownItem aria-label='preview campaign'>
+                    <Link
+                      prefetch={true}
+                      className='flex w-full'
+                      href={{
+                        pathname: `/dashboard/campaigns/${campaign.id}`,
+                        query: {
+                          campaignId: campaign.id,
+                        },
+                      }}
+                    >
+                      <div className={` flex gap-2  items-center text-grey500`}>
+                        <LuEye />
+                        <p>Preview campaign</p>
+                      </div>
+                    </Link>
                   </DropdownItem>
-                )}
-                {(role === 0 ||
-                  userRolePermissions?.canDeleteCampaign === true) && (
-                  <DropdownItem
-                    aria-label='delete campaign'
-                    onClick={() => {
-                      toggleCampaignModal();
-                      saveJsonItemToLocalStorage('campaign', campaign);
-                    }}
-                  >
-                    <div className={` flex gap-2  items-center text-grey500`}>
-                      <RiDeleteBin6Line />
+                  {campaign.isActive === false && (
+                    <DropdownItem
+                      aria-label='repeat campaign'
+                      onClick={() => toggleRepeatModal(campaign)}
+                    >
+                      <div className={` flex gap-2  items-center text-grey500`}>
+                        <PiRepeat />
+                        <p>Repeat campaign</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                  {(role === 0 ||
+                    userRolePermissions?.canEditCampaign === true) && (
+                    <DropdownItem
+                      aria-label='edit campaign'
+                      onClick={() => {
+                        saveJsonItemToLocalStorage('campaign', campaign);
+                        router.push('/dashboard/campaigns/edit-campaign');
+                      }}
+                    >
+                      <div className={` flex gap-2  items-center text-grey500`}>
+                        <FaRegEdit />
 
-                      <p>Delete campaign</p>
-                    </div>
-                  </DropdownItem>
-                )}
+                        <p>Edit campaign</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                  {(role === 0 ||
+                    userRolePermissions?.canDeleteCampaign === true) && (
+                    <DropdownItem
+                      aria-label='delete campaign'
+                      onClick={() => {
+                        toggleCampaignModal();
+                        saveJsonItemToLocalStorage('campaign', campaign);
+                      }}
+                    >
+                      <div className={` flex gap-2  items-center text-grey500`}>
+                        <RiDeleteBin6Line />
+
+                        <p>Delete campaign</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                </DropdownSection>
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -322,6 +336,13 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
         isOpenDelete={isOpenDelete}
         setIsOpenDelete={setIsOpenDelete}
         toggleCampaignModal={toggleCampaignModal}
+      />
+      <RepeatCampaignModal
+        isLoading={isLoading}
+        isOpenRepeat={isOpenRepeat}
+        singleCampaign={singleCampaign}
+        restartCampaign={restartCampaign}
+        toggleRepeatModal={toggleRepeatModal}
       />
     </section>
   );

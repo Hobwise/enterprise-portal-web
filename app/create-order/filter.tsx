@@ -11,11 +11,11 @@ const Filters = ({
       <div className='flex   w-full border-b border-divider px-3 justify-between'>
         <Tabs
           classNames={{
-            base: 'overflow-scroll relative top-2',
+            base: 'overflow-scroll relative top-5',
             tabList: 'gap-x-4 ',
             cursor: 'w-full bg-primaryColor',
             tab: 'max-w-fit px-0 py-0 h-10 ',
-            tabContent: 'group-data-[selected=true]:text-primaryColor m-0',
+            tabContent: 'group-data-[selected=true]:text-primaryColor m-0 ',
           }}
           variant={'underlined'}
           aria-label='menu filter'

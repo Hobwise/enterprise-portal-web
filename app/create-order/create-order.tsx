@@ -176,7 +176,7 @@ const CreateOrder = () => {
 
   const baseString = 'data:image/jpeg;base64,';
   return (
-    <main className='grid place-content-center '>
+    <main className=' '>
       <article
         style={{
           backgroundColor: menuConfig?.backgroundColour || 'white',

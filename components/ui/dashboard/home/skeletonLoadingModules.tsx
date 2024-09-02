@@ -11,8 +11,8 @@ const SkeletonLoaderModules = () => {
               <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                 <Skeleton className='h-6 w-24 rounded-md' />
               </div>
-              <div className='w-full  p-3 flex gap-4'>
-                <Skeleton className='w-[130px] h-[130px]  rounded-full' />
+              <div className='w-full  p-5 flex gap-4'>
+                <Skeleton className='w-[100px] h-[100px]  rounded-full' />
                 <div className='flex flex-col justify-center gap-1'>
                   <Skeleton className='h-4 w-24 rounded-md' />
                   <Skeleton className='h-4 w-40 rounded-md' />
