@@ -127,6 +127,7 @@ api.interceptors.request.use(async (config) => {
 
   return config;
 });
+
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
@@ -139,30 +140,6 @@ api.interceptors.response.use(
     } else {
       handleError(error);
     }
-
-    //   if (error.code === 'ECONNABORTED') {
-    //     notify({
-    //       title: 'Network Timeout',
-    //       text: 'The request took too long. Please try again later.',
-    //       type: 'error',
-    //     });
-    //     return error;
-    //   }
-    //   if (error.code === 'ERR_BAD_REQUEST') {
-    //     handleError(error, true);
-    //     return error;
-    //   } else {
-    //     handleError(error);
-    //   }
-
-    //   if (error.code === 'ERR_NETWORK') {
-    //     notify({
-    //       title: 'Network Timeout!',
-    //       text: 'Check your network and try again',
-    //       type: 'error',
-    //     });
-    //     return error;
-    //   }
   }
 );
 
