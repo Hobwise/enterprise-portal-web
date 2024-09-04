@@ -11,7 +11,7 @@ const Filters = ({
       <div className='flex   w-full border-b border-divider px-3 justify-between'>
         <Tabs
           classNames={{
-            base: 'overflow-scroll relative top-5',
+            base: 'overflow-scroll relative top-2',
             tabList: 'gap-x-4 ',
             cursor: 'w-full bg-primaryColor',
             tab: 'max-w-fit px-0 py-0 h-10 ',

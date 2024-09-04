@@ -51,7 +51,7 @@ const CheckoutModal = ({
   handleIncrement,
   orderDetails,
   id,
-  closeModal = false,
+
   setSelectedItems,
   businessId,
   cooperateID,
@@ -122,7 +122,6 @@ const CheckoutModal = ({
     }
   };
 
-  const [changeTitle, setChangeTitle] = useState(false);
   const placeOrder = async () => {
     setLoading(true);
     const transformedArray = selectedItems.map((item) => ({
@@ -150,8 +149,8 @@ const CheckoutModal = ({
         text: 'Order placed',
         type: 'success',
       });
-      closeModal === true && setChangeTitle(true);
-      closeModal === false && setScreen(2);
+
+      setScreen(2);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -288,27 +287,16 @@ const CheckoutModal = ({
                 <>
                   <ModalHeader className='flex flex-col mt-5 gap-1'>
                     <div className='flex flex-row flex-wrap  justify-between'>
-                      {changeTitle ? (
-                        <div>
-                          <div className='text-[24px] leading-8 font-semibold'>
-                            <span className='text-black'>Hello,</span>
-                          </div>
-                          <p className='text-sm  text-grey600 xl:mb-8 w-full mb-4'>
-                            Your orders
-                          </p>
+                      <div>
+                        <div className='text-[24px] leading-8 font-semibold'>
+                          <span className='text-black'>Confirm order</span>
                         </div>
-                      ) : (
-                        <div>
-                          <div className='text-[24px] leading-8 font-semibold'>
-                            <span className='text-black'>Confirm order</span>
-                          </div>
-                          <p className='text-sm  text-grey600 xl:mb-8 w-full mb-4'>
-                            Confirm order before checkout
-                          </p>
-                        </div>
-                      )}
+                        <p className='text-sm  text-grey600 xl:mb-8 w-full mb-4'>
+                          Confirm order before checkout
+                        </p>
+                      </div>
 
-                      <div className='gap-3 xl:flex hidden'>
+                      <div className='gap-3 flex '>
                         <CustomButton
                           onClick={onOpenChange}
                           className='py-2 px-4 mb-0 bg-white border border-primaryGrey'
@@ -453,38 +441,6 @@ const CheckoutModal = ({
                           label='Add comment'
                           placeholder='Add a comment to this order. (optional)'
                         />
-                      </div>
-                      <div className='gap-3 flex px-3 flex-col xl:hidden'>
-                        {changeTitle ? (
-                          <CustomButton
-                            onClick={updateOrder}
-                            className='py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey'
-                          >
-                            Update order
-                          </CustomButton>
-                        ) : (
-                          <>
-                            <CustomButton
-                              onClick={onOpenChange}
-                              className='py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey'
-                            >
-                              Update order
-                            </CustomButton>
-
-                            <CustomButton
-                              loading={loading}
-                              disabled={loading}
-                              onClick={id ? updateOrder : placeOrder}
-                              className='py-2 h-[50px] px-4 mb-0 text-white'
-                              backgroundColor='bg-primaryColor'
-                            >
-                              <div className='flex gap-2  w-full items-center justify-between'>
-                                <p>Place order </p>
-                                <HiArrowLongLeft className='text-[22px] rotate-180' />
-                              </div>
-                            </CustomButton>
-                          </>
-                        )}
                       </div>
                     </div>
                   </ModalBody>

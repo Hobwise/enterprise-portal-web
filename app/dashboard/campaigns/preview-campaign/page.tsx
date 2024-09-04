@@ -1,11 +1,10 @@
+import dynamic from 'next/dynamic';
 import React from 'react';
 import Preview from './preview-campaign';
 
-export const metadata = {
-  title: 'Hobink | Preview campaign',
-  description: 'Streamline your business processes',
-};
-
+const DynamicMetaTag = dynamic(() => import('@/components/dynamicMetaTag'), {
+  ssr: false,
+});
 const PreviewCampaign: React.FC = () => {
   return (
     <>
@@ -17,6 +16,7 @@ const PreviewCampaign: React.FC = () => {
           </p>
         </div>
         <Preview />
+        <DynamicMetaTag route='Preview campaign' />
       </div>
     </>
   );

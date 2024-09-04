@@ -1,12 +1,20 @@
 import MenuList from '@/components/ui/dashboard/orders/place-order/menuList';
+import dynamic from 'next/dynamic';
 
-export const metadata = {
-  title: 'Hobink | Place Order',
-  description: ' Select items from the menu to place order',
-};
+const DynamicMetaTag = dynamic(() => import('@/components/dynamicMetaTag'), {
+  ssr: false,
+});
 
 const PlaceOrder = () => {
-  return <MenuList />;
+  return (
+    <>
+      <MenuList />
+      <DynamicMetaTag
+        route='Place Order'
+        description='Select items from the menu to place order'
+      />
+    </>
+  );
 };
 
 export default PlaceOrder;

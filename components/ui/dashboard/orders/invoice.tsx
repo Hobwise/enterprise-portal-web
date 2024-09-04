@@ -42,10 +42,10 @@ const InvoiceModal = ({
   };
 
   useEffect(() => {
-    if (singleOrder.id) {
+    if (singleOrder?.id) {
       getOrderDetails();
     }
-  }, [singleOrder.id]);
+  }, [singleOrder?.id]);
 
   return (
     <Modal

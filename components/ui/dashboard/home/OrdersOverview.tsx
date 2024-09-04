@@ -123,6 +123,7 @@ const OrdersOverview = ({
       1: { type: 'bars' },
     },
     isStacked: true,
+    chartArea: { left: '5%', right: '0%', width: '85%', height: '80%' },
   };
 
   const curveOptions = {
@@ -242,13 +243,15 @@ const OrdersOverview = ({
                   </div>
                 </div>
                 <Divider className='my-3 bg-primaryGrey' />
+                {/* <div className='w-full'> */}
                 <Chart
                   chartType='ComboChart'
                   width='100%'
                   height='200px'
                   data={transformedData}
                   options={options}
-                />{' '}
+                />
+                {/* </div> */}
               </>
             )}
           </div>

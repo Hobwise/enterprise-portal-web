@@ -203,7 +203,7 @@ const ViewModal = ({
                           });
                           toggleVarietyModal();
                         }}
-                        className='bg-white h-10  w-full text-black border border-primaryGrey'
+                        className='md:bg-white bg-primaryGrey h-10  w-full text-black border border-primaryGrey'
                       >
                         Select
                       </CustomButton>

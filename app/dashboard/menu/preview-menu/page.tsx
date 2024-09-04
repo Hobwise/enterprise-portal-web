@@ -3,11 +3,11 @@ import { IoIosArrowRoundBack } from 'react-icons/io';
 
 import Layout from '@/components/ui/dashboard/menu/preview-menu/layout';
 import Preview from '@/components/ui/dashboard/menu/preview-menu/preview';
+import dynamic from 'next/dynamic';
 
-export const metadata = {
-  title: 'Hobink | Preview menu',
-  description: 'Preview how the menu appear',
-};
+const DynamicMetaTag = dynamic(() => import('@/components/dynamicMetaTag'), {
+  ssr: false,
+});
 const PreviewMenu = () => {
   return (
     <>
@@ -23,6 +23,10 @@ const PreviewMenu = () => {
         <Layout />
         <Preview />
       </section>
+      <DynamicMetaTag
+        route='Preview menu'
+        description='Preview how the menu appear'
+      />
     </>
   );
 };

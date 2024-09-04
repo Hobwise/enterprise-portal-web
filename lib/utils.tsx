@@ -387,28 +387,21 @@ export const printPDF = async (invoiceRef: any) => {
     .output('blob')
     .then((blob) => {
       const url = URL.createObjectURL(blob);
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.width = '100%';
-      iframe.style.height = '100%';
-      iframe.style.top = '0';
-      iframe.style.left = '0';
-      iframe.style.zIndex = '10000';
-      iframe.src = url;
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        iframe.contentWindow.print();
-        iframe.contentWindow.onafterprint = () => {
-          document.body.removeChild(iframe);
-          URL.revokeObjectURL(url);
-        };
+      // Open a new tab
+      const newTab = window.open(url, '_blank');
+      newTab.focus();
+
+      newTab.onload = () => {
+        newTab.print();
+        URL.revokeObjectURL(url);
       };
     });
 };
+
 const crypto = require('crypto');
 
 const algorithm = 'aes-256-ctr';
-const secretKey = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3'; // This should be kept secret and secure
+const secretKey = 'vOVH6sdmpNWjRRIqCc7rdxs01lwHzfr3';
 
 export const encrypt = (text: any) => {
   const iv = crypto.randomBytes(16);

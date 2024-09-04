@@ -3,7 +3,7 @@ import { inter } from '@/utilities/ui-config/fonts';
 import 'react-toastify/dist/ReactToastify.css';
 
 export const metadata = {
-  title: 'Hobink | Dashboard',
+  title: 'Hobink | Onboarding',
   description: 'Streamline your business processes',
 };
 

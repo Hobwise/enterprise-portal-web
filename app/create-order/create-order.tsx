@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
 import { togglePreview } from '@/components/ui/dashboard/menu/preview-menu/data';
-import CheckoutModal from '@/components/ui/dashboard/orders/place-order/checkoutModal';
+
 import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
 import ViewModal from '@/components/ui/dashboard/orders/place-order/view';
 import useMenu from '@/hooks/cachedEndpoints/useMenu';
@@ -17,7 +17,9 @@ import { formatPrice } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import noMenu from '../../public/assets/images/no-menu.png';
+
 import SplashScreen from '../reservation/splash-screen';
+import CheckoutModal from './checkoutModal';
 import Filters from './filter';
 
 const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];

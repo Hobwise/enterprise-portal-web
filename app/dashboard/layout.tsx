@@ -1,13 +1,13 @@
-import { inter } from '@/utilities/ui-config/fonts';
-
 import BusinessSettingsDashboardPrompt from '@/components/businessSettingsDashboardPrompt';
 import Container from '@/components/dashboardContainer';
+
+import { inter } from '@/utilities/ui-config/fonts';
+import dynamic from 'next/dynamic';
 import 'react-toastify/dist/ReactToastify.css';
 
-export const metadata = {
-  title: 'Hobink | Dashboard',
-  description: 'Streamline your business processes',
-};
+const DynamicMetaTag = dynamic(() => import('@/components/dynamicMetaTag'), {
+  ssr: false,
+});
 
 export default function DashboardLayout({
   children,
@@ -15,9 +15,12 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='en' className={`${inter.className} `} suppressHydrationWarning>
+    <html lang='en' className={`${inter.className}`} suppressHydrationWarning>
       <body>
-        <Container>{children}</Container>
+        <Container>
+          <DynamicMetaTag />
+          {children}
+        </Container>
         <BusinessSettingsDashboardPrompt />
       </body>
     </html>
