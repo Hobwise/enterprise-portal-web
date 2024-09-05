@@ -1,5 +1,7 @@
 export const AUTH = {
   user: 'api/v1/User',
+  userByBusiness: 'api/v1/User/by-business',
+  additionalUser: 'api/v1/User/additional-account',
   generateToken: 'api/v1/OneTimePassword/generate',
   validateToken: 'api/v1/OneTimePassword/validate',
   registerBusiness: 'api/v1/business',

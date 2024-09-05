@@ -6,6 +6,7 @@ import BusinessProfile from './businessProfile';
 import Password from './password';
 import Profile from './profile';
 import Roles from './rolesAndPrivileges/roles';
+import Teams from './teams/teams';
 
 interface ListItemProps {
   title: string;
@@ -77,9 +78,11 @@ const SettingsComponent: React.FC = () => {
         {activeScreen === 3 && (
           <BusinessProfile setActiveScreen={setActiveScreen} />
         )}
+
         {activeScreen === 4 && (
           <BusinessSettings setActiveScreen={setActiveScreen} />
         )}
+        {activeScreen === 5 && <Teams setActiveScreen={setActiveScreen} />}
         {activeScreen === 6 && <Roles />}
       </article>
     </>

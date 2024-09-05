@@ -30,6 +30,13 @@ const updateUserSchema = z.object({
   email: emailValidation(),
   role: z.string().trim().min(1, 'Select a role'),
 });
+const additionalUserSchema = z.object({
+  firstName: inputNameValidation('First name'),
+  lastName: inputNameValidation('Last name'),
+  email: emailValidation(),
+  role: z.number().min(0, 'Select a role'),
+  password: passwordValidation(),
+});
 
 const loginSchema = z.object({
   email: emailValidation(),
@@ -72,6 +79,28 @@ const businessSchema = z.object({
     }),
 });
 
+export async function getUserByBusiness(
+  businessId: string,
+  page: any,
+  pageSize: any,
+  cooperateId: string
+) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(
+      `${AUTH.userByBusiness}?Page=${page}&PageSize=${pageSize}&cooperateId=${cooperateId}&businessId=${businessId}`,
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
 export async function createUser(formData: any) {
   const validatedFields = userSchema.safeParse({
     firstName: formData.firstName,
@@ -94,6 +123,29 @@ export async function createUser(formData: any) {
 
   try {
     const data = await api.post(AUTH.generateToken, payload);
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+export async function createAdditionalUser(formData: any) {
+  const validatedFields = additionalUserSchema.safeParse({
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.email,
+    role: formData.role,
+    password: formData.password,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  try {
+    const data = await api.post(AUTH.additionalUser, formData);
 
     return data;
   } catch (error) {
