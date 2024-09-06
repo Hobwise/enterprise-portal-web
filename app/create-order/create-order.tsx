@@ -77,6 +77,21 @@ const CreateOrder = () => {
     INITIAL_VISIBLE_COLUMNS
   );
 
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    if (selectedItems.length > 0) {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+    }
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [selectedItems]);
+
   if (isError) {
     return (
       <div className='h-screen grid place-content-center bg-white'>
@@ -178,6 +193,7 @@ const CreateOrder = () => {
   };
 
   const baseString = 'data:image/jpeg;base64,';
+
   return (
     <main className=' '>
       <article

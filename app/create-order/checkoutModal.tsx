@@ -153,9 +153,10 @@ const CheckoutModal = ({
         hideCloseButton={changeTitle}
         isKeyboardDismissDisabled={true}
         classNames={{
-          base: `md:overflow-none overflow-scroll ${
-            changeTitle ? 'h-full' : 'h-auto'
-          }`,
+          base: `max-h-full overflow-scroll`,
+          // base: `md:overflow-none overflow-scroll ${
+          //   changeTitle ? 'h-full' : 'h-screen'
+          // }`,
           body: 'px-1 md:px-6',
           header: 'px-3 md:px-6',
         }}
