@@ -33,6 +33,7 @@ const useUserByBusiness = () => {
       rowsPerPage,
       userInformation?.cooperateID
     );
+
     return responseData?.data?.data as UserBusiness[];
   };
 

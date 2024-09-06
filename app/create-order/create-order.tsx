@@ -35,6 +35,7 @@ const CreateOrder = () => {
 
   let businessId = searchParams.get('businessID');
   let cooperateID = searchParams.get('cooperateID');
+  let qrId = searchParams.get('id');
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -299,6 +300,7 @@ const CreateOrder = () => {
 
       {isOpen && (
         <CheckoutModal
+          qrId={qrId}
           handleDecrement={handleDecrement}
           handleIncrement={handleIncrement}
           selectedItems={selectedItems}

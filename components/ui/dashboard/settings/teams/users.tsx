@@ -1,11 +1,15 @@
+import { deleteUser } from '@/app/api/controllers/auth';
+import CustomDelete from '@/components/deleteComponent';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { downloadCSV } from '@/lib/downloadToExcel';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Avatar,
   Button,
   Chip,
   Dropdown,
+  DropdownItem,
   DropdownMenu,
   DropdownTrigger,
   Table,
@@ -17,11 +21,13 @@ import {
   useDisclosure,
 } from '@nextui-org/react';
 import moment from 'moment';
-import React from 'react';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { MdOutlineFileDownload } from 'react-icons/md';
+import { RiDeleteBin6Line } from 'react-icons/ri';
 import noImage from '../../../../../public/assets/images/no-image.svg';
-import CreateTeam from './createTeam';
+import CreateUser from './createUser';
 export const columns = [
   { name: 'ID', uid: 'id' },
   { name: 'Name', uid: 'firstName' },
@@ -31,7 +37,7 @@ export const columns = [
 ];
 const INITIAL_VISIBLE_COLUMNS = ['firstName', 'dateCreated', 'role', 'actions'];
 
-const Users = ({ data }: any) => {
+const Users = ({ data, refetch }: any) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { page, rowsPerPage } = useGlobalContext();
   const {
@@ -45,6 +51,38 @@ const Users = ({ data }: any) => {
 
     classNames,
   } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const [isOpenEdit, setIsOpenEdit] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isOpenDelete, setIsOpenDelete] = useState(false);
+  const [user, setUser] = useState<any>({});
+
+  const toggleEdit = (user: any) => {
+    setUser(user);
+    setIsOpenEdit(!isOpenEdit);
+  };
+
+  const toggleDelete = (user?: any) => {
+    setUser(user);
+    setIsOpenDelete(!isOpenDelete);
+  };
+
+  const removeUser = async () => {
+    setIsLoading(true);
+    const data = await deleteUser(user?.id);
+    setIsLoading(false);
+    if (data?.data?.isSuccessful) {
+      toggleDelete();
+      toast.success('Deleted successfully');
+      refetch();
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
 
   const renderCell = React.useCallback((user, columnKey) => {
     const cellValue = user[columnKey];
@@ -90,21 +128,35 @@ const Users = ({ data }: any) => {
       case 'actions':
         return (
           <div className='relative flexjustify-center items-center gap-2'>
-            <Dropdown aria-label='drop down' className=''>
-              <DropdownTrigger aria-label='actions'>
-                <span className='text-lg border rounded-md p-1 border-primaryGrey text-default-400 cursor-pointer active:opacity-50'>
-                  <HiOutlineDotsVertical />
-                </span>
-              </DropdownTrigger>
-              <DropdownMenu className='text-black'>
-                {/* <DropdownItem aria-label='view'>
+            {user?.email !== userInformation.email && (
+              <Dropdown aria-label='drop down' className=''>
+                <DropdownTrigger aria-label='actions'>
+                  <span className='text-lg border rounded-md p-1 border-primaryGrey text-default-400 cursor-pointer active:opacity-50'>
+                    <HiOutlineDotsVertical />
+                  </span>
+                </DropdownTrigger>
+                <DropdownMenu className='text-black'>
+                  {/* <DropdownItem
+                  aria-label='edit user'
+                  onClick={() => toggleEdit(user)}
+                >
                   <div className={` flex gap-2  items-center text-grey500`}>
-                    <GrFormView className='text-[20px]' />
-                    <p>View more</p>
+                    <MdEdit className='text-[20px]' />
+                    <p>Edit user</p>
                   </div>
                 </DropdownItem> */}
-              </DropdownMenu>
-            </Dropdown>
+                  <DropdownItem
+                    onClick={() => toggleDelete(user)}
+                    aria-label='delete user'
+                  >
+                    <div className={` flex gap-2  items-center`}>
+                      <RiDeleteBin6Line className='text-[20px] text-danger-500' />
+                      <p className=' text-grey500'>Delete user</p>
+                    </div>
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            )}
           </div>
         );
       default:
@@ -143,7 +195,6 @@ const Users = ({ data }: any) => {
         removeWrapper
         allowsSorting
         aria-label='list of reservations'
-        bottomContent={bottomContent}
         bottomContentPlacement='outside'
         classNames={{
           td: 'h-[70px]',
@@ -177,7 +228,23 @@ const Users = ({ data }: any) => {
           )}
         </TableBody>
       </Table>
-      <CreateTeam isOpen={isOpen} onOpenChange={onOpenChange} />
+      <CreateUser isOpen={isOpen} onOpenChange={onOpenChange} />
+      {/* <EditUser user={user} toggleEdit={toggleEdit} isOpenEdit={isOpenEdit} /> */}
+      <CustomDelete
+        title={
+          <span>
+            Are you sure you want to remove{' '}
+            <span className='font-bold'>
+              {user?.firstName} {user?.lastName}
+            </span>{' '}
+            from your team?
+          </span>
+        }
+        isLoading={isLoading}
+        action={removeUser}
+        toggleDelete={toggleDelete}
+        isOpen={isOpenDelete}
+      />
     </section>
   );
 };

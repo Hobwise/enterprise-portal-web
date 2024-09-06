@@ -30,7 +30,7 @@ const LogoutModal = ({ isOpen, onOpenChange }: any) => {
               <div className='flex flex-col justify-center items-center gap-2'>
                 <PiSealWarningDuotone className='text-danger-500 text-[48px] mt-5' />
 
-                <div className='text-black text-center xl:w-[80%] w-full mb-2 font-[700]'>
+                <div className='text-black text-center xl:w-[80%] w-full mb-2'>
                   Are you sure you want to log out?
                 </div>
               </div>

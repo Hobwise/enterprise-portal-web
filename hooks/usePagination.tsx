@@ -6,7 +6,7 @@ import { useGlobalContext } from './globalProvider';
 
 const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
-
+  console.log(arrayToMap, 'comment');
   const refinedArrayToMap = arrayToMap ? arrayToMap?.totalPages : 1;
   const [filterValue, setFilterValue] = React.useState('');
 

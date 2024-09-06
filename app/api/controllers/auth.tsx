@@ -311,6 +311,15 @@ export async function getUser(id: string) {
     handleError(error);
   }
 }
+export async function deleteUser(id: string) {
+  try {
+    const data = await api.delete(`${AUTH.user}?userId=${id}`);
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function getRoleCount(businessId: string, cooperateId: string) {
   const headers = businessId ? { businessId } : {};
 

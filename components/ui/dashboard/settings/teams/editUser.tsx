@@ -14,11 +14,11 @@ import {
   Tooltip,
 } from '@nextui-org/react';
 import Image from 'next/image';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 import follow from '../../../../../public/assets/images/follow.png';
 
-const CreateTeam = ({ isOpen, onOpenChange }: any) => {
+const EditUser = ({ isOpenEdit, user, toggleEdit }: any) => {
   const { refetch } = useUserByBusiness();
   const [isOpenInviteMore, setIsOpenInviteMore] = useState(false);
   const userInformation = getJsonItemFromLocalStorage('userInformation');
@@ -30,10 +30,8 @@ const CreateTeam = ({ isOpen, onOpenChange }: any) => {
     lastName: '',
     email: '',
     password: '',
-
     businessID: businessInformation[0]?.businessId,
     cooperateID: userInformation?.cooperateID,
-
     isActive: true,
     role: '',
   });
@@ -61,7 +59,7 @@ const CreateTeam = ({ isOpen, onOpenChange }: any) => {
     setResponse(data);
 
     if (data?.data?.isSuccessful) {
-      onOpenChange();
+      toggleEdit();
       toggleInviteMoreModal();
       setCreateFormData({
         firstName: '',
@@ -94,13 +92,13 @@ const CreateTeam = ({ isOpen, onOpenChange }: any) => {
   ];
   return (
     <>
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+      <Modal isOpen={isOpenEdit} onOpenChange={() => toggleEdit()}>
         <ModalContent>
           {(onClose) => (
             <>
               <ModalHeader className='flex flex-col mt-2 text-black gap-1'>
                 <h1 className='text-[22px]  font-bold leading-4'>
-                  Create team members
+                  Update team member
                 </h1>
                 <p className='text-[14px] font-[500]  text-grey600'>
                   Enter details to invite a team member
@@ -272,4 +270,4 @@ const CreateTeam = ({ isOpen, onOpenChange }: any) => {
   );
 };
 
-export default CreateTeam;
+export default EditUser;

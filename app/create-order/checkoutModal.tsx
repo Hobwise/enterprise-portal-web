@@ -3,7 +3,6 @@ import {
   createUserOrder,
   editUserOrder,
 } from '@/app/api/controllers/dashboard/orders';
-import { getQRByBusiness } from '@/app/api/controllers/dashboard/quickResponse';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
@@ -20,6 +19,7 @@ import {
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { FaMinus, FaPlus } from 'react-icons/fa6';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import noImage from '../../public/assets/images/no-image.svg';
@@ -50,6 +50,7 @@ const CheckoutModal = ({
   setSelectedItems,
   businessId,
   cooperateID,
+  qrId,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
@@ -58,27 +59,14 @@ const CheckoutModal = ({
   const [orderId, setOrderId] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [reference, setReference] = useState('');
   const [screen, setScreen] = useState(1);
 
-  const [qr, setQr] = useState([]);
   const [order, setOrder] = useState<Order>({
     placedByName: orderDetails?.placedByName || '',
     placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
 
     comment: orderDetails?.comment || '',
   });
-
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
-
-  const handleClick = (methodId: number) => {
-    if (methodId === 3) {
-      router.push('/dashboard/orders');
-    } else {
-      setSelectedPaymentMethod(methodId);
-      setScreen(3);
-    }
-  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -111,7 +99,7 @@ const CheckoutModal = ({
       status: 0,
       placedByName: order.placedByName,
       placedByPhoneNumber: order.placedByPhoneNumber,
-
+      quickResponseID: qrId,
       comment: order.comment,
       orderDetails: transformedArray,
     };
@@ -126,14 +114,16 @@ const CheckoutModal = ({
         text: 'Order placed',
         type: 'success',
       });
+      toast.success('Order placed');
       closeModal === true && setChangeTitle(true);
       closeModal === false && setScreen(2);
-    } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
+      setOrder({
+        placedByName: '',
+        placedByPhoneNumber: '',
+        comment: '',
       });
+    } else {
+      toast.error(data?.data?.error);
     }
   };
   const updateOrder = async () => {
@@ -148,7 +138,7 @@ const CheckoutModal = ({
       status: 0,
       placedByName: order.placedByName,
       placedByPhoneNumber: order.placedByPhoneNumber,
-
+      quickResponseID: qrId,
       comment: order.comment,
       orderDetails: transformedArray,
     };
@@ -172,24 +162,6 @@ const CheckoutModal = ({
     }
   };
 
-  const getQrID = async () => {
-    const id = businessId ? businessId : businessInformation[0]?.businessId;
-
-    const data = await getQRByBusiness(id, cooperateID);
-
-    if (data?.data?.isSuccessful) {
-      let response = data?.data?.data;
-      const newData = response.map((item) => ({
-        ...item,
-        label: item.name,
-        value: item.id,
-      }));
-
-      setQr(newData);
-    } else if (data?.data?.error) {
-    }
-  };
-
   useEffect(() => {
     setOrder({
       placedByName: orderDetails?.placedByName || '',
@@ -199,15 +171,13 @@ const CheckoutModal = ({
     });
   }, [orderDetails]);
 
-  useEffect(() => {
-    getQrID();
-  }, []);
-
   return (
     <div className=''>
       <Modal
         classNames={{
-          base: 'md:overflow-none overflow-scroll h-full md:h-full',
+          base: `md:overflow-none overflow-scroll ${
+            changeTitle ? 'h-full' : 'h-auto'
+          }`,
           body: 'px-1 md:px-6',
           header: 'px-3 md:px-6',
         }}
@@ -217,9 +187,9 @@ const CheckoutModal = ({
         onOpenChange={() => {
           setScreen(1);
           onOpenChange();
-          setReference('');
+
           setIsLoading(false);
-          setSelectedPaymentMethod(0);
+
           setOrder({
             placedByName: orderDetails?.placedByName || '',
             placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
@@ -233,7 +203,7 @@ const CheckoutModal = ({
             <>
               {screen === 1 && (
                 <>
-                  <ModalHeader className='flex flex-col mt-5 gap-1'>
+                  <ModalHeader className='flex flex-col mt-3 gap-1'>
                     <div className='flex flex-row flex-wrap  justify-between'>
                       {changeTitle ? (
                         <div>
@@ -262,7 +232,11 @@ const CheckoutModal = ({
                   <ModalBody>
                     <div className=''>
                       <div className='flex lg:flex-row flex-col gap-3 mb-4'>
-                        <div className='lg:w-[60%] max-h-[300px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2'>
+                        <div
+                          className={`lg:w-[60%] ${
+                            changeTitle ? 'h-full' : 'max-h-[300px]'
+                          }   overflow-y-scroll w-full  p-2`}
+                        >
                           {selectedItems?.map((item, index) => {
                             return (
                               <>
@@ -279,20 +253,20 @@ const CheckoutModal = ({
                                       }
                                       width={20}
                                       height={20}
-                                      className='object-cover rounded-lg w-20 h-15'
+                                      className='object-cover rounded-lg w-20 h-20'
                                       aria-label='uploaded image'
                                       alt='uploaded image(s)'
                                     />
 
-                                    <div className='p-3 flex  flex-col text-sm justify-center'>
+                                    <div className='pl-2 flex  flex-col text-sm justify-center'>
                                       <p className='font-[600]'>
-                                        {item.menuName}
-                                      </p>
-                                      <Spacer y={2} />
-                                      <p className='text-grey600'>
                                         {item.itemName}
                                       </p>
-                                      <Spacer y={2} />
+                                      <Spacer y={1} />
+                                      <p className='text-grey600'>
+                                        {item.menuName}
+                                      </p>
+                                      <Spacer y={1} />
                                       <div className='text-black md:w-[150px] md:hidden w-auto grid'>
                                         <h3 className='font-[600]'>
                                           {formatPrice(item?.price)}
@@ -306,7 +280,7 @@ const CheckoutModal = ({
                                       isIconOnly
                                       radius='sm'
                                       variant='faded'
-                                      className='border h-[35px] w-[30px] border-grey400'
+                                      className='border h-[35px] w-[30px] border-primaryGrey bg-white'
                                       aria-label='minus'
                                     >
                                       <FaMinus />
@@ -319,7 +293,7 @@ const CheckoutModal = ({
                                       isIconOnly
                                       radius='sm'
                                       variant='faded'
-                                      className='border h-[35px] w-[30px] border-grey400'
+                                      className='border border-primaryGrey h-[35px] w-[30px] bg-white '
                                       aria-label='plus'
                                     >
                                       <FaPlus />
@@ -381,6 +355,8 @@ const CheckoutModal = ({
                       <div className='gap-3 flex px-3 flex-col'>
                         {changeTitle ? (
                           <CustomButton
+                            loading={loading}
+                            disabled={loading}
                             onClick={updateOrder}
                             className='py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey'
                           >

@@ -45,7 +45,7 @@ const DeleteMenu = ({ isOpenDelete, toggleModalDelete, menuItem }: any) => {
           <>
             <ModalBody>
               <div className='flex justify-center'>
-                <div className='text-black text-center mt-8 xl:w-[80%] w-full mb-2 font-[700]'>
+                <div className='text-black text-center mt-8 xl:w-[80%] w-full mb-2'>
                   Are you sure you want to delete this menu item?
                 </div>
               </div>

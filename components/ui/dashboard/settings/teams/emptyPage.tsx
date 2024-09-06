@@ -1,7 +1,7 @@
 import { Button, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import noBooking from '../../../../../public/assets/images/no-booking.png';
-import CreateTeam from './createTeam';
+import CreateTeam from './createUser';
 
 const EmptyPage = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();

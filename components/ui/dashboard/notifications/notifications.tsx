@@ -9,6 +9,7 @@ import moment from 'moment';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { IoCheckmarkDoneOutline } from 'react-icons/io5';
+import { MdAccessTime } from 'react-icons/md';
 
 const Notifications = ({
   loadMore,
@@ -128,8 +129,11 @@ const Notifications = ({
                 <div className='flex justify-center flex-col space-y-1'>
                   <div className='flex justify-between'>
                     <span className='font-[600]'>{notif.eventType}</span>
-                    <span className='text-xs text-grey500'>
-                      {getRelativeTime(notif.dateUpdated)}
+                    <span className='flex items-center gap-1 text-grey500'>
+                      <MdAccessTime className='text-xs ' />
+                      <span className='text-xs '>
+                        {getRelativeTime(notif.dateUpdated)}
+                      </span>
                     </span>
                   </div>
                   <span className='flex justify-center '>

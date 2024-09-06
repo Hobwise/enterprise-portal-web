@@ -28,7 +28,11 @@ const Teams = ({ setActiveScreen }: any) => {
   }
   return (
     <section>
-      {data?.length > 0 ? <Users data={data} /> : <EmptyPage />}
+      {data?.length > 0 ? (
+        <Users data={data} refetch={refetch} />
+      ) : (
+        <EmptyPage />
+      )}
     </section>
   );
 };
