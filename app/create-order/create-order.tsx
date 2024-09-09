@@ -23,7 +23,7 @@ import Filters from './filter';
 
 const CreateOrder = () => {
   const searchParams = useSearchParams();
-
+  let businessName = searchParams.get('businessName');
   let businessId = searchParams.get('businessID');
   let cooperateID = searchParams.get('cooperateID');
   let qrId = searchParams.get('id');
@@ -87,7 +87,7 @@ const CreateOrder = () => {
     );
   }
   if (isLoading) {
-    return <SplashScreen />;
+    return <SplashScreen businessName={businessName} />;
   }
   const convertActiveTile = (activeTile: number) => {
     const previewStyles: { [key: string]: string } = {

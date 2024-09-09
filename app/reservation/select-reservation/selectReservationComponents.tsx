@@ -8,15 +8,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import noImage from '../../../public/assets/images/no-image.svg';
 import SplashScreen from '../splash-screen';
 
-const INITIAL_VISIBLE_COLUMNS = [
-  'reservationName',
-  'reservationDescription',
-  'reservationFee',
-  'quantity',
-  'minimumSpend',
-  'actions',
-];
-
 const SelectReservationComponents = () => {
   const searchParams = useSearchParams();
   let businessName = searchParams.get('businessName');
@@ -28,17 +19,12 @@ const SelectReservationComponents = () => {
     businessId,
     cooperateID
   );
-  // const { data, isLoading, isError, refetch } = useReservationUser(
-  //   businessId,
-  //   cooperateID
-  // );
-  console.log(data, 'data');
 
   if (isError) {
     return <Error imageHeight={'h-32'} onClick={() => refetch()} />;
   }
   if (isLoading) {
-    return <SplashScreen />;
+    return <SplashScreen businessName={businessName} />;
   }
 
   return (

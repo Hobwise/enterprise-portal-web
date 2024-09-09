@@ -55,7 +55,7 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
                     maxWidth: '100%',
                     maxHeight: '100%',
                   }}
-                  value={`https://hobink-corporate-web.vercel.app/create-order?businessID=${business[0]?.businessId}&cooperateID=${userInformation?.cooperateID}&id=${qrObject?.id}`}
+                  value={`https://hobink-corporate-web.vercel.app/create-order?businessID=${business[0]?.businessId}&cooperateID=${userInformation?.cooperateID}&id=${qrObject?.id}&businessName=${business[0]?.businessName}`}
                   viewBox={`0 0 256 256`}
                 />
               </div>

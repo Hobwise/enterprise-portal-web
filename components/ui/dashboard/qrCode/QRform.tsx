@@ -103,7 +103,7 @@ const QRform = () => {
                       maxWidth: '100%',
                       maxHeight: '100%',
                     }}
-                    value={`https://hobink-corporate-web.vercel.app/create-order?businessID=${qrURL?.businessID}&cooperateID=${qrURL?.cooperateID}&id=${qrURL?.id}`}
+                    value={`https://hobink-corporate-web.vercel.app/create-order?businessID=${qrURL?.businessID}&cooperateID=${qrURL?.cooperateID}&id=${qrURL?.id}&businessName=${businessInformation[0]?.businessName}`}
                     viewBox={`0 0 256 256`}
                   />
                 </div>

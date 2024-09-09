@@ -1,8 +1,4 @@
-const SplashScreen = ({
-  businessName = 'Hobink',
-}: {
-  businessName?: string;
-}) => {
+const SplashScreen = ({ businessName = 'Hobink' }: { businessName?: any }) => {
   return (
     <main className='h-screen grid w-full place-content-center bg-primaryColor'>
       <div className='text-4xl font-bold text-gray-800'>

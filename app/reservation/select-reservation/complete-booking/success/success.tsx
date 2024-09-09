@@ -24,7 +24,7 @@ const SuccessComponent = () => {
 
   return (
     <>
-      <div className='grid place-content-center mt-8'>
+      <div className='grid place-content-center'>
         <Image src={Success} alt='success' />
       </div>
 
