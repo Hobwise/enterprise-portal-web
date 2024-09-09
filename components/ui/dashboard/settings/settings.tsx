@@ -45,7 +45,8 @@ const SettingsComponent: React.FC = () => {
         role === 1 &&
         (item.title === 'Roles and Privileges' ||
           item.title === 'Business settings' ||
-          item.title === 'Team')
+          item.title === 'Team' ||
+          item.title === 'Password')
       )
   );
 

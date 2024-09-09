@@ -117,8 +117,12 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
         />
         <Divider className='bg-[#F0F2F5]' />
         <Details text1='Email address' text2={data?.contactEmailAddress} />
-        <Divider className='bg-[#F0F2F5]' />
-        <Details text1='Phone number' text2={data?.contactPhoneNumber} />
+        {userInformation.role === 0 && (
+          <>
+            <Divider className='bg-[#F0F2F5]' />
+            <Details text1='Phone number' text2={data?.contactPhoneNumber} />
+          </>
+        )}
         <Divider className='bg-[#F0F2F5]' />
         <Details text1='Category' text2={businessCategories()} />
         {userInformation.role === 0 && (
@@ -144,15 +148,16 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
           text2={data?.secondaryBrandColour}
         />
       </article>
-      <article className='bg-white border border-[#F0F2F5] rounded-lg px-3 md:px-6 py-2 mb-6'>
-        <div className='flex justify-between text-black items-center py-4'>
-          <div>
-            <p className='font-[600] '>Service Terms and Conditions</p>
-            <p className='text-sm font-[400] text-grey500'>
-              Your terms and conditions for your services
-            </p>
-          </div>
-          {userInformation.role === 0 && (
+      {userInformation.role === 0 && (
+        <article className='bg-white border border-[#F0F2F5] rounded-lg px-3 md:px-6 py-2 mb-6'>
+          <div className='flex justify-between text-black items-center py-4'>
+            <div>
+              <p className='font-[600] '>Service Terms and Conditions</p>
+              <p className='text-sm font-[400] text-grey500'>
+                Your terms and conditions for your services
+              </p>
+            </div>
+
             <div>
               <CustomButton
                 onClick={() => {
@@ -164,18 +169,19 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
                 View
               </CustomButton>
             </div>
-          )}
-        </div>
-      </article>
-      <article className='bg-white border border-[#F0F2F5] rounded-lg px-3 md:px-6 py-2 mb-6'>
-        <div className='flex justify-between text-black items-center py-4'>
-          <div>
-            <p className='font-[600] '>Email Templates</p>
-            <p className='text-sm font-[400] text-grey500'>
-              Customize emails that your customers receive
-            </p>
           </div>
-          {userInformation.role === 0 && (
+        </article>
+      )}
+      {userInformation.role === 0 && (
+        <article className='bg-white border border-[#F0F2F5] rounded-lg px-3 md:px-6 py-2 mb-6'>
+          <div className='flex justify-between text-black items-center py-4'>
+            <div>
+              <p className='font-[600] '>Email Templates</p>
+              <p className='text-sm font-[400] text-grey500'>
+                Customize emails that your customers receive
+              </p>
+            </div>
+
             <div>
               <CustomButton
                 onClick={() => {
@@ -187,9 +193,9 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
                 View
               </CustomButton>
             </div>
-          )}
-        </div>
-      </article>
+          </div>
+        </article>
+      )}
     </section>
   );
 };
