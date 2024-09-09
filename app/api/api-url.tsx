@@ -29,7 +29,7 @@ export const DASHBOARD = {
   getMenu: 'api/v1/Menu',
   menuConfiguration: 'api/v1/Menu/configuration',
   getMenuByBusiness: 'api/v1/Menu/by-business',
-
+  menuByUserBusiness: 'api/v1/Menu/by-business-user',
   menuItem: 'api/v1/Menu/item',
   uploadFile: 'api/v1/File/upload',
   removeFile: 'api/v1/File/remove',
@@ -52,6 +52,7 @@ export const DASHBOARD = {
   qr: 'api/v1/QuickResponse',
   // Reservations
   reservationsByBusiness: 'api/v1/Reservation/by-business',
+  reservationsByBusinessUser: 'api/v1/Reservation/by-business-user',
   reservation: 'api/v1/Reservation',
   singleReservation: 'api/v1/Reservation/fetch',
   // Bookings

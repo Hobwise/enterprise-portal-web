@@ -109,7 +109,7 @@ const MenuList = ({ menus, onOpen, onOpenViewMenu, searchQuery }: any) => {
     switch (columnKey) {
       case 'name':
         return (
-          <div className='flex '>
+          <div className='flex w-[100px]'>
             <Image
               className='h-[60px] w-[60px] bg-cover rounded-lg'
               width={60}
@@ -139,13 +139,13 @@ const MenuList = ({ menus, onOpen, onOpenViewMenu, searchQuery }: any) => {
         );
       case 'price':
         return (
-          <div className='text-sm'>
+          <div className='text-sm flex '>
             <p>{formatPrice(menu.price)}</p>
           </div>
         );
       case 'desc':
         return (
-          <div className=' text-sm grid  m-0  w-[360px]   flex-col'>
+          <div className=' text-sm  m-0   w-[360px]'>
             {menu.itemDescription}
           </div>
         );

@@ -134,9 +134,10 @@ const CheckoutModal = ({
       comment: order.comment,
       orderDetails: transformedArray,
     };
-    console.log(payload, 'payload');
+
     const data = await editUserOrder(orderId, payload);
     setResponse(data);
+
     setLoading(false);
     if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
@@ -153,7 +154,7 @@ const CheckoutModal = ({
         hideCloseButton={changeTitle}
         isKeyboardDismissDisabled={true}
         classNames={{
-          base: `max-h-full overflow-scroll`,
+          base: `${changeTitle ? 'h-full' : 'max-h-full'} overflow-scroll`,
           // base: `md:overflow-none overflow-scroll ${
           //   changeTitle ? 'h-full' : 'h-screen'
           // }`,

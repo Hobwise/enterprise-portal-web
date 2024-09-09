@@ -9,27 +9,18 @@ import { togglePreview } from '@/components/ui/dashboard/menu/preview-menu/data'
 
 import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
 import ViewModal from '@/components/ui/dashboard/orders/place-order/view';
-import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
 import { useGlobalContext } from '@/hooks/globalProvider';
-import usePagination from '@/hooks/usePagination';
 import { formatPrice } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import noMenu from '../../public/assets/images/no-menu.png';
 
+import useMenuUser from '@/hooks/cachedEndpoints/userMenuUser';
 import SplashScreen from '../reservation/splash-screen';
 import CheckoutModal from './checkoutModal';
 import Filters from './filter';
 
-const INITIAL_VISIBLE_COLUMNS = ['name', 'desc', 'price', 'actions'];
-const columns = [
-  { name: 'ID', uid: 'menuID' },
-  { name: '', uid: 'name' },
-  { name: '', uid: 'price' },
-  { name: '', uid: 'desc' },
-  { name: '', uid: 'actions' },
-];
 const CreateOrder = () => {
   const searchParams = useSearchParams();
 
@@ -45,10 +36,11 @@ const CreateOrder = () => {
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
 
-  const { data, isLoading, isError, refetch } = useMenu(
+  const { data, isLoading, isError, refetch } = useMenuUser(
     businessId,
     cooperateID
   );
+
   useEffect(() => {
     setMenuIdTable(data?.[0]?.id);
   }, []);
@@ -70,12 +62,6 @@ const CreateOrder = () => {
   const matchingObjectArray = matchingObject
     ? matchingObject?.items
     : data?.[0]?.items;
-
-  const { bottomContent } = usePagination(
-    matchingObject,
-    columns,
-    INITIAL_VISIBLE_COLUMNS
-  );
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -311,7 +297,6 @@ const CreateOrder = () => {
             );
           })}
         </div>
-        <>{bottomContent}</>
       </article>
 
       {isOpen && (

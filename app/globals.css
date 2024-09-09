@@ -25,6 +25,11 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+table {
+  width: 100%;
+  overflow: scroll;
+}
 .background {
   background-color: black;
 }

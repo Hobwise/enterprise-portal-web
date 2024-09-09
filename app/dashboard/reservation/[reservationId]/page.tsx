@@ -13,6 +13,7 @@ import {
 import {
   Button,
   ButtonGroup,
+  Chip,
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -134,9 +135,17 @@ const ReservationDetails = () => {
               <h2 className='text-black font-[600]  text-[28px]'>
                 {data?.reservationName}
               </h2>
-              <p className='text-[#3D424A] text-[14px] font-[400]'>
-                {data?.reservationDescription}
-              </p>
+              <div className='text-[#3D424A] text-[14px] font-[400] gap-2 flex'>
+                <p>{data?.reservationDescription} </p>{' '}
+                <Chip
+                  classNames={{
+                    base: ` text-xs h-6 capitalize font-[700] w-5 bg-[#EAE5FF] text-primaryColor`,
+                  }}
+                  size='sm'
+                >
+                  {data?.quantityLeft} available
+                </Chip>
+              </div>
               <div className='flex lg:gap-3 gap-0 lg:flex-row flex-col'>
                 <div className='flex gap-2  text-[14px] font-[400]'>
                   <p className='text-[#3D424A]'>RESERVATION FEE</p>

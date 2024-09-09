@@ -3,7 +3,7 @@ import BackButton from '@/components/backButton';
 import { CustomButton } from '@/components/customButton';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
-import { Spinner } from '@nextui-org/react';
+import { Code, Spinner } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import noImage from '../../../../public/assets/images/no-image.svg';
@@ -26,6 +26,7 @@ const SingleReservationComponent = () => {
       </div>
     );
   }
+  console.log(singleReservation, 'singleReservation');
   const getSingleReservation = reservationId ? data : singleReservation;
 
   return (
@@ -61,21 +62,24 @@ const SingleReservationComponent = () => {
         <p className='text-grey600 text-[14px]'>
           {getSingleReservation?.reservationDescription}
         </p>
+        <Code className='text-xs' color='danger'>
+          Only {getSingleReservation?.quantityLeft} left
+        </Code>
       </div>
       <div className='flex gap-3'>
-        {getSingleReservation.reservationFee > 0 && (
+        {getSingleReservation?.reservationFee > 0 && (
           <div className='flex bg-secondaryGrey rounded-lg p-3 mb-4 flex-col justify-center text-black items-center flex-grow'>
             <p className='text-[14px]'>RESERVATION FEE</p>
             <p className='text-[14px] font-bold'>
-              {formatPrice(getSingleReservation.reservationFee)}
+              {formatPrice(getSingleReservation?.reservationFee)}
             </p>
           </div>
         )}
-        {getSingleReservation.minimumSpend > 0 && (
+        {getSingleReservation?.minimumSpend > 0 && (
           <div className='flex bg-secondaryGrey rounded-lg p-3 mb-4 flex-col justify-center text-black items-center flex-grow'>
             <p className='text-[14px]'>MINUMUM SPEND</p>
             <p className='text-[14px] font-bold'>
-              {formatPrice(getSingleReservation.minimumSpend)}
+              {formatPrice(getSingleReservation?.minimumSpend)}
             </p>
           </div>
         )}

@@ -173,7 +173,7 @@ export async function editOrder(orderId: string, payload: Order) {
   }
 }
 export async function editUserOrder(orderId: string, payload: Order) {
-  const validatedFields = orderSchema.safeParse({
+  const validatedFields = orderSchemaUser.safeParse({
     placedByName: payload?.placedByName,
     placedByPhoneNumber: payload?.placedByPhoneNumber,
   });

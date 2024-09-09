@@ -6,7 +6,7 @@ import { useGlobalContext } from './globalProvider';
 
 const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
-  console.log(arrayToMap, 'comment');
+
   const refinedArrayToMap = arrayToMap ? arrayToMap?.totalPages : 1;
   const [filterValue, setFilterValue] = React.useState('');
 
@@ -161,8 +161,9 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
   }, []);
   const classNames = React.useMemo(
     () => ({
-      table: 'w-full overflow-x-scroll',
-      wrapper: ['max-h-[382px]', 'max-w-3xl'],
+      grid: 'w-full overflow-x-scroll',
+      // table: 'w-full ',
+      wrapper: ['max-h-[382px]', ''],
       th: ['bg-transparent', 'text-default-500', 'border-b', 'border-divider'],
       tr: 'border-b border-divider',
       td: [
@@ -181,6 +182,7 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
     }),
     []
   );
+
   return {
     bottomContent,
     headerColumns,

@@ -69,6 +69,7 @@ const ConfirmOrderModal = ({
     setIsLoading(true);
     const payload = {
       treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
+      treatedById: userInformation.id,
       paymentMethod: selectedPaymentMethod,
       paymentReference: reference,
       status: 1,

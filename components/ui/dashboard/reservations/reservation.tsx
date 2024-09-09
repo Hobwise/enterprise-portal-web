@@ -6,6 +6,7 @@ import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice } from '@/lib/utils';
 import {
+  Chip,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -27,6 +28,7 @@ import { columns } from './data';
 const INITIAL_VISIBLE_COLUMNS = [
   'reservationName',
   'reservationDescription',
+  'quantityLeft',
   'reservationFee',
   'quantity',
   'minimumSpend',
@@ -127,6 +129,17 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
           <div className='text-textGrey text-sm'>
             {reservation.reservationDescription}
           </div>
+        );
+      case 'quantityLeft':
+        return (
+          <Chip
+            classNames={{
+              base: ` text-xs h-6 capitalize font-[700] w-5 bg-[#EAE5FF] text-primaryColor`,
+            }}
+            size='sm'
+          >
+            {reservation?.quantityLeft} available
+          </Chip>
         );
 
       case 'actions':

@@ -38,6 +38,11 @@ const extractPermissions = (permissions: any, roleType: string) => {
     canCreateReservation: rolePermissions.canCreateReservation,
     canEditReservation: rolePermissions.canEditReservation,
     canDeleteReservation: rolePermissions.canDeleteReservation,
+
+    canViewPayment: rolePermissions.canViewPayment,
+    canCreatePayment: rolePermissions.canCreatePayment,
+    canEditPayment: rolePermissions.canEditPayment,
+    canDeletePayment: rolePermissions.canDeletePayment,
   };
 };
 

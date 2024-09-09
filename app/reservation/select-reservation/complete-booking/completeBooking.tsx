@@ -201,20 +201,27 @@ const CompleteBookingComponent = () => {
             defaultValue={now(getLocalTimeZone())}
           />
         </div>
-        <Spacer y={6} />
-        <div className='flex '>
-          <Checkbox
-            isSelected={isSelected}
-            onValueChange={setIsSelected}
-            size='sm'
-          />
-          <div className='text-black text-[14px]'>
-            I accept the{' '}
-            <span onClick={onOpen} className='text-primaryColor cursor-pointer'>
-              terms and condition
-            </span>
-          </div>
-        </div>
+        {data?.content && (
+          <>
+            <Spacer y={6} />
+            <div className='flex '>
+              <Checkbox
+                isSelected={isSelected}
+                onValueChange={setIsSelected}
+                size='sm'
+              />
+              <div className='text-black text-[14px]'>
+                I accept the{' '}
+                <span
+                  onClick={onOpen}
+                  className={'text-primaryColor cursor-pointer'}
+                >
+                  terms and condition
+                </span>
+              </div>
+            </div>
+          </>
+        )}
 
         <Spacer y={6} />
         <CustomButton

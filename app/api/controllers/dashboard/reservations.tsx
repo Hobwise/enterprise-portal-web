@@ -42,6 +42,22 @@ export async function getReservations(
     handleError(error);
   }
 }
+export async function getReservationsUser(
+  businessId: string,
+  cooperateId?: any
+) {
+  const headers = businessId ? { cooperateId, businessId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.reservationsByBusinessUser, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function createReservations(
   businessId: string,
   payload: payloadReservationItem

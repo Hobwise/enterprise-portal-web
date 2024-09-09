@@ -1,31 +1,24 @@
 'use client';
 import {
-  getReservations,
+  getReservationsUser,
   payloadReservationItem,
 } from '@/app/api/controllers/dashboard/reservations';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
-import { useGlobalContext } from '../globalProvider';
 
-const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
-  const { page, rowsPerPage } = useGlobalContext();
+const useReservationUser = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
   const businessId = businessInformation
     ? businessInformation[0]?.businessId
     : businessIdOutsideApp;
-  const getAllReservation = async ({ queryKey }) => {
-    const responseData = await getReservations(
-      businessId,
-      page,
-      rowsPerPage,
-      cooperateID
-    );
+  const getAllReservation = async () => {
+    const responseData = await getReservationsUser(businessId, cooperateID);
     return responseData?.data?.data as payloadReservationItem[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<
     payloadReservationItem[]
-  >(['reservation', { page, rowsPerPage }], getAllReservation, {
+  >('reservationUser', getAllReservation, {
     keepPreviousData: true,
     refetchOnWindowFocus: false,
   });
@@ -38,4 +31,4 @@ const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
   };
 };
 
-export default useReservation;
+export default useReservationUser;

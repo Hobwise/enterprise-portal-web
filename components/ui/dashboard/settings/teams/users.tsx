@@ -116,10 +116,10 @@ const Users = ({ data, refetch }: any) => {
       case 'role':
         return (
           <Chip
-            className='capitalize'
-            color={'secondary'}
+            classNames={{
+              base: ` text-xs h-6 capitalize font-[700] w-5 bg-[#EAE5FF] text-primaryColor`,
+            }}
             size='sm'
-            variant='flat'
           >
             {user?.role === 0 ? 'Manager' : 'User'}
           </Chip>

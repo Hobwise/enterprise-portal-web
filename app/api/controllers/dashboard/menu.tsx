@@ -104,6 +104,27 @@ export async function getMenuByBusiness(
     handleError(error);
   }
 }
+export async function getMenuByBusinessUser(
+  businessId: string,
+
+  cooperateID?: string
+) {
+  const headers = businessId ? { businessId, cooperateID } : {};
+
+  try {
+    const data = await api.post(
+      DASHBOARD.menuByUserBusiness,
+      {},
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 
 type payloadMenu = {
   name: string;

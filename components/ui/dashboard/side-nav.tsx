@@ -81,6 +81,12 @@ const SideNav = () => {
       userRolePermissions?.canViewReservation === false
     )
       return false;
+    if (
+      item.title === 'Payments' &&
+      userRolePermissions?.canViewPayment === false &&
+      role === 1
+    )
+      return false;
     return true;
   });
 

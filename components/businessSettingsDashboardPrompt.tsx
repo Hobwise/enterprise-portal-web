@@ -16,12 +16,12 @@ const BusinessSettingsDashboardPrompt = () => {
   const { data } = useGetBusiness();
   const router = useRouter();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
   useEffect(() => {
     if (data?.resistrationCertificateImageReference === '') {
       onOpen();
     }
-  }, []);
+  }, [data]);
+
   return (
     <Modal
       isOpen={isOpen}
@@ -63,7 +63,7 @@ const BusinessSettingsDashboardPrompt = () => {
                   Go to settings
                 </CustomButton>
                 <CustomButton
-                  className='h-[50px]  text-black bg-transparent border rounded-lg border-grey500'
+                  className='h-[50px]  text-black bg-transparent border rounded-lg border-primaryGrey'
                   onClick={onOpenChange}
                   type='submit'
                 >

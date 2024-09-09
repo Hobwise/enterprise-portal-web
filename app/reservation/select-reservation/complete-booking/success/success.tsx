@@ -32,7 +32,7 @@ const SuccessComponent = () => {
         Fantastic!
       </h2>
       <h3 className='text-sm text-center text-grey600  mb-4'>
-        confirmation email will be sent to{' '}
+        Confirmation email will be sent to{' '}
         <span className='font-[600] text-black'>
           {bookingDetails?.emailAddress}
         </span>{' '}

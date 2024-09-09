@@ -16,11 +16,11 @@ const Filters = ({
 
   return (
     <>
-      <div className='flex relative top-3  w-full border-b border-divider justify-between'>
+      <div className='flex xl:flex-row flex-col-reverse relative top-3 flex-wrap  w-full border-b border-divider justify-between'>
         <Tabs
           classNames={{
-            tabList:
-              'gap-6  relative rounded-none py-0 w-[100%]  overflow-scroll',
+            base: 'xl:w-[70%] w-full',
+            tabList: 'gap-6  relative rounded-none py-0   overflow-scroll',
             cursor: 'w-full bg-primaryColor',
             tab: 'max-w-fit px-0 py-0 h-10',
             tabContent: 'group-data-[selected=true]:text-primaryColor m-0',

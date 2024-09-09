@@ -29,6 +29,7 @@ const CancelOrderModal = ({
       treatedBy: `${userInformation.firstName}  ${userInformation.lastName}`,
       paymentMethod: singleOrder.paymentMethod,
       paymentReference: singleOrder.paymentReference,
+      treatedById: userInformation.id,
       status: 2,
     };
 

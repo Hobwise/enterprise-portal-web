@@ -184,9 +184,8 @@ const Menu: React.FC = () => {
         <div className='flex items-center flex-wrap gap-3'>
           {data?.length > 0 && (
             <>
-              <div>
+              <div className='md:w-[242px] w-full'>
                 <CustomInput
-                  classnames={'w-[242px]'}
                   label=''
                   size='md'
                   value={searchQuery}
@@ -217,14 +216,16 @@ const Menu: React.FC = () => {
             </>
           )}
 
-          {role === 0 && userRolePermissions?.canCreateMenu === true && (
+          {(role === 0 || userRolePermissions?.canCreateMenu === true) && (
+            // <div>
+
             <CustomButton
               onClick={
                 data?.length > 0
                   ? () => router.push('/dashboard/menu/add-menu-item')
                   : onOpen
               }
-              className='py-2 px-4 md:mb-0 mb-4 text-white'
+              className='py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white'
               backgroundColor='bg-primaryColor'
             >
               <div className='flex gap-2 items-center justify-center'>
@@ -232,6 +233,7 @@ const Menu: React.FC = () => {
                 <p>{data?.length > 0 ? 'Add menu items' : 'Add menu'} </p>
               </div>
             </CustomButton>
+            // </div>
           )}
         </div>
       </div>
