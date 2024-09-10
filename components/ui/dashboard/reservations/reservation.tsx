@@ -126,7 +126,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
         );
       case 'reservationDescription':
         return (
-          <div className='text-textGrey text-sm'>
+          <div className='text-textGrey text-sm max-w-[330px]'>
             {reservation.reservationDescription}
           </div>
         );
@@ -138,7 +138,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
             }}
             size='sm'
           >
-            {reservation?.quantityLeft} available
+            {reservation?.quantityLeft} remaining
           </Chip>
         );
 

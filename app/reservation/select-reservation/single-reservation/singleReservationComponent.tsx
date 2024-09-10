@@ -3,7 +3,7 @@ import BackButton from '@/components/backButton';
 import { CustomButton } from '@/components/customButton';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
-import { Code, Spinner } from '@nextui-org/react';
+import { Spinner } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import noImage from '../../../../public/assets/images/no-image.svg';
@@ -62,9 +62,9 @@ const SingleReservationComponent = () => {
         <p className='text-grey600 text-[14px]'>
           {getSingleReservation?.reservationDescription}
         </p>
-        <Code className='text-xs' color='danger'>
-          Only {getSingleReservation?.quantityLeft} left
-        </Code>
+        <p className='bg-[#F5F5F5] rounded-md text-sx mt-1 inline-flex text-black px-3 py-1'>
+          {getSingleReservation?.quantityLeft} remaining
+        </p>
       </div>
       <div className='flex gap-3'>
         {getSingleReservation?.reservationFee > 0 && (

@@ -143,7 +143,7 @@ const ReservationDetails = () => {
                   }}
                   size='sm'
                 >
-                  {data?.quantityLeft} available
+                  {data?.quantityLeft} remaining
                 </Chip>
               </div>
               <div className='flex lg:gap-3 gap-0 lg:flex-row flex-col'>

@@ -34,9 +34,7 @@ const SelectReservationComponents = () => {
         <h2 className='text-xl text-black font-bold'>Reservations</h2>
         <p className='text-grey600'>Select a reservation to make a booking</p>
       </div>
-      <Divider />
-
-      <br />
+      <Divider className='mb-3' />
 
       <>
         <div className='w-full'>
@@ -65,15 +63,18 @@ const SelectReservationComponents = () => {
                   alt={index + reservation.reservationName}
                   className='w-[70px] h-[60px] rounded-lg border border-primaryGrey bg-cover'
                 />
-                <div className='text-black flex w-full justify-between'>
-                  <div>
+                <div className='text-black w-full '>
+                  <div className='flex justify-between gap-2'>
                     <h3 className='font-[500]'>
                       {reservation.reservationName}
                     </h3>
-                    <p className='text-gray-600 text-[14px] font-[400]'>
-                      {reservation.reservationDescription}
-                    </p>
+                    <span className='bg-[#F5F5F5] rounded-md text-black text-sx px-3 py-1'>
+                      {reservation?.quantityLeft} remaining
+                    </span>
                   </div>
+                  <p className='text-gray-600 text-[14px] font-[400]'>
+                    {reservation.reservationDescription}
+                  </p>
                 </div>
               </div>
               <Divider className='bg-[#E4E7EC80] my-2' />
