@@ -1,6 +1,6 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
-import useGetRoleByBusiness from '@/hooks/cachedEndpoints/useGetRoleBusiness';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
@@ -11,9 +11,7 @@ import NoBooking from '../../../../public/assets/images/no-booking.png';
 const CreateReservation = ({ showCreateBookingModal }: any) => {
   const router = useRouter();
   const { data } = useReservation();
-  const { data: permission } = useGetRoleByBusiness();
-  const canCreateReservation =
-    permission?.data?.data?.userRole?.canCreateReservation;
+  const { userRolePermissions, role } = usePermission();
 
   return (
     <section>
@@ -28,7 +26,8 @@ const CreateReservation = ({ showCreateBookingModal }: any) => {
             : 'Create a booking for the customers.'}
         </p>
         <Spacer y={5} />
-        {canCreateReservation && (
+
+        {(role === 0 || userRolePermissions?.canCreateReservation === true) && (
           <CustomButton
             onClick={() =>
               data?.totalCount === 0
