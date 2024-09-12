@@ -60,21 +60,19 @@ const Bookings: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data
-      ?.map((item) => ({
-        ...item,
-        bookings: item?.bookings?.filter(
-          (item) =>
-            item?.reservationName?.toLowerCase().includes(searchQuery) ||
-            item?.firstName?.toLowerCase().includes(searchQuery) ||
-            item?.lastName?.toLowerCase().includes(searchQuery) ||
-            item?.reference?.toLowerCase().includes(searchQuery) ||
-            item?.emailAddress?.toLowerCase().includes(searchQuery) ||
-            item?.phoneNumber?.toLowerCase().includes(searchQuery) ||
-            item?.bookingDateTime?.toLowerCase().includes(searchQuery)
-        ),
-      }))
-      .filter((item) => item?.bookings?.length > 0);
+    return data?.map((item) => ({
+      ...item,
+      bookings: item?.bookings?.filter(
+        (item) =>
+          item?.reservationName?.toLowerCase().includes(searchQuery) ||
+          item?.firstName?.toLowerCase().includes(searchQuery) ||
+          item?.lastName?.toLowerCase().includes(searchQuery) ||
+          item?.reference?.toLowerCase().includes(searchQuery) ||
+          item?.emailAddress?.toLowerCase().includes(searchQuery) ||
+          item?.phoneNumber?.toLowerCase().includes(searchQuery) ||
+          item?.bookingDateTime?.toLowerCase().includes(searchQuery)
+      ),
+    }));
   }, [data, searchQuery]);
 
   const getScreens = () => {

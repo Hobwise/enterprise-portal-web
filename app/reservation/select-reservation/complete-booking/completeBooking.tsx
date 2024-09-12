@@ -54,7 +54,7 @@ const CompleteBookingComponent = () => {
     email: '',
     phoneNumber: '',
 
-    id: reservationId ? reservationId : getSingleReservation.id,
+    id: reservationId ? reservationId : getSingleReservation?.id,
   });
 
   const formSubmit = () => {
@@ -65,6 +65,15 @@ const CompleteBookingComponent = () => {
       bookings.phoneNumber &&
       timeNdate &&
       isSelected
+    );
+  };
+  const formSubmitTnC = () => {
+    return (
+      bookings.firstName &&
+      bookings.lastName &&
+      bookings.email &&
+      bookings.phoneNumber &&
+      timeNdate
     );
   };
 
@@ -226,7 +235,9 @@ const CompleteBookingComponent = () => {
         <Spacer y={6} />
         <CustomButton
           loading={isLoading}
-          disabled={isLoading || !formSubmit()}
+          disabled={
+            isLoading || data?.content ? !formSubmit() : !formSubmitTnC()
+          }
           type='submit'
         >
           {' '}

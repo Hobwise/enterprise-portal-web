@@ -39,6 +39,7 @@ const SideNav = () => {
   const { userRolePermissions, role } = usePermission();
 
   const business = getJsonItemFromLocalStorage('business') || [];
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
 
   const toggleBtwBusiness = (businessInfo: any) => {
     const exists = businessDetailsList?.some(
@@ -161,47 +162,52 @@ const SideNav = () => {
             variant='light'
             aria-label='Dropdown menu to switch businesses'
           >
-            {businessDetailsList?.map((item: any) => {
-              return (
-                <DropdownItem
-                  classNames={{
-                    base: 'hover:bg-none max-h-[100px] overflow-scroll',
-                  }}
-                  key={item.businessId}
-                  onClick={() => toggleBtwBusiness(item)}
-                >
-                  <div className='flex items-center gap-3'>
-                    <Avatar
-                      showFallback={true}
-                      src={`data:image/jpeg;base64,${item?.logoImage}`}
-                      name={item?.name}
-                    />
-                    <div className='flex flex-col'>
-                      <span className='font-[500] text-[14px]'>
-                        {item?.name}
-                      </span>
+            {userInformation?.isOwner && (
+              <>
+                {businessDetailsList?.map((item: any) => {
+                  return (
+                    <DropdownItem
+                      classNames={{
+                        base: 'hover:bg-none max-h-[100px] overflow-scroll',
+                      }}
+                      key={item.businessId}
+                      onClick={() => toggleBtwBusiness(item)}
+                    >
+                      <div className='flex items-center gap-3'>
+                        <Avatar
+                          showFallback={true}
+                          src={`data:image/jpeg;base64,${item?.logoImage}`}
+                          name={item?.name}
+                        />
+                        <div className='flex flex-col'>
+                          <span className='font-[500] text-[14px]'>
+                            {item?.name}
+                          </span>
 
-                      <span className=''>{item?.city}</span>
-                    </div>
+                          <span className=''>{item?.city}</span>
+                        </div>
+                      </div>
+                    </DropdownItem>
+                  );
+                })}
+              </>
+            )}
+            {userInformation?.isOwner && (
+              <DropdownItem
+                key='add another business'
+
+                // onClick={onOpenChange}
+              >
+                <div className='flex items-center gap-3 '>
+                  <div className='p-2 rounded-md bg-[#7182A3]'>
+                    <GoPlus className='text-[20px] font-[700]' />
                   </div>
-                </DropdownItem>
-              );
-            })}
-
-            <DropdownItem
-              key='add another business'
-
-              // onClick={onOpenChange}
-            >
-              <div className='flex items-center gap-3 '>
-                <div className='p-2 rounded-md bg-[#7182A3]'>
-                  <GoPlus className='text-[20px] font-[700]' />
+                  <span className='font-[500] text-[14px]'>
+                    Add another business
+                  </span>
                 </div>
-                <span className='font-[500] text-[14px]'>
-                  Add another business
-                </span>
-              </div>
-            </DropdownItem>
+              </DropdownItem>
+            )}
             <DropdownItem
               key='logout'
               className='text-danger'

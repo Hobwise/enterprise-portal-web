@@ -4,6 +4,5 @@ export const columns = [
   { name: 'Description', uid: 'campaignDescription' },
   { name: 'Launch date', uid: 'startDateTime' },
   { name: 'Images', uid: 'image' },
-  { name: 'Status', uid: 'isActive' },
   { name: '', uid: 'actions' },
 ];

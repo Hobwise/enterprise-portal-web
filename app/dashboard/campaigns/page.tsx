@@ -38,17 +38,15 @@ const Compaigns: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data
-      ?.map((item) => ({
-        ...item,
-        campaigns: item?.campaigns?.filter(
-          (item) =>
-            item?.campaignName?.toLowerCase().includes(searchQuery) ||
-            item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
-            item?.dressCode?.toLowerCase().includes(searchQuery)
-        ),
-      }))
-      .filter((item) => item?.campaigns?.length > 0);
+    return data?.map((item) => ({
+      ...item,
+      campaigns: item?.campaigns?.filter(
+        (item) =>
+          item?.campaignName?.toLowerCase().includes(searchQuery) ||
+          item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
+          item?.dressCode?.toLowerCase().includes(searchQuery)
+      ),
+    }));
   }, [data, searchQuery]);
 
   const getScreens = () => {

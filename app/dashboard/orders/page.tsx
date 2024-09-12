@@ -36,20 +36,18 @@ const Orders: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data
-      ?.map((order) => ({
-        ...order,
-        orders: order?.orders?.filter(
-          (item) =>
-            item?.placedByName?.toLowerCase().includes(searchQuery) ||
-            String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
-            item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-            item?.reference?.toLowerCase().includes(searchQuery) ||
-            item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
-            item?.paymentReference?.toLowerCase().includes(searchQuery)
-        ),
-      }))
-      .filter((order) => order?.orders?.length > 0);
+    return data?.map((order) => ({
+      ...order,
+      orders: order?.orders?.filter(
+        (item) =>
+          item?.placedByName?.toLowerCase().includes(searchQuery) ||
+          String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
+          item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+          item?.reference?.toLowerCase().includes(searchQuery) ||
+          item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
+          item?.paymentReference?.toLowerCase().includes(searchQuery)
+      ),
+    }));
   }, [data, searchQuery]);
 
   const getScreens = () => {

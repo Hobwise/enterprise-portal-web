@@ -50,21 +50,20 @@ const PaymentsList = ({ payments, searchQuery }: any) => {
 
   useEffect(() => {
     if (payments && searchQuery) {
-      const filteredData = payments
-        .map((payment) => ({
-          ...payment,
-          payments: payment?.payments?.filter(
-            (item) =>
-              item?.qrName?.toLowerCase().includes(searchQuery) ||
-              String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
-              item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-              item?.reference?.toLowerCase().includes(searchQuery) ||
-              item?.treatedBy?.toLowerCase().includes(searchQuery) ||
-              item?.paymentReference?.toLowerCase().includes(searchQuery) ||
-              item?.customer?.toLowerCase().includes(searchQuery)
-          ),
-        }))
-        .filter((payment) => payment?.orders?.length > 0);
+      const filteredData = payments.map((payment) => ({
+        ...payment,
+        payments: payment?.payments?.filter(
+          (item) =>
+            item?.qrName?.toLowerCase().includes(searchQuery) ||
+            String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
+            item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+            item?.reference?.toLowerCase().includes(searchQuery) ||
+            item?.treatedBy?.toLowerCase().includes(searchQuery) ||
+            item?.paymentReference?.toLowerCase().includes(searchQuery) ||
+            item?.customer?.toLowerCase().includes(searchQuery)
+        ),
+      }));
+
       setFilteredPayment(filteredData.length > 0 ? filteredData[0].orders : []);
     } else {
       setFilteredPayment(payments?.[0]?.payments);

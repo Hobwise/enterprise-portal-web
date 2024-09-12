@@ -47,18 +47,17 @@ const MenuList = ({ menus, onOpen, onOpenViewMenu, searchQuery }: any) => {
 
   useEffect(() => {
     if (menus && searchQuery) {
-      const filteredData = menus
-        .map((item) => ({
-          ...item,
-          items: item?.items?.filter(
-            (item) =>
-              item?.itemName?.toLowerCase().includes(searchQuery) ||
-              String(item?.price)?.toLowerCase().includes(searchQuery) ||
-              item?.menuName?.toLowerCase().includes(searchQuery) ||
-              item?.itemDescription?.toLowerCase().includes(searchQuery)
-          ),
-        }))
-        .filter((item) => item?.items?.length > 0);
+      const filteredData = menus.map((item) => ({
+        ...item,
+        items: item?.items?.filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(searchQuery) ||
+            String(item?.price)?.toLowerCase().includes(searchQuery) ||
+            item?.menuName?.toLowerCase().includes(searchQuery) ||
+            item?.itemDescription?.toLowerCase().includes(searchQuery)
+        ),
+      }));
+
       setFilteredMenu(filteredData.length > 0 ? filteredData[0].items : []);
     } else {
       setFilteredMenu(menus?.[0]?.items);

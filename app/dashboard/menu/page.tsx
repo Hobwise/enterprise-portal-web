@@ -94,18 +94,16 @@ const Menu: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data
-      ?.map((item) => ({
-        ...item,
-        items: item?.items?.filter(
-          (item) =>
-            item?.itemName?.toLowerCase().includes(searchQuery) ||
-            String(item?.price)?.toLowerCase().includes(searchQuery) ||
-            item?.menuName?.toLowerCase().includes(searchQuery) ||
-            item?.itemDescription?.toLowerCase().includes(searchQuery)
-        ),
-      }))
-      .filter((menu) => menu?.items?.length > 0);
+    return data?.map((item) => ({
+      ...item,
+      items: item?.items?.filter(
+        (item) =>
+          item?.itemName?.toLowerCase().includes(searchQuery) ||
+          String(item?.price)?.toLowerCase().includes(searchQuery) ||
+          item?.menuName?.toLowerCase().includes(searchQuery) ||
+          item?.itemDescription?.toLowerCase().includes(searchQuery)
+      ),
+    }));
   }, [data, searchQuery]);
 
   const getScreens = () => {

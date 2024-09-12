@@ -74,18 +74,16 @@ const MenuList = () => {
   const [filterValue, setFilterValue] = React.useState('');
 
   const filteredItems = useMemo(() => {
-    return data
-      ?.map((item) => ({
-        ...item,
-        items: item?.items?.filter(
-          (item) =>
-            item?.itemName?.toLowerCase().includes(filterValue) ||
-            String(item?.price)?.toLowerCase().includes(filterValue) ||
-            item?.menuName?.toLowerCase().includes(filterValue) ||
-            item?.itemDescription?.toLowerCase().includes(filterValue)
-        ),
-      }))
-      .filter((menu) => menu?.items?.length > 0);
+    return data?.map((item) => ({
+      ...item,
+      items: item?.items?.filter(
+        (item) =>
+          item?.itemName?.toLowerCase().includes(filterValue) ||
+          String(item?.price)?.toLowerCase().includes(filterValue) ||
+          item?.menuName?.toLowerCase().includes(filterValue) ||
+          item?.itemDescription?.toLowerCase().includes(filterValue)
+      ),
+    }));
   }, [data, filterValue]);
 
   useEffect(() => {
@@ -163,18 +161,17 @@ const MenuList = () => {
 
   useEffect(() => {
     if (filteredItems && filterValue) {
-      const filteredData = filteredItems
-        .map((item) => ({
-          ...item,
-          items: item?.items?.filter(
-            (item) =>
-              item?.itemName?.toLowerCase().includes(filterValue) ||
-              String(item?.price)?.toLowerCase().includes(filterValue) ||
-              item?.menuName?.toLowerCase().includes(filterValue) ||
-              item?.itemDescription?.toLowerCase().includes(filterValue)
-          ),
-        }))
-        .filter((item) => item?.items?.length > 0);
+      const filteredData = filteredItems.map((item) => ({
+        ...item,
+        items: item?.items?.filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(filterValue) ||
+            String(item?.price)?.toLowerCase().includes(filterValue) ||
+            item?.menuName?.toLowerCase().includes(filterValue) ||
+            item?.itemDescription?.toLowerCase().includes(filterValue)
+        ),
+      }));
+
       setFilteredMenu(filteredData.length > 0 ? filteredData[0].items : []);
     } else {
       setFilteredMenu(filteredItems?.[0]?.items);

@@ -240,7 +240,11 @@ const CreateBooking = ({
                   <label className='font-[500] text-black text-[14px] pb-1'>
                     Time and date
                   </label>
+
                   <DatePicker
+                    classNames={{
+                      calendar: 'w-full',
+                    }}
                     variant='bordered'
                     hideTimeZone
                     size='lg'

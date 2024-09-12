@@ -30,21 +30,19 @@ const Payments: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data?.paymentComposites
-      ?.map((item) => ({
-        ...item,
-        orders: item?.payments?.filter(
-          (item) =>
-            item?.qrName?.toLowerCase().includes(searchQuery) ||
-            String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
-            item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-            item?.reference?.toLowerCase().includes(searchQuery) ||
-            item?.treatedBy?.toLowerCase().includes(searchQuery) ||
-            item?.paymentReference?.toLowerCase().includes(searchQuery) ||
-            item?.customer?.toLowerCase().includes(searchQuery)
-        ),
-      }))
-      .filter((item) => item?.payments?.length > 0);
+    return data?.paymentComposites?.map((item) => ({
+      ...item,
+      orders: item?.payments?.filter(
+        (item) =>
+          item?.qrName?.toLowerCase().includes(searchQuery) ||
+          String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
+          item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+          item?.reference?.toLowerCase().includes(searchQuery) ||
+          item?.treatedBy?.toLowerCase().includes(searchQuery) ||
+          item?.paymentReference?.toLowerCase().includes(searchQuery) ||
+          item?.customer?.toLowerCase().includes(searchQuery)
+      ),
+    }));
   }, [data?.paymentComposites, searchQuery]);
 
   const getScreens = () => {

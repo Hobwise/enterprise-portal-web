@@ -8,7 +8,6 @@ import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { notify, saveJsonItemToLocalStorage } from '@/lib/utils';
 import {
-  Chip,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -42,7 +41,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'campaignDescription',
   'startDateTime',
   'image',
-  'isActive',
+
   'actions',
 ];
 
@@ -55,17 +54,15 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
 
   useEffect(() => {
     if (campaigns && searchQuery) {
-      const filteredData = campaigns
-        .map((campaign) => ({
-          ...campaign,
-          campaigns: campaign?.campaigns?.filter(
-            (item) =>
-              item?.campaignName?.toLowerCase().includes(searchQuery) ||
-              item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
-              item?.dressCode?.toLowerCase().includes(searchQuery)
-          ),
-        }))
-        .filter((campaign) => campaign?.campaigns?.length > 0);
+      const filteredData = campaigns.map((campaign) => ({
+        ...campaign,
+        campaigns: campaign?.campaigns?.filter(
+          (item) =>
+            item?.campaignName?.toLowerCase().includes(searchQuery) ||
+            item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
+            item?.dressCode?.toLowerCase().includes(searchQuery)
+        ),
+      }));
       setFilteredCampaigns(
         filteredData.length > 0 ? filteredData[0].campaigns : []
       );
@@ -166,19 +163,6 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
         return (
           <div className='text-textGrey text-sm'>
             {moment(campaign?.startDateTime).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'isActive':
-        return (
-          <div className='text-textGrey text-sm'>
-            <Chip
-              className='capitalize border-none gap-1 text-default-600'
-              color={campaign.isActive ? 'success' : 'danger'}
-              size='sm'
-              variant='dot'
-            >
-              {campaign.isActive ? 'Active' : 'Inactive'}
-            </Chip>
           </div>
         );
 

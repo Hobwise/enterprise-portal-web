@@ -70,20 +70,19 @@ const OrdersList = ({ orders, searchQuery }: any) => {
 
   useEffect(() => {
     if (orders && searchQuery) {
-      const filteredData = orders
-        .map((order) => ({
-          ...order,
-          orders: order?.orders?.filter(
-            (item) =>
-              item?.placedByName?.toLowerCase().includes(searchQuery) ||
-              String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
-              item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-              item?.reference?.toLowerCase().includes(searchQuery) ||
-              item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
-              item?.paymentReference?.toLowerCase().includes(searchQuery)
-          ),
-        }))
-        .filter((menu) => menu?.orders?.length > 0);
+      const filteredData = orders.map((order) => ({
+        ...order,
+        orders: order?.orders?.filter(
+          (item) =>
+            item?.placedByName?.toLowerCase().includes(searchQuery) ||
+            String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
+            item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+            item?.reference?.toLowerCase().includes(searchQuery) ||
+            item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
+            item?.paymentReference?.toLowerCase().includes(searchQuery)
+        ),
+      }));
+
       setFilteredOrder(filteredData?.length > 0 ? filteredData[0]?.orders : []);
     } else {
       setFilteredOrder(orders?.[0]?.orders);
