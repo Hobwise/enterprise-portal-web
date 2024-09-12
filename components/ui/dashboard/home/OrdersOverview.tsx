@@ -256,7 +256,7 @@ const OrdersOverview = ({
             )}
           </div>
         </div>
-        <div className='flex-grow border h-full bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl'>
+        <div className='flex-grow border h-auto bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl'>
           <div>
             <div className='p-4'>
               <h2 className='font-medium mb-2'>Total amount processed</h2>
@@ -289,7 +289,7 @@ const OrdersOverview = ({
             response?.paymentDetails.paymentPartitions.length === 0 ? (
               ''
             ) : (
-              <div className='relative bottom-0'>
+              <div className='mt-[4.5rem]'>
                 <Line data={curveData} options={curveOptions} />
               </div>
             )}
