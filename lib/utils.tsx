@@ -330,6 +330,12 @@ export const formatDateTimeForPayload = (dateTime) => {
     '0'
   )}`;
 };
+export const formatDateTimeForPayload3 = (dateTime) => {
+  return `${dateTime?.year}-${String(dateTime?.month).padStart(
+    2,
+    '0'
+  )}-${String(dateTime?.day).padStart(2, '0')}`;
+};
 export const formatDateTimeForPayload2 = (dateTime) => {
   const {
     year,

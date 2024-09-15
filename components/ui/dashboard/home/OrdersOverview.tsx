@@ -1,5 +1,5 @@
 'use client';
-import { formatPrice } from '@/lib/utils';
+import { formatDateTimeForPayload3, formatPrice } from '@/lib/utils';
 import {
   Button,
   Divider,
@@ -153,9 +153,15 @@ const OrdersOverview = ({
             <span className='font-[600]'>Overview</span>
             {selectedValue === 'Custom date' && (
               <p className='text-default-500 text-sm'>
-                {value.start && moment(value?.start).format('MMMM Do YYYY')}
+                {value.start &&
+                  moment(formatDateTimeForPayload3(value?.start)).format(
+                    'MMMM Do YYYY'
+                  )}
                 {' - '}
-                {value.end && moment(value?.end).format('MMMM Do YYYY')}
+                {value.end &&
+                  moment(formatDateTimeForPayload3(value?.end)).format(
+                    'MMMM Do YYYY'
+                  )}
               </p>
             )}
             <Dropdown>
