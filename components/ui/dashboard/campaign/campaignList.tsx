@@ -45,6 +45,39 @@ const INITIAL_VISIBLE_COLUMNS = [
   'actions',
 ];
 
+interface Campaign {
+  id: string;
+  campaignName: string;
+  campaignDescription: string;
+  startDateTime: string;
+  endDateTime: string;
+  dressCode: string;
+  isActive: boolean;
+  image: string;
+  imageReference: string;
+}
+
+interface CampaignGroup {
+  name: string;
+  campaigns: Campaign[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+function isItemInCompletedArray(
+  item: Campaign,
+  array: CampaignGroup[]
+): boolean {
+  const completedGroup = array.find((group) => group.name === 'Completed');
+  return completedGroup
+    ? completedGroup.campaigns.some((campaign) => campaign.id === item.id)
+    : false;
+}
+
 const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
   const [filteredCampaigns, setFilteredCampaigns] = React.useState(
     campaigns[0]?.campaigns
@@ -194,7 +227,7 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
                       </div>
                     </Link>
                   </DropdownItem>
-                  {campaign.isActive === false && (
+                  {isItemInCompletedArray(campaign, campaigns) && (
                     <DropdownItem
                       aria-label='repeat campaign'
                       onClick={() => toggleRepeatModal(campaign)}

@@ -332,20 +332,22 @@ const CheckoutModal = ({
                                 className='flex justify-between gap-2'
                               >
                                 <div className='py-3 w-[250px] rounded-lg  text-black  flex'>
-                                  <Image
-                                    src={
-                                      item?.image
-                                        ? `data:image/jpeg;base64,${item?.image}`
-                                        : noImage
-                                    }
-                                    width={20}
-                                    height={20}
-                                    className='object-cover rounded-lg w-20 h-15'
-                                    aria-label='uploaded image'
-                                    alt='uploaded image(s)'
-                                  />
+                                  <div className='h-[60px] w-[60px]'>
+                                    <Image
+                                      src={
+                                        item?.image
+                                          ? `data:image/jpeg;base64,${item?.image}`
+                                          : noImage
+                                      }
+                                      width={60}
+                                      height={60}
+                                      className='object-cover rounded-lg bg-cover h-[60px]'
+                                      aria-label='uploaded image'
+                                      alt='uploaded image(s)'
+                                    />
+                                  </div>
 
-                                  <div className='p-3 flex  flex-col text-sm justify-center'>
+                                  <div className='px-3 flex  flex-col text-sm justify-center'>
                                     <p className='font-[600]'>
                                       {item.menuName}
                                     </p>
@@ -354,7 +356,7 @@ const CheckoutModal = ({
                                       {item.itemName}
                                     </p>
                                     <Spacer y={2} />
-                                    <div className='text-black md:w-[150px] md:hidden w-auto grid'>
+                                    <div className='text-black md:w-[150px] md:hidden w-auto grid place-content-end'>
                                       <h3 className='font-[600]'>
                                         {formatPrice(item?.price)}
                                       </h3>
@@ -367,7 +369,7 @@ const CheckoutModal = ({
                                     isIconOnly
                                     radius='sm'
                                     variant='faded'
-                                    className='border h-[35px] w-[30px] border-grey400'
+                                    className='border h-[35px] w-[30px] border-primaryGrey bg-white'
                                     aria-label='minus'
                                   >
                                     <FaMinus />
@@ -380,7 +382,7 @@ const CheckoutModal = ({
                                     isIconOnly
                                     radius='sm'
                                     variant='faded'
-                                    className='border h-[35px] w-[30px] border-grey400'
+                                    className='border h-[35px] w-[30px] border-primaryGrey bg-white'
                                     aria-label='plus'
                                   >
                                     <FaPlus />

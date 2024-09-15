@@ -148,7 +148,7 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
                                         width={60}
                                         height={60}
                                         className={
-                                          'bg-contain h-[60px] rounded-lg w-[60px]'
+                                          'bg-cover h-[60px] rounded-lg w-[60px]'
                                         }
                                         aria-label='uploaded image'
                                         alt='uploaded image(s)'

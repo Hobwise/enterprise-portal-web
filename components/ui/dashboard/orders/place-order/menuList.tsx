@@ -349,7 +349,7 @@ const MenuList = () => {
                           : noImage
                       }
                       alt={index + menu.id}
-                      className='w-full md:h-[100.54px] h-[150px] rounded-lg border border-primaryGrey mb-2 bg-contain'
+                      className='w-full md:h-[100.54px] h-[150px] rounded-lg border border-primaryGrey mb-2 bg-cover'
                     />
                     <div className=''>
                       <h3 className='text-[14px] font-[500]'>

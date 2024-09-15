@@ -177,7 +177,7 @@ const ReservationDetails = () => {
                 style={{
                   objectFit: data?.image ? 'cover' : 'contain',
                 }}
-                className={'bg-contain border  h-[100px] rounded-lg w-[159px]'}
+                className={'bg-cover border  h-[100px] rounded-lg w-[159px]'}
                 aria-label='reservation image'
                 alt='reservation image'
               />

@@ -108,17 +108,19 @@ const MenuList = ({ menus, onOpen, onOpenViewMenu, searchQuery }: any) => {
     switch (columnKey) {
       case 'name':
         return (
-          <div className='flex w-[100px]'>
-            <Image
-              className='h-[60px] w-[60px] bg-cover rounded-lg'
-              width={60}
-              height={60}
-              alt='menu'
-              aria-label='menu'
-              src={
-                menu.image ? `data:image/jpeg;base64,${menu.image}` : noImage
-              }
-            />
+          <div className='flex '>
+            <div className='h-[60px] w-[60px]'>
+              <Image
+                className='bg-cover h-[60px] rounded-lg'
+                width={60}
+                height={60}
+                alt='menu'
+                aria-label='menu'
+                src={
+                  menu.image ? `data:image/jpeg;base64,${menu.image}` : noImage
+                }
+              />
+            </div>
 
             <div className='ml-5 gap-1 grid place-content-center'>
               <p className='text-sm'>{menu.menuName}</p>
