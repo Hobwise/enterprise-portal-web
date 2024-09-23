@@ -1,6 +1,8 @@
 'use client';
 
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { formatPrice } from '@/lib/utils';
+import { Card } from '@nextui-org/react';
 import moment from 'moment';
 import Image from 'next/image';
 import Chart from 'react-google-charts';
@@ -13,6 +15,7 @@ import EmptyOverview from './emptyOverview';
 import SkeletonLoaderModules from './skeletonLoadingModules';
 
 const ModulesOverview = ({ response, isLoading }: any) => {
+  const { userRolePermissions, role } = usePermission();
   const pieData = response && [
     ['Payment Method', 'Amount'],
     ...response?.paymentDetails?.paymentMethodCounts.map((item) => {
@@ -62,7 +65,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
         <div className='lg:w-[70%] flex flex-col lg:flex-row lg:gap-5 gap-3 w-full'>
           <div className='flex lg:w-[70%] w-full flex-col lg:gap-5 gap-3'>
             <div className='flex xl:flex-row flex-col lg:gap-5 gap-3'>
-              <div className='border border-primaryGrey rounded-xl lg:w-[300px] w-full flex-grow'>
+              <Card className=' rounded-xl lg:w-[300px] w-full flex-grow'>
                 <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                   <span className='font-[600]'>Payments</span>
                 </div>
@@ -83,8 +86,8 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                     <EmptyOverview image={NoPayment} title='payments' />
                   )}
                 </div>
-              </div>
-              <div className='border  flex-grow border-primaryGrey rounded-xl'>
+              </Card>
+              <Card className=' flex-grow rounded-xl'>
                 <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                   <span className='font-[600]'>Bookings</span>
                 </div>
@@ -183,9 +186,9 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 ) : (
                   <EmptyOverview title='active bookings' />
                 )}
-              </div>
+              </Card>
             </div>
-            <div className='border flex-grow border-primaryGrey rounded-xl'>
+            <Card className=' flex-grow  rounded-xl'>
               <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                 <span className='font-[600]'>Campaigns</span>
               </div>
@@ -193,7 +196,12 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 <EmptyOverview
                   image={NoOrder}
                   title='active campaigns'
-                  buttonText='Start a campaign'
+                  buttonText={
+                    role === 0 ||
+                    userRolePermissions?.canCreateCampaign === true
+                      ? 'Start a campaign'
+                      : ''
+                  }
                   href='/dashboard/campaigns/create-campaign'
                 />
               ) : (
@@ -237,16 +245,20 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 </Link> */}
                 </div>
               )}
-            </div>
+            </Card>
           </div>
-          <div className='border flex-grow border-primaryGrey rounded-xl'>
+          <Card className='flex-grow  rounded-xl'>
             <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
               <span className='font-[600]'>Best sellers</span>
             </div>
             {response?.bestSellers.length === 0 || response === undefined ? (
               <EmptyOverview
                 title='active menus'
-                buttonText='Create menu'
+                buttonText={
+                  role === 0 || userRolePermissions?.canCreateMenu === true
+                    ? 'Create menu'
+                    : ''
+                }
                 href='/dashboard/menu'
               />
             ) : (
@@ -276,9 +288,9 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 ))}
               </div>
             )}
-          </div>
+          </Card>
         </div>
-        <div className='border flex-grow border-primaryGrey p-3 rounded-xl'>
+        <Card className=' flex-grow  p-3 rounded-xl'>
           <div className='flex items-center gap-1'>
             <div className='h-2 w-2 rounded-full bg-success-800' />
             <span className='font-[600]'>QR Code</span>
@@ -312,7 +324,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
               href='/dashboard/qr-code/create-qr'
             />
           )}
-        </div>
+        </Card>
       </article>
     </section>
   );

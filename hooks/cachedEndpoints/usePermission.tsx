@@ -39,10 +39,37 @@ const extractPermissions = (permissions: any, roleType: string) => {
     canEditReservation: rolePermissions.canEditReservation,
     canDeleteReservation: rolePermissions.canDeleteReservation,
 
+    canViewBusiness: rolePermissions.canViewBusiness,
+    canCreateBusiness: rolePermissions.canCreateBusiness,
+    canEditBusiness: rolePermissions.canEditBusiness,
+    canDeleteBusiness: rolePermissions.canDeleteBusiness,
+
+    canViewOrder: rolePermissions.canViewOrder,
+    canCreateOrder: rolePermissions.canCreateOrder,
+    canEditOrder: rolePermissions.canEditOrder,
+    canDeleteOrder: rolePermissions.canDeleteOrder,
+
+    canViewQR: rolePermissions.canViewQR,
+    canCreateQR: rolePermissions.canCreateQR,
+    canEditQR: rolePermissions.canEditQR,
+    canDeleteQR: rolePermissions.canDeleteQR,
+
+    canViewUser: rolePermissions.canViewUser,
+    canCreateUser: rolePermissions.canCreateUser,
+    canEditUser: rolePermissions.canEditUser,
+    canDeleteUser: rolePermissions.canDeleteUser,
+
+    canViewBooking: rolePermissions.canViewBooking,
+    canCreateBooking: rolePermissions.canCreateBooking,
+    canEditBooking: rolePermissions.canEditBooking,
+
     canViewPayment: rolePermissions.canViewPayment,
-    canCreatePayment: rolePermissions.canCreatePayment,
     canEditPayment: rolePermissions.canEditPayment,
-    canDeletePayment: rolePermissions.canDeletePayment,
+
+    canViewReport: rolePermissions.canViewReport,
+    canEditReport: rolePermissions.canEditReport,
+
+    canViewDashboard: rolePermissions.canViewDashboard,
   };
 };
 

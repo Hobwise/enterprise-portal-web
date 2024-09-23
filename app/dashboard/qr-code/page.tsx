@@ -13,6 +13,7 @@ import { IoAddCircleOutline, IoSearchOutline } from 'react-icons/io5';
 import Error from '@/components/error';
 import CreateQRcode from '@/components/ui/dashboard/qrCode/createQR';
 import QrList from '@/components/ui/dashboard/qrCode/qrCode';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useQR from '@/hooks/cachedEndpoints/useQRcode';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { MdOutlineFileDownload } from 'react-icons/md';
@@ -20,6 +21,7 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 const QRCode: React.FC = () => {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useQR();
+  const { userRolePermissions, role } = usePermission();
 
   const { setPage, setTableStatus } = useGlobalContext();
 
@@ -121,18 +123,19 @@ const QRCode: React.FC = () => {
             </>
           )}
 
-          {data?.quickResponses?.length > 0 && (
-            <CustomButton
-              onClick={() => router.push('/dashboard/qr-code/create-qr')}
-              className='py-2 w-full md:w-auto px-4 md:mb-0 mb-4 text-white'
-              backgroundColor='bg-primaryColor'
-            >
-              <div className='flex gap-2 items-center justify-center'>
-                <IoAddCircleOutline className='text-[22px]' />
-                <p>{'Create QR'} </p>
-              </div>
-            </CustomButton>
-          )}
+          {(role === 0 || userRolePermissions?.canCreateQR === true) &&
+            data?.quickResponses?.length > 0 && (
+              <CustomButton
+                onClick={() => router.push('/dashboard/qr-code/create-qr')}
+                className='py-2 w-full md:w-auto px-4 md:mb-0 mb-4 text-white'
+                backgroundColor='bg-primaryColor'
+              >
+                <div className='flex gap-2 items-center justify-center'>
+                  <IoAddCircleOutline className='text-[22px]' />
+                  <p>{'Create QR'} </p>
+                </div>
+              </CustomButton>
+            )}
         </div>
       </div>
       {/* <CreateQRcode /> */}

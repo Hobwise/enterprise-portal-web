@@ -88,6 +88,36 @@ const SideNav = () => {
       role === 1
     )
       return false;
+    if (
+      item.title === 'Orders' &&
+      userRolePermissions?.canViewOrder === false &&
+      role === 1
+    )
+      return false;
+    if (
+      item.title === 'Reports' &&
+      userRolePermissions?.canViewReport === false &&
+      role === 1
+    )
+      return false;
+    if (
+      item.title === 'Bookings' &&
+      userRolePermissions?.canViewBooking === false &&
+      role === 1
+    )
+      return false;
+    if (
+      item.title === 'Dashboard' &&
+      userRolePermissions?.canViewDashboard === false &&
+      role === 1
+    )
+      return false;
+    if (
+      item.title === 'QR Code' &&
+      userRolePermissions?.canViewQR === false &&
+      role === 1
+    )
+      return false;
     return true;
   });
 

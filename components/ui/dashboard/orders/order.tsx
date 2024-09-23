@@ -8,6 +8,7 @@ import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
+  DropdownSection,
   DropdownTrigger,
   Table,
   TableBody,
@@ -29,6 +30,7 @@ import {
 } from './data';
 import Filters from './filters';
 
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
 import moment from 'moment';
@@ -50,7 +52,7 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 const OrdersList = ({ orders, searchQuery }: any) => {
   const router = useRouter();
-
+  const { userRolePermissions, role } = usePermission();
   const [singleOrder, setSingleOrder] = React.useState('');
   const [isOpenCancelOrder, setIsOpenCancelOrder] =
     React.useState<Boolean>(false);
@@ -206,54 +208,66 @@ const OrdersList = ({ orders, searchQuery }: any) => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu className='text-black'>
-                <DropdownItem
-                  onClick={() => toggleInvoiceModal(order)}
-                  aria-label='Generate invoice'
-                >
-                  <div className={`  flex gap-3  items-center text-grey500`}>
-                    <TbFileInvoice className='text-[18px]' />
-                    <p>Generate invoice</p>
-                  </div>
-                </DropdownItem>
-                {options && options.includes('Update Order') && (
+                <DropdownSection>
                   <DropdownItem
-                    onClick={() => {
-                      router.push('/dashboard/orders/place-order');
-                      saveJsonItemToLocalStorage('order', order);
-                    }}
-                    aria-label='update order'
+                    onClick={() => toggleInvoiceModal(order)}
+                    aria-label='Generate invoice'
                   >
-                    <div className={` flex gap-3  items-center text-grey500`}>
-                      <FaRegEdit />
-                      <p>Update order</p>
+                    <div className={`  flex gap-3  items-center text-grey500`}>
+                      <TbFileInvoice className='text-[18px]' />
+                      <p>Generate invoice</p>
                     </div>
                   </DropdownItem>
-                )}
-                {options && options.includes('Checkout') && (
-                  <DropdownItem
-                    onClick={() => toggleConfirmModal(order)}
-                    aria-label='checkout'
-                  >
-                    <div className={`flex gap-3 items-center text-grey500`}>
-                      <BsCalendar2Check />
-                      <p>Checkout</p>
-                    </div>
-                  </DropdownItem>
-                )}
-                {options && options.includes('Cancel Order') && (
-                  <DropdownItem
-                    onClick={() => toggleCancelModal(order)}
-                    aria-label='cancel order'
-                  >
-                    <div
-                      className={` text-danger-500 flex  items-center gap-3 `}
-                    >
-                      <LiaTimesSolid />
 
-                      <p>Cancel order</p>
-                    </div>
-                  </DropdownItem>
-                )}
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    options &&
+                    options.includes('Update Order') && (
+                      <DropdownItem
+                        onClick={() => {
+                          router.push('/dashboard/orders/place-order');
+                          saveJsonItemToLocalStorage('order', order);
+                        }}
+                        aria-label='update order'
+                      >
+                        <div
+                          className={` flex gap-3  items-center text-grey500`}
+                        >
+                          <FaRegEdit />
+                          <p>Update order</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    options &&
+                    options.includes('Checkout') && (
+                      <DropdownItem
+                        onClick={() => toggleConfirmModal(order)}
+                        aria-label='checkout'
+                      >
+                        <div className={`flex gap-3 items-center text-grey500`}>
+                          <BsCalendar2Check />
+                          <p>Checkout</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    options &&
+                    options.includes('Cancel Order') && (
+                      <DropdownItem
+                        onClick={() => toggleCancelModal(order)}
+                        aria-label='cancel order'
+                      >
+                        <div
+                          className={` text-danger-500 flex  items-center gap-3 `}
+                        >
+                          <LiaTimesSolid />
+
+                          <p>Cancel order</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+                </DropdownSection>
               </DropdownMenu>
             </Dropdown>
           </div>

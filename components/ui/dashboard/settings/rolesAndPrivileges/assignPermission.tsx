@@ -18,10 +18,18 @@ import {
 } from '@nextui-org/react';
 import { useCallback, useEffect, useState } from 'react';
 import {
+  bookingOption,
+  businessOption,
   campaignOption,
   columns,
+  dashboardOption,
   menuOption,
+  orderOption,
+  paymentOption,
+  qrOption,
+  reportOption,
   reservationsOption,
+  userOption,
 } from '../data';
 
 const AssignPermission = ({ isOpen, onOpenChange }: any) => {
@@ -33,50 +41,80 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
     userRole: {
       cooperateId: userInformation.cooperateID,
       businessId: businessInformation[0].businessId,
-      canViewMenu: false,
-      canCreateMenu: false,
-      canEditMenu: false,
-      canDeleteMenu: false,
-      canViewCampaign: false,
-      canCreateCampaign: false,
-      canEditCampaign: false,
-      canViewReservation: false,
-      canCreateReservation: false,
-      canEditReservation: false,
-      canDeleteReservation: false,
-      canCreateUser: false,
-      canViewUser: false,
-      canEditUser: false,
-      canDeleteUser: false,
       canCreateBusiness: false,
-      canViewBusiness: false,
-      canEditBusiness: false,
+      canCreateCampaign: false,
+      canCreateMenu: true,
+      canCreateOrder: false,
+      canCreateQR: false,
+      canCreateReservation: false,
+      canCreateUser: false,
       canDeleteBusiness: false,
+      canDeleteMenu: true,
+      canDeleteOrder: true,
+      canDeleteQR: false,
+      canDeleteReservation: false,
+      canDeleteUser: false,
+      canEditBooking: true,
+      canEditBusiness: false,
+      canEditCampaign: false,
+      canEditMenu: true,
+      canEditOrder: true,
+      canEditPayment: false,
+      canEditQR: false,
+      canEditReport: false,
+      canEditReservation: false,
+      canEditUser: false,
+      canViewBooking: true,
+      canViewBusiness: false,
+      canViewCampaign: false,
+      canViewDashboard: false,
+      canViewMenu: true,
       canViewMessages: false,
+      canViewOrder: true,
+      canViewPayment: false,
+      canViewQR: false,
+      canViewReport: false,
+      canViewReservation: false,
+      canViewUser: false,
     },
     managerRole: {
       cooperateId: userInformation.cooperateID,
       businessId: businessInformation[0].businessId,
-      canViewMenu: true,
-      canCreateMenu: true,
-      canEditMenu: true,
-      canDeleteMenu: true,
-      canViewCampaign: true,
-      canCreateCampaign: true,
-      canEditCampaign: true,
-      canViewReservation: true,
-      canCreateReservation: true,
-      canEditReservation: true,
-      canDeleteReservation: true,
-      canCreateUser: true,
-      canViewUser: true,
-      canEditUser: true,
-      canDeleteUser: true,
       canCreateBusiness: true,
-      canViewBusiness: true,
-      canEditBusiness: true,
+      canCreateCampaign: true,
+      canCreateMenu: true,
+      canCreateOrder: true,
+      canCreateQR: true,
+      canCreateReservation: true,
+      canCreateUser: true,
       canDeleteBusiness: true,
+      canDeleteMenu: true,
+      canDeleteOrder: true,
+      canDeleteQR: true,
+      canDeleteReservation: true,
+      canDeleteUser: true,
+      canEditBooking: true,
+      canEditBusiness: true,
+      canEditCampaign: true,
+      canEditMenu: true,
+      canEditOrder: true,
+      canEditPayment: true,
+      canEditQR: true,
+      canEditReport: true,
+      canEditReservation: true,
+      canEditUser: true,
+      canViewBooking: true,
+      canViewBusiness: true,
+      canViewCampaign: true,
+      canViewDashboard: true,
+      canViewMenu: true,
       canViewMessages: true,
+      canViewOrder: true,
+      canViewPayment: true,
+      canViewQR: true,
+      canViewReport: true,
+      canViewReservation: true,
+      canViewUser: true,
     },
   };
 
@@ -309,6 +347,358 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                           )}
                         </TableHeader>
                         <TableBody items={reservationsOption}>
+                          {(item) => (
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
+                              {(columnKey) => (
+                                <TableCell>
+                                  {renderCell(
+                                    item?.role === 'manager'
+                                      ? 'managerRole'
+                                      : 'userRole',
+                                    item,
+                                    columnKey
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      <p className='text-[#5F35D2] px-3 font-[700] text-[13px] '>
+                        BUSINESS
+                      </p>
+                      <Table
+                        radius='none'
+                        shadow='none'
+                        removeWrapper={true}
+                        classNames={{
+                          td: 'px-3 py-2 border-y border-y-primaryGrey',
+                          table: 'p-0 border-none',
+                        }}
+                        aria-label='Reservation table'
+                        hideHeader
+                      >
+                        <TableHeader columns={columns}>
+                          {(column) => (
+                            <TableColumn
+                              key={column.uid}
+                              align={
+                                column.uid === 'actions' ? 'start' : 'center'
+                              }
+                            >
+                              {column.name}
+                            </TableColumn>
+                          )}
+                        </TableHeader>
+                        <TableBody items={businessOption}>
+                          {(item) => (
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
+                              {(columnKey) => (
+                                <TableCell>
+                                  {renderCell(
+                                    item?.role === 'manager'
+                                      ? 'managerRole'
+                                      : 'userRole',
+                                    item,
+                                    columnKey
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      <p className='text-[#5F35D2] px-3 font-[700] text-[13px] '>
+                        ORDERS
+                      </p>
+                      <Table
+                        radius='none'
+                        shadow='none'
+                        removeWrapper={true}
+                        classNames={{
+                          td: 'px-3 py-2 border-y border-y-primaryGrey',
+                          table: 'p-0 border-none',
+                        }}
+                        aria-label='Reservation table'
+                        hideHeader
+                      >
+                        <TableHeader columns={columns}>
+                          {(column) => (
+                            <TableColumn
+                              key={column.uid}
+                              align={
+                                column.uid === 'actions' ? 'start' : 'center'
+                              }
+                            >
+                              {column.name}
+                            </TableColumn>
+                          )}
+                        </TableHeader>
+                        <TableBody items={orderOption}>
+                          {(item) => (
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
+                              {(columnKey) => (
+                                <TableCell>
+                                  {renderCell(
+                                    item?.role === 'manager'
+                                      ? 'managerRole'
+                                      : 'userRole',
+                                    item,
+                                    columnKey
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      <p className='text-[#5F35D2] px-3 font-[700] text-[13px] '>
+                        QR
+                      </p>
+                      <Table
+                        radius='none'
+                        shadow='none'
+                        removeWrapper={true}
+                        classNames={{
+                          td: 'px-3 py-2 border-y border-y-primaryGrey',
+                          table: 'p-0 border-none',
+                        }}
+                        aria-label='Reservation table'
+                        hideHeader
+                      >
+                        <TableHeader columns={columns}>
+                          {(column) => (
+                            <TableColumn
+                              key={column.uid}
+                              align={
+                                column.uid === 'actions' ? 'start' : 'center'
+                              }
+                            >
+                              {column.name}
+                            </TableColumn>
+                          )}
+                        </TableHeader>
+                        <TableBody items={qrOption}>
+                          {(item) => (
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
+                              {(columnKey) => (
+                                <TableCell>
+                                  {renderCell(
+                                    item?.role === 'manager'
+                                      ? 'managerRole'
+                                      : 'userRole',
+                                    item,
+                                    columnKey
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      <p className='text-[#5F35D2] px-3 font-[700] text-[13px] '>
+                        USER
+                      </p>
+                      <Table
+                        radius='none'
+                        shadow='none'
+                        removeWrapper={true}
+                        classNames={{
+                          td: 'px-3 py-2 border-y border-y-primaryGrey',
+                          table: 'p-0 border-none',
+                        }}
+                        aria-label='Reservation table'
+                        hideHeader
+                      >
+                        <TableHeader columns={columns}>
+                          {(column) => (
+                            <TableColumn
+                              key={column.uid}
+                              align={
+                                column.uid === 'actions' ? 'start' : 'center'
+                              }
+                            >
+                              {column.name}
+                            </TableColumn>
+                          )}
+                        </TableHeader>
+                        <TableBody items={userOption}>
+                          {(item) => (
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
+                              {(columnKey) => (
+                                <TableCell>
+                                  {renderCell(
+                                    item?.role === 'manager'
+                                      ? 'managerRole'
+                                      : 'userRole',
+                                    item,
+                                    columnKey
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      <p className='text-[#5F35D2] px-3 font-[700] text-[13px] '>
+                        BOOKINGS
+                      </p>
+                      <Table
+                        radius='none'
+                        shadow='none'
+                        removeWrapper={true}
+                        classNames={{
+                          td: 'px-3 py-2 border-y border-y-primaryGrey',
+                          table: 'p-0 border-none',
+                        }}
+                        aria-label='Reservation table'
+                        hideHeader
+                      >
+                        <TableHeader columns={columns}>
+                          {(column) => (
+                            <TableColumn
+                              key={column.uid}
+                              align={
+                                column.uid === 'actions' ? 'start' : 'center'
+                              }
+                            >
+                              {column.name}
+                            </TableColumn>
+                          )}
+                        </TableHeader>
+                        <TableBody items={bookingOption}>
+                          {(item) => (
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
+                              {(columnKey) => (
+                                <TableCell>
+                                  {renderCell(
+                                    item?.role === 'manager'
+                                      ? 'managerRole'
+                                      : 'userRole',
+                                    item,
+                                    columnKey
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      <p className='text-[#5F35D2] px-3 font-[700] text-[13px] '>
+                        PAYMENTS
+                      </p>
+                      <Table
+                        radius='none'
+                        shadow='none'
+                        removeWrapper={true}
+                        classNames={{
+                          td: 'px-3 py-2 border-y border-y-primaryGrey',
+                          table: 'p-0 border-none',
+                        }}
+                        aria-label='Reservation table'
+                        hideHeader
+                      >
+                        <TableHeader columns={columns}>
+                          {(column) => (
+                            <TableColumn
+                              key={column.uid}
+                              align={
+                                column.uid === 'actions' ? 'start' : 'center'
+                              }
+                            >
+                              {column.name}
+                            </TableColumn>
+                          )}
+                        </TableHeader>
+                        <TableBody items={paymentOption}>
+                          {(item) => (
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
+                              {(columnKey) => (
+                                <TableCell>
+                                  {renderCell(
+                                    item?.role === 'manager'
+                                      ? 'managerRole'
+                                      : 'userRole',
+                                    item,
+                                    columnKey
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      <p className='text-[#5F35D2] px-3 font-[700] text-[13px] '>
+                        REPORTS
+                      </p>
+                      <Table
+                        radius='none'
+                        shadow='none'
+                        removeWrapper={true}
+                        classNames={{
+                          td: 'px-3 py-2 border-y border-y-primaryGrey',
+                          table: 'p-0 border-none',
+                        }}
+                        aria-label='Reservation table'
+                        hideHeader
+                      >
+                        <TableHeader columns={columns}>
+                          {(column) => (
+                            <TableColumn
+                              key={column.uid}
+                              align={
+                                column.uid === 'actions' ? 'start' : 'center'
+                              }
+                            >
+                              {column.name}
+                            </TableColumn>
+                          )}
+                        </TableHeader>
+                        <TableBody items={reportOption}>
+                          {(item) => (
+                            <TableRow className='text-[#5F6D7E]' key={item?.id}>
+                              {(columnKey) => (
+                                <TableCell>
+                                  {renderCell(
+                                    item?.role === 'manager'
+                                      ? 'managerRole'
+                                      : 'userRole',
+                                    item,
+                                    columnKey
+                                  )}
+                                </TableCell>
+                              )}
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                      <p className='text-[#5F35D2] px-3 font-[700] text-[13px] '>
+                        DASHBOARD
+                      </p>
+                      <Table
+                        radius='none'
+                        shadow='none'
+                        removeWrapper={true}
+                        classNames={{
+                          td: 'px-3 py-2 border-y border-y-primaryGrey',
+                          table: 'p-0 border-none',
+                        }}
+                        aria-label='Reservation table'
+                        hideHeader
+                      >
+                        <TableHeader columns={columns}>
+                          {(column) => (
+                            <TableColumn
+                              key={column.uid}
+                              align={
+                                column.uid === 'actions' ? 'start' : 'center'
+                              }
+                            >
+                              {column.name}
+                            </TableColumn>
+                          )}
+                        </TableHeader>
+                        <TableBody items={dashboardOption}>
                           {(item) => (
                             <TableRow className='text-[#5F6D7E]' key={item?.id}>
                               {(columnKey) => (

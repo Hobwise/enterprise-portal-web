@@ -51,6 +51,10 @@ module.exports = {
           DEFAULT: '#BEF264',
           foreground: '#000000',
         },
+        primaryColor: {
+          DEFAULT: '#F0F2F5',
+          foreground: '#000000',
+        },
         placeholder: {
           small: '1px',
           medium: '1px',

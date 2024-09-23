@@ -1,3 +1,4 @@
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { Button, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import noBooking from '../../../../../public/assets/images/no-booking.png';
@@ -5,6 +6,8 @@ import CreateTeam from './createUser';
 
 const EmptyPage = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { userRolePermissions, role } = usePermission();
+
   return (
     <div>
       <h1 className='text-[16px] leading-8 font-semibold'>Team members</h1>
@@ -31,13 +34,14 @@ const EmptyPage = () => {
               fulfill orders.
             </p>
           </div>
-
-          <Button
-            onPress={onOpen}
-            className='text-white bg-primaryColor rounded-lg'
-          >
-            Invite new member
-          </Button>
+          {(role === 0 || userRolePermissions?.canCreateUser === true) && (
+            <Button
+              onPress={onOpen}
+              className='text-white bg-primaryColor rounded-lg'
+            >
+              Invite new member
+            </Button>
+          )}
         </div>
       </article>
       <CreateTeam isOpen={isOpen} onOpenChange={onOpenChange} />

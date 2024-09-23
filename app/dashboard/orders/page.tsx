@@ -10,6 +10,7 @@ import Error from '@/components/error';
 import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
 import OrdersList from '@/components/ui/dashboard/orders/order';
 import useOrder from '@/hooks/cachedEndpoints/useOrder';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import { Button, ButtonGroup, Chip } from '@nextui-org/react';
@@ -21,6 +22,7 @@ const Orders: React.FC = () => {
   const router = useRouter();
 
   const { data, isLoading, isError, refetch } = useOrder();
+  const { userRolePermissions, role } = usePermission();
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -130,17 +132,18 @@ const Orders: React.FC = () => {
               </ButtonGroup>
             </>
           )}
-
-          <CustomButton
-            onClick={() => router.push('/dashboard/orders/place-order')}
-            className='py-2 px-4 mb-0 text-white'
-            backgroundColor='bg-primaryColor'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              <IoAddCircleOutline className='text-[22px]' />
-              <p>{'Create order'} </p>
-            </div>
-          </CustomButton>
+          {(role === 0 || userRolePermissions?.canCreateOrder === true) && (
+            <CustomButton
+              onClick={() => router.push('/dashboard/orders/place-order')}
+              className='py-2 px-4 mb-0 text-white'
+              backgroundColor='bg-primaryColor'
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                <IoAddCircleOutline className='text-[22px]' />
+                <p>{'Create order'} </p>
+              </div>
+            </CustomButton>
+          )}
         </div>
       </div>
       {isLoading ? <CustomLoading /> : <>{getScreens()}</>}

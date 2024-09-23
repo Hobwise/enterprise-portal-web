@@ -1,5 +1,6 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -8,6 +9,7 @@ import NoOrder from '../../../../public/assets/images/no-order.png';
 
 const CreateQRcode = () => {
   const router = useRouter();
+  const { userRolePermissions, role } = usePermission();
   return (
     <section>
       <Spacer y={14} />
@@ -20,17 +22,19 @@ const CreateQRcode = () => {
           orders
         </p>
         <Spacer y={5} />
-        <CustomButton
-          onClick={() => router.push('/dashboard/qr-code/create-qr')}
-          className='py-2 px-4 md:mb-0 mb-4 text-white'
-          backgroundColor='bg-primaryColor'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <IoMdAdd className='text-[22px]' />
+        {(role === 0 || userRolePermissions?.canCreateQR === true) && (
+          <CustomButton
+            onClick={() => router.push('/dashboard/qr-code/create-qr')}
+            className='py-2 px-4 md:mb-0 mb-4 text-white'
+            backgroundColor='bg-primaryColor'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <IoMdAdd className='text-[22px]' />
 
-            <p>Create QR code</p>
-          </div>
-        </CustomButton>
+              <p>Create QR code</p>
+            </div>
+          </CustomButton>
+        )}
       </div>
     </section>
   );

@@ -27,26 +27,35 @@ const CreateReservation = ({ showCreateBookingModal }: any) => {
         </p>
         <Spacer y={5} />
 
-        {(role === 0 || userRolePermissions?.canCreateReservation === true) && (
-          <CustomButton
-            onClick={() =>
-              data?.totalCount === 0
-                ? router.push('/dashboard/reservation/create-reservation')
-                : showCreateBookingModal()
-            }
-            className='py-2 px-4 md:mb-0 mb-4 text-white'
-            backgroundColor='bg-primaryColor'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              <IoMdAdd className='text-[22px]' />
-              <p>
-                {data?.totalCount === 0
-                  ? 'Create reservation'
-                  : 'Create booking'}
-              </p>
-            </div>
-          </CustomButton>
-        )}
+        {(role === 0 || userRolePermissions?.canCreateReservation === true) &&
+          data?.totalCount === 0 && (
+            <CustomButton
+              onClick={() =>
+                router.push('/dashboard/reservation/create-reservation')
+              }
+              className='py-2 px-4 md:mb-0 mb-4 text-white'
+              backgroundColor='bg-primaryColor'
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                <IoMdAdd className='text-[22px]' />
+                <p>Create reservation</p>
+              </div>
+            </CustomButton>
+          )}
+
+        {(role === 0 || userRolePermissions?.canCreateBooking === true) &&
+          data?.totalCount > 0 && (
+            <CustomButton
+              onClick={() => showCreateBookingModal()}
+              className='py-2 px-4 md:mb-0 mb-4 text-white'
+              backgroundColor='bg-primaryColor'
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                <IoMdAdd className='text-[22px]' />
+                <p>Create booking</p>
+              </div>
+            </CustomButton>
+          )}
       </div>
     </section>
   );

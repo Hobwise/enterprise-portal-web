@@ -11,6 +11,7 @@ import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
+  DropdownSection,
   DropdownTrigger,
   Table,
   TableBody,
@@ -28,6 +29,7 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 import noImage from '../../../../../public/assets/images/no-image.svg';
 import CreateUser from './createUser';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 export const columns = [
   { name: 'ID', uid: 'id' },
   { name: 'Name', uid: 'firstName' },
@@ -40,6 +42,7 @@ const INITIAL_VISIBLE_COLUMNS = ['firstName', 'dateCreated', 'role', 'actions'];
 const Users = ({ data, refetch }: any) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { page, rowsPerPage } = useGlobalContext();
+  const { userRolePermissions, role } = usePermission();
   const {
     bottomContent,
     headerColumns,
@@ -145,15 +148,20 @@ const Users = ({ data, refetch }: any) => {
                     <p>Edit user</p>
                   </div>
                 </DropdownItem> */}
-                  <DropdownItem
-                    onClick={() => toggleDelete(user)}
-                    aria-label='delete user'
-                  >
-                    <div className={` flex gap-2  items-center`}>
-                      <RiDeleteBin6Line className='text-[20px] text-danger-500' />
-                      <p className=' text-grey500'>Delete user</p>
-                    </div>
-                  </DropdownItem>
+                  <DropdownSection>
+                    {(role === 0 ||
+                      userRolePermissions?.canDeleteUser === true) && (
+                      <DropdownItem
+                        onClick={() => toggleDelete(user)}
+                        aria-label='delete user'
+                      >
+                        <div className={` flex gap-2  items-center`}>
+                          <RiDeleteBin6Line className='text-[20px] text-danger-500' />
+                          <p className=' text-grey500'>Delete user</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+                  </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
             )}
@@ -180,12 +188,14 @@ const Users = ({ data, refetch }: any) => {
             <MdOutlineFileDownload className='text-[22px]' />
             <p>Export csv</p>
           </Button>
-          <Button
-            onPress={onOpen}
-            className='text-white bg-primaryColor rounded-lg'
-          >
-            Invite new member
-          </Button>
+          {(role === 0 || userRolePermissions?.canCreateUser === true) && (
+            <Button
+              onPress={onOpen}
+              className='text-white bg-primaryColor rounded-lg'
+            >
+              Invite new member
+            </Button>
+          )}
         </div>
       </div>
 

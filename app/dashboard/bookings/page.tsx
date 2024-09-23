@@ -15,6 +15,7 @@ import CreateBooking from '@/components/ui/dashboard/bookings/createBooking';
 import CreateReservation from '@/components/ui/dashboard/bookings/createReservation';
 import SuccessModal from '@/components/ui/dashboard/bookings/successModal';
 import useBookings from '@/hooks/cachedEndpoints/useBookings';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
@@ -24,6 +25,7 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 const Bookings: React.FC = () => {
   const { data, isLoading, isError, refetch } = useBookings();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { userRolePermissions, role } = usePermission();
   const [searchQuery, setSearchQuery] = useState('');
   const [openBookingModal, setOpenBookingModal] = useState(false);
   const [openCreateBookingModal, setOpenCreateBookingModal] = useState(false);
@@ -188,17 +190,21 @@ const Bookings: React.FC = () => {
                   <MdOutlineFileDownload className='text-[22px]' />
                   <p>Export csv</p>
                 </Button>
+                {(role === 0 ||
+            userRolePermissions?.canCreateOrder === true) &&
                 <Button
-                  onClick={showCreateBookingModal}
-                  className='flex text-grey600 bg-white'
+                onClick={showCreateBookingModal}
+                className='flex text-grey600 bg-white'
                 >
                   <p>Create a booking</p>
                 </Button>
+                }
               </ButtonGroup>
-
+              {(role === 0 ||
+            userRolePermissions?.canEditOrder === true) &&
               <CustomButton onClick={onOpen} className='flex text-white'>
                 <p>Confirm a booking</p>
-              </CustomButton>
+              </CustomButton>}
             </>
           )}
         </div>

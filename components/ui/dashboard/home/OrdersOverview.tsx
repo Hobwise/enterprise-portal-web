@@ -2,6 +2,7 @@
 import { formatDateTimeForPayload3, formatPrice } from '@/lib/utils';
 import {
   Button,
+  Card,
   Divider,
   Dropdown,
   DropdownItem,
@@ -83,7 +84,6 @@ const OrdersOverview = ({
       (acc, item) => acc + item.count,
       0
     );
-
     if (totalCount <= 100) {
       return {
         minValue: 0,
@@ -148,7 +148,7 @@ const OrdersOverview = ({
   return (
     <section className='w-full'>
       <article className='flex md:gap-6 gap-3 lg:flex-row flex-col'>
-        <div className='border border-primaryGrey lg:w-[70%] w-full rounded-xl'>
+        <Card className='  lg:w-[70%] w-full rounded-xl'>
           <div className='flex justify-between items-center flex-wrap border-b border-primaryGrey p-3'>
             <span className='font-[600]'>Overview</span>
             {selectedValue === 'Custom date' && (
@@ -261,8 +261,8 @@ const OrdersOverview = ({
               </>
             )}
           </div>
-        </div>
-        <div className='flex-grow border h-auto bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl'>
+        </Card>
+        <Card className='flex-grow border h-auto bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl'>
           <div>
             <div className='p-4'>
               <h2 className='font-medium mb-2'>Total amount processed</h2>
@@ -300,7 +300,7 @@ const OrdersOverview = ({
               </div>
             )}
           </div>
-        </div>
+        </Card>
       </article>
     </section>
   );

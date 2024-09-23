@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
 import { saveJsonItemToLocalStorage } from '@/lib/utils';
@@ -9,6 +10,7 @@ import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
+  DropdownSection,
   DropdownTrigger,
   Table,
   TableBody,
@@ -38,7 +40,7 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 const QrList = ({ qr, searchQuery, data }: any) => {
   const router = useRouter();
-
+  const { userRolePermissions, role } = usePermission();
   const [singleOrder, setSingleOrder] = React.useState('');
 
   const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
@@ -127,45 +129,53 @@ const QrList = ({ qr, searchQuery, data }: any) => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu className='text-black'>
-                <DropdownItem
-                  onClick={() => {
-                    saveJsonItemToLocalStorage('qr', qr);
-                    toggleQRmodalView();
-                  }}
-                  aria-label='View QR'
-                >
-                  <div className={` flex gap-2  items-center text-grey500`}>
-                    <GrFormView className='text-[20px]' />
-                    <p>View QR</p>
-                  </div>
-                </DropdownItem>
+                <DropdownSection>
+                  <DropdownItem
+                    onClick={() => {
+                      saveJsonItemToLocalStorage('qr', qr);
+                      toggleQRmodalView();
+                    }}
+                    aria-label='View QR'
+                  >
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <GrFormView className='text-[20px]' />
+                      <p>View QR</p>
+                    </div>
+                  </DropdownItem>
 
-                <DropdownItem
-                  onClick={() => {
-                    saveJsonItemToLocalStorage('qr', qr);
-                    toggleQRmodalEdit();
-                  }}
-                  aria-label='Edit QR'
-                >
-                  <div className={`flex gap-3 items-center text-grey500`}>
-                    <FaRegEdit />
-                    <p>Edit QR</p>
-                  </div>
-                </DropdownItem>
+                  {(role === 0 || userRolePermissions?.canEditQR === true) && (
+                    <DropdownItem
+                      onClick={() => {
+                        saveJsonItemToLocalStorage('qr', qr);
+                        toggleQRmodalEdit();
+                      }}
+                      aria-label='Edit QR'
+                    >
+                      <div className={`flex gap-3 items-center text-grey500`}>
+                        <FaRegEdit />
+                        <p>Edit QR</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                  {(role === 0 ||
+                    userRolePermissions?.canDeleteQR === true) && (
+                    <DropdownItem
+                      onClick={() => {
+                        toggleQRmodalModal();
+                        saveJsonItemToLocalStorage('qr', qr);
+                      }}
+                      aria-label='delete QR'
+                    >
+                      <div
+                        className={` text-danger-500 flex  items-center gap-3 `}
+                      >
+                        <RiDeleteBin6Line />
 
-                <DropdownItem
-                  onClick={() => {
-                    toggleQRmodalModal();
-                    saveJsonItemToLocalStorage('qr', qr);
-                  }}
-                  aria-label='delete QR'
-                >
-                  <div className={` text-danger-500 flex  items-center gap-3 `}>
-                    <RiDeleteBin6Line />
-
-                    <p>Delete QR</p>
-                  </div>
-                </DropdownItem>
+                        <p>Delete QR</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                </DropdownSection>
               </DropdownMenu>
             </Dropdown>
           </div>

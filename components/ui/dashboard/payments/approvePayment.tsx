@@ -3,6 +3,7 @@ import { confirmPayment } from '@/app/api/controllers/dashboard/payment';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import usePayment from '@/hooks/cachedEndpoints/usePayment';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Chip,
@@ -22,6 +23,8 @@ import { paymentMethodMap } from './data';
 
 const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
   const { refetch } = usePayment();
+  const { userRolePermissions, role } = usePermission();
+
   const [reference, setReference] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [order, setOrder] = useState([]);
@@ -209,32 +212,34 @@ const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
                       />
 
                       <Spacer y={3} />
-                      {singlePayment.status === 0 && (
-                        <>
-                          <CustomInput
-                            type='text'
-                            value={reference}
-                            onChange={(e) => setReference(e.target.value)}
-                            name='itemName'
-                            label='Enter ref'
-                            placeholder='Provide payment reference'
-                          />
+                      {(role === 0 ||
+                        userRolePermissions?.canEditPayment === true) &&
+                        singlePayment.status === 0 && (
+                          <>
+                            <CustomInput
+                              type='text'
+                              value={reference}
+                              onChange={(e) => setReference(e.target.value)}
+                              name='itemName'
+                              label='Enter ref'
+                              placeholder='Provide payment reference'
+                            />
 
-                          <Spacer y={5} />
+                            <Spacer y={5} />
 
-                          <CustomButton
-                            loading={isLoading}
-                            disabled={isLoading}
-                            onClick={finalizeOrder}
-                            className='text-white w-full h-[50px]'
-                          >
-                            <div className='flex gap-2 items-center justify-center'>
-                              <p>{'Confirm payment'} </p>
-                              <HiArrowLongLeft className='text-[22px] rotate-180' />
-                            </div>
-                          </CustomButton>
-                        </>
-                      )}
+                            <CustomButton
+                              loading={isLoading}
+                              disabled={isLoading}
+                              onClick={finalizeOrder}
+                              className='text-white w-full h-[50px]'
+                            >
+                              <div className='flex gap-2 items-center justify-center'>
+                                <p>{'Confirm payment'} </p>
+                                <HiArrowLongLeft className='text-[22px] rotate-180' />
+                              </div>
+                            </CustomButton>
+                          </>
+                        )}
                     </div>
                   </div>
                 </div>

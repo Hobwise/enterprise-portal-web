@@ -14,6 +14,7 @@ import {
   Dropdown,
   DropdownItem,
   DropdownMenu,
+  DropdownSection,
   DropdownTrigger,
   Table,
   TableBody,
@@ -27,6 +28,7 @@ import { HiOutlineDotsVertical } from 'react-icons/hi';
 
 import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
 import useBookings from '@/hooks/cachedEndpoints/useBookings';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { notify, submitBookingStatus } from '@/lib/utils';
 import { CiCalendar } from 'react-icons/ci';
 import { IoCheckmark } from 'react-icons/io5';
@@ -46,6 +48,7 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 const BookingsList = ({ bookings, searchQuery }: any) => {
+  const { userRolePermissions, role } = usePermission();
   const [filteredBooking, setFilteredBooking] = React.useState(
     bookings[0]?.bookings
   );
@@ -168,57 +171,68 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu className='text-black'>
-                {booking?.bookingStatus === 1 && (
-                  <DropdownItem
-                    aria-label='admit'
-                    onClick={() =>
-                      updateBookingStatus(
-                        submitBookingStatus(booking?.bookingStatus),
-                        booking?.id
-                      )
-                    }
-                  >
-                    <div className={` flex gap-2  items-center text-grey500`}>
-                      <IoCheckmark className='text-[20px]' />
-                      <p>Admit</p>
-                    </div>
-                  </DropdownItem>
-                )}
-                {booking?.bookingStatus === 0 && (
-                  <DropdownItem
-                    aria-label='accept booking'
-                    onClick={() =>
-                      updateBookingStatus(
-                        submitBookingStatus(booking?.bookingStatus),
-                        booking?.id
-                      )
-                    }
-                  >
-                    <div className={` flex gap-2  items-center text-grey500`}>
-                      <IoCheckmark className='text-[20px]' />
+                <DropdownSection>
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    booking?.bookingStatus === 1 && (
+                      <DropdownItem
+                        aria-label='admit'
+                        onClick={() =>
+                          updateBookingStatus(
+                            submitBookingStatus(booking?.bookingStatus),
+                            booking?.id
+                          )
+                        }
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <IoCheckmark className='text-[20px]' />
+                          <p>Admit</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    booking?.bookingStatus === 0 && (
+                      <DropdownItem
+                        aria-label='accept booking'
+                        onClick={() =>
+                          updateBookingStatus(
+                            submitBookingStatus(booking?.bookingStatus),
+                            booking?.id
+                          )
+                        }
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <IoCheckmark className='text-[20px]' />
 
-                      <p>Accept booking</p>
-                    </div>
-                  </DropdownItem>
-                )}
+                          <p>Accept booking</p>
+                        </div>
+                      </DropdownItem>
+                    )}
 
-                {booking?.bookingStatus === 2 && (
-                  <DropdownItem
-                    aria-label='close booking'
-                    onClick={() =>
-                      updateBookingStatus(
-                        submitBookingStatus(booking?.bookingStatus),
-                        booking?.id
-                      )
-                    }
-                  >
-                    <div className={` flex gap-2  items-center text-grey500`}>
-                      <CiCalendar className='text-[20px]' />
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    booking?.bookingStatus === 2 && (
+                      <DropdownItem
+                        aria-label='close booking'
+                        onClick={() =>
+                          updateBookingStatus(
+                            submitBookingStatus(booking?.bookingStatus),
+                            booking?.id
+                          )
+                        }
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <CiCalendar className='text-[20px]' />
 
-                      <p>Close booking</p>
-                    </div>
-                  </DropdownItem>
-                )}
+                          <p>Close booking</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+                </DropdownSection>
               </DropdownMenu>
             </Dropdown>
           </div>
