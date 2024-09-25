@@ -1,5 +1,6 @@
 import { Card, CardBody, Divider, Spacer } from '@nextui-org/react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Chart } from 'react-google-charts';
 import { BsArrowUpShort } from 'react-icons/bs';
 import { IoIosArrowForward } from 'react-icons/io';
@@ -54,7 +55,11 @@ const ReportDetails = () => {
     },
   ];
 
+  const router = useRouter();
   const AvailableReport = ['Completed orders', 'All orders', 'Food orders'];
+  const handleActivityReport = (activity: string) => {
+    router.push(`/dashboard/reports/${activity}`);
+  };
   return (
     <div className=' flex lg:flex-row flex-col gap-4 mb-4'>
       <div className='lg:w-[77%] w-full'>
@@ -88,7 +93,11 @@ const ReportDetails = () => {
           <Spacer y={4} />
           <div>
             {AvailableReport.map((item) => (
-              <div key={item} className='cursor-pointer'>
+              <div
+                onClick={() => handleActivityReport(item)}
+                key={item}
+                className='cursor-pointer'
+              >
                 <div className='flex justify-between'>
                   <p className='hover:text-gray-100'>{item}</p>
                   <IoIosArrowForward className='text-grey600' />

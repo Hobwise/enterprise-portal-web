@@ -10,6 +10,7 @@ interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   onClick?: any;
+  disableRipple?: boolean;
   type?: 'submit' | 'button' | 'reset';
 }
 export const CustomButton = ({
@@ -18,6 +19,7 @@ export const CustomButton = ({
   loading,
   onClick,
   title,
+  disableRipple = false,
   type = 'submit',
   backgroundColor = 'bg-primaryColor',
   radius = 'rounded-lg',
@@ -30,6 +32,7 @@ export const CustomButton = ({
       onClick={onClick}
       isLoading={loading}
       disabled={disabled}
+      disableRipple={disableRipple}
       aria-label='submit button'
       spinner={
         <svg

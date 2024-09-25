@@ -297,7 +297,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
           </div>
           {response?.quickResponseDetails.quickResponseRecord.length > 0 ? (
             <div className=''>
-              <div className='w-full max-w-[300px]  relative overflow-scroll h-[400px]'>
+              <div className='w-full   relative overflow-scroll h-[400px]'>
                 <h1 className='text-[28px] font-bold text-[#4A4C4F] mb-4'>
                   {response?.quickResponseDetails.totalQuickResponse}
                 </h1>
@@ -307,6 +307,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                       <span className='flex-1 text-sm'>
                         {item.quickResponseName}
                       </span>
+
                       <div
                         className='h-2 max-w-full rounded-full bg-[#5F35D2]'
                         style={{ width: `${item.count}%` }}
