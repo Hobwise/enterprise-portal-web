@@ -257,3 +257,10 @@ export async function configureRole(businessId: string, payload: any) {
     return data;
   } catch (error) {}
 }
+export async function logout() {
+  try {
+    const data = await api.post(AUTH.logout, {});
+
+    return data;
+  } catch (error) {}
+}

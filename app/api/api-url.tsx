@@ -11,6 +11,7 @@ export const AUTH = {
   changePassword: 'api/v1/User/change-password',
   getBusiness: 'api/v1/Business/configuration',
   getRoleCount: 'api/v1/User/role-count',
+  logout: 'api/v1/User/logout',
 };
 export const DASHBOARD = {
   // settings

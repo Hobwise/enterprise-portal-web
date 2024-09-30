@@ -27,7 +27,7 @@ const EmptyOverview = ({
           alt='empty overview'
         />
       </div>
-      <p>There are no {title}</p>
+      <p className='text-center'>There are no {title}</p>
       {buttonText && (
         <div className='justify-center items-center flex'>
           <Link

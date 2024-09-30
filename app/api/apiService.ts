@@ -1,4 +1,4 @@
-// 'use client';
+'use client';
 import {
   getJsonItemFromLocalStorage,
   notify,
@@ -47,11 +47,15 @@ const now = Date.now();
 const TOKEN_REFRESH_WINDOW = 5 * 60 * 1000;
 const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
 
-const logout = () => {
+const logout = async () => {
+  // const response = await logout();
+  // const isSuccessful = response?.data?.isSuccessful;
+  // if (isSuccessful) {
   toast.error('Session Expired, please log in again.');
   window.location.href = '/auth/login';
   localStorage.clear();
   removeCookie('token');
+  // }
 };
 const refreshToken = async () => {
   const userData = getJsonItemFromLocalStorage('userInformation');

@@ -65,7 +65,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
         <div className='lg:w-[70%] flex flex-col lg:flex-row lg:gap-5 gap-3 w-full'>
           <div className='flex lg:w-[70%] w-full flex-col lg:gap-5 gap-3'>
             <div className='flex xl:flex-row flex-col lg:gap-5 gap-3'>
-              <Card className=' rounded-xl lg:w-[300px] w-full flex-grow'>
+              <Card className=' rounded-xl xl:w-[300px] w-full flex-grow'>
                 <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                   <span className='font-[600]'>Payments</span>
                 </div>
