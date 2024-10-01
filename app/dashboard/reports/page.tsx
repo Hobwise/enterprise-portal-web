@@ -1,11 +1,15 @@
 'use client';
 
-import React, { Suspense, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 
-import ReportDetails from '@/components/ui/dashboard/reports/reports';
+import Error from '@/components/error';
+import AuditReportDetails from '@/components/ui/dashboard/reports/auditReport';
+import BookingReportDetails from '@/components/ui/dashboard/reports/bookingReport';
+import OrderReportDetails from '@/components/ui/dashboard/reports/orderReports';
+import PaymentReportDetails from '@/components/ui/dashboard/reports/paymentReports';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import useQR from '@/hooks/cachedEndpoints/useQRcode';
-import { CustomLoading } from '@/lib/utils';
+import useReport from '@/hooks/cachedEndpoints/useReport';
+import { CustomLoading, formatDateTimeForPayload2 } from '@/lib/utils';
 import { getLocalTimeZone, today } from '@internationalized/date';
 import {
   Button,
@@ -27,51 +31,98 @@ import { MdKeyboardArrowDown } from 'react-icons/md';
 
 const Reports: React.FC = () => {
   const router = useRouter();
-  const { data, isLoading, isError, refetch } = useQR();
+
   const { userRolePermissions, role } = usePermission();
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const [value, setValue] = React.useState({
     start: null,
     end: null,
   });
-  const [selectedKeys, setSelectedKeys] = useState(new Set(['Last 7 days']));
+  const [selectedKeys, setSelectedKeys] = useState(new Set(['Today']));
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
     [selectedKeys]
   );
+  const [previousSelectedValue, setPreviousSelectedValue] = useState('Today');
 
-  // const getScreens = () => {
-  //   if (data?.quickResponses?.length > 0) {
-  //     return (
-  //       <QrList qr={filteredItems} searchQuery={searchQuery} data={data} />
-  //     );
-  //   } else if (isError) {
-  //     return <Error onClick={() => refetch()} />;
-  //   } else {
-  //     return <CreateQRcode />;
-  //   }
-  // };
+  const logIndexForSelectedKey = (key: string) => {
+    switch (key) {
+      case 'Today':
+        return 0;
+      case 'This week':
+        return 1;
+      case 'This year':
+        return 2;
+      case 'Custom date':
+        return 3;
+      default:
+        console.log('Unknown key');
+        return -1;
+    }
+  };
+
+  const checkValue = () => {
+    return value.start !== null && value.end !== null;
+  };
+
+  const shouldFetchReport =
+    selectedValue !== 'Custom date' ||
+    (selectedValue === 'Custom date' && checkValue());
+
+  const effectiveSelectedValue = shouldFetchReport
+    ? selectedValue
+    : previousSelectedValue;
+
+  const startDate = value.start
+    ? `${formatDateTimeForPayload2(value.start)}Z`
+    : undefined;
+  const endDate = value.end
+    ? `${formatDateTimeForPayload2(value.end)}Z`
+    : undefined;
+  const { data, isError, refetch, isLoading } = useReport(
+    logIndexForSelectedKey(effectiveSelectedValue),
+    startDate,
+    endDate,
+    { enabled: true }
+  );
+
+  useEffect(() => {
+    if (shouldFetchReport && selectedValue !== 'Custom date') {
+      setPreviousSelectedValue(selectedValue);
+    }
+  }, [shouldFetchReport, selectedValue]);
+
+  const handleDateChange = (newValue) => {
+    setValue(newValue);
+    if (newValue.start && newValue.end) {
+      onClose();
+    }
+  };
+
+  if (isError) {
+    return <Error onClick={() => refetch()} />;
+  }
 
   let tabs = [
     {
       id: 'orders',
       label: 'Orders',
-      content: <ReportDetails />,
+      content: <OrderReportDetails report={data?.orderDetails} />,
     },
     {
       id: 'payments',
       label: 'Payments',
-      content: <ReportDetails />,
+      content: <PaymentReportDetails report={data?.paymentDetails} />,
     },
     {
-      id: 'reservations',
-      label: 'Reservations',
-      content: <ReportDetails />,
+      id: 'bookings',
+      label: 'Bookings',
+      content: <BookingReportDetails report={data?.bookingDetails} />,
     },
     {
-      id: 'campaigns',
-      label: 'Campaigns',
-      content: <ReportDetails />,
+      id: 'audits',
+      label: 'Audits',
+      content: <AuditReportDetails report={data?.auditDetails} />,
     },
   ];
 
@@ -97,7 +148,7 @@ const Reports: React.FC = () => {
           </div>
           <div className='flex gap-2 items-center mb-4'>
             <p className='text-sm  text-grey600  '>A summary of activities</p>
-            <Dropdown>
+            <Dropdown isDisabled={isLoading}>
               <DropdownTrigger>
                 <Button
                   variant='light'
@@ -118,9 +169,8 @@ const Reports: React.FC = () => {
               >
                 <DropdownItem key='Today'>Today</DropdownItem>
                 <DropdownItem key='This week'>This week</DropdownItem>
-                <DropdownItem key='Last 7 days'>Last 7 days</DropdownItem>
-                <DropdownItem key='Last 30 days'>Last 30 days</DropdownItem>
-                <DropdownItem key='This month'>This month</DropdownItem>
+                <DropdownItem key='This year'>This year</DropdownItem>
+
                 <DropdownItem onClick={() => onOpen()} key='Custom date'>
                   Custom date
                 </DropdownItem>
@@ -128,32 +178,28 @@ const Reports: React.FC = () => {
             </Dropdown>
           </div>
         </div>
-        <div
-        // className='flex items-center flex-wrap gap-3'
-        >
-          <Tabs
-            classNames={
-              {
-                // tabList: 'active:bg-[#EAE5FF] active:text-primaryColor',
-              }
-            }
-            variant='bordered'
-            color='secondary'
-            aria-label='report tabs'
-            items={tabs}
-          >
-            {(item) => (
-              <Tab key={item.id} title={item.label}>
-                <div className='absolute top-[14rem] lg:top-[10.5rem] md:w-[calc(100%-272px)] w-full right-0 lg:px-6 px-4'>
-                  {item.content}
-                </div>
-              </Tab>
-            )}
-          </Tabs>
-        </div>
-        {/* </div> */}
-        {/* <CreateQRcode /> */}
-        {/* {isLoading ? <CustomLoading /> : <>{getScreens()} </>} */}
+
+        {isLoading ? (
+          <CustomLoading />
+        ) : (
+          <div>
+            <Tabs
+              size={'sm'}
+              variant='bordered'
+              color='secondary'
+              aria-label='report tabs'
+              items={tabs}
+            >
+              {(item) => (
+                <Tab key={item.id} title={item.label}>
+                  <div className='absolute top-[14rem] lg:top-[10.5rem] md:w-[calc(100%-272px)] w-full right-0 lg:px-6 px-4'>
+                    {item.content}
+                  </div>
+                </Tab>
+              )}
+            </Tabs>
+          </div>
+        )}
       </div>
       <Modal
         isDismissable={false}
@@ -172,7 +218,7 @@ const Reports: React.FC = () => {
                   radius='sm'
                   maxValue={today(getLocalTimeZone())}
                   value={value}
-                  onChange={setValue}
+                  onChange={handleDateChange}
                   visibleMonths={2}
                   variant='faded'
                   pageBehavior='single'

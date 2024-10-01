@@ -44,8 +44,9 @@ export const handleError = (error: any, showError: boolean = true) => {
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const now = Date.now();
-const TOKEN_REFRESH_WINDOW = 5 * 60 * 1000;
-const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
+const TOKEN_REFRESH_WINDOW = 1 * 60 * 1000;
+
+const TOKEN_EXPIRY_DURATION = 5 * 60 * 1000;
 
 const logout = async () => {
   // const response = await logout();

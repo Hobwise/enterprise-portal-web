@@ -1,0 +1,98 @@
+import { Card, CardBody, Divider, Spacer } from '@nextui-org/react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+// import { Chart } from 'react-google-charts';
+import { IoIosArrowForward } from 'react-icons/io';
+import Accepted from '../../../../public/assets/icons/accepted.png';
+import Decline from '../../../../public/assets/icons/canceled.png';
+import Star from '../../../../public/assets/icons/star.png';
+
+const ReportDetails = ({ report }: any) => {
+  const reportData = [
+    {
+      icon: <Image src={Accepted} alt='accepted' />,
+      title: 'USERS',
+      desc: report?.totalUsersCount,
+    },
+    {
+      icon: <Image src={Decline} alt='decline' />,
+      title: 'ACTIVITIES',
+      desc: report?.totalActivitiesCount,
+    },
+  ];
+
+  const router = useRouter();
+
+  const handleActivityReport = (activity: string) => {
+    router.push(`/dashboard/reports/${activity}`);
+  };
+  return (
+    <div className=' flex lg:flex-row flex-col gap-4 mb-4'>
+      <div className='lg:w-[77%] w-full'>
+        <div className='flex w-full gap-4 mb-4'>
+          {reportData.map((item, index) => (
+            <Card className='bg-[#EBE8F9] flex-grow'>
+              <CardBody key={index} className='space-y-2 p-4'>
+                {item.icon}
+                <p className='text-xs text-gray-500'>{item.title}</p>
+                <p className=' font-bold'>{item.desc}</p>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+
+        <div>
+          <h3 className=' font-semibold mb-2'>Available Audit logs</h3>
+          <Divider />
+          <Spacer y={4} />
+          <div>
+            {report?.availableReport.map((item: any) => (
+              <div
+                onClick={() => handleActivityReport(item.reportType)}
+                key={item}
+                className='cursor-pointer'
+              >
+                <div className='flex justify-between items-center'>
+                  <p className='hover:text-gray-100 text-sm'>
+                    {item.reportName}
+                  </p>
+                  <IoIosArrowForward className='text-grey600' />
+                </div>
+                <Divider className='bg-primaryGrey my-2' />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className='h-full flex-grow'>
+        <Card className='border  bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl mb-4 h-[247px]'>
+          <div>
+            <div className='p-4'>
+              <h2 className='font-medium text-sm'>MOST ACTIVE USER</h2>
+              <h1 className='text-xl font-[500] mt-5'>
+                {report?.mostActiveUser?.name}
+              </h1>
+              <p className='text-xs text-primaryGrey'>
+                {report?.mostActiveUser?.emailAddress}
+              </p>
+            </div>
+          </div>
+        </Card>
+        <Card className='bg-[#FDF5E1] lg:h-[348px] h-full'>
+          <CardBody className=' p-4'>
+            <div className='mb-4'>
+              <Image src={Star} alt='star' />
+            </div>
+
+            <p className='font-[500] text-sm'>MOST COMMON ACTIVITY</p>
+            <p className='text-[22px] font-semibold'>
+              {report?.mostActiveUser?.activityCount}
+            </p>
+          </CardBody>
+        </Card>
+      </div>
+    </div>
+  );
+};
+export default ReportDetails;

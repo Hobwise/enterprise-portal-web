@@ -5,7 +5,7 @@ const SplashScreen = ({ businessName = 'Hobink' }: { businessName?: any }) => {
         {businessName.split('').map((letter, index) => (
           <span
             key={index}
-            className='inline-block animate-bounce'
+            className='inline-block animate-bounce text-white'
             style={{
               animationDelay: `${index * 0.1}s`,
               animationDuration: '1s',

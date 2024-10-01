@@ -348,7 +348,10 @@ const MenuList = () => {
                           ? `data:image/jpeg;base64,${menu?.image}`
                           : noImage
                       }
-                      alt={index + menu.id}
+                      alt={index + menu?.id}
+                      style={{
+                        objectFit: 'cover',
+                      }}
                       className='w-full md:h-[100.54px] h-[150px] rounded-lg border border-primaryGrey mb-2 bg-cover'
                     />
                     <div className=''>

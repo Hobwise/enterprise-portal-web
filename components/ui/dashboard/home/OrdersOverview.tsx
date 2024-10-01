@@ -164,7 +164,7 @@ const OrdersOverview = ({
                   )}
               </p>
             )}
-            <Dropdown>
+            <Dropdown isDisabled={isLoading}>
               <DropdownTrigger>
                 <Button
                   variant='light'
@@ -183,9 +183,9 @@ const OrdersOverview = ({
                 selectedKeys={selectedKeys}
                 onSelectionChange={setSelectedKeys}
               >
-                <DropdownItem key='Daily'>Daily</DropdownItem>
+                <DropdownItem key='Today'>Today</DropdownItem>
                 <DropdownItem key='This week'>This week</DropdownItem>
-                <DropdownItem key='Yearly'>Yearly</DropdownItem>
+                <DropdownItem key='This year'>This year</DropdownItem>
                 <DropdownItem onClick={() => onOpen()} key='Custom date'>
                   Custom date
                 </DropdownItem>

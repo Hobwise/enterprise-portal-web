@@ -67,4 +67,6 @@ export const DASHBOARD = {
   repeatCampaigns: 'api/v1/Campaign/restart',
   //Dashboard
   dashboard: 'api/v1/DashboardReportManager',
+  //Report
+  report: 'api/v1/ReportManager',
 };

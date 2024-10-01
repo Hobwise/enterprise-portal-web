@@ -1,4 +1,5 @@
 'use client';
+import Error from '@/components/error';
 import OrdersOverview from '@/components/ui/dashboard/home/OrdersOverview';
 import ModulesOverview from '@/components/ui/dashboard/home/modulesOverview';
 import useDashboardReport from '@/hooks/cachedEndpoints/useDashboard';
@@ -14,21 +15,26 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 
 const Dashboard: React.FC = () => {
-  const [selectedKeys, setSelectedKeys] = useState(new Set(['Daily']));
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [selectedKeys, setSelectedKeys] = useState(new Set(['Today']));
+  const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
+  const [value, setValue] = React.useState({
+    start: null,
+    end: null,
+  });
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
     [selectedKeys]
   );
+  const [previousSelectedValue, setPreviousSelectedValue] = useState('Today');
 
   const logIndexForSelectedKey = (key: string) => {
     switch (key) {
-      case 'Daily':
+      case 'Today':
         return 0;
       case 'This week':
         return 1;
-      case 'Yearly':
+      case 'This year':
         return 2;
       case 'Custom date':
         return 3;
@@ -38,18 +44,17 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  const [value, setValue] = React.useState({
-    start: null,
-    end: null,
-  });
   const checkValue = () => {
-    if (value.start !== null && value.end !== null) {
-      return true;
-    }
-    return false;
+    return value.start !== null && value.end !== null;
   };
+
   const shouldFetchReport =
-    selectedValue !== 'Custom date' || checkValue() === true;
+    selectedValue !== 'Custom date' ||
+    (selectedValue === 'Custom date' && checkValue());
+
+  const effectiveSelectedValue = shouldFetchReport
+    ? selectedValue
+    : previousSelectedValue;
 
   const startDate = value.start
     ? `${formatDateTimeForPayload2(value.start)}Z`
@@ -59,21 +64,32 @@ const Dashboard: React.FC = () => {
     : undefined;
   const {
     data: response,
-
+    isError,
+    refetch,
     isLoading,
   } = useDashboardReport(
-    shouldFetchReport ? logIndexForSelectedKey(selectedValue) : -1,
+    logIndexForSelectedKey(effectiveSelectedValue),
     startDate,
     endDate,
-    { enabled: shouldFetchReport }
+    { enabled: true }
   );
 
   useEffect(() => {
-    if (selectedValue === 'Custom date') {
-      onOpenChange();
+    if (shouldFetchReport && selectedValue !== 'Custom date') {
+      setPreviousSelectedValue(selectedValue);
     }
-  }, [value.start, value.end, selectedValue]);
+  }, [shouldFetchReport, selectedValue]);
 
+  if (isError) {
+    return <Error onClick={() => refetch()} />;
+  }
+
+  const handleDateChange = (newValue) => {
+    setValue(newValue);
+    if (newValue.start && newValue.end) {
+      onClose();
+    }
+  };
   return (
     <>
       <div className='flex flex-col xl:gap-5 gap-3'>
@@ -106,7 +122,7 @@ const Dashboard: React.FC = () => {
                   radius='sm'
                   maxValue={today(getLocalTimeZone())}
                   value={value}
-                  onChange={setValue}
+                  onChange={handleDateChange}
                   visibleMonths={2}
                   variant='faded'
                   pageBehavior='single'

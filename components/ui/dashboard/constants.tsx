@@ -93,4 +93,8 @@ export const headerRouteMapping = {
       <Image src={Campaigns} className='dashboardLogo' alt='Campaigns logo' />
     ),
   },
+  report: {
+    title: 'Reports',
+    icon: <Image src={Report} className='dashboardLogo' alt='Report logo' />,
+  },
 };

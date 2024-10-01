@@ -22,7 +22,7 @@ const Comment = ({ isOpenComment, singleOrder, toggleCommentModal }: any) => {
             </ModalBody>
             <ModalFooter>
               <Button
-                color='danger'
+                className='bg-primaryColor text-white'
                 variant='bordered'
                 onPress={toggleCommentModal}
               >
