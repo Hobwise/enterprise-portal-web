@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import BusinessSettings from './business-settings/businessSettings';
 import BusinessProfile from './businessProfile';
 import Password from './password';
+import Pricings from './pricings';
 import Profile from './profile';
 import Roles from './rolesAndPrivileges/roles';
 import Teams from './teams/teams';
@@ -30,16 +31,34 @@ const SettingsComponent: React.FC = () => {
 
   const { role } = userInformation;
 
-  const baseListItems: ListItemProps[] = [
-    { title: 'Profile', screenNumber: 1 },
-    { title: 'Password', screenNumber: 2 },
-    { title: 'Business profile', screenNumber: 3 },
-    { title: 'Business settings', screenNumber: 4 },
-    { title: 'Team', screenNumber: 5 },
-    { title: 'Roles and Privileges', screenNumber: 6 },
-  ];
+  // const baseListItems: ListItemProps[] = [
+  //   { title: 'Profile', screenNumber: 1 },
+  //   { title: 'Password', screenNumber: 2 },
+  //   { title: 'Business profile', screenNumber: 3 },
+  //   { title: 'Business settings', screenNumber: 4 },
+  //   { title: 'Team', screenNumber: 5 },
+  //   { title: 'Roles and Privileges', screenNumber: 6 },
+  //   { title: 'Pricings', screenNumber: 7 },
+  // ];
+  console.log(userInformation?.isOwner, 'userInformation?.isOwne');
+  const getListItems = (): ListItemProps[] => {
+    const baseListItems: ListItemProps[] = [
+      { title: 'Profile', screenNumber: 1 },
+      { title: 'Password', screenNumber: 2 },
+      { title: 'Business profile', screenNumber: 3 },
+      { title: 'Business settings', screenNumber: 4 },
+      { title: 'Team', screenNumber: 5 },
+      { title: 'Roles and Privileges', screenNumber: 6 },
+    ];
 
-  const listItems: ListItemProps[] = baseListItems.filter(
+    if (true) {
+      baseListItems.push({ title: 'Pricings', screenNumber: 7 });
+    }
+
+    return baseListItems;
+  };
+
+  const listItems: ListItemProps[] = getListItems().filter(
     (item) =>
       !(
         role === 1 &&
@@ -51,11 +70,11 @@ const SettingsComponent: React.FC = () => {
   );
 
   return (
-    <>
+    <div className='flex xl:flex-row flex-col gap-3 w-full'>
       <article
-        className={`border ${
-          role === 1 ? 'max-h-[175px]' : 'max-h-[320px]'
-        }   border-secondaryGrey w-full xl:w-[284px] p-3 rounded-[8px]`}
+        className={`border 
+        inline-flex flex-col
+          border-secondaryGrey w-full xl:w-[284px] p-3 rounded-[8px] h-fit`}
       >
         <ul className='flex xl:flex-col flex-row xl:gap-1 gap-3'>
           {listItems.map((item) => (
@@ -73,7 +92,7 @@ const SettingsComponent: React.FC = () => {
           ))}
         </ul>
       </article>
-      <article className='border w-full border-secondaryGrey p-6 rounded-[8px]'>
+      <article className='border min-h-[400px] w-full border-secondaryGrey p-6 rounded-[8px]'>
         {activeScreen === 1 && <Profile />}
         {activeScreen === 2 && <Password />}
         {activeScreen === 3 && (
@@ -85,8 +104,9 @@ const SettingsComponent: React.FC = () => {
         )}
         {activeScreen === 5 && <Teams setActiveScreen={setActiveScreen} />}
         {activeScreen === 6 && <Roles />}
+        {activeScreen === 7 && <Pricings />}
       </article>
-    </>
+    </div>
   );
 };
 

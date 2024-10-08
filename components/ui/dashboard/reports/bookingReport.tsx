@@ -3,6 +3,7 @@ import moment from 'moment';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 // import { Chart } from 'react-google-charts';
+import { saveJsonItemToLocalStorage } from '@/lib/utils';
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -120,8 +121,12 @@ const ReportDetails = ({ report }: any) => {
 
   const router = useRouter();
 
-  const handleActivityReport = (activity: string) => {
-    router.push(`/dashboard/reports/${activity}`);
+  const handleActivityReport = (reportType: number, reportName: string) => {
+    router.push(`/dashboard/reports/${reportName}`);
+    saveJsonItemToLocalStorage('reportFilter', {
+      reportType: reportType,
+      reportName: reportName,
+    });
   };
   return (
     <div className=' flex lg:flex-row flex-col gap-4 mb-4'>
@@ -151,7 +156,7 @@ const ReportDetails = ({ report }: any) => {
           <div>
             {report?.availableReport.map((item: any) => (
               <div
-                onClick={() => handleActivityReport(item.reportType)}
+                onClick={() => handleActivityReport(item.reportType, 'booking')}
                 key={item}
                 className='cursor-pointer'
               >

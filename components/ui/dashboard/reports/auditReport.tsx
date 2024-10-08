@@ -2,6 +2,7 @@ import { Card, CardBody, Divider, Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 // import { Chart } from 'react-google-charts';
+import { saveJsonItemToLocalStorage } from '@/lib/utils';
 import { IoIosArrowForward } from 'react-icons/io';
 import Accepted from '../../../../public/assets/icons/accepted.png';
 import Decline from '../../../../public/assets/icons/canceled.png';
@@ -23,8 +24,12 @@ const ReportDetails = ({ report }: any) => {
 
   const router = useRouter();
 
-  const handleActivityReport = (activity: string) => {
-    router.push(`/dashboard/reports/${activity}`);
+  const handleActivityReport = (reportType: number, reportName: string) => {
+    router.push(`/dashboard/reports/${reportName}`);
+    saveJsonItemToLocalStorage('reportFilter', {
+      reportType: reportType,
+      reportName: reportName,
+    });
   };
   return (
     <div className=' flex lg:flex-row flex-col gap-4 mb-4'>
@@ -48,7 +53,9 @@ const ReportDetails = ({ report }: any) => {
           <div>
             {report?.availableReport.map((item: any) => (
               <div
-                onClick={() => handleActivityReport(item.reportType)}
+                onClick={() =>
+                  handleActivityReport(item.reportType, 'audit-logs')
+                }
                 key={item}
                 className='cursor-pointer'
               >

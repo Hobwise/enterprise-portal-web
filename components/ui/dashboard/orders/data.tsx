@@ -1,4 +1,3 @@
-import React from 'react';
 const columns = [
   { name: 'ID', uid: 'menuID' },
   { name: 'Name', uid: 'name' },
@@ -7,7 +6,7 @@ const columns = [
   { name: 'Phone number', uid: 'placedByPhoneNumber' },
   { name: 'Payment', uid: 'payment' },
   { name: 'Status', uid: 'status' },
-  { name: 'Date Created', uid: 'dateCreated' },
+
   { name: '', uid: 'actions' },
 ];
 export const statusColorMap: Record<

@@ -2,26 +2,13 @@ import { CustomButton } from '@/components/customButton';
 import usePagination from '@/hooks/usePagination';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import {
-  SmallLoader,
   formatDateTimeForPayload3,
   formatPrice,
   getJsonItemFromLocalStorage,
   printPDF,
   saveAsPDF,
 } from '@/lib/utils';
-import {
-  Chip,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalHeader,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-} from '@nextui-org/react';
+import { Modal, ModalBody, ModalContent, ModalHeader } from '@nextui-org/react';
 import moment from 'moment';
 import Image from 'next/image';
 import { useCallback, useRef, useState } from 'react';
@@ -30,76 +17,84 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
-import { statusColorMap, statusDataMap } from '../orders/data';
 
-const INITIAL_VISIBLE_COLUMNS0 = [
-  'name',
-  'amount',
-  'orderID',
-  'placedByPhoneNumber',
-  'status',
-  'placedByName',
-  'orderID',
+const INITIAL_VISIBLE_COLUMNS8 = [
+  'dateUpdated',
+
+  'reservationName',
+  'totalBookingFee',
+  'totalBookings',
+  'totalMinimumSpendValue',
 ];
-const INITIAL_VISIBLE_COLUMNS1 = [
-  'itemName',
-  'menuName',
-  'totalAmountSold',
-  'totalQuantitySold',
-  'dateCreated',
-];
-const INITIAL_VISIBLE_COLUMNS2 = [
-  'lastOrderDateTime',
-  'orderCount',
-  'placedByName',
-  'placedByPhoneNumber',
-  'totalOrderValue',
-];
-const INITIAL_VISIBLE_COLUMNS3 = [
-  'confirmedAmount',
+
+const INITIAL_VISIBLE_COLUMNS9 = [
   'dateUpdated',
   'emailAddress',
   'firstName',
-  'numberOfOrders',
-  'pendingAmount',
-  'totalAmount',
+  'phoneNumber',
+  'totalBookingFee',
+  'totalBookings',
+  'totalMinimumSpendValue',
 ];
 
-const columns0 = [
-  { name: 'ID', uid: 'menuID' },
-  { name: 'Name', uid: 'name' },
-  { name: 'amount', uid: 'amount' },
-  { name: 'Order ID', uid: 'orderID' },
-  { name: 'Phone number', uid: 'placedByPhoneNumber' },
-  { name: 'Payment', uid: 'payment' },
-  { name: 'Status', uid: 'status' },
+const INITIAL_VISIBLE_COLUMNS7 = [
+  'firstName',
+  'bookingDateTime',
+  'checkInDateTime',
+  'checkOutDateTime',
+  'emailAddress',
+  'minimumSpend',
+  'bookingStatus',
+  'bookingFee',
 ];
-const columns1 = [
-  { name: 'ID', uid: 'menuID' },
-  { name: 'Item Name', uid: 'itemName' },
-  { name: 'menu Name', uid: 'menuName' },
-  { name: 'Amount', uid: 'totalAmountSold' },
-  { name: 'quantity', uid: 'totalQuantitySold' },
-  { name: 'Date Created', uid: 'dateCreated' },
-];
-const columns2 = [
-  { name: 'Name', uid: 'placedByName' },
-  { name: 'Phone Number', uid: 'placedByPhoneNumber' },
-  { name: 'Order Count', uid: 'orderCount' },
-  { name: 'Total Order Count', uid: 'totalOrderValue' },
-  { name: 'Date Created/Updated', uid: 'lastOrderDateTime' },
-];
-const columns3 = [
+const columns7 = [
   { name: 'Name', uid: 'firstName' },
+  //   { name: 'Minimum Spend', uid: 'minimumSpend' },
+  //   { name: 'Booking Fee', uid: 'bookingFee' },
+  { name: 'Booking date', uid: 'bookingDateTime' },
   { name: 'Email Address', uid: 'emailAddress' },
-  { name: 'Order Count', uid: 'numberOfOrder' },
-  { name: 'Pending Payment', uid: 'pendingAmount' },
-  { name: 'Confirmed Payment', uid: 'confirmedAmount' },
-  { name: 'Total Payment', uid: 'totalAmount' },
+  { name: 'CheckOut Date', uid: 'checkOutDateTime' },
+  { name: 'CheckIn Date', uid: 'checkInDateTime' },
+  //   { name: 'Status', uid: 'bookingStatus' },
+];
+
+const columns8 = [
+  { name: 'Reservation Name', uid: 'reservationName' },
+  { name: 'Total Booking Amount', uid: 'totalBookingFee' },
+  { name: 'Total Bookings', uid: 'totalBookings' },
+  { name: 'Date Updated', uid: 'dateUpdated' },
+  { name: 'Total Minimum Spend', uid: 'totalMinimumSpendValue' },
+];
+
+const columns9 = [
+  { name: 'Name', uid: 'firstName' },
+  { name: 'Phone Number', uid: 'phoneNumber' },
+  { name: 'Email Address', uid: 'emailAddress' },
+  //   { name: 'Total Booking Fee', uid: 'totalBookingFee' },
+  { name: 'Total Bookings', uid: 'totalBookings' },
+  { name: 'Total Minimum Spend', uid: 'totalMinimumSpendValue' },
   { name: 'Date Updated', uid: 'dateUpdated' },
 ];
 
-const ActivityTable = ({
+const INITIAL_VISIBLE_COLUMNS10 = [
+  'endDate',
+  'occupancyRate',
+  'reservationName',
+  'reservationQuantity',
+  'startDate',
+  'totalBookings',
+];
+
+const columns10 = [
+  { name: 'Reservation Name', uid: 'reservationName' },
+  { name: 'Quantity', uid: 'reservationQuantity' },
+  { name: 'Occupancy Rate', uid: 'occupancyRate' },
+  { name: 'Total Bookings', uid: 'totalBookings' },
+  { name: 'Start Date', uid: 'startDate' },
+  { name: 'End Date', uid: 'endDate' },
+];
+
+const ActivityTableAudit = ({
   reportName,
   data,
   isLoading,
@@ -107,34 +102,37 @@ const ActivityTable = ({
   reportType,
   value,
 }: any) => {
+  console.log(data, 'data');
+  console.log(reportType, 'reportType');
   const business = getJsonItemFromLocalStorage('business');
   const columns = () => {
-    if (reportType === 0) {
+    if (reportType === 7) {
       return {
-        data: data?.orders,
-        column: columns0,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS0,
+        data: data?.bookings,
+        column: columns7,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS7,
       };
     }
-    if (reportType === 1) {
+
+    if (reportType === 8) {
       return {
-        data: data?.items,
-        column: columns1,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS1,
+        data: data?.reservationBookings,
+        column: columns8,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS8,
       };
     }
-    if (reportType === 2) {
+    if (reportType === 9) {
       return {
-        data: data?.customers,
-        column: columns2,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS2,
+        data: data?.customerBookings,
+        column: columns9,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS9,
       };
     }
-    if (reportType === 3) {
+    if (reportType === 10) {
       return {
-        data: data?.orders,
-        column: columns3,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS3,
+        data: data?.dailyOccupancyUtilizations,
+        column: columns10,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS10,
       };
     }
   };
@@ -163,108 +161,74 @@ const ActivityTable = ({
     setShowMore(!showMore);
   };
 
-  const renderCell = useCallback((order, columnKey) => {
-    const cellValue = order[columnKey];
+  const renderCell = useCallback((booking, columnKey) => {
+    const cellValue = booking[columnKey];
 
     switch (columnKey) {
-      case 'name':
-        return (
-          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
-            <span>{order.placedByName}</span>
-            {/* {order.comment && (
-                  <div
-                    title={'view comment'}
-                    onClick={() => toggleCommentModal(order)}
-                    className=' cursor-pointer'
-                  >
-                    <FaCommentDots className='text-primaryColor' />
-                  </div>
-                )} */}
-          </div>
-        );
       case 'firstName':
         return (
           <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
             <span>
-              {order.firstName} {order.lastName}
+              {booking.firstName} {booking.lastName}
             </span>
-            {/* {order.comment && (
-                  <div
-                    title={'view comment'}
-                    onClick={() => toggleCommentModal(order)}
-                    className=' cursor-pointer'
-                  >
-                    <FaCommentDots className='text-primaryColor' />
-                  </div>
-                )} */}
           </div>
         );
-      case 'amount':
+
+      case 'minimumSpend':
         return (
           <div className='text-textGrey text-sm'>
-            <p>{formatPrice(order.totalAmount)}</p>
+            <p>{formatPrice(booking.minimumSpend)}</p>
           </div>
         );
-      case 'dateCreated':
+      case 'totalBookingFee':
         return (
           <div className='text-textGrey text-sm'>
-            {moment(order.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+            <p>{formatPrice(booking.totalBookingFee)}</p>
           </div>
         );
-      case 'lastOrderDateTime':
+
+      case 'bookingFee':
         return (
           <div className='text-textGrey text-sm'>
-            {moment(order.lastOrderDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+            <p>{formatPrice(booking.bookingFee)}</p>
           </div>
         );
+      case 'checkOutDateTime':
+        return (
+          <div className='text-textGrey text-sm'>
+            {moment(booking.checkOutDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
+        );
+      case 'endDate':
+        return (
+          <div className='text-textGrey text-sm'>
+            {moment(booking.endDate).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
+        );
+      case 'startDate':
+        return (
+          <div className='text-textGrey text-sm'>
+            {moment(booking.startDate).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
+        );
+      case 'checkInDateTime':
+        return (
+          <div className='text-textGrey text-sm'>
+            {moment(booking.checkInDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
+        );
+      case 'bookingDateTime':
+        return (
+          <div className='text-textGrey text-sm'>
+            {moment(booking.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
+        );
+
       case 'dateUpdated':
         return (
           <div className='text-textGrey text-sm'>
-            {moment(order.dateUpdated).format('MMMM Do YYYY, h:mm:ss a')}
+            {moment(booking.dateUpdated).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
-        );
-      case 'totalAmountSold':
-        return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.totalAmountSold)}
-          </div>
-        );
-      case 'pendingAmount':
-        return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.pendingAmount)}
-          </div>
-        );
-      case 'totalAmount':
-        return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.totalAmount)}
-          </div>
-        );
-      case 'confirmedAmount':
-        return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.confirmedAmount)}
-          </div>
-        );
-      case 'orderID':
-        return <div className='text-textGrey text-sm'>{order.reference}</div>;
-      // case 'placedByPhoneNumber':
-      //   return (
-      //     <div className='text-textGrey text-sm'>
-      //       {order.placedByPhoneNumber}
-      //     </div>
-      //   );
-      case 'status':
-        return (
-          <Chip
-            className='capitalize'
-            color={statusColorMap[order.status]}
-            size='sm'
-            variant='bordered'
-          >
-            {statusDataMap[cellValue]}
-          </Chip>
         );
 
       default:
@@ -306,7 +270,7 @@ const ActivityTable = ({
         className='border border-primaryGrey rounded-md mt-2 p-3'
       >
         <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>All {reportName}</p>
+          <p className='text-xl font-bold capitalize'>All Audit Logs</p>
           <p className='text-base font-semibold'>
             {business[0]?.businessName}, {business[0]?.city}{' '}
             {business[0]?.state}
@@ -328,7 +292,7 @@ const ActivityTable = ({
           </p>
           <p className='text-xs text-danger-500'>{data?.message}</p>
         </div>
-        <Table
+        {/* <Table
           radius='lg'
           isCompact
           removeWrapper
@@ -368,10 +332,10 @@ const ActivityTable = ({
             {(item) => (
               <TableRow
                 key={
-                  item?.name ||
-                  item?.itemID ||
+                  item?.reservationId ||
                   item?.lastOrderDateTime ||
-                  item?.treatedById
+                  item?.dateUpdated ||
+                  item?.reservationId
                 }
               >
                 {(columnKey) => (
@@ -380,7 +344,7 @@ const ActivityTable = ({
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </Table> */}
       </section>
 
       <Modal
@@ -424,4 +388,4 @@ const ActivityTable = ({
   );
 };
 
-export default ActivityTable;
+export default ActivityTableAudit;

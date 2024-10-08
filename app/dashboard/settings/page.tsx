@@ -11,7 +11,7 @@ const Settings: React.FC = () => {
         Take a look at your polices and the new policy to see what is covered
       </p>
       <Spacer y={8} />
-      <section className='flex xl:flex-row flex-col xl:max-w-[80%] w-full gap-3 '>
+      <section className='xl:max-w-[80%] w-full'>
         <SettingsComponent />
       </section>
     </>

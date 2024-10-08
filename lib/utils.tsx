@@ -362,29 +362,46 @@ export const formatDateTimeForPayload2 = (dateTime) => {
   return datePart + timePart;
 };
 
-export const saveAsPDF = async (invoiceRef: any) => {
+export const saveAsPDF = async (
+  invoiceRef: any,
+  filename: string = 'invoice.pdf'
+) => {
   const html2pdf = (await import('html2pdf.js/dist/html2pdf.min.js')).default;
   const element = invoiceRef.current;
   const options = {
-    margin: 1,
-    filename: 'invoice.pdf',
+    margin: 0.5,
+    filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2 },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+    jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' },
   };
 
   html2pdf().from(element).set(options).save();
 };
 
-export const printPDF = async (invoiceRef: any) => {
+export const printPDF = async (
+  invoiceRef: any,
+  filename: string = 'invoice.pdf'
+) => {
   const html2pdf = (await import('html2pdf.js/dist/html2pdf.min.js')).default;
   const element = invoiceRef.current;
   const options = {
-    margin: 1,
-    filename: 'invoice.pdf',
+    margin: 0.5,
+    textAlign: 'center',
+    filename: filename,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      logging: true,
+      letterRendering: true,
+    },
+    jsPDF: {
+      unit: 'in',
+      format: 'a4',
+      orientation: 'landscape',
+      compress: true,
+    },
   };
 
   html2pdf()
@@ -393,7 +410,6 @@ export const printPDF = async (invoiceRef: any) => {
     .output('blob')
     .then((blob) => {
       const url = URL.createObjectURL(blob);
-      // Open a new tab
       const newTab = window.open(url, '_blank');
       newTab.focus();
 

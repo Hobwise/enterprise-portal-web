@@ -31,75 +31,56 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
 import { statusColorMap, statusDataMap } from '../orders/data';
+import { paymentMethodMap } from '../payments/data';
 
-const INITIAL_VISIBLE_COLUMNS0 = [
-  'name',
-  'amount',
-  'orderID',
-  'placedByPhoneNumber',
+const INITIAL_VISIBLE_COLUMNS4 = [
+  'customer',
+  'treatedBy',
+  'totalAmount',
+  'reference',
+  'paymentMethod',
   'status',
-  'placedByName',
-  'orderID',
 ];
-const INITIAL_VISIBLE_COLUMNS1 = [
-  'itemName',
-  'menuName',
-  'totalAmountSold',
-  'totalQuantitySold',
-  'dateCreated',
-];
-const INITIAL_VISIBLE_COLUMNS2 = [
-  'lastOrderDateTime',
-  'orderCount',
-  'placedByName',
-  'placedByPhoneNumber',
-  'totalOrderValue',
-];
-const INITIAL_VISIBLE_COLUMNS3 = [
-  'confirmedAmount',
-  'dateUpdated',
-  'emailAddress',
-  'firstName',
-  'numberOfOrders',
-  'pendingAmount',
+const INITIAL_VISIBLE_COLUMNS5 = [
+  'lastRecordDateTime',
+  'paymentCount',
+  'paymentMethod',
   'totalAmount',
 ];
 
-const columns0 = [
-  { name: 'ID', uid: 'menuID' },
-  { name: 'Name', uid: 'name' },
-  { name: 'amount', uid: 'amount' },
-  { name: 'Order ID', uid: 'orderID' },
-  { name: 'Phone number', uid: 'placedByPhoneNumber' },
-  { name: 'Payment', uid: 'payment' },
-  { name: 'Status', uid: 'status' },
-];
-const columns1 = [
-  { name: 'ID', uid: 'menuID' },
-  { name: 'Item Name', uid: 'itemName' },
-  { name: 'menu Name', uid: 'menuName' },
-  { name: 'Amount', uid: 'totalAmountSold' },
-  { name: 'quantity', uid: 'totalQuantitySold' },
-  { name: 'Date Created', uid: 'dateCreated' },
-];
-const columns2 = [
-  { name: 'Name', uid: 'placedByName' },
-  { name: 'Phone Number', uid: 'placedByPhoneNumber' },
-  { name: 'Order Count', uid: 'orderCount' },
-  { name: 'Total Order Count', uid: 'totalOrderValue' },
-  { name: 'Date Created/Updated', uid: 'lastOrderDateTime' },
-];
-const columns3 = [
-  { name: 'Name', uid: 'firstName' },
-  { name: 'Email Address', uid: 'emailAddress' },
-  { name: 'Order Count', uid: 'numberOfOrder' },
-  { name: 'Pending Payment', uid: 'pendingAmount' },
-  { name: 'Confirmed Payment', uid: 'confirmedAmount' },
-  { name: 'Total Payment', uid: 'totalAmount' },
-  { name: 'Date Updated', uid: 'dateUpdated' },
+const INITIAL_VISIBLE_COLUMNS6 = [
+  'confirmedAmount',
+  'dateUpdated',
+  'numberOfOrders',
+  'pendingAmount',
+  'qrName',
+  'totalAmount',
 ];
 
-const ActivityTable = ({
+const columns4 = [
+  { name: 'Customer Name', uid: 'customer' },
+  { name: 'Treated By', uid: 'treatedBy' },
+  { name: 'Total Amount', uid: 'totalAmount' },
+  { name: 'Reference', uid: 'reference' },
+  { name: 'Payment Method', uid: 'paymentMethod' },
+  { name: 'Status', uid: 'status' },
+];
+
+const columns5 = [
+  { name: 'Payment Method', uid: 'paymentMethod' },
+  { name: 'Payment Count', uid: 'paymentCount' },
+  { name: 'Amount', uid: 'totalAmount' },
+  { name: 'Date Updated', uid: 'lastRecordDateTime' },
+];
+const columns6 = [
+  { name: 'QR', uid: 'qrName' },
+  { name: 'Pending Payment', uid: 'pendingAmount' },
+  { name: 'Total Payment', uid: 'totalAmount' },
+  { name: 'Total Order Count', uid: 'numberOfOrders' },
+  { name: 'Confirmed Payment', uid: 'confirmedAmount' },
+];
+
+const ActivityTablePayment = ({
   reportName,
   data,
   isLoading,
@@ -109,32 +90,25 @@ const ActivityTable = ({
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
   const columns = () => {
-    if (reportType === 0) {
+    if (reportType === 4) {
       return {
-        data: data?.orders,
-        column: columns0,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS0,
+        data: data?.payments,
+        column: columns4,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS4,
       };
     }
-    if (reportType === 1) {
+    if (reportType === 5) {
       return {
-        data: data?.items,
-        column: columns1,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS1,
+        data: data?.payments,
+        column: columns5,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS5,
       };
     }
-    if (reportType === 2) {
+    if (reportType === 6) {
       return {
-        data: data?.customers,
-        column: columns2,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS2,
-      };
-    }
-    if (reportType === 3) {
-      return {
-        data: data?.orders,
-        column: columns3,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS3,
+        data: data?.qrOrders,
+        column: columns6,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS6,
       };
     }
   };
@@ -163,103 +137,84 @@ const ActivityTable = ({
     setShowMore(!showMore);
   };
 
-  const renderCell = useCallback((order, columnKey) => {
-    const cellValue = order[columnKey];
+  const renderCell = useCallback((payment, columnKey) => {
+    const cellValue = payment[columnKey];
 
     switch (columnKey) {
       case 'name':
         return (
           <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
-            <span>{order.placedByName}</span>
-            {/* {order.comment && (
-                  <div
-                    title={'view comment'}
-                    onClick={() => toggleCommentModal(order)}
-                    className=' cursor-pointer'
-                  >
-                    <FaCommentDots className='text-primaryColor' />
-                  </div>
-                )} */}
+            <span>{payment.placedByName}</span>
           </div>
         );
-      case 'firstName':
+      case 'paymentMethod':
         return (
           <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
-            <span>
-              {order.firstName} {order.lastName}
-            </span>
-            {/* {order.comment && (
-                  <div
-                    title={'view comment'}
-                    onClick={() => toggleCommentModal(order)}
-                    className=' cursor-pointer'
-                  >
-                    <FaCommentDots className='text-primaryColor' />
-                  </div>
-                )} */}
+            <span> {paymentMethodMap[payment.paymentMethod]}</span>
           </div>
         );
+
       case 'amount':
         return (
           <div className='text-textGrey text-sm'>
-            <p>{formatPrice(order.totalAmount)}</p>
+            <p>{formatPrice(payment.totalAmount)}</p>
           </div>
         );
       case 'dateCreated':
         return (
           <div className='text-textGrey text-sm'>
-            {moment(order.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+            {moment(payment.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
+        );
+      case 'lastRecordDateTime':
+        return (
+          <div className='text-textGrey text-sm'>
+            {moment(payment.lastRecordDateTime).format(
+              'MMMM Do YYYY, h:mm:ss a'
+            )}
           </div>
         );
       case 'lastOrderDateTime':
         return (
           <div className='text-textGrey text-sm'>
-            {moment(order.lastOrderDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+            {moment(payment.lastOrderDateTime).format(
+              'MMMM Do YYYY, h:mm:ss a'
+            )}
           </div>
         );
       case 'dateUpdated':
         return (
           <div className='text-textGrey text-sm'>
-            {moment(order.dateUpdated).format('MMMM Do YYYY, h:mm:ss a')}
+            {moment(payment.dateUpdated).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
-      case 'totalAmountSold':
-        return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.totalAmountSold)}
-          </div>
-        );
+
       case 'pendingAmount':
         return (
           <div className='text-textGrey text-sm'>
-            {formatPrice(order.pendingAmount)}
+            {formatPrice(payment.pendingAmount)}
           </div>
         );
       case 'totalAmount':
         return (
           <div className='text-textGrey text-sm'>
-            {formatPrice(order.totalAmount)}
+            {formatPrice(payment.totalAmount)}
           </div>
         );
       case 'confirmedAmount':
         return (
           <div className='text-textGrey text-sm'>
-            {formatPrice(order.confirmedAmount)}
+            {formatPrice(payment.confirmedAmount)}
           </div>
         );
       case 'orderID':
-        return <div className='text-textGrey text-sm'>{order.reference}</div>;
-      // case 'placedByPhoneNumber':
-      //   return (
-      //     <div className='text-textGrey text-sm'>
-      //       {order.placedByPhoneNumber}
-      //     </div>
-      //   );
+        return <div className='text-textGrey text-sm'>{payment.reference}</div>;
+
       case 'status':
         return (
           <Chip
             className='capitalize'
-            color={statusColorMap[order.status]}
+            color={statusColorMap[payment.status]}
             size='sm'
             variant='bordered'
           >
@@ -306,7 +261,7 @@ const ActivityTable = ({
         className='border border-primaryGrey rounded-md mt-2 p-3'
       >
         <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>All {reportName}</p>
+          <p className='text-xl font-bold capitalize'>All {reportName}s</p>
           <p className='text-base font-semibold'>
             {business[0]?.businessName}, {business[0]?.city}{' '}
             {business[0]?.state}
@@ -368,10 +323,7 @@ const ActivityTable = ({
             {(item) => (
               <TableRow
                 key={
-                  item?.name ||
-                  item?.itemID ||
-                  item?.lastOrderDateTime ||
-                  item?.treatedById
+                  item?.id || item?.lastRecordDateTime || item?.quickResponseID
                 }
               >
                 {(columnKey) => (
@@ -424,4 +376,4 @@ const ActivityTable = ({
   );
 };
 
-export default ActivityTable;
+export default ActivityTablePayment;

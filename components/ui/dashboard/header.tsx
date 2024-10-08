@@ -114,7 +114,7 @@ const Header = () => {
               <PopoverTrigger>
                 <Badge
                   className='cursor-pointer'
-                  content={notificationCount}
+                  content={notificationCount === 0 ? '' : notificationCount}
                   size='sm'
                   color='danger'
                 >

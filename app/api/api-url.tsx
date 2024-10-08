@@ -69,4 +69,8 @@ export const DASHBOARD = {
   dashboard: 'api/v1/DashboardReportManager',
   //Report
   report: 'api/v1/ReportManager',
+  reportOrder: 'api/v1/ReportManager/order',
+  reportPayment: 'api/v1/ReportManager/payment',
+  reportBooking: 'api/v1/ReportManager/booking',
+  reportAuditLog: 'api/v1/ReportManager/audit-log',
 };
