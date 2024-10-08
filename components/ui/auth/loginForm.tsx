@@ -1,7 +1,9 @@
 'use client';
+import { TOKEN_EXPIRY_DURATION } from '@/app/api/apiService';
 import { loginUser } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import {
   notify,
   saveJsonItemToLocalStorage,
@@ -13,10 +15,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 const LoginForm = () => {
-  const TOKEN_EXPIRY_DURATION = 30 * 60 * 1000;
-
   const router = useRouter();
-
+  const { setLoginDetails } = useGlobalContext();
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [loginFormData, setLoginFormData] = useState({
@@ -48,6 +48,7 @@ const LoginForm = () => {
         ...data?.data?.data,
         tokenExpiry: Date.now() + TOKEN_EXPIRY_DURATION,
       });
+      setLoginDetails(loginFormData);
       saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
       setTokenCookie('token', data?.data?.data.token);
       router.push(

@@ -1,43 +1,37 @@
 'use client';
-import { getBusinessDetails } from '@/app/api/controllers/auth';
+import { TOKEN_EXPIRY_DURATION } from '@/app/api/apiService';
+import {
+  getBusinessDetails,
+  loginUserSelectedBusiness,
+} from '@/app/api/controllers/auth';
 import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
-import { SmallLoader, notify, saveJsonItemToLocalStorage } from '@/lib/utils';
+import { useGlobalContext } from '@/hooks/globalProvider';
+import {
+  SmallLoader,
+  notify,
+  saveJsonItemToLocalStorage,
+  setTokenCookie,
+} from '@/lib/utils';
 import { Avatar, ScrollShadow } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-const INITIAL_VISIBLE_COLUMNS = [
-  'reservationName',
-  'reservationDescription',
-  'reservationFee',
-  'quantity',
-  'minimumSpend',
-  'actions',
-];
-const columns = [
-  { name: 'ID', uid: 'id' },
-  { name: 'Reservation', uid: 'reservationName' },
-  { name: 'Quantity', uid: 'quantity' },
-  { name: 'Description', uid: 'reservationDescription' },
-  { name: '', uid: 'actions' },
-];
-
 const SelectBusinessForm = () => {
   const router = useRouter();
-
+  const { loginDetails } = useGlobalContext();
   const [business, setBusiness] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { data, isLoading: loading } = useGetBusinessByCooperate();
 
-  const handleSelectedBusiness = async (item: any) => {
-    setIsLoading(true);
-
-    setBusiness(item);
-    const data = await getBusinessDetails(item);
-    setIsLoading(false);
-
+  const callLogin = async (businessId: string) => {
+    const data = await loginUserSelectedBusiness(loginDetails, businessId);
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage('business', [data?.data?.data]);
+      saveJsonItemToLocalStorage('userInformation', {
+        ...data?.data?.data,
+        tokenExpiry: Date.now() + TOKEN_EXPIRY_DURATION,
+      });
+      saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
+      setTokenCookie('token', data?.data?.data.token);
       router.push('/dashboard');
     } else if (data?.data?.error) {
       notify({
@@ -45,6 +39,22 @@ const SelectBusinessForm = () => {
         text: data?.data?.error,
         type: 'error',
       });
+    }
+  };
+
+  const handleSelectedBusiness = async (item: any) => {
+    setIsLoading(true);
+
+    setBusiness(item);
+    const data = await getBusinessDetails(item);
+
+    if (data?.data?.isSuccessful) {
+      saveJsonItemToLocalStorage('business', [data?.data?.data]);
+      await callLogin(data?.data?.data.businessId);
+
+      setIsLoading(false);
+    } else if (data?.data?.error) {
+      setIsLoading(false);
     }
   };
   if (loading) {

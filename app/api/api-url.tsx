@@ -6,6 +6,7 @@ export const AUTH = {
   validateToken: 'api/v1/OneTimePassword/validate',
   registerBusiness: 'api/v1/business',
   loginUser: 'api/v1/User/login',
+  loginUserSelectedBusiness: 'api/v1/User/login-selected-business',
   refreshToken: 'api/v1/User/refresh-token',
   forgetPassword: 'api/v1/User/forget-password',
   changePassword: 'api/v1/User/change-password',

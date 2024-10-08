@@ -2,13 +2,24 @@ import { CustomButton } from '@/components/customButton';
 import usePagination from '@/hooks/usePagination';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import {
+  SmallLoader,
   formatDateTimeForPayload3,
-  formatPrice,
   getJsonItemFromLocalStorage,
   printPDF,
   saveAsPDF,
 } from '@/lib/utils';
-import { Modal, ModalBody, ModalContent, ModalHeader } from '@nextui-org/react';
+import {
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalHeader,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from '@nextui-org/react';
 import moment from 'moment';
 import Image from 'next/image';
 import { useCallback, useRef, useState } from 'react';
@@ -18,80 +29,20 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
 
-const INITIAL_VISIBLE_COLUMNS8 = [
-  'dateUpdated',
-
-  'reservationName',
-  'totalBookingFee',
-  'totalBookings',
-  'totalMinimumSpendValue',
-];
-
-const INITIAL_VISIBLE_COLUMNS9 = [
-  'dateUpdated',
+const INITIAL_VISIBLE_COLUMNS = [
+  'userName',
   'emailAddress',
-  'firstName',
-  'phoneNumber',
-  'totalBookingFee',
-  'totalBookings',
-  'totalMinimumSpendValue',
+  'activity',
+  'ipAddress',
+  'activityType',
 ];
 
-const INITIAL_VISIBLE_COLUMNS7 = [
-  'firstName',
-  'bookingDateTime',
-  'checkInDateTime',
-  'checkOutDateTime',
-  'emailAddress',
-  'minimumSpend',
-  'bookingStatus',
-  'bookingFee',
-];
-const columns7 = [
-  { name: 'Name', uid: 'firstName' },
-  //   { name: 'Minimum Spend', uid: 'minimumSpend' },
-  //   { name: 'Booking Fee', uid: 'bookingFee' },
-  { name: 'Booking date', uid: 'bookingDateTime' },
+const column = [
+  { name: 'Username', uid: 'userName' },
   { name: 'Email Address', uid: 'emailAddress' },
-  { name: 'CheckOut Date', uid: 'checkOutDateTime' },
-  { name: 'CheckIn Date', uid: 'checkInDateTime' },
-  //   { name: 'Status', uid: 'bookingStatus' },
-];
-
-const columns8 = [
-  { name: 'Reservation Name', uid: 'reservationName' },
-  { name: 'Total Booking Amount', uid: 'totalBookingFee' },
-  { name: 'Total Bookings', uid: 'totalBookings' },
-  { name: 'Date Updated', uid: 'dateUpdated' },
-  { name: 'Total Minimum Spend', uid: 'totalMinimumSpendValue' },
-];
-
-const columns9 = [
-  { name: 'Name', uid: 'firstName' },
-  { name: 'Phone Number', uid: 'phoneNumber' },
-  { name: 'Email Address', uid: 'emailAddress' },
-  //   { name: 'Total Booking Fee', uid: 'totalBookingFee' },
-  { name: 'Total Bookings', uid: 'totalBookings' },
-  { name: 'Total Minimum Spend', uid: 'totalMinimumSpendValue' },
-  { name: 'Date Updated', uid: 'dateUpdated' },
-];
-
-const INITIAL_VISIBLE_COLUMNS10 = [
-  'endDate',
-  'occupancyRate',
-  'reservationName',
-  'reservationQuantity',
-  'startDate',
-  'totalBookings',
-];
-
-const columns10 = [
-  { name: 'Reservation Name', uid: 'reservationName' },
-  { name: 'Quantity', uid: 'reservationQuantity' },
-  { name: 'Occupancy Rate', uid: 'occupancyRate' },
-  { name: 'Total Bookings', uid: 'totalBookings' },
-  { name: 'Start Date', uid: 'startDate' },
-  { name: 'End Date', uid: 'endDate' },
+  { name: 'IP Address', uid: 'ipAddress' },
+  { name: 'Activity', uid: 'activity' },
+  { name: 'Activity Type', uid: 'activityType' },
 ];
 
 const ActivityTableAudit = ({
@@ -106,33 +57,11 @@ const ActivityTableAudit = ({
   console.log(reportType, 'reportType');
   const business = getJsonItemFromLocalStorage('business');
   const columns = () => {
-    if (reportType === 7) {
+    if (reportType === 11) {
       return {
-        data: data?.bookings,
-        column: columns7,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS7,
-      };
-    }
-
-    if (reportType === 8) {
-      return {
-        data: data?.reservationBookings,
-        column: columns8,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS8,
-      };
-    }
-    if (reportType === 9) {
-      return {
-        data: data?.customerBookings,
-        column: columns9,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS9,
-      };
-    }
-    if (reportType === 10) {
-      return {
-        data: data?.dailyOccupancyUtilizations,
-        column: columns10,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS10,
+        data: data?.auditLogs,
+        column: column,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS,
       };
     }
   };
@@ -161,73 +90,16 @@ const ActivityTableAudit = ({
     setShowMore(!showMore);
   };
 
-  const renderCell = useCallback((booking, columnKey) => {
-    const cellValue = booking[columnKey];
+  const renderCell = useCallback((audit, columnKey) => {
+    const cellValue = audit[columnKey];
 
     switch (columnKey) {
       case 'firstName':
         return (
           <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
             <span>
-              {booking.firstName} {booking.lastName}
+              {audit.firstName} {audit.lastName}
             </span>
-          </div>
-        );
-
-      case 'minimumSpend':
-        return (
-          <div className='text-textGrey text-sm'>
-            <p>{formatPrice(booking.minimumSpend)}</p>
-          </div>
-        );
-      case 'totalBookingFee':
-        return (
-          <div className='text-textGrey text-sm'>
-            <p>{formatPrice(booking.totalBookingFee)}</p>
-          </div>
-        );
-
-      case 'bookingFee':
-        return (
-          <div className='text-textGrey text-sm'>
-            <p>{formatPrice(booking.bookingFee)}</p>
-          </div>
-        );
-      case 'checkOutDateTime':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.checkOutDateTime).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'endDate':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.endDate).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'startDate':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.startDate).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'checkInDateTime':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.checkInDateTime).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'bookingDateTime':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-
-      case 'dateUpdated':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.dateUpdated).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
 
@@ -292,7 +164,7 @@ const ActivityTableAudit = ({
           </p>
           <p className='text-xs text-danger-500'>{data?.message}</p>
         </div>
-        {/* <Table
+        <Table
           radius='lg'
           isCompact
           removeWrapper
@@ -330,21 +202,14 @@ const ActivityTableAudit = ({
             loadingContent={<SmallLoader />}
           >
             {(item) => (
-              <TableRow
-                key={
-                  item?.reservationId ||
-                  item?.lastOrderDateTime ||
-                  item?.dateUpdated ||
-                  item?.reservationId
-                }
-              >
+              <TableRow key={item?.id}>
                 {(columnKey) => (
                   <TableCell>{renderCell(item, columnKey)}</TableCell>
                 )}
               </TableRow>
             )}
           </TableBody>
-        </Table> */}
+        </Table>
       </section>
 
       <Modal

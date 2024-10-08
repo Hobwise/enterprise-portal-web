@@ -1,8 +1,8 @@
 'use client';
 import Error from '@/components/error';
-import ActivityTable from '@/components/ui/dashboard/reports/activityTable';
 import ActivityTableAudit from '@/components/ui/dashboard/reports/activityTableAuditReport';
 import ActivityTableBooking from '@/components/ui/dashboard/reports/activityTableBooking';
+import ActivityTableOrder from '@/components/ui/dashboard/reports/activityTableOrder';
 import ActivityTablePayment from '@/components/ui/dashboard/reports/activityTablePayment';
 import useReportFilter from '@/hooks/cachedEndpoints/useReportFilter';
 import {
@@ -359,7 +359,7 @@ const Activity = () => {
         </CustomButton>
       </div> */}
       {reportFilter?.reportName === 'orders' && (
-        <ActivityTable
+        <ActivityTableOrder
           data={data}
           reportName={reportFilter?.reportName}
           isLoading={isLoading}

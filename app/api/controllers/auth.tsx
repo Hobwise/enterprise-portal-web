@@ -237,6 +237,32 @@ export async function loginUser(formData: any) {
     handleError(error);
   }
 }
+export async function loginUserSelectedBusiness(
+  formData: any,
+  businessId: string
+) {
+  const validatedFields = loginSchema.safeParse({
+    password: formData.password,
+    email: formData.email,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const headers = businessId ? { businessId } : {};
+  try {
+    const data = await api.post(AUTH.loginUserSelectedBusiness, formData, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function generateRefreshToken(formData: any) {
   try {
     const data = await api.post(AUTH.refreshToken, formData);
@@ -321,8 +347,6 @@ export async function deleteUser(id: string) {
   }
 }
 export async function getRoleCount(businessId: string, cooperateId: string) {
-  const headers = businessId ? { businessId } : {};
-
   try {
     const data = await api.get(
       `${AUTH.getRoleCount}?cooperateId=${cooperateId}&businessId=${businessId}`

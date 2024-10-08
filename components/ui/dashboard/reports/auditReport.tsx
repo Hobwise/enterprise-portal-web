@@ -1,4 +1,4 @@
-import { Card, CardBody, Divider, Spacer } from '@nextui-org/react';
+import { Card, CardBody, Divider } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 // import { Chart } from 'react-google-charts';
@@ -49,7 +49,7 @@ const ReportDetails = ({ report }: any) => {
         <div>
           <h3 className=' font-semibold mb-2'>Available Audit logs</h3>
           <Divider />
-          <Spacer y={4} />
+
           <div>
             {report?.availableReport.map((item: any) => (
               <div
@@ -57,15 +57,15 @@ const ReportDetails = ({ report }: any) => {
                   handleActivityReport(item.reportType, 'audit-logs')
                 }
                 key={item}
-                className='cursor-pointer'
+                className='cursor-pointer hover:bg-primaryGrey transition-all duration-300 '
               >
-                <div className='flex justify-between items-center'>
+                <div className='flex justify-between items-center p-3'>
                   <p className='hover:text-gray-100 text-sm'>
                     {item.reportName}
                   </p>
                   <IoIosArrowForward className='text-grey600' />
                 </div>
-                <Divider className='bg-primaryGrey my-2' />
+                <Divider className='bg-primaryGrey' />
               </div>
             ))}
           </div>

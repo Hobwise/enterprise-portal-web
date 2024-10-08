@@ -1,4 +1,4 @@
-import { Card, CardBody, Divider, Spacer } from '@nextui-org/react';
+import { Card, CardBody, Divider } from '@nextui-org/react';
 import moment from 'moment';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -152,21 +152,21 @@ const ReportDetails = ({ report }: any) => {
         <div>
           <h3 className=' font-semibold mb-2'>Available reports</h3>
           <Divider />
-          <Spacer y={4} />
+
           <div>
             {report?.availableReport.map((item: any) => (
               <div
                 onClick={() => handleActivityReport(item.reportType, 'booking')}
                 key={item}
-                className='cursor-pointer'
+                className='cursor-pointer hover:bg-primaryGrey transition-all duration-300'
               >
-                <div className='flex justify-between items-center'>
+                <div className='flex justify-between items-center p-3'>
                   <p className='hover:text-gray-100 text-sm'>
                     {item.reportName}
                   </p>
                   <IoIosArrowForward className='text-grey600' />
                 </div>
-                <Divider className='bg-primaryGrey my-2' />
+                <Divider className='bg-primaryGrey' />
               </div>
             ))}
           </div>

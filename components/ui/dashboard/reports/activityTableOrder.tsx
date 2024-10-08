@@ -99,7 +99,7 @@ const columns3 = [
   { name: 'Date Updated', uid: 'dateUpdated' },
 ];
 
-const ActivityTable = ({
+const ActivityTableOrder = ({
   reportName,
   data,
   isLoading,
@@ -424,4 +424,4 @@ const ActivityTable = ({
   );
 };
 
-export default ActivityTable;
+export default ActivityTableOrder;

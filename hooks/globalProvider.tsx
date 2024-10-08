@@ -38,6 +38,7 @@ const AppProvider = ({ children }: any) => {
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const [tableStatus, setTableStatus] = React.useState('All');
   const [menuIdTable, setMenuIdTable] = React.useState('');
+  const [loginDetails, setLoginDetails] = useState(null);
 
   const [isOpenEdit, setIsOpenEdit] = useState(false);
   const toggleModalDelete = () => {
@@ -82,6 +83,8 @@ const AppProvider = ({ children }: any) => {
         imageReference,
         setImageReference,
         backgroundColor,
+        loginDetails,
+        setLoginDetails,
         setBackgroundColor,
         selectedTextColor,
         setSelectedTextColor,
