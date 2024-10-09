@@ -34,7 +34,6 @@ const INITIAL_VISIBLE_COLUMNS = [
   'emailAddress',
   'activity',
   'ipAddress',
-  'activityType',
 ];
 
 const column = [
@@ -42,7 +41,6 @@ const column = [
   { name: 'Email Address', uid: 'emailAddress' },
   { name: 'IP Address', uid: 'ipAddress' },
   { name: 'Activity', uid: 'activity' },
-  { name: 'Activity Type', uid: 'activityType' },
 ];
 
 const ActivityTableAudit = ({

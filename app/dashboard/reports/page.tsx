@@ -92,7 +92,7 @@ const Reports: React.FC = () => {
     }
   }, [shouldFetchReport, selectedValue]);
 
-  const handleDateChange = (newValue) => {
+  const handleDateChange = (newValue: any) => {
     setValue(newValue);
     if (newValue.start && newValue.end) {
       onClose();
@@ -103,7 +103,13 @@ const Reports: React.FC = () => {
     return <Error onClick={() => refetch()} />;
   }
 
-  let tabs = [
+  interface TabItem {
+    id: string;
+    label: string;
+    content: React.ReactNode;
+  }
+  const [selectedTab, setSelectedTab] = useState<string>('orders');
+  let tabs: TabItem[] = [
     {
       id: 'orders',
       label: 'Orders',
@@ -189,6 +195,8 @@ const Reports: React.FC = () => {
               color='secondary'
               aria-label='report tabs'
               items={tabs}
+              selectedKey={selectedTab}
+              onSelectionChange={(key) => setSelectedTab(key as string)}
             >
               {(item) => (
                 <Tab key={item.id} title={item.label}>

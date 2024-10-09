@@ -16,7 +16,7 @@ import {
 import { Line } from 'react-chartjs-2';
 import { BsArrowUpShort } from 'react-icons/bs';
 import { IoIosArrowForward } from 'react-icons/io';
-import { MdPending } from 'react-icons/md';
+import Decline from '../../../../public/assets/icons/canceled.png';
 import Like from '../../../../public/assets/icons/like.png';
 import Star from '../../../../public/assets/icons/star.png';
 
@@ -97,7 +97,7 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: <MdPending className='text-primaryColor text-[30px]' />,
+      icon: <Image src={Decline} alt='decline' />,
       title: 'PENDING PAYMENT',
       desc: formatPrice(report?.pendingAmount),
     },
