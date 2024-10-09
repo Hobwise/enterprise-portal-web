@@ -1,6 +1,5 @@
 import { formatPrice } from '@/lib/utils';
 import { useState } from 'react';
-import { PaystackButton } from 'react-paystack';
 
 const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState('Free');
@@ -116,10 +115,10 @@ const Pricing = () => {
       >
         Upgrade plan
       </button> */}
-      <PaystackButton
+      {/* <PaystackButton
         className='px-4 py-2 bg-secondary-600 float-right text-white rounded'
         {...componentProps}
-      />
+      /> */}
       <p className='text-sm text-secondary-600 mt-4 cursor-pointer'>
         Compare plans and pricing options
       </p>
