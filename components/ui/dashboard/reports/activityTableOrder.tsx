@@ -30,7 +30,6 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
-import { statusColorMap, statusDataMap } from '../orders/data';
 
 const INITIAL_VISIBLE_COLUMNS0 = [
   'name',
@@ -163,6 +162,16 @@ const ActivityTableOrder = ({
     setShowMore(!showMore);
   };
 
+  const statusColorMap: Record<
+    string,
+    'warning' | 'success' | 'danger' | 'secondary'
+  > = {
+    Open: 'warning',
+    Closed: 'success',
+    Cancelled: 'danger',
+    AwaitingConfirmation: 'secondary',
+  };
+
   const renderCell = useCallback((order, columnKey) => {
     const cellValue = order[columnKey];
 
@@ -249,12 +258,7 @@ const ActivityTableOrder = ({
         );
       case 'orderID':
         return <div className='text-textGrey text-sm'>{order.reference}</div>;
-      // case 'placedByPhoneNumber':
-      //   return (
-      //     <div className='text-textGrey text-sm'>
-      //       {order.placedByPhoneNumber}
-      //     </div>
-      //   );
+
       case 'status':
         return (
           <Chip
@@ -263,7 +267,7 @@ const ActivityTableOrder = ({
             size='sm'
             variant='bordered'
           >
-            {statusDataMap[cellValue]}
+            {cellValue}
           </Chip>
         );
 

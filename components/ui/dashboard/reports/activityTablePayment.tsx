@@ -30,8 +30,6 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
-import { statusColorMap, statusDataMap } from '../orders/data';
-import { paymentMethodMap } from '../payments/data';
 
 const INITIAL_VISIBLE_COLUMNS4 = [
   'customer',
@@ -136,7 +134,15 @@ const ActivityTablePayment = ({
   const toggleMoreFilters = () => {
     setShowMore(!showMore);
   };
-
+  const statusColorMap: Record<
+    string,
+    'warning' | 'success' | 'danger' | 'secondary'
+  > = {
+    Pending: 'warning',
+    Confirmed: 'success',
+    Cancelled: 'danger',
+    AwaitingConfirmation: 'secondary',
+  };
   const renderCell = useCallback((payment, columnKey) => {
     const cellValue = payment[columnKey];
 
@@ -147,12 +153,12 @@ const ActivityTablePayment = ({
             <span>{payment.placedByName}</span>
           </div>
         );
-      case 'paymentMethod':
-        return (
-          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
-            <span> {paymentMethodMap[payment.paymentMethod]}</span>
-          </div>
-        );
+      // case 'paymentMethod':
+      //   return (
+      //     <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
+      //       <span> {paymentMethodMap[payment.paymentMethod]}</span>
+      //     </div>
+      //   );
 
       case 'amount':
         return (
@@ -218,7 +224,7 @@ const ActivityTablePayment = ({
             size='sm'
             variant='bordered'
           >
-            {statusDataMap[cellValue]}
+            {cellValue}
           </Chip>
         );
 
