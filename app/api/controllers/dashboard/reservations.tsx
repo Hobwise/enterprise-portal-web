@@ -39,7 +39,7 @@ export async function getReservations(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function getReservationsUser(
@@ -55,7 +55,7 @@ export async function getReservationsUser(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function createReservations(

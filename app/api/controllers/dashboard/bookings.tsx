@@ -80,7 +80,7 @@ export async function getBookingsByBusiness(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 
@@ -114,6 +114,6 @@ export async function postBookingStatus(bookingId: string, status: number) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }

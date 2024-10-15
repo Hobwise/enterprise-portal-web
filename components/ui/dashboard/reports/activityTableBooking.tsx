@@ -1,10 +1,10 @@
+import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import usePagination from '@/hooks/usePagination';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import {
   SmallLoader,
   formatDateTimeForPayload3,
-  formatPrice,
   getJsonItemFromLocalStorage,
   printPDF,
   saveAsPDF,
@@ -23,12 +23,14 @@ import {
 } from '@nextui-org/react';
 import moment from 'moment';
 import Image from 'next/image';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { BsPrinter } from 'react-icons/bs';
 import { IoIosArrowForward } from 'react-icons/io';
+import { IoSearchOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
+import { PaginationComponent } from './data';
 
 // export const statusBookingMap: Record<
 //   number,
@@ -128,7 +130,7 @@ const ActivityTableBooking = ({
   const columns = () => {
     if (reportType === 7) {
       return {
-        data: data?.bookings,
+        data: data?.bookings || [],
         column: columns7,
         visibleColumn: INITIAL_VISIBLE_COLUMNS7,
       };
@@ -136,21 +138,21 @@ const ActivityTableBooking = ({
 
     if (reportType === 8) {
       return {
-        data: data?.reservationBookings,
+        data: data?.reservationBookings || [],
         column: columns8,
         visibleColumn: INITIAL_VISIBLE_COLUMNS8,
       };
     }
     if (reportType === 9) {
       return {
-        data: data?.customerBookings,
+        data: data?.customerBookings || [],
         column: columns9,
         visibleColumn: INITIAL_VISIBLE_COLUMNS9,
       };
     }
     if (reportType === 10) {
       return {
-        data: data?.dailyOccupancyUtilizations,
+        data: data?.dailyOccupancyUtilizations || [],
         column: columns10,
         visibleColumn: INITIAL_VISIBLE_COLUMNS10,
       };
@@ -162,8 +164,6 @@ const ActivityTableBooking = ({
     headerColumns,
     setSelectedKeys,
     selectedKeys,
-    sortDescriptor,
-    setSortDescriptor,
 
     classNames,
   } = usePagination(
@@ -181,6 +181,58 @@ const ActivityTableBooking = ({
     setShowMore(!showMore);
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortDescriptor, setSortDescriptor] = useState({
+    column: 'dateCreated',
+    direction: 'ascending',
+  });
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value.toLowerCase());
+  };
+
+  const filteredItems = useMemo(() => {
+    let filteredData = [...columns()?.data];
+
+    filteredData = filteredData.filter(
+      (item) =>
+        item?.firstName?.toLowerCase().includes(searchQuery) ||
+        item?.lastName?.toLowerCase().includes(searchQuery) ||
+        item?.minimumSpend?.toLowerCase().includes(searchQuery) ||
+        item?.totalBookingFee?.toLowerCase().includes(searchQuery) ||
+        item?.bookingFee?.toLowerCase().includes(searchQuery) ||
+        item?.checkOutDateTime?.toLowerCase().includes(searchQuery) ||
+        item?.endDate?.toLowerCase().includes(searchQuery) ||
+        item?.startDate?.toLowerCase().includes(searchQuery) ||
+        item?.checkInDateTime?.toLowerCase().includes(searchQuery) ||
+        item?.bookingDateTime?.toLowerCase().includes(searchQuery) ||
+        item?.dateUpdated?.toLowerCase().includes(searchQuery)
+    );
+
+    return filteredData;
+  }, [columns()?.data, searchQuery]);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 10;
+
+  const pages = Math.ceil(filteredItems?.length / rowsPerPage);
+
+  const items = useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredItems?.slice(start, end);
+  }, [page, filteredItems]);
+
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const first = a[sortDescriptor.column];
+      const second = b[sortDescriptor.column];
+      const cmp = first < second ? -1 : first > second ? 1 : 0;
+
+      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
+    });
+  }, [sortDescriptor, items]);
+
   const renderCell = useCallback((booking, columnKey) => {
     const cellValue = booking[columnKey];
 
@@ -197,20 +249,20 @@ const ActivityTableBooking = ({
       case 'minimumSpend':
         return (
           <div className='text-textGrey text-sm'>
-            <p>{formatPrice(booking.minimumSpend)}</p>
+            <p>{booking.minimumSpend}</p>
           </div>
         );
       case 'totalBookingFee':
         return (
           <div className='text-textGrey text-sm'>
-            <p>{formatPrice(booking.totalBookingFee)}</p>
+            <p>{booking.totalBookingFee}</p>
           </div>
         );
 
       case 'bookingFee':
         return (
           <div className='text-textGrey text-sm'>
-            <p>{formatPrice(booking.bookingFee)}</p>
+            <p>{booking.bookingFee}</p>
           </div>
         );
       case 'checkOutDateTime':
@@ -260,37 +312,51 @@ const ActivityTableBooking = ({
 
   return (
     <>
-      <div className='w-full mt-4 flex justify-end  gap-3'>
-        <CustomButton
-          disableRipple={true}
-          onClick={() => toggleDownloadReport()}
-          className='py-2 px-4 md:mb-0 text-black  mb-4 '
-          backgroundColor='bg-white'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <MdOutlineFileDownload className='text-[22px]' />
-            <p>Download</p>
-          </div>
-        </CustomButton>
-        <CustomButton
-          disableRipple={true}
-          onClick={() => printPDF(reportRef, reportName)}
-          className='py-2 px-4 md:mb-0 text-black mb-4 '
-          backgroundColor='bg-white'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <BsPrinter className='text-[22px]' />
+      <div className='w-full mt-4 flex justify-between  gap-3'>
+        <CustomInput
+          classnames={'w-[242px]'}
+          label=''
+          size='md'
+          value={searchQuery}
+          onChange={handleSearchChange}
+          isRequired={false}
+          startContent={<IoSearchOutline />}
+          type='text'
+          placeholder='Search here...'
+        />
 
-            <p>Print</p>
-          </div>
-        </CustomButton>
+        <div className='flex gap-3'>
+          <CustomButton
+            disableRipple={true}
+            onClick={() => toggleDownloadReport()}
+            className='py-2 px-4 md:mb-0 text-black  mb-4 '
+            backgroundColor='bg-white'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <MdOutlineFileDownload className='text-[22px]' />
+              <p>Download</p>
+            </div>
+          </CustomButton>
+          <CustomButton
+            disableRipple={true}
+            onClick={() => printPDF(reportRef, reportName)}
+            className='py-2 px-4 md:mb-0 text-black mb-4 '
+            backgroundColor='bg-white'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <BsPrinter className='text-[22px]' />
+
+              <p>Print</p>
+            </div>
+          </CustomButton>
+        </div>
       </div>
       <section
         ref={reportRef}
         className='border border-primaryGrey rounded-md mt-2 p-3'
       >
         <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>All {reportName}s</p>
+          <p className='text-xl font-bold capitalize'>{reportName}</p>
           <p className='text-base font-semibold'>
             {business[0]?.businessName}, {business[0]?.city}{' '}
             {business[0]?.state}
@@ -317,8 +383,19 @@ const ActivityTableBooking = ({
           isCompact
           removeWrapper
           allowsSorting
-          aria-label='list of orders'
-          // bottomContent={bottomContent}
+          aria-label='list of bookings'
+          bottomContent={
+            isLoading || items?.length === 0 ? (
+              ''
+            ) : (
+              <PaginationComponent
+                data={items}
+                page={page}
+                setPage={setPage}
+                pages={pages}
+              />
+            )
+          }
           bottomContentPlacement='outside'
           classNames={classNames}
           selectedKeys={selectedKeys}
@@ -345,19 +422,12 @@ const ActivityTableBooking = ({
               textAlign: 'center',
             }}
             emptyContent={'No items found'}
-            items={columns()?.data || []}
+            items={sortedItems || []}
             isLoading={isLoading}
             loadingContent={<SmallLoader />}
           >
-            {(item) => (
-              <TableRow
-                key={
-                  item?.reservationId ||
-                  item?.lastOrderDateTime ||
-                  item?.dateUpdated ||
-                  item?.reservationId
-                }
-              >
+            {(item: any, index: any) => (
+              <TableRow key={`row-${index}`}>
                 {(columnKey) => (
                   <TableCell>{renderCell(item, columnKey)}</TableCell>
                 )}

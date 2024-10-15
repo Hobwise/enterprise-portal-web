@@ -14,7 +14,7 @@ export async function getQR(businessId: string, page: any, pageSize: any) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function getQRByBusiness(
@@ -30,7 +30,7 @@ export async function getQRByBusiness(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 

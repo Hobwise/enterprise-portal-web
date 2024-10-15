@@ -122,11 +122,16 @@ const ReportDetails = ({ report }: any) => {
 
   const router = useRouter();
 
-  const handleActivityReport = (reportType: number, reportName: string) => {
-    router.push(`/dashboard/reports/${reportName}`);
+  const handleActivityReport = (
+    reportType: number,
+    reportName: string,
+    route: string
+  ) => {
+    router.push(`/dashboard/reports/${route}`);
     saveJsonItemToLocalStorage('reportFilter', {
       reportType: reportType,
       reportName: reportName,
+      route: route,
     });
   };
   return (
@@ -157,7 +162,13 @@ const ReportDetails = ({ report }: any) => {
           <div>
             {report?.availableReport.map((item: any) => (
               <div
-                onClick={() => handleActivityReport(item.reportType, 'orders')}
+                onClick={() =>
+                  handleActivityReport(
+                    item.reportType,
+                    item.reportName,
+                    'orders'
+                  )
+                }
                 key={item}
                 className='cursor-pointer hover:bg-primaryGrey transition-all duration-300 '
               >

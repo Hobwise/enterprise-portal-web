@@ -234,7 +234,7 @@ export async function loginUser(formData: any) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function loginUserSelectedBusiness(
@@ -325,7 +325,7 @@ export async function getBusinessDetails(formData: any) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function getUser(id: string) {
@@ -334,7 +334,7 @@ export async function getUser(id: string) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function deleteUser(id: string) {
@@ -343,7 +343,7 @@ export async function deleteUser(id: string) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function getRoleCount(businessId: string, cooperateId: string) {
@@ -354,6 +354,6 @@ export async function getRoleCount(businessId: string, cooperateId: string) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }

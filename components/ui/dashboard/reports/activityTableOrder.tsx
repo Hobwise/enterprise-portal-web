@@ -1,10 +1,10 @@
+import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import usePagination from '@/hooks/usePagination';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import {
   SmallLoader,
   formatDateTimeForPayload3,
-  formatPrice,
   getJsonItemFromLocalStorage,
   printPDF,
   saveAsPDF,
@@ -24,19 +24,21 @@ import {
 } from '@nextui-org/react';
 import moment from 'moment';
 import Image from 'next/image';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { BsPrinter } from 'react-icons/bs';
 import { IoIosArrowForward } from 'react-icons/io';
+import { IoSearchOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
+import { PaginationComponent } from './data';
 
 const INITIAL_VISIBLE_COLUMNS0 = [
   'name',
   'amount',
   'orderID',
   'placedByPhoneNumber',
-  'status',
+  'orderStatus',
   'placedByName',
   'orderID',
 ];
@@ -67,18 +69,18 @@ const INITIAL_VISIBLE_COLUMNS3 = [
 const columns0 = [
   { name: 'ID', uid: 'menuID' },
   { name: 'Name', uid: 'name' },
-  { name: 'amount', uid: 'amount' },
+  { name: 'Amount', uid: 'amount' },
   { name: 'Order ID', uid: 'orderID' },
   { name: 'Phone number', uid: 'placedByPhoneNumber' },
   { name: 'Payment', uid: 'payment' },
-  { name: 'Status', uid: 'status' },
+  { name: 'Status', uid: 'orderStatus' },
 ];
 const columns1 = [
   { name: 'ID', uid: 'menuID' },
   { name: 'Item Name', uid: 'itemName' },
-  { name: 'menu Name', uid: 'menuName' },
+  { name: 'Menu Name', uid: 'menuName' },
   { name: 'Amount', uid: 'totalAmountSold' },
-  { name: 'quantity', uid: 'totalQuantitySold' },
+  { name: 'Quantity', uid: 'totalQuantitySold' },
   { name: 'Date Created', uid: 'dateCreated' },
 ];
 const columns2 = [
@@ -110,28 +112,28 @@ const ActivityTableOrder = ({
   const columns = () => {
     if (reportType === 0) {
       return {
-        data: data?.orders,
+        data: data?.orders || [],
         column: columns0,
         visibleColumn: INITIAL_VISIBLE_COLUMNS0,
       };
     }
     if (reportType === 1) {
       return {
-        data: data?.items,
+        data: data?.items || [],
         column: columns1,
         visibleColumn: INITIAL_VISIBLE_COLUMNS1,
       };
     }
     if (reportType === 2) {
       return {
-        data: data?.customers,
+        data: data?.customers || [],
         column: columns2,
         visibleColumn: INITIAL_VISIBLE_COLUMNS2,
       };
     }
     if (reportType === 3) {
       return {
-        data: data?.orders,
+        data: data?.orders || [],
         column: columns3,
         visibleColumn: INITIAL_VISIBLE_COLUMNS3,
       };
@@ -139,12 +141,9 @@ const ActivityTableOrder = ({
   };
 
   const {
-    bottomContent,
     headerColumns,
     setSelectedKeys,
     selectedKeys,
-    sortDescriptor,
-    setSortDescriptor,
 
     classNames,
   } = usePagination(
@@ -171,6 +170,68 @@ const ActivityTableOrder = ({
     Cancelled: 'danger',
     AwaitingConfirmation: 'secondary',
   };
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortDescriptor, setSortDescriptor] = useState({
+    column: 'dateCreated',
+    direction: 'ascending',
+  });
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value.toLowerCase());
+  };
+
+  const filteredItems = useMemo(() => {
+    let filteredData = [...columns()?.data];
+
+    filteredData = filteredData.filter(
+      (item) =>
+        item?.firstName?.toLowerCase().includes(searchQuery) ||
+        item?.lastName?.toLowerCase().includes(searchQuery) ||
+        item?.name?.toLowerCase().includes(searchQuery) ||
+        item?.itemName?.toLowerCase().includes(searchQuery) ||
+        item?.orderCount?.toLowerCase().includes(searchQuery) ||
+        item?.lastOrderDateTime?.toLowerCase().includes(searchQuery) ||
+        item?.totalOrderValue?.toLowerCase().includes(searchQuery) ||
+        item?.menuName?.toLowerCase().includes(searchQuery) ||
+        String(item?.totalQuantitySold)?.toLowerCase().includes(searchQuery) ||
+        String(item?.numberOfOrders)?.toLowerCase().includes(searchQuery) ||
+        item?.amount?.toLowerCase().includes(searchQuery) ||
+        item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+        item?.totalAmountSold?.toLowerCase().includes(searchQuery) ||
+        item?.pendingAmount?.toLowerCase().includes(searchQuery) ||
+        item?.totalAmount?.toLowerCase().includes(searchQuery) ||
+        item?.confirmedAmount?.toLowerCase().includes(searchQuery) ||
+        item?.totalAmountSold?.toLowerCase().includes(searchQuery) ||
+        item?.orderID?.toLowerCase().includes(searchQuery) ||
+        item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
+        item?.placedByName?.toLowerCase().includes(searchQuery) ||
+        item?.emailAddress?.toLowerCase().includes(searchQuery)
+    );
+
+    return filteredData;
+  }, [columns()?.data, searchQuery]);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 10;
+
+  const pages = Math.ceil(filteredItems?.length / rowsPerPage);
+
+  const items = useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredItems?.slice(start, end);
+  }, [page, filteredItems]);
+
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const first = a[sortDescriptor.column];
+      const second = b[sortDescriptor.column];
+      const cmp = first < second ? -1 : first > second ? 1 : 0;
+
+      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
+    });
+  }, [sortDescriptor, items]);
 
   const renderCell = useCallback((order, columnKey) => {
     const cellValue = order[columnKey];
@@ -211,7 +272,7 @@ const ActivityTableOrder = ({
       case 'amount':
         return (
           <div className='text-textGrey text-sm'>
-            <p>{formatPrice(order.totalAmount)}</p>
+            <p>{order.totalAmount}</p>
           </div>
         );
       case 'dateCreated':
@@ -234,36 +295,26 @@ const ActivityTableOrder = ({
         );
       case 'totalAmountSold':
         return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.totalAmountSold)}
-          </div>
+          <div className='text-textGrey text-sm'>{order.totalAmountSold}</div>
         );
       case 'pendingAmount':
         return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.pendingAmount)}
-          </div>
+          <div className='text-textGrey text-sm'>{order.pendingAmount}</div>
         );
       case 'totalAmount':
-        return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.totalAmount)}
-          </div>
-        );
+        return <div className='text-textGrey text-sm'>{order.totalAmount}</div>;
       case 'confirmedAmount':
         return (
-          <div className='text-textGrey text-sm'>
-            {formatPrice(order.confirmedAmount)}
-          </div>
+          <div className='text-textGrey text-sm'>{order.confirmedAmount}</div>
         );
       case 'orderID':
         return <div className='text-textGrey text-sm'>{order.reference}</div>;
 
-      case 'status':
+      case 'orderStatus':
         return (
           <Chip
             className='capitalize'
-            color={statusColorMap[order.status]}
+            color={statusColorMap[order.orderStatus]}
             size='sm'
             variant='bordered'
           >
@@ -280,37 +331,51 @@ const ActivityTableOrder = ({
 
   return (
     <>
-      <div className='w-full mt-4 flex justify-end  gap-3'>
-        <CustomButton
-          disableRipple={true}
-          onClick={() => toggleDownloadReport()}
-          className='py-2 px-4 md:mb-0 text-black  mb-4 '
-          backgroundColor='bg-white'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <MdOutlineFileDownload className='text-[22px]' />
-            <p>Download</p>
-          </div>
-        </CustomButton>
-        <CustomButton
-          disableRipple={true}
-          onClick={() => printPDF(reportRef, reportName)}
-          className='py-2 px-4 md:mb-0 text-black mb-4 '
-          backgroundColor='bg-white'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <BsPrinter className='text-[22px]' />
+      <div className='w-full mt-4 flex justify-between  gap-3'>
+        <CustomInput
+          classnames={'w-[242px]'}
+          label=''
+          size='md'
+          value={searchQuery}
+          onChange={handleSearchChange}
+          isRequired={false}
+          startContent={<IoSearchOutline />}
+          type='text'
+          placeholder='Search here...'
+        />
 
-            <p>Print</p>
-          </div>
-        </CustomButton>
+        <div className='flex gap-3'>
+          <CustomButton
+            disableRipple={true}
+            onClick={() => toggleDownloadReport()}
+            className='py-2 px-4 md:mb-0 text-black  mb-4 '
+            backgroundColor='bg-white'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <MdOutlineFileDownload className='text-[22px]' />
+              <p>Download</p>
+            </div>
+          </CustomButton>
+          <CustomButton
+            disableRipple={true}
+            onClick={() => printPDF(reportRef, reportName)}
+            className='py-2 px-4 md:mb-0 text-black mb-4 '
+            backgroundColor='bg-white'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <BsPrinter className='text-[22px]' />
+
+              <p>Print</p>
+            </div>
+          </CustomButton>
+        </div>
       </div>
       <section
         ref={reportRef}
         className='border border-primaryGrey rounded-md mt-2 p-3'
       >
         <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>All {reportName}</p>
+          <p className='text-xl font-bold capitalize'>{reportName}</p>
           <p className='text-base font-semibold'>
             {business[0]?.businessName}, {business[0]?.city}{' '}
             {business[0]?.state}
@@ -338,7 +403,18 @@ const ActivityTableOrder = ({
           removeWrapper
           allowsSorting
           aria-label='list of orders'
-          // bottomContent={bottomContent}
+          bottomContent={
+            isLoading || items?.length === 0 ? (
+              ''
+            ) : (
+              <PaginationComponent
+                data={items}
+                page={page}
+                setPage={setPage}
+                pages={pages}
+              />
+            )
+          }
           bottomContentPlacement='outside'
           classNames={classNames}
           selectedKeys={selectedKeys}
@@ -365,19 +441,12 @@ const ActivityTableOrder = ({
               textAlign: 'center',
             }}
             emptyContent={'No items found'}
-            items={columns()?.data || []}
+            items={sortedItems || []}
             isLoading={isLoading}
             loadingContent={<SmallLoader />}
           >
-            {(item) => (
-              <TableRow
-                key={
-                  item?.name ||
-                  item?.itemID ||
-                  item?.lastOrderDateTime ||
-                  item?.treatedById
-                }
-              >
+            {(item: any, index: any) => (
+              <TableRow key={`row-${index}`}>
                 {(columnKey) => (
                   <TableCell>{renderCell(item, columnKey)}</TableCell>
                 )}

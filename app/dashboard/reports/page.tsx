@@ -38,12 +38,13 @@ const Reports: React.FC = () => {
     start: null,
     end: null,
   });
-  const [selectedKeys, setSelectedKeys] = useState(new Set(['Today']));
+  const [selectedKeys, setSelectedKeys] = useState(new Set(['This week']));
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
     [selectedKeys]
   );
-  const [previousSelectedValue, setPreviousSelectedValue] = useState('Today');
+  const [previousSelectedValue, setPreviousSelectedValue] =
+    useState('This week');
 
   const logIndexForSelectedKey = (key: string) => {
     switch (key) {

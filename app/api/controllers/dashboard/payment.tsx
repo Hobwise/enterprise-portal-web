@@ -24,7 +24,7 @@ export async function getPaymentByBusiness(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 

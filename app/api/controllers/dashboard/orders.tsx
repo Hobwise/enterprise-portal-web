@@ -61,7 +61,7 @@ export async function getOrderByBusiness(
 
     return response.data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 
@@ -75,7 +75,7 @@ export async function getOrder(orderId: string) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function completeOrder(payload: any, orderId: string) {

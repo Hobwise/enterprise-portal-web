@@ -213,7 +213,9 @@ export async function getBusinessByBusinessId(businessId: string) {
     });
 
     return data;
-  } catch (error) {}
+  } catch (error) {
+    handleError(error, false);
+  }
 }
 
 export async function getFile(referenceId: string) {

@@ -45,7 +45,7 @@ export async function getCampaigns(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 
@@ -101,7 +101,7 @@ export async function getCampaign(campaignId: string, businessId: string) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 

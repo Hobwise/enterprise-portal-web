@@ -31,7 +31,7 @@ export async function getMenuItem(menuId: string) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function uploadFile(businessId: string, formData: FormData) {
@@ -101,7 +101,7 @@ export async function getMenuByBusiness(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 export async function getMenuByBusinessUser(
@@ -122,7 +122,7 @@ export async function getMenuByBusinessUser(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 
@@ -171,7 +171,7 @@ export async function getMenuConfiguration(
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
   }
 }
 

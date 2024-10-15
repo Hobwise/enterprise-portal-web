@@ -1,3 +1,4 @@
+import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import usePagination from '@/hooks/usePagination';
 import { downloadCSV } from '@/lib/downloadToExcel';
@@ -9,6 +10,7 @@ import {
   saveAsPDF,
 } from '@/lib/utils';
 import {
+  Chip,
   Modal,
   ModalBody,
   ModalContent,
@@ -22,25 +24,33 @@ import {
 } from '@nextui-org/react';
 import moment from 'moment';
 import Image from 'next/image';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { BsPrinter } from 'react-icons/bs';
 import { IoIosArrowForward } from 'react-icons/io';
+import { IoSearchOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
+import { PaginationComponent } from './data';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'userName',
   'emailAddress',
   'activity',
   'ipAddress',
+
+  'isSuccessful',
+  'dateCreated',
 ];
 
 const column = [
   { name: 'Username', uid: 'userName' },
   { name: 'Email Address', uid: 'emailAddress' },
   { name: 'IP Address', uid: 'ipAddress' },
+
   { name: 'Activity', uid: 'activity' },
+  { name: 'Date', uid: 'dateCreated' },
+  { name: 'Status', uid: 'isSuccessful' },
 ];
 
 const ActivityTableAudit = ({
@@ -51,36 +61,26 @@ const ActivityTableAudit = ({
   reportType,
   value,
 }: any) => {
-  console.log(data, 'data');
-  console.log(reportType, 'reportType');
   const business = getJsonItemFromLocalStorage('business');
   const columns = () => {
     if (reportType === 11) {
       return {
-        data: data?.auditLogs,
+        data: data?.auditLogs || [],
         column: column,
         visibleColumn: INITIAL_VISIBLE_COLUMNS,
       };
     }
   };
 
-  const {
-    bottomContent,
-    headerColumns,
-    setSelectedKeys,
-    selectedKeys,
-    sortDescriptor,
-    setSortDescriptor,
-
-    classNames,
-  } = usePagination(
-    columns()?.data,
-    columns()?.column,
-    columns()?.visibleColumn
-  );
-
   const [showMore, setShowMore] = useState(false);
   const [isOpenDownload, setIsOpenDownload] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortDescriptor, setSortDescriptor] = useState({
+    column: 'dateCreated',
+    direction: 'ascending',
+  });
+
   const toggleDownloadReport = () => {
     setIsOpenDownload(!isOpenDownload);
   };
@@ -100,47 +100,127 @@ const ActivityTableAudit = ({
             </span>
           </div>
         );
+      case 'dateCreated':
+        return (
+          <div className='text-textGrey text-sm'>
+            {moment(audit.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+          </div>
+        );
+      case 'isSuccessful':
+        return (
+          <Chip
+            className='capitalize'
+            color={audit.isSuccessful ? 'success' : 'danger'}
+            size='sm'
+            variant='bordered'
+          >
+            {audit.isSuccessful ? 'Successful' : 'Failed'}
+          </Chip>
+        );
 
       default:
         return cellValue;
     }
   }, []);
 
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value.toLowerCase());
+  };
+
+  const filteredItems = useMemo(() => {
+    let filteredData = [...columns()?.data];
+
+    filteredData = filteredData.filter(
+      (item) =>
+        item.activity.toLowerCase().includes(searchQuery) ||
+        item.emailAddress.toLowerCase().includes(searchQuery) ||
+        item.ipAddress.toLowerCase().includes(searchQuery) ||
+        item.userName.toLowerCase().includes(searchQuery) ||
+        item.dateCreated.toLowerCase().includes(searchQuery)
+    );
+
+    return filteredData;
+  }, [columns()?.data, searchQuery]);
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 10;
+
+  const pages = Math.ceil(filteredItems?.length / rowsPerPage);
+
+  const items = useMemo(() => {
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+
+    return filteredItems?.slice(start, end);
+  }, [page, filteredItems]);
+
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const first = a[sortDescriptor.column];
+      const second = b[sortDescriptor.column];
+      const cmp = first < second ? -1 : first > second ? 1 : 0;
+
+      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
+    });
+  }, [sortDescriptor, items]);
+
   const reportRef = useRef(null);
+
+  const {
+    bottomContent,
+    headerColumns,
+    setSelectedKeys,
+    selectedKeys,
+
+    classNames,
+  } = usePagination(filteredItems, columns()?.column, columns()?.visibleColumn);
 
   return (
     <>
-      <div className='w-full mt-4 flex justify-end  gap-3'>
-        <CustomButton
-          disableRipple={true}
-          onClick={() => toggleDownloadReport()}
-          className='py-2 px-4 md:mb-0 text-black  mb-4 '
-          backgroundColor='bg-white'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <MdOutlineFileDownload className='text-[22px]' />
-            <p>Download</p>
-          </div>
-        </CustomButton>
-        <CustomButton
-          disableRipple={true}
-          onClick={() => printPDF(reportRef, reportName)}
-          className='py-2 px-4 md:mb-0 text-black mb-4 '
-          backgroundColor='bg-white'
-        >
-          <div className='flex gap-2 items-center justify-center'>
-            <BsPrinter className='text-[22px]' />
+      <div className='w-full mt-4 flex justify-between  gap-3'>
+        <CustomInput
+          classnames={'w-[242px]'}
+          label=''
+          size='md'
+          value={searchQuery}
+          onChange={handleSearchChange}
+          isRequired={false}
+          startContent={<IoSearchOutline />}
+          type='text'
+          placeholder='Search here...'
+        />
 
-            <p>Print</p>
-          </div>
-        </CustomButton>
+        <div className='flex gap-3'>
+          <CustomButton
+            disableRipple={true}
+            onClick={() => toggleDownloadReport()}
+            className='py-2 px-4 md:mb-0 text-black  mb-4 '
+            backgroundColor='bg-white'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <MdOutlineFileDownload className='text-[22px]' />
+              <p>Download</p>
+            </div>
+          </CustomButton>
+          <CustomButton
+            disableRipple={true}
+            onClick={() => printPDF(reportRef, reportName)}
+            className='py-2 px-4 md:mb-0 text-black mb-4 '
+            backgroundColor='bg-white'
+          >
+            <div className='flex gap-2 items-center justify-center'>
+              <BsPrinter className='text-[22px]' />
+
+              <p>Print</p>
+            </div>
+          </CustomButton>
+        </div>
       </div>
       <section
         ref={reportRef}
         className='border border-primaryGrey rounded-md mt-2 p-3'
       >
         <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>All Audit Logs</p>
+          <p className='text-xl font-bold capitalize'>{reportName}</p>
           <p className='text-base font-semibold'>
             {business[0]?.businessName}, {business[0]?.city}{' '}
             {business[0]?.state}
@@ -167,14 +247,23 @@ const ActivityTableAudit = ({
           isCompact
           removeWrapper
           allowsSorting
-          aria-label='list of orders'
-          // bottomContent={bottomContent}
+          aria-label='list of audit reports'
+          bottomContent={
+            isLoading ? (
+              ''
+            ) : (
+              <PaginationComponent
+                data={items}
+                page={page}
+                setPage={setPage}
+                pages={pages}
+              />
+            )
+          }
           bottomContentPlacement='outside'
           classNames={classNames}
           selectedKeys={selectedKeys}
-          // selectionMode='multiple'
           sortDescriptor={sortDescriptor}
-          // topContent={topContent}
           topContentPlacement='outside'
           onSelectionChange={setSelectedKeys}
           onSortChange={setSortDescriptor}
@@ -195,12 +284,12 @@ const ActivityTableAudit = ({
               textAlign: 'center',
             }}
             emptyContent={'No items found'}
-            items={columns()?.data || []}
+            items={sortedItems || []}
             isLoading={isLoading}
             loadingContent={<SmallLoader />}
           >
-            {(item) => (
-              <TableRow key={item?.id}>
+            {(item: any, index: any) => (
+              <TableRow key={`row-${index}`}>
                 {(columnKey) => (
                   <TableCell>{renderCell(item, columnKey)}</TableCell>
                 )}

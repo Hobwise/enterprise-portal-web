@@ -15,7 +15,7 @@ import {
 import React, { useEffect, useMemo, useState } from 'react';
 
 const Dashboard: React.FC = () => {
-  const [selectedKeys, setSelectedKeys] = useState(new Set(['Today']));
+  const [selectedKeys, setSelectedKeys] = useState(new Set(['This week']));
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
   const [value, setValue] = React.useState({

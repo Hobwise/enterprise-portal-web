@@ -40,8 +40,9 @@ const Activity = () => {
     start: null,
     end: null,
   });
-  const [selectedKeys, setSelectedKeys] = useState(new Set(['Today']));
-  const [previousSelectedValue, setPreviousSelectedValue] = useState('Today');
+  const [selectedKeys, setSelectedKeys] = useState(new Set(['This week']));
+  const [previousSelectedValue, setPreviousSelectedValue] =
+    useState('This week');
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
     [selectedKeys]
@@ -100,10 +101,10 @@ const Activity = () => {
     endDate,
     reportFilter?.reportType,
     userInformation?.email,
-    reportFilter?.reportName,
+    reportFilter?.route,
     { enabled: true }
   );
-  console.log(data, 'dataaaaaaaaaaaaa');
+
   useEffect(() => {
     if (shouldFetchReport && selectedValue !== 'Custom date') {
       setPreviousSelectedValue(selectedValue);
@@ -358,7 +359,8 @@ const Activity = () => {
           </div>
         </CustomButton>
       </div> */}
-      {reportFilter?.reportName === 'orders' && (
+
+      {reportFilter?.route === 'orders' && (
         <ActivityTableOrder
           data={data}
           reportName={reportFilter?.reportName}
@@ -368,7 +370,7 @@ const Activity = () => {
           value={value}
         />
       )}
-      {reportFilter?.reportName === 'booking' && (
+      {reportFilter?.route === 'booking' && (
         <ActivityTableBooking
           reportName={reportFilter?.reportName}
           data={data}
@@ -378,7 +380,7 @@ const Activity = () => {
           value={value}
         />
       )}
-      {reportFilter?.reportName === 'payment' && (
+      {reportFilter?.route === 'payment' && (
         <ActivityTablePayment
           reportName={reportFilter?.reportName}
           data={data}
@@ -388,7 +390,7 @@ const Activity = () => {
           value={value}
         />
       )}
-      {reportFilter?.reportName === 'audit-logs' && (
+      {reportFilter?.route === 'audit-logs' && (
         <ActivityTableAudit
           reportName={reportFilter?.reportName}
           data={data}
@@ -398,7 +400,6 @@ const Activity = () => {
           value={value}
         />
       )}
-
       <Modal
         isDismissable={false}
         classNames={{
