@@ -207,7 +207,7 @@ export const refreshToken = async () => {
   }
 };
 
-const scheduleTokenRefresh = () => {
+export const scheduleTokenRefresh = () => {
   if (refreshTimer) {
     clearTimeout(refreshTimer);
   }

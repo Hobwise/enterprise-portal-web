@@ -71,6 +71,10 @@ export const DASHBOARD = {
   //Report
   report: 'api/v1/ReportManager',
   reportOrder: 'api/v1/ReportManager/order',
+  reportOrderExport: 'api/v1/ReportManager/order/export',
+  reportBookingExport: 'api/v1/ReportManager/booking/export',
+  reportAuditLogExport: 'api/v1/ReportManager/audit-log/export',
+  reportPaymentExport: 'api/v1/ReportManager/payment/export',
   reportPayment: 'api/v1/ReportManager/payment',
   reportBooking: 'api/v1/ReportManager/booking',
   reportAuditLog: 'api/v1/ReportManager/audit-log',

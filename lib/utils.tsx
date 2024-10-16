@@ -447,3 +447,35 @@ export const decrypt = (hash: any) => {
   ]);
   return decrpyted.toString();
 };
+
+export const dynamicExportConfig = (response: any, fileName: string) => {
+  const blob = new Blob([response.data], {
+    type: response.headers['content-type'],
+  });
+
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.style.display = 'none';
+  a.href = url;
+
+  let filename = fileName;
+  const contentDisposition = response.headers['content-disposition'];
+  if (contentDisposition) {
+    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i);
+    if (filenameMatch.length === 2) {
+      filename = filenameMatch[1];
+    }
+  }
+
+  const contentType = response.headers['content-type'];
+  if (contentType.includes('sheet')) {
+    filename += '.xlsx';
+  } else if (contentType.includes('pdf')) {
+    filename += '.pdf';
+  }
+
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  window.URL.revokeObjectURL(url);
+};

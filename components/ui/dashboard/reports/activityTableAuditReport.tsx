@@ -1,13 +1,9 @@
 import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
 import usePagination from '@/hooks/usePagination';
-import { downloadCSV } from '@/lib/downloadToExcel';
 import {
   SmallLoader,
   formatDateTimeForPayload3,
   getJsonItemFromLocalStorage,
-  printPDF,
-  saveAsPDF,
 } from '@/lib/utils';
 import {
   Chip,
@@ -25,7 +21,6 @@ import {
 import moment from 'moment';
 import Image from 'next/image';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { BsPrinter } from 'react-icons/bs';
 import { IoIosArrowForward } from 'react-icons/io';
 import { IoSearchOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
@@ -60,6 +55,8 @@ const ActivityTableAudit = ({
   selectedValue,
   reportType,
   value,
+  isLoadingExport,
+  exportFile,
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
   const columns = () => {
@@ -190,20 +187,22 @@ const ActivityTableAudit = ({
         />
 
         <div className='flex gap-3'>
-          <CustomButton
-            disableRipple={true}
-            onClick={() => toggleDownloadReport()}
-            className='py-2 px-4 md:mb-0 text-black  mb-4 '
-            backgroundColor='bg-white'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              <MdOutlineFileDownload className='text-[22px]' />
-              <p>Download</p>
+          <div className='flex items-center'>
+            {isLoadingExport && <SmallLoader />}
+            <div
+              onClick={() => toggleDownloadReport()}
+              className='py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 '
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                <MdOutlineFileDownload className='text-[22px]' />
+                <p>Export</p>
+              </div>
             </div>
-          </CustomButton>
-          <CustomButton
+          </div>
+          {/* <CustomButton
             disableRipple={true}
-            onClick={() => printPDF(reportRef, reportName)}
+            // onClick={() => exportFile(0)}
+            onClick={() => toggleDownloadReport()}
             className='py-2 px-4 md:mb-0 text-black mb-4 '
             backgroundColor='bg-white'
           >
@@ -212,7 +211,7 @@ const ActivityTableAudit = ({
 
               <p>Print</p>
             </div>
-          </CustomButton>
+          </CustomButton> */}
         </div>
       </div>
       <section
@@ -312,7 +311,10 @@ const ActivityTableAudit = ({
               </ModalHeader>
               <ModalBody className='mb-6'>
                 <div
-                  onClick={() => saveAsPDF(reportRef, reportName)}
+                  onClick={() => {
+                    exportFile(0);
+                    toggleDownloadReport();
+                  }}
                   className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
                 >
                   <div className='flex gap-2'>
@@ -322,7 +324,10 @@ const ActivityTableAudit = ({
                   <IoIosArrowForward className='text-grey600' />
                 </div>
                 <div
-                  onClick={() => downloadCSV(columns()?.data)}
+                  onClick={() => {
+                    toggleDownloadReport();
+                    exportFile(1);
+                  }}
                   className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
                 >
                   <div className='flex gap-2'>

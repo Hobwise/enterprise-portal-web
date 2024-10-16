@@ -1,4 +1,10 @@
 'use client';
+import {
+  getReportAuditLogExport,
+  getReportBookingExport,
+  getReportOrderExport,
+  getReportPaymentExport,
+} from '@/app/api/controllers/dashboard/report';
 import Error from '@/components/error';
 import ActivityTableAudit from '@/components/ui/dashboard/reports/activityTableAuditReport';
 import ActivityTableBooking from '@/components/ui/dashboard/reports/activityTableBooking';
@@ -6,8 +12,10 @@ import ActivityTableOrder from '@/components/ui/dashboard/reports/activityTableO
 import ActivityTablePayment from '@/components/ui/dashboard/reports/activityTablePayment';
 import useReportFilter from '@/hooks/cachedEndpoints/useReportFilter';
 import {
+  dynamicExportConfig,
   formatDateTimeForPayload2,
   getJsonItemFromLocalStorage,
+  notify,
 } from '@/lib/utils';
 import { getLocalTimeZone, today } from '@internationalized/date';
 import {
@@ -104,6 +112,64 @@ const Activity = () => {
     reportFilter?.route,
     { enabled: true }
   );
+
+  const [isLoadingExport, setIsLoadingExport] = useState(false);
+  const exportFile = async (exportType: number) => {
+    const business = getJsonItemFromLocalStorage('business');
+    setIsLoadingExport(true);
+    let response;
+    if (reportFilter?.route === 'orders') {
+      response = await getReportOrderExport(
+        business[0].businessId,
+        logIndexForSelectedKey(effectiveSelectedValue),
+        startDate,
+        endDate,
+        reportFilter?.reportType,
+        exportType,
+        userInformation?.email
+      );
+    } else if (reportFilter?.route === 'booking') {
+      response = await getReportBookingExport(
+        business[0].businessId,
+        logIndexForSelectedKey(effectiveSelectedValue),
+        startDate,
+        endDate,
+        reportFilter?.reportType,
+        exportType,
+        userInformation?.email
+      );
+    } else if (reportFilter?.route === 'payment') {
+      response = await getReportPaymentExport(
+        business[0].businessId,
+        logIndexForSelectedKey(effectiveSelectedValue),
+        startDate,
+        endDate,
+        reportFilter?.reportType,
+        exportType,
+        userInformation?.email
+      );
+    } else if (reportFilter?.route === 'audit-logs') {
+      response = await getReportAuditLogExport(
+        business[0].businessId,
+        logIndexForSelectedKey(effectiveSelectedValue),
+        startDate,
+        endDate,
+        reportFilter?.reportType,
+        exportType,
+        userInformation?.email
+      );
+    }
+    setIsLoadingExport(false);
+    if (response?.status === 200) {
+      dynamicExportConfig(response, reportFilter?.reportName);
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: 'Failed to download the file',
+        type: 'error',
+      });
+    }
+  };
 
   useEffect(() => {
     if (shouldFetchReport && selectedValue !== 'Custom date') {
@@ -368,6 +434,8 @@ const Activity = () => {
           reportType={reportFilter?.reportType}
           selectedValue={selectedValue}
           value={value}
+          isLoadingExport={isLoadingExport}
+          exportFile={exportFile}
         />
       )}
       {reportFilter?.route === 'booking' && (
@@ -378,6 +446,8 @@ const Activity = () => {
           isLoading={isLoading}
           selectedValue={selectedValue}
           value={value}
+          isLoadingExport={isLoadingExport}
+          exportFile={exportFile}
         />
       )}
       {reportFilter?.route === 'payment' && (
@@ -388,6 +458,8 @@ const Activity = () => {
           isLoading={isLoading}
           selectedValue={selectedValue}
           value={value}
+          isLoadingExport={isLoadingExport}
+          exportFile={exportFile}
         />
       )}
       {reportFilter?.route === 'audit-logs' && (
@@ -398,6 +470,8 @@ const Activity = () => {
           isLoading={isLoading}
           selectedValue={selectedValue}
           value={value}
+          isLoadingExport={isLoadingExport}
+          exportFile={exportFile}
         />
       )}
       <Modal
