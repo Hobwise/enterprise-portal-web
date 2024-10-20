@@ -3,6 +3,7 @@ import { createBusiness } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
+import { companyInfo } from '@/lib/companyInfo';
 import {
   getJsonItemFromLocalStorage,
   notify,
@@ -115,7 +116,7 @@ const BusinessInformationForm = () => {
           onChange={handleInputChange}
           value={businessFormData.contactEmailAddress}
           label='Business email'
-          placeholder='hobink@gmail.com'
+          placeholder={`${companyInfo.name}@gmail.com`}
         />
         <CustomInput
           type='text'

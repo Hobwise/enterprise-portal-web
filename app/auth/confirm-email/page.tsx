@@ -1,12 +1,13 @@
 import BackButton from '@/components/backButton';
-import HobinkLogo from '@/components/logo';
+import CompanyLogo from '@/components/logo';
 import ConfirmEmailForm from '@/components/ui/auth/confirmEmailForm';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
+import { companyInfo } from '../../../lib/companyInfo';
 import confirmEmailLogo from '../../../public/assets/images/confirmEmailImage.png';
 
 export const metadata = {
-  title: 'Hobink | Confirm your email',
+  title: `${companyInfo.name} | Confirm your email`,
   description: 'Streamline your business processes',
 };
 const ConfirmEmail = () => {
@@ -15,7 +16,7 @@ const ConfirmEmail = () => {
       <div className='absolute top-0 left-0'>
         <BackButton url='/auth/signup' />
       </div>
-      <HobinkLogo />
+      <CompanyLogo />
       <section className='md:w-[464px] w-full bg-white text-black lg:p-7 py-12 px-6  md:rounded-2xl rounded-lg'>
         <div className='grid place-content-center'>
           <Image src={confirmEmailLogo} alt='confirm email logo' />

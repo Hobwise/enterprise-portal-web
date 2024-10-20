@@ -1,8 +1,9 @@
+import { companyInfo } from '@/lib/companyInfo';
 import { Suspense } from 'react';
 import CreateOrder from './create-order';
 
 export const metadata = {
-  title: 'Hobink | Create order',
+  title: `${companyInfo.name} | Create order`,
   description: 'Streamline your business processes',
 };
 

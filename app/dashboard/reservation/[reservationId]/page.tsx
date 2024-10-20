@@ -5,6 +5,7 @@ import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import useTextCopy from '@/hooks/useTextCopy';
+import { companyInfo } from '@/lib/companyInfo';
 import {
   CustomLoading,
   formatPrice,
@@ -65,7 +66,7 @@ const ReservationDetails = () => {
   }
 
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `https://hobink-corporate-web.vercel.app/reservation/select-reservation/single-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}&reservationId=${reservationId}`
+    `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}&reservationId=${reservationId}`
   );
 
   return (

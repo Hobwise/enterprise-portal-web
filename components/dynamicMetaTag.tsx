@@ -1,5 +1,6 @@
 'use client';
 import useNotificationCount from '@/hooks/cachedEndpoints/useNotificationCount';
+import { companyInfo } from '@/lib/companyInfo';
 
 interface Props {
   route?: string;
@@ -13,7 +14,9 @@ export default function DynamicMetaTag({
   const { data } = useNotificationCount();
   return (
     <>
-      <title>{`${data && data > 0 && `(${data})`} Hobink | ${route} `}</title>
+      <title>{`${data && data > 0 && `(${data})`} ${
+        companyInfo.name
+      } | ${route} `}</title>
       <meta name='description' content={description} />
     </>
   );

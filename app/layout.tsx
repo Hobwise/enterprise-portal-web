@@ -1,16 +1,16 @@
+import { AppProvider } from '@/hooks/globalProvider';
+
+import QueryProvider from '@/hooks/queryProvider';
 import { Providers } from '@/utilities/providers';
 import { inter } from '@/utilities/ui-config/fonts';
 import { Toaster } from 'react-hot-toast';
 import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { companyInfo } from '../lib/companyInfo';
 import './globals.css';
 
-import { AppProvider } from '@/hooks/globalProvider';
-
-import QueryProvider from '@/hooks/queryProvider';
-import 'react-toastify/dist/ReactToastify.css';
-
 export const metadata = {
-  title: 'Hobink',
+  title: companyInfo.name,
   description: 'Streamline your business processes',
 };
 

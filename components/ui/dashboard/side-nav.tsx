@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-import HobinkLogo from '@/components/logo';
+import CompanyLogo from '@/components/logo';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
@@ -190,7 +190,7 @@ const SideNav = () => {
             href='/dashboard'
             className='flex flex-row  items-center justify-center md:justify-start md:px-8 md:py-10   w-full'
           >
-            <HobinkLogo
+            <CompanyLogo
               textColor='text-white font-lexend text-[28px] font-[600]'
               containerClass='flex gap-2 items-center '
             />

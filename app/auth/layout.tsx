@@ -1,9 +1,9 @@
 import { inter } from '@/utilities/ui-config/fonts';
-
 import 'react-toastify/dist/ReactToastify.css';
+import { companyInfo } from '../../lib/companyInfo';
 
 export const metadata = {
-  title: 'Hobink | Onboarding',
+  title: `${companyInfo.name} | Onboarding`,
   description: 'Streamline your business processes',
 };
 

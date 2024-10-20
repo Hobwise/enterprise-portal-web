@@ -3,6 +3,7 @@ import { createQr } from '@/app/api/controllers/dashboard/quickResponse';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import useQR from '@/hooks/cachedEndpoints/useQRcode';
+import { companyInfo } from '@/lib/companyInfo';
 import {
   downloadQRImage,
   getJsonItemFromLocalStorage,
@@ -103,7 +104,7 @@ const QRform = () => {
                       maxWidth: '100%',
                       maxHeight: '100%',
                     }}
-                    value={`https://hobink-corporate-web.vercel.app/create-order?businessID=${qrURL?.businessID}&cooperateID=${qrURL?.cooperateID}&id=${qrURL?.id}&businessName=${businessInformation[0]?.businessName}`}
+                    value={`${companyInfo.webUrl}/create-order?businessID=${qrURL?.businessID}&cooperateID=${qrURL?.cooperateID}&id=${qrURL?.id}&businessName=${businessInformation[0]?.businessName}`}
                     viewBox={`0 0 256 256`}
                   />
                 </div>

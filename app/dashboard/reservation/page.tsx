@@ -22,6 +22,7 @@ import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import useTextCopy from '@/hooks/useTextCopy';
+import { companyInfo } from '@/lib/companyInfo';
 import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { IoMdAdd } from 'react-icons/io';
 import { VscCopy } from 'react-icons/vsc';
@@ -77,7 +78,7 @@ const Reservation: React.FC = () => {
     }
   };
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
+    `${companyInfo.webUrl}/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
   );
   return (
     <>

@@ -1,4 +1,10 @@
-const SplashScreen = ({ businessName = 'Hobink' }: { businessName?: any }) => {
+import { companyInfo } from '@/lib/companyInfo';
+
+const SplashScreen = ({
+  businessName = companyInfo.name,
+}: {
+  businessName?: any;
+}) => {
   return (
     <main className='h-screen grid w-full place-content-center bg-primaryColor'>
       <div className='text-4xl font-bold text-gray-800'>

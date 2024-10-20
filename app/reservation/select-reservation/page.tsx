@@ -1,9 +1,10 @@
+import { companyInfo } from '@/lib/companyInfo';
 import { Spinner } from '@nextui-org/react';
 import { Suspense } from 'react';
 import SelectReservationComponents from './selectReservationComponents';
 
 export const metadata = {
-  title: 'Hobink | Reservation',
+  title: `${companyInfo.name} | Reservation`,
   description: 'Select a reservation and complete bookings',
 };
 const reservations = () => {

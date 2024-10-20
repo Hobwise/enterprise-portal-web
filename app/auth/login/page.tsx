@@ -1,12 +1,13 @@
-import HobinkLogo from '@/components/logo';
+import CompanyLogo from '@/components/logo';
 import LoginForm from '@/components/ui/auth/loginForm';
+import { companyInfo } from '@/lib/companyInfo';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Background from '../../../public/assets/images/nightlife-party-with-drinks-bar 1.png';
 
 export const metadata = {
-  title: 'Hobink | Log in to Hobink',
+  title: `${companyInfo.name} | Log in to ${companyInfo.name}`,
   description: 'Streamline your business processes',
 };
 
@@ -17,13 +18,13 @@ export default function Login() {
     >
       <Image fill className='absolute' src={Background} alt='background' />
       <div className='container flex flex-col justify-center  w-full xl:p-0 px-4 '>
-        <HobinkLogo
+        <CompanyLogo
           textColor='text-white'
           containerClass='flex lg:hidden gap-2 z-10 items-center pt-8 mb-10'
         />
         <div className='flex flex-col justify-between gap-4 lg:flex-row'>
           <div className='relative w-[400px] lg:flex flex-col  hidden  text-white'>
-            <HobinkLogo
+            <CompanyLogo
               textColor='text-white'
               containerClass='lg:flex hidden gap-2 '
             />

@@ -12,7 +12,9 @@ import cookie from 'js-cookie';
 import Image from 'next/image';
 import { toast } from 'react-toastify';
 import { twMerge } from 'tailwind-merge';
+
 import LoadingAvatar from '../public/assets/images/loadingAvatar.svg';
+import { companyInfo } from './companyInfo';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -170,7 +172,7 @@ export const CustomLoading = () => {
         <Image
           src={LoadingAvatar}
           style={{ objectFit: 'cover' }}
-          alt='hobink logo'
+          alt={`${companyInfo.name} logo`}
           className='w-[60px] h-[60px]'
         />
       </div>

@@ -2,6 +2,7 @@
 import BackButton from '@/components/backButton';
 import { CustomButton } from '@/components/customButton';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
+import { companyInfo } from '@/lib/companyInfo';
 import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Spinner } from '@nextui-org/react';
 import Image from 'next/image';
@@ -36,7 +37,7 @@ const SingleReservationComponent = () => {
         {reservationId ? null : (
           <BackButton
             color='text-black'
-            url={`https://hobink-corporate-web.vercel.app/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
+            url={`${companyInfo.webUrl}/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
           />
         )}
       </div>

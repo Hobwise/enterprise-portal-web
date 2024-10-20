@@ -1,12 +1,13 @@
-import HobinkLogo from '@/components/logo';
+import CompanyLogo from '@/components/logo';
 import SignupForm from '@/components/ui/auth/signupForm';
+import { companyInfo } from '@/lib/companyInfo';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import Background from '../../../public/assets/images/nightlife-party-with-drinks-bar 1.png';
 
 export const metadata = {
-  title: 'Hobink | Create account',
+  title: `${companyInfo.name}| Create account`,
   description: 'Streamline your business processes',
 };
 
@@ -24,14 +25,14 @@ export default function Signup() {
     >
       <Image fill className='absolute' src={Background} alt='background' />
       <div className='container flex flex-col justify-center  w-full xl:p-0 px-4 '>
-        <HobinkLogo
+        <CompanyLogo
           textColor='text-white'
           containerClass='flex lg:hidden z-10 gap-2 items-center pt-8 mb-10'
         />
         <div className='flex w-full flex-col  justify-between lg:flex-row'>
           {/* Left Card: Text Content */}
           <div className='relative w-[400px] lg:flex flex-col  hidden  text-white'>
-            <HobinkLogo
+            <CompanyLogo
               textColor='text-white'
               containerClass='lg:flex hidden gap-2 '
             />

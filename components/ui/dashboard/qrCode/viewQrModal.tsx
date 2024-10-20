@@ -1,5 +1,6 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
+import { companyInfo } from '@/lib/companyInfo';
 import { downloadQRImage, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Modal, ModalBody, ModalContent, Spacer } from '@nextui-org/react';
 import { useRef } from 'react';
@@ -55,7 +56,7 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
                     maxWidth: '100%',
                     maxHeight: '100%',
                   }}
-                  value={`https://hobink-corporate-web.vercel.app/create-order?businessID=${business[0]?.businessId}&cooperateID=${userInformation?.cooperateID}&id=${qrObject?.id}&businessName=${business[0]?.businessName}`}
+                  value={`${companyInfo.webUrl}/create-order?businessID=${business[0]?.businessId}&cooperateID=${userInformation?.cooperateID}&id=${qrObject?.id}&businessName=${business[0]?.businessName}`}
                   viewBox={`0 0 256 256`}
                 />
               </div>

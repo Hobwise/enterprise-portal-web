@@ -1,6 +1,7 @@
 'use client';
 import Error from '@/components/error';
 import useReservationUser from '@/hooks/cachedEndpoints/useReservationUser';
+import { companyInfo } from '@/lib/companyInfo';
 import { saveJsonItemToLocalStorage, saveToLocalStorage } from '@/lib/utils';
 import { Divider } from '@nextui-org/react';
 import Image from 'next/image';
@@ -46,7 +47,7 @@ const SelectReservationComponents = () => {
                   saveJsonItemToLocalStorage('singleReservation', reservation);
                   saveToLocalStorage('businessName', businessName);
                   router.push(
-                    `https://hobink-corporate-web.vercel.app/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+                    `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
                   );
                 }}
                 key={reservation.reservationName}

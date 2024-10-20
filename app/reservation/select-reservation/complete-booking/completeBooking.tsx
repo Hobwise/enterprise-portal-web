@@ -4,6 +4,7 @@ import { CustomInput } from '@/components/CustomInput';
 import BackButton from '@/components/backButton';
 import { CustomButton } from '@/components/customButton';
 import useTermsAndCondition from '@/hooks/cachedEndpoints/useTermsAndConditions';
+import { companyInfo } from '@/lib/companyInfo';
 import {
   formatDateTime,
   getJsonItemFromLocalStorage,
@@ -108,10 +109,10 @@ const CompleteBookingComponent = () => {
       setTimeNdate(now(getLocalTimeZone()));
       reservationId
         ? router.push(
-            `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
+            `${companyInfo.webUrl}/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
           )
         : router.push(
-            `https://hobink-corporate-web.vercel.app/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+            `${companyInfo.webUrl}/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
           );
       saveJsonItemToLocalStorage('bookingDetails', data?.data?.data);
       setBookings({
@@ -141,7 +142,7 @@ const CompleteBookingComponent = () => {
         {reservationId ? null : (
           <BackButton
             color='text-black'
-            url={`https://hobink-corporate-web.vercel.app/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
+            url={`${companyInfo.webUrl}/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
           />
         )}
       </div>
