@@ -251,6 +251,7 @@ const EditCampaign = () => {
               Campaign end
             </label>
             <DatePicker
+              calendarWidth={270}
               variant='bordered'
               hideTimeZone
               size='lg'

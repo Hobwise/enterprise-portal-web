@@ -30,7 +30,7 @@ const SelectBusinessForm = () => {
         ...data?.data?.data,
         tokenExpiry: Date.now() + TOKEN_EXPIRY_DURATION,
       });
-      saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
+
       setTokenCookie('token', data?.data?.data.token);
       router.push('/dashboard');
     } else if (data?.data?.error) {

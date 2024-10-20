@@ -171,12 +171,13 @@ const AddItemToMenu = () => {
     if (data?.data?.isSuccessful) {
       onOpen();
       setMenuItem({
+        ...menuItem,
         itemDescription: '',
         itemName: '',
         price: 0,
-        menuID: '',
         imageReference: '',
       });
+
       // setSelectedFile();
       setSelectedImage('');
     } else if (data?.data?.error) {

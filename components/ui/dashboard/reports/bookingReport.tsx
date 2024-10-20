@@ -99,7 +99,7 @@ const ReportDetails = ({ report }: any) => {
   const reportData = [
     {
       icon: <Image src={Accepted} alt='accepted' />,
-      title: 'ACCEPTED',
+      title: 'CONFIRMED',
       desc: report?.confirmedBookingCount,
     },
     {
@@ -109,7 +109,7 @@ const ReportDetails = ({ report }: any) => {
     },
     {
       icon: <Image src={Cancel} alt='faile' />,
-      title: 'FAILED',
+      title: 'CANCELED',
       desc: report?.failedBookingCount,
     },
     {

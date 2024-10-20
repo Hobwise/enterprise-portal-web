@@ -92,7 +92,7 @@ const columns3 = [
   { name: 'Pending Payment', uid: 'pendingAmount' },
   { name: 'Confirmed Payment', uid: 'confirmedAmount' },
   { name: 'Total Payment', uid: 'totalAmount' },
-  { name: 'Date Updated', uid: 'dateUpdated' },
+  { name: 'Order count', uid: 'numberOfOrders' },
 ];
 
 const ActivityTableOrder = ({
@@ -187,7 +187,7 @@ const ActivityTableOrder = ({
         item?.lastName?.toLowerCase().includes(searchQuery) ||
         item?.name?.toLowerCase().includes(searchQuery) ||
         item?.itemName?.toLowerCase().includes(searchQuery) ||
-        item?.orderCount?.toLowerCase().includes(searchQuery) ||
+        String(item?.orderCount)?.toLowerCase().includes(searchQuery) ||
         item?.lastOrderDateTime?.toLowerCase().includes(searchQuery) ||
         item?.totalOrderValue?.toLowerCase().includes(searchQuery) ||
         item?.menuName?.toLowerCase().includes(searchQuery) ||

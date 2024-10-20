@@ -32,6 +32,7 @@ import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { notify, submitBookingStatus } from '@/lib/utils';
 import { CiCalendar } from 'react-icons/ci';
 import { IoCheckmark } from 'react-icons/io5';
+import { LiaTimesSolid } from 'react-icons/lia';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -194,7 +195,7 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     booking?.bookingStatus === 0 && (
                       <DropdownItem
-                        aria-label='accept booking'
+                        aria-label='confirm booking'
                         onClick={() =>
                           updateBookingStatus(
                             submitBookingStatus(booking?.bookingStatus),
@@ -207,7 +208,23 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                         >
                           <IoCheckmark className='text-[20px]' />
 
-                          <p>Accept booking</p>
+                          <p>Confirm booking</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    (booking?.bookingStatus === 0 ||
+                      booking?.bookingStatus === 1) && (
+                      <DropdownItem
+                        aria-label='cancel'
+                        onClick={() => updateBookingStatus(3, booking?.id)}
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-danger-500`}
+                        >
+                          <LiaTimesSolid className='text-[20px]' />
+
+                          <p>Cancel booking</p>
                         </div>
                       </DropdownItem>
                     )}

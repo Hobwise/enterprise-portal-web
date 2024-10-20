@@ -13,7 +13,7 @@ export default function DynamicMetaTag({
   const { data } = useNotificationCount();
   return (
     <>
-      <title>{`${data && `(${data})`} Hobink | ${route} `}</title>
+      <title>{`${data && data > 0 && `(${data})`} Hobink | ${route} `}</title>
       <meta name='description' content={description} />
     </>
   );

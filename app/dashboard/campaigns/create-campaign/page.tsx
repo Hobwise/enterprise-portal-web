@@ -281,6 +281,7 @@ const AddNewCampaign = () => {
             </label>
             <DatePicker
               variant='bordered'
+              calendarWidth={270}
               hideTimeZone
               size='lg'
               radius='sm'

@@ -42,9 +42,10 @@ const SideNav = () => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
 
   const toggleBtwBusiness = (businessInfo: any) => {
-    const exists = businessDetailsList?.some(
-      (comparisonItem: any) => comparisonItem.id === businessInfo.businessId
+    const exists = business?.some(
+      (comparisonItem: any) => comparisonItem.businessId === businessInfo.id
     );
+
     const transformedArray = [businessInfo].map((item) => ({
       businessId: item.id,
       businessAddress: item.address,
@@ -121,6 +122,65 @@ const SideNav = () => {
     return true;
   });
 
+  const arr = [
+    {
+      address: 'Lagos',
+      businessCategory: 2,
+      city: '',
+      contactEmailAddress: '',
+      contactPhoneNumber: '',
+      cooperateID: 'aed6bf03-5c1a-4654-bd06-71fe4bc4607f',
+      dateCreated: '2024-03-30T21:56:38.5837607',
+      dateUpdated: '2024-03-30T21:56:38.5838341',
+      id: '5ae4ad45-b94b-4060-a407-897ff8dad559',
+      identificationImage: '',
+      identificationImageReference: 'string',
+      isVerified: false,
+      logoImage: '',
+      logoImageReference: 'string',
+      name: 'Oga Ade',
+      nin: 'string',
+      primaryBrandColour: '#EAE5FF',
+      resistrationCertificateImage: '',
+      resistrationCertificateImageReference: 'string',
+      resistrationNumber: 'string',
+      secondaryBrandColour: 'string',
+      state: '',
+      verificationDate: '0001-01-01T00:00:00',
+      verificationOfficer: '',
+      verificationRemark: '',
+      verificationStage: 0,
+    },
+    {
+      address: 'Abuja',
+      businessCategory: 3,
+      city: '',
+      contactEmailAddress: '',
+      contactPhoneNumber: '',
+      cooperateID: 'aed6bf03-5c1a-4654-bd06-71fe4bc4607f',
+      dateCreated: '2024-03-30T21:56:38.5837607',
+      dateUpdated: '2024-03-30T21:56:38.5838341',
+      id: '5ae4ad45-b94b-4060-a407-897ff8dad558',
+      identificationImage: '',
+      identificationImageReference: 'string',
+      isVerified: true,
+      logoImage: '',
+      logoImageReference: 'string',
+      name: 'Olajide',
+      nin: 'string',
+      primaryBrandColour: '#EAE5FF',
+      resistrationCertificateImage: '',
+      resistrationCertificateImageReference: 'string',
+      resistrationNumber: 'string',
+      secondaryBrandColour: 'string',
+      state: '',
+      verificationDate: '0001-01-01T00:00:00',
+      verificationOfficer: '',
+      verificationRemark: '',
+      verificationStage: 0,
+    },
+  ];
+
   return (
     <div className='md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex'>
       <div className='flex flex-col  w-full'>
@@ -192,36 +252,36 @@ const SideNav = () => {
             variant='light'
             aria-label='Dropdown menu to switch businesses'
           >
-            {userInformation?.isOwner && (
-              <>
-                {businessDetailsList?.map((item: any) => {
-                  return (
-                    <DropdownItem
-                      classNames={{
-                        base: 'hover:bg-none max-h-[100px] overflow-scroll',
-                      }}
-                      key={item.businessId}
-                      onClick={() => toggleBtwBusiness(item)}
-                    >
-                      <div className='flex items-center gap-3'>
-                        <Avatar
-                          showFallback={true}
-                          src={`data:image/jpeg;base64,${item?.logoImage}`}
-                          name={item?.name}
-                        />
-                        <div className='flex flex-col'>
-                          <span className='font-[500] text-[14px]'>
-                            {item?.name}
-                          </span>
+            {userInformation?.isOwner &&
+              businessDetailsList?.map((item: any) => {
+                return (
+                  <DropdownItem
+                    classNames={{
+                      base: 'hover:bg-none max-h-[100px] overflow-scroll',
+                    }}
+                    key={item?.id}
+                    onClick={() => toggleBtwBusiness(item)}
+                  >
+                    <div className='flex items-center gap-3'>
+                      <Avatar
+                        showFallback={true}
+                        src={`data:image/jpeg;base64,${item?.logoImage}`}
+                        name={item?.name}
+                      />
+                      <div className='flex flex-col'>
+                        <span className='font-[500] text-[14px]'>
+                          {item?.name}
+                        </span>
 
-                          <span className=''>{item?.city}</span>
-                        </div>
+                        <span className='text-xs text-secondaryGrey'>
+                          {item?.city}
+                        </span>
                       </div>
-                    </DropdownItem>
-                  );
-                })}
-              </>
-            )}
+                    </div>
+                  </DropdownItem>
+                );
+              })}
+
             {userInformation?.isOwner && (
               <DropdownItem
                 key='add another business'
