@@ -175,7 +175,7 @@ const Activity = () => {
     }
     setIsLoadingExport(false);
     if (response?.status === 200) {
-      dynamicExportConfig(response, reportFilter?.route);
+      dynamicExportConfig(response, selectedReportObject.reportName);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
