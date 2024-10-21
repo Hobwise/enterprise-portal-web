@@ -16,6 +16,7 @@ import {
   LineElement,
   LinearScale,
   PointElement,
+  Tooltip,
 } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
@@ -62,7 +63,7 @@ const OrdersOverview = ({
     labels: getCurveChartConfig().label,
     datasets: [
       {
-        label: 'Wave-like Data',
+        label: 'Total order',
         data: getCurveChartConfig().data,
         borderColor: '#9747FF',
         backgroundColor: 'rgba(151, 71, 255, 0.3)',
@@ -71,12 +72,14 @@ const OrdersOverview = ({
       },
     ],
   };
+
   ChartJS.register(
     LineElement,
     CategoryScale,
     LinearScale,
     PointElement,
-    Filler
+    Filler,
+    Tooltip
   );
 
   const getChartConfig = () => {
@@ -134,10 +137,19 @@ const OrdersOverview = ({
     elements: {
       point: {
         radius: 0,
+        hitRadius: 40,
+        hoverRadius: 5,
       },
     },
     plugins: {
       legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (context: any) => {
+            return context.parsed.y;
+          },
+        },
+      },
     },
   };
 

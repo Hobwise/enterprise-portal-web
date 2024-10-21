@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import { TOKEN_EXPIRY_DURATION } from '@/app/api/apiService';
+import { generateRefreshToken } from '@/app/api/controllers/auth';
 import CompanyLogo from '@/components/logo';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
@@ -41,7 +43,34 @@ const SideNav = () => {
   const business = getJsonItemFromLocalStorage('business') || [];
   const userInformation = getJsonItemFromLocalStorage('userInformation');
 
-  const toggleBtwBusiness = (businessInfo: any) => {
+  const refreshToken = async () => {
+    const userData = getJsonItemFromLocalStorage('userInformation');
+    if (!userData) return null;
+
+    const { token, email } = userData;
+
+    try {
+      const response = await generateRefreshToken({
+        token,
+        email,
+      });
+
+      const newToken = response?.data?.data?.jwtToken;
+
+      const newExpiry = Date.now() + TOKEN_EXPIRY_DURATION;
+      saveJsonItemToLocalStorage('userInformation', {
+        ...userData,
+        token: newToken,
+        tokenExpiry: newExpiry,
+      });
+
+      return newToken;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const toggleBtwBusiness = async (businessInfo: any) => {
     const exists = business?.some(
       (comparisonItem: any) => comparisonItem.businessId === businessInfo.id
     );
@@ -60,6 +89,8 @@ const SideNav = () => {
 
     if (!exists) {
       saveJsonItemToLocalStorage('business', transformedArray);
+      await refreshToken();
+
       window.location.reload();
     }
   };

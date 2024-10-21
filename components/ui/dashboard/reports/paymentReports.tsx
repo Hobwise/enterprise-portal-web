@@ -19,6 +19,7 @@ import { IoIosArrowForward } from 'react-icons/io';
 import Decline from '../../../../public/assets/icons/canceled.png';
 import Like from '../../../../public/assets/icons/like.png';
 import Star from '../../../../public/assets/icons/star.png';
+import paymentIllustration from '../../../../public/assets/images/paymentIllustration.png';
 
 ChartJS.register(
   CategoryScale,
@@ -175,6 +176,15 @@ const ReportDetails = ({ report }: any) => {
 
       <div className='h-full flex-grow'>
         <Card className='border  bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl mb-4 h-[247px]'>
+          <div className='absolute bottom-0  right-3'>
+            <Image
+              className={'bg-cover rounded-lg '}
+              width={100}
+              height={100}
+              src={paymentIllustration}
+              alt='menu'
+            />
+          </div>
           <div>
             <div className='p-4'>
               <h2 className='font-medium text-sm'>CONFIRMED PAYMENT </h2>

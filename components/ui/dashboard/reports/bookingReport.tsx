@@ -20,6 +20,7 @@ import Accepted from '../../../../public/assets/icons/accepted.png';
 import Decline from '../../../../public/assets/icons/canceled.png';
 import Cancel from '../../../../public/assets/icons/declined.png';
 import Star from '../../../../public/assets/icons/star.png';
+import bookingIllustration from '../../../../public/assets/images/bookingIllustration.png';
 
 ChartJS.register(
   CategoryScale,
@@ -66,7 +67,9 @@ const ReportDetails = ({ report }: any) => {
         min: 0,
         max:
           report &&
-          Math.max(...report?.bookingPartitions.map((item) => item.count)) + 1,
+          Math.max(
+            ...report?.bookingPartitions.map((item: any) => item.count)
+          ) + 1,
         ticks: {
           stepSize: 1,
           color: '#888',
@@ -186,6 +189,15 @@ const ReportDetails = ({ report }: any) => {
 
       <div className='h-full flex-grow'>
         <Card className='border  bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl mb-4 h-[247px]'>
+          <div className='absolute bottom-0  right-3'>
+            <Image
+              className={'bg-cover rounded-lg '}
+              width={150}
+              height={150}
+              src={bookingIllustration}
+              alt='menu'
+            />
+          </div>
           <div>
             <div className='p-4'>
               <h2 className='font-medium text-sm'>ALL BOOKINGS</h2>

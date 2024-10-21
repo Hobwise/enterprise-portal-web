@@ -21,6 +21,7 @@ import Decline from '../../../../public/assets/icons/canceled.png';
 import Cancel from '../../../../public/assets/icons/declined.png';
 import Like from '../../../../public/assets/icons/like.png';
 import Star from '../../../../public/assets/icons/star.png';
+import orderIllustration from '../../../../public/assets/images/orderIlustration.png';
 
 ChartJS.register(
   CategoryScale,
@@ -187,6 +188,15 @@ const ReportDetails = ({ report }: any) => {
 
       <div className='h-full flex-grow'>
         <Card className='border  bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl mb-4 h-[247px]'>
+          <div className='absolute bottom-0  right-0'>
+            <Image
+              className={'bg-cover rounded-lg '}
+              width={150}
+              height={150}
+              src={orderIllustration}
+              alt='menu'
+            />
+          </div>
           <div>
             <div className='p-4'>
               <h2 className='font-medium text-sm'>ALL ORDERS</h2>

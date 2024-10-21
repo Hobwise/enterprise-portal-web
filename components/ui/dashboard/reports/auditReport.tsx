@@ -7,6 +7,7 @@ import { IoIosArrowForward } from 'react-icons/io';
 import Accepted from '../../../../public/assets/icons/accepted.png';
 import Decline from '../../../../public/assets/icons/canceled.png';
 import Star from '../../../../public/assets/icons/star.png';
+import auditIllustration from '../../../../public/assets/images/auditlogIllustration.png';
 
 const ReportDetails = ({ report }: any) => {
   const reportData = [
@@ -83,6 +84,15 @@ const ReportDetails = ({ report }: any) => {
 
       <div className='h-full flex-grow'>
         <Card className='border  bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl mb-4 h-[247px]'>
+          <div className='absolute bottom-0  right-3'>
+            <Image
+              className={'bg-cover rounded-lg '}
+              width={150}
+              height={150}
+              src={auditIllustration}
+              alt='menu'
+            />
+          </div>
           <div>
             <div className='p-4'>
               <h2 className='font-medium text-sm'>MOST ACTIVE USER</h2>
