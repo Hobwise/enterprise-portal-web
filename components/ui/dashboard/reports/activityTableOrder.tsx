@@ -62,37 +62,37 @@ const INITIAL_VISIBLE_COLUMNS3 = [
 ];
 
 const columns0 = [
-  { name: 'Name', uid: 'name' },
-  { name: 'Amount', uid: 'amount' },
-  { name: 'Order ID', uid: 'orderID' },
-  { name: 'Phone Number', uid: 'placedByPhoneNumber' },
-  { name: 'Place By', uid: 'placedByName' },
-  { name: 'Payment Method', uid: 'paymentMethod' },
-  { name: 'Status', uid: 'orderStatus' },
+  { name: 'Name', uid: 'name', sortable: true },
+  { name: 'Amount', uid: 'amount', sortable: true },
+  { name: 'Order ID', uid: 'orderID', sortable: true },
+  { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
+  { name: 'Place By', uid: 'placedByName', sortable: true },
+  { name: 'Payment Method', uid: 'paymentMethod', sortable: true },
+  { name: 'Status', uid: 'orderStatus', sortable: true },
 ];
 const columns1 = [
-  { name: 'Item Name', uid: 'itemName' },
-  { name: 'Menu Name', uid: 'menuName' },
-  { name: 'Amount Sold', uid: 'totalAmountSold' },
-  { name: 'Quantity', uid: 'totalQuantitySold' },
-  { name: 'Current Price', uid: 'currentPrice' },
-  { name: 'Availability', uid: 'isCurrentlyAvailable' },
+  { name: 'Item Name', uid: 'itemName', sortable: true },
+  { name: 'Menu Name', uid: 'menuName', sortable: true },
+  { name: 'Amount Sold', uid: 'totalAmountSold', sortable: true },
+  { name: 'Quantity', uid: 'totalQuantitySold', sortable: true },
+  { name: 'Current Price', uid: 'currentPrice', sortable: true },
+  { name: 'Availability', uid: 'isCurrentlyAvailable', sortable: true },
 ];
 const columns2 = [
-  { name: 'Place By', uid: 'placedByName' },
-  { name: 'Phone Number', uid: 'placedByPhoneNumber' },
-  { name: 'Order Count', uid: 'orderCount' },
-  { name: 'Total Order Count', uid: 'totalOrderValue' },
-  { name: 'Date Created/Updated', uid: 'lastOrderDateTime' },
+  { name: 'Place By', uid: 'placedByName', sortable: true },
+  { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
+  { name: 'Order Count', uid: 'orderCount', sortable: true },
+  { name: 'Total Order Count', uid: 'totalOrderValue', sortable: true },
+  { name: 'Date Created/Updated', uid: 'lastOrderDateTime', sortable: true },
 ];
 const columns3 = [
-  { name: 'Name', uid: 'firstName' },
-  { name: 'Email Address', uid: 'emailAddress' },
-  { name: 'Order Count', uid: 'numberOfOrder' },
-  { name: 'Pending Payment', uid: 'pendingAmount' },
+  { name: 'Name', uid: 'firstName', sortable: true },
+  { name: 'Email Address', uid: 'emailAddress', sortable: true },
+  { name: 'Order Count', uid: 'numberOfOrder', sortable: true },
+  { name: 'Pending Payment', uid: 'pendingAmount', sortable: true },
   { name: 'Confirmed Payment', uid: 'confirmedAmount' },
-  { name: 'Total Payment', uid: 'totalAmount' },
-  { name: 'Order count', uid: 'numberOfOrders' },
+  { name: 'Total Payment', uid: 'totalAmount', sortable: true },
+  { name: 'Order count', uid: 'numberOfOrders', sortable: true },
 ];
 
 const ActivityTableOrder = ({
@@ -220,7 +220,15 @@ const ActivityTableOrder = ({
     return [...items].sort((a, b) => {
       const first = a[sortDescriptor.column];
       const second = b[sortDescriptor.column];
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
+      let cmp = 0;
+
+      if (typeof first === 'string' && typeof second === 'string') {
+        cmp = first.localeCompare(second);
+      } else if (typeof first === 'number' && typeof second === 'number') {
+        cmp = first - second;
+      } else if (first instanceof Date && second instanceof Date) {
+        cmp = first.getTime() - second.getTime();
+      }
 
       return sortDescriptor.direction === 'descending' ? -cmp : cmp;
     });

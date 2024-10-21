@@ -191,7 +191,15 @@ const ActivityTablePayment = ({
     return [...items].sort((a, b) => {
       const first = a[sortDescriptor.column];
       const second = b[sortDescriptor.column];
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
+      let cmp = 0;
+
+      if (typeof first === 'string' && typeof second === 'string') {
+        cmp = first.localeCompare(second);
+      } else if (typeof first === 'number' && typeof second === 'number') {
+        cmp = first - second;
+      } else if (first instanceof Date && second instanceof Date) {
+        cmp = first.getTime() - second.getTime();
+      }
 
       return sortDescriptor.direction === 'descending' ? -cmp : cmp;
     });

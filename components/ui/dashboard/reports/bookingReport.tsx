@@ -104,8 +104,8 @@ const ReportDetails = ({ report }: any) => {
     },
     {
       icon: <Image src={Decline} alt='pending' />,
-      title: 'PENDING',
-      desc: report?.pendingBookingCount,
+      title: 'COMPLETED',
+      desc: report?.completedBookingCount,
     },
     {
       icon: <Image src={Cancel} alt='faile' />,

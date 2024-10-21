@@ -39,13 +39,13 @@ const INITIAL_VISIBLE_COLUMNS = [
 ];
 
 const column = [
-  { name: 'Username', uid: 'userName' },
-  { name: 'Email Address', uid: 'emailAddress' },
-  { name: 'IP Address', uid: 'ipAddress' },
+  { name: 'Username', uid: 'userName', sortable: true },
+  { name: 'Email Address', uid: 'emailAddress', sortable: true },
+  { name: 'IP Address', uid: 'ipAddress', sortable: true },
 
-  { name: 'Activity', uid: 'activity' },
-  { name: 'Date', uid: 'dateCreated' },
-  { name: 'Status', uid: 'isSuccessful' },
+  { name: 'Activity', uid: 'activity', sortable: true },
+  { name: 'Date', uid: 'dateCreated', sortable: true },
+  { name: 'Status', uid: 'isSuccessful', sortable: true },
 ];
 
 const ActivityTableAudit = ({
@@ -59,7 +59,8 @@ const ActivityTableAudit = ({
   exportFile,
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
-  const columns = () => {
+
+  const columns = useMemo(() => {
     if (reportType === 11) {
       return {
         data: data?.auditLogs || [],
@@ -67,7 +68,7 @@ const ActivityTableAudit = ({
         visibleColumn: INITIAL_VISIBLE_COLUMNS,
       };
     }
-  };
+  }, [reportType, data]);
 
   const [showMore, setShowMore] = useState(false);
   const [isOpenDownload, setIsOpenDownload] = useState(false);
@@ -125,7 +126,7 @@ const ActivityTableAudit = ({
   };
 
   const filteredItems = useMemo(() => {
-    let filteredData = [...columns()?.data];
+    let filteredData = [...columns?.data];
 
     filteredData = filteredData.filter(
       (item) =>
@@ -137,7 +138,7 @@ const ActivityTableAudit = ({
     );
 
     return filteredData;
-  }, [columns()?.data, searchQuery]);
+  }, [columns?.data, searchQuery]);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -154,7 +155,15 @@ const ActivityTableAudit = ({
     return [...items].sort((a, b) => {
       const first = a[sortDescriptor.column];
       const second = b[sortDescriptor.column];
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
+      let cmp = 0;
+
+      if (typeof first === 'string' && typeof second === 'string') {
+        cmp = first.localeCompare(second);
+      } else if (typeof first === 'number' && typeof second === 'number') {
+        cmp = first - second;
+      } else if (first instanceof Date && second instanceof Date) {
+        cmp = first.getTime() - second.getTime();
+      }
 
       return sortDescriptor.direction === 'descending' ? -cmp : cmp;
     });
@@ -169,7 +178,7 @@ const ActivityTableAudit = ({
     selectedKeys,
 
     classNames,
-  } = usePagination(filteredItems, columns()?.column, columns()?.visibleColumn);
+  } = usePagination(filteredItems, columns?.column, columns?.visibleColumn);
 
   return (
     <>
@@ -267,7 +276,7 @@ const ActivityTableAudit = ({
           onSelectionChange={setSelectedKeys}
           onSortChange={setSortDescriptor}
         >
-          <TableHeader columns={headerColumns}>
+          <TableHeader columns={columns?.column}>
             {(column) => (
               <TableColumn
                 key={column.uid}
