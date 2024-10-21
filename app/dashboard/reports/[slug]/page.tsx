@@ -35,6 +35,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { IoIosArrowRoundBack } from 'react-icons/io';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 
+interface ReportObject {
+  reportName: string;
+  reportType: number;
+}
+
 const Activity = () => {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const [isOpenDownload, setIsOpenDownload] = useState(false);
@@ -44,6 +49,12 @@ const Activity = () => {
   // const toggleDownloadReport = () => {
   //   setIsOpenDownload(!isOpenDownload);
   // };
+  const [selectedReportObject, setSelectedReportObject] =
+    useState<ReportObject>({
+      reportName: reportFilter?.reportName,
+      reportType: reportFilter?.reportType,
+    });
+
   const [value, setValue] = useState({
     start: null,
     end: null,
@@ -55,13 +66,15 @@ const Activity = () => {
     () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
     [selectedKeys]
   );
-  const [selectedKeysDynamic, setSelectedKeysDynamic] = useState(
-    new Set(['All'])
-  );
-  const selectedValueDynamic = useMemo(
-    () => Array.from(selectedKeysDynamic).join(', ').replaceAll('_', ' '),
-    [selectedKeysDynamic]
-  );
+
+  // const [selectedKeysDynamic, setSelectedKeysDynamic] = useState(
+  //   new Set([reportFilter?.reportName])
+  // );
+  // const selectedValueDynamic = useMemo(
+  //   () => Array.from(selectedKeysDynamic).join(', ').replaceAll('_', ' '),
+  //   [selectedKeysDynamic]
+  // );
+
   const [showMore, setShowMore] = useState(false);
   const toggleMoreFilters = () => {
     setShowMore(!showMore);
@@ -103,11 +116,12 @@ const Activity = () => {
   const endDate = value.end
     ? `${formatDateTimeForPayload2(value.end)}Z`
     : undefined;
+
   const { data, isError, refetch, isLoading } = useReportFilter(
     logIndexForSelectedKey(effectiveSelectedValue),
     startDate,
     endDate,
-    reportFilter?.reportType,
+    selectedReportObject.reportType,
     userInformation?.email,
     reportFilter?.route,
     { enabled: true }
@@ -124,7 +138,7 @@ const Activity = () => {
         logIndexForSelectedKey(effectiveSelectedValue),
         startDate,
         endDate,
-        reportFilter?.reportType,
+        selectedReportObject.reportType,
         exportType,
         userInformation?.email
       );
@@ -134,7 +148,7 @@ const Activity = () => {
         logIndexForSelectedKey(effectiveSelectedValue),
         startDate,
         endDate,
-        reportFilter?.reportType,
+        selectedReportObject.reportType,
         exportType,
         userInformation?.email
       );
@@ -144,7 +158,7 @@ const Activity = () => {
         logIndexForSelectedKey(effectiveSelectedValue),
         startDate,
         endDate,
-        reportFilter?.reportType,
+        selectedReportObject.reportType,
         exportType,
         userInformation?.email
       );
@@ -154,14 +168,14 @@ const Activity = () => {
         logIndexForSelectedKey(effectiveSelectedValue),
         startDate,
         endDate,
-        reportFilter?.reportType,
+        selectedReportObject.reportType,
         exportType,
         userInformation?.email
       );
     }
     setIsLoadingExport(false);
     if (response?.status === 200) {
-      dynamicExportConfig(response, reportFilter?.reportName);
+      dynamicExportConfig(response, reportFilter?.route);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -176,6 +190,21 @@ const Activity = () => {
       setPreviousSelectedValue(selectedValue);
     }
   }, [shouldFetchReport, selectedValue]);
+
+  useEffect(() => {
+    if (data?.availableReport) {
+      const newReportObject = data.availableReport.find(
+        (item: ReportObject) =>
+          item.reportName === selectedReportObject.reportName
+      );
+      if (
+        newReportObject &&
+        newReportObject.reportType !== selectedReportObject.reportType
+      ) {
+        setSelectedReportObject(newReportObject);
+      }
+    }
+  }, [data, selectedReportObject]);
 
   const handleDateChange = (newValue: any) => {
     setValue(newValue);
@@ -227,33 +256,43 @@ const Activity = () => {
                 </DropdownMenu>
               </Dropdown>
             </div>
-            {/* <div className='flex gap-2 items-center'>
-              <p className='text-sm  text-grey600  '>Status</p>
-              <Dropdown>
+            <div className='flex gap-2 items-center'>
+              <Dropdown isDisabled={isLoading}>
                 <DropdownTrigger>
                   <Button
                     endContent={<MdKeyboardArrowDown />}
                     disableRipple
                     className='font-[600] bg-background/30 p-0 capitalize text-black'
                   >
-                    {selectedValueDynamic}
+                    {selectedReportObject.reportName}
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label='Single selection example'
+                  aria-label='Report selection'
                   variant='flat'
                   disallowEmptySelection
                   selectionMode='single'
                   className='text-black'
-                  selectedKeys={selectedKeysDynamic}
-                  onSelectionChange={setSelectedKeysDynamic}
+                  selectedKeys={new Set([selectedReportObject.reportName])}
+                  onSelectionChange={(keys) => {
+                    const selectedReportName = Array.from(keys)[0] as string;
+                    const newReportObject = data?.availableReport.find(
+                      (item: ReportObject) =>
+                        item.reportName === selectedReportName
+                    );
+                    if (newReportObject) {
+                      setSelectedReportObject(newReportObject);
+                    }
+                  }}
                 >
-                  {status.map((item) => (
-                    <DropdownItem key={item}>{item}</DropdownItem>
+                  {data?.availableReport.map((item: ReportObject) => (
+                    <DropdownItem key={item.reportName}>
+                      {item.reportName}
+                    </DropdownItem>
                   ))}
                 </DropdownMenu>
               </Dropdown>
-            </div> */}
+            </div>
             {/* <div className='flex gap-2 items-center'>
               <p className='text-sm  text-grey600  '>Channel</p>
               <Dropdown>
@@ -429,9 +468,9 @@ const Activity = () => {
       {reportFilter?.route === 'orders' && (
         <ActivityTableOrder
           data={data}
-          reportName={reportFilter?.reportName}
+          reportName={selectedReportObject?.reportName}
           isLoading={isLoading}
-          reportType={reportFilter?.reportType}
+          reportType={selectedReportObject?.reportType}
           selectedValue={selectedValue}
           value={value}
           isLoadingExport={isLoadingExport}
@@ -440,9 +479,9 @@ const Activity = () => {
       )}
       {reportFilter?.route === 'booking' && (
         <ActivityTableBooking
-          reportName={reportFilter?.reportName}
+          reportName={selectedReportObject?.reportName}
           data={data}
-          reportType={reportFilter?.reportType}
+          reportType={selectedReportObject?.reportType}
           isLoading={isLoading}
           selectedValue={selectedValue}
           value={value}
@@ -452,9 +491,9 @@ const Activity = () => {
       )}
       {reportFilter?.route === 'payment' && (
         <ActivityTablePayment
-          reportName={reportFilter?.reportName}
+          reportName={selectedReportObject?.reportName}
           data={data}
-          reportType={reportFilter?.reportType}
+          reportType={selectedReportObject?.reportType}
           isLoading={isLoading}
           selectedValue={selectedValue}
           value={value}
@@ -464,9 +503,9 @@ const Activity = () => {
       )}
       {reportFilter?.route === 'audit-logs' && (
         <ActivityTableAudit
-          reportName={reportFilter?.reportName}
+          reportName={selectedReportObject?.reportName}
           data={data}
-          reportType={reportFilter?.reportType}
+          reportType={selectedReportObject?.reportType}
           isLoading={isLoading}
           selectedValue={selectedValue}
           value={value}

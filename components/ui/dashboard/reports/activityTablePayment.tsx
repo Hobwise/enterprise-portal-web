@@ -86,7 +86,8 @@ const ActivityTablePayment = ({
   exportFile,
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
-  const columns = () => {
+
+  const columns = useMemo(() => {
     if (reportType === 4) {
       return {
         data: data?.payments || [],
@@ -108,7 +109,7 @@ const ActivityTablePayment = ({
         visibleColumn: INITIAL_VISIBLE_COLUMNS6,
       };
     }
-  };
+  }, [reportType, data]);
 
   const {
     headerColumns,
@@ -116,11 +117,7 @@ const ActivityTablePayment = ({
     selectedKeys,
 
     classNames,
-  } = usePagination(
-    columns()?.data,
-    columns()?.column,
-    columns()?.visibleColumn
-  );
+  } = usePagination(columns?.data, columns?.column, columns?.visibleColumn);
 
   const [showMore, setShowMore] = useState(false);
   const [isOpenDownload, setIsOpenDownload] = useState(false);
@@ -151,7 +148,7 @@ const ActivityTablePayment = ({
   };
 
   const filteredItems = useMemo(() => {
-    let filteredData = [...columns()?.data];
+    let filteredData = [...columns?.data];
 
     filteredData = filteredData.filter(
       (item) =>
@@ -177,7 +174,7 @@ const ActivityTablePayment = ({
     );
 
     return filteredData;
-  }, [columns()?.data, searchQuery]);
+  }, [columns?.data, searchQuery]);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -384,7 +381,7 @@ const ActivityTablePayment = ({
           onSelectionChange={setSelectedKeys}
           onSortChange={setSortDescriptor}
         >
-          <TableHeader columns={headerColumns}>
+          <TableHeader columns={columns?.column}>
             {(column) => (
               <TableColumn
                 key={column.uid}

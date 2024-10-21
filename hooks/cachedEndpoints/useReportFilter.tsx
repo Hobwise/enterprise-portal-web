@@ -17,7 +17,13 @@ const useReportFilter = (
   reportFilter?: string,
   options?: { enabled: boolean }
 ) => {
-  const getEndpoint = (filterType: any, startDate: any, endDate: any) => {
+  const getEndpoint = (
+    filterType: any,
+    startDate: any,
+    endDate: any,
+    reportType: any
+  ) => {
+    console.log(reportType, 'repos');
     if (reportFilter === 'orders') {
       return getReportOrder(
         business[0].businessId,
@@ -59,8 +65,13 @@ const useReportFilter = (
 
   const business = getJsonItemFromLocalStorage('business');
   const fetchReport = async ({ queryKey }: any) => {
-    const [_key, { filterType, startDate, endDate }] = queryKey;
-    const responseData = await getEndpoint(filterType, startDate, endDate);
+    const [_key, { filterType, startDate, endDate, reportType }] = queryKey;
+    const responseData = await getEndpoint(
+      filterType,
+      startDate,
+      endDate,
+      reportType
+    );
     return responseData?.data?.data as any;
   };
 

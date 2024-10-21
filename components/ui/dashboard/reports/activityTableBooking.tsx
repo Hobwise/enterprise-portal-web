@@ -89,10 +89,9 @@ const columns9 = [
   { name: 'Name', uid: 'firstName' },
   { name: 'Phone Number', uid: 'phoneNumber' },
   { name: 'Email Address', uid: 'emailAddress' },
-  //   { name: 'Total Booking Fee', uid: 'totalBookingFee' },
+  { name: 'Total Booking Fee', uid: 'totalBookingFee' },
   { name: 'Total Bookings', uid: 'totalBookings' },
   { name: 'Total Minimum Spend', uid: 'totalMinimumSpendValue' },
-  { name: 'Date Updated', uid: 'dateUpdated' },
 ];
 
 const INITIAL_VISIBLE_COLUMNS10 = [
@@ -124,7 +123,8 @@ const ActivityTableBooking = ({
   exportFile,
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
-  const columns = () => {
+
+  const columns = useMemo(() => {
     if (reportType === 7) {
       return {
         data: data?.bookings || [],
@@ -154,7 +154,7 @@ const ActivityTableBooking = ({
         visibleColumn: INITIAL_VISIBLE_COLUMNS10,
       };
     }
-  };
+  }, [reportType, data]);
 
   const {
     bottomContent,
@@ -163,11 +163,7 @@ const ActivityTableBooking = ({
     selectedKeys,
 
     classNames,
-  } = usePagination(
-    columns()?.data,
-    columns()?.column,
-    columns()?.visibleColumn
-  );
+  } = usePagination(columns?.data, columns?.column, columns?.visibleColumn);
 
   const [showMore, setShowMore] = useState(false);
   const [isOpenDownload, setIsOpenDownload] = useState(false);
@@ -189,7 +185,7 @@ const ActivityTableBooking = ({
   };
 
   const filteredItems = useMemo(() => {
-    let filteredData = [...columns()?.data];
+    let filteredData = [...columns?.data];
 
     filteredData = filteredData.filter(
       (item) =>
@@ -207,7 +203,7 @@ const ActivityTableBooking = ({
     );
 
     return filteredData;
-  }, [columns()?.data, searchQuery]);
+  }, [columns?.data, searchQuery]);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -405,7 +401,7 @@ const ActivityTableBooking = ({
           onSelectionChange={setSelectedKeys}
           onSortChange={setSortDescriptor}
         >
-          <TableHeader columns={headerColumns}>
+          <TableHeader columns={columns?.column}>
             {(column) => (
               <TableColumn
                 key={column.uid}

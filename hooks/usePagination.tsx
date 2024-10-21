@@ -1,6 +1,6 @@
 'use client';
 import { Button, Pagination, PaginationItemType, cn } from '@nextui-org/react';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useGlobalContext } from './globalProvider';
 
@@ -81,13 +81,17 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
   // const pages = Math.ceil(arrayToMap?.length / rowsPerPage);
   const hasSearchFilter = Boolean(filterValue);
 
+  useEffect(() => {
+    setVisibleColumns(new Set(visibleColumn));
+  }, [visibleColumn]);
+
   const headerColumns = React.useMemo(() => {
     if (visibleColumns === 'all') return columns;
 
     return columns?.filter((column) =>
       Array.from(visibleColumns).includes(column.uid)
     );
-  }, [visibleColumns]);
+  }, [visibleColumns, columns]);
 
   const onNextPage = React.useCallback(() => {
     if (page < refinedArrayToMap) {

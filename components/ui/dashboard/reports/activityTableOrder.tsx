@@ -62,24 +62,24 @@ const INITIAL_VISIBLE_COLUMNS3 = [
 ];
 
 const columns0 = [
-  { name: 'ID', uid: 'menuID' },
   { name: 'Name', uid: 'name' },
   { name: 'Amount', uid: 'amount' },
   { name: 'Order ID', uid: 'orderID' },
-  { name: 'Phone number', uid: 'placedByPhoneNumber' },
-  { name: 'Payment', uid: 'payment' },
+  { name: 'Phone Number', uid: 'placedByPhoneNumber' },
+  { name: 'Place By', uid: 'placedByName' },
+  { name: 'Payment Method', uid: 'paymentMethod' },
   { name: 'Status', uid: 'orderStatus' },
 ];
 const columns1 = [
-  { name: 'ID', uid: 'menuID' },
   { name: 'Item Name', uid: 'itemName' },
   { name: 'Menu Name', uid: 'menuName' },
-  { name: 'Amount', uid: 'totalAmountSold' },
+  { name: 'Amount Sold', uid: 'totalAmountSold' },
   { name: 'Quantity', uid: 'totalQuantitySold' },
-  { name: 'Date Created', uid: 'dateCreated' },
+  { name: 'Current Price', uid: 'currentPrice' },
+  { name: 'Availability', uid: 'isCurrentlyAvailable' },
 ];
 const columns2 = [
-  { name: 'Name', uid: 'placedByName' },
+  { name: 'Place By', uid: 'placedByName' },
   { name: 'Phone Number', uid: 'placedByPhoneNumber' },
   { name: 'Order Count', uid: 'orderCount' },
   { name: 'Total Order Count', uid: 'totalOrderValue' },
@@ -106,7 +106,7 @@ const ActivityTableOrder = ({
   isLoadingExport,
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
-  const columns = () => {
+  const columns = useMemo(() => {
     if (reportType === 0) {
       return {
         data: data?.orders || [],
@@ -135,7 +135,7 @@ const ActivityTableOrder = ({
         visibleColumn: INITIAL_VISIBLE_COLUMNS3,
       };
     }
-  };
+  }, [reportType, data]);
 
   const {
     headerColumns,
@@ -143,11 +143,7 @@ const ActivityTableOrder = ({
     selectedKeys,
 
     classNames,
-  } = usePagination(
-    columns()?.data,
-    columns()?.column,
-    columns()?.visibleColumn
-  );
+  } = usePagination(columns?.data, columns?.column, columns?.visibleColumn);
 
   const [showMore, setShowMore] = useState(false);
   const [isOpenDownload, setIsOpenDownload] = useState(false);
@@ -179,7 +175,7 @@ const ActivityTableOrder = ({
   };
 
   const filteredItems = useMemo(() => {
-    let filteredData = [...columns()?.data];
+    let filteredData = [...columns?.data];
 
     filteredData = filteredData.filter(
       (item) =>
@@ -207,7 +203,7 @@ const ActivityTableOrder = ({
     );
 
     return filteredData;
-  }, [columns()?.data, searchQuery]);
+  }, [columns?.data, searchQuery]);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 
@@ -318,6 +314,17 @@ const ActivityTableOrder = ({
             {cellValue}
           </Chip>
         );
+      case 'isCurrentlyAvailable':
+        return (
+          <Chip
+            className='capitalize'
+            color={order.isCurrentlyAvailable ? 'success' : 'danger'}
+            size='sm'
+            variant='bordered'
+          >
+            {order.isCurrentlyAvailable ? 'Available' : 'Out of stock'}
+          </Chip>
+        );
 
       default:
         return cellValue;
@@ -424,7 +431,7 @@ const ActivityTableOrder = ({
           onSelectionChange={setSelectedKeys}
           onSortChange={setSortDescriptor}
         >
-          <TableHeader columns={headerColumns}>
+          <TableHeader columns={columns?.column}>
             {(column) => (
               <TableColumn
                 key={column.uid}
