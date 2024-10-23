@@ -329,6 +329,7 @@ const CreateOrder = () => {
         handleIncrement={handleIncrement}
         selectedMenu={selectedMenu}
         isOpenVariety={isOpenVariety}
+        totalPrice={calculateTotalPrice()}
         toggleVarietyModal={toggleVarietyModal}
         selectedItems={selectedItems}
       />
