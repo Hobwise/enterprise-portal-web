@@ -151,7 +151,7 @@ const CheckoutModal = ({
   return (
     <div className=''>
       <Modal
-        hideCloseButton={changeTitle}
+        hideCloseButton={true}
         isKeyboardDismissDisabled={true}
         classNames={{
           base: `${changeTitle ? 'h-full' : 'max-h-full'} overflow-scroll`,
@@ -323,14 +323,24 @@ const CheckoutModal = ({
                     </div>
                     <div className='gap-3 flex px-3 flex-col'>
                       {changeTitle ? (
-                        <CustomButton
-                          loading={loading}
-                          disabled={loading}
-                          onClick={updateOrder}
-                          className='py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey'
-                        >
-                          Update order
-                        </CustomButton>
+                        <div className='flex flex-col gap-3'>
+                          <CustomButton
+                            loading={loading}
+                            disabled={loading}
+                            onClick={updateOrder}
+                            className='py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey'
+                          >
+                            Update order
+                          </CustomButton>
+                          <CustomButton
+                            onClick={() => {
+                              window.location.reload();
+                            }}
+                            className='py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey'
+                          >
+                            Close
+                          </CustomButton>
+                        </div>
                       ) : (
                         <>
                           <CustomButton

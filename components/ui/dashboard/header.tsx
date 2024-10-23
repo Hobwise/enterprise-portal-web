@@ -165,7 +165,7 @@ const Header = () => {
                 <DropdownItem key='logout'>
                   <div
                     onClick={onOpenChange}
-                    className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2'
+                    className='flex cursor-pointer text-danger-500 transition-all hover:rounded-md px-2 py-2 items-center gap-2'
                   >
                     <FiLogOut className='text-[20px]' />
                     <span className='  text-sm font-md'> Log out</span>
