@@ -33,6 +33,7 @@ import { notify, submitBookingStatus } from '@/lib/utils';
 import { CiCalendar } from 'react-icons/ci';
 import { IoCheckmark } from 'react-icons/io5';
 import { LiaTimesSolid } from 'react-icons/lia';
+import DeleteModal from '../../deleteModal';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -53,6 +54,14 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
   const [filteredBooking, setFilteredBooking] = React.useState(
     bookings[0]?.bookings
   );
+  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
+  const [id, setId] = React.useState<Number>();
+
+  const toggleDeleteModal = (id?: number) => {
+    setId(id);
+    setIsOpenDelete(!isOpenDelete);
+  };
+
   const { refetch } = useBookings();
   const { page, rowsPerPage, tableStatus, setTableStatus, setPage } =
     useGlobalContext();
@@ -122,6 +131,7 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
         type: 'success',
       });
       refetch();
+      toggleDeleteModal();
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -217,7 +227,10 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                       booking?.bookingStatus === 1) && (
                       <DropdownItem
                         aria-label='cancel'
-                        onClick={() => updateBookingStatus(3, booking?.id)}
+                        onClick={() => {
+                          toggleDeleteModal(booking?.id);
+                        }}
+                        // onClick={() => updateBookingStatus(3, booking?.id)}
                       >
                         <div
                           className={` flex gap-2  items-center text-danger-500`}
@@ -321,6 +334,14 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
           )}
         </TableBody>
       </Table>
+
+      <DeleteModal
+        isOpen={isOpenDelete}
+        action='booking'
+        handleDelete={() => updateBookingStatus(3, id)}
+        setIsOpen={setIsOpenDelete}
+        toggleModal={toggleDeleteModal}
+      />
     </section>
   );
 };
