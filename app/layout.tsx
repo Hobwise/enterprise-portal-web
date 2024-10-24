@@ -8,6 +8,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { companyInfo } from '../lib/companyInfo';
 import './globals.css';
+import '@/public/fonts/satoshi/stylesheet.css';
+import '@/public/fonts/satoshi/stylesheet.css';
 
 export const metadata = {
   title: companyInfo.name,
@@ -17,7 +19,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.className}`} suppressHydrationWarning>
-      <link href="https://fonts.cdnfonts.com/css/satoshi" rel="stylesheet" />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" />
+      <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet"></link>
+
       <body>
         <QueryProvider>
           <AppProvider>
@@ -42,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               />
               <ToastContainer theme="light" />
             </Providers>
-          </AppProvider>{' '}
+          </AppProvider>
         </QueryProvider>
       </body>
     </html>

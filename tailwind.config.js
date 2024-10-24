@@ -20,10 +20,11 @@ module.exports = {
       grey400: '#98A2B3',
       grey500: '#667185',
       grey600: '#645D5D',
+      dark: '#44444A',
       pink200: '#EAE5FF',
       primaryGrey: '#F0F2F5',
       secondaryGrey: '#E4E7EC',
-      navColor: '#616B7C'
+      navColor: '#616B7C',
     },
     extend: {
       backgroundImage: {
@@ -33,7 +34,10 @@ module.exports = {
       },
       fontFamily: {
         satoshi: ['Satoshi'], // Define your custom font
-        bricolage_grotesque: ['Bricolage_Grotesque']
+        bricolage_grotesque: ['Bricolage Grotesque']
+      },
+      boxShadow: {
+        'custom-inset': '0px 7.4px 18.5px 0px rgba(255, 255, 255, 0.11) inset',
       },
     },
   },

@@ -1,8 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "/public/fonts/satoshi/stylesheet.css";
-                
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+          
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -34,11 +34,7 @@ table {
 .background {
   background-color: black;
 }
-.main {
 
-  background-color: white;
-  background-position: center;
-}
 .main-section {
   background-image: url('/public/assets/images/landing-page-bg.png');
   background-size: cover;

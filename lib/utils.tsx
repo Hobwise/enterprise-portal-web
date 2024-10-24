@@ -3,6 +3,11 @@ import { CalendarDateTime, parseAbsolute, parseZonedDateTime } from '@internatio
 import { clsx, type ClassValue } from 'clsx';
 import download from 'downloadjs';
 import { toPng } from 'html-to-image';
+import Airbnb from '@/public/assets/icons/airbnb.png';
+import Hubspot from '@/public/assets/icons/hubspot.png';
+import Google from '@/public/assets/icons/google.png';
+import Microsoft from '@/public/assets/icons/microsoft.png';
+import FedEx from '@/public/assets/icons/fedex.png';
 
 import cookie from 'js-cookie';
 import Image from 'next/image';
@@ -387,3 +392,11 @@ export const dynamicExportConfig = (response: any, fileName: string) => {
   a.click();
   window.URL.revokeObjectURL(url);
 };
+
+export const companies = [
+  { image: Airbnb, title: 'Airbnb' },
+  { image: Hubspot, title: 'Hubspot' },
+  { image: Google, title: 'Google' },
+  { image: Microsoft, title: 'Microsoft' },
+  { image: FedEx, title: 'FedEx' },
+];
