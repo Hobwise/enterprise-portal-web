@@ -1,4 +1,5 @@
 import { nextui } from '@nextui-org/react';
+import { Bricolage_Grotesque } from 'next/font/google';
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -22,12 +23,17 @@ module.exports = {
       pink200: '#EAE5FF',
       primaryGrey: '#F0F2F5',
       secondaryGrey: '#E4E7EC',
+      navColor: '#616B7C'
     },
     extend: {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic':
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+      },
+      fontFamily: {
+        satoshi: ['Satoshi'], // Define your custom font
+        bricolage_grotesque: ['Bricolage_Grotesque']
       },
     },
   },

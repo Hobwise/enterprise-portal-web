@@ -1,7 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import "/public/fonts/satoshi/stylesheet.css";
+                
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -32,6 +33,96 @@ table {
 }
 .background {
   background-color: black;
+}
+.main {
+
+  background-color: white;
+  background-position: center;
+}
+.main-section {
+  background-image: url('/public/assets/images/landing-page-bg.png');
+  background-size: cover;
+}
+
+.wrapper {
+  width: 100%;
+  max-width: 1536px;
+  margin-inline: auto;
+  height: 50px;
+  align-items: center;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+}
+
+@keyframes scrollLeft {
+  to {
+    left: -200px;
+  }
+}
+
+.itemLeft {
+  width: 200px;
+  border-radius: 6px;
+  position: absolute;
+  animation-timing-function: linear;
+  animation-duration: 30s;
+  animation-iteration-count: infinite;
+  font-size: 14px;
+  color: white;
+}
+
+.itemLeft {
+  left: max(calc(200px * 8), 100%);
+  animation-name: scrollLeft;
+}
+
+.item1 {
+  animation-delay: calc(30s / 8 * (8 - 1) * -1);
+}
+
+.item2 {
+  animation-delay: calc(30s / 8 * (8 - 2) * -1);
+}
+
+.item3 {
+  animation-delay: calc(30s / 8 * (8 - 3) * -1);
+}
+
+.item4 {
+  animation-delay: calc(30s / 8 * (8 - 4) * -1);
+}
+
+.item5 {
+  animation-delay: calc(30s / 8 * (8 - 5) * -1);
+}
+
+.item6 {
+  animation-delay: calc(30s / 8 * (8 - 6) * -1);
+}
+
+.item7 {
+  animation-delay: calc(30s / 8 * (8 - 7) * -1);
+}
+
+.item8 {
+  animation-delay: calc(30s / 8 * (8 - 8) * -1);
+}
+.nav_link {
+  display: inline-block;
+  padding-bottom:2px;
+  background-image: linear-gradient(#5F35D2 0 0);
+  background-position: 0 100%;
+  background-size: 0% 1.5px;
+  background-repeat: no-repeat;
+  transition:
+    background-size 0.5s,
+    background-position 0s 0.5s; /*change after the size immediately*/
+}
+
+.nav_link:hover {
+  background-position: 100% 100%; /*OR bottom right*/
+  background-size: 100% 1.5px;
 }
 .container {
   width: calc(100vw - 272px);
