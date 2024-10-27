@@ -1,18 +1,26 @@
+'use client';
 import LandingPageBg from '@/public/assets/images/landing-page-bg.png';
 import Image from 'next/image';
 import React from 'react';
 import LandingPageHeader from '@/components/ui/landingPage/header';
 import Navbar from '@/components/ui/landingPage/nav-bar';
-import { ArrowRight, RoundedCheckIcon, SettingsIcon } from '@/public/assets/svg';
+import { ArrowLeftIcon, ArrowRight, ArrowRightIcon, ArrowUp, CampaignIcon, FaqIcon, FlashIcon, StarIcon, TagIcon } from '@/public/assets/svg';
 import { CustomButton } from '@/components/customButton';
 import DashboardImage from '@/public/assets/images/dashboard-image.png';
-// import { companies } from '@/lib/utils';
 import Airbnb from '@/public/assets/icons/airbnb.png';
 import Hubspot from '@/public/assets/icons/hubspot.png';
 import Google from '@/public/assets/icons/google.png';
 import Microsoft from '@/public/assets/icons/microsoft.png';
 import FedEx from '@/public/assets/icons/fedex.png';
-import ContentImage from '@/public/assets/images/content-image.png';
+import AdvertOne from '@/public/assets/images/advert-1.png';
+import PricePlan from '@/public/assets/images/price-bg.png';
+import ReportsImage from '@/public/assets/images/reports-image.png';
+import { Footer } from '@/components/ui/landingPage/footer';
+import Features from '@/components/ui/landingPage/features';
+import PricingComponent from '@/components/ui/landingPage/pricing';
+import { BestToolsComponent } from '@/components/ui/landingPage/bestTools';
+import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
+import FAQs from '@/components/ui/landingPage/faq';
 
 // export const metadata = {
 //   title: companyInfo.name,
@@ -28,12 +36,7 @@ export default function LandingPage() {
     { image: FedEx, title: 'FedEx' },
   ];
   const sectionHeaderClass: string =
-    'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1.5 rounded-full text-xs mx-auto shadow-custom-inset';
-  const realTimeAnalytics: string[] = [
-    'Gain detailed insights on customer trends and preferences.',
-    'Monitor sales, orders, and stock levels in real-time for better management.',
-    'Identify opportunities to streamline processes and reduce costs.',
-  ];
+    'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1.5 rounded-full text-xs mx-auto shadow_custom-inset';
   return (
     <React.Fragment>
       <header className="z-50 backdrop-filter backdrop-blur-md fixed w-full">
@@ -41,7 +44,7 @@ export default function LandingPage() {
         <Navbar />
       </header>
 
-      <main className="gap-3 relative text-center py-32 bg-white">
+      <main className="gap-3 relative text-center pt-32 bg-white overflow-x-hidden">
         <Image src={LandingPageBg} alt="" className="absolute top-0" priority />
         <section className="w-[50%] mx-auto space-y-6 font-satoshi pt-20 main-section">
           <div className={sectionHeaderClass}>
@@ -71,47 +74,54 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="bg-[#FBFBFC] py-16 space-y-10 font-satoshi">
-          <div className={sectionHeaderClass}>
-            <SettingsIcon />
-            <p className="font-normal">Features</p>
-          </div>
-          <div className="w-[65%] mx-auto">
-            <h2 className="text-[40px] text-[#161618] leading-[64px] font-bricolage_grotesque">
-              Unlock the Power of Hospitality with an All-in-One Management Platform
-            </h2>
-            <p className="font-normal text-[#44444A] text-center w-[80%] mx-auto text-sm">
-              Transform how you manage your restaurant, hotel, or bar with Hobink&apos;s comprehensive platform that integrates everything you need in one
-              place.
-            </p>
-          </div>
+        <section className="bg-[#FBFBFC] py-16 space-y-8 font-satoshi">
+          <Features />
+        </section>
 
-          <div className="bg-white border border-[#ECEFF2] rounded-xl px-12 py-6 flex space-x-12 mx-36 items-center">
-            <div className="text-left w-1/2 space-y-6">
-              <div className="space-y-2">
-                <h4 className="text-[#101928] text-[24px] font-bricolage_grotesque border-b-[4px] rounded-lg w-fit border-b-primaryColor">
-                  Real-Time Analytics
-                </h4>
-                <p className="text-[#808B9F] text-sm">
-                  Stay in the know with real-time insights that give you a clear picture of how your business is doing. Make smart, data-driven decisions that
-                  help you run things smoothly and efficiently.
-                </p>
-              </div>
-              <div className="space-y-2.5">
-                {realTimeAnalytics.map((each) => (
-                  <div key={each} className="flex items-center space-x-2 text-sm">
-                    <RoundedCheckIcon />
-                    <p className="text-dark">{each}</p>
-                  </div>
-                ))}
-              </div>
+        <section className="bg-white py-16 font-satoshi space-y-8 px-12">
+          <BestToolsComponent />
+        </section>
+
+        <section className="bg-white py-16 font-satoshi space-y-8 px-12">
+          <div className={sectionHeaderClass}>
+            <CampaignIcon />
+            <p className="font-normal">Campaigns</p>
+          </div>
+          <div className="w-[85%] mx-auto">
+            <h2 className="text-[40px] text-[#161618] leading-[64px] font-bricolage_grotesque">Checkout amazing deals from brands registered with us</h2>
+          </div>
+          <div className="w-full relative px-8">
+            <Image src={AdvertOne} alt="advert" />
+            <div className="p-3 rounded-full w-fit shadow-custom_shadow absolute left-1 bottom-[45%] bg-white">
+              <ArrowLeftIcon />
             </div>
-            <div className="w-1/2 flex">
-              <Image src={ContentImage} alt="content" priority />
+            <div className="p-3 rounded-full w-fit shadow-custom_shadow absolute bottom-[45%] right-0 bg-white">
+              <ArrowRightIcon />
             </div>
           </div>
         </section>
+
+        <section className="bg-[#5F35D2] py-20 font-satoshi space-y-8 px-12 price-plan-section relative">
+          <Image src={PricePlan} alt="" className="absolute top-0 w-[90%]" priority />
+          <div className="bg-[#703CFF] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom-inset">
+            <TagIcon />
+            <p className="font-normal text-white">Pricing Plan</p>
+          </div>
+
+          <div className="w-[85%] mx-auto text-satoshi space-y-2">
+            <h2 className="text-[40px] text-white leading-[64px] font-bricolage_grotesque">Plans That Fit Your Business</h2>
+            <p className="text-[#ACB5BB]">From startups to enterprises, find the right solution to streamline your HR processes</p>
+          </div>
+
+          <PricingComponent />
+        </section>
+
+        <FAQs />
+
+        <JoinCommunity />
       </main>
+
+      <Footer />
     </React.Fragment>
   );
 }

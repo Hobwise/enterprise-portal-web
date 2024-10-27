@@ -39,6 +39,10 @@ table {
   background-image: url('/public/assets/images/landing-page-bg.png');
   background-size: cover;
 }
+.price-plan-section {
+  background-image: url('/public/assets/images/price-bg.png');
+  background-size: cover;
+}
 
 .wrapper {
   width: 100%;
@@ -116,7 +120,23 @@ table {
     background-position 0s 0.5s; /*change after the size immediately*/
 }
 
+.nav_link_colored {
+  display: inline-block;
+  padding-bottom:2px;
+  background-image: linear-gradient(#9A7DFA 0 0);
+  background-position: 0 100%;
+  background-size: 0% 1.5px;
+  background-repeat: no-repeat;
+  transition:
+    background-size 0.5s,
+    background-position 0s 0.5s; /*change after the size immediately*/
+}
+
 .nav_link:hover {
+  background-position: 100% 100%; /*OR bottom right*/
+  background-size: 100% 1.5px;
+}
+.nav_link_colored:hover {
   background-position: 100% 100%; /*OR bottom right*/
   background-size: 100% 1.5px;
 }
@@ -207,4 +227,50 @@ input:-webkit-autofill:focus {
   100% {
     opacity: 0;
   }
+}
+
+.content {
+  scrollbar-width: thin;
+  scrollbar-color: #7A69E8 #FBFBFC;
+}
+
+
+/* Chrome, Edge, and Safari */
+.content::-webkit-scrollbar {
+  width: thin;
+}
+
+.content::-webkit-scrollbar-track {
+  background: #FBFBFC;
+  width: thin;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background-color: #7A69E8;
+  border-radius: 6px;
+  border: 1px solid #7A69E8;
+}
+
+.content_div {
+  width: 300px;
+  height: 450px;
+  position: relative;
+  max-height: 90vh;
+  margin: 20px;
+  background: var(--white);
+  overflow: hidden;
+}
+
+.section {
+  height: 50vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  scroll-snap-align: center;
+  perspective: 500px;
+}
+
+.content {
+  scroll-snap-type: y mandatory;
 }
