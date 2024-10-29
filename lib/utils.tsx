@@ -16,6 +16,7 @@ import { twMerge } from 'tailwind-merge';
 
 import LoadingAvatar from '../public/assets/images/loadingAvatar.svg';
 import { companyInfo } from './companyInfo';
+import { useDebouncedCallback } from 'use-debounce';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));

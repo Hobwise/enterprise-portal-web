@@ -37,6 +37,7 @@ module.exports = {
         bricolage_grotesque: ['Bricolage Grotesque']
       },
       boxShadow: {
+        'custom': '0px 4px 12px 0px rgba(49, 54, 63, 0.1)',
         'custom-inset': '0px 7.4px 18.5px 0px rgba(255, 255, 255, 0.11) inset',
         'custom_shadow': '0px 12px 27px 0px rgba(16, 24, 40, 0.07)',
         'custom_double': 'inset 0px 7.4px 18.5px rgba(255, 255, 255, 0.11), 0px 0px 0px 3.7px rgba(190, 202, 234, 0.03)',

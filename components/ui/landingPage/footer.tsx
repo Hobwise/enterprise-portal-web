@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import HobinkLogo from '@/public/assets/images/hobink-logo.png';
-import { navItem } from './nav-bar';
+import { navItem } from './navBar';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { EclipseIcon, FacebookIcon, InstgramIcon, LinkedInIcon, TwitterIcon } from '@/public/assets/svg';

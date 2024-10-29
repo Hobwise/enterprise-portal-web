@@ -2,7 +2,7 @@ import { AppProvider } from '@/hooks/globalProvider';
 
 import QueryProvider from '@/hooks/queryProvider';
 import { Providers } from '@/utilities/providers';
-import { inter } from '@/utilities/ui-config/fonts';
+import { bricolage_grotesque, inter } from '@/utilities/ui-config/fonts';
 import { Toaster } from 'react-hot-toast';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -10,6 +10,10 @@ import { companyInfo } from '../lib/companyInfo';
 import './globals.css';
 import '@/public/fonts/satoshi/stylesheet.css';
 import '@/public/fonts/satoshi/stylesheet.css';
+import '@fontsource/bricolage-grotesque'; // Defaults to weight 400
+import '@fontsource/bricolage-grotesque/400.css';
+import '@fontsource/bricolage-grotesque/500.css';
+import '@fontsource/bricolage-grotesque/700.css';
 
 export const metadata = {
   title: companyInfo.name,
@@ -18,11 +22,7 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.className}`} suppressHydrationWarning>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" />
-      <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap" rel="stylesheet"></link>
-
+    <html lang="en" className={`${inter.className} ${bricolage_grotesque.className}`} suppressHydrationWarning>
       <body>
         <QueryProvider>
           <AppProvider>

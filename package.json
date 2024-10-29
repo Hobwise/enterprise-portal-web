@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fontsource/bricolage-grotesque": "^5.1.0",
     "@iconify/react": "^4.1.1",
     "@internationalized/date": "^3.5.4",
     "@nextui-org/react": "^2.4.2",
+    "@radix-ui/react-tabs": "^1.1.1",
     "@types/js-cookie": "^3.0.6",
     "axios": "^1.6.8",
     "browser-image-compression": "^2.0.2",
@@ -40,6 +42,7 @@
     "react-qr-code": "^2.0.13",
     "react-query": "^3.39.3",
     "react-toastify": "^10.0.5",
+    "use-debounce": "^10.0.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {

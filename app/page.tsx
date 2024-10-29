@@ -1,10 +1,9 @@
 'use client';
-import LandingPageBg from '@/public/assets/images/landing-page-bg.png';
 import Image from 'next/image';
 import React from 'react';
 import LandingPageHeader from '@/components/ui/landingPage/header';
-import Navbar from '@/components/ui/landingPage/nav-bar';
-import { ArrowLeftIcon, ArrowRight, ArrowRightIcon, ArrowUp, CampaignIcon, FaqIcon, FlashIcon, StarIcon, TagIcon } from '@/public/assets/svg';
+import Navbar from '@/components/ui/landingPage/navBar';
+import { ArrowLeftIcon, ArrowRight, ArrowRightIcon, CampaignIcon, TagIcon } from '@/public/assets/svg';
 import { CustomButton } from '@/components/customButton';
 import DashboardImage from '@/public/assets/images/dashboard-image.png';
 import Airbnb from '@/public/assets/icons/airbnb.png';
@@ -14,7 +13,6 @@ import Microsoft from '@/public/assets/icons/microsoft.png';
 import FedEx from '@/public/assets/icons/fedex.png';
 import AdvertOne from '@/public/assets/images/advert-1.png';
 import PricePlan from '@/public/assets/images/price-bg.png';
-import ReportsImage from '@/public/assets/images/reports-image.png';
 import { Footer } from '@/components/ui/landingPage/footer';
 import Features from '@/components/ui/landingPage/features';
 import PricingComponent from '@/components/ui/landingPage/pricing';
@@ -44,9 +42,8 @@ export default function LandingPage() {
         <Navbar />
       </header>
 
-      <main className="gap-3 relative text-center pt-32 bg-white overflow-x-hidden">
-        <Image src={LandingPageBg} alt="" className="absolute top-0" priority />
-        <section className="w-[50%] mx-auto space-y-6 font-satoshi pt-20 main-section">
+      <main className="gap-3 relative text-center pt-32 bg-white overflow-x-hidden font-satoshi">
+        <section className="w-[50%] mx-auto space-y-6 font-satoshi pt-20 home-main-section">
           <div className={sectionHeaderClass}>
             <p className="font-normal">New: Contactless Service with QR Codes</p>
             <ArrowRight />

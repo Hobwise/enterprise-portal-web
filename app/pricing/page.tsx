@@ -1,4 +1,4 @@
-import Navbar from '@/components/ui/landingPage/nav-bar';
+import Navbar from '@/components/ui/landingPage/navBar';
 import Image from 'next/image';
 import React from 'react';
 import PricePlan from '@/public/assets/images/price-bg.png';

@@ -36,8 +36,17 @@ table {
 }
 
 .main-section {
-  background-image: url('/public/assets/images/landing-page-bg.png');
-  background-size: cover;
+  background-image: url('/assets/images/landing-page-bg.png');
+  background-position: center;
+  background-size: cover;      /* Scales the image to cover the div */
+  height: 500px;
+  width: 100%;
+}
+.home-main-section {
+  background-image: url('/assets/images/landing-page-bg.png');
+  background-position: center;
+  background-size: cover;      /* Scales the image to cover the div */
+  /* height: 500px; */
 }
 .price-plan-section {
   background-image: url('/public/assets/images/price-bg.png');
@@ -273,4 +282,11 @@ input:-webkit-autofill:focus {
 
 .content {
   scroll-snap-type: y mandatory;
+}
+.multiline-truncate {
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Number of lines you want to show */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
