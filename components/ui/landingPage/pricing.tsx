@@ -2,6 +2,7 @@
 import { CustomButton } from '@/components/customButton';
 import { cn, pricingPlan } from '@/lib/utils';
 import { RoundedCheckIcon, TickIcon } from '@/public/assets/svg';
+import { Transition } from './transition';
 
 export function SwitchPlan({ className }: { className?: string }) {
   return (
@@ -19,30 +20,36 @@ export default function PricingComponent() {
 
       <div className="grid grid-cols-3 gap-6">
         <div className="border border-[#FFFFFF61] bg-[#FFFFFF1A] p-8 rounded-[10px] space-y-8">
-          <div className="space-y-2.5">
-            <h4 className="text-left text-white text-[20px]">Basic Plan</h4>
-            <div className="flex items-baseline space-x-2">
-              <p className="text-[42px] text-white font-medium font-sans">$10</p>
-              <p className="text-white/65">/month</p>
+          <Transition>
+            <div className="space-y-2.5">
+              <h4 className="text-left text-white text-[20px]">Basic Plan</h4>
+              <div className="flex items-baseline space-x-2">
+                <p className="text-[42px] text-white font-medium font-sans">$10</p>
+                <p className="text-white/65">/month</p>
+              </div>
+              <p className="text-white text-left">
+                Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
+              </p>
             </div>
-            <p className="text-white text-left">
-              Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-[35%] border-[#FFFFFF61] border" />
-            <p className="uppercase w-[45%] font-medium text-[10px] text-white">WHAT YOU WILL GET</p>
-            <div className="w-[35%] border-[#FFFFFF61] border" />
-          </div>
+          </Transition>
+          <Transition>
+            <div className="flex items-center space-x-2">
+              <div className="w-[35%] border-[#FFFFFF61] border" />
+              <p className="uppercase w-[45%] font-medium text-[10px] text-white">WHAT YOU WILL GET</p>
+              <div className="w-[35%] border-[#FFFFFF61] border" />
+            </div>
+          </Transition>
 
           <div className="space-y-4">
             {pricingPlan.map((each) => (
-              <div className="flex items-start space-x-2">
-                <TickIcon className="w-[10%]" />
-                <p key={each + 'basic'} className="text-left text-white text-sm w-[90%]">
-                  {each}
-                </p>
-              </div>
+              <Transition>
+                <div className="flex items-start space-x-2">
+                  <TickIcon className="w-[10%]" />
+                  <p key={each + 'basic'} className="text-left text-white text-sm w-[90%]">
+                    {each}
+                  </p>
+                </div>
+              </Transition>
             ))}
           </div>
           <div className="mt-24">
@@ -153,20 +160,30 @@ export function PricingExtended() {
 
       <div className="bg-white">
         {pricingLists.map((list, index) => (
-          <div className="grid grid-cols-4 py-10 px-4 gap-24 border-b border-b-[#E5E5E5]" key={list.type + index}>
-            <p className="text-sm">{list.type}</p>
-            <div>{list.basic ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}</div>
-            <div>{list.professional ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}</div>
-            <div>{list.enterprise ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}</div>
-          </div>
+          <Transition>
+            <div className="grid grid-cols-4 py-10 px-4 gap-24 border-b border-b-[#E5E5E5]" key={list.type + index}>
+              <p className="text-sm">{list.type}</p>
+              <div>{list.basic ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}</div>
+              <div>{list.professional ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}</div>
+              <div>{list.enterprise ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}</div>
+            </div>
+          </Transition>
         ))}
       </div>
 
       <div className="grid grid-cols-4 bg-[#3A159F] py-10 px-4 gap-24 rounded-br-xl rounded-bl-xl">
-        <p className="font-bricolage_grotesque text-white text-[20px]">Get Started now</p>
-        <CustomButton className={btnClassName}>Get Started</CustomButton>
-        <CustomButton className={btnClassName}>Get Started</CustomButton>
-        <CustomButton className={btnClassName}>Get Started</CustomButton>
+        <Transition>
+          <p className="font-bricolage_grotesque text-white text-[20px]">Get Started now</p>
+        </Transition>
+        <Transition>
+          <CustomButton className={btnClassName}>Get Started</CustomButton>
+        </Transition>
+        <Transition>
+          <CustomButton className={btnClassName}>Get Started</CustomButton>
+        </Transition>
+        <Transition>
+          <CustomButton className={btnClassName}>Get Started</CustomButton>
+        </Transition>
       </div>
     </div>
   );

@@ -6,6 +6,9 @@ import ContentImage4 from '@/public/assets/images/content-image-4.png';
 import React, { useRef } from 'react';
 import Image from 'next/image';
 import { motion, useScroll, useSpring, useTransform, MotionValue } from 'framer-motion';
+import { Transition } from './transition';
+import { IntersectionObserver } from '../intersectionObserver';
+import { StaggerWrap } from './staggerWrap';
 
 function useParallax(value: MotionValue<number>, distance: number) {
   return useTransform(value, [0, 1], [-distance, distance]);
@@ -86,38 +89,43 @@ export default function Features() {
         <SettingsIcon className="text-[#5F35D2]" />
         <p className="font-normal">Features</p>
       </div>
-      <div className="w-[65%] mx-auto">
-        <h2 className="text-[40px] text-[#161618] leading-[64px] font-bricolage_grotesque">
-          Unlock the Power of Hospitality with an All-in-One Management Platform
-        </h2>
-        <p className="font-normal text-[#44444A] text-center w-[80%] mx-auto text-sm">
-          Transform how you manage your restaurant, hotel, or bar with Hobink&apos;s comprehensive platform that integrates everything you need in one place.
-        </p>
-      </div>
 
-      <div className="h-[400px] overflow-y-scroll bg-white border border-[#ECEFF2] rounded-xl px-12 mx-36 space-y-4 content">
-        {contents.map((content) => (
-          <div className="flex space-x-12 items-center justify-between" key={content.title}>
-            <div className="text-left w-[55%] space-y-8">
-              <div className="space-y-4">
-                <h4 className="text-[#101928] text-[24px] font-bricolage_grotesque border-b-[4px] rounded-lg w-fit border-b-primaryColor">{content.title}</h4>
-                <p className="text-[#808B9F] text-sm">{content.description}</p>
+      <Transition>
+        <div className="w-[65%] mx-auto">
+          <h2 className="text-[40px] text-[#161618] leading-[64px] font-bricolage_grotesque">
+            Unlock the Power of Hospitality with an All-in-One Management Platform
+          </h2>
+          <p className="font-normal text-[#44444A] text-center w-[80%] mx-auto text-sm">
+            Transform how you manage your restaurant, hotel, or bar with Hobink&apos;s comprehensive platform that integrates everything you need in one place.
+          </p>
+        </div>
+      </Transition>
+
+      <Transition>
+        <div className="h-[400px] overflow-y-scroll bg-white border border-[#ECEFF2] rounded-xl px-12 mx-36 space-y-4 content">
+          {contents.map((content) => (
+            <div className="flex space-x-12 items-center justify-between" key={content.title}>
+              <div className="text-left w-[55%] space-y-8">
+                <div className="space-y-4">
+                  <h4 className="text-[#101928] text-[24px] font-bricolage_grotesque border-b-[4px] rounded-lg w-fit border-b-primaryColor">{content.title}</h4>
+                  <p className="text-[#808B9F] text-sm">{content.description}</p>
+                </div>
+                <div className="space-y-4">
+                  {content.lists.map((each) => (
+                    <div key={each} className="flex items-start space-x-2 text-sm">
+                      <RoundedCheckIcon />
+                      <p className="text-dark">{each}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <div className="space-y-4">
-                {content.lists.map((each) => (
-                  <div key={each} className="flex items-start space-x-2 text-sm">
-                    <RoundedCheckIcon />
-                    <p className="text-dark">{each}</p>
-                  </div>
-                ))}
+              <div className="w-[35%] flex">
+                <ImageDisplay content={content} />
               </div>
             </div>
-            <div className="w-[35%] flex">
-              <ImageDisplay content={content} />
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Transition>
     </React.Fragment>
   );
 }

@@ -264,7 +264,7 @@ export const ArrowDown: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <path
       d="M16.5984 12.5415L11.1651 7.1082C10.5234 6.46654 9.47344 6.46654 8.83177 7.1082L3.39844 12.5415"
-      stroke="#5F35D2"
+      stroke="currentColor"
       strokeWidth="1.5"
       strokeMiterlimit="10"
       strokeLinecap="round"
@@ -446,8 +446,8 @@ export const LocationIcon = () => (
   </svg>
 );
 
-export const CompanyLogo_2 = () => (
-  <svg width="57" height="56" viewBox="0 0 57 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+export const CompanyLogo_2: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg width="57" height="56" viewBox="0 0 57 56" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <g filter="url(#filter0_d_4072_46989)">
       <rect x="4.66406" y="2" width="48" height="48" rx="24" fill="#5BBE85" />
       <path
@@ -470,8 +470,8 @@ export const CompanyLogo_2 = () => (
   </svg>
 );
 
-export const CompanyLogo_3 = () => (
-  <svg width="57" height="56" viewBox="0 0 57 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+export const CompanyLogo_3: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg width="57" height="56" viewBox="0 0 57 56" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
     <g filter="url(#filter0_d_4072_47007)">
       <rect x="4.33594" y="2" width="48" height="48" rx="24" fill="#FF4F00" />
       <path
@@ -540,6 +540,23 @@ export const InfoCircle: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
       strokeWidth="0.8"
       strokeLinecap="round"
       strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const ListItemIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg width="16" height="17" viewBox="0 0 16 17" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path
+      d="M2.67188 4.25065C2.67188 3.88246 2.97035 3.58398 3.33854 3.58398H12.6719C13.0401 3.58398 13.3385 3.88246 13.3385 4.25065C13.3385 4.61884 13.0401 4.91732 12.6719 4.91732H3.33854C2.97035 4.91732 2.67188 4.61884 2.67188 4.25065Z"
+      fill="#344054"
+    />
+    <path
+      d="M4.00521 8.25065C4.00521 7.88246 4.30369 7.58398 4.67188 7.58398H11.3385C11.7067 7.58398 12.0052 7.88246 12.0052 8.25065C12.0052 8.61884 11.7067 8.91732 11.3385 8.91732H4.67188C4.30369 8.91732 4.00521 8.61884 4.00521 8.25065Z"
+      fill="#344054"
+    />
+    <path
+      d="M6.00521 11.584C5.63702 11.584 5.33854 11.8825 5.33854 12.2507C5.33854 12.6188 5.63702 12.9173 6.00521 12.9173H10.0052C10.3734 12.9173 10.6719 12.6188 10.6719 12.2507C10.6719 11.8825 10.3734 11.584 10.0052 11.584H6.00521Z"
+      fill="#344054"
     />
   </svg>
 );

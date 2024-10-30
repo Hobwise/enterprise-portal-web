@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Bottle from '@/public/assets/images/bottle.png';
 import { menus } from './data';
 import { Footer } from '@/components/ui/landingPage/footer';
+import { Transition } from '@/components/ui/landingPage/transition';
 
 export default function EachBusiness() {
   const tabs: string[] = ['Menu', 'Reservations'];
@@ -35,8 +36,6 @@ export default function EachBusiness() {
     }
     replace(`${pathname}?${params.toString()}`);
   }, 200);
-
-  console.log(pathname);
 
   return (
     <div className="space-y-12">
@@ -120,16 +119,22 @@ export default function EachBusiness() {
 
                 <div className="grid grid-cols-5 gap-8">
                   {menus.map((each, index) => (
-                    <div className="bg-white rounded-xl shadow-custom" key={each.name + index + 'bottle'} onClick={() => push(`${pathname}/book-reservation`)}>
-                      <div className="bg-[#E8E8E8] rounded-xl">
-                        <Image src={Bottle} alt="bottle" />
+                    <Transition>
+                      <div
+                        className="bg-white rounded-xl shadow-custom"
+                        key={each.name + index + 'bottle'}
+                        onClick={() => push(`${pathname}/book-reservation`)}
+                      >
+                        <div className="bg-[#E8E8E8] rounded-xl">
+                          <Image src={Bottle} alt="bottle" />
+                        </div>
+                        <div className="p-4 space-y-2">
+                          <div className="bg-[#C1C1C126] border border-[#CBCBCB4D] rounded-full w-fit px-2 py-1 text-[#4C4C4C] text-xs">{each.type}</div>
+                          <p className="text-[#161618]">{each.name}</p>
+                          <p className="text-[#161618] font-bold">${each.price}</p>
+                        </div>
                       </div>
-                      <div className="p-4 space-y-2">
-                        <div className="bg-[#C1C1C126] border border-[#CBCBCB4D] rounded-full w-fit px-2 py-1 text-[#4C4C4C] text-xs">{each.type}</div>
-                        <p className="text-[#161618]">{each.name}</p>
-                        <p className="text-[#161618] font-bold">${each.price}</p>
-                      </div>
-                    </div>
+                    </Transition>
                   ))}
                 </div>
               </div>

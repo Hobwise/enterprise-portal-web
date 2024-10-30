@@ -1,6 +1,7 @@
 'use client';
 import { cn } from '@/lib/utils';
 import { ArrowUp, FaqIcon } from '@/public/assets/svg';
+import { Transition } from './transition';
 
 export default function FAQs({ className }: { className?: string }) {
   const faq: { title: string; description: string }[] = [
@@ -43,18 +44,20 @@ export default function FAQs({ className }: { className?: string }) {
 
       <div className="space-y-6">
         {faq.map((each) => (
-          <div
-            className="bg-[#F6F5FE] px-8 py-6 rounded-2xl border border-[#5F35D24D] flex items-center justify-between font-bricolage_grotesque"
-            key={each.title}
-          >
-            <div className="space-y-2 text-left w-[80%]">
-              <p className="text-[#252525] font-medium text-[20px]">{each.title}</p>
-              <p className="text-[#677182] font-satoshi">{each.description}</p>
+          <Transition>
+            <div
+              className="bg-[#F6F5FE] px-8 py-6 rounded-2xl border border-[#5F35D24D] flex items-center justify-between font-bricolage_grotesque"
+              key={each.title}
+            >
+              <div className="space-y-2 text-left w-[80%]">
+                <p className="text-[#252525] font-medium text-[20px]">{each.title}</p>
+                <p className="text-[#677182] font-satoshi">{each.description}</p>
+              </div>
+              <div className="border border-[#5F35D2] bg-[#EAE8FD] rounded-full h-12 w-12 flex items-center justify-center" role="button">
+                <ArrowUp />
+              </div>
             </div>
-            <div className="border border-[#5F35D2] bg-[#EAE8FD] rounded-full h-12 w-12 flex items-center justify-center" role="button">
-              <ArrowUp />
-            </div>
-          </div>
+          </Transition>
         ))}
       </div>
     </section>

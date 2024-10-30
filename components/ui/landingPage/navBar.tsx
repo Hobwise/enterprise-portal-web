@@ -3,7 +3,7 @@ import Image from 'next/image';
 import HobinkLogo from '@/public/assets/images/hobink-logo.png';
 import HobinkLogoWhite from '@/public/assets/images/hobink-logo-white.png';
 import Link from 'next/link';
-import { BUSINESS_URL, CONTACT_URL, HOME_URL, PRICING_URL, RESERVATIONS_URL } from '@/utilities/routes';
+import { BUSINESS_URL, CONTACT_URL, HOME_URL, LOGIN_URL, PRICING_URL, RESERVATIONS_URL, SIGN_UP_URL } from '@/utilities/routes';
 import { CustomButton } from '@/components/customButton';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -34,7 +34,7 @@ export default function Navbar({ type = 'non-colored' }: INavbar) {
       <nav className={cn('flex py-4 space-x-6 text-sm', type === 'colored' ? 'text-[#C0AFF7]' : 'text-navColor')}>
         {navItem.map((each) => {
           const linkStyle = `px-4 ${
-            pathname.slice(1).startsWith(each.href)
+            pathname.slice(1).startsWith(each.href) || (each.href === '/' && pathname === each.href)
               ? `border-b-1 font-semibold pb-1.5 ${type === 'colored' ? 'border-b-[#9A7DFA] text-white' : 'border-b-primaryColor text-primaryColor'}`
               : type === 'colored'
               ? 'nav_link_colored'
@@ -42,15 +42,19 @@ export default function Navbar({ type = 'non-colored' }: INavbar) {
           }`;
 
           return (
-            <Link href={each.href} key={each.title} className={cn('px-4 cursor-pointer', linkStyle)}>
+            <Link href={`/${each.href}`} key={each.title} className={cn('px-4 cursor-pointer', linkStyle)}>
               {each.title}
             </Link>
           );
         })}
       </nav>
       <div className="flex space-x-4">
-        <CustomButton className="bg-white border border-primaryColor text-primaryColor h-[38px] px-8">Login</CustomButton>
-        <CustomButton className={btnClassName}>Get Started</CustomButton>
+        <Link href={LOGIN_URL}>
+          <CustomButton className="bg-white border border-primaryColor text-primaryColor h-[38px] px-8">Login</CustomButton>
+        </Link>
+        <Link href={SIGN_UP_URL}>
+          <CustomButton className={btnClassName}>Get Started</CustomButton>
+        </Link>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { ChartIcon, CpuCharge, DocumentIcon, ManagementIcon, NotificationIcon, SecurityIcon } from '@/public/assets/svg';
+import { Transition } from './transition';
 
 export default function BestTools() {
   const tools = [
@@ -68,25 +69,27 @@ export default function BestTools() {
   return (
     <div className="grid grid-cols-3 gap-4 pt-10">
       {tools.map((each) => (
-        <div
-          key={each.title}
-          className="text-left p-6 space-y-12 relative"
-          style={{ background: each.color, backdropFilter: 'blur(18px)', borderRadius: each.radius }}
-        >
+        <Transition>
           <div
-            className="rounded-bl-full rounded-br-full rounded-tr-lg  rounded-tl-lg h-32 w-24 absolute right-0 top-0"
-            style={{ background: each.shapeColor }}
-          />
-          <div className="">{each.icon}</div>
-          <div className="space-y-2">
-            <p className="font-bold text-[20px]" style={{ color: each.textColor }}>
-              {each.title}
-            </p>
-            <p className="text-[18px]" style={{ color: each.textColor2 }}>
-              {each.description}
-            </p>
+            key={each.title}
+            className="text-left p-6 space-y-12 relative"
+            style={{ background: each.color, backdropFilter: 'blur(18px)', borderRadius: each.radius }}
+          >
+            <div
+              className="rounded-bl-full rounded-br-full rounded-tr-lg  rounded-tl-lg h-32 w-24 absolute right-0 top-0"
+              style={{ background: each.shapeColor }}
+            />
+            <div className="">{each.icon}</div>
+            <div className="space-y-2">
+              <p className="font-bold text-[20px]" style={{ color: each.textColor }}>
+                {each.title}
+              </p>
+              <p className="text-[18px]" style={{ color: each.textColor2 }}>
+                {each.description}
+              </p>
+            </div>
           </div>
-        </div>
+        </Transition>
       ))}
     </div>
   );

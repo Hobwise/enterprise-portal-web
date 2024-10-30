@@ -1,7 +1,4 @@
 'use client';
-import LandingPageBg from '@/public/assets/images/landing-page-bg-2.png';
-import Navbar from '@/components/ui/landingPage/navBar';
-import Image from 'next/image';
 import { ArrowRight } from '@/public/assets/svg';
 import { CustomButton } from '@/components/customButton';
 import { CustomInput } from '@/components/CustomInput';

@@ -11,6 +11,7 @@ import { CustomButton } from '@/components/customButton';
 import FAQs from '@/components/ui/landingPage/faq';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
 import { Footer } from '@/components/ui/landingPage/footer';
+import { Transition } from '@/components/ui/landingPage/transition';
 
 export default function Contact() {
   const sectionHeaderClass: string =
@@ -40,74 +41,45 @@ export default function Contact() {
               <Image src={DashboardImage} alt="Dashboard image" className="mx-auto w-[85%] z-50 mt-10 mr-12" />
             </div>
 
-            <div className="grid grid-cols-2 gap-12 bg-[#DDD1FF] px-8 py-10 rounded-b-xl">
-              <form onSubmit={submitFormData} autoComplete="off" className="space-y-8">
-                <CustomInput
-                  type="text"
-                  name="name"
-                  // errorMessage={response?.errors?.email?.[0]}
-                  // onChange={handleInputChange}
-                  // value={loginFormData.email}
-                  label="What’s your name?"
-                  placeholder="yourname"
-                  classnames="font-light"
-                  // isRequired={true}
-                  // endContent={<FaRegEnvelope className='text-foreground-500 text-l' />}
-                />
+            <Transition>
+              <div className="grid grid-cols-2 gap-12 bg-[#DDD1FF] px-8 py-10 rounded-b-xl">
+                <form onSubmit={submitFormData} autoComplete="off" className="space-y-8">
+                  <CustomInput type="text" name="name" label="What’s your name?" placeholder="yourname" classnames="font-light" />
 
-                <CustomInput
-                  type="email"
-                  name="email"
-                  // errorMessage={response?.errors?.email?.[0]}
-                  // onChange={handleInputChange}
-                  // value={loginFormData.email}
-                  label="Email Address"
-                  placeholder="yourname@gmail.com"
-                  classnames="font-light mt-4"
-                  // isRequired={true}
-                  // endContent={<FaRegEnvelope className='text-foreground-500 text-l' />}
-                />
+                  <CustomInput type="email" name="email" label="Email Address" placeholder="yourname@gmail.com" classnames="font-light mt-4" />
 
-                <CustomTextArea
-                  name="question"
-                  // errorMessage={response?.errors?.email?.[0]}
-                  // onChange={handleInputChange}
-                  // value={loginFormData.email}
-                  label="What’s your question?"
-                  placeholder="Describe your questions here.."
-                  classnames="font-light -pt-6"
-                  // isRequired={true}
-                  // endContent={<FaRegEnvelope className='text-foreground-500 text-l' />}
-                />
-                <div>
-                  <CustomButton className="h-10 w-full text-white -mt-6">Submit</CustomButton>
-                </div>
-              </form>
-              <div className="font-satoshi space-y-8 w-[55%]">
-                <Image src={HobinkLogo} alt="hobink logo" width={50} height={50} />
-                <div className="space-y-6">
-                  <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer email?</h4>
-                  <a href="mailto: hello@hobink.com" target="_blank" className="text-primaryColor underline font-medium">
-                    hello@hobink.com
-                  </a>
-                </div>
-                <div className="space-y-6">
-                  <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer docs?</h4>
-                  <p className="text-[#252525]">
-                    Check out our{' '}
-                    <span>
-                      <a href="#" target="_blank" className="text-primaryColor underline">
-                        documentation
-                      </a>
-                    </span>
-                  </p>
-                </div>
-                <div className="space-y-6">
-                  <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Office Headquarters</h4>
-                  <p className="text-[#252525]">San Francisco, West Coast Headquarter Suite 3241</p>
+                  <CustomTextArea name="question" label="What’s your question?" placeholder="Describe your questions here.." classnames="font-light -pt-6" />
+                  <div>
+                    <CustomButton className="h-10 w-full text-white -mt-6">Submit</CustomButton>
+                  </div>
+                </form>
+
+                <div className="font-satoshi space-y-8 w-[55%]">
+                  <Image src={HobinkLogo} alt="hobink logo" width={50} height={50} />
+                  <div className="space-y-6">
+                    <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer email?</h4>
+                    <a href="mailto: hello@hobink.com" target="_blank" className="text-primaryColor underline font-medium">
+                      hello@hobink.com
+                    </a>
+                  </div>
+                  <div className="space-y-6">
+                    <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer docs?</h4>
+                    <p className="text-[#252525]">
+                      Check out our{' '}
+                      <span>
+                        <a href="#" target="_blank" className="text-primaryColor underline">
+                          documentation
+                        </a>
+                      </span>
+                    </p>
+                  </div>
+                  <div className="space-y-6">
+                    <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Office Headquarters</h4>
+                    <p className="text-[#252525]">San Francisco, West Coast Headquarter Suite 3241</p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </Transition>
           </div>
         </section>
 
