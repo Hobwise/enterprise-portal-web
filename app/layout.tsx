@@ -2,25 +2,27 @@ import { AppProvider } from '@/hooks/globalProvider';
 
 import QueryProvider from '@/hooks/queryProvider';
 import { Providers } from '@/utilities/providers';
-import { inter } from '@/utilities/ui-config/fonts';
+import { bricolage_grotesque, inter } from '@/utilities/ui-config/fonts';
 import { Toaster } from 'react-hot-toast';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { companyInfo } from '../lib/companyInfo';
 import './globals.css';
+import '@/public/fonts/satoshi/stylesheet.css';
+import '@/public/fonts/satoshi/stylesheet.css';
+import '@fontsource/bricolage-grotesque'; // Defaults to weight 400
+import '@fontsource/bricolage-grotesque/400.css';
+import '@fontsource/bricolage-grotesque/500.css';
+import '@fontsource/bricolage-grotesque/700.css';
 
 export const metadata = {
   title: companyInfo.name,
   description: 'Streamline your business processes',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang='en' className={`${inter.className}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.className} ${bricolage_grotesque.className}`} suppressHydrationWarning>
       <body>
         <QueryProvider>
           <AppProvider>
@@ -43,9 +45,9 @@ export default function RootLayout({
                   },
                 }}
               />
-              <ToastContainer theme='light' />
+              <ToastContainer theme="light" />
             </Providers>
-          </AppProvider>{' '}
+          </AppProvider>
         </QueryProvider>
       </body>
     </html>
