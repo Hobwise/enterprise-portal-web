@@ -4,7 +4,11 @@ import { loginUser } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
-import { saveJsonItemToLocalStorage, setTokenCookie } from '@/lib/utils';
+import {
+  notify,
+  saveJsonItemToLocalStorage,
+  setTokenCookie,
+} from '@/lib/utils';
 import { Spacer } from '@nextui-org/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

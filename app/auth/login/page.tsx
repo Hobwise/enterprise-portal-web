@@ -22,7 +22,7 @@ export default function Login() {
           alt='background'
         />
 
-        <div className='absolute bottom-16 left-8 text-white max-w-md'>
+        <div className='absolute bottom-10 left-10 text-white max-w-md'>
           <h1 className='text-5xl font-display mb-4'>
             Streamline your business processes
           </h1>
