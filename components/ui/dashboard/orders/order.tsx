@@ -45,7 +45,6 @@ const INITIAL_VISIBLE_COLUMNS = [
   'name',
   'amount',
   'orderID',
-  'placedByPhoneNumber',
   'status',
   'dateCreated',
   'actions',
@@ -153,17 +152,22 @@ const OrdersList = ({ orders, searchQuery }: any) => {
     switch (columnKey) {
       case 'name':
         return (
-          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
-            <span>{order.placedByName}</span>
-            {order.comment && (
-              <div
-                title={'view comment'}
-                onClick={() => toggleCommentModal(order)}
-                className=' cursor-pointer'
-              >
-                <FaCommentDots className='text-primaryColor' />
-              </div>
-            )}
+          <div>
+            <div className='flex text-black font-medium items-center gap-2 text-sm cursor-pointer'>
+              <span>{order.placedByName}</span>
+              {order.comment && (
+                <div
+                  title={'view comment'}
+                  onClick={() => toggleCommentModal(order)}
+                  className=' cursor-pointer'
+                >
+                  <FaCommentDots className='text-primaryColor' />
+                </div>
+              )}
+            </div>
+            <div className='text-textGrey text-[13px]'>
+              {order.placedByPhoneNumber}
+            </div>
           </div>
         );
       case 'amount':
@@ -174,12 +178,7 @@ const OrdersList = ({ orders, searchQuery }: any) => {
         );
       case 'orderID':
         return <div className='text-textGrey text-sm'>{order.reference}</div>;
-      case 'placedByPhoneNumber':
-        return (
-          <div className='text-textGrey text-sm'>
-            {order.placedByPhoneNumber}
-          </div>
-        );
+
       case 'status':
         return (
           <Chip

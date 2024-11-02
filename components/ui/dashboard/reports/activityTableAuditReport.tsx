@@ -92,7 +92,7 @@ const ActivityTableAudit = ({
     switch (columnKey) {
       case 'firstName':
         return (
-          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
+          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
             <span>
               {audit.firstName} {audit.lastName}
             </span>

@@ -119,7 +119,7 @@ const PaymentsList = ({ payments, searchQuery }: any) => {
     switch (columnKey) {
       case 'totalAmount':
         return (
-          <div className='text-textGrey text-sm'>
+          <div className='font-medium text-black text-sm'>
             <p>{formatPrice(payment.totalAmount)}</p>
           </div>
         );

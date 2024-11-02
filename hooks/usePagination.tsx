@@ -181,7 +181,7 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
         // changing the rows border radius
         // first
         'py-3',
-
+        'text-textGrey',
         'group-data-[first=true]:first:before:rounded-none',
         'group-data-[first=true]:last:before:rounded-none',
         // middle

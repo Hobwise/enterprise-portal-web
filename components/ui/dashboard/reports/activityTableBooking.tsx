@@ -240,7 +240,7 @@ const ActivityTableBooking = ({
     switch (columnKey) {
       case 'firstName':
         return (
-          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
+          <div className='flex text-black font-medium items-center gap-2 text-sm cursor-pointer'>
             <span>
               {booking.firstName} {booking.lastName}
             </span>

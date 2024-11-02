@@ -211,21 +211,27 @@ const ActivityTablePayment = ({
     switch (columnKey) {
       case 'name':
         return (
-          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
+          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
             <span>{payment.placedByName}</span>
           </div>
         );
-      // case 'paymentMethod':
-      //   return (
-      //     <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
-      //       <span> {paymentMethodMap[payment.paymentMethod]}</span>
-      //     </div>
-      //   );
+      case 'quickResponseName':
+        return (
+          <div className='flex text-black font-medium items-center gap-2 text-sm'>
+            <span> {payment.quickResponseName}</span>
+          </div>
+        );
 
       case 'amount':
         return (
           <div className='text-textGrey text-sm'>
             <p>{payment.totalAmount}</p>
+          </div>
+        );
+      case 'customer':
+        return (
+          <div className='font-medium text-black text-sm'>
+            <p>{payment.customer}</p>
           </div>
         );
       case 'dateCreated':

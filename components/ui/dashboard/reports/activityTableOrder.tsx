@@ -240,7 +240,7 @@ const ActivityTableOrder = ({
     switch (columnKey) {
       case 'name':
         return (
-          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
+          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
             <span>{order.placedByName}</span>
             {/* {order.comment && (
                   <div
@@ -253,9 +253,15 @@ const ActivityTableOrder = ({
                 )} */}
           </div>
         );
+      case 'placedByName':
+        return (
+          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
+            <span>{order.placedByName}</span>
+          </div>
+        );
       case 'firstName':
         return (
-          <div className='flex text-textGrey items-center gap-2 text-sm cursor-pointer'>
+          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
             <span>
               {order.firstName} {order.lastName}
             </span>
@@ -274,6 +280,12 @@ const ActivityTableOrder = ({
         return (
           <div className='text-textGrey text-sm'>
             <p>{order.totalAmount}</p>
+          </div>
+        );
+      case 'itemName':
+        return (
+          <div className='font-medium text-black text-sm'>
+            <p>{order.itemName}</p>
           </div>
         );
       case 'dateCreated':

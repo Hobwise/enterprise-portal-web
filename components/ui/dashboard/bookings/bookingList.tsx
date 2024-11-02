@@ -147,11 +147,11 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
     switch (columnKey) {
       case 'firstName':
         return (
-          <div className=' text-textGrey text-sm'>
-            <p className='font-bold'>
+          <div className='text-sm'>
+            <p className='font-medium text-black'>
               {booking?.firstName} {booking?.lastName}
             </p>
-            <p>{booking?.phoneNumber}</p>
+            <p className='text-[13px] text-textGrey'>{booking?.phoneNumber}</p>
           </div>
         );
 

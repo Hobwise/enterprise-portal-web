@@ -57,7 +57,7 @@ const Filters = ({
         <div className='flex gap-3'>
           <span
             onClick={onOpenViewMenu}
-            className='bg-white text-primaryColor justify-center items-center text-sm cursor-pointer flex gap-1'
+            className='bg-white text-primaryColor font-semibold justify-center items-center text-sm cursor-pointer flex gap-1'
           >
             <LuEye />
             <span>View menus</span>
@@ -65,7 +65,7 @@ const Filters = ({
           {(role === 0 || userRolePermissions?.canCreateMenu === true) && (
             <span
               onClick={onOpen}
-              className='bg-white text-primaryColor items-center text-sm cursor-pointer flex gap-1'
+              className='bg-white font-semibold text-primaryColor items-center text-sm cursor-pointer flex gap-1'
             >
               <GoPlus className='text-[20px]' />
               <span>Create new menu</span>
