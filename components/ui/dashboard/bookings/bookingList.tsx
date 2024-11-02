@@ -161,6 +161,8 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
             {moment(booking?.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
+      case 'reference':
+        return <div className='text-textGrey text-sm'>{booking.reference}</div>;
       case 'bookingStatus':
         return (
           <Chip

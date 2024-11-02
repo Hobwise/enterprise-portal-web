@@ -1,4 +1,4 @@
-import { inter } from '@/utilities/ui-config/fonts';
+import { bricolage_grotesque } from '@/utilities/ui-config/fonts';
 import 'react-toastify/dist/ReactToastify.css';
 import { companyInfo } from '../../lib/companyInfo';
 
@@ -13,7 +13,11 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='en' className={`${inter.className} `} suppressHydrationWarning>
+    <html
+      lang='en'
+      className={`${bricolage_grotesque.className}`}
+      suppressHydrationWarning
+    >
       <body>{children}</body>
     </html>
   );

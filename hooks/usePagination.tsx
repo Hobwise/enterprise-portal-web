@@ -167,9 +167,16 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
     () => ({
       grid: 'w-full overflow-x-scroll',
       // table: 'w-full ',
-      wrapper: ['max-h-[382px]', ''],
-      th: ['bg-transparent', 'text-default-500', 'border-b', 'border-divider'],
-      tr: 'border-b border-divider',
+      wrapper: ['max-h-[382px]'],
+      th: [
+        'text-default-500',
+        'border-b',
+        'border-divider',
+        'py-4',
+        'rounded-none',
+        'bg-[#F9FAFB]',
+      ],
+      tr: 'border-b border-divider rounded-none',
       td: [
         // changing the rows border radius
         // first

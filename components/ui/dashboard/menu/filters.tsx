@@ -20,10 +20,12 @@ const Filters = ({
         <Tabs
           classNames={{
             base: 'xl:w-[70%] w-full',
-            tabList: 'gap-6  relative rounded-none py-0   overflow-scroll',
-            cursor: 'w-full bg-primaryColor',
-            tab: 'max-w-fit px-0 py-0 h-10',
-            tabContent: 'group-data-[selected=true]:text-primaryColor m-0',
+            tabList:
+              'gap-4  relative rounded-none p-0 w-[100%] text-[#344054] overflow-scroll',
+            cursor: 'w-full bg-primaryColor h-[1px]',
+            tab: 'max-w-fit px-0 py-0 h-10 px-4',
+            tabContent:
+              'group-data-[selected=true]:text-primaryColor group-data-[selected=true]:font-semibold',
           }}
           variant={'underlined'}
           aria-label='menu filter'
