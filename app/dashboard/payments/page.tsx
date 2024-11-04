@@ -10,13 +10,22 @@ import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
 import PaymentsList from '@/components/ui/dashboard/payments/payment';
 import usePayment from '@/hooks/cachedEndpoints/usePayment';
 import { useGlobalContext } from '@/hooks/globalProvider';
+import useDateFilter from '@/hooks/useDateFilter';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import { Button, ButtonGroup, Chip } from '@nextui-org/react';
 import { IoSearchOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 
 const Payments: React.FC = () => {
-  const { data, isLoading, isError, refetch } = usePayment();
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    dropdownComponent,
+    datePickerModal,
+  } = useDateFilter(usePayment);
+
   const [searchQuery, setSearchQuery] = useState('');
   const { setPage, setTableStatus } = useGlobalContext();
 
@@ -49,6 +58,8 @@ const Payments: React.FC = () => {
     if (data?.paymentComposites?.[0]?.payments.length > 0) {
       return (
         <PaymentsList
+          data={data}
+          isLoading={isLoading}
           payments={filteredItems}
           refetch={refetch}
           searchQuery={searchQuery}
@@ -75,7 +86,7 @@ const Payments: React.FC = () => {
 
   return (
     <>
-      <div className='flex flex-row flex-wrap  justify-between'>
+      <div className='flex flex-row flex-wrap  xl:mb-8 mb-4 items-center justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
             {data?.paymentComposites?.[0]?.payments.length > 0 ? (
@@ -93,11 +104,12 @@ const Payments: React.FC = () => {
               <span>Payments</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
+          <p className='text-sm  text-grey600  xl:w-[231px] w-full '>
             Showing all payments
           </p>
         </div>
-        <div className='flex items-center gap-3'>
+        <div className='flex  gap-3'>
+          {dropdownComponent}
           {data?.paymentComposites?.[0]?.payments.length > 0 && (
             <>
               <div>
@@ -128,6 +140,7 @@ const Payments: React.FC = () => {
       </div>
 
       {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+      {datePickerModal}
     </>
   );
 };

@@ -21,14 +21,21 @@ export default function Signup() {
     <main className='flex min-h-screen bg-white text-black'>
       <div className='hidden lg:block lg:fixed inset-y-0 left-0 w-1/2 m-3'>
         <div className='relative h-full'>
-          <video
-            className='absolute inset-0 w-full h-full object-cover bg-black rounded-[32px]'
-            src='/onboarding-vids.mp4'
-            autoPlay
-            loop
-            muted
-            playsInline
-          />
+          <Suspense
+            fallback={
+              <div className='absolute inset-0 w-full h-full object-cover bg-primaryGrey rounded-[32px]' />
+            }
+          >
+            <video
+              className='absolute inset-0 w-full h-full object-cover bg-primaryGrey rounded-[32px]'
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source src='/onboarding-vids.mp4' type='video/mp4' />
+            </video>
+          </Suspense>
 
           <div className='absolute bottom-10 left-10 text-white max-w-md'>
             <h1 className='text-5xl font-display mb-4'>

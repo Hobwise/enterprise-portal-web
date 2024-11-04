@@ -122,7 +122,7 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
   const bottomContent = (
     <div className='py-2 px-2 flex justify-between items-center'>
       <div className='text-[14px] text-grey600'>
-        Page {arrayToMap?.currentPage} of {arrayToMap?.totalPages}
+        Page {arrayToMap?.currentPage} of {arrayToMap?.totalPages || 1}
       </div>
       <Pagination
         disableCursorAnimation

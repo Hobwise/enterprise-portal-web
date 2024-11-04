@@ -2,7 +2,6 @@ import { getOrder } from '@/app/api/controllers/dashboard/orders';
 import { confirmPayment } from '@/app/api/controllers/dashboard/payment';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import usePayment from '@/hooks/cachedEndpoints/usePayment';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
@@ -21,8 +20,12 @@ import noImage from '../../../../public/assets/images/no-image.svg';
 import Success from '../../../../public/assets/images/success.png';
 import { paymentMethodMap } from './data';
 
-const ApprovePayment = ({ singlePayment, isOpen, toggleApproveModal }: any) => {
-  const { refetch } = usePayment();
+const ApprovePayment = ({
+  singlePayment,
+  isOpen,
+  toggleApproveModal,
+  refetch,
+}: any) => {
   const { userRolePermissions, role } = usePermission();
 
   const [reference, setReference] = useState('');

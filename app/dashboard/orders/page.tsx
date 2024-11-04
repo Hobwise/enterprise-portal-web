@@ -12,6 +12,7 @@ import OrdersList from '@/components/ui/dashboard/orders/order';
 import useOrder from '@/hooks/cachedEndpoints/useOrder';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
+import useDateFilter from '@/hooks/useDateFilter';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import { Button, ButtonGroup, Chip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
@@ -21,7 +22,14 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 const Orders: React.FC = () => {
   const router = useRouter();
 
-  const { data, isLoading, isError, refetch } = useOrder();
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    dropdownComponent,
+    datePickerModal,
+  } = useDateFilter(useOrder);
   const { userRolePermissions, role } = usePermission();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -69,8 +77,8 @@ const Orders: React.FC = () => {
   };
 
   const newArray = useMemo(() => {
-    return data?.flatMap((item) =>
-      item.orders.map((order) => ({
+    return data?.flatMap((item: any) =>
+      item.orders.map((order: any) => ({
         placedByName: order.placedByName,
         reference: order.reference,
         totalAmount: order.totalAmount,
@@ -83,7 +91,7 @@ const Orders: React.FC = () => {
 
   return (
     <>
-      <div className='flex flex-row flex-wrap  justify-between'>
+      <div className='flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
             {data?.[0]?.orders.length > 0 ? (
@@ -101,11 +109,12 @@ const Orders: React.FC = () => {
               <span>Orders</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
+          <p className='text-sm  text-grey600  xl:w-[231px]  w-full '>
             Showing all orders
           </p>
         </div>
         <div className='flex items-center gap-3'>
+          {dropdownComponent}
           {data?.[0]?.orders.length > 0 && (
             <>
               <div>
@@ -147,6 +156,7 @@ const Orders: React.FC = () => {
         </div>
       </div>
       {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+      {datePickerModal}
     </>
   );
 };

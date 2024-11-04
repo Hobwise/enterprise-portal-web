@@ -49,7 +49,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'dateCreated',
   'actions',
 ];
-const OrdersList = ({ orders, searchQuery }: any) => {
+const OrdersList = ({ orders, searchQuery, refetch }: any) => {
   const router = useRouter();
   const { userRolePermissions, role } = usePermission();
   const [singleOrder, setSingleOrder] = React.useState('');
@@ -341,11 +341,13 @@ const OrdersList = ({ orders, searchQuery }: any) => {
         isOpenComment={isOpenComment}
       />
       <CancelOrderModal
+        refetch={refetch}
         singleOrder={singleOrder}
         isOpenCancelOrder={isOpenCancelOrder}
         toggleCancelModal={toggleCancelModal}
       />
       <ConfirmOrderModal
+        refetch={refetch}
         singleOrder={singleOrder}
         isOpenConfirmOrder={isOpenConfirmOrder}
         toggleConfirmModal={toggleConfirmModal}

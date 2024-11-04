@@ -27,7 +27,6 @@ import moment from 'moment';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 
 import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
-import useBookings from '@/hooks/cachedEndpoints/useBookings';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { notify, submitBookingStatus } from '@/lib/utils';
 import { CiCalendar } from 'react-icons/ci';
@@ -49,7 +48,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'actions',
 ];
 
-const BookingsList = ({ bookings, searchQuery }: any) => {
+const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
   const { userRolePermissions, role } = usePermission();
   const [filteredBooking, setFilteredBooking] = React.useState(
     bookings[0]?.bookings
@@ -62,7 +61,6 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
     setIsOpenDelete(!isOpenDelete);
   };
 
-  const { refetch } = useBookings();
   const { page, rowsPerPage, tableStatus, setTableStatus, setPage } =
     useGlobalContext();
 
@@ -324,7 +322,7 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={'No booking found'}
+          emptyContent={'No booking(s) found'}
           items={matchingObjectArray}
         >
           {(item) => (

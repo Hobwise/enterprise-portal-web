@@ -4,7 +4,7 @@ import { Chip, Tab, Tabs } from '@nextui-org/react';
 const Filters = ({ bookings, handleTabChange, handleTabClick }: any) => {
   return (
     <>
-      <div className='flex  relative w-full top-4 px-3  border-b border-primaryGrey justify-between'>
+      <div className='flex  relative w-full top-4 px-3   border-b border-primaryGrey justify-between'>
         <Tabs
           classNames={{
             tabList:

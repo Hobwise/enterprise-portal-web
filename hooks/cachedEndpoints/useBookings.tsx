@@ -29,27 +29,42 @@ interface BookingGroup {
   hasPrevious: boolean;
 }
 
-const useBookings = () => {
+const useBookings = (
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  options?: { enabled: boolean }
+) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
 
-  const getAllBookings = async ({ queryKey }) => {
-    const [_key, { page, rowsPerPage, tableStatus }] = queryKey;
+  const getAllBookings = async ({ queryKey }: { queryKey: any }) => {
+    const [
+      _key,
+      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+    ] = queryKey;
     const responseData = await getBookingsByBusiness(
       businessInformation[0]?.businessId,
       page,
       rowsPerPage,
-      tableStatus
+      tableStatus,
+      filterType,
+      startDate,
+      endDate
     );
     return responseData?.data?.data as BookingGroup[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<BookingGroup[]>(
-    ['bookings', { page, rowsPerPage, tableStatus }],
+    [
+      'bookings',
+      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+    ],
     getAllBookings,
     {
       keepPreviousData: true,
       refetchOnWindowFocus: false,
+      ...options,
     }
   );
 
