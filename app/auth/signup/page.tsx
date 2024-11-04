@@ -3,6 +3,7 @@ import { companyInfo } from '@/lib/companyInfo';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
 export const metadata = {
   title: `${companyInfo.name}| Create account`,
