@@ -1,7 +1,7 @@
-'use server';
+'use client';
 import { cn } from '@/lib/utils';
 
-export default async function LandingPageHeader() {
+export default function LandingPageHeader() {
   const promo: { class: string; title: string }[] = [
     { class: 'item1', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
     { class: 'item2', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
@@ -13,7 +13,7 @@ export default async function LandingPageHeader() {
     { class: 'item8', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
   ];
   return (
-    <div className="wrapper bg-primaryColor text-white">
+    <div className="wrapper bg-primaryColor">
       {promo.map((each, index) => (
         <p className={`itemLeft font-satoshi font-light item${index}`} key={each.class}>
           {each.title}
