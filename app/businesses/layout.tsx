@@ -11,7 +11,7 @@ export default function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="w-full bg-white">
       <header className="z-[50] backdrop-filter backdrop-blur-md fixed w-full">
-        <Navbar />
+        <Navbar type="default" />
       </header>
       <div className="pt-20 pb-10">{children}</div>
     </div>

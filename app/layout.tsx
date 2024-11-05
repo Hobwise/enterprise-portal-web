@@ -23,6 +23,7 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.className} ${bricolage_grotesque.className}`} suppressHydrationWarning>
+      {/* <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" /> */}
       <body>
         <QueryProvider>
           <AppProvider>

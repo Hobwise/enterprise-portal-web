@@ -23,12 +23,12 @@ export default function Pricing() {
     { image: FedEx, title: 'FedEx' },
   ];
   return (
-    <React.Fragment>
+    <div className="bg-primaryColor">
       <header className="z-50 backdrop-filter backdrop-blur-md fixed w-full">
         <Navbar type="colored" />
       </header>
 
-      <main className="w-full py-12 font-satoshi">
+      <main className="w-full pt-12 font-satoshi">
         <section className="px-12 font-satoshi py-12 space-y-8 bg-primaryColor">
           <Image src={PricePlan} alt="" className="absolute top-0 w-[90%]" priority />
           <div className="bg-[#6840D50D] border border-[#5F35D2] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom_inset_2">
@@ -76,6 +76,6 @@ export default function Pricing() {
         </section>
       </main>
       <Footer />
-    </React.Fragment>
+    </div>
   );
 }

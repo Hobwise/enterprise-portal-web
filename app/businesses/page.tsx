@@ -16,13 +16,13 @@ export default function Businesses() {
       <main className="gap-3 relative text-center bg-white overflow-x-hidden main-section">
         <section className="w-[50%] mx-auto space-y-6 font-satoshi pt-32">
           <div className={sectionHeaderClass}>
-            <p className="font-normal">New: Contactless Service with QR Codes</p>
+            <p className="font-normal">Businesses Trust Us</p>
             <ArrowRight />
           </div>
-          <h1 className="text-[50px] leading-[64px] text-[#161618] font-bricolage_grotesque">Lorem ipsum dolor sit amet consectetur. Urna sapien.</h1>
+          <h1 className="text-[50px] leading-[64px] text-[#161618] font-bricolage_grotesque">Meet some of the Businesses That Trust Us</h1>
           <p className="font-normal text-dark">
-            Lorem ipsum dolor sit amet consectetur. Quis nullam id amet amet feugiat sollicitudin. Lobortis diam pellentesque lectus augue rhoncus lacus lectus
-            lobortis. Lectus odio sed sit nunc sit amet mi orci massa.
+            Explore the restaurants, bars, and lounges elevating their operations with our platform. Enhance guest experiences, and drive growth all in one
+            place.
           </p>
 
           <div className="flex space-x-4 justify-center mx-36">
