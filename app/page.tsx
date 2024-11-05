@@ -51,7 +51,7 @@ export default function LandingPage() {
               <p className="font-normal text-white">New: Contactless Service with QR Codes</p>
               <ArrowRight className="text-[#cbd2d6]" />
             </div>
-            <h1 className="text-[50px] leading-[64px] text-white font-bricolage_grotesque font-bold">
+            <h1 className="text-[50px] leading-[64px] text-white font-bricolage_grotesque font-medium">
               Effortless Management for Restaurants, Hotels, and Bars
             </h1>
             <p className="font-normal text-[#cbd2d6]">
