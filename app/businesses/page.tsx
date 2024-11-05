@@ -6,7 +6,7 @@ import { IoSearchOutline } from 'react-icons/io5';
 import BusinessCard from '@/components/ui/landingPage/businessCard';
 import { companies } from './data';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
-import { Footer } from '@/components/ui/landingPage/footer';
+import Footer from '@/components/ui/landingPage/footer';
 
 export default function Businesses() {
   const sectionHeaderClass: string =
