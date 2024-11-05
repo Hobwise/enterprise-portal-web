@@ -46,7 +46,7 @@ interface TransitionProps {
 }
 
 export const Transition: React.FC<TransitionProps> = ({ children }) => (
-  <IntersectionObserver reset={true}>
+  <IntersectionObserver>
     <StaggerWrap>
       <FadeInUp>{children}</FadeInUp>
     </StaggerWrap>

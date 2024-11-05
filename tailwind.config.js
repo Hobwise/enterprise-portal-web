@@ -47,6 +47,15 @@ module.exports = {
         'custom_shadow_2': 'box-shadow: 0px 7.4px 18.5px 0px #FFFFFF1C inset',
         'custom_shadow_3': '-4.69px 7.03px 4.69px 0px rgba(0, 0, 0, 0.06)'
       },
+      animation: {
+        'infinite-scroll': 'infinite-scroll 25s linear infinite',
+      },
+      keyframes: {
+        'infinite-scroll': {
+            from: { transform: 'translateX(0)' },
+            to: { transform: 'translateX(-100%)' },
+        }
+      } 
     },
   },
   darkMode: 'class',

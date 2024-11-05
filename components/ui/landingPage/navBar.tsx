@@ -17,21 +17,24 @@ export const navItem = [
 ];
 
 interface INavbar {
-  type?: 'colored' | 'non-colored';
+  type?: 'colored' | 'non-colored' | 'default';
+  className?: string;
 }
 
-export default function Navbar({ type = 'non-colored' }: INavbar) {
+export default function Navbar({ type = 'non-colored', className }: INavbar) {
   const pathname = usePathname();
 
-  const btnClassName =
-    'before:ease relative h-[40px] overflow-hidden border border-[#FFFFFF26] px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40';
-
+  const btnClassName = `before:ease relative h-[40px] overflow-hidden ${
+    type === 'default' && 'border border-[#FFFFFF26]'
+  } px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40`;
+  // type === 'colored' ? 'bg-primaryColor' : 'bg-white/60'
   return (
-    <div className={cn('flex items-center font-satoshi w-full justify-between px-12 py-2.5', type === 'colored' ? 'bg-primaryColor' : 'bg-white/60')}>
+    <div className={cn('flex items-center font-satoshi w-full z-[999] justify-between px-12 py-2.5', className)}>
       <Link href={HOME_URL}>
-        <Image src={type === 'colored' ? HobinkLogoWhite : HobinkLogo} alt="Hobink logo" width={240} />
+        {/* type === 'colored' ? HobinkLogoWhite : type === 'default' ? HobinkLogo : HobinkLogo */}
+        <Image src={type === 'colored' || type === 'non-colored' ? HobinkLogoWhite : HobinkLogo} alt="Hobink logo" width={240} />
       </Link>
-      <nav className={cn('flex py-4 space-x-6 text-sm', type === 'colored' ? 'text-[#C0AFF7]' : 'text-navColor')}>
+      <nav className={cn('flex py-4 space-x-6 text-sm text-white', type === 'colored' && 'text-[#C0AFF7]', type === 'default' && 'text-[#616B7C]')}>
         {navItem.map((each) => {
           const linkStyle = `px-4 ${
             pathname.slice(1).startsWith(each.href) || (each.href === '/' && pathname === each.href)
@@ -50,7 +53,7 @@ export default function Navbar({ type = 'non-colored' }: INavbar) {
       </nav>
       <div className="flex space-x-4">
         <Link href={LOGIN_URL}>
-          <CustomButton className="bg-white border border-primaryColor text-primaryColor h-[38px] px-8">Login</CustomButton>
+          <CustomButton className={cn('bg-white text-primaryColor h-[38px] px-8', type === 'default' && 'border border-primaryColor')}>Login</CustomButton>
         </Link>
         <Link href={SIGN_UP_URL}>
           <CustomButton className={btnClassName}>Get Started</CustomButton>
