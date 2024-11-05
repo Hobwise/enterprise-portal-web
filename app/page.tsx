@@ -59,10 +59,10 @@ export default function LandingPage() {
             </p>
 
             <div className="flex space-x-4 justify-center">
-              <CustomButton className="before:ease relative h-[40px] overflow-hidden border border-[#FFFFFF26] px-8 border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40">
+              <CustomButton className="before:ease relative h-[40px] overflow-hidden px-8 border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40">
                 Request a Demo
               </CustomButton>
-              <CustomButton className="bg-[#DDDCFE] border border-primaryColor text-primaryColor h-[38px] px-8">Get Started</CustomButton>
+              <CustomButton className="bg-[#DDDCFE]  text-primaryColor h-[38px] px-8">Get Started</CustomButton>
             </div>
           </div>
         </section>
