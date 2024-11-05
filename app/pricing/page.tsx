@@ -9,10 +9,10 @@ import Hubspot from '@/public/assets/icons/hubspot-2.png';
 import Google from '@/public/assets/icons/google-2.png';
 import Microsoft from '@/public/assets/icons/microsoft-2.png';
 import FedEx from '@/public/assets/icons/fedex-2.png';
-import { BestToolsComponent } from '@/components/ui/landingPage/bestTools';
-import { Footer } from '@/components/ui/landingPage/footer';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
 import FAQs from '@/components/ui/landingPage/faq';
+import BestToolsComponent from '@/components/ui/landingPage/bestTools';
+import Footer from '@/components/ui/landingPage/footer';
 
 export default function Pricing() {
   const companies = [

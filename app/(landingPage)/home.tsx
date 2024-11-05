@@ -1,8 +1,8 @@
 'use client';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import LandingPageHeader from '@/components/ui/landingPage/header';
-import Navbar from '@/components/ui/landingPage/navBar';
+// import LandingPageHeader from '@/components/ui/landingPage/header';
+// import Navbar from '@/components/ui/landingPage/navBar';
 import { ArrowLeftIcon, ArrowRight, ArrowRightIcon, CampaignIcon, TagIcon } from '@/public/assets/svg';
 import { CustomButton } from '@/components/customButton';
 import Airbnb from '@/public/assets/icons/airbnb.png';
@@ -12,15 +12,28 @@ import Microsoft from '@/public/assets/icons/microsoft.png';
 import FedEx from '@/public/assets/icons/fedex.png';
 import AdvertOne from '@/public/assets/images/advert-1.png';
 import PricePlan from '@/public/assets/images/price-bg.png';
-import { Footer } from '@/components/ui/landingPage/footer';
-import Features from '@/components/ui/landingPage/features';
-import PricingComponent from '@/components/ui/landingPage/pricing';
-import { BestToolsComponent } from '@/components/ui/landingPage/bestTools';
-import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
-import FAQs from '@/components/ui/landingPage/faq';
+// import { Footer } from '@/components/ui/landingPage/footer';
+// import Features from '@/components/ui/landingPage/features';
+// import PricingComponent from '@/components/ui/landingPage/pricing';
+// import { BestToolsComponent } from '@/components/ui/landingPage/bestTools';
+// import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
+// import FAQs from '@/components/ui/landingPage/faq';
 import { Transition } from '@/components/ui/landingPage/transition';
+import Link from 'next/link';
+import { SIGN_UP_URL } from '@/utilities/routes';
 
-export default function LandingPage() {
+import dynamic from 'next/dynamic';
+
+const LandingPageHeader = dynamic(() => import('@/components/ui/landingPage/header'), { ssr: false });
+const Navbar = dynamic(() => import('@/components/ui/landingPage/navBar'), { ssr: false });
+const Features = dynamic(() => import('@/components/ui/landingPage/features'), { ssr: false });
+const PricingComponent = dynamic(() => import('@/components/ui/landingPage/pricing'), { ssr: false });
+const BestToolsComponent = dynamic(() => import('@/components/ui/landingPage/bestTools'), { ssr: false });
+const FAQs = dynamic(() => import('@/components/ui/landingPage/faq'), { ssr: false });
+const JoinCommunity = dynamic(() => import('@/components/ui/landingPage/joinCommunity'), { ssr: false });
+const Footer = dynamic(() => import('@/components/ui/landingPage/footer'), { ssr: false });
+
+export default function HomeComponent() {
   const companies = [
     { image: Airbnb, title: 'Airbnb' },
     { image: Hubspot, title: 'Hubspot' },
@@ -32,7 +45,7 @@ export default function LandingPage() {
     'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1.5 rounded-full text-xs mx-auto shadow_custom-inset';
   const sectionHeaderClass2: string =
     'flex items-center w-fit space-x-2 text-[#cbd2d6] bg-[#6840D50D] border-[#cbd2d6] border px-4 py-1.5 rounded-full text-xs mx-auto shadow_custom-inset';
-  // backdrop-filter backdrop-blur-md fixed
+
   return (
     <div className="overflow-y-scroll h-screen scroll-smooth bg-white">
       <main className="gap-3 text-center relative bg-white overflow-x-hidden font-satoshi h-full">
@@ -62,7 +75,9 @@ export default function LandingPage() {
               <CustomButton className="before:ease relative h-[40px] overflow-hidden px-8 border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40">
                 Request a Demo
               </CustomButton>
-              <CustomButton className="bg-[#DDDCFE]  text-primaryColor h-[38px] px-8">Get Started</CustomButton>
+              <Link href={SIGN_UP_URL}>
+                <CustomButton className="bg-[#DDDCFE]  text-primaryColor h-[38px] px-8">Get Started</CustomButton>
+              </Link>
             </div>
           </div>
         </section>
@@ -85,14 +100,14 @@ export default function LandingPage() {
                 <ul className="flex animate-infinite-scroll items-center justify-center md:justify-start [&_img]:max-w-none [&_li]:mx-8">
                   {companies.map((logo, index) => (
                     <li key={index}>
-                      <img src={logo.image.src} alt={logo.title} width={120} />
+                      <img src={logo.image.src} alt={logo.title} width={120} loading="lazy" />
                     </li>
                   ))}
                 </ul>
                 <ul className="flex animate-infinite-scroll items-center justify-center md:justify-start [&_img]:max-w-none [&_li]:mx-8" aria-hidden="true">
                   {companies.map((logo, index) => (
                     <li key={index}>
-                      <img src={logo.image.src} alt={logo.title} width={120} />
+                      <img src={logo.image.src} alt={logo.title} width={120} loading="lazy" />
                     </li>
                   ))}
                 </ul>

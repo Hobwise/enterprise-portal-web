@@ -10,8 +10,8 @@ import { CustomTextArea } from '@/components/customTextArea';
 import { CustomButton } from '@/components/customButton';
 import FAQs from '@/components/ui/landingPage/faq';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
-import { Footer } from '@/components/ui/landingPage/footer';
 import { Transition } from '@/components/ui/landingPage/transition';
+import Footer from '@/components/ui/landingPage/footer';
 
 export default function Contact() {
   const sectionHeaderClass: string =

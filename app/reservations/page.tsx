@@ -8,11 +8,11 @@ import { columns } from './columns';
 import { allReservations, companyFilter } from './data';
 import Image from 'next/image';
 import { CustomButton } from '@/components/customButton';
-import { Footer } from '@/components/ui/landingPage/footer';
 import { Popover, PopoverTrigger, PopoverContent, Slider } from '@nextui-org/react';
 import { CheckboxGroup, Checkbox } from '@nextui-org/react';
 import StarRating from '@/components/ui/starRating';
 import { Transition } from '@/components/ui/landingPage/transition';
+import Footer from '@/components/ui/landingPage/footer';
 
 export default function Reservations() {
   const [value, setValue] = React.useState<any>([100, 300]);

@@ -25,7 +25,7 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
   const pathname = usePathname();
 
   const btnClassName = `before:ease relative h-[40px] overflow-hidden ${
-    type === 'default' && 'border border-[#FFFFFF26]'
+    type === 'default' || (type === 'colored' && 'border border-[#FFFFFF26]')
   } px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40`;
   // type === 'colored' ? 'bg-primaryColor' : 'bg-white/60'
   return (
