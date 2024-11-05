@@ -100,7 +100,7 @@ const BusinessInformationForm = () => {
       <CustomInput
         type='text'
         name='name'
-        label='Business name'
+        label='Business Name'
         errorMessage={response?.errors?.name?.[0]}
         onChange={handleInputChange}
         value={businessFormData.name}
@@ -115,7 +115,7 @@ const BusinessInformationForm = () => {
           errorMessage={response?.errors?.contactEmailAddress?.[0]}
           onChange={handleInputChange}
           value={businessFormData.contactEmailAddress}
-          label='Business email'
+          label='Business Email'
           placeholder={`${companyInfo.name}@gmail.com`}
         />
         <CustomInput
@@ -124,7 +124,7 @@ const BusinessInformationForm = () => {
           errorMessage={response?.errors?.contactPhoneNumber?.[0]}
           onChange={handleInputChange}
           value={businessFormData.contactPhoneNumber}
-          label='Business phone number'
+          label='Business Phone Number'
           placeholder='09034545454'
         />
       </div>
@@ -135,7 +135,7 @@ const BusinessInformationForm = () => {
         errorMessage={response?.errors?.address?.[0]}
         onChange={handleInputChange}
         value={businessFormData.address}
-        label='Business address'
+        label='Business Address'
         placeholder='Where is your business located '
       />
 
@@ -143,7 +143,7 @@ const BusinessInformationForm = () => {
       <div className='flex flex-col md:flex-row  gap-3'>
         <SelectInput
           errorMessage={response?.errors?.state?.[0]}
-          label={'Business state'}
+          label={'Business State'}
           name='state'
           onChange={handleInputChange}
           value={businessFormData.state}
@@ -153,18 +153,18 @@ const BusinessInformationForm = () => {
 
         <SelectInput
           errorMessage={response?.errors?.city?.[0]}
-          label={'Business city'}
+          label={'Business LGA'}
           name='city'
           onChange={handleInputChange}
           value={businessFormData.city}
-          placeholder={'Select a city'}
+          placeholder={'Select a lga'}
           contents={getCities()}
         />
       </div>
       <Spacer y={4} />
       <SelectInput
         errorMessage={response?.errors?.businessCategory?.[0]}
-        label={'Business category'}
+        label={'Business Category'}
         name='businessCategory'
         onChange={handleInputChange}
         value={businessFormData.businessCategory}

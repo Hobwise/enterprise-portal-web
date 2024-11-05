@@ -25,19 +25,18 @@ export const businessNameValidation = () => {
   return z
     .string()
     .min(1, `Business name field is required`)
-    .max(50, `Business name cannot be longer than 50 characters`)
-    .regex(/^[a-zA-Z\s]+$/, 'Business name must only contain alphabets');
+    .max(50, `Business name cannot be longer than 50 characters`);
+  // .regex(/^[a-zA-Z\s]+$/, 'Business name must only contain alphabets');
 };
 export const businessAddressValidation = () => {
   return z
     .string()
-
     .min(5, 'Business address must contain at least 5 characters')
-    .max(100, `Business address cannot be longer than 100 characters`)
-    .regex(
-      /^[a-zA-Z0-9\s,]+$/,
-      'Business address must only contain alphabets and numbers'
-    );
+    .max(150, 'Business address cannot be longer than 150 characters');
+  // .regex(
+  //   /^[a-zA-Z0-9\s]+$/,
+  //   'Business address must only contain alphabets and numbers'
+  // );
 };
 export const emailValidation = () => {
   return z

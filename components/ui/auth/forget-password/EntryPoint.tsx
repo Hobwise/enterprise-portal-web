@@ -1,10 +1,10 @@
 'use client';
-import React, { useState } from 'react';
-import ForgetPasswordForm from './forgetPasswordForm';
+import { useState } from 'react';
 import ChangePasswordForm from './changePassword';
+import ForgetPasswordForm from './forgetPasswordForm';
 
 const EntryPoint = () => {
-  const [screen, setScreen] = useState(1);
+  const [screen, setScreen] = useState<number>(1);
   const [email, setEmail] = useState('');
   return (
     <>

@@ -5,7 +5,7 @@ import { CustomButton } from '@/components/customButton';
 import { notify } from '@/lib/utils';
 import { Spacer } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 const ChangePasswordForm = ({ email }) => {
@@ -70,7 +70,7 @@ const ChangePasswordForm = ({ email }) => {
           onChange={handleInputChange}
           name='oldPassword'
           type='password'
-          label='Enter password'
+          label='Enter Password'
           placeholder='Enter password'
           // isRequired={true}
         />
@@ -81,7 +81,7 @@ const ChangePasswordForm = ({ email }) => {
           onChange={handleInputChange}
           type='password'
           name='password'
-          label='Enter new password'
+          label='Enter New Password'
           placeholder='Enter password'
           // isRequired={true}
         />
@@ -92,7 +92,7 @@ const ChangePasswordForm = ({ email }) => {
           onChange={handleInputChange}
           type='password'
           name='confirmPassword'
-          label='Confirm new password'
+          label='Confirm New Password'
           placeholder='Confirm password'
           // isRequired={true}
         />

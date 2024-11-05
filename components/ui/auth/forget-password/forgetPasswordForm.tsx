@@ -6,11 +6,11 @@ import { notify } from '@/lib/utils';
 import { Spacer } from '@nextui-org/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { FaRegEnvelope } from 'react-icons/fa6';
 
-const ForgetPasswordForm = ({ setScreen, email, setEmail }) => {
+const ForgetPasswordForm = ({ setScreen, email, setEmail }: any) => {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);

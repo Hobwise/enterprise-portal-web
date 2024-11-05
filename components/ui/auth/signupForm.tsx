@@ -59,7 +59,7 @@ const SignupForm = () => {
         <CustomInput
           type='text'
           name='firstName'
-          label='First name'
+          label='First Name'
           errorMessage={response?.errors?.firstName?.[0]}
           onChange={handleInputChange}
           value={signupFormData.firstName}
@@ -72,7 +72,7 @@ const SignupForm = () => {
           errorMessage={response?.errors?.lastName?.[0]}
           onChange={handleInputChange}
           value={signupFormData.lastName}
-          label='Last name'
+          label='Last Name'
           placeholder='Last name'
         />
       </div>
