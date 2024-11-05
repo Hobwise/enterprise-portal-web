@@ -96,11 +96,11 @@ const BookingGrid = ({ data }: any) => {
     switch (columnKey) {
       case 'firstName':
         return (
-          <div className=' text-textGrey text-sm'>
-            <p className='font-bold'>
+          <div className='  text-sm'>
+            <p className='font-medium text-black'>
               {data?.firstName} {data?.lastName}
             </p>
-            <p>{data?.phoneNumber}</p>
+            <p className='text-[13px]'>{data?.phoneNumber}</p>
           </div>
         );
 
@@ -110,6 +110,8 @@ const BookingGrid = ({ data }: any) => {
             {moment(data?.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
+      case 'reference':
+        return <p className='text-sm text-textGrey'>{data?.reference}</p>;
       case 'bookingStatus':
         return (
           <Chip

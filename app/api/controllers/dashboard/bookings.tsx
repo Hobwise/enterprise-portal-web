@@ -61,17 +61,26 @@ export async function getBookingsByBusiness(
   businessId: string,
   page: any,
   rowsPerPage: any,
-  tableStatus: any
+  tableStatus: any,
+  filterType: any,
+  startDate?: any,
+  endDate?: any
 ) {
   const headers = businessId ? { businessId } : {};
 
-  const payload = [
-    {
-      status: tableStatus || 'All',
-      page: page || 1,
-      pageSize: rowsPerPage || 10,
-    },
-  ];
+  const payload = {
+    startDate: startDate,
+    endDate: endDate,
+    filterType: filterType,
+    businessId: businessId,
+    statusPaginationInfoList: [
+      {
+        status: tableStatus || 'All',
+        page: page || 1,
+        pageSize: rowsPerPage || 10,
+      },
+    ],
+  };
 
   try {
     const data = await api.post(DASHBOARD.bookingsByBusiness, payload, {

@@ -234,7 +234,7 @@ export async function loginUser(formData: any) {
 
     return data;
   } catch (error) {
-    handleError(error, false);
+    handleError(error);
   }
 }
 export async function loginUserSelectedBusiness(

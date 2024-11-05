@@ -11,7 +11,7 @@ export const metadata = {
 
 const SelectBusiness = () => {
   return (
-    <main className='min-h-screen  md:py-24 py-4 px-4 flex flex-col  items-center bg-pink200'>
+    <main className='min-h-screen  md:py-24 py-4 px-4 flex flex-col  items-center bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] bg-pink200'>
       <div className='absolute top-0 left-0'>
         <BackButton url='/auth/login' />
       </div>

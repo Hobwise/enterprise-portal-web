@@ -201,6 +201,7 @@ const CompleteBookingComponent = () => {
           <DatePicker
             variant='bordered'
             hideTimeZone
+            calendarWidth={270}
             size='lg'
             radius='sm'
             errorMessage={response?.errors?.timeNdate?.[0]}

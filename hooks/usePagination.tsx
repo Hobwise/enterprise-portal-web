@@ -122,7 +122,7 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
   const bottomContent = (
     <div className='py-2 px-2 flex justify-between items-center'>
       <div className='text-[14px] text-grey600'>
-        Page {arrayToMap?.currentPage} of {arrayToMap?.totalPages}
+        Page {arrayToMap?.currentPage} of {arrayToMap?.totalPages || 1}
       </div>
       <Pagination
         disableCursorAnimation
@@ -167,14 +167,21 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
     () => ({
       grid: 'w-full overflow-x-scroll',
       // table: 'w-full ',
-      wrapper: ['max-h-[382px]', ''],
-      th: ['bg-transparent', 'text-default-500', 'border-b', 'border-divider'],
-      tr: 'border-b border-divider',
+      wrapper: ['max-h-[382px]'],
+      th: [
+        'text-default-500',
+        'border-b',
+        'border-divider',
+        'py-4',
+        'rounded-none',
+        'bg-[#F9FAFB]',
+      ],
+      tr: 'border-b border-divider rounded-none',
       td: [
         // changing the rows border radius
         // first
         'py-3',
-
+        'text-textGrey',
         'group-data-[first=true]:first:before:rounded-none',
         'group-data-[first=true]:last:before:rounded-none',
         // middle

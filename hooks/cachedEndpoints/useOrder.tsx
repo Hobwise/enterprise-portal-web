@@ -22,30 +22,42 @@ type OrderItem = {
 
 type OrderData = Array<OrderItem>;
 
-const useOrder = () => {
+const useOrder = (
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  options?: { enabled: boolean }
+) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
 
   const businessInformation = getJsonItemFromLocalStorage('business');
 
-  const getAllOrders = async ({ queryKey }) => {
+  const getAllOrders = async ({ queryKey }: { queryKey: any }) => {
     const [_key, { page, rowsPerPage, tableStatus }] = queryKey;
     const responseData = await getOrderByBusiness(
       businessInformation[0]?.businessId,
       page,
       rowsPerPage,
-      tableStatus
+      tableStatus,
+      filterType,
+      startDate,
+      endDate
     );
 
     return responseData?.data as OrderData[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<OrderData[]>(
-    ['orders', { page, rowsPerPage, tableStatus }],
+    [
+      'orders',
+      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+    ],
     getAllOrders,
 
     {
       keepPreviousData: true,
       refetchOnWindowFocus: false,
+      ...options,
     }
   );
 

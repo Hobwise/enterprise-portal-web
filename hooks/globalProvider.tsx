@@ -34,9 +34,9 @@ const AppProvider = ({ children }: any) => {
   const [selectedImage, setSelectedImage] = useState('');
   const [selectedTextColor, setSelectedTextColor] = useState('#000');
 
-  const [page, setPage] = React.useState(1);
-  const [rowsPerPage, setRowsPerPage] = React.useState(10);
-  const [tableStatus, setTableStatus] = React.useState('All');
+  const [page, setPage] = React.useState<any>(1);
+  const [rowsPerPage, setRowsPerPage] = React.useState<any>(10);
+  const [tableStatus, setTableStatus] = React.useState<any>('All');
   const [menuIdTable, setMenuIdTable] = React.useState('');
   const [loginDetails, setLoginDetails] = useState(null);
 

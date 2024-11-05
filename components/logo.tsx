@@ -9,11 +9,13 @@ const CompanyLogo = ({
   return (
     <div className={containerClass}>
       <Image
+        height={30}
+        width={30}
         src={companyInfo.logo}
         style={{ objectFit: 'cover' }}
         alt='company logo'
       />
-      <h2 className={`text-2xl font-bold ${textColor} ${lexend.className}`}>
+      <h2 className={`text-xl font-bold ${textColor} ${lexend.className}`}>
         {companyInfo.name}
       </h2>
     </div>

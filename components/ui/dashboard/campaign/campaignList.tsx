@@ -188,9 +188,13 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
         );
       case 'campaignDescription':
         return (
-          <div className='md:w-[250px] w-[150px]'>
+          <div className='md:w-[250px] text-textGrey w-[150px]'>
             {campaign.campaignDescription}
           </div>
+        );
+      case 'campaignName':
+        return (
+          <div className='font-medium text-black'>{campaign.campaignName}</div>
         );
       case 'startDateTime':
         return (

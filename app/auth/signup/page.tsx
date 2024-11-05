@@ -1,10 +1,9 @@
-import CompanyLogo from '@/components/logo';
 import SignupForm from '@/components/ui/auth/signupForm';
 import { companyInfo } from '@/lib/companyInfo';
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import Background from '../../../public/assets/images/nightlife-party-with-drinks-bar 1.png';
+import { Suspense } from 'react';
 
 export const metadata = {
   title: `${companyInfo.name}| Create account`,
@@ -20,49 +19,74 @@ export const metadata = {
 
 export default function Signup() {
   return (
-    <main
-      className={` background relative lg:py-8 py-2   flex justify-center lg:items-center items-start  min-h-screen `}
-    >
-      <Image fill className='absolute' src={Background} alt='background' />
-      <div className='container flex flex-col justify-center  w-full xl:p-0 px-4 '>
-        <CompanyLogo
-          textColor='text-white'
-          containerClass='flex lg:hidden z-10 gap-2 items-center pt-8 mb-10'
-        />
-        <div className='flex w-full flex-col  justify-between lg:flex-row'>
-          {/* Left Card: Text Content */}
-          <div className='relative w-[400px] lg:flex flex-col  hidden  text-white'>
-            <CompanyLogo
-              textColor='text-white'
-              containerClass='lg:flex hidden gap-2 '
-            />
-            <div className='absolute bottom-0'>
-              <h2 className='text-[32px] font-[600]  leading-9 mb-3'>
-                Streamline your business processes{' '}
-              </h2>
-              <p className='text-foreground-400 font-[400]'>
-                Increase efficiency and improve user experience, from
-                reservation to checkout. Manage orders and inventory like a pro.
-              </p>
+    <main className='flex min-h-screen bg-white text-black'>
+      <div className='hidden lg:block lg:fixed inset-y-0 left-0 w-1/2 m-3'>
+        <div className='relative h-full'>
+          <Suspense
+            fallback={
+              <div className='absolute inset-0 w-full h-full object-cover bg-primaryGrey rounded-[32px]' />
+            }
+          >
+            <video
+              className='absolute inset-0 w-full h-full object-cover bg-primaryGrey rounded-[32px]'
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source src='/onboarding-vids.mp4' type='video/mp4' />
+            </video>
+          </Suspense>
+
+          <div className='absolute bottom-10 left-10 text-white max-w-md'>
+            <h1 className='text-5xl font-display mb-4'>
+              Streamline your business processes
+            </h1>
+            <p className='text-primaryGrey'>
+              Increase efficiency and improve user experience, from reservation
+              to checkout. Manage orders and inventory like a pro.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className='w-full lg:w-1/2 lg:ml-[50%]'>
+        <div className='min-h-screen flex flex-col'>
+          <div className='pt-8 px-8 lg:pt-16 lg:px-16'>
+            <div className='flex justify-center'>
+              <div className='flex items-center gap-2'>
+                <Image
+                  src={companyInfo.logo}
+                  height={30}
+                  width={30}
+                  style={{ objectFit: 'cover' }}
+                  alt='company logo'
+                />
+                <span className='text-xl font-bold'>{companyInfo.name}</span>
+              </div>
             </div>
           </div>
 
-          {/* Right Card: Login Form */}
-          <div className='flex-1 z-10  mb-10 lg:max-w-[456px]  w-full md:mb-0 bg-white text-black lg:p-7 py-12 px-6  rounded-xl'>
-            <h2 className='text-[28px] font-bold mb-2'>Create Account</h2>
-            <p className='text-sm  text-grey500 mb-8'>
-              Enter your details to create your account
-            </p>
-            <SignupForm />
-            {/* <SignupForm /> */}
-            <Spacer y={8} />
-            <div className='flex items-center gap-2'>
-              <p className='text-grey400 text-xs m-0'>
-                {'Already have an account?'}
+          <div className='flex-1 flex lg:items-center items-start xl:py-6 py-12  justify-center px-8 lg:px-16'>
+            <div className='w-full max-w-md'>
+              <h1 className='text-4xl text-center font-semibold mb-2'>
+                Create Account
+              </h1>
+              <p className='text-grey600 text-center'>
+                Enter your details to create your account
               </p>
-              <Link className='text-primaryColor text-sm' href='/auth/login'>
-                Log in
-              </Link>
+              <Spacer y={10} />
+              <SignupForm />
+
+              <p className='text-center mt-8 text-sm text-grey600'>
+                Already have an account?{' '}
+                <Link
+                  href='/auth/login'
+                  className='text-primaryColor font-medium'
+                >
+                  Log in
+                </Link>
+              </p>
             </div>
           </div>
         </div>

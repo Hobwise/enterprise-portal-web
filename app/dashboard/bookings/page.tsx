@@ -17,13 +17,21 @@ import SuccessModal from '@/components/ui/dashboard/bookings/successModal';
 import useBookings from '@/hooks/cachedEndpoints/useBookings';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
+import useDateFilter from '@/hooks/useDateFilter';
 import { downloadCSV } from '@/lib/downloadToExcel';
 import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
 import { IoSearchOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
 
 const Bookings: React.FC = () => {
-  const { data, isLoading, isError, refetch } = useBookings();
+  const {
+    data,
+    isLoading,
+    isError,
+    refetch,
+    dropdownComponent,
+    datePickerModal,
+  } = useDateFilter(useBookings);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { userRolePermissions, role } = usePermission();
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,7 +151,7 @@ const Bookings: React.FC = () => {
 
   return (
     <>
-      <div className='flex flex-row flex-wrap  justify-between'>
+      <div className='flex flex-row flex-wrap mb-4 xl:mb-8 item-center justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
             {data?.[0]?.bookings.length > 0 ? (
@@ -161,11 +169,12 @@ const Bookings: React.FC = () => {
               <span>Bookings</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
+          <p className='text-sm  text-grey600  xl:w-[231px] w-full '>
             Showing all bookings
           </p>
         </div>
         <div className='flex items-center gap-3'>
+          {dropdownComponent}
           {data?.[0]?.bookings.length > 0 && (
             <>
               <div>
@@ -191,29 +200,31 @@ const Bookings: React.FC = () => {
                   <p>Export csv</p>
                 </Button>
                 {(role === 0 ||
-            userRolePermissions?.canCreateOrder === true) &&
-                <Button
-                onClick={showCreateBookingModal}
-                className='flex text-grey600 bg-white'
-                >
-                  <p>Create a booking</p>
-                </Button>
-                }
+                  userRolePermissions?.canCreateOrder === true) && (
+                  <Button
+                    onClick={showCreateBookingModal}
+                    className='flex text-grey600 bg-white'
+                  >
+                    <p>Create a booking</p>
+                  </Button>
+                )}
               </ButtonGroup>
-              {(role === 0 ||
-            userRolePermissions?.canEditOrder === true) &&
-              <CustomButton onClick={onOpen} className='flex text-white'>
-                <p>Confirm a booking</p>
-              </CustomButton>}
+              {(role === 0 || userRolePermissions?.canEditOrder === true) && (
+                <CustomButton onClick={onOpen} className='flex text-white'>
+                  <p>Confirm a booking</p>
+                </CustomButton>
+              )}
             </>
           )}
         </div>
       </div>
       {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+      {datePickerModal}
       <CreateBooking
         openCreateBookingModal={openCreateBookingModal}
         closeCreateBookingModal={closeCreateBookingModal}
         showSuccessModal={showSuccessModal}
+        refetch={refetch}
         setCompletedBooking={setCompletedBooking}
       />
       <ConfirmBooking

@@ -110,7 +110,9 @@ const QrList = ({ qr, searchQuery, data }: any) => {
 
     switch (columnKey) {
       case 'name':
-        return <div className='flex text-textGrey text-sm'>{qr.name}</div>;
+        return (
+          <div className='flex text-black font-medium text-sm'>{qr.name}</div>
+        );
 
       case 'dateCreated':
         return (

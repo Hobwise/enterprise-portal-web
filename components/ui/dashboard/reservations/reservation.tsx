@@ -97,21 +97,21 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
             />
 
             <div className='ml-5 gap-1 grid place-content-center'>
-              <p className='font-bold text-sm mb-1'>
+              <p className='font-medium text-black text-sm mb-[0.5px]'>
                 {reservation.reservationName}
               </p>
 
               {showReservationFee ? (
                 <div>
                   <p className='text-sm'>Reservation Fee</p>
-                  <p className='font-bold text-sm'>
+                  <p className='font-medium text-black text-[13px]'>
                     {formatPrice(reservation.reservationFee)}
                   </p>
                 </div>
               ) : showMinimumSpend ? (
                 <div>
                   <p className='text-sm'>Minimum Spend</p>
-                  <p className='font-bold text-sm'>
+                  <p className='font-medium text-black text-[13px]'>
                     {formatPrice(reservation.minimumSpend)}
                   </p>
                 </div>

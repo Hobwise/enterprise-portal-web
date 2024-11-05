@@ -3,7 +3,6 @@ import { createBooking } from '@/app/api/controllers/dashboard/bookings';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { selectClassNames } from '@/components/selectInput';
-import useBookings from '@/hooks/cachedEndpoints/useBookings';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import {
   formatDateTime,
@@ -28,7 +27,7 @@ import noImage from '../../../../public/assets/images/no-image.svg';
 
 const CreateBooking = ({
   openCreateBookingModal,
-
+  refetch,
   showSuccessModal,
   closeCreateBookingModal,
   setCompletedBooking,
@@ -36,7 +35,6 @@ const CreateBooking = ({
   const businessInformation = getJsonItemFromLocalStorage('business');
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const { data } = useReservation();
-  const { refetch } = useBookings();
 
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);

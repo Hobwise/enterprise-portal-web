@@ -5,7 +5,6 @@ import {
 } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
-import useOrder from '@/hooks/cachedEndpoints/useOrder';
 import { formatPrice, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Divider,
@@ -27,10 +26,11 @@ const ConfirmOrderModal = ({
   singleOrder,
   isOpenConfirmOrder,
   toggleConfirmModal,
-}) => {
+  refetch,
+}: any) => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [isLoading, setIsLoading] = useState(false);
-  const { refetch } = useOrder();
+
   const [screen, setScreen] = useState(1);
   const [order, setOrder] = useState([]);
   const [reference, setReference] = useState('');

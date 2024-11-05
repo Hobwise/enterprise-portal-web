@@ -8,7 +8,7 @@ import Error from '@/components/error';
 import { togglePreview } from '@/components/ui/dashboard/menu/preview-menu/data';
 
 import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
-import ViewModal from '@/components/ui/dashboard/orders/place-order/view';
+
 import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { formatPrice } from '@/lib/utils';
@@ -20,6 +20,7 @@ import useMenuUser from '@/hooks/cachedEndpoints/userMenuUser';
 import SplashScreen from '../reservation/splash-screen';
 import CheckoutModal from './checkoutModal';
 import Filters from './filter';
+import ViewModal from './viewMore';
 
 const CreateOrder = () => {
   const searchParams = useSearchParams();
@@ -130,6 +131,7 @@ const CreateOrder = () => {
 
   const toggleVarietyModal = (menu: any) => {
     setSelectedMenu(menu);
+
     setIsOpenVariety(!isOpenVariety);
   };
 
@@ -214,6 +216,12 @@ const CreateOrder = () => {
             backgroundColor='bg-primaryColor'
           >
             <div className='flex gap-2 items-center justify-center'>
+              {selectedItems.length > 0 && (
+                <span className='font-bold'>
+                  {' '}
+                  {formatPrice(calculateTotalPrice())}{' '}
+                </span>
+              )}
               <p>{'Proceed'} </p>
               <HiArrowLongLeft className='text-[22px] rotate-180' />
             </div>
@@ -317,8 +325,11 @@ const CreateOrder = () => {
 
       <ViewModal
         handleCardClick={handleCardClick}
+        handleDecrement={handleDecrement}
+        handleIncrement={handleIncrement}
         selectedMenu={selectedMenu}
         isOpenVariety={isOpenVariety}
+        totalPrice={calculateTotalPrice()}
         toggleVarietyModal={toggleVarietyModal}
         selectedItems={selectedItems}
       />

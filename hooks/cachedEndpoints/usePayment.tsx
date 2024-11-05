@@ -26,29 +26,44 @@ interface OrderSummary {
   payments: Payment[];
 }
 
-const usePayment = () => {
+const usePayment = (
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  options?: { enabled: boolean }
+) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage('business');
 
-  const getAllPayments = async ({ queryKey }) => {
-    const [_key, { page, rowsPerPage, tableStatus }] = queryKey;
+  const getAllPayments = async ({ queryKey }: { queryKey: any }) => {
+    const [
+      _key,
+      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+    ] = queryKey;
     const responseData = await getPaymentByBusiness(
       businessInformation[0]?.businessId,
       page,
       rowsPerPage,
-      tableStatus
+      tableStatus,
+      filterType,
+      startDate,
+      endDate
     );
 
     return responseData?.data?.data as OrderSummary[];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<OrderSummary[]>(
-    ['payments', { page, rowsPerPage, tableStatus }],
+    [
+      'payments',
+      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+    ],
 
     getAllPayments,
     {
       keepPreviousData: true,
       refetchOnWindowFocus: false,
+      ...options,
     }
   );
 

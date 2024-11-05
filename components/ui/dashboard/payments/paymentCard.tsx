@@ -1,9 +1,7 @@
-import usePayment from '@/hooks/cachedEndpoints/usePayment';
 import { formatPrice } from '@/lib/utils';
 import { Card, CardBody } from '@nextui-org/react';
 
-const PaymentCard = ({ payments }: any) => {
-  const { data } = usePayment();
+const PaymentCard = ({ data }: any) => {
   return (
     <article className='flex flex-wrap gap-5'>
       <Card className='p-4 lg:w-[300px] w-full'>

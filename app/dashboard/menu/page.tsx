@@ -157,7 +157,7 @@ const Menu: React.FC = () => {
 
   return (
     <>
-      <div className='flex flex-row flex-wrap  justify-between'>
+      <div className='flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between'>
         <div>
           <div className='text-[24px] leading-8 font-semibold'>
             {data?.length > 0 ? (
@@ -175,7 +175,7 @@ const Menu: React.FC = () => {
               <span>Menu</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
+          <p className='text-sm  text-grey600  xl:w-[231px] w-full'>
             Show all menu items
           </p>
         </div>

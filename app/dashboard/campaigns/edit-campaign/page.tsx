@@ -236,6 +236,7 @@ const EditCampaign = () => {
               variant='bordered'
               hideTimeZone
               size='lg'
+              calendarWidth={270}
               radius='sm'
               errorMessage={response?.errors?.startDateTime?.[0]}
               value={startDateTime}

@@ -8,15 +8,17 @@ const Filters = ({
 }: any) => {
   return (
     <>
-      <div className='flex   w-full border-b border-divider px-3 justify-between'>
+      <div className='flex   w-full  px-3 justify-between'>
         <Tabs
           classNames={{
-            base: 'overflow-scroll relative top-2',
-            tabList: 'gap-x-4 ',
-            cursor: 'w-full bg-primaryColor',
-            tab: 'max-w-fit px-0 py-0 h-10 ',
-            tabContent: 'group-data-[selected=true]:text-primaryColor m-0 ',
+            tabList:
+              'gap-4  relative rounded-none p-0 w-[100%] text-[#344054] overflow-scroll',
+            cursor: 'w-full bg-primaryColor h-[1px]',
+            tab: 'max-w-fit px-0 py-0 h-10 px-4',
+            tabContent:
+              'group-data-[selected=true]:text-primaryColor group-data-[selected=true]:font-semibold',
           }}
+          fullWidth={true}
           variant={'underlined'}
           aria-label='menu filter'
         >

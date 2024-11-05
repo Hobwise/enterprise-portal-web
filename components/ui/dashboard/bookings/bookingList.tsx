@@ -27,12 +27,12 @@ import moment from 'moment';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 
 import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
-import useBookings from '@/hooks/cachedEndpoints/useBookings';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { notify, submitBookingStatus } from '@/lib/utils';
 import { CiCalendar } from 'react-icons/ci';
 import { IoCheckmark } from 'react-icons/io5';
 import { LiaTimesSolid } from 'react-icons/lia';
+import DeleteModal from '../../deleteModal';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -48,12 +48,19 @@ const INITIAL_VISIBLE_COLUMNS = [
   'actions',
 ];
 
-const BookingsList = ({ bookings, searchQuery }: any) => {
+const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
   const { userRolePermissions, role } = usePermission();
   const [filteredBooking, setFilteredBooking] = React.useState(
     bookings[0]?.bookings
   );
-  const { refetch } = useBookings();
+  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
+  const [id, setId] = React.useState<Number>();
+
+  const toggleDeleteModal = (id?: number) => {
+    setId(id);
+    setIsOpenDelete(!isOpenDelete);
+  };
+
   const { page, rowsPerPage, tableStatus, setTableStatus, setPage } =
     useGlobalContext();
 
@@ -122,6 +129,7 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
         type: 'success',
       });
       refetch();
+      toggleDeleteModal();
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -137,11 +145,11 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
     switch (columnKey) {
       case 'firstName':
         return (
-          <div className=' text-textGrey text-sm'>
-            <p className='font-bold'>
+          <div className='text-sm'>
+            <p className='font-medium text-black'>
               {booking?.firstName} {booking?.lastName}
             </p>
-            <p>{booking?.phoneNumber}</p>
+            <p className='text-[13px] text-textGrey'>{booking?.phoneNumber}</p>
           </div>
         );
 
@@ -151,6 +159,8 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
             {moment(booking?.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
+      case 'reference':
+        return <div className='text-textGrey text-sm'>{booking.reference}</div>;
       case 'bookingStatus':
         return (
           <Chip
@@ -217,7 +227,10 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
                       booking?.bookingStatus === 1) && (
                       <DropdownItem
                         aria-label='cancel'
-                        onClick={() => updateBookingStatus(3, booking?.id)}
+                        onClick={() => {
+                          toggleDeleteModal(booking?.id);
+                        }}
+                        // onClick={() => updateBookingStatus(3, booking?.id)}
                       >
                         <div
                           className={` flex gap-2  items-center text-danger-500`}
@@ -309,7 +322,7 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={'No booking found'}
+          emptyContent={'No booking(s) found'}
           items={matchingObjectArray}
         >
           {(item) => (
@@ -321,6 +334,14 @@ const BookingsList = ({ bookings, searchQuery }: any) => {
           )}
         </TableBody>
       </Table>
+
+      <DeleteModal
+        isOpen={isOpenDelete}
+        action='booking'
+        handleDelete={() => updateBookingStatus(3, id)}
+        setIsOpen={setIsOpenDelete}
+        toggleModal={toggleDeleteModal}
+      />
     </section>
   );
 };

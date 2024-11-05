@@ -9,6 +9,7 @@ import {
   DropdownMenu,
   DropdownTrigger,
   Spacer,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -40,7 +41,14 @@ const INITIAL_VISIBLE_COLUMNS = [
   'status',
   'actions',
 ];
-const PaymentsList = ({ payments, searchQuery }: any) => {
+const PaymentsList = ({
+  refetch,
+  data,
+  payments,
+  searchQuery,
+
+  isLoading,
+}: any) => {
   const [singlePayment, setSinglePayment] = React.useState('');
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
 
@@ -119,7 +127,7 @@ const PaymentsList = ({ payments, searchQuery }: any) => {
     switch (columnKey) {
       case 'totalAmount':
         return (
-          <div className='text-textGrey text-sm'>
+          <div className='font-medium text-black text-sm'>
             <p>{formatPrice(payment.totalAmount)}</p>
           </div>
         );
@@ -202,7 +210,7 @@ const PaymentsList = ({ payments, searchQuery }: any) => {
 
   return (
     <>
-      <PaymentCard payments={payments} />
+      <PaymentCard data={data} />
       <Spacer y={5} />
       <section className='border border-primaryGrey rounded-lg'>
         <Table
@@ -234,7 +242,9 @@ const PaymentsList = ({ payments, searchQuery }: any) => {
             )}
           </TableHeader>
           <TableBody
-            emptyContent={'No payments found'}
+            isLoading={isLoading}
+            loadingContent={<Spinner label='fetching payment...' />}
+            emptyContent={'No payment(s) found'}
             items={matchingObjectArray}
           >
             {(item) => (
@@ -247,6 +257,7 @@ const PaymentsList = ({ payments, searchQuery }: any) => {
           </TableBody>
         </Table>
         <ApprovePayment
+          refetch={refetch}
           singlePayment={singlePayment}
           isOpen={isOpen}
           toggleApproveModal={toggleApproveModal}

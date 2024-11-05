@@ -1,7 +1,6 @@
 import BusinessSettingsDashboardPrompt from '@/components/businessSettingsDashboardPrompt';
 import Container from '@/components/dashboardContainer';
 
-import { inter } from '@/utilities/ui-config/fonts';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function DashboardLayout({
@@ -10,7 +9,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang='en' className={`${inter.className}`} suppressHydrationWarning>
+    <html lang='en' className={`font-satoshi`} suppressHydrationWarning>
       <body>
         <Container>{children}</Container>
         <BusinessSettingsDashboardPrompt />

@@ -1,6 +1,5 @@
 import { completeOrder } from '@/app/api/controllers/dashboard/orders';
 import { CustomButton } from '@/components/customButton';
-import useOrder from '@/hooks/cachedEndpoints/useOrder';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Modal,
@@ -17,10 +16,10 @@ const CancelOrderModal = ({
   isOpenCancelOrder,
   singleOrder,
   toggleCancelModal,
+  refetch,
 }: any) => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [loading, setLoading] = useState(false);
-  const { refetch } = useOrder();
 
   const handleCancel = async () => {
     setLoading(true);
