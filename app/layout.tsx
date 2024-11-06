@@ -19,17 +19,9 @@ export const metadata = {
   description: 'Streamline your business processes',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang='en'
-      className={` ${bricolage_grotesque.className}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={` ${bricolage_grotesque.className}`} suppressHydrationWarning>
       <body>
         <QueryProvider>
           <AppProvider>
@@ -52,7 +44,7 @@ export default function RootLayout({
                   },
                 }}
               />
-              <ToastContainer theme='light' />
+              <ToastContainer theme="light" />
             </Providers>
           </AppProvider>
         </QueryProvider>

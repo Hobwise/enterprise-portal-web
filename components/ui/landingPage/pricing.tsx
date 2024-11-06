@@ -42,83 +42,95 @@ export default function PricingComponent() {
 
           <div className="space-y-4">
             {pricingPlan.map((each) => (
-              <Transition>
+              <Transition key={each + 'basic'}>
                 <div className="flex items-start space-x-2">
                   <TickIcon className="w-[10%]" />
-                  <p key={each + 'basic'} className="text-left text-white text-sm w-[90%]">
-                    {each}
-                  </p>
+                  <p className="text-left text-white text-sm w-[90%]">{each}</p>
                 </div>
               </Transition>
             ))}
           </div>
-          <div className="mt-24">
-            <CustomButton className="text-[#2020A6] bg-white w-full font-medium mt-20">Get Started</CustomButton>
-          </div>
+          <Transition>
+            <div className="mt-24">
+              <CustomButton className="text-[#2020A6] bg-white w-full font-medium mt-20">Get Started</CustomButton>
+            </div>
+          </Transition>
         </div>
 
         <div className="border border-[#44444A] bg-white p-8 rounded-[10px] space-y-8">
-          <div className="space-y-2.5">
-            <h4 className="text-left text-[#FF9900] text-[20px]">Premium Plan (Recommended)</h4>
-            <div className="flex items-baseline space-x-2">
-              <p className="text-[42px] text-[#161618] font-medium font-sans">$19.99</p>
-              <p className="text-[#ACB5BB]">/month</p>
+          <Transition>
+            <div className="space-y-2.5">
+              <h4 className="text-left text-[#FF9900] text-[20px]">Premium Plan (Recommended)</h4>
+              <div className="flex items-baseline space-x-2">
+                <p className="text-[42px] text-[#161618] font-medium font-sans">$19.99</p>
+                <p className="text-[#ACB5BB]">/month</p>
+              </div>
+              <p className="text-[#161618] text-left">
+                Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
+              </p>
             </div>
-            <p className="text-[#161618] text-left">
-              Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-[35%] border-[#00000040] border" />
-            <p className="uppercase w-[45%] font-medium text-[10px] text-[#00000040]">WHAT YOU WILL GET</p>
-            <div className="w-[35%] border-[#00000040] border" />
-          </div>
+          </Transition>
+          <Transition>
+            <div className="flex items-center space-x-2">
+              <div className="w-[35%] border-[#00000040] border" />
+              <p className="uppercase w-[45%] font-medium text-[10px] text-[#00000040]">WHAT YOU WILL GET</p>
+              <div className="w-[35%] border-[#00000040] border" />
+            </div>
+          </Transition>
 
           <div className="space-y-4">
             {pricingPlan.map((each) => (
-              <div className="flex items-start space-x-2">
-                <TickIcon className="w-[10%]" />
-                <p key={each + 'basic'} className="text-left text-[#161618] text-sm w-[90%]">
-                  {each}
-                </p>
-              </div>
+              <Transition key={each + 'premium'}>
+                <div className="flex items-start space-x-2">
+                  <TickIcon className="w-[10%]" />
+                  <p className="text-left text-[#161618] text-sm w-[90%]">{each}</p>
+                </div>
+              </Transition>
             ))}
           </div>
-          <div className="mt-24">
-            <CustomButton className="text-white shadow-custom_inset_2 bg-[#5F35D2] w-full font-medium mt-20">Get Started</CustomButton>
-          </div>
+          <Transition>
+            <div className="mt-24">
+              <CustomButton className="text-white shadow-custom_inset_2 bg-[#5F35D2] w-full font-medium mt-20">Get Started</CustomButton>
+            </div>
+          </Transition>
         </div>
 
         <div className="border border-[#FFFFFF61] bg-[#FFFFFF1A] p-8 rounded-[10px] space-y-8">
-          <div className="space-y-2.5">
-            <h4 className="text-left text-white text-[20px]">Professional Plan</h4>
-            <div className="flex items-baseline space-x-2">
-              <p className="text-[42px] text-white font-medium font-sans">$49.99</p>
-              <p className="text-white/65">/month</p>
+          <Transition>
+            <div className="space-y-2.5">
+              <h4 className="text-left text-white text-[20px]">Professional Plan</h4>
+              <div className="flex items-baseline space-x-2">
+                <p className="text-[42px] text-white font-medium font-sans">$49.99</p>
+                <p className="text-white/65">/month</p>
+              </div>
+              <p className="text-white text-left">
+                Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
+              </p>
             </div>
-            <p className="text-white text-left">
-              Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-[35%] border-[#FFFFFF61] border" />
-            <p className="uppercase w-[45%] font-medium text-[10px] text-white">WHAT YOU WILL GET</p>
-            <div className="w-[35%] border-[#FFFFFF61] border" />
-          </div>
+          </Transition>
+          <Transition>
+            <div className="flex items-center space-x-2">
+              <div className="w-[35%] border-[#FFFFFF61] border" />
+              <p className="uppercase w-[45%] font-medium text-[10px] text-white">WHAT YOU WILL GET</p>
+              <div className="w-[35%] border-[#FFFFFF61] border" />
+            </div>
+          </Transition>
 
           <div className="space-y-4">
             {pricingPlan.map((each) => (
-              <div className="flex items-start space-x-2">
-                <TickIcon className="w-[10%]" />
-                <p key={each + 'basic'} className="text-left text-white text-sm w-[90%]">
-                  {each}
-                </p>
-              </div>
+              <Transition key={each + 'basic'}>
+                <div className="flex items-start space-x-2">
+                  <TickIcon className="w-[10%]" />
+                  <p className="text-left text-white text-sm w-[90%]">{each}</p>
+                </div>
+              </Transition>
             ))}
           </div>
-          <div className="mt-24">
-            <CustomButton className="text-[#2020A6] bg-white w-full font-medium mt-20">Get Started</CustomButton>
-          </div>
+          <Transition>
+            <div className="mt-24">
+              <CustomButton className="text-[#2020A6] bg-white w-full font-medium mt-20">Get Started</CustomButton>
+            </div>
+          </Transition>
         </div>
       </div>
     </div>

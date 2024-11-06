@@ -13,9 +13,9 @@ export default function LandingPageHeader() {
     { class: 'item8', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
   ];
   return (
-    <div className="wrapper bg-primaryColor text-white">
-      {promo.map((each) => (
-        <p className={cn('itemLeft font-satoshi font-light', each.class)} key={each.class}>
+    <div className="wrapper bg-primaryColor">
+      {promo.map((each, index) => (
+        <p className={`itemLeft font-satoshi font-light item${index}`} key={each.class}>
           {each.title}
         </p>
       ))}

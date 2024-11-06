@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { EclipseIcon, FacebookIcon, InstgramIcon, LinkedInIcon, TwitterIcon } from '@/public/assets/svg';
 import { Transition } from './transition';
 
-export function Footer() {
+export default function Footer() {
   const socialMedia = [
     { icon: <FacebookIcon />, url: 'fb' },
     { icon: <TwitterIcon />, url: 'x' },

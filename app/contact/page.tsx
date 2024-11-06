@@ -10,8 +10,8 @@ import { CustomTextArea } from '@/components/customTextArea';
 import { CustomButton } from '@/components/customButton';
 import FAQs from '@/components/ui/landingPage/faq';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
-import { Footer } from '@/components/ui/landingPage/footer';
 import { Transition } from '@/components/ui/landingPage/transition';
+import Footer from '@/components/ui/landingPage/footer';
 
 export default function Contact() {
   const sectionHeaderClass: string =
@@ -23,7 +23,7 @@ export default function Contact() {
   return (
     <div className="w-full bg-white">
       <header className="z-[100] backdrop-filter backdrop-blur-md fixed w-full">
-        <Navbar />
+        <Navbar type="default" />
       </header>
       <main>
         <section className="font-satoshi bg-white w-full pt-32 space-y-12">

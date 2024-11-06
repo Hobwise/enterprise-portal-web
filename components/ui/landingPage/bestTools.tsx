@@ -4,7 +4,7 @@ import React from 'react';
 import BestTools from './tools';
 import { Transition } from './transition';
 
-export function BestToolsComponent() {
+export default function BestToolsComponent() {
   const sectionHeaderClass: string =
     'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1.5 rounded-full text-xs mx-auto shadow_custom-inset';
   return (

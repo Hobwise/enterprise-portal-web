@@ -1,30 +1,30 @@
 'use client';
 import { CustomInput } from '@/components/CustomInput';
 import Navbar from '@/components/ui/landingPage/navBar';
-import { ArrowDown, CompanyLogo_1, ListItemIcon } from '@/public/assets/svg';
-import React, { useState } from 'react';
+import { ArrowDown, ListItemIcon } from '@/public/assets/svg';
+import React from 'react';
 import { IoSearchOutline } from 'react-icons/io5';
 import { columns } from './columns';
 import { allReservations, companyFilter } from './data';
 import Image from 'next/image';
 import { CustomButton } from '@/components/customButton';
-import { Footer } from '@/components/ui/landingPage/footer';
-import { Popover, PopoverTrigger, PopoverContent, Button, Slider } from '@nextui-org/react';
+import { Popover, PopoverTrigger, PopoverContent, Slider } from '@nextui-org/react';
 import { CheckboxGroup, Checkbox } from '@nextui-org/react';
 import StarRating from '@/components/ui/starRating';
 import { Transition } from '@/components/ui/landingPage/transition';
+import Footer from '@/components/ui/landingPage/footer';
 
 export default function Reservations() {
   const [value, setValue] = React.useState<any>([100, 300]);
-  const [open, setOpen] = useState<boolean>(false);
+
   const btnClassName =
     'before:ease relative h-[40px] mt-4 overflow-hidden w-full border border-[#FFFFFF26] px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40';
 
   return (
-    <React.Fragment>
+    <div className="bg-white">
       <div className="w-full bg-white">
         <header className="z-[50] backdrop-filter backdrop-blur-md fixed w-full">
-          <Navbar />
+          <Navbar type="default" />
         </header>
       </div>
       <section className="bg-white pt-32 px-12 pb-10 text-[#161618] space-y-10 font-satoshi">
@@ -186,6 +186,6 @@ export default function Reservations() {
       </section>
 
       <Footer />
-    </React.Fragment>
+    </div>
   );
 }
