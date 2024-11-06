@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 const SignupForm = () => {
   const router = useRouter();
-  const { setUserData } = useGlobalContext();
+  const { setUserData, setExpireTime } = useGlobalContext();
 
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
@@ -43,6 +43,7 @@ const SignupForm = () => {
     setResponse(data);
 
     if (data?.data?.isSuccessful) {
+      setExpireTime(new Date(data.data.data));
       router.push('/auth/confirm-email');
     } else if (data?.data?.error) {
       notify({

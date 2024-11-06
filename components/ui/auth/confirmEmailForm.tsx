@@ -4,6 +4,7 @@ import api from '@/app/api/apiService';
 import { confirmEmail } from '@/app/api/controllers/auth';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
+import useCountdown from '@/hooks/useTimer';
 import {
   notify,
   saveJsonItemToLocalStorage,
@@ -16,9 +17,10 @@ import toast from 'react-hot-toast';
 import { IoMdRefresh } from 'react-icons/io';
 import OtpInput from 'react-otp-input';
 const ConfirmEmailForm = () => {
-  const { userData } = useGlobalContext();
+  const { userData, expireTime, setExpireTime } = useGlobalContext();
   const router = useRouter();
   const [otp, setOtp] = useState('');
+
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -64,9 +66,10 @@ const ConfirmEmailForm = () => {
     try {
       setIsLoading(true);
 
-      await api.post(AUTH.generateToken, payload);
+      const { data } = await api.post(AUTH.generateToken, payload);
       setIsLoading(false);
-
+      setExpireTime(new Date(data.data));
+      console.log(data, 'data');
       toast.success('Check your email for the verification code');
     } catch (error) {
       setIsLoading(false);
@@ -75,6 +78,8 @@ const ConfirmEmailForm = () => {
       }
     }
   };
+
+  const { timeLeft, formatTime } = useCountdown(expireTime);
 
   return (
     <>
@@ -106,19 +111,28 @@ const ConfirmEmailForm = () => {
               // border: '1px solid rgba(0,0,0,0.3)',
             }}
           />
-          <div className='flex items-center mt-2 gap-2'>
-            <p className='text-grey400 text-xs m-0'>{"Didn't get the code?"}</p>
-            {isLoading ? (
-              <IoMdRefresh className='text-grey400 animate-spin' />
-            ) : (
-              <span
-                onClick={resendOtp}
-                className='text-primaryColor cursor-pointer underline text-sm'
-              >
-                Click to resend
-              </span>
-            )}
-          </div>
+          {timeLeft ? (
+            <p className='text-grey400 text-xs mt-2 flex gap-1 '>
+              <span>{`One time password expires in `}</span>
+              <span className='text-black font-bold'>{formatTime()}</span>
+            </p>
+          ) : (
+            <div className='flex items-center mt-2 gap-2'>
+              <p className='text-grey400 text-xs m-0'>
+                {"Didn't get the code?"}
+              </p>
+              {isLoading ? (
+                <IoMdRefresh className='text-grey400 animate-spin' />
+              ) : (
+                <span
+                  onClick={resendOtp}
+                  className='text-primaryColor cursor-pointer underline text-sm'
+                >
+                  Click to resend
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         <Spacer y={8} />
