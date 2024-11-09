@@ -560,3 +560,22 @@ export const ListItemIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => 
     />
   </svg>
 );
+
+export const HamburgerIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path d="M3 7.37695H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M3 12.377H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M3 17.377H21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+export const CloseIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg width="24" height="39" viewBox="0 0 24 39" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M20.8843 11.5538C21.1772 11.2609 21.1772 10.786 20.8843 10.4931C20.5914 10.2002 20.1166 10.2002 19.8237 10.4931L12.0012 18.3155L4.17877 10.4931C3.88587 10.2002 3.411 10.2002 3.11811 10.4931C2.82521 10.786 2.82521 11.2609 3.11811 11.5538L10.9406 19.3762L3.11811 27.1986C2.82521 27.4915 2.82521 27.9664 3.11811 28.2593C3.411 28.5522 3.88587 28.5522 4.17877 28.2593L12.0012 20.4368L19.8237 28.2593C20.1166 28.5522 20.5914 28.5522 20.8843 28.2593C21.1772 27.9664 21.1772 27.4915 20.8843 27.1986L13.0619 19.3762L20.8843 11.5538Z"
+      fill="#5F35D2"
+    />
+  </svg>
+);

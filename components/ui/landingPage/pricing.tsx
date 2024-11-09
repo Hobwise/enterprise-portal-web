@@ -3,12 +3,51 @@ import { CustomButton } from '@/components/customButton';
 import { cn, pricingPlan } from '@/lib/utils';
 import { RoundedCheckIcon, TickIcon } from '@/public/assets/svg';
 import { Transition } from './transition';
+import { useState } from 'react';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 export function SwitchPlan({ className }: { className?: string }) {
+  const [plan, setPlan] = useState<string>('monthly');
+  const plans: string[] = ['monthly', 'annually'];
+  console.log(plan, '-> plan');
+
   return (
-    <div className={cn('bg-white border border-[#44444A] shadow-shadow_2 w-fit mx-auto flex py-1 px-1 rounded-lg', className)} role="switch">
-      <p className="px-10 py-2 rounded-lg text-[#949494] font-satoshi font-normal">Monthly</p>
-      <p className="px-10 bg-[#5F35D2] py-2 rounded-lg font-satoshi font-normal text-white border border-[#FFFFFF26] z-20 shadow-custom_double">Annually</p>
+    // <div className={cn('bg-white border border-[#44444A] shadow-shadow_2 w-fit mx-auto flex py-1 px-1 rounded-lg', className)} role="switch">
+    //   {plans.map((each) => (
+    //     <p
+    //       key={each}
+    //       className={cn(
+    //         'px-10 py-2 z-20 rounded-lg text-[#949494] font-satoshi font-normal capitalize cursor-pointer transition-all duration-300 ',
+    //         each === plan ? 'bg-[#5F35D2] font-normal text-white border border-[#FFFFFF26] shadow-custom_double translate-x-full' : ''
+    //       )}
+    //       onClick={() => setPlan(each)}
+    //       role="button"
+    //     >
+    //       {each}
+    //     </p>
+    //   ))}
+    // </div>
+
+    <div className={cn('bg-white shadow-shadow_2 w-fit mx-auto flex py-2 px-1 rounded-lg relative', className)} role="switch">
+      <div
+        className={`absolute top-1.5 h-[80%] w-[48%] rounded-lg bg-[#5F35D2] transition-transform duration-300 ease-in-out ${
+          plan === plans[1] ? 'translate-x-full' : ''
+        }`}
+      ></div>
+
+      {plans.map((each) => (
+        <p
+          key={each}
+          className={cn(
+            'px-10 py-2 z-10 text-[#949494] font-satoshi font-normal capitalize cursor-pointer transition-colors duration-300',
+            each === plan ? 'text-white' : ''
+          )}
+          onClick={() => setPlan(each)}
+          role="button"
+        >
+          {each}
+        </p>
+      ))}
     </div>
   );
 }
@@ -18,7 +57,7 @@ export default function PricingComponent() {
     <div className="w-full space-y-16">
       <SwitchPlan />
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="border border-[#FFFFFF61] bg-[#FFFFFF1A] p-8 rounded-[10px] space-y-8">
           <Transition>
             <div className="space-y-2.5">
@@ -138,34 +177,35 @@ export default function PricingComponent() {
 }
 
 export function PricingExtended() {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const btnClassName =
-    'before:ease relative h-[40px] overflow-hidden border border-[#6C7278] px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-[#6C7278] bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40';
+    'before:ease relative h-[40px] overflow-hidden w-fit lg:text-base text-xs border border-[#6C7278] lg:px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-[#6C7278] bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40';
   return (
     <div className="border border-white bg-white rounded-xl font-satoshi">
-      <div className="grid grid-cols-4 bg-[#3A159F] py-4 px-4 gap-24 rounded-tr-xl rounded-tl-xl">
-        <div className="space-y-4 col-span-1">
+      <div className="grid grid-cols-3 lg:grid-cols-4 bg-[#3A159F] py-4 px-4 gap-6 lg:gap-24 rounded-tr-xl rounded-tl-xl">
+        <div className="space-y-4 col-span-1 hidden lg:block">
           <p className="font-bricolage_grotesque text-white text-[20px]">Select type of price</p>
           <SwitchPlan className="mx-0" />
         </div>
         <div className="space-y-6 col-span-1">
-          <p className="text-white">Basic Plan</p>
+          <p className="text-white text-xs lg:text-base h-[32px]">Basic Plan</p>
           <div className="flex items-baseline space-x-2">
-            <p className="text-[28px] text-white font-medium font-sans">$29</p>
-            <p className="text-white/65 text-sm">/month</p>
+            <p className="text-[14px] lg:text-[28px] text-white font-medium font-sans">$29</p>
+            <p className="text-white/65 text-[10px] lg:text-sm">/month</p>
           </div>
         </div>
         <div className="space-y-6 col-span-1">
-          <p className="text-white">Professional Plan</p>
+          <p className="text-white  text-xs lg:text-base">Professional Plan</p>
           <div className="flex items-baseline space-x-2">
-            <p className="text-[28px] text-white font-medium font-sans">$79</p>
-            <p className="text-white/65 text-sm">/month</p>
+            <p className="text-[14px] lg:text-[28px] text-white font-medium font-sans">$79</p>
+            <p className="text-white/65 text-[10px] lg:text-sm">/month</p>
           </div>
         </div>
         <div className="space-y-6 col-span-1">
-          <p className="text-white">Enterprise Plan</p>
+          <p className="text-white  text-xs lg:text-base">Enterprise Plan</p>
           <div className="flex items-baseline space-x-2">
-            <p className="text-[28px] text-white font-medium font-sans">$199</p>
-            <p className="text-white/65 text-sm">/month</p>
+            <p className="text-[14px] lg:text-[28px] text-white font-medium font-sans">$199</p>
+            <p className="text-white/65 text-[10px] lg:text-sm">/month</p>
           </div>
         </div>
       </div>
@@ -173,7 +213,7 @@ export function PricingExtended() {
       <div className="bg-white">
         {pricingLists.map((list, index) => (
           <Transition>
-            <div className="grid grid-cols-4 py-10 px-4 gap-24 border-b border-b-[#E5E5E5]" key={list.type + index}>
+            <div className="grid grid-cols-3 lg:grid-cols-4 py-10 px-4 gap-24 border-b border-b-[#E5E5E5]" key={list.type + index}>
               <p className="text-sm">{list.type}</p>
               <div>{list.basic ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}</div>
               <div>{list.professional ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}</div>
@@ -183,10 +223,12 @@ export function PricingExtended() {
         ))}
       </div>
 
-      <div className="grid grid-cols-4 bg-[#3A159F] py-10 px-4 gap-24 rounded-br-xl rounded-bl-xl">
-        <Transition>
-          <p className="font-bricolage_grotesque text-white text-[20px]">Get Started now</p>
-        </Transition>
+      <div className="grid grid-cols-3 lg:grid-cols-4 bg-[#3A159F] py-10 px-4 gap-3 lg:gap-24 rounded-br-xl rounded-bl-xl">
+        {isDesktop && (
+          <Transition>
+            <p className="font-bricolage_grotesque text-white text-[20px]">Get Started now</p>
+          </Transition>
+        )}
         <Transition>
           <CustomButton className={btnClassName}>Get Started</CustomButton>
         </Transition>

@@ -3,7 +3,7 @@ import Image from 'next/image';
 import React from 'react';
 import PricePlan from '@/public/assets/images/price-bg.png';
 import { SettingsIcon, TagIcon } from '@/public/assets/svg';
-import PricingComponent, { PricingExtended } from '@/components/ui/landingPage/pricing';
+import PricingComponent, { PricingExtended, SwitchPlan } from '@/components/ui/landingPage/pricing';
 import Airbnb from '@/public/assets/icons/airbnb-2.png';
 import Hubspot from '@/public/assets/icons/hubspot-2.png';
 import Google from '@/public/assets/icons/google-2.png';
@@ -29,7 +29,7 @@ export default function Pricing() {
       </header>
 
       <main className="w-full pt-12 font-satoshi">
-        <section className="px-12 font-satoshi py-12 space-y-8 bg-primaryColor">
+        <section className="px-6 lg:px-12 font-satoshi py-12 space-y-8 bg-primaryColor">
           <Image src={PricePlan} alt="" className="absolute top-0 w-[90%]" priority />
           <div className="bg-[#6840D50D] border border-[#5F35D2] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom_inset_2">
             <TagIcon />
@@ -53,23 +53,29 @@ export default function Pricing() {
           </div>
 
           <div className="space-y-4 pb-24">
-            <div className="mt-24 space-y-4">
+            <div className="lg:mt-24 space-y-4">
               <div className="bg-[#6840D50D] border border-white/30 flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full shadow-custom_inset_2">
                 <SettingsIcon className="text-white" />
                 <p className="font-normal text-white text-sm">Compare pricing</p>
               </div>
-              <p className="font-normal text-white text-[40px] font-bricolage_grotesque">Choose the Right Plan for Your Growth</p>
+              <p className="font-normal text-white text-[24px] lg:text-[40px] font-bricolage_grotesque">Choose the Right Plan for Your Growth</p>
+            </div>
+
+            <div className="my-8 col-span-1 block lg:hidden">
+              <div className="my-8 flex justify-center">
+                <SwitchPlan className="mx-0" />
+              </div>
             </div>
 
             <PricingExtended />
           </div>
         </section>
 
-        <section className="bg-white py-24 px-12 text-center">
+        <section className="bg-white py-12 lg:py-24 px-6 lg:px-12 text-center">
           <BestToolsComponent />
         </section>
 
-        <FAQs className="pt-20" />
+        <FAQs className="pt-10 lg:pt-20" />
 
         <section className="text-center">
           <JoinCommunity className="mt-0" />

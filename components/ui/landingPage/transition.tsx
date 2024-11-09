@@ -10,7 +10,7 @@ interface FadeInUpProps {
   easing?: [number, number, number, number];
 }
 
-const FadeInUp: React.FC<FadeInUpProps> = ({ children, reset = true, duration = 1, easing = [0, 0.78, 0.42, 0.98] }) => {
+const FadeInUp: React.FC<FadeInUpProps> = ({ children, reset = true, duration = 2, easing = [0, 0.78, 0.42, 0.98] }) => {
   const { inView } = useContext(IntersectionContext);
 
   const transition: FramerTransition = useMemo(

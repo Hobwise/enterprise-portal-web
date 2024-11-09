@@ -261,11 +261,21 @@ input:-webkit-autofill:focus {
 }
 
 .content_div {
-  width: 300px;
+  width: 350px;
   height: 450px;
   position: relative;
   max-height: 90vh;
   margin: 20px;
+  background: var(--white);
+  overflow: hidden;
+}
+
+.content_div_small {
+  width: 80vw;
+  height: 580px;
+  position: relative;
+  max-height: 90vh;
+  /* margin: 20px; */
   background: var(--white);
   overflow: hidden;
 }

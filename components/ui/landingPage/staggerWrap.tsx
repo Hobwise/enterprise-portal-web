@@ -17,7 +17,7 @@ interface StaggerWrapProps extends MotionProps {
   childrenDelay?: number;
 }
 
-export const StaggerWrap: React.FC<StaggerWrapProps> = ({ children, delayOrder, delay = 0, childrenDelay = 1, ...rest }) => {
+export const StaggerWrap: React.FC<StaggerWrapProps> = ({ children, delayOrder, delay = 0, childrenDelay = 0, ...rest }) => {
   const { inView } = useContext(IntersectionContext);
 
   const variants = {

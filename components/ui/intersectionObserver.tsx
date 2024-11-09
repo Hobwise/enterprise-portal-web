@@ -50,7 +50,7 @@ interface IntersectionObserverProps {
   delay?: number; // Optional delay prop to control entry delay
 }
 
-export const IntersectionObserver: React.FC<IntersectionObserverProps> = ({ children, reset = true, delay = 200 }) => {
+export const IntersectionObserver: React.FC<IntersectionObserverProps> = ({ children, reset = true, delay = 10 }) => {
   // Default delay set to 500ms
   const [inView, setInView] = useState(false);
   const intersectionRef = useRef<HTMLDivElement>(null);

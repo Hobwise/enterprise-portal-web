@@ -38,11 +38,11 @@ export default function Contact() {
           <div className="bg-[#5F35D2] rounded-xl relative w-[80%] mx-auto">
             <Image src={ContactUsBg} alt="" className="absolute top-0" priority />
             <div className="flex">
-              <Image src={DashboardImage} alt="Dashboard image" className="mx-auto w-[85%] z-50 mt-10 mr-12" />
+              <Image src={DashboardImage} alt="Dashboard image" className="mx-auto w-[75%] lg:w-[85%] z-50 mt-10 lg:mr-12" />
             </div>
 
             <Transition>
-              <div className="grid grid-cols-2 gap-12 bg-[#DDD1FF] px-8 py-10 rounded-b-xl">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white lg:bg-[#DDD1FF] px-8 py-10 rounded-b-xl">
                 <form onSubmit={submitFormData} autoComplete="off" className="space-y-8">
                   <CustomInput type="text" name="name" label="What’s your name?" placeholder="yourname" classnames="font-light" />
 
