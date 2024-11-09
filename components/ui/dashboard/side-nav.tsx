@@ -10,6 +10,7 @@ import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import {
   getJsonItemFromLocalStorage,
   saveJsonItemToLocalStorage,
+  setTokenCookie,
 } from '@/lib/utils';
 import {
   Avatar,
@@ -60,7 +61,7 @@ const SideNav = () => {
         ...userData,
         token: newToken,
       });
-
+      setTokenCookie('token', newToken);
       return newToken;
     } catch (error) {
       console.log(error);
