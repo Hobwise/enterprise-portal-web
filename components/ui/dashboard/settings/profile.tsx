@@ -191,7 +191,7 @@ const Profile = () => {
       </div>
       <Spacer y={6} />
       <CustomInput
-        type='email'
+        type='text'
         name='email'
         disabled={true}
         errorMessage={response?.errors?.email?.[0]}

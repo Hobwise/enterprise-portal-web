@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 
-import { TOKEN_EXPIRY_DURATION } from '@/app/api/apiService';
 import { generateRefreshToken } from '@/app/api/controllers/auth';
 import CompanyLogo from '@/components/logo';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
@@ -57,11 +56,9 @@ const SideNav = () => {
 
       const newToken = response?.data?.data?.jwtToken;
 
-      const newExpiry = Date.now() + TOKEN_EXPIRY_DURATION;
       saveJsonItemToLocalStorage('userInformation', {
         ...userData,
         token: newToken,
-        tokenExpiry: newExpiry,
       });
 
       return newToken;

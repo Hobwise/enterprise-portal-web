@@ -43,5 +43,5 @@ export const emailValidation = () => {
     .string()
     .trim()
     .min(1, { message: 'Please enter a valid email' })
-    .email('This is not a valid email.');
+    .email({ message: 'This is not a valid email.' });
 };

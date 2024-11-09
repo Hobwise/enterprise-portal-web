@@ -108,17 +108,17 @@ const BusinessInformationForm = () => {
       />
       <Spacer y={4} />
 
-      <div className='flex flex-col md:flex-row  gap-3'>
-        <CustomInput
-          type='email'
-          name='contactEmailAddress'
-          errorMessage={response?.errors?.contactEmailAddress?.[0]}
-          onChange={handleInputChange}
-          value={businessFormData.contactEmailAddress}
-          label='Business Email'
-          placeholder={`${companyInfo.name}@gmail.com`}
-        />
-        <CustomInput
+      {/* <div className='flex flex-col md:flex-row  gap-3'> */}
+      <CustomInput
+        type='text'
+        name='contactEmailAddress'
+        errorMessage={response?.errors?.contactEmailAddress?.[0]}
+        onChange={handleInputChange}
+        value={businessFormData.contactEmailAddress}
+        label='Business Email'
+        placeholder={`${companyInfo.name}@gmail.com`}
+      />
+      {/* <CustomInput
           type='text'
           name='contactPhoneNumber'
           errorMessage={response?.errors?.contactPhoneNumber?.[0]}
@@ -127,7 +127,7 @@ const BusinessInformationForm = () => {
           label='Business Phone Number'
           placeholder='09034545454'
         />
-      </div>
+      </div> */}
       <Spacer y={4} />
       <CustomInput
         type='text'
@@ -147,7 +147,7 @@ const BusinessInformationForm = () => {
           name='state'
           onChange={handleInputChange}
           value={businessFormData.state}
-          placeholder={'Select a state'}
+          placeholder={'Select state'}
           contents={getStates()}
         />
 
@@ -157,7 +157,7 @@ const BusinessInformationForm = () => {
           name='city'
           onChange={handleInputChange}
           value={businessFormData.city}
-          placeholder={'Select a lga'}
+          placeholder={'Select lga'}
           contents={getCities()}
         />
       </div>

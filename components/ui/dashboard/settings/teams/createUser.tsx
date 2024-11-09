@@ -129,7 +129,7 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
                   </div>
                   <Spacer y={6} />
                   <CustomInput
-                    type='email'
+                    type='text'
                     name='email'
                     errorMessage={response?.errors?.email?.[0]}
                     onChange={handleInputChange}

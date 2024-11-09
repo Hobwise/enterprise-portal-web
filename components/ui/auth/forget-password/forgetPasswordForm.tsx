@@ -48,7 +48,7 @@ const ForgetPasswordForm = ({ setScreen, email, setEmail }: any) => {
       <Spacer y={8} />
       <form onSubmit={submitFormData} autoComplete='off'>
         <CustomInput
-          type='email'
+          type='text'
           label='Email Address'
           errorMessage={response?.errors?.email?.[0]}
           onChange={(e) => {
