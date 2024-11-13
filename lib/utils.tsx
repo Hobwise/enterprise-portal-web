@@ -402,17 +402,6 @@ export const companies = [
   { image: FedEx, title: 'FedEx' },
 ];
 
-export const pricingPlan: string[] = [
-  'All features of the Free Plan',
-  'Lorem ipsum dolor sit amet consectetur. Rhoncus in elementum.',
-  'Lorem ipsum dolor sit amet consectetur.',
-  'Lorem ipsum dolor sit amet consectetur. Ut.',
-  'Lorem ipsum dolor sit amet consectetur. Tellus.',
-  'Lorem ipsum dolor sit amet consectetur. Sit.',
-  'Lorem ipsum dolor sit amet consectetur. Amet.',
-  'Lorem ipsum dolor sit amet consectetur. Tincidunt tempus elementum facilisi in.',
-];
-
 export const formatKey = (key: string) => {
   const formattedString = key.replace(/^canAccess/, '');
 
@@ -453,21 +442,3 @@ export function formatDate(dateString: string) {
 
   return `${dayWithSuffix} ${month}., ${year}`;
 }
-
-const pricingsModel = {
-  maxUsers: 2147483647,
-  monthlyFee: 10000,
-  yearlyFee: 100000,
-  canAccessDashboard: true,
-  canAccessMenu: true,
-  canAccessReservations: true,
-  canAccessNotifications: true,
-  canAccessOrders: true,
-  canAccessPayments: true,
-  canAccessBookings: true,
-  canAccessCampaigns: true,
-  canAccessReports: true,
-  canAccessSettings: true,
-  canAccessQR: true,
-  canAccessMultipleLocations: true,
-};
