@@ -2,7 +2,7 @@
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
-import { ArrowLeftIcon, ArrowRightIcon, InfoCircle } from '@/public/assets/svg';
+import { ArrowLeftIcon, ArrowRightIcon, InfoCircle, LocationIcon } from '@/public/assets/svg';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { Modal, ModalBody, ModalContent } from '@nextui-org/react';
@@ -89,7 +89,7 @@ export default function BookReservation() {
   };
 
   return (
-    <div className="font-satoshi px-6 lg:px-24 space-y-8 mt-8">
+    <div className="font-satoshi px-6 lg:px-24 space-y-4 mt-8">
       <div className="flex items-center space-x-2.5 text-sm">
         <div className="bg-[#EDE7FD] border border-[#5F35D24D] rounded-md w-8 h-8 flex items-center justify-center" role="button" onClick={() => back()}>
           <ArrowLeftIcon width={20} height={20} />
@@ -186,8 +186,14 @@ export default function BookReservation() {
             </form>
           </div>
 
-          <div className="lg:space-y-6">
-            <p className="text-lg font-medium text-[#161618]">Selected Reservation</p>
+          <div className="lg:space-y-6 space-y-6 lg:-mt-16">
+            <div className="space-y-1.5">
+              <p className="text-lg font-medium text-[#161618]">Selected Reservation</p>
+              <div className="flex space-x-2 items-center text-sm">
+                <LocationIcon />
+                <p>{reservation?.businessAddress}</p>
+              </div>
+            </div>
             {isClient && (
               <div className="border border-[#E4E7EC] py-4 px-5 rounded-lg space-y-6">
                 <div className="flex border-b border-b-[#E4E7EC] pb-6 items-start space-x-4">
@@ -259,7 +265,7 @@ export default function BookReservation() {
 
                 <div className="font-bold flex justify-between text-[#404245]">
                   <p>Total</p>
-                  <p>₦{formatNumber(Number(reservation?.reservationFee || 0) * quantity)}.00</p>
+                  <p className="opacity-20">₦{formatNumber(Number(reservation?.reservationFee || 0) * quantity)}.00</p>
                 </div>
 
                 <div className="bg-[#F0F2F4] p-4 text-[#5A5A63] flex items-baseline space-x-2 rounded-lg">

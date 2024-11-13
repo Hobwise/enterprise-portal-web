@@ -15,16 +15,18 @@ interface IReservationCard {
   each: any;
 }
 
-export default function ReservationCard({ image, businessName, reservationName, id, each }: IReservationCard) {
+export default function ReservationCard({ image, businessName, reservationName, id, each, businessAddress }: IReservationCard) {
   const handleView = () => {
     localStorage.setItem('reservation', JSON.stringify(each));
   };
+
+  console.log(each);
 
   return (
     <Transition key={id}>
       <div
         role="contentinfo"
-        className="bg-white rounded-xl font-satoshi w-full px-2.5 pt-2.5 pb-4 relative space-y-2.5 h-[265px]"
+        className="bg-white rounded-xl font-satoshi w-full px-2.5 pt-2.5 pb-4 relative space-y-2.5 h-[285px]"
         style={{ boxShadow: '0px 4px 12px 0px #31363F1A' }}
       >
         {image ? (
@@ -36,9 +38,12 @@ export default function ReservationCard({ image, businessName, reservationName, 
         )}
 
         <div className="px-2 space-y-4">
-          <div className="space-y-1.5">
-            <p className="text-[#282828] font-medium text-[15px] capitalize truncate">{reservationName}</p>
-            <p className="text-[#808B9F] text-xs">{businessName}</p>
+          <div className="space-y-2">
+            <div>
+              <p className="text-[#282828] font-medium text-[15px] capitalize truncate">{reservationName}</p>
+              <p className="text-xs text-[#44444A] truncate capitalize">{businessAddress}</p>
+            </div>
+            <p className="text-[#808B9F] text-xs capitalize">{businessName}</p>
           </div>
           <div>
             <Link href={`${RESERVATIONS_URL}/${id}`} onClick={handleView}>
