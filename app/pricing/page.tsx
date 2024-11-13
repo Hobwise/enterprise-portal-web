@@ -1,27 +1,19 @@
+'use client';
 import Navbar from '@/components/ui/landingPage/navBar';
 import Image from 'next/image';
-import React from 'react';
+import React, { useState } from 'react';
 import PricePlan from '@/public/assets/images/price-bg.png';
 import { SettingsIcon, TagIcon } from '@/public/assets/svg';
 import PricingComponent, { PricingExtended, SwitchPlan } from '@/components/ui/landingPage/pricing';
-import Airbnb from '@/public/assets/icons/airbnb-2.png';
-import Hubspot from '@/public/assets/icons/hubspot-2.png';
-import Google from '@/public/assets/icons/google-2.png';
-import Microsoft from '@/public/assets/icons/microsoft-2.png';
-import FedEx from '@/public/assets/icons/fedex-2.png';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
 import FAQs from '@/components/ui/landingPage/faq';
 import BestToolsComponent from '@/components/ui/landingPage/bestTools';
 import Footer from '@/components/ui/landingPage/footer';
+import Companies from '@/components/ui/landingPage/companies';
 
 export default function Pricing() {
-  const companies = [
-    { image: Airbnb, title: 'Airbnb' },
-    { image: Hubspot, title: 'Hubspot' },
-    { image: Google, title: 'Google' },
-    { image: Microsoft, title: 'Microsoft' },
-    { image: FedEx, title: 'FedEx' },
-  ];
+  const [plan, setPlan] = useState<string>('monthly');
+
   return (
     <div className="bg-primaryColor">
       <header className="z-50 backdrop-filter backdrop-blur-md fixed w-full">
@@ -37,7 +29,7 @@ export default function Pricing() {
           </div>
 
           <div className="w-[100%] mx-auto text-satoshi space-y-2 text-center">
-            <h2 className="text-[56px] text-white leading-[64px] font-bricolage_grotesque">Simple Pricing for Every Business</h2>
+            <h2 className="text-[32px] lg:text-[56px] text-white lg:leading-[64px] font-bricolage_grotesque">Simple Pricing for Every Business</h2>
             <p className="text-[#ACB5BB]">Our transparent and straightforward pricing plans are designed to meet the needs of businesses of all sizes.</p>
           </div>
 
@@ -45,16 +37,12 @@ export default function Pricing() {
 
           <div className="mt-12 space-y-12">
             <p className="text-center text-white text-[20px] mt-16">More than 10,000 companies enjoy using our product</p>
-            <div className="grid grid-cols-5 gap-10 w-[50%] items-center mx-auto">
-              {companies.map((each) => (
-                <img src={each.image.src} alt={each.title} key={each.title} />
-              ))}
-            </div>
+            <Companies type="min" />
           </div>
 
           <div className="space-y-4 pb-24">
             <div className="lg:mt-24 space-y-4">
-              <div className="bg-[#6840D50D] border border-white/30 flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full shadow-custom_inset_2">
+              <div className="bg-[#9F7CFE] border border-white/30 flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full shadow-custom_inset_2">
                 <SettingsIcon className="text-white" />
                 <p className="font-normal text-white text-sm">Compare pricing</p>
               </div>
@@ -63,15 +51,15 @@ export default function Pricing() {
 
             <div className="my-8 col-span-1 block lg:hidden">
               <div className="my-8 flex justify-center">
-                <SwitchPlan className="mx-0" />
+                <SwitchPlan className="mx-0" plan={plan} setPlan={setPlan} />
               </div>
             </div>
 
-            <PricingExtended />
+            <PricingExtended plan={plan} setPlan={setPlan} />
           </div>
         </section>
 
-        <section className="bg-white py-12 lg:py-24 px-6 lg:px-12 text-center">
+        <section className="bg-white pt-12 lg:pt-20 px-6 lg:px-12 text-center">
           <BestToolsComponent />
         </section>
 

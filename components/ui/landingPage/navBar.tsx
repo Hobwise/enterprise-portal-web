@@ -3,7 +3,7 @@ import Image from 'next/image';
 import HobinkLogo from '@/public/assets/images/hobink-logo.png';
 import HobinkLogoWhite from '@/public/assets/images/hobink-logo-white.png';
 import Link from 'next/link';
-import { BUSINESS_URL, CONTACT_URL, HOME_URL, LOGIN_URL, PRICING_URL, RESERVATIONS_URL, SIGN_UP_URL } from '@/utilities/routes';
+import { CONTACT_URL, HOME_URL, LOGIN_URL, PRICING_URL, RESERVATIONS_URL, SIGN_UP_URL } from '@/utilities/routes';
 import { CustomButton } from '@/components/customButton';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -12,7 +12,6 @@ import { useState } from 'react';
 import SmallScreenBackground from '@/public/assets/images/small-screen-bg.png';
 import { socialMedia } from './footer';
 import { Transition } from './transition';
-import { useMediaQuery } from '@/hooks/use-media-query';
 
 export const navItem = [
   { title: 'Home', href: HOME_URL },
@@ -34,7 +33,7 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
   const btnClassName = `before:ease relative h-[40px] overflow-hidden ${
     type === 'default' || (type === 'colored' && 'border border-[#FFFFFF26]')
   } px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40`;
-  // type === 'colored' || type === 'default' || !openNav ? HobinkLogoWhite :
+
   return (
     <div className={cn(openNav && 'w-full bg-white h-screen relative')}>
       {openNav && <Image src={SmallScreenBackground} alt="" className="absolute top-0 right-0 w-[90%] lg:hidden" priority />}
@@ -88,15 +87,15 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
               const isActive = pathname.slice(1).startsWith(each.href) || (each.href === '/' && pathname === each.href);
 
               return (
-                <Transition>
-                  <ul>
-                    <li>
-                      <Link href={`/${each.href}`} key={each.title} className={cn('cursor-pointer w-full', isActive && 'text-primaryColor')}>
+                <Transition key={each.title}>
+                  <Link href={`/${each.href}`} className={cn('cursor-pointer w-full', isActive && 'text-primaryColor')}>
+                    <ul>
+                      <li>
                         {each.title}
-                      </Link>
-                      {isActive && <div className="border border-primaryColor w-full" />}
-                    </li>
-                  </ul>
+                        {isActive && <div className="border border-primaryColor w-full" />}
+                      </li>
+                    </ul>
+                  </Link>
                 </Transition>
               );
             })}

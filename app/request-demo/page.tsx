@@ -9,18 +9,16 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomTextArea } from '@/components/customTextArea';
 import { CustomButton } from '@/components/customButton';
 import FAQs from '@/components/ui/landingPage/faq';
-import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
-import { Transition } from '@/components/ui/landingPage/transition';
 import Footer from '@/components/ui/landingPage/footer';
 import { useState } from 'react';
 import { notify, validateEmail } from '@/lib/utils';
-import { ContactUs } from '../api/controllers/landingPage';
+import { BookDemo } from '../api/controllers/landingPage';
 import { toast } from 'react-toastify';
 
 export default function Contact() {
-  const defaultErrorValue = { name: '', email: '', message: '' };
-  const [contactInfo, setContactInfo] = useState<{ name: string; email: string; message: string }>({ name: '', email: '', message: '' });
-  const [error, setError] = useState(defaultErrorValue);
+  const defaultValue = { name: '', email: '', notes: '', preferredDateTime: '', phoneNumber: '' };
+  const [contactInfo, setContactInfo] = useState(defaultValue);
+  const [error, setError] = useState(defaultValue);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const sectionHeaderClass: string =
@@ -34,18 +32,22 @@ export default function Contact() {
     if (!contactInfo.email || !validateEmail(contactInfo.email)) {
       setError((prev) => ({ ...prev, email: 'Please enter a valid email address.' }));
     }
-    if (!contactInfo.message) {
-      setError((prev) => ({ ...prev, message: 'Question is compulsory' }));
+    if (!contactInfo.phoneNumber) {
+      setError((prev) => ({ ...prev, phoneNumber: 'Phone number is compulsory' }));
     }
-    if (contactInfo.name && contactInfo.email && validateEmail(contactInfo.email) && contactInfo.message) {
+    if (!contactInfo.preferredDateTime) {
+      setError((prev) => ({ ...prev, preferredDateTime: 'Preferred date and time is compulsory' }));
+    }
+    if (contactInfo.name && contactInfo.phoneNumber && contactInfo.email && validateEmail(contactInfo.email) && contactInfo.preferredDateTime) {
       setIsLoading(true);
-      const data: any = await ContactUs(contactInfo);
+      const updateContactInfo = { ...contactInfo, preferredDateTime: new Date(contactInfo.preferredDateTime).toISOString() };
+      const data: any = await BookDemo(updateContactInfo);
 
       setIsLoading(false);
 
       if (data?.data?.isSuccessful) {
-        setContactInfo({ name: '', email: '', message: '' });
-        toast.success("You're successfully added to our waitlist");
+        setContactInfo(defaultValue);
+        toast.success('Demo booked successully. Calendar invites has been sent to your email');
       } else if (data?.data?.error) {
         notify({
           title: 'Error!',
@@ -62,13 +64,13 @@ export default function Contact() {
         <Navbar type="default" />
       </header>
       <main>
-        <section className="font-satoshi bg-white w-full pt-32 space-y-12">
+        <section className="font-satoshi bg-white w-full pt-28 space-y-8">
           <div className={sectionHeaderClass}>
             <ContactIcon className="text-[#5F35D2]" />
-            <p className="font-normal">Content</p>
+            <p className="font-normal">Requests</p>
           </div>
           <div className="w-[65%] mx-auto text-center">
-            <h2 className="text-[40px] text-[#161618] leading-[64px] font-bricolage_grotesque">Talk to us</h2>
+            <h2 className="text-[40px] text-[#161618] leading-[64px] font-bricolage_grotesque">Book a demo</h2>
           </div>
 
           <div className="bg-[#5F35D2] rounded-xl relative w-[80%] mx-auto">
@@ -78,7 +80,7 @@ export default function Contact() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white lg:bg-[#DDD1FF] px-8 py-10 rounded-b-xl">
-              <form autoComplete="off" className="">
+              <form autoComplete="off" className="space-y-8">
                 <CustomInput
                   type="text"
                   name="name"
@@ -107,18 +109,46 @@ export default function Contact() {
                   }}
                   errorMessage={error.email}
                 />
+                <CustomInput
+                  type="tel"
+                  onChange={({ target }: any) => {
+                    setError((prev) => ({ ...prev, phoneNumber: '' }));
+                    setContactInfo((prev) => ({ ...prev, phoneNumber: target.value }));
+                  }}
+                  value={contactInfo.phoneNumber}
+                  defaultValue=""
+                  name="phoneNumber"
+                  classnames="mt-4"
+                  label="Phone number"
+                  placeholder="Enter phone number"
+                  errorMessage={error.phoneNumber}
+                />
+                <CustomInput
+                  type="datetime-local"
+                  name="preferredDateTime"
+                  label="Preferred Date"
+                  placeholder="Preferred date"
+                  defaultValue=""
+                  classnames="font-light mt-4"
+                  value={contactInfo.preferredDateTime}
+                  onChange={({ target }: any) => {
+                    setError((prev) => ({ ...prev, preferredDateTime: '' }));
+                    setContactInfo((prev) => ({ ...prev, preferredDateTime: target.value }));
+                  }}
+                  errorMessage={error.preferredDateTime}
+                />
                 <CustomTextArea
                   name="question"
                   label="What’s your question?"
                   placeholder="Describe your questions here.."
-                  classnames="font-light pt-6"
+                  classnames="font-light -pt-8"
                   defaultValue=""
-                  value={contactInfo.message}
+                  value={contactInfo.notes}
                   onChange={({ target }: any) => {
-                    setError((prev) => ({ ...prev, message: '' }));
-                    setContactInfo((prev) => ({ ...prev, message: target.value }));
+                    setError((prev) => ({ ...prev, notes: '' }));
+                    setContactInfo((prev) => ({ ...prev, notes: target.value }));
                   }}
-                  errorMessage={error.message}
+                  errorMessage={error.notes}
                 />
                 <div>
                   <CustomButton className="h-10 w-full text-white -mt-6" type="button" onClick={submitFormData} loading={isLoading} disabled={isLoading}>
@@ -159,8 +189,6 @@ export default function Contact() {
         <section className="pt-20">
           <FAQs />
         </section>
-
-        <JoinCommunity className="text-center" />
       </main>
       <Footer />
     </div>

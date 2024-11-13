@@ -105,18 +105,24 @@ export default function Features() {
       </Transition>
 
       {isDesktop ? (
-        <Transition>
-          <div className="h-[400px] overflow-y-scroll bg-white border border-[#ECEFF2] rounded-xl px-6 mx-6 lg:mx-36 space-y-4 content">
-            {contents.map((content) => (
-              <div className="lg:flex lg:space-x-12 items-center justify-between" key={content.title}>
-                <div className="text-left lg:w-[55%] lg:space-y-8">
-                  <div className="space-y-4">
+        <div className="px-6 lg:px-24 space-y-16 mt-8">
+          {contents.map((content, index) => (
+            <div
+              className="lg:flex items-center justify-between"
+              key={content.title}
+              style={{
+                flexDirection: index % 2 === 0 ? 'row' : 'row-reverse',
+              }}
+            >
+              <div className="text-left lg:w-[50%] lg:space-y-8">
+                <Transition>
+                  <div className="space-y-6">
                     <h4 className="text-[#101928] text-[24px] font-bricolage_grotesque border-b-[4px] rounded-lg w-fit border-b-primaryColor">
                       {content.title}
                     </h4>
                     <p className="text-[#808B9F] text-sm">{content.description}</p>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-6 mt-8">
                     {content.lists.map((each) => (
                       <div key={each} className="flex items-start space-x-2 text-sm">
                         <RoundedCheckIcon />
@@ -124,16 +130,17 @@ export default function Features() {
                       </div>
                     ))}
                   </div>
-                </div>
-                <div className="w-[35%] flex">
-                  <ImageDisplay content={content} />
-                </div>
+                </Transition>
               </div>
-            ))}
-          </div>
-        </Transition>
+              <div className="w-[50%] flex" style={{ justifyContent: index % 2 ? 'start' : 'end' }}>
+                <Transition>
+                  <img src={content.image.src} alt="content" className="h-[400px] object-contain justify-start" />
+                </Transition>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
-        // <Transition>
         <div className="px-6 space-y- w-full">
           {contents.map((content) => (
             <div className="grid grid-cols-1" key={content.title}>
@@ -157,7 +164,6 @@ export default function Features() {
             </div>
           ))}
         </div>
-        // </Transition>
       )}
     </React.Fragment>
   );

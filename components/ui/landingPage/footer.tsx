@@ -20,8 +20,8 @@ export default function Footer() {
         <Image src={HobinkLogo} alt="Hobink logo" width={140} className="mx-auto" />
         <div className="lg:w-1/2 mx-auto flex flex-wrap justify-center items-center">
           {navItem.map((each, index) => (
-            <div className="flex items-center px-2 lg:px-0 mb-4 justify-center">
-              <Link href={each.href} key={each.title} className="px-4 nav_link hover:text-primaryColor">
+            <div className="flex items-center px-2 lg:px-0 mb-4 justify-center" key={each.title + 'footer'}>
+              <Link href={each.href} className="px-4 nav_link hover:text-primaryColor">
                 {each.title}
               </Link>
               {index !== navItem.length - 1 && <EclipseIcon />}

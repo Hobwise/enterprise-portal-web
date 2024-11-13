@@ -72,9 +72,8 @@ export default function BestTools() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-10">
       {tools.map((each, index) => (
-        <Transition>
+        <Transition key={each.title}>
           <div
-            key={each.title}
             className="text-left p-6 space-y-12 relative min-h-[350px]"
             style={{ background: each.color, backdropFilter: 'blur(18px)', borderRadius: each.radius }}
           >

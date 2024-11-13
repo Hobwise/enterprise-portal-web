@@ -4,10 +4,40 @@ import { StarIcon } from '@/public/assets/svg';
 import Image from 'next/image';
 import PricePlan from '@/public/assets/images/price-bg.png';
 import ReportsImage from '@/public/assets/images/reports-image.png';
-import { cn } from '@/lib/utils';
+import { cn, notify, validateEmail } from '@/lib/utils';
 import { Transition } from './transition';
+import { useState } from 'react';
+import { AddToWaitingList } from '@/app/api/controllers/landingPage';
+import { toast } from 'react-hot-toast';
 
 export default function JoinCommunity({ className }: { className?: string }) {
+  const [userEmail, setUserEmail] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+
+    if (!userEmail || !validateEmail(userEmail)) {
+      setError('Please enter a valid email address.');
+    } else {
+      setIsLoading(true);
+      const data: any = await AddToWaitingList({ email: userEmail, name: 'Waitlist' });
+
+      setIsLoading(false);
+
+      if (data?.data?.isSuccessful) {
+        setUserEmail('');
+        toast.success("You've successfully added to our waitlist");
+      } else if (data?.data?.error) {
+        notify({
+          title: 'Error!',
+          text: data?.data?.error,
+          type: 'error',
+        });
+      }
+    }
+  };
   return (
     <section
       className={cn('bg-[#5F35D2] shadow-custom_shadow_2 pt-8 lg:pt-16 font-satoshi space-y-6 lg:space-y-12 px-6 lg:px-12 relative mt-6 lg:mt-12', className)}
@@ -29,22 +59,38 @@ export default function JoinCommunity({ className }: { className?: string }) {
 
       <Transition>
         <div>
-          <div className="lg:w-[35%] mx-auto flex items-center space-x-2 lg:space-x-4 mb-10 lg:mb-20">
-            <input
-              type="email"
-              placeholder="Input your email"
-              onChange={({ target }) => console.log(target.value)}
-              className="border border-white bg-[#FFFFFF1A] py-2 px-4 h-10 w-[100%] rounded-lg placeholder:text-[#DCE4E8] placeholder:text-sm"
-              name="email"
-              id="email"
-            />
-            <CustomButton className="bg-white ">Submit</CustomButton>
-          </div>
+          <form onSubmit={handleSubmit} autoComplete="off">
+            <div className="lg:w-[35%] mx-auto flex items-center space-x-2 lg:space-x-4 mb-10 lg:mb-20">
+              <div className="space-y-1 w-full z-50 h-[42px]">
+                <input
+                  type="email"
+                  placeholder="Input your email"
+                  value={userEmail}
+                  onChange={({ target }) => {
+                    setError('');
+                    setUserEmail(target.value);
+                  }}
+                  className="border border-white bg-[#FFFFFF1A] py-2 px-4 h-10 w-[100%] text-white rounded-lg placeholder:text-[#DCE4E8] placeholder:text-sm"
+                  name="email"
+                  id="email"
+                />
+                {error && (
+                  <div className="text-[#F25202] text-sm text-left flex justify-between">
+                    <p>{error}</p>
+                    <p className="pr-4  text-white cursor-pointer text-center" onClick={() => setError('')}>
+                      x
+                    </p>
+                  </div>
+                )}
+              </div>
+              <CustomButton className="bg-white" loading={isLoading} disabled={isLoading}>
+                Submit
+              </CustomButton>
+            </div>
+          </form>
         </div>
       </Transition>
-      <Transition>
-        <Image src={ReportsImage} alt="reports" />
-      </Transition>
+      <Image src={ReportsImage} alt="reports" />
     </section>
   );
 }

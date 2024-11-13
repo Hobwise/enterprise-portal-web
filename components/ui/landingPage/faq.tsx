@@ -1,36 +1,43 @@
 'use client';
-import { cn } from '@/lib/utils';
-import { ArrowUp, FaqIcon } from '@/public/assets/svg';
+import { cn, notify } from '@/lib/utils';
+import { ArrowDown2, ArrowUp, FaqIcon } from '@/public/assets/svg';
 import { Transition } from './transition';
+import React, { useEffect, useState } from 'react';
+import { getFAQItems } from '@/app/api/controllers/landingPage';
 
 export default function FAQs({ className }: { className?: string }) {
-  const faq: { title: string; description: string }[] = [
-    {
-      title: 'How secure is my data on Hobink?',
-      description:
-        'Security is our top priority. Hobink uses industry-standard encryption and regular security audits to ensure your business and customer data are always protected.',
-    },
-    {
-      title: 'Can I manage multiple locations with Hobink?',
-      description:
-        'Security is our top priority. Hobink uses industry-standard encryption and regular security audits to ensure your business and customer data are always protected.',
-    },
-    {
-      title: 'Does Hobink offer real-time data and reporting?',
-      description:
-        'Security is our top priority. Hobink uses industry-standard encryption and regular security audits to ensure your business and customer data are always protected.',
-    },
-    {
-      title: 'Is Hobink available on mobile devices?',
-      description:
-        'Security is our top priority. Hobink uses industry-standard encryption and regular security audits to ensure your business and customer data are always protected.',
-    },
-    {
-      title: 'What types of businesses benefit from Hobink?',
-      description:
-        'Security is our top priority. Hobink uses industry-standard encryption and regular security audits to ensure your business and customer data are always protected.',
-    },
-  ];
+  const [isLoading, setIsLoading] = useState(true);
+  const [faqs, setFaqs] = useState<{ question: string; answer: string; collapse: boolean }[]>([]);
+
+  const getFaqs = async (loading = true) => {
+    setIsLoading(loading);
+    const data = await getFAQItems();
+    setIsLoading(false);
+
+    if (data?.data?.isSuccessful) {
+      setFaqs([...data?.data?.data, { collapse: true }]);
+    } else if (data?.data?.error) {
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
+
+  useEffect(() => {
+    getFaqs();
+  }, []);
+
+  const handleCollapse = (index: number) => {
+    const copyFaqs = [...faqs];
+    if (copyFaqs[index].collapse) {
+      copyFaqs[index].collapse = false;
+    } else {
+      copyFaqs[index].collapse = true;
+    }
+    setFaqs(copyFaqs);
+  };
 
   return (
     <section className={cn('bg-white py-8 lg:py-16 font-satoshi space-y-2 px-6 lg:px-12', className)}>
@@ -43,22 +50,37 @@ export default function FAQs({ className }: { className?: string }) {
       </div>
 
       <div className="space-y-6">
-        {faq.map((each) => (
-          <Transition>
-            <div
-              className="bg-[#F6F5FE] px-4 lg:px-8 py-6 rounded-2xl border border-[#5F35D24D] flex items-start justify-between font-bricolage_grotesque"
-              key={each.title}
-            >
-              <div className="space-y-2 text-left w-[80%]">
-                <p className="text-[#252525] font-medium text-base lg:text-[20px]">{each.title}</p>
-                <p className="text-[#677182] font-satoshi text-sm lg:text-base">{each.description}</p>
-              </div>
-              <div className="border border-[#5F35D2] bg-[#EAE8FD] rounded-full lg:h-12 lg:w-12 w-8 h-8 flex items-center justify-center" role="button">
-                <ArrowUp />
-              </div>
-            </div>
-          </Transition>
-        ))}
+        {isLoading ? (
+          ''
+        ) : (
+          <React.Fragment>
+            {faqs.map((each, index) => (
+              <Transition key={each.question}>
+                {each.question && (
+                  <div className="bg-[#F6F5FE] px-4 lg:px-8 py-6 rounded-2xl border border-[#5F35D24D] flex items-start justify-between font-bricolage_grotesque">
+                    <div className="space-y-2 text-left w-[80%]">
+                      <p className="text-[#252525] font-medium text-base lg:text-[20px]" onClick={() => handleCollapse(index)}>
+                        {each.question}
+                      </p>
+                      {each.collapse && (
+                        <Transition>
+                          <p className="text-[#677182] font-satoshi text-sm lg:text-base">{each.answer}</p>
+                        </Transition>
+                      )}
+                    </div>
+                    <div
+                      className="border border-[#5F35D2] bg-[#EAE8FD] rounded-full lg:h-12 lg:w-12 w-8 h-8 flex items-center justify-center"
+                      role="button"
+                      onClick={() => handleCollapse(index)}
+                    >
+                      {each.collapse ? <ArrowUp /> : <ArrowDown2 />}
+                    </div>
+                  </div>
+                )}
+              </Transition>
+            ))}
+          </React.Fragment>
+        )}
       </div>
     </section>
   );
