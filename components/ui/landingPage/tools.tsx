@@ -1,7 +1,10 @@
 import { ChartIcon, CpuCharge, DocumentIcon, ManagementIcon, NotificationIcon, SecurityIcon } from '@/public/assets/svg';
 import { Transition } from './transition';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { cn } from '@/lib/utils';
 
 export default function BestTools() {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const tools = [
     {
       title: 'Real-Time Business Insights',
@@ -11,7 +14,7 @@ export default function BestTools() {
       textColor: '#FFF',
       textColor2: '#FFF',
       shapeColor: '#FFD259',
-      radius: '20px 0px 0px 0px',
+      radius: isDesktop ? '20px 0px 0px 0px' : '0px 0px 0px 0px',
     },
     {
       title: 'Effortless Reservation Management',
@@ -32,7 +35,7 @@ export default function BestTools() {
       textColor: '#161618',
       textColor2: '#677182',
       shapeColor: '#9F7CFE',
-      radius: '0px 0px 0px 20px',
+      radius: '0px 20px 0px 0px',
     },
     {
       title: 'Deep Dive Analytics & Reports',
@@ -43,7 +46,7 @@ export default function BestTools() {
       textColor: '#23453F',
       textColor2: '#23453F',
       shapeColor: '#FFF',
-      radius: '0px 0px 0px 20px',
+      radius: isDesktop ? '0px 0px 0px 20px' : '0px 0px 0px 0px',
     },
     {
       title: 'Strong Security, Peace of Mind',
@@ -53,7 +56,7 @@ export default function BestTools() {
       textColor: '#202020',
       textColor2: '#202020',
       shapeColor: '#F8FD91',
-      radius: '0px 0px 0px 00px',
+      radius: '0px 0px 0px 0px',
     },
     {
       title: 'Tailored Tips & Recommendations',
@@ -63,20 +66,19 @@ export default function BestTools() {
       textColor: '#060807',
       textColor2: '#060807',
       shapeColor: '#D0EFEF',
-      radius: '0px 20px 20px 0px',
+      radius: isDesktop ? '0px 0px 20px 0px' : '0px 0px 0px 0px',
     },
   ];
   return (
-    <div className="grid grid-cols-3 gap-4 pt-10">
-      {tools.map((each) => (
-        <Transition>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 pt-10">
+      {tools.map((each, index) => (
+        <Transition key={each.title}>
           <div
-            key={each.title}
-            className="text-left p-6 space-y-12 relative"
+            className="text-left p-6 space-y-12 relative min-h-[350px]"
             style={{ background: each.color, backdropFilter: 'blur(18px)', borderRadius: each.radius }}
           >
             <div
-              className="rounded-bl-full rounded-br-full rounded-tr-lg  rounded-tl-lg h-32 w-24 absolute right-0 top-0"
+              className={cn('rounded-bl-[50px] rounded-br-[50px]  h-32 w-24 absolute right-0 top-0', index === 2 ? 'rounded-tr-[20px]' : 'rounded-tr-[0px]')}
               style={{ background: each.shapeColor }}
             />
             <div className="">{each.icon}</div>

@@ -14,6 +14,18 @@ export const AUTH = {
   getRoleCount: 'api/v1/User/role-count',
   logout: 'api/v1/User/logout',
 };
+export const LANDINGPAGE = {
+  getFAQs: 'api/v1/LandingPage/faqs',
+  addToWaitList: 'api/v1/LandingPage/waitlist',
+  getPricing: 'api/v1/LandingPage/pricing',
+  getCompanies: 'api/v1/LandingPage/registered-business-logo',
+  contactUs: 'api/v1/LandingPage/contact',
+  bookDemo: 'api/v1/LandingPage/book-demo',
+  getNews: 'api/v1/LandingPage/news',
+  getCampaigns: 'api/v1/LandingPage/campaigns',
+  getReservations: 'api/v1/LandingPage/reservations',
+  bookReservation: 'api/v1/Booking',
+};
 export const DASHBOARD = {
   // settings
   getRoleByBusiness: 'api/v1/User/role-by-business',

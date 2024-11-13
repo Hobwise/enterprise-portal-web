@@ -1,6 +1,6 @@
 import { CustomButton } from '@/components/customButton';
 import { LocationIcon, StarIcon2 } from '@/public/assets/svg';
-import { BUSINESS_URL } from '@/utilities/routes';
+import { RESERVATIONS_URL } from '@/utilities/routes';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 import { Transition } from './transition';
@@ -34,7 +34,7 @@ export default function BusinessCard({ logo, rating, name, type, address }: IBus
           <p className="text-primaryColor underline multiline-truncate">{address}</p>
         </div>
         <div>
-          <Link href={`${BUSINESS_URL}/${name}`}>
+          <Link href={`${RESERVATIONS_URL}/${name}`}>
             <CustomButton className="bg-[#DDDCFE] border border-[#5F35D2] h-10 shadow-custom_double text-[#5F35D2] w-full">View Business</CustomButton>
           </Link>
         </div>
