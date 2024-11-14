@@ -62,7 +62,7 @@ export async function getRoleByBusiness(businessId: string) {
 
     return data;
   } catch (error) {
-    // handleError(error);
+    handleError(error, false);
   }
 }
 
@@ -244,7 +244,7 @@ export async function getBusinesByCooperate(businessId: string) {
 
     return data;
   } catch (error) {
-    // handleError(error, false);
+    handleError(error, false);
   }
 }
 

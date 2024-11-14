@@ -123,7 +123,7 @@ const MenuList = ({ menus, onOpen, onOpenViewMenu, searchQuery }: any) => {
             </div>
 
             <div className='ml-5 gap-1 grid place-content-center'>
-              <p className='text-sm'>{menu.menuName}</p>
+              <p className='text-sm capitalize'>{menu.menuName}</p>
               <p className='font-medium text-black text-sm'>{menu.itemName}</p>
               {menu.isAvailable === false && (
                 <Chip

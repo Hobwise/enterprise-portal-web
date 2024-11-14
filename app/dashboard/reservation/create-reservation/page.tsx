@@ -252,6 +252,7 @@ const AddNewReservation = () => {
           <div className='flex gap-6'>
             <CustomInput
               type='text'
+              disabled={true}
               startContent={<div>₦</div>}
               name='reservationFee'
               errorMessage={response?.errors?.reservationFee?.[0]}
@@ -272,6 +273,9 @@ const AddNewReservation = () => {
               placeholder='Minimum spend'
             />
           </div>
+          <span className='text-xs text-white px-2 py-1 bg-success-500 rounded-full '>
+            Coming soon
+          </span>
           <Spacer y={6} />
           <CustomInput
             type='text'
