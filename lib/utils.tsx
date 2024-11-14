@@ -402,13 +402,43 @@ export const companies = [
   { image: FedEx, title: 'FedEx' },
 ];
 
-export const pricingPlan: string[] = [
-  'All features of the Free Plan',
-  'Lorem ipsum dolor sit amet consectetur. Rhoncus in elementum.',
-  'Lorem ipsum dolor sit amet consectetur.',
-  'Lorem ipsum dolor sit amet consectetur. Ut.',
-  'Lorem ipsum dolor sit amet consectetur. Tellus.',
-  'Lorem ipsum dolor sit amet consectetur. Sit.',
-  'Lorem ipsum dolor sit amet consectetur. Amet.',
-  'Lorem ipsum dolor sit amet consectetur. Tincidunt tempus elementum facilisi in.',
-];
+export const formatKey = (key: string) => {
+  const formattedString = key.replace(/^canAccess/, '');
+
+  return formattedString
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (str) => str.toUpperCase())
+    .concat(' management');
+};
+
+export const formatNumber = (value: string | number) => {
+  if (typeof value === 'number') {
+    return new Intl.NumberFormat().format(value);
+  }
+  return value;
+};
+
+export const validateEmail = (email: string) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+export const getInitials2 = (businessName: string | undefined | null): string => {
+  if (!businessName) return '';
+  const names = businessName.split(' ');
+  const firstName = names[0] ?? '';
+  const secondName = names[1] ?? '';
+  return `${firstName && secondName ? firstName[0] + secondName[0] : firstName ? firstName[0] : ''}`;
+};
+
+export function formatDate(dateString: string) {
+  const date = new Date(dateString);
+
+  const day = date.getDate();
+  const month = date.toLocaleString('default', { month: 'short' });
+  const year = date.getFullYear();
+
+  const dayWithSuffix = day + (day % 10 === 1 && day !== 11 ? 'st' : day % 10 === 2 && day !== 12 ? 'nd' : day % 10 === 3 && day !== 13 ? 'rd' : 'th');
+
+  return `${dayWithSuffix} ${month}., ${year}`;
+}

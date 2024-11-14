@@ -1,21 +1,42 @@
 'use client';
-import { cn } from '@/lib/utils';
+import { getNews } from '@/app/api/controllers/landingPage';
+import { cn, notify } from '@/lib/utils';
+import { useEffect, useState } from 'react';
 
 export default function LandingPageHeader() {
-  const promo: { class: string; title: string }[] = [
-    { class: 'item1', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
-    { class: 'item2', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
-    { class: 'item3', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
-    { class: 'item4', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
-    { class: 'item5', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
-    { class: 'item6', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
-    { class: 'item7', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
-    { class: 'item8', title: 'PROMO! PROMO!! PROMO!!! 🔥' },
-  ];
+  const [isLoading, setIsLoading] = useState(true);
+  const [news, setNews] = useState<{ title: string; content: string }[]>([]);
+  const [error, setError] = useState<string>('');
+
+  const getAllNews = async (loading = true) => {
+    setIsLoading(loading);
+    const data = await getNews();
+    setIsLoading(false);
+
+    if (data?.data?.isSuccessful) {
+      setNews([...data?.data?.data, { collapse: true }]);
+    } else if (data?.data?.error) {
+      setError(data?.data?.error);
+      notify({
+        title: 'Error!',
+        text: data?.data?.error,
+        type: 'error',
+      });
+    }
+  };
+
+  useEffect(() => {
+    getAllNews();
+  }, []);
+
+  if (isLoading) return <div className="wrapper bg-primaryColor h-10"></div>;
+
+  if (error) return null;
+
   return (
     <div className="wrapper bg-primaryColor">
-      {promo.map((each, index) => (
-        <p className={`itemLeft font-satoshi font-light item${index}`} key={each.class}>
+      {news.map((each, index) => (
+        <p className={`itemLeft font-satoshi font-light item${index}`} key={each.title}>
           {each.title}
         </p>
       ))}
