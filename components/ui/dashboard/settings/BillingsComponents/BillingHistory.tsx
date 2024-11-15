@@ -109,7 +109,7 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = ({ subscriptions, se
           <TableColumn>Duration</TableColumn>
           {/* <TableColumn>Start Date</TableColumn> */}
           <TableColumn>Status</TableColumn>
-          <TableColumn>Expiration</TableColumn>
+          <TableColumn>Invoice</TableColumn>
         </TableHeader>
         <TableBody items={filteredData}>
           {(item) => (

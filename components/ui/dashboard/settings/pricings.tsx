@@ -123,7 +123,7 @@ const Pricing = () => {
           )}
           {showPlans && <PricingCards plans={plansArray} disableButtons={disableButtons}/>}
 
-          <h2 className="text-lg font-bold mt-10 mb-10">Billing history</h2>
+          <h2 className="text-lg font-bold mt-10 mb-3">Billing history</h2>
           <SubscriptionTable subscriptions={billingHistory}/>
 
         </>
