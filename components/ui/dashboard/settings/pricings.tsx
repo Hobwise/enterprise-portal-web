@@ -19,7 +19,9 @@ import {
   Plans,
   SubscriptionData,
   CurrentSubscriptionDetails,
+  SubscriptionHistory,
 } from "./BillingsComponents/Interfaces";
+import SubscriptionTable from "./BillingsComponents/BillingHistory";
 
 const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState("Free");
@@ -29,6 +31,7 @@ const Pricing = () => {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [showPlans, setShowPlans] = useState(false);
   const [plansArray, setPlansArray] = useState<Plans | null>(null);
+  const [billingHistory, setBillingHistory] = useState<SubscriptionHistory[] | null>(null)
   const [isLoading, setIsLoading] = useState(true);
   const [disableButtons, setDisableButtons] = useState(false);
   const [cardAuthorization, setCardAuthorization] =
@@ -54,12 +57,13 @@ const Pricing = () => {
       return;
     }
   
-    const { plans, status, authorization, subscription: currentSub } = data;
+    const { plans, status, authorization, subscription: currentSub, subscriptionHistories    } = data;
   
     setPlansArray(plans);
     setIsLoading(isLoading);
     setShowPlans(true);
     setNoSubscription(false);
+    setBillingHistory(subscriptionHistories)
   
     if (!currentSub) {
       setNoSubscription(true);
@@ -119,7 +123,9 @@ const Pricing = () => {
           )}
           {showPlans && <PricingCards plans={plansArray} disableButtons={disableButtons}/>}
 
-          <h2 className="text-lg font-bold mt-10">Billing history</h2>
+          <h2 className="text-lg font-bold mt-10 mb-10">Billing history</h2>
+          <SubscriptionTable subscriptions={billingHistory}/>
+
         </>
       )}
 
@@ -145,65 +151,3 @@ const Pricing = () => {
 
 export default Pricing;
 
-[
-  {
-      "cooperateID": "9467e040-39ae-44c8-80ae-be79c403d0f1",
-      "businessID": "79254411-a3b6-47d2-a0ae-f1916fe5bf1f",
-      "subcribedByID": "39a6dd90-f7af-41fb-ae39-eed63fb05442",
-      "plan": 1,
-      "paymentPeriod": 0,
-      "subscriptionStartDate": "2024-11-14T13:01:15.2261612",
-      "subscriptionEndDate": "2024-12-14T13:01:12.7083507",
-      "isActive": true,
-      "isExpired": false,
-      "id": "012ffb7e-f17c-4425-b05c-92d242e2a83f"
-  },
-  {
-      "cooperateID": "9467e040-39ae-44c8-80ae-be79c403d0f1",
-      "businessID": "79254411-a3b6-47d2-a0ae-f1916fe5bf1f",
-      "subcribedByID": "39a6dd90-f7af-41fb-ae39-eed63fb05442",
-      "plan": 1,
-      "paymentPeriod": 0,
-      "subscriptionStartDate": "2024-11-14T13:01:44.9606095",
-      "subscriptionEndDate": "2024-12-14T13:01:15.2261612",
-      "isActive": true,
-      "isExpired": false,
-      "id": "1d33ae23-02fb-4884-a68f-c7d4245b68e9"
-  },
-  {
-      "cooperateID": "9467e040-39ae-44c8-80ae-be79c403d0f1",
-      "businessID": "79254411-a3b6-47d2-a0ae-f1916fe5bf1f",
-      "subcribedByID": "39a6dd90-f7af-41fb-ae39-eed63fb05442",
-      "plan": 1,
-      "paymentPeriod": 0,
-      "subscriptionStartDate": "2024-11-14T13:01:12.7083507",
-      "subscriptionEndDate": "2024-12-14T13:01:08.5165863",
-      "isActive": true,
-      "isExpired": false,
-      "id": "31b44b1d-8e77-4446-b5b0-0d481317ba81"
-  },
-  {
-      "cooperateID": "9467e040-39ae-44c8-80ae-be79c403d0f1",
-      "businessID": "79254411-a3b6-47d2-a0ae-f1916fe5bf1f",
-      "subcribedByID": "39a6dd90-f7af-41fb-ae39-eed63fb05442",
-      "plan": 1,
-      "paymentPeriod": 0,
-      "subscriptionStartDate": "2024-11-14T13:01:08.5165863",
-      "subscriptionEndDate": "0001-02-01T00:00:00",
-      "isActive": true,
-      "isExpired": true,
-      "id": "6dd27834-d0de-45fa-90db-4409184b1ebe"
-  },
-  {
-      "cooperateID": "9467e040-39ae-44c8-80ae-be79c403d0f1",
-      "businessID": "79254411-a3b6-47d2-a0ae-f1916fe5bf1f",
-      "subcribedByID": "39a6dd90-f7af-41fb-ae39-eed63fb05442",
-      "plan": 1,
-      "paymentPeriod": 0,
-      "subscriptionStartDate": "2024-11-14T13:16:30.1469275",
-      "subscriptionEndDate": "2024-12-14T13:01:44.9606095",
-      "isActive": true,
-      "isExpired": false,
-      "id": "9632c8b3-cd64-4928-95c3-cf07821cd60e"
-  }
-]

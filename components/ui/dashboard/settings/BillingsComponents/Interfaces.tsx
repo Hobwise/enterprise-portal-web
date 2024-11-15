@@ -100,6 +100,26 @@ export interface CurrentSubscriptionDetails {
     currentSubscriptionDetails: CurrentSubscriptionDetails | null
   }
 
+  export interface SubscriptionHistory {
+    cooperateID: string; 
+    businessID: string; 
+    subcribedByID: string; 
+    plan: number; 
+    paymentPeriod: number; 
+    subscriptionStartDate: string; 
+    subscriptionEndDate: string; 
+    isActive: boolean; 
+    isExpired: boolean;
+    id: string; 
+  }
+
+  export interface SubscriptionTableProps {
+    subscriptions: SubscriptionHistory[] | null;
+    searchQuery?: string;
+  }
+  
+  
+
 //   {
 //     "data": {
 //         "subscription": {

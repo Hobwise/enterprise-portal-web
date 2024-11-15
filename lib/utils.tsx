@@ -1,4 +1,5 @@
 'use client';
+import moment from 'moment';
 import { CalendarDateTime, parseAbsolute, parseZonedDateTime } from '@internationalized/date';
 import { clsx, type ClassValue } from 'clsx';
 import download from 'downloadjs';
@@ -44,6 +45,16 @@ export const getJsonItemFromLocalStorage = (name) => {
 
 export const saveJsonItemToLocalStorage = (name: string, itemToSave: any): void => {
   localStorage.setItem(name, JSON.stringify(itemToSave));
+};
+
+export const formatSubscriptionEndDate = (date: string): string => {
+  // Ensure the input date is valid
+  if (!moment(date, 'MMMM Do YYYY, h:mm:ss a', true).isValid()) {
+    return 'Invalid Date';
+  }
+  
+  // Convert and format the date
+  return moment(date, 'MMMM Do YYYY, h:mm:ss a').format('MM/DD/YYYY hh:mmA');
 };
 
 // export const setTokenCookie = (token: string) => {
