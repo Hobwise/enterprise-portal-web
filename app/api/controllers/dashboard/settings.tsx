@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { AUTH, DASHBOARD } from '../../api-url';
 import api, { handleError } from '../../apiService';
 import { businessAddressValidation, emailValidation } from '../validations';
-
+import axios from "axios";
 type termsNcondition = {
   content: string;
   isPublished: boolean;
@@ -259,6 +259,121 @@ export async function configureRole(businessId: string, payload: any) {
     return data;
   } catch (error) {}
 }
+
+export async function initializeTransaction(businessId: string, payload: any) {
+  const headers = businessId ? { businessId: businessId } : {};
+
+  console.log("FROM", businessId, payload);
+  // console.log("TO", headers);
+  try {
+    const data = await api.post(DASHBOARD.intializeTransaction, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    console.log("ERROR", error);
+  }
+}
+
+export async function initializeTransactionv2(
+  businessId: string,
+  payload: any,
+  token: string
+) {
+  // const headers = businessId ? { businessId: businessId } : {};
+
+  const body = JSON.stringify(payload);
+
+  var config = {
+    method: "POST",
+    url: "https://walrus-app-lehim.ondigitalocean.app/api/v1/Transaction/initialise-subscription",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Businessid: businessId,
+    },
+    data: body,
+  };
+
+  return axios(config)
+    .then((response) => {
+      console.log(response)
+      return response?.data?.data?.data;
+    })
+    .catch((error) => {
+      console.log("ERROR", error);
+    });
+}
+
+
+
+
+export async function getSubscription(
+  businessId: string,
+  page: any,
+  pageSize: any
+) {
+  const headers = businessId ? { businessId, page, pageSize } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.subscription, {
+      headers,
+    });
+
+    // console.log("SUCCESS", data)
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function manageSubscription(businessId:string){
+  const headers = businessId ? { businessId } : {};
+  try {
+    const data = await api.post(DASHBOARD.manage, {
+      headers,
+    });
+
+    // console.log("SUCCESS", data)
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+
+export async function manageSubscriptionv2(
+  businessId: string,
+  token: string
+) {
+  // const headers = businessId ? { businessId: businessId } : {};
+
+  // const body = JSON.stringify(payload);
+
+  var config = {
+    method: "POST",
+    url: "https://walrus-app-lehim.ondigitalocean.app/api/v1/Subscription/manaage-url",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      Businessid: businessId,
+    },
+    // data: body,
+  };
+
+  return axios(config)
+    .then((response) => {
+      // console.log(response)
+      return response?.data;
+    })
+    .catch((error) => {
+      console.log("ERROR", error);
+    });
+}
+
+
+
 export async function logout() {
   try {
     const data = await api.post(AUTH.logout, {});

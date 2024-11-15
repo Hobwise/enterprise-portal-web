@@ -21,6 +21,12 @@ import { useDebouncedCallback } from 'use-debounce';
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
+export function capitalizeFirstLetterOfEachWord(str: string): string {
+  return str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export const saveToLocalStorage = (name, itemToSave) => {
   return typeof window !== 'undefined' ? localStorage.setItem(name, itemToSave) : false;
