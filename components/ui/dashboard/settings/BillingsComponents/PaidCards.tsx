@@ -143,9 +143,9 @@ export const PaidCards: React.FC<PaidCardsData> = ({
               onClick={() => manageYourSubscription()}
               className="border-2 border-secondary-500 rounded-lg px-6 py-2 font-bold text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
-              {loadingModal && (
+              {/* {loadingModal && (
            <div className="border-gray-300 h-20 w-20 animate-spin rounded-full border-8 border-secondary-500" />
-              )}
+              )} */}
 
 
               Manage subscription

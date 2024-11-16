@@ -23,6 +23,7 @@ import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
 // import PaystackPop from 'paystack-inline-ts';
 import PaystackPop from "paystack-inline-ts";
+// import {PaystackPop} from '../Paystack'
 
 
 
@@ -145,6 +146,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       accessCode: access_code,
       onSuccess:() => window.location.reload()
     });
+    // popup.resumeTransaction(access_code);
 
     setPremiumLoading(false);
     setStarterLoading(false);
