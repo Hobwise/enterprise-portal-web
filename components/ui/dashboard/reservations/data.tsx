@@ -4,5 +4,6 @@ export const columns = [
   { name: 'Quantity', uid: 'quantity' },
   { name: 'Description', uid: 'reservationDescription' },
   { name: 'Availability', uid: 'quantityLeft' },
+  { name: 'Duration', uid: 'reservationDuration' },
   { name: '', uid: 'actions' },
 ];

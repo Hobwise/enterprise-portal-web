@@ -293,7 +293,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
         <Card className=' flex-grow  p-3 rounded-xl'>
           <div className='flex items-center gap-1'>
             <div className='h-2 w-2 rounded-full bg-success-800' />
-            <span className='font-[600]'>QR Code</span>
+            <span className='font-[600]'>Quick Response</span>
           </div>
           {response?.quickResponseDetails.quickResponseRecord.length > 0 ? (
             <div className=''>
@@ -320,9 +320,9 @@ const ModulesOverview = ({ response, isLoading }: any) => {
           ) : (
             <EmptyOverview
               image={NoQR}
-              title='active QR codes'
-              buttonText='Create QR'
-              href='/dashboard/qr-code/create-qr'
+              title='active Quick response'
+              buttonText='Create quick response'
+              href='/dashboard/quick-response/create-qr'
             />
           )}
         </Card>

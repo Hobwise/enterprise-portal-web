@@ -83,7 +83,9 @@ const EditQrModal: React.FC<EditQrModalProps> = ({
         {(onClose) => (
           <>
             <ModalHeader>
-              <p className='font-[600] text-[16px] text-black'>Edit QR code</p>
+              <p className='font-[600] text-[16px] text-black'>
+                Edit Quick Response
+              </p>
             </ModalHeader>
 
             <ModalBody>

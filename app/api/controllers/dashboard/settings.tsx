@@ -264,5 +264,7 @@ export async function logout() {
     const data = await api.post(AUTH.logout, {});
 
     return data;
-  } catch (error) {}
+  } catch (error) {
+    handleError(error, false);
+  }
 }

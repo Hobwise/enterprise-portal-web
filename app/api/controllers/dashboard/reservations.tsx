@@ -7,8 +7,10 @@ export type payloadReservationItem = {
   reservationDescription: string;
   reservationFee: number;
   minimumSpend: number;
+  reservationDuration?: any;
+  allowSystemAdvert?: boolean;
   reservationRequirement?: number;
-  quantity: number | string;
+  quantity: number;
   imageReference: string;
 };
 

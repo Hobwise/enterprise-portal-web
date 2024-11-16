@@ -19,7 +19,7 @@ const CreateReservation = () => {
         <Spacer y={5} />
         <p className='text-lg font-[600]'>You have no Reservations yet</p>
         <p className='text-sm font-[400] xl:w-[260px] w-full text-center text-[#475367]'>
-          Create QR codes so that customers can start booking
+          Create Quick response so that customers can start booking
         </p>
         <Spacer y={5} />
         {(role === 0 || userRolePermissions?.canCreateReservation === true) && (
