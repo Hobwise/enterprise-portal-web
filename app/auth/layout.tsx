@@ -12,13 +12,5 @@ export default function AuthLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html
-      lang='en'
-      className={`${bricolage_grotesque.className}`}
-      suppressHydrationWarning
-    >
-      <body>{children}</body>
-    </html>
-  );
+  return <div className={`${bricolage_grotesque.className}`}>{children}</div>;
 }

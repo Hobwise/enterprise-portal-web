@@ -28,7 +28,7 @@ export default function Login() {
               muted
               playsInline
             >
-              <source src='onboarding-vids.mp4' type='video/mp4' />
+              <source src='/onboarding-vids.mp4' type='video/mp4' />
             </video>
           </Suspense>
 
