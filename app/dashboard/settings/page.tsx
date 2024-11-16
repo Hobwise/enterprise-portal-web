@@ -1,4 +1,4 @@
-'use client';
+// 'use client';
 import SettingsComponent from '@/components/ui/dashboard/settings/settings';
 import { Spacer } from '@nextui-org/react';
 import React from 'react';

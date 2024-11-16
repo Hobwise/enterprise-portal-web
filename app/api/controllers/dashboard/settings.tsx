@@ -352,8 +352,8 @@ export async function manageSubscriptionv2(
   // const body = JSON.stringify(payload);
 
   var config = {
-    method: "POST",
-    url: "https://walrus-app-lehim.ondigitalocean.app/api/v1/Subscription/manaage-url",
+    method: "GET",
+    url: "https://walrus-app-lehim.ondigitalocean.app/api/v1/Subscription/manage-link",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

@@ -4,9 +4,21 @@ import Image from "next/image";
 import visa from "../../../../../public/assets/images/visa.png";
 import verve from "../../../../../public/assets/images/verve.png";
 import { PaidCardsData } from "./Interfaces";
-import { capitalizeFirstLetterOfEachWord, getJsonItemFromLocalStorage } from "@/lib/utils";
-import useManageSubscription from "@/hooks/cachedEndpoints/useManageSubscription";
-import { manageSubscription, manageSubscriptionv2 } from "@/app/api/controllers/dashboard/settings";
+
+
+
+import {
+  capitalizeFirstLetterOfEachWord,
+  getJsonItemFromLocalStorage,
+  notify,
+} from "@/lib/utils";
+// import useManageSubscription from "@/hooks/cachedEndpoints/useManageSubscription";
+import {
+  manageSubscription,
+  manageSubscriptionv2,
+} from "@/app/api/controllers/dashboard/settings";
+import IframeComponent from "./Iframe";
+import LoadingSpinner from "@/app/dashboard/menu/[menuId]/loading";
 
 export const PaidCards: React.FC<PaidCardsData> = ({
   cardDetails,
@@ -15,8 +27,11 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const businessID = userInformation?.businesses[0]?.businessId;
 
-  const [manageSubUrl, setManageSubUrl] =useState(null)
-  
+  const [manageSubUrl, setManageSubUrl] = useState<string>("");
+  const [triggerIframe, setTriggerIframe] = useState(false);
+  const [loadingModal, setLoadingModal] = useState(false)
+  // const { bindings,  } = useModal();
+
   //* HANDLE TYPES
   const TYPE_OF_CARD = {
     VISA: <Image alt="Visa" src={visa} height={40} layout="intrinsic" />,
@@ -57,37 +72,32 @@ export const PaidCards: React.FC<PaidCardsData> = ({
     currentSubscriptionDetails?.nextPaymentDate?.split("T")[0];
   const isActive = currentSubscriptionDetails?.isActive ? "Active" : "False";
 
-
   //*================== MANAGE SUBSCRIPTION ==================
 
-
-
-
-
-
-  
   const manageYourSubscription = async () => {
+
+    setLoadingModal(true)
     const token = getJsonItemFromLocalStorage("userInformation").token;
-    const data =  await manageSubscriptionv2(businessID, token)
-    if(data !== null){
+    const data = await manageSubscriptionv2(businessID, token);
+    if (data !== null && data.error == null) {
+      setManageSubUrl(data?.data);
 
-      setManageSubUrl(data)
+      triggerModal();
     }
-    
-  }
+  };
 
-useEffect(() => {
-  console.log('manage', manageSubUrl)
+  const triggerModal = () => {
+   
+    setTriggerIframe(true);
+  };
 
- 
+  useEffect(() => {
+    console.log("TRIGGER STATUS", triggerIframe);
+    if(!triggerIframe) {
+      setLoadingModal(false);
+    }
 
-}, [manageSubUrl])
-
-
-
-
-
-
+  }, [triggerIframe]);
 
   //*================== MANAGE SUBSCRIPTION ==================
   return (
@@ -129,14 +139,21 @@ useEffect(() => {
             </p>
           </div>
           <div className="p-4 flex justify-center items-center">
-            <button 
+            <button
               onClick={() => manageYourSubscription()}
-            className="border-2 border-secondary-500 rounded-lg px-6 py-2 font-bold text-secondary-500 hover:bg-secondary-500 hover:text-white">
+              className="border-2 border-secondary-500 rounded-lg px-6 py-2 font-bold text-secondary-500 hover:bg-secondary-500 hover:text-white"
+            >
+              {loadingModal && (
+           <div className="border-gray-300 h-20 w-20 animate-spin rounded-full border-8 border-secondary-500" />
+              )}
+
+
               Manage subscription
             </button>
           </div>
         </div>
       </div>
-    </div>
+
+      {triggerIframe && <IframeComponent url={manageSubUrl} trigger={triggerIframe} setTriggerIframe={setTriggerIframe} />}    </div>
   );
 };

@@ -118,7 +118,11 @@ export interface CurrentSubscriptionDetails {
     searchQuery?: string;
   }
   
-  
+  export interface ManageSubscriptionIframe {
+    url : string;
+    trigger: boolean;
+  }
+
 
 //   {
 //     "data": {

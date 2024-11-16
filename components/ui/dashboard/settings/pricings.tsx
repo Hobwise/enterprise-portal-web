@@ -4,11 +4,8 @@ import { useEffect, useState } from "react";
 import PlanCard from "./BillingsComponents/PlanCard";
 import { SubscriptionCard } from "./BillingsComponents/SubscriptionCard";
 import { PaidCards } from "./BillingsComponents/PaidCards";
-import Table from "./Table";
 import { CustomLoading, notify } from "@/lib/utils";
 import ReservationList from "../reservations/reservation";
-import TableWithPagination from "./TableTest";
-import PaginatedTable from "./TableTest";
 import { PricingCards } from "./BillingsComponents/PricingCards";
 import SubscriptionPendingCard from "./BillingsComponents/SubscriptionPendingCard";
 import NoSubscriptionCard from "./BillingsComponents/NoSubscriptionCard";
@@ -65,7 +62,7 @@ const Pricing = () => {
     setNoSubscription(false);
     setBillingHistory(subscriptionHistories)
   
-    if (!currentSub) {
+    if (!currentSub || status =='non-renewing') {
       setNoSubscription(true);
       return;
     }

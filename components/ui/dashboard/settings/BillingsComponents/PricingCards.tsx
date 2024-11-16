@@ -1,3 +1,4 @@
+'use client'
 import React, { useEffect, useState } from "react";
 import { FcLock, FcOk } from "react-icons/fc";
 import {
@@ -21,7 +22,10 @@ import { MdVerified } from "react-icons/md";
 import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
 // import PaystackPop from 'paystack-inline-ts';
-import PaystackPop from "@paystack/inline-js";
+import PaystackPop from "paystack-inline-ts";
+
+
+
 import LoadingSpinner from "@/app/dashboard/reservation/[reservationId]/loading";
 
 export const PricingCards: React.FC<PlansFromParent> = ({
@@ -77,29 +81,32 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   // Destructure data from the hook, but only call the hook when there's a payload
 
   const initializeTrnx = (selectedPlan: number, e: any) => {
+    console.log("initializeTrnx", selectedPlan)
     e.preventDefault();
 
-    const plans = [premiumPlan, professionalPlan, starterPlan];
-    // Adjust selectedPlan to match array indexing (1, 2, 3 to 0, 1, 2)
-    const planIndex = selectedPlan - 1;
+     // Align plans array with selectedPlan (1-based indexing)
+  const plans = [null, starterPlan, professionalPlan, premiumPlan];
+  const setLoading = [null, setStarterLoading, setProfessionalLoading, setPremiumLoading];
 
-    //* ACTIVATE LOADER
-    planIndex === 1
-      ? setPremiumLoading(true)
-      : planIndex === 2
-      ? setProfessionalLoading(true)
-      : planIndex === 3
-      ? setStarterLoading(true)
-      : null;
-    console.log("PLAN INDEX", planIndex);
+  // Boundary check for selectedPlan
+  if (selectedPlan < 1 || selectedPlan >= plans.length) {
+    return notify({
+      title: "Payment Plan Error",
+      text: "Invalid payment plan selected.",
+      type: "error",
+    });
+  }
 
-    const amount =
-      activeTab === "Monthly"
-        ? plans[planIndex]?.monthlyFee || 0
-        : plans[planIndex]?.yearlyFee || 0;
+  // Activate the loader for the selected plan
+  setLoading[selectedPlan]?.(true);
+
+  const amount = activeTab === "Monthly"
+    ? plans[selectedPlan]?.monthlyFee || 0
+    : plans[selectedPlan]?.yearlyFee || 0;
+
 
     // Error handling for undefined or null plans
-    if (!plans[planIndex]) {
+    if (!plans[selectedPlan]) {
       const notificationBody = {
         title: "Payment Plan Error",
         text: "Invalid payment plan selected.",
@@ -117,13 +124,13 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       plan: selectedPlan,
       paymentPeriod: activeTab === "Monthly" ? 0 : 1,
     };
-    // console.log("BODY", body);
+    console.log("BODY", body);
 
     init(body);
   };
 
   const init = async (payload: any) => {
-    console.log("PAYLOAD FROM INIT", payload);
+
 
     const token = getJsonItemFromLocalStorage("userInformation").token;
     const initializedTransaction = await initializeTransactionv2(
@@ -134,7 +141,10 @@ export const PricingCards: React.FC<PlansFromParent> = ({
     console.log("INITIALIZED TRANSACTION", initializedTransaction);
     const access_code = initializedTransaction.access_code;
 
-    popup.resumeTransaction(access_code);
+    popup.resumeTransaction({
+      accessCode: access_code,
+      onSuccess:() => window.location.reload()
+    });
 
     setPremiumLoading(false);
     setStarterLoading(false);
@@ -284,7 +294,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
 
           {hasActive === false ? (
             <button
-              onClick={(e) => initializeTrnx(3, e)}
+              onClick={(e) => initializeTrnx(1, e)}
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {starterLoading ? <Spinner /> : "Select Plan"}
@@ -415,8 +425,8 @@ export const PricingCards: React.FC<PlansFromParent> = ({
 
           {hasActive === false ? (
             <button
-              onClick={(e) => initializeTrnx(1, e)}
-              disabled
+              onClick={(e) => initializeTrnx(3, e)}
+            
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {starterLoading ? <Spinner /> : "Select Plan"}
@@ -547,7 +557,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           {hasActive === false ? (
             <button
               onClick={(e) => initializeTrnx(2, e)}
-              disabled
+          
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {starterLoading ? <Spinner /> : "Select Plan"}
