@@ -1,6 +1,4 @@
 'use client';
-import AdvertTwo from '@/public/assets/images/advert-2.png';
-import Hampers from '@/public/assets/images/packs.png';
 import Image from 'next/image';
 import Autoplay from 'embla-carousel-autoplay';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
@@ -8,10 +6,9 @@ import React, { useEffect, useState } from 'react';
 import { getCampaigns } from '@/app/api/controllers/landingPage';
 import { formatDate, getInitials2, notify } from '@/lib/utils';
 import { Skeleton } from './skeleton-loading';
-import ProductImage from '@/public/assets/images/product-image.png';
 import CarouselLoading from '@/public/assets/images/loading-carousel.png';
 import DateWrapper from '@/public/assets/images/date-wrapper.png';
-import { CalendarIcon, FromText } from '@/public/assets/svg';
+import { CalendarIcon, FromText, LocationIcon } from '@/public/assets/svg';
 
 export default function Campaigns() {
   const [isLoading, setIsLoading] = useState(true);
@@ -25,6 +22,7 @@ export default function Campaigns() {
       startDateTime: string;
       businessName: string;
       image: string;
+      businessAddress: string;
     }[]
   >([]);
   const [error, setError] = useState<string>('');
@@ -84,6 +82,10 @@ export default function Campaigns() {
                       <p className="font-light font-satoshi text-[10px] sm:text-[12px] lg:text-[20px] text-[#222222] truncate">{campaign.businessName}</p>
                       <p className="font-bricolage_grotesque text-[12px] sm:text-[16px] lg:text-[40px] text-[#171D22]">{campaign.campaignName}</p>
                       <p className="font-satoshi text-[8px] sm:text-[10px] lg:text-[20px] text-[#55626A] multi-truncate">{campaign.campaignDescription}</p>
+                      <div className="flex space-x-2 items-center mt-2">
+                        <LocationIcon />
+                        <p className="text-xs font-light truncate text-[#55626A]">{campaign.businessAddress}</p>
+                      </div>
                       <img src={CarouselLoading.src} alt="loading" className="mt-4 sm:mt-8 lg:mt-16 hidden lg:block" width={100} />
                     </div>
 
