@@ -26,7 +26,7 @@ const IframeModule: React.FC<{ url: string }> = ({ url }) => {
       title="Embedded Website" // Improves accessibility
       style={{
         width: "100%",
-        height: "680px", // Adjust the height as necessary
+        height: "600px", // Adjust the height as necessary
         border: "none",
       }}
       onLoad={(e) => {
@@ -60,7 +60,7 @@ const IframeComponent: React.FC<ManageSubscriptionIframe> = ({ url, trigger, set
   return (
     <div >
  
-      <Modal isOpen={isOpen} onClose={handleClose} onOpenChange={onOpenChange} backdrop="blur" style={{ width: '1100px' }}>
+      <Modal isOpen={isOpen} onClose={handleClose} onOpenChange={onOpenChange} backdrop="blur" style={{ width: '1000px' }}>
         <ModalContent className="w-[600px] h-auto max-w-full" >
           {(onClose) => (
             <>
