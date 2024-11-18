@@ -53,12 +53,12 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   const [professionalLoading, setProfessionalLoading] = useState(false);
   const [hasActive, setHasActive] = useState(false);
 
-  // useEffect(() => {
-  //   if(disableButtons){
+  useEffect(() => {
+    if(disableButtons){
 
-  //     setHasActive(disableButtons)
-  //   }
-  // }, [disableButtons]);
+      setHasActive(disableButtons)
+    }
+  }, [disableButtons]);
 
   //* SET THE PLANS FROM THE PARENT COMPONENT *//
   useEffect(() => {
