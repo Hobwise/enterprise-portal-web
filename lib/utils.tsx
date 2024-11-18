@@ -24,6 +24,12 @@ import { companyInfo } from './companyInfo';
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
 };
+export function capitalizeFirstLetterOfEachWord(str: string): string {
+  return str
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
 
 export const saveToLocalStorage = (name, itemToSave) => {
   return typeof window !== 'undefined'
@@ -48,6 +54,16 @@ export const saveJsonItemToLocalStorage = (
   itemToSave: any
 ): void => {
   localStorage.setItem(name, JSON.stringify(itemToSave));
+};
+
+export const formatSubscriptionEndDate = (date: string): string => {
+  // Ensure the input date is valid
+  if (!moment(date, 'MMMM Do YYYY, h:mm:ss a', true).isValid()) {
+    return 'Invalid Date';
+  }
+  
+  // Convert and format the date
+  return moment(date, 'MMMM Do YYYY, h:mm:ss a').format('MM/DD/YYYY hh:mmA');
 };
 
 // export const setTokenCookie = (token: string) => {
@@ -531,6 +547,11 @@ export const getInitials2 = (
       : ''
   }`;
 };
+
+export function addCommasToNumber(number: number) {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 
 export function formatDate(dateString: string) {
   const date = new Date(dateString);
