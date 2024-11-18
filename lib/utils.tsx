@@ -548,6 +548,11 @@ export const getInitials2 = (
   }`;
 };
 
+export function addCommasToNumber(number: number) {
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+
 export function formatDate(dateString: string) {
   const date = new Date(dateString);
 

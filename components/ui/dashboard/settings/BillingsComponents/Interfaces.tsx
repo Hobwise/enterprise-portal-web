@@ -110,8 +110,14 @@ export interface CurrentSubscriptionDetails {
     subscriptionEndDate: string; 
     isActive: boolean; 
     isExpired: boolean;
-    id: string; 
+    id: string;
+    perAmount: number;
+    totalAmount: number;
   }
+
+
+
+
 
   export interface SubscriptionTableProps {
     subscriptions: SubscriptionHistory[] | null;

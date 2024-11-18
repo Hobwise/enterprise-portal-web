@@ -11,6 +11,7 @@ import {
 } from '@nextui-org/react';
 import moment from 'moment';
 import { SubscriptionTableProps } from './Interfaces';
+import { addCommasToNumber } from '@/lib/utils';
 
 const SubscriptionTable: React.FC<SubscriptionTableProps> = ({ subscriptions, searchQuery }: any) => {
   const [filteredData, setFilteredData] = React.useState(subscriptions);
@@ -28,6 +29,10 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = ({ subscriptions, se
         return 'Unknown';
     }
   };
+
+  const mapAmount =(amount :number) => {
+    return `₦${addCommasToNumber(amount)}`
+  }
 
   const mapPaymentPeriod = (paymentPeriod: number) => {
     switch (paymentPeriod) {
@@ -108,6 +113,7 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = ({ subscriptions, se
           <TableColumn>Bill Date</TableColumn>
           <TableColumn>Duration</TableColumn>
           {/* <TableColumn>Start Date</TableColumn> */}
+          <TableColumn>Amount</TableColumn> 
           <TableColumn>Status</TableColumn>
           <TableColumn>Invoice</TableColumn>
         </TableHeader>
@@ -121,6 +127,7 @@ const SubscriptionTable: React.FC<SubscriptionTableProps> = ({ subscriptions, se
               <TableCell>{renderCell(item, 'subscriptionEndDate')}</TableCell>
               <TableCell>{mapPaymentPeriod(item.paymentPeriod)}</TableCell>
               {/* <TableCell>{renderCell(item, 'subscriptionStartDate')}</TableCell> */}
+              <TableCell>{mapAmount(item.totalAmount)}</TableCell>
               <TableCell>{renderCell(item, 'isActive')}</TableCell>
               <TableCell>{renderCell(item, 'isExpired')}</TableCell>
             </TableRow>

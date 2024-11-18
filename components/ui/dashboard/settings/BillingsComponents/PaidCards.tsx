@@ -4,8 +4,7 @@ import Image from "next/image";
 import visa from "../../../../../public/assets/images/visa.png";
 import verve from "../../../../../public/assets/images/verve.png";
 import { PaidCardsData } from "./Interfaces";
-
-
+import { Spinner } from "@nextui-org/react";
 
 import {
   capitalizeFirstLetterOfEachWord,
@@ -29,7 +28,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
 
   const [manageSubUrl, setManageSubUrl] = useState<string>("");
   const [triggerIframe, setTriggerIframe] = useState(false);
-  const [loadingModal, setLoadingModal] = useState(false)
+  const [loadingModal, setLoadingModal] = useState(false);
   // const { bindings,  } = useModal();
 
   //* HANDLE TYPES
@@ -75,8 +74,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   //*================== MANAGE SUBSCRIPTION ==================
 
   const manageYourSubscription = async () => {
-
-    setLoadingModal(true)
+    setLoadingModal(true);
     const token = getJsonItemFromLocalStorage("userInformation").token;
     const data = await manageSubscriptionv2(businessID, token);
     if (data !== null && data.error == null) {
@@ -87,16 +85,14 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   };
 
   const triggerModal = () => {
-   
     setTriggerIframe(true);
   };
 
   useEffect(() => {
-    console.log("TRIGGER STATUS", triggerIframe);
-    if(!triggerIframe) {
+    // console.log("TRIGGER STATUS", triggerIframe);
+    if (!triggerIframe) {
       setLoadingModal(false);
     }
-
   }, [triggerIframe]);
 
   //*================== MANAGE SUBSCRIPTION ==================
@@ -142,18 +138,26 @@ export const PaidCards: React.FC<PaidCardsData> = ({
             <button
               onClick={() => manageYourSubscription()}
               className="border-2 border-secondary-500 rounded-lg px-6 py-2 font-bold text-secondary-500 hover:bg-secondary-500 hover:text-white"
+              style={{ minWidth: "200px" }} // Ensures the button width doesn't shrink
             >
-              {/* {loadingModal && (
-           <div className="border-gray-300 h-20 w-20 animate-spin rounded-full border-8 border-secondary-500" />
-              )} */}
-
-
-              Manage subscription
+              {loadingModal ? (
+                <div className="flex justify-center items-center">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                "Manage subscription"
+              )}
             </button>
           </div>
         </div>
       </div>
-
-      {triggerIframe && <IframeComponent url={manageSubUrl} trigger={triggerIframe} setTriggerIframe={setTriggerIframe} />}    </div>
+      {triggerIframe && (
+        <IframeComponent
+          url={manageSubUrl}
+          trigger={triggerIframe}
+          setTriggerIframe={setTriggerIframe}
+        />
+      )}{" "}
+    </div>
   );
 };
