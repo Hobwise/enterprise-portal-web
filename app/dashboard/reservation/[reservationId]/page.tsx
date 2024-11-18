@@ -147,6 +147,18 @@ const ReservationDetails = () => {
                   {data?.quantityLeft} remaining
                 </Chip>
               </div>
+              <div>
+                {data?.allowSystemAdvert && (
+                  <Chip
+                    classNames={{
+                      base: ` text-xs text-black bg-success-200`,
+                    }}
+                    size='sm'
+                  >
+                    Advertisement enabled
+                  </Chip>
+                )}
+              </div>
               <div className='flex lg:gap-3 gap-0 lg:flex-row flex-col'>
                 <div className='flex gap-2  text-[14px] font-[400]'>
                   <p className='text-[#3D424A]'>RESERVATION FEE</p>

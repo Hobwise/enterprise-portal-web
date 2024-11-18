@@ -36,6 +36,7 @@ export async function createBooking(
     emailAddress: payload.emailAddress,
     phoneNumber: payload.phoneNumber,
     reservationId: payload.reservationId,
+
     // bookingDateTime: payload. bookingDateTime,
   });
 

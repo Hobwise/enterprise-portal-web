@@ -143,7 +143,7 @@ const SideNav = () => {
     )
       return false;
     if (
-      item.title === 'QR Code' &&
+      item.title === 'Quick Response' &&
       userRolePermissions?.canViewQR === false &&
       role === 1
     )

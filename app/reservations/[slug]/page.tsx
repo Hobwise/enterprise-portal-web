@@ -189,7 +189,7 @@ export default function BookReservation() {
           <div className="lg:space-y-6 space-y-6 lg:-mt-16">
             <div className="space-y-1.5">
               <p className="text-lg font-medium text-[#161618]">Selected Reservation</p>
-              <div className="flex space-x-2 items-center text-sm">
+              <div className="flex space-x-2 items-center text-sm text-[#161618]">
                 <LocationIcon />
                 <p>{reservation?.businessAddress}</p>
               </div>

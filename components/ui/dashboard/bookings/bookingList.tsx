@@ -41,6 +41,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   'lastName',
   'id',
   'emailAddress',
+  'quantity',
   'phoneNumber',
   'reference',
   'bookingDateTime',

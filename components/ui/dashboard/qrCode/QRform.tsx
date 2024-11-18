@@ -114,7 +114,7 @@ const QRform = () => {
                     Fantastic!
                   </p>
                   <p className='text-center text-grey400 text-sm font-[400]'>
-                    You have created a new QR code
+                    You have created a new Quick Response
                   </p>
                 </div>
                 <Spacer y={0} />

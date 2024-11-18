@@ -3,6 +3,7 @@ import { createBooking } from '@/app/api/controllers/dashboard/bookings';
 import { CustomInput } from '@/components/CustomInput';
 import BackButton from '@/components/backButton';
 import { CustomButton } from '@/components/customButton';
+import { CustomTextArea } from '@/components/customTextArea';
 import useTermsAndCondition from '@/hooks/cachedEndpoints/useTermsAndConditions';
 import { companyInfo } from '@/lib/companyInfo';
 import {
@@ -10,6 +11,7 @@ import {
   getJsonItemFromLocalStorage,
   saveJsonItemToLocalStorage,
 } from '@/lib/utils';
+import { InfoCircle } from '@/public/assets/svg';
 import { getLocalTimeZone, now, today } from '@internationalized/date';
 import { DatePicker } from '@nextui-org/date-picker';
 import {
@@ -48,13 +50,14 @@ const CompleteBookingComponent = () => {
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
+  const [quantity, setQuantity] = useState<number>(1);
   const [timeNdate, setTimeNdate] = useState(now(getLocalTimeZone()));
   const [bookings, setBookings] = useState<any>({
     firstName: '',
     lastName: '',
     email: '',
     phoneNumber: '',
-
+    description: '',
     id: reservationId ? reservationId : getSingleReservation?.id,
   });
 
@@ -96,6 +99,9 @@ const CompleteBookingComponent = () => {
       emailAddress: bookings.email,
       phoneNumber: bookings.phoneNumber,
       bookingDateTime: formatDateTime(timeNdate),
+      description: bookings.description,
+
+      quantity: quantity,
     };
 
     setIsLoading(true);
@@ -120,9 +126,10 @@ const CompleteBookingComponent = () => {
         lastName: '',
         email: '',
         phoneNumber: '',
-
+        description: '',
         id: '',
       });
+      setQuantity(1);
     } else if (data?.data?.error) {
       toast.error(data?.data?.error);
     }
@@ -182,6 +189,15 @@ const CompleteBookingComponent = () => {
           placeholder='Enter email'
         />
         <Spacer y={5} />
+        <CustomTextArea
+          value={bookings.description}
+          name='description'
+          errorMessage={response?.errors?.description?.[0]}
+          onChange={handleInputChange}
+          label='Add a description to this booking'
+          placeholder='Add a description'
+        />
+        <Spacer y={5} />
         <CustomInput
           type='text'
           value={bookings.phoneNumber}
@@ -211,6 +227,34 @@ const CompleteBookingComponent = () => {
             minValue={today(getLocalTimeZone())}
             defaultValue={now(getLocalTimeZone())}
           />
+        </div>
+        <div className='text-sm flex justify-between'>
+          <div className='text-[#404245] flex space-x-2 items-center'>
+            <p>Quantity</p>
+            <InfoCircle />
+          </div>
+          <div className='flex space-x-4 text-[#000] items-center'>
+            <button
+              className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
+              disabled={quantity <= 1}
+              role='button'
+              onClick={() => {
+                quantity > 1 ? setQuantity((prev) => prev - 1) : null;
+              }}
+            >
+              -
+            </button>
+            <p className='font-medium w-4 flex justify-center items-center'>
+              {quantity}
+            </p>
+            <div
+              className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
+              role='button'
+              onClick={() => setQuantity((prev) => prev + 1)}
+            >
+              +
+            </div>
+          </div>
         </div>
         {data?.content && (
           <>
