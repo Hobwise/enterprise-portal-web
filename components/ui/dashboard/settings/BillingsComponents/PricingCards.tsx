@@ -23,6 +23,7 @@ import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
 // import PaystackPop from 'paystack-inline-ts';
 import PaystackPop from "paystack-inline-ts";
+import {usePaystackPayment} from  'react-paystack'
 // import {PaystackPop} from '../Paystack'
 
 
@@ -35,6 +36,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
 }) => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const popup = new PaystackPop();
+  
   const token = userInformation?.token;
   const cooperateID = userInformation?.cooperateID;
   const businessID = userInformation?.businesses[0]?.businessId;
@@ -51,12 +53,12 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   const [professionalLoading, setProfessionalLoading] = useState(false);
   const [hasActive, setHasActive] = useState(false);
 
-  useEffect(() => {
-    if(disableButtons){
+  // useEffect(() => {
+  //   if(disableButtons){
 
-      setHasActive(disableButtons)
-    }
-  }, [disableButtons]);
+  //     setHasActive(disableButtons)
+  //   }
+  // }, [disableButtons]);
 
   //* SET THE PLANS FROM THE PARENT COMPONENT *//
   useEffect(() => {
@@ -146,6 +148,8 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       accessCode: access_code,
       onSuccess:() => window.location.reload()
     });
+
+    
     // popup.resumeTransaction(access_code);
 
     setPremiumLoading(false);
@@ -299,14 +303,14 @@ export const PricingCards: React.FC<PlansFromParent> = ({
               onClick={(e) => initializeTrnx(1, e)}
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
-              {starterLoading ? <Spinner /> : "Select Plan"}
+              {starterLoading ? <Spinner size="sm" /> : "Select Plan"}
             </button>
           ) : (
             <button
               onClick={(e) => activePlan()}
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
-              {starterLoading ? <Spinner /> : "Select Plan"}
+              {starterLoading ? <Spinner size="sm"  /> : "Select Plan"}
             </button>
           )}
         </div>
@@ -431,14 +435,14 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
-              {starterLoading ? <Spinner /> : "Select Plan"}
+              {premiumLoading ? <Spinner size="sm" /> : "Select Plan"}
             </button>
           ) : (
             <button
             onClick={(e) => activePlan()}
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
-              {starterLoading ? <Spinner /> : "Select Plan"}
+              {premiumLoading ? <Spinner  size="sm" /> : "Select Plan"}
             </button>
           )}
         </div>
@@ -562,18 +566,19 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
-              {starterLoading ? <Spinner /> : "Select Plan"}
+              {professionalLoading ? <Spinner size="sm" /> : "Select Plan"}
             </button>
           ) : (
             <button
             onClick={(e) => activePlan()}
               className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
-              {starterLoading ? <Spinner /> : "Select Plan"}
+              {professionalLoading ? <Spinner size="sm"  /> : "Select Plan"}
             </button>
           )}
         </div>
       </div>
+      <script src="https://js.paystack.co/v1/inline.js"></script>
     </div>
   );
 };

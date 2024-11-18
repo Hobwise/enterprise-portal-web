@@ -1,12 +1,21 @@
 // components/Pricing.tsx
-
+'use client'
 import { useEffect, useState } from "react";
 import PlanCard from "./BillingsComponents/PlanCard";
 import { SubscriptionCard } from "./BillingsComponents/SubscriptionCard";
 import { PaidCards } from "./BillingsComponents/PaidCards";
 import { CustomLoading, notify } from "@/lib/utils";
 import ReservationList from "../reservations/reservation";
-import { PricingCards } from "./BillingsComponents/PricingCards";
+// import { PricingCards } from "./BillingsComponents/PricingCards";
+const PricingCards = dynamic(() => import('./BillingsComponents/PricingCards').then(mod => mod.PricingCards), {
+  ssr: false
+});
+
+// const PricingCards = dynamic(
+//   () => import('./BillingsComponents/PricingCards'),
+//   { ssr: false }
+// )
+ 
 import SubscriptionPendingCard from "./BillingsComponents/SubscriptionPendingCard";
 import NoSubscriptionCard from "./BillingsComponents/NoSubscriptionCard";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
@@ -19,6 +28,7 @@ import {
   SubscriptionHistory,
 } from "./BillingsComponents/Interfaces";
 import SubscriptionTable from "./BillingsComponents/BillingHistory";
+import dynamic from "next/dynamic";
 
 const Pricing = () => {
   const [selectedPlan, setSelectedPlan] = useState("Free");
