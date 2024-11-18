@@ -167,7 +167,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   };
 
   return (
-    <div className="border border-secondaryGrey w-full rounded-lg flex flex-col ">
+    <div className="border border-secondaryGrey w-full max-w-[800px] rounded-lg flex flex-col mx-auto">
       <div className="p-4 px-6 border-b border-secondaryGrey">
         <div className="flex justify-between">
           <h2 className="text-lg font-bold">Plans</h2>
@@ -184,10 +184,10 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       </div>
 
       <div className="flex">
-        <div className="flex-1 border-r border-secondaryGrey p-4 gap-4">
+        <div className="w-full sm:w-1/2 lg:w-1/3 border-r border-secondaryGrey p-4">
           {/* Content for the first part */}
           <div className="flex flex-row gap-4">
-            <p className="font-extrabold ">Starter Plan</p>
+            <p className="font-extrabold text-sm ">Starter</p>
 
             <button
               disabled
@@ -240,84 +240,84 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           <div className="flex flex-col gap-2">
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(true)}
-              <p>Maximum users - {starterPlan?.maxUsers}</p>
+              <p className="text-sm">Maximum users - {starterPlan?.maxUsers}</p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessDashboard!)}
-              <p>Can Access Dashboard </p>
+              <p className="text-sm">Can Access Dashboard </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessDashboard!)}
-              <p>Can Access Dashboard </p>
+              <p className="text-sm">Can Access Dashboard </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessMenu!)}
-              <p>Can Access Menu </p>
+              <p className="text-sm">Can Access Menu </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessOrders!)}
-              <p>Can Access Orders </p>
+              <p className="text-sm">Can Access Orders </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessPayments!)}
-              <p>Can Access Payments </p>
+              <p className="text-sm">Can Access Payments </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessSettings!)}
-              <p>Can Access Settings </p>
+              <p className="text-sm">Can Access Settings </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessQR!)}
-              <p>Can Access QR </p>
+              <p className="text-sm">Can Access QR </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessReservations!)}
-              <p>Can Access Reservations </p>
+              <p className="text-sm">Can Access Reservations </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessNotifications!)}
-              <p>Can Access Notifications </p>
+              <p className="text-sm">Can Access Notifications </p>
             </div>
 
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessBookings!)}
-              <p>Can Access Bookings </p>
+              <p className="text-sm">Can Access Bookings </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessCampaigns!)}
-              <p>Can Access Campaigns </p>
+              <p className="text-sm">Can Access Campaigns </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessReports!)}
-              <p>Can Access Reports </p>
+              <p className="text-sm">Can Access Reports </p>
             </div>
 
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(starterPlan?.canAccessMultipleLocations!)}
-              <p>Can Access Multiple Locations </p>
+              <p className="text-sm">Can Access Multiple Locations </p>
             </div>
           </div>
 
           {hasActive === false ? (
             <button
               onClick={(e) => initializeTrnx(1, e)}
-              className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {starterLoading ? <Spinner size="sm" /> : "Select Plan"}
             </button>
           ) : (
             <button
               onClick={(e) => activePlan()}
-              className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {starterLoading ? <Spinner size="sm"  /> : "Select Plan"}
             </button>
           )}
         </div>
 
-        <div className="flex-1 border border-[#5F35D2] bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF] p-4">
+        <div className="w-full sm:w-1/2 lg:w-1/3 border border-[#5F35D2] bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF] p-4">
           <div className="flex flex-row gap-4 items-center">
-            <p className="font-extrabold ">Premium Plan</p>
+            <p className="font-extrabold text-sm ">Premium</p>
 
             <button
               disabled
@@ -371,61 +371,61 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           <div className="flex flex-col gap-2">
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(true)}
-              <p>Maximum users - {premiumPlan?.maxUsers}</p>
+              <p  className="text-sm">Maximum users - {premiumPlan?.maxUsers}</p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessDashboard!)}
-              <p>Can Access Dashboard </p>
+              <p  className="text-sm">Can Access Dashboard </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessDashboard!)}
-              <p>Can Access Dashboard </p>
+              <p  className="text-sm">Can Access Dashboard </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessMenu!)}
-              <p>Can Access Menu </p>
+              <p  className="text-sm">Can Access Menu </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessOrders!)}
-              <p>Can Access Orders </p>
+              <p  className="text-sm">Can Access Orders </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessPayments!)}
-              <p>Can Access Payments </p>
+              <p  className="text-sm">Can Access Payments </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessSettings!)}
-              <p>Can Access Settings </p>
+              <p  className="text-sm">Can Access Settings </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessQR!)}
-              <p>Can Access QR </p>
+              <p className="text-sm">Can Access QR </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessReservations!)}
-              <p>Can Access Reservations </p>
+              <p className="text-sm">Can Access Reservations </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessNotifications!)}
-              <p>Can Access Notifications </p>
+              <p className="text-sm">Can Access Notifications </p>
             </div>
 
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessBookings!)}
-              <p>Can Access Bookings </p>
+              <p className="text-sm">Can Access Bookings </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessCampaigns!)}
-              <p>Can Access Campaigns </p>
+              <p className="text-sm">Can Access Campaigns </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessReports!)}
-              <p>Can Access Reports </p>
+              <p className="text-sm">Can Access Reports </p>
             </div>
 
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(premiumPlan?.canAccessMultipleLocations!)}
-              <p>Can Access Multiple Locations </p>
+              <p className="text-sm">Can Access Multiple Locations </p>
             </div>
           </div>
 
@@ -433,23 +433,23 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             <button
               onClick={(e) => initializeTrnx(3, e)}
             
-              className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {premiumLoading ? <Spinner size="sm" /> : "Select Plan"}
             </button>
           ) : (
             <button
             onClick={(e) => activePlan()}
-              className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {premiumLoading ? <Spinner  size="sm" /> : "Select Plan"}
             </button>
           )}
         </div>
 
-        <div className="flex-1 p-4">
+        <div className="w-full sm:w-1/2 lg:w-1/3 p-4">
           <div className="flex flex-row gap-4">
-            <p className="font-extrabold ">Professional Plan</p>
+            <p className="font-extrabold text-sm ">Professional</p>
 
             <button
               disabled
@@ -500,63 +500,63 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           </div>
 
           <div className="flex flex-col gap-2">
-            <div className="flex flex-row gap-3 items-center">
+            <div className="flex flex-row gap-3 items-center ">
               {handleIcons(true)}
-              <p>Maximum users - {professionalPlan?.maxUsers}</p>
+              <p className="text-sm">Maximum users - {professionalPlan?.maxUsers}</p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessDashboard!)}
-              <p>Can Access Dashboard </p>
+              <p className="text-sm">Can Access Dashboard </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessDashboard!)}
-              <p>Can Access Dashboard </p>
+              <p className="text-sm">Can Access Dashboard </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessMenu!)}
-              <p>Can Access Menu </p>
+              <p className="text-sm">Can Access Menu </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessOrders!)}
-              <p>Can Access Orders </p>
+              <p className="text-sm">Can Access Orders </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessPayments!)}
-              <p>Can Access Payments </p>
+              <p className="text-sm">Can Access Payments </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessSettings!)}
-              <p>Can Access Settings </p>
+              <p className="text-sm">Can Access Settings </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessQR!)}
-              <p>Can Access QR </p>
+              <p className="text-sm">Can Access QR </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessReservations!)}
-              <p>Can Access Reservations </p>
+              <p className="text-sm"> Can Access Reservations </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessNotifications!)}
-              <p>Can Access Notifications </p>
+              <p className="text-sm">Can Access Notifications </p>
             </div>
 
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessBookings!)}
-              <p>Can Access Bookings </p>
+              <p className="text-sm">Can Access Bookings </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessCampaigns!)}
-              <p>Can Access Campaigns </p>
+              <p className="text-sm">Can Access Campaigns </p>
             </div>
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessReports!)}
-              <p>Can Access Reports </p>
+              <p className="text-sm">Can Access Reports </p>
             </div>
 
             <div className="flex flex-row gap-3 items-center">
               {handleIcons(professionalPlan?.canAccessMultipleLocations!)}
-              <p>Can Access Multiple Locations </p>
+              <p className="text-sm">Can Access Multiple Locations </p>
             </div>
           </div>
 
@@ -564,14 +564,14 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             <button
               onClick={(e) => initializeTrnx(2, e)}
           
-              className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {professionalLoading ? <Spinner size="sm" /> : "Select Plan"}
             </button>
           ) : (
             <button
             onClick={(e) => activePlan()}
-              className="mt-6 w-64 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
             >
               {professionalLoading ? <Spinner size="sm"  /> : "Select Plan"}
             </button>

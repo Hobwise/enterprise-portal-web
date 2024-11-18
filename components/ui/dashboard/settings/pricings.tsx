@@ -100,7 +100,7 @@ const Pricing = () => {
   ];
 
   return (
-    <div className=" ">
+    <div className="w-[750px]">
       <div className="w-full mb-2">
         <h1 className="text-xl font-bold mb-2">Billing & Subscription</h1>
         <p className="text-foreground-600 mb-4">
