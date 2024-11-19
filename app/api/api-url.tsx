@@ -90,4 +90,9 @@ export const DASHBOARD = {
   reportPayment: 'api/v1/ReportManager/payment',
   reportBooking: 'api/v1/ReportManager/booking',
   reportAuditLog: 'api/v1/ReportManager/audit-log',
+   //Billings and Subscriptions
+   subscription: 'api/v1/Subscription',
+   manage: 'api/v1/Subscription/manaage-url',
+   intializeTransaction:'api/v1/Transaction/initialise',
+   completeTransaction:'api/v1/Transaction/complete',
 };

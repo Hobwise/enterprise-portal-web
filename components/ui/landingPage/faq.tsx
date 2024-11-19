@@ -69,7 +69,7 @@ export default function FAQs({ className }: { className?: string }) {
                       )}
                     </div>
                     <div
-                      className="border border-[#5F35D2] bg-[#EAE8FD] rounded-full lg:h-12 lg:w-12 w-8 h-8 flex items-center justify-center"
+                      className="border border-[#5F35D2] bg-[#EAE8FD] rounded-full lg:h-10 lg:w-10 w-6 h-6 flex items-center justify-center"
                       role="button"
                       onClick={() => handleCollapse(index)}
                     >

@@ -52,7 +52,7 @@ const SettingsComponent: React.FC = () => {
     ];
 
     if (true) {
-      baseListItems.push({ title: 'Pricings', screenNumber: 7 });
+      baseListItems.push({ title: 'Billings and Subscription', screenNumber: 7 });
     }
 
     return baseListItems;

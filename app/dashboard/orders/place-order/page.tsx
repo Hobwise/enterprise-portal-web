@@ -1,3 +1,4 @@
+'use client'
 import MenuList from '@/components/ui/dashboard/orders/place-order/menuList';
 import dynamic from 'next/dynamic';
 

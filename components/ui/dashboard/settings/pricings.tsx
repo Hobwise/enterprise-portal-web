@@ -1,105 +1,145 @@
-import { formatPrice } from '@/lib/utils';
-import { useState } from 'react';
+// components/Pricing.tsx
+'use client'
+import { useEffect, useState } from "react";
+import PlanCard from "./BillingsComponents/PlanCard";
+import { SubscriptionCard } from "./BillingsComponents/SubscriptionCard";
+import { PaidCards } from "./BillingsComponents/PaidCards";
+import { CustomLoading, notify } from "@/lib/utils";
+import ReservationList from "../reservations/reservation";
+// import { PricingCards } from "./BillingsComponents/PricingCards";
+const PricingCards = dynamic(() => import('./BillingsComponents/PricingCards').then(mod => mod.PricingCards), {
+  ssr: false
+});
+
+// const PricingCards = dynamic(
+//   () => import('./BillingsComponents/PricingCards'),
+//   { ssr: false }
+// )
+ 
+import SubscriptionPendingCard from "./BillingsComponents/SubscriptionPendingCard";
+import NoSubscriptionCard from "./BillingsComponents/NoSubscriptionCard";
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import useBilling from "@/hooks/cachedEndpoints/useBilling";
+import {
+  CardDetails,
+  Plans,
+  SubscriptionData,
+  CurrentSubscriptionDetails,
+  SubscriptionHistory,
+} from "./BillingsComponents/Interfaces";
+import SubscriptionTable from "./BillingsComponents/BillingHistory";
+import dynamic from "next/dynamic";
 
 const Pricing = () => {
-  const [selectedPlan, setSelectedPlan] = useState('Free');
+  const [selectedPlan, setSelectedPlan] = useState("Free");
   const [showDowngradeWarning, setShowDowngradeWarning] = useState(false);
+  const [noSubscription, setNoSubscription] = useState(false);
+  const [pendingSubscription, setPendingSubscription] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
+  const [showPlans, setShowPlans] = useState(false);
+  const [plansArray, setPlansArray] = useState<Plans | null>(null);
+  const [billingHistory, setBillingHistory] = useState<SubscriptionHistory[] | null>(null)
+  const [isLoading, setIsLoading] = useState(true);
+  const [disableButtons, setDisableButtons] = useState(false);
+  const [cardAuthorization, setCardAuthorization] =
+    useState<CardDetails | null>(null);
+  const [currentSubDetails, setCurrentSubDetails] =
+    useState<CurrentSubscriptionDetails | null>(null);
 
-  const plans = [
-    { name: 'Free', price: 0, current: true },
-    { name: 'Standard', price: 25000 },
-    { name: 'Pro', price: 75000 },
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const businessInformation = getJsonItemFromLocalStorage("business");
+
+  const businessId = businessInformation?.businessId;
+
+  //* Fetch subscription data from the API here *//
+
+  const subscription = useBilling();
+
+  useEffect(() => {
+    console.log("SUBS", subscription.data)
+    const { data, isLoading } = subscription;
+  
+    if (!data) {
+      setNoSubscription(true);
+      return;
+    }
+  
+    const { plans, status, authorization, subscription: currentSub, subscriptionHistories    } = data;
+  
+    setPlansArray(plans);
+    setIsLoading(isLoading);
+    setShowPlans(true);
+    setNoSubscription(false);
+    setBillingHistory(subscriptionHistories)
+  
+    if (!currentSub || status =='non-renewing') {
+      setNoSubscription(true);
+      return;
+    }
+  
+    if (status === 'active') {
+      console.log("SUB IS ACTIVE")
+      setDisableButtons(true);
+      if (currentSub.isActive) {
+        setHasSubscription(true);
+        setCardAuthorization({ ...authorization, status: 'active' });
+        setCurrentSubDetails({ ...currentSub, nextPaymentDate: data.nextPaymentDate });
+      } else {
+        setPendingSubscription(true);
+      }
+    }
+  }, [subscription?.data, subscription?.isLoading]);
+
+  const columns = [
+    { name: "Plan" },
+    { name: "Bill Date" },
+    { name: "Duration" },
+    { name: "Amount" },
+    { name: "Invoice" },
+    { name: "Action" },
   ];
 
-  const handlePlanChange = (planName: any) => {
-    if (planName !== 'Pro' && selectedPlan === 'Pro') {
-      setSelectedPlan(planName);
-      setShowDowngradeWarning(true);
-    } else {
-      setSelectedPlan(planName);
-      setShowDowngradeWarning(false);
-    }
-  };
-
-  const handleUpgrade = () => {
-    console.log(`Upgrading to ${selectedPlan} plan`);
-    // Add actual upgrade logic here
-  };
-  const componentProps = {
-    email: 'damoye81@gmail.com',
-    amount: 75000 * 100,
-    metadata: {
-      name: 'Damilare Oyedeji',
-      phone: '07031203859',
-    },
-    publicKey: '123456',
-    text: 'Pay Now',
-    onSuccess: () =>
-      alert('Thanks for donating to us! we do not take it for granted!!'),
-    onClose: () => alert("Wait! You need to donate, don't go!!!!"),
-  };
   return (
-    <div className='max-w-2xl mx-auto'>
-      <h1 className='text-2xl font-bold mb-2'>Select plan</h1>
-      <p className='text-foreground-600 mb-4'>
-        Simple and flexible per-user pricing.
-      </p>
-
-      <div className='grid grid-cols-3 gap-4 mb-6'>
-        {plans.map((plan) => (
-          <div
-            key={plan.name}
-            className={`p-4 border rounded-lg ${
-              selectedPlan === plan.name
-                ? 'border-secondary-500 border-2'
-                : 'border-foreground-200'
-            }`}
-          >
-            <label className='flex flex-col items-center cursor-pointer'>
-              <input
-                type='radio'
-                name='plan'
-                checked={selectedPlan === plan.name}
-                onChange={() => handlePlanChange(plan.name)}
-                className='sr-only'
-              />
-              <div className='flex flex-col items-center'>
-                <h3 className='text-lg font-semibold'>{plan.name}</h3>
-                <p className='text-2xl font-bold'>
-                  {formatPrice(plan.price)}
-                  <span className='text-sm font-normal'>/month</span>
-                </p>
-                {plan.current ? (
-                  <span
-                    className={`mt-2 px-2 py-1 ${
-                      selectedPlan === plan.name
-                        ? 'bg-secondary-600 text-white'
-                        : 'bg-foreground-200 text-foreground-700'
-                    }  text-sm rounded`}
-                  >
-                    {selectedPlan === plan.name ? 'Selected' : 'Current plan'}
-                  </span>
-                ) : (
-                  <button
-                    className={`mt-2 px-4 py-2 rounded text-sm ${
-                      selectedPlan === plan.name
-                        ? 'bg-secondary-600 text-white'
-                        : 'bg-foreground-200 text-foreground-700'
-                    }`}
-                  >
-                    {selectedPlan === plan.name ? 'Selected' : 'Select'}
-                  </button>
-                )}
-              </div>
-            </label>
-          </div>
-        ))}
+    <div className="w-[750px]">
+      <div className="w-full mb-2">
+        <h1 className="text-xl font-bold mb-2">Billing & Subscription</h1>
+        <p className="text-foreground-600 mb-4">
+          Manage your pricing and billing settings
+        </p>
       </div>
 
-      {showDowngradeWarning && (
+      {/* No scriptions card */}
+      {/* <SubscriptionCard /> */}
+
+      {isLoading ? (
+        <CustomLoading />
+      ) : (
+        <>
+          {noSubscription && <NoSubscriptionCard />}
+          {hasSubscription && (
+            <PaidCards
+              cardDetails={cardAuthorization}
+              currentSubscriptionDetails={currentSubDetails}
+            />
+          )}
+          {pendingSubscription && (
+            <SubscriptionPendingCard
+              cardDetails={cardAuthorization}
+              currentSubscriptionDetails={currentSubDetails}
+            />
+          )}
+          {showPlans && <PricingCards plans={plansArray} disableButtons={disableButtons}/>}
+
+          <h2 className="text-lg font-bold mt-10 mb-3">Billing history</h2>
+          <SubscriptionTable subscriptions={billingHistory}/>
+
+        </>
+      )}
+
+      {/* {showDowngradeWarning && (
         <div
-          className='bg-primary-100 border-l-4 border-primary-500 text-primary-700 p-4 mb-6'
-          role='alert'
+          className="bg-primary-100 border-l-4 border-primary-500 text-primary-700 p-4 mb-6"
+          role="alert"
         >
           <p>
             Are you sure you want to downgrade? This will remove Pro plan
@@ -107,23 +147,14 @@ const Pricing = () => {
             2024.
           </p>
         </div>
-      )}
+      )} */}
 
-      {/* <button
-        className='px-4 py-2 bg-secondary-600 float-right text-white rounded'
-        onClick={handleUpgrade}
-      >
-        Upgrade plan
-      </button> */}
-      {/* <PaystackButton
-        className='px-4 py-2 bg-secondary-600 float-right text-white rounded'
-        {...componentProps}
-      /> */}
-      <p className='text-sm text-secondary-600 mt-4 cursor-pointer'>
+      {/* <p className="text-sm text-secondary-600 mt-4 cursor-pointer">
         Compare plans and pricing options
-      </p>
+      </p> */}
     </div>
   );
 };
 
 export default Pricing;
+
