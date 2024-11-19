@@ -59,7 +59,7 @@ export const scheduleTokenRefresh = () => {
   const expirationTime = new Date(userData.tokenExpiration).getTime();
   const currentTime = Date.now();
 
-  const timeUntilRefresh = expirationTime - currentTime - 60 * 1000;
+  const timeUntilRefresh = expirationTime - currentTime - 120 * 1000;
 
   if (timeUntilRefresh <= 0) {
     refreshToken();

@@ -16,10 +16,10 @@ const useLogout = () => {
       const isSuccessful = response?.data?.isSuccessful;
 
       if (isSuccessful) {
+        router.push('/auth/login');
         queryClient.clear();
         localStorage.clear();
         removeCookie('token');
-        router.push('/auth/login');
       } else {
         notify({
           title: 'Error!',

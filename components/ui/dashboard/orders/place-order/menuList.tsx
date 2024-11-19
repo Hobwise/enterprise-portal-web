@@ -368,7 +368,7 @@ const MenuList = () => {
             )}
 
             <Spacer y={8} />
-            {!isLoading && bottomContent}
+            <div>{!isLoading && bottomContent}</div>
           </div>
 
           <div className='hidden xl:block max-h-[360px] overflow-scroll bg-[#F7F6FA] p-4 rounded-lg flex-grow'>

@@ -47,9 +47,9 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
 
   const businessCategories = () => {
     if (data?.businessCategory === 0) {
-      return 'Business center';
+      return 'Lounge';
     } else if (data?.businessCategory === 1) {
-      return 'Logistics';
+      return 'Game House';
     } else if (data?.businessCategory === 2) {
       return 'Bar';
     } else if (data?.businessCategory === 3) {
@@ -60,6 +60,8 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
       return 'Cafe';
     } else if (data?.businessCategory === 6) {
       return 'Hotel';
+    } else if (data?.businessCategory === 7) {
+      return 'Gallery';
     }
   };
 

@@ -1,16 +1,20 @@
 'use client';
 import { Button, Pagination, PaginationItemType, cn } from '@nextui-org/react';
-import React, { useEffect } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useGlobalContext } from './globalProvider';
 
-const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
+const usePagination = (arrayToMap: any, columns = [], visibleColumn = []) => {
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
 
-  const refinedArrayToMap = arrayToMap ? arrayToMap?.totalPages : 1;
-  const [filterValue, setFilterValue] = React.useState('');
+  // Convert these to useMemo to prevent unnecessary recalculations
+  const refinedArrayToMap = useMemo(
+    () => (arrayToMap ? arrayToMap?.totalPages : 1),
+    [arrayToMap?.totalPages]
+  );
 
-  const [statusFilter, setStatusFilter] = React.useState('all');
+  const [filterValue, setFilterValue] = React.useState('');
+  const [statusFilter] = React.useState('all');
   const [selectedKeys, setSelectedKeys] = React.useState(new Set([]));
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(visibleColumn)
@@ -20,153 +24,179 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
     direction: 'ascending',
   });
 
-  const renderItem = ({
-    ref,
-    key,
-    value,
-    isActive,
-    onNext,
-    onPrevious,
-    setPage,
-    className,
-  }: any) => {
-    if (value === PaginationItemType.NEXT) {
+  // Memoize the renderItem function
+  const renderItem = useCallback(
+    ({
+      ref,
+      key,
+      value,
+      isActive,
+      onNext,
+      onPrevious,
+      setPage,
+      className,
+    }: any) => {
+      if (value === PaginationItemType.NEXT) {
+        return (
+          <button
+            title='next'
+            key={key}
+            className={cn(className, 'bg-default-200/50 min-w-8 w-8 h-8')}
+            onClick={onNext}
+          >
+            <IoIosArrowForward />
+          </button>
+        );
+      }
+
+      if (value === PaginationItemType.PREV) {
+        return (
+          <button
+            key={key}
+            title='previous'
+            className={cn(className, 'bg-default-200/50 min-w-8 w-8 h-8')}
+            onClick={onPrevious}
+          >
+            <IoIosArrowForward className='rotate-180' />
+          </button>
+        );
+      }
+
+      if (value === PaginationItemType.DOTS) {
+        return (
+          <button key={key} className={className}>
+            ...
+          </button>
+        );
+      }
+
       return (
         <button
-          title='next'
           key={key}
-          className={cn(className, 'bg-default-200/50 min-w-8 w-8 h-8')}
-          onClick={onNext}
+          ref={ref}
+          className={cn(
+            className,
+            isActive && 'rounded-md text-primaryColor bg-[#EAE5FF] '
+          )}
+          onClick={() => setPage(value)}
         >
-          <IoIosArrowForward />
+          {value}
         </button>
       );
-    }
+    },
+    [setPage]
+  );
 
-    if (value === PaginationItemType.PREV) {
-      return (
-        <button
-          key={key}
-          title='previous'
-          className={cn(className, 'bg-default-200/50 min-w-8 w-8 h-8')}
-          onClick={onPrevious}
-        >
-          <IoIosArrowForward className='rotate-180' />
-        </button>
-      );
-    }
-
-    if (value === PaginationItemType.DOTS) {
-      return (
-        <button key={key} className={className}>
-          ...
-        </button>
-      );
-    }
-    return (
-      <button
-        key={key}
-        ref={ref}
-        className={cn(
-          className,
-          isActive && 'rounded-md text-primaryColor bg-[#EAE5FF] '
-        )}
-        onClick={() => setPage(value)}
-      >
-        {value}
-      </button>
-    );
-  };
-
-  // const pages = Math.ceil(arrayToMap?.length / rowsPerPage);
   const hasSearchFilter = Boolean(filterValue);
 
-  useEffect(() => {
-    setVisibleColumns(new Set(visibleColumn));
+  // Replace useEffect with useMemo for visibleColumns
+  const currentVisibleColumns = useMemo(() => {
+    return new Set(visibleColumn);
   }, [visibleColumn]);
 
-  const headerColumns = React.useMemo(() => {
-    if (visibleColumns === 'all') return columns;
+  const headerColumns = useMemo(() => {
+    if (currentVisibleColumns === 'all') return columns;
 
     return columns?.filter((column) =>
-      Array.from(visibleColumns).includes(column.uid)
+      Array.from(currentVisibleColumns).includes(column.uid)
     );
-  }, [visibleColumns, columns]);
+  }, [currentVisibleColumns, columns]);
 
-  const onNextPage = React.useCallback(() => {
+  const onNextPage = useCallback(() => {
     if (page < refinedArrayToMap) {
       setPage(page + 1);
     }
-  }, [page, refinedArrayToMap]);
+  }, [page, refinedArrayToMap, setPage]);
 
-  const onPreviousPage = React.useCallback(() => {
+  const onPreviousPage = useCallback(() => {
     if (page > 1) {
       setPage(page - 1);
     }
-  }, [page]);
+  }, [page, setPage]);
 
-  const onRowsPerPageChange = React.useCallback((e) => {
-    setRowsPerPage(Number(e.target.value));
-    setPage(1);
-  }, []);
-
-  const onSearchChange = React.useCallback((value) => {
-    if (value) {
-      setFilterValue(value);
+  const onRowsPerPageChange = useCallback(
+    (e) => {
+      setRowsPerPage(Number(e.target.value));
       setPage(1);
-    } else {
-      setFilterValue('');
-    }
-  }, []);
-
-  const bottomContent = (
-    <div className='py-2 px-2 flex justify-between items-center'>
-      <div className='text-[14px] text-grey600'>
-        Page {arrayToMap?.currentPage} of {arrayToMap?.totalPages || 1}
-      </div>
-      <Pagination
-        disableCursorAnimation
-        // showControls
-        page={page}
-        total={refinedArrayToMap}
-        onChange={setPage}
-        className='gap-2'
-        radius='full'
-        renderItem={renderItem}
-        variant='light'
-      />
-
-      <div className='hidden md:flex w-[30%] justify-end gap-2'>
-        <Button
-          isDisabled={
-            refinedArrayToMap === 1 || arrayToMap?.hasPrevious === false
-          }
-          size='sm'
-          variant='flat'
-          onPress={onPreviousPage}
-        >
-          Previous
-        </Button>
-        <Button
-          isDisabled={refinedArrayToMap === 1 || arrayToMap?.hasNext === false}
-          size='sm'
-          variant='flat'
-          onPress={onNextPage}
-        >
-          Next
-        </Button>
-      </div>
-    </div>
+    },
+    [setRowsPerPage, setPage]
   );
 
-  const onClear = React.useCallback(() => {
+  const onSearchChange = useCallback(
+    (value) => {
+      if (value) {
+        setFilterValue(value);
+        setPage(1);
+      } else {
+        setFilterValue('');
+      }
+    },
+    [setPage]
+  );
+
+  const onClear = useCallback(() => {
     setFilterValue('');
     setPage(1);
-  }, []);
-  const classNames = React.useMemo(
+  }, [setPage]);
+
+  // Memoize the bottomContent
+  const bottomContent = useMemo(
+    () => (
+      <div className='py-2 px-2 flex justify-between items-center'>
+        <div className='text-[14px] text-grey600'>
+          Page {arrayToMap?.currentPage} of {arrayToMap?.totalPages || 1}
+        </div>
+        <Pagination
+          disableCursorAnimation
+          page={page}
+          total={refinedArrayToMap}
+          onChange={setPage}
+          className='gap-2'
+          radius='full'
+          renderItem={renderItem}
+          variant='light'
+        />
+        <div className='hidden md:flex w-[30%] justify-end gap-2'>
+          <Button
+            isDisabled={
+              refinedArrayToMap === 1 || arrayToMap?.hasPrevious === false
+            }
+            size='sm'
+            variant='flat'
+            onPress={onPreviousPage}
+          >
+            Previous
+          </Button>
+          <Button
+            isDisabled={
+              refinedArrayToMap === 1 || arrayToMap?.hasNext === false
+            }
+            size='sm'
+            variant='flat'
+            onPress={onNextPage}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    ),
+    [
+      arrayToMap?.currentPage,
+      arrayToMap?.totalPages,
+      arrayToMap?.hasPrevious,
+      arrayToMap?.hasNext,
+      page,
+      refinedArrayToMap,
+      setPage,
+      renderItem,
+      onPreviousPage,
+      onNextPage,
+    ]
+  );
+
+  const classNames = useMemo(
     () => ({
       grid: 'w-full overflow-x-scroll',
-      // table: 'w-full ',
       wrapper: ['max-h-[382px]'],
       th: [
         'text-default-500',
@@ -178,15 +208,11 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
       ],
       tr: 'border-b border-divider rounded-none',
       td: [
-        // changing the rows border radius
-        // first
         'py-3',
         'text-textGrey',
         'group-data-[first=true]:first:before:rounded-none',
         'group-data-[first=true]:last:before:rounded-none',
-        // middle
         'group-data-[middle=true]:before:rounded-none',
-        // last
         'group-data-[last=true]:first:before:rounded-none',
         'group-data-[last=true]:last:before:rounded-none',
       ],
@@ -199,7 +225,6 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
     headerColumns,
     setSelectedKeys,
     selectedKeys,
-
     sortDescriptor,
     setSortDescriptor,
     filterValue,
@@ -209,6 +234,7 @@ const usePagination = (arrayToMap, columns = [], visibleColumn = []) => {
     onRowsPerPageChange,
     hasSearchFilter,
     classNames,
+    onClear,
   };
 };
 

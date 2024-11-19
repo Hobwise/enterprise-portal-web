@@ -171,11 +171,11 @@ const BusinessInformationForm = () => {
         placeholder={'Business category'}
         contents={[
           {
-            label: 'Business center',
+            label: 'Lounge',
             value: 0,
           },
           {
-            label: 'Logistics',
+            label: 'Game House',
             value: 1,
           },
           {
@@ -197,6 +197,10 @@ const BusinessInformationForm = () => {
           {
             label: 'Hotel',
             value: 6,
+          },
+          {
+            label: 'Gallery',
+            value: 7,
           },
         ]}
       />

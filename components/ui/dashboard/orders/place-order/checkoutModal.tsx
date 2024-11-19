@@ -96,14 +96,6 @@ const CheckoutModal = ({
     { text: 'Pay Later', subText: 'Keep this order open', id: 3 },
   ];
 
-  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setResponse(null);
-  //   const { name, value } = e.target;
-  //   setOrder((prevFormData) => ({
-  //     ...prevFormData,
-  //     [name]: value,
-  //   }));
-  // };
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = event.target;
@@ -428,7 +420,7 @@ const CheckoutModal = ({
                         <SelectInput
                           errorMessage={response?.errors?.quickResponseID?.[0]}
                           label='Select a table'
-                          placeholder='Enter table'
+                          placeholder='Select table'
                           name='quickResponseID'
                           selectedKeys={[order?.quickResponseID]}
                           onChange={handleInputChange}
