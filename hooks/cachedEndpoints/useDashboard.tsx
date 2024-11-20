@@ -18,7 +18,11 @@ const useDashboardReport = (
       startDate,
       endDate
     );
-    return responseData?.data?.data as any;
+    if (responseData?.data) {
+      return responseData?.data?.data as any;
+    } else {
+      return responseData;
+    }
   };
 
   const { data, isLoading, isError, refetch } = useQuery<any>(
@@ -26,7 +30,7 @@ const useDashboardReport = (
     fetchDashboardReport,
     {
       refetchOnWindowFocus: false,
-     
+
       ...options,
     }
   );

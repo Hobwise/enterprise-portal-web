@@ -1,5 +1,5 @@
 import { DASHBOARD } from '../../api-url';
-import api, { handleError } from '../../apiService';
+import api from '../../apiService';
 
 export async function getDashboardReport(
   businessId: string,
@@ -15,12 +15,13 @@ export async function getDashboardReport(
   };
 
   try {
-    const data = await api.post(DASHBOARD.dashboard, payload, {
+    const data = await api.post(`${DASHBOARD.dashboard}`, payload, {
       headers,
     });
 
     return data;
   } catch (error) {
-    handleError(error, false);
+    return error;
+    // handleError(error, false);
   }
 }
