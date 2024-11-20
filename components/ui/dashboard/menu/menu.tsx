@@ -238,7 +238,7 @@ const MenuList = ({ menus, onOpen, onOpenViewMenu, searchQuery }: any) => {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={'No menu items found'}
+          emptyContent={'Add items to this menu'}
           items={matchingObjectArray}
         >
           {(item) => (
