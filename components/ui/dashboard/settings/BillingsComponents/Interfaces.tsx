@@ -108,6 +108,7 @@ export interface CurrentSubscriptionDetails {
     paymentPeriod: number; 
     subscriptionStartDate: string; 
     subscriptionEndDate: string; 
+    subscriptionPlanCode: string;
     isActive: boolean; 
     isExpired: boolean;
     id: string;

@@ -98,8 +98,8 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   //*================== MANAGE SUBSCRIPTION ==================
   return (
     <div>
-      <div className="flex gap-4">
-        <div className="border border-secondaryGrey w-full rounded-lg my-6 px-4 py-6">
+      <div className="flex flex-col gap-4 lg:flex-row md:flex-row">
+        <div className="border border-secondaryGrey w-1/2 rounded-lg my-6 px-4 py-6">
           <div>
             <div className="flex flex-row my-2 w-full justify-between">
               <div>{image}</div>
@@ -121,7 +121,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
             </p>
           </div>
         </div>
-        <div className="border border-secondaryGrey w-full rounded-lg my-6">
+        <div className="border border-secondaryGrey w-1/2 rounded-lg my-6">
           <div className="p-4 px-6 border-b border-secondaryGrey">
             <div className="flex justify-between">
               <h2 className="text-lg font-bold">{plan} plan</h2>
