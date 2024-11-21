@@ -130,7 +130,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
         type: 'success',
       });
       refetch();
-      toggleDeleteModal();
+      status === 3 && toggleDeleteModal();
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -338,7 +338,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
 
       <DeleteModal
         isOpen={isOpenDelete}
-        action='booking'
+        text='Are you sure you want to cancel this booking?'
         handleDelete={() => updateBookingStatus(3, id)}
         setIsOpen={setIsOpenDelete}
         toggleModal={toggleDeleteModal}

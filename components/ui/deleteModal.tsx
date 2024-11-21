@@ -12,7 +12,8 @@ const DeleteModal = ({
   toggleModal,
   handleDelete,
   isLoading,
-  action,
+
+  text,
 }: any) => {
   return (
     <Modal isDismissable={false} isOpen={isOpen} onOpenChange={toggleModal}>
@@ -22,7 +23,7 @@ const DeleteModal = ({
             <ModalBody>
               <div className='flex justify-center'>
                 <div className='text-black text-center mt-8 xl:w-[80%] w-full mb-2'>
-                  Are you sure you want to delete this {action}?
+                  {text}
                 </div>
               </div>
             </ModalBody>
@@ -34,7 +35,7 @@ const DeleteModal = ({
                   color='danger'
                   variant='flat'
                 >
-                  Delete
+                  Yes
                 </Button>
                 <Button
                   color='default'
