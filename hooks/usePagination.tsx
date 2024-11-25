@@ -200,11 +200,12 @@ const usePagination = (arrayToMap: any, columns = [], visibleColumn = []) => {
       wrapper: ['max-h-[382px]'],
       th: [
         'text-default-500',
+        'text-sm',
         'border-b',
         'border-divider',
         'py-4',
         'rounded-none',
-        'bg-[#F9FAFB]',
+        'bg-grey300',
       ],
       tr: 'border-b border-divider rounded-none',
       td: [
