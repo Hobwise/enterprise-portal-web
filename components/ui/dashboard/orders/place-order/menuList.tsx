@@ -87,7 +87,7 @@ const MenuList = () => {
   }, [data, filterValue]);
 
   useEffect(() => {
-    setMenuIdTable(filteredItems?.[0]?.id);
+    setMenuIdTable(data?.[0]?.id);
   }, []);
 
   const [loading, setLoading] = useState<Boolean>(false);
