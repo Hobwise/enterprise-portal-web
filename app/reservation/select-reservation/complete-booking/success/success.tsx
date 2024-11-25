@@ -29,14 +29,10 @@ const SuccessComponent = () => {
       </div>
 
       <h2 className='text-[16px] text-center leading-3 my-4 text-black font-semibold'>
-        Fantastic!
+        Reservation has been booked!
       </h2>
       <h3 className='text-sm text-center text-grey600  mb-4'>
-        Confirmation email will be sent to{' '}
-        <span className='font-[600] text-black'>
-          {bookingDetails?.emailAddress}
-        </span>{' '}
-        once booking is confirmed
+        You'll get an email after details of your reservation has been confirmed
       </h3>
 
       <div className='flex gap-3'>

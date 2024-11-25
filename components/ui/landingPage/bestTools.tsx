@@ -12,14 +12,16 @@ export default function BestToolsComponent() {
       <Transition>
         <div className={sectionHeaderClass}>
           <FlashIcon />
-          <p className="font-normal">Best Tools</p>
+          <p className='font-normal'>Best Tools</p>
         </div>
-        <div className="lg:w-[55%] lg:mx-auto space-y-4 lg:space-y-0 mt-4 lg:mt-0">
-          <h2 className="text-[24px] text-left lg:text-center lg:text-[40px] text-[#161618] lg:leading-[64px] font-bricolage_grotesque">
+        <div className='lg:w-[55%] lg:mx-auto space-y-4 lg:space-y-0 mt-4 lg:mt-0'>
+          <h2 className='text-[24px] text-left lg:text-center lg:text-[40px] text-[#161618] lg:leading-[64px] font-bricolage_grotesque'>
             Everything You Need to Run Your Business — All in One Place
           </h2>
-          <p className="font-normal text-[#44444A] text-left lg:text-center lg:w-[80%] mx-auto text-sm">
-            We&apos;ve carefully designed Hobink to help you manage your restaurant, hotel, or bar with ease, so you can focus on what matters most—your guests.
+          <p className='font-normal text-[#44444A] text-left lg:text-center lg:w-[80%] mx-auto text-sm'>
+            We&apos;ve carefully designed Hobwise to help you manage your
+            restaurant, hotel, or bar with ease, so you can focus on what
+            matters most—your guests.
           </p>
         </div>
       </Transition>

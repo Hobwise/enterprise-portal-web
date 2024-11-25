@@ -57,6 +57,42 @@ export async function createBooking(
     handleError(error);
   }
 }
+export async function updateBooking(
+  businessId: any,
+  payload: Bookings,
+  cooperateID: null,
+  UserId: string,
+  bookingId: string
+) {
+  const validatedFields = bookingsSchema.safeParse({
+    firstName: payload?.firstName,
+    lastName: payload?.lastName,
+    emailAddress: payload.emailAddress,
+    phoneNumber: payload.phoneNumber,
+    reservationId: payload.reservationId,
+
+    // bookingDateTime: payload. bookingDateTime,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+  const headers = businessId
+    ? { businessId, cooperateID, UserId, bookingId }
+    : {};
+
+  try {
+    const data = await api.put(DASHBOARD.bookings, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 
 export async function getBookingsByBusiness(
   businessId: string,
@@ -124,6 +160,7 @@ export async function postBookingStatus(bookingId: string, status: number) {
 
     return data;
   } catch (error) {
-    handleError(error, false);
+    return error;
+    // handleError(error, false);
   }
 }

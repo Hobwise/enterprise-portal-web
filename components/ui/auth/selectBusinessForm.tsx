@@ -67,6 +67,7 @@ const SelectBusinessForm = () => {
         return (
           <ScrollShadow size={10} className='w-full max-h-[350px]'>
             <article
+              key={item.id}
               className={`bg-[#F1F2F480] rounded-xl p-3 cursor-pointer ${
                 isLoading &&
                 item.name === business?.name &&

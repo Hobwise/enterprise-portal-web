@@ -32,7 +32,9 @@ import { notify, submitBookingStatus } from '@/lib/utils';
 import { CiCalendar } from 'react-icons/ci';
 import { IoCheckmark } from 'react-icons/io5';
 import { LiaTimesSolid } from 'react-icons/lia';
+import { MdOutlineModeEditOutline } from 'react-icons/md';
 import DeleteModal from '../../deleteModal';
+import EditBooking from './editBooking';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -55,11 +57,18 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
     bookings[0]?.bookings
   );
   const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
+  const [isEditBookingModal, setIsEditBookingModal] =
+    React.useState<Boolean>(false);
   const [id, setId] = React.useState<Number>();
+  const [eachBooking, setEachBooking] = React.useState<any>(null);
 
   const toggleDeleteModal = (id?: number) => {
     setId(id);
     setIsOpenDelete(!isOpenDelete);
+  };
+  const toggleEditBookingModal = (booking: any) => {
+    setEachBooking(booking);
+    setIsEditBookingModal(!isEditBookingModal);
   };
 
   const { page, rowsPerPage, tableStatus, setTableStatus, setPage } =
@@ -224,6 +233,21 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                       </DropdownItem>
                     )}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    booking?.bookingStatus === 0 && (
+                      <DropdownItem
+                        aria-label='edit booking'
+                        onClick={() => toggleEditBookingModal(booking)}
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <MdOutlineModeEditOutline className='text-[20px]' />
+
+                          <p>Edit booking</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     (booking?.bookingStatus === 0 ||
                       booking?.bookingStatus === 1) && (
                       <DropdownItem
@@ -335,6 +359,13 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
           )}
         </TableBody>
       </Table>
+
+      <EditBooking
+        eachBooking={eachBooking}
+        isEditBookingModal={isEditBookingModal}
+        toggleEditBookingModal={toggleEditBookingModal}
+        refetch={refetch}
+      />
 
       <DeleteModal
         isOpen={isOpenDelete}

@@ -140,10 +140,10 @@ const Bookings: React.FC = () => {
       refetch();
       setBookingId('');
       closeBookingModal();
-    } else if (data?.data?.error) {
+    } else {
       notify({
         title: 'Error!',
-        text: data?.data?.error,
+        text: data.response?.data?.error?.responseDescription,
         type: 'error',
       });
     }
@@ -211,7 +211,7 @@ const Bookings: React.FC = () => {
               </ButtonGroup>
               {(role === 0 || userRolePermissions?.canEditOrder === true) && (
                 <CustomButton onClick={onOpen} className='flex text-white'>
-                  <p>Confirm a booking</p>
+                  <p>Admit booking</p>
                 </CustomButton>
               )}
             </>
@@ -227,6 +227,7 @@ const Bookings: React.FC = () => {
         refetch={refetch}
         setCompletedBooking={setCompletedBooking}
       />
+
       <ConfirmBooking
         isOpen={isOpen}
         bookingId={bookingId}

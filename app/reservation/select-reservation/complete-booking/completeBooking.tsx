@@ -228,6 +228,7 @@ const CompleteBookingComponent = () => {
             defaultValue={now(getLocalTimeZone())}
           />
         </div>
+        <Spacer y={5} />
         <div className='text-sm flex justify-between'>
           <div className='text-[#404245] flex space-x-2 items-center'>
             <p>Quantity</p>

@@ -28,15 +28,18 @@ import { usePathname } from 'next/navigation';
 import { FiLogOut } from 'react-icons/fi';
 import { GoPlus } from 'react-icons/go';
 import { IoIosArrowDown } from 'react-icons/io';
+import { MdMenuBook } from 'react-icons/md';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
+import AddBusiness from './settings/addBusiness';
 import { SideNavItem } from './types';
+import { PiBookOpenTextLight } from 'react-icons/pi';
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
 
   const { data: businessDetails, isLoading } = useGetBusiness();
-  const { data: businessDetailsList } = useGetBusinessByCooperate();
+  const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
 
   const { userRolePermissions, role } = usePermission();
 
@@ -210,6 +213,11 @@ const SideNav = () => {
     },
   ];
 
+  const [isOpenBusinessModal, setIsOpenBusinessModal] = useState(false);
+  const toggleBusinessModal = () => {
+    setIsOpenBusinessModal(!isOpenBusinessModal);
+  };
+
   return (
     <div className='md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex'>
       <div className='flex flex-col  w-full'>
@@ -314,8 +322,7 @@ const SideNav = () => {
             {userInformation?.isOwner && (
               <DropdownItem
                 key='add another business'
-
-                // onClick={onOpenChange}
+                onClick={toggleBusinessModal}
               >
                 <div className='flex items-center gap-3 '>
                   <div className='p-2 rounded-md bg-[#7182A3]'>
@@ -343,6 +350,11 @@ const SideNav = () => {
           </DropdownMenu>
         </Dropdown>
       </div>
+      <AddBusiness
+        refetch={refetch}
+        toggleBusinessModal={toggleBusinessModal}
+        isOpenBusinessModal={isOpenBusinessModal}
+      />
       <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
     </div>
   );
@@ -351,6 +363,7 @@ const SideNav = () => {
 export default SideNav;
 
 const MenuItem = ({ item }: { item: SideNavItem }) => {
+
   const pathname = usePathname();
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const toggleSubMenu = () => {
@@ -404,7 +417,11 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
             item.path === pathname ? 'bg-[#2B3342]' : ''
           }`}
         >
-          <Image src={item.icon} alt={item.title} />
+          {item.title === 'Menu' ? (
+            <PiBookOpenTextLight className="font-bold text-xl" />
+          ) : (
+            <Image src={item.icon} alt={item.title} />
+          )}
 
           <span className='font-[400] text-[14px] flex'>{item.title}</span>
         </Link>
