@@ -160,7 +160,7 @@ const OrdersOverview = ({
   return (
     <section className='w-full'>
       <article className='flex md:gap-6 gap-3 lg:flex-row flex-col'>
-        <Card className='  lg:w-[70%] w-full rounded-xl'>
+        <Card shadow='sm' className='  lg:w-[70%] w-full rounded-xl'>
           <div className='flex justify-between items-center flex-wrap border-b border-primaryGrey p-3'>
             <span className='font-[600]'>Overview</span>
             {selectedValue === 'Custom date' && (
@@ -274,7 +274,10 @@ const OrdersOverview = ({
             )}
           </div>
         </Card>
-        <Card className='flex-grow border h-auto bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl'>
+        <Card
+          shadow='sm'
+          className='flex-grow border h-auto bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl'
+        >
           <div>
             <div className='p-4'>
               <h2 className='font-medium mb-2'>Total amount processed</h2>

@@ -61,7 +61,7 @@ const Bookings: React.FC = () => {
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All');
+    setTableStatus('All Bookings');
     setPage(1);
   }, []);
 

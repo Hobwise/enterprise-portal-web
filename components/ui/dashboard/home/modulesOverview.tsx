@@ -65,7 +65,10 @@ const ModulesOverview = ({ response, isLoading }: any) => {
         <div className='lg:w-[70%] flex flex-col lg:flex-row lg:gap-5 gap-3 w-full'>
           <div className='flex lg:w-[70%] w-full flex-col lg:gap-5 gap-3'>
             <div className='flex xl:flex-row flex-col lg:gap-5 gap-3'>
-              <Card className=' rounded-xl xl:w-[300px] w-full flex-grow'>
+              <Card
+                shadow='sm'
+                className=' rounded-xl xl:w-[300px] w-full flex-grow'
+              >
                 <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                   <span className='font-[600]'>Payments</span>
                 </div>
@@ -87,7 +90,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                   )}
                 </div>
               </Card>
-              <Card className=' flex-grow rounded-xl'>
+              <Card shadow='sm' className=' flex-grow rounded-xl'>
                 <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                   <span className='font-[600]'>Bookings</span>
                 </div>
@@ -188,7 +191,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                 )}
               </Card>
             </div>
-            <Card className=' flex-grow  rounded-xl'>
+            <Card shadow='sm' className=' flex-grow  rounded-xl'>
               <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
                 <span className='font-[600]'>Campaigns</span>
               </div>
@@ -247,7 +250,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
               )}
             </Card>
           </div>
-          <Card className='flex-grow  rounded-xl'>
+          <Card shadow='sm' className='flex-grow  rounded-xl'>
             <div className='flex justify-between items-center border-b border-primaryGrey p-3'>
               <span className='font-[600]'>Best sellers</span>
             </div>
@@ -290,7 +293,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
             )}
           </Card>
         </div>
-        <Card className=' flex-grow  p-3 rounded-xl'>
+        <Card shadow='sm' className=' flex-grow  p-3 rounded-xl'>
           <div className='flex items-center gap-1'>
             <div className='h-2 w-2 rounded-full bg-success-800' />
             <span className='font-[600]'>Quick Response</span>
@@ -309,7 +312,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                       </span>
 
                       <div
-                        className='h-2 max-w-full rounded-full bg-[#5F35D2]'
+                        className='h-2 max-w-full rounded-r-full bg-[#5F35D2]'
                         style={{ width: `${item.count}%` }}
                       ></div>
                     </div>
