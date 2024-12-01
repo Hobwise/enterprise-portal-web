@@ -198,7 +198,13 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       </div>
 
       <div className="flex flex-col md:flex-row">
-        <div className="w-[100%]  sm:w-1/2 lg:w-1/3 border-r border-secondaryGrey p-4 md:w-full">
+        <div
+          className={`w-[100%]  sm:w-1/2 lg:w-1/3 border-r border-secondaryGrey p-4 md:w-full  ${
+            planType === 3
+              ? "border-[#5F35D2] bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF]"
+              : "border-secondaryGrey"
+          }`}
+        >
           {/* Content for the first part */}
           <div className="flex flex-row gap-4">
             <p className="font-extrabold text-sm ">Starter</p>
@@ -268,7 +274,92 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           </button>
         </div>
 
-        <div className="w-[100%] sm:w-1/2 lg:w-1/3 border border-[#5F35D2] bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF] p-4 md:w-full">
+
+
+        <div
+          className={`w-[100%] sm:w-1/2 lg:w-1/3 p-4 md:w-full ${
+            planType === 2
+              ? "border-[#5F35D2] bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF]"
+              : "border-secondaryGrey"
+          }`}
+        >
+          <div className="flex flex-row gap-4">
+            <p className="font-extrabold text-sm ">Professional</p>
+
+            {/* <button
+              disabled
+              className="text-[10px] bg-[#EAECF0] px-3 py-1 rounded-sm"
+            >
+              RECOMMEND
+            </button> */}
+          </div>
+
+          <div className="flex flex-row gap-4 mt-6">
+            <div
+              className={`transition-all duration-500 ease-in-out ${
+                activeTab === "Monthly" ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {activeTab === "Monthly" ? (
+                <p className="font-extrabold text-2xl">
+                  ₦{professionalPlan?.monthlyFee}{" "}
+                  <span className="text-[#ACB5BB] font-normal">/month</span>
+                </p>
+              ) : null}
+            </div>
+
+            <div
+              className={`transition-all duration-500 ease-in-out ${
+                activeTab === "Yearly" ? "opacity-100" : "opacity-0"
+              }`}
+            >
+              {activeTab === "Yearly" ? (
+                <p className="font-extrabold text-2xl">
+                  ₦{professionalPlan?.yearlyFee}{" "}
+                  <span className="text-[#ACB5BB] font-normal">/year</span>
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <p className="text-sm mt-4">
+            Lorem ipsum dolor sit amet consectetur. Mi aliquam amet velit felis.
+          </p>
+
+          <div className="flex items-center my-6">
+            <hr className="flex-grow border-t border-secondaryGrey" />
+            <span className="mx-4 text-xs text-[#ACB5BB]">
+              WHAT YOU WILL GET
+            </span>
+            <hr className="flex-grow border-t border-secondaryGrey" />
+          </div>
+
+          {professionalPlan && (
+            <FeatureList
+              plan={professionalPlan!}
+              handleIcons={(value) => handleIcons(value)}
+            />
+          )}
+          <button
+            onClick={
+              hasActive === false ? (e) => initializeTrnx(2, e) : activePlan
+            }
+            className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+          >
+            {professionalLoading ? <Spinner size="sm" /> : "Select Plan"}
+          </button>
+        </div>
+
+
+
+
+        <div
+          className={`w-[100%] sm:w-1/2 lg:w-1/3 border p-4 md:w-full ${
+            planType === 1
+              ? "border-[#5F35D2] bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF]"
+              : "border-secondaryGrey"
+          }`}
+        >
           <div className="flex flex-row gap-4 items-center">
             <p className="font-extrabold text-sm ">Premium</p>
 
@@ -337,73 +428,9 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           </button>
         </div>
 
-        <div className="w-[100%] sm:w-1/2 lg:w-1/3 p-4 md:w-full hover:border border-[#5F35D2] hover:bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF] transition-all">
-          <div className="flex flex-row gap-4">
-            <p className="font-extrabold text-sm ">Professional</p>
+     
 
-            {/* <button
-              disabled
-              className="text-[10px] bg-[#EAECF0] px-3 py-1 rounded-sm"
-            >
-              RECOMMEND
-            </button> */}
-          </div>
 
-          <div className="flex flex-row gap-4 mt-6">
-            <div
-              className={`transition-all duration-500 ease-in-out ${
-                activeTab === "Monthly" ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              {activeTab === "Monthly" ? (
-                <p className="font-extrabold text-2xl">
-                  ₦{professionalPlan?.monthlyFee}{" "}
-                  <span className="text-[#ACB5BB] font-normal">/month</span>
-                </p>
-              ) : null}
-            </div>
-
-            <div
-              className={`transition-all duration-500 ease-in-out ${
-                activeTab === "Yearly" ? "opacity-100" : "opacity-0"
-              }`}
-            >
-              {activeTab === "Yearly" ? (
-                <p className="font-extrabold text-2xl">
-                  ₦{professionalPlan?.yearlyFee}{" "}
-                  <span className="text-[#ACB5BB] font-normal">/year</span>
-                </p>
-              ) : null}
-            </div>
-          </div>
-
-          <p className="text-sm mt-4">
-            Lorem ipsum dolor sit amet consectetur. Mi aliquam amet velit felis.
-          </p>
-
-          <div className="flex items-center my-6">
-            <hr className="flex-grow border-t border-secondaryGrey" />
-            <span className="mx-4 text-xs text-[#ACB5BB]">
-              WHAT YOU WILL GET
-            </span>
-            <hr className="flex-grow border-t border-secondaryGrey" />
-          </div>
-
-          {professionalPlan && (
-            <FeatureList
-              plan={professionalPlan!}
-              handleIcons={(value) => handleIcons(value)}
-            />
-          )}
-          <button
-            onClick={
-              hasActive === false ? (e) => initializeTrnx(2, e) : activePlan
-            }
-            className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
-          >
-            {professionalLoading ? <Spinner size="sm" /> : "Select Plan"}
-          </button>
-        </div>
       </div>
       <script src="https://js.paystack.co/v1/inline.js"></script>
     </div>
