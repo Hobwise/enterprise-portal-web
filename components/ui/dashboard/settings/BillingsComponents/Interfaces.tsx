@@ -116,10 +116,6 @@ export interface CurrentSubscriptionDetails {
     totalAmount: number;
   }
 
-
-
-
-
   export interface SubscriptionTableProps {
     subscriptions: SubscriptionHistory[] | null;
     searchQuery?: string;
