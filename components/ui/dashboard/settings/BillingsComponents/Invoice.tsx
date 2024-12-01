@@ -59,6 +59,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
 
     try {
       if (invoiceRef.current) {
+        console.log(invoiceRef.current)
         const canvas = await html2canvas(invoiceRef.current, { scale: 2 });
         const imgData = canvas.toDataURL("image/png");
 
