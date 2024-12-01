@@ -29,9 +29,16 @@ export interface Plans {
   
 }
 
+export const TYPE_OF_PLAN = {
+  1: "Premium",
+  2: "Professional",
+  3: "Starter",
+};
+
 export interface PlansFromParent {
   plans: Plans | null;
   disableButtons?: boolean;
+  currentSubscriptionDetails?: CurrentSubscriptionDetails | null
 }
 
 export interface PaymentDetails {

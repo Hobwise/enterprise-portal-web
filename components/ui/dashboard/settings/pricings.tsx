@@ -65,6 +65,7 @@ const Pricing = () => {
     setNoSubscription(false);
     setBillingHistory(subscriptionHistories)
   
+  console.log("CURRENT SUB", currentSub)
     if (!currentSub || status =='non-renewing') {
       setNoSubscription(true);
       return;
@@ -126,7 +127,7 @@ const Pricing = () => {
               currentSubscriptionDetails={currentSubDetails}
             />
           )}
-          {showPlans && <PricingCards plans={plansArray} disableButtons={disableButtons}/>}
+          {showPlans && <PricingCards plans={plansArray} disableButtons={disableButtons} currentSubscriptionDetails={currentSubDetails}/>}
 
           <h2 className="text-lg font-bold mt-10 mb-3">Billing history</h2>
           <SubscriptionTable subscriptions={billingHistory}/>

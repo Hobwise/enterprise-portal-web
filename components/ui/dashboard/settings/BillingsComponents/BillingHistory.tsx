@@ -260,33 +260,33 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
        )} 
 
       {invoiceDetails && (
-        // <Modal isOpen={isOpen} onClose={onClose}>
-        //   <div className="fixed inset-0 flex items-center justify-center">
-        //     <ModalContent className="w-full max-w-[90%] sm:max-w-[600px] h-auto max-h-[90%] bg-white shadow-lg rounded-lg overflow-hidden">
-        //       <ModalBody className="p-4 overflow-y-auto max-h-[80vh]">
-        //         <InvoiceSection
-        //           data={invoiceDetails}
-        //           download={downloadClickedInvoice}
-        //           setDownloadClickedInvoice={setDownloadClickedInvoice}
-        //         />
-        //       </ModalBody>
-        //     </ModalContent>
-        //   </div>
-        // </Modal>
-
         <Modal isOpen={isOpen} onClose={onClose}>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <ModalContent className="relative w-full max-w-[90%] sm:max-w-[600px] bg-white shadow-lg rounded-lg overflow-hidden">
-            <ModalBody className="p-4 overflow-y-auto max-h-[80vh]">
-              <InvoiceSection
-                data={invoiceDetails}
-                download={downloadClickedInvoice}
-                setDownloadClickedInvoice={setDownloadClickedInvoice}
-              />
-            </ModalBody>
-          </ModalContent>
-        </div>
-      </Modal>
+          <div className=" inset-0 z-20 flex items-center justify-center">
+            <ModalContent className="w-full max-w-[90%] sm:max-w-[600px] h-auto max-h-[90%] bg-white shadow-lg rounded-lg overflow-hidden">
+              <ModalBody className="p-4 overflow-y-auto max-h-[80vh]">
+                <InvoiceSection
+                  data={invoiceDetails}
+                  download={downloadClickedInvoice}
+                  setDownloadClickedInvoice={setDownloadClickedInvoice}
+                />
+              </ModalBody>
+            </ModalContent>
+          </div>
+        </Modal>
+
+      //   <Modal isOpen={isOpen} onClose={onClose}>
+      //   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+      //     <ModalContent className="relative w- max-w-[90%] sm:max-w-[300px] bg-white shadow-lg rounded-lg overflow-hidden">
+      //       <ModalBody className="p-4 overflow-y-auto max-h-[80vh]">
+      //         <InvoiceSection
+      //           data={invoiceDetails}
+      //           download={downloadClickedInvoice}
+      //           setDownloadClickedInvoice={setDownloadClickedInvoice}
+      //         />
+      //       </ModalBody>
+      //     </ModalContent>
+      //   </div>
+      // </Modal>
       )}
     </section>
   );
