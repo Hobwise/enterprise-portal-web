@@ -17,6 +17,7 @@ import {
   TabContentProps,
   PaymentDetails,
   PAYMENT_PLAN,
+  TYPE_OF_PLAN,
 } from "./Interfaces";
 
 import { MdVerified } from "react-icons/md";
@@ -33,9 +34,11 @@ import FeatureList from "./FeatureList";
 export const PricingCards: React.FC<PlansFromParent> = ({
   plans,
   disableButtons,
+  currentSubscriptionDetails,
 }) => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const popup = new PaystackPop();
+  const planType = currentSubscriptionDetails?.plan;
 
   const token = userInformation?.token;
   const cooperateID = userInformation?.cooperateID;
@@ -79,6 +82,15 @@ export const PricingCards: React.FC<PlansFromParent> = ({
 
     return <FcLock />;
   };
+
+  let plan;
+
+  plan =
+    planType === 1
+      ? TYPE_OF_PLAN[1]
+      : planType === 2
+      ? TYPE_OF_PLAN[2]
+      : TYPE_OF_PLAN[3];
 
   // Destructure data from the hook, but only call the hook when there's a payload
 
@@ -191,12 +203,12 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           <div className="flex flex-row gap-4">
             <p className="font-extrabold text-sm ">Starter</p>
 
-            <button
+            {/* <button
               disabled
               className="text-[10px] bg-[#EAECF0] px-3 py-1 rounded-sm"
             >
               RECOMMEND
-            </button>
+            </button> */}
           </div>
 
           <div className="flex flex-row gap-4 mt-6">
@@ -325,16 +337,16 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           </button>
         </div>
 
-        <div className="w-[100%] sm:w-1/2 lg:w-1/3 p-4 md:w-full">
+        <div className="w-[100%] sm:w-1/2 lg:w-1/3 p-4 md:w-full hover:border border-[#5F35D2] hover:bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF] transition-all">
           <div className="flex flex-row gap-4">
             <p className="font-extrabold text-sm ">Professional</p>
 
-            <button
+            {/* <button
               disabled
               className="text-[10px] bg-[#EAECF0] px-3 py-1 rounded-sm"
             >
               RECOMMEND
-            </button>
+            </button> */}
           </div>
 
           <div className="flex flex-row gap-4 mt-6">

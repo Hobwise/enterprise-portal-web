@@ -103,10 +103,8 @@ export const PaidCards: React.FC<PaidCardsData> = ({
           <div>
             <div className="flex flex-row my-2 w-full justify-between">
               <div>{image}</div>
-              {/* <button className="px-4 py-1.5 border-1 font-bold border-secondary-500 text-secondary-500 rounded-lg">
-                Edit
-              </button> */}
-              <div className="px-2 flex items-center border-2 border-cyan text-cyan rounded-full">
+           
+               <div className="px-3 py-0 border-2 border-cyan text-cyan rounded-full flex justify-center items-center">
                 Default
               </div>
             </div>
@@ -124,7 +122,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
             </p>
           </div>
         </div>
-        <div className="border border-secondaryGrey w-full w-full rounded-lg my-6 sm:w-1/2">
+        <div className="border border-secondaryGrey w-full  rounded-lg my-6 sm:w-1/2">
           <div className="p-4 px-6 border-b border-secondaryGrey">
             <div className="flex justify-between">
               <h2 className="text-lg font-bold">{plan} plan</h2>
