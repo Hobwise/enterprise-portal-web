@@ -264,17 +264,27 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             />
           )}
 
-          <button
-            onClick={
-              hasActive === false ? (e) => initializeTrnx(1, e) : activePlan
-            }
-            className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
-          >
-            {starterLoading ? <Spinner size="sm" /> : "Select Plan"}
-          </button>
+          {planType === 3 ? (
+            <button
+              // onClick={
+              //   hasActive === false ? (e) => initializeTrnx(1, e) : activePlan
+              // }
+              disabled
+              className="mt-6 w-56 mx-auto bg-[#F1F2F4] rounded-lg px-8 py-2 font-normal text-sm text-grey500 "
+            >
+              Current Plan
+            </button>
+          ) : (
+            <button
+              onClick={
+                hasActive === false ? (e) => initializeTrnx(1, e) : activePlan
+              }
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+            >
+              {starterLoading ? <Spinner size="sm" /> : "Select Plan"}
+            </button>
+          )}
         </div>
-
-
 
         <div
           className={`w-[100%] sm:w-1/2 lg:w-1/3 p-4 md:w-full ${
@@ -340,18 +350,28 @@ export const PricingCards: React.FC<PlansFromParent> = ({
               handleIcons={(value) => handleIcons(value)}
             />
           )}
-          <button
-            onClick={
-              hasActive === false ? (e) => initializeTrnx(2, e) : activePlan
-            }
-            className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
-          >
-            {professionalLoading ? <Spinner size="sm" /> : "Select Plan"}
-          </button>
+
+          {planType === 2 ? (
+            <button
+              // onClick={
+              //   hasActive === false ? (e) => initializeTrnx(1, e) : activePlan
+              // }
+              disabled
+              className="mt-6 w-56 mx-auto bg-[#F1F2F4]  rounded-lg px-8 py-2 font-normal text-sm text-grey500 "
+            >
+              Current Plan
+            </button>
+          ) : (
+            <button
+              onClick={
+                hasActive === false ? (e) => initializeTrnx(2, e) : activePlan
+              }
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+            >
+              {professionalLoading ? <Spinner size="sm" /> : "Select Plan"}
+            </button>
+          )}
         </div>
-
-
-
 
         <div
           className={`w-[100%] sm:w-1/2 lg:w-1/3 border p-4 md:w-full ${
@@ -418,19 +438,28 @@ export const PricingCards: React.FC<PlansFromParent> = ({
               handleIcons={(value) => handleIcons(value)}
             />
           )}
-          <button
-            onClick={
-              hasActive === false ? (e) => initializeTrnx(3, e) : activePlan
-            }
-            className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
-          >
-            {premiumLoading ? <Spinner size="sm" /> : "Select Plan"}
-          </button>
+
+          {planType === 3 ? (
+            <button
+              // onClick={
+              //   hasActive === false ? (e) => initializeTrnx(1, e) : activePlan
+              // }
+              disabled
+              className="mt-6 w-56 mx-auto bg-[#F1F2F4]  rounded-lg px-8 py-2 font-normal text-sm text-grey500 "
+            >
+              Current Plan
+            </button>
+          ) : (
+            <button
+              onClick={
+                hasActive === false ? (e) => initializeTrnx(3, e) : activePlan
+              }
+              className="mt-6 w-56 mx-auto border-1 border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+            >
+              {premiumLoading ? <Spinner size="sm" /> : "Select Plan"}
+            </button>
+          )}
         </div>
-
-     
-
-
       </div>
       <script src="https://js.paystack.co/v1/inline.js"></script>
     </div>
