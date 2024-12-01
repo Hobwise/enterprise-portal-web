@@ -250,7 +250,8 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
       />
 
       {downloadClickedInvoice && (
-        <div className=""  style={{ visibility: 'hidden', height: 0, overflow: 'hidden' }}>
+        <div className="" style={{ height: 0 }}  >
+        {/* <div className=""  style={{ visibility: 'hidden', height: 0, overflow: 'hidden' }}> */}
           <InvoiceSection
             data={invoiceDetails}
             download={downloadClickedInvoice}
