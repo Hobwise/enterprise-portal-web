@@ -21,7 +21,7 @@ import {
 } from "./Interfaces";
 
 import { MdVerified } from "react-icons/md";
-import { addCommasToNumber, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
 // import PaystackPop from 'paystack-inline-ts';
 import PaystackPop from "paystack-inline-ts";
@@ -225,7 +225,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             >
               {activeTab === "Monthly" ? (
                 <p className="font-extrabold text-2xl">
-                  ₦{addCommasToNumber(starterPlan?.monthlyFee!)}{" "}
+                  ₦{starterPlan?.monthlyFee}{" "}
                   <span className="text-[#ACB5BB] font-normal">/month</span>
                 </p>
               ) : null}
@@ -238,7 +238,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             >
               {activeTab === "Yearly" ? (
                 <p className="font-extrabold text-2xl">
-                  ₦{addCommasToNumber(starterPlan?.yearlyFee!)}{" "}
+                  ₦{starterPlan?.yearlyFee}{" "}
                   <span className="text-[#ACB5BB] font-normal">/year</span>
                 </p>
               ) : null}
@@ -312,7 +312,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             >
               {activeTab === "Monthly" ? (
                 <p className="font-extrabold text-2xl">
-                  ₦{addCommasToNumber(professionalPlan?.monthlyFee!)}{" "}
+                  ₦{professionalPlan?.monthlyFee}{" "}
                   <span className="text-[#ACB5BB] font-normal">/month</span>
                 </p>
               ) : null}
@@ -325,7 +325,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             >
               {activeTab === "Yearly" ? (
                 <p className="font-extrabold text-2xl">
-                  ₦{addCommasToNumber(professionalPlan?.yearlyFee!)}{" "}
+                  ₦{professionalPlan?.yearlyFee}{" "}
                   <span className="text-[#ACB5BB] font-normal">/year</span>
                 </p>
               ) : null}
@@ -400,7 +400,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             >
               {activeTab === "Monthly" ? (
                 <p className="font-extrabold text-2xl">
-                  ₦{addCommasToNumber(premiumPlan?.monthlyFee!)}{" "}
+                  ₦{premiumPlan?.monthlyFee}{" "}
                   <span className="text-[#ACB5BB] font-normal">/month</span>
                 </p>
               ) : null}
@@ -413,7 +413,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             >
               {activeTab === "Yearly" ? (
                 <p className="font-extrabold text-2xl">
-                  ₦{addCommasToNumber(premiumPlan?.yearlyFee!)}{" "}
+                  ₦{premiumPlan?.yearlyFee}{" "}
                   <span className="text-[#ACB5BB] font-normal">/year</span>
                 </p>
               ) : null}
