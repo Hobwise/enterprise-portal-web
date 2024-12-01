@@ -98,30 +98,33 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   //*================== MANAGE SUBSCRIPTION ==================
   return (
     <div>
-      <div className="flex flex-col gap-4 lg:flex-row md:flex-row">
-        <div className="border border-secondaryGrey w-1/2 rounded-lg my-6 px-4 py-6">
+      <div className="flex flex-col gap-0 lg:flex-row md:flex-row sm:gap-4">
+        <div className="border border-secondaryGrey w-full rounded-lg my-6 px-4 py-6 sm:w-1/2">
           <div>
             <div className="flex flex-row my-2 w-full justify-between">
               <div>{image}</div>
-              <button className="px-4 py-1.5 border-1 font-bold border-secondary-500 text-secondary-500 rounded-lg">
+              {/* <button className="px-4 py-1.5 border-1 font-bold border-secondary-500 text-secondary-500 rounded-lg">
                 Edit
-              </button>
+              </button> */}
+              <div className="px-2 flex items-center border-2 border-cyan text-cyan rounded-full">
+                Default
+              </div>
             </div>
             <div className="flex flex-row space-x-4">
               <h2 className="text-lg font-bold">
                 {capitalizeFirstLetterOfEachWord(cardDetails?.brand!)} ending in{" "}
                 {cardDetails?.last4}
               </h2>
-              <div className="px-3 border-2 border-cyan text-cyan rounded-full">
+              {/* <div className="px-3 border-2 border-cyan text-cyan rounded-full">
                 Default
-              </div>
+              </div> */}
             </div>
             <p className="text-base my-1 font-medium">
               Expiry {cardDetails?.exp_Month}/{cardDetails?.exp_Year}
             </p>
           </div>
         </div>
-        <div className="border border-secondaryGrey w-1/2 rounded-lg my-6">
+        <div className="border border-secondaryGrey w-full w-full rounded-lg my-6 sm:w-1/2">
           <div className="p-4 px-6 border-b border-secondaryGrey">
             <div className="flex justify-between">
               <h2 className="text-lg font-bold">{plan} plan</h2>

@@ -6,16 +6,9 @@ import { SubscriptionCard } from "./BillingsComponents/SubscriptionCard";
 import { PaidCards } from "./BillingsComponents/PaidCards";
 import { CustomLoading, notify } from "@/lib/utils";
 import ReservationList from "../reservations/reservation";
-// import { PricingCards } from "./BillingsComponents/PricingCards";
 const PricingCards = dynamic(() => import('./BillingsComponents/PricingCards').then(mod => mod.PricingCards), {
   ssr: false
 });
-
-// const PricingCards = dynamic(
-//   () => import('./BillingsComponents/PricingCards'),
-//   { ssr: false }
-// )
- 
 import SubscriptionPendingCard from "./BillingsComponents/SubscriptionPendingCard";
 import NoSubscriptionCard from "./BillingsComponents/NoSubscriptionCard";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
@@ -78,7 +71,7 @@ const Pricing = () => {
     }
   
     if (status === 'active') {
-      console.log("SUB IS ACTIVE")
+      // console.log("SUB IS ACTIVE")
       setDisableButtons(true);
       if (currentSub.isActive) {
         setHasSubscription(true);
@@ -100,13 +93,18 @@ const Pricing = () => {
   ];
 
   return (
-    <div className="w-[750px]">
+    <div className="w-full">
+      {
+        !isLoading && (
+
       <div className="w-full mb-2">
         <h1 className="text-xl font-bold mb-2">Billing & Subscription</h1>
         <p className="text-foreground-600 mb-4">
           Manage your pricing and billing settings
         </p>
       </div>
+        )
+      }
 
       {/* No scriptions card */}
       {/* <SubscriptionCard /> */}

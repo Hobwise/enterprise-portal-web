@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -8,209 +8,286 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-  Button,
-  ButtonGroup,
-  Chip,
   Modal,
   ModalBody,
   ModalContent,
-  ScrollShadow,
-  Spacer,
-  Tooltip,
-  useDisclosure
-} from '@nextui-org/react';
-import moment from 'moment';
-import { SubscriptionTableProps, SubscriptionHistory } from './Interfaces';
-import { addCommasToNumber } from '@/lib/utils';
+  useDisclosure,
+  Chip,
+  Spinner,
+  Pagination,
+} from "@nextui-org/react";
 import { AiOutlineCloudDownload } from "react-icons/ai";
 import { VscEye } from "react-icons/vsc";
-import InvoiceSection from './Invoice';
+import InvoiceSection from "./Invoice";
+import moment from "moment";
+import { addCommasToNumber } from "@/lib/utils";
+import usePagination from "@/hooks/usePagination";
+import CustomPagination from "./CustomPagination";
+
+const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
+  const [filteredData, setFilteredData] = useState(subscriptions);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [invoiceDetails, setInvoiceDetails] = useState(null);
+  const [downloadClickedInvoice, setDownloadClickedInvoice] = useState(false);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1); 
+  const [totalPages, setTotalPages] = useState(1);
+
+  const ITEMS_PER_PAGE = 5;
 
 
-const SubscriptionTable: React.FC<SubscriptionTableProps> = ({ subscriptions, searchQuery }: any) => {
-  const [filteredData, setFilteredData] = React.useState(subscriptions);
-  const [showInvoice, setShowInvoice] = React.useState(false)
-  const { isOpen, onOpen, onOpenChange,onClose } = useDisclosure();
-  const [invoiceDetails, setInvoiceDetails] = useState<SubscriptionHistory | null>(null)
-
-
-  useEffect(() => {
-    if (showInvoice) {
-      onOpen(); // Open modal if triggerModal is true
-    }
-  }, [ showInvoice,onOpen]);
-
-  const handleClose = () => {
-    onClose();
-    setShowInvoice(false)
-    // setTriggerIframe(false); // Set triggerIframe back to false when modal is closed
-  };
-  // Map numeric plans and payment periods to human-readable text
-  const mapPlan = (plan: number) => {
-    switch (plan) {
-      case 1:
-        return 'Premium';
-      case 2:
-        return 'Professional';
-      case 3:
-        return 'Starter';
-      default:
-        return 'Unknown';
-    }
-  };
-
-  const mapAmount =(amount :number) => {
-    return `₦${addCommasToNumber(amount)}`
-  }
-
-  const mapPaymentPeriod = (paymentPeriod: number) => {
-    switch (paymentPeriod) {
-      case 0:
-        return 'Monthly';
-      case 1:
-        return 'Annually';
-      default:
-        return 'Unknown';
-    }
-  };
-
-  // Filter data based on search query
   useEffect(() => {
     if (subscriptions && searchQuery) {
       const filtered = subscriptions.filter((item: any) =>
         Object.values(item)
-          .join(' ')
+          .join(" ")
           .toLowerCase()
           .includes(searchQuery.toLowerCase())
       );
       setFilteredData(filtered);
+
+      setTotalPages(Math.ceil(filtered.length / ITEMS_PER_PAGE));
     } else {
       setFilteredData(subscriptions);
+      setTotalPages(Math.ceil(subscriptions.length / ITEMS_PER_PAGE));
     }
   }, [searchQuery, subscriptions]);
 
-  const renderCell = (item: any, columnKey: string) => {
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
+  };
+
+  const INITIAL_VISIBLE_COLUMNS = [
+    "plan",
+    "billDate",
+    "amount",
+    "duration",
+    "invoice",
+  ];
+
+  const columns = [
+    { name: "ID", uid: "id" },
+    { name: "Plan", uid: "plan" },
+    { name: "Bill Date", uid: "billDate" },
+    { name: "Amount", uid: "amount" },
+    { name: "Duration", uid: "duration" },
+    { name: "Invoice", uid: "invoice" },
+    // { name: '', uid: 'actions' },
+  ];
+
+  const {
+    bottomContent,
+    headerColumns,
+    setSelectedKeys,
+
+    selectedKeys,
+    sortDescriptor,
+    setSortDescriptor,
+
+    classNames,
+  } = usePagination(subscriptions, columns, INITIAL_VISIBLE_COLUMNS);
+
+
+  const mapPlan = (plan: number) => {
+    return ["Unknown", "Premium", "Professional", "Starter"][plan] || "Unknown";
+  };
+
+  const mapAmount = (amount: number) => `₦${addCommasToNumber(amount)}`;
+
+
+  const mapPaymentPeriod = (paymentPeriod: number) =>
+    paymentPeriod === 0 ? "Monthly" : "Annually";
+
+  const renderCell = useCallback((item: any, columnKey: string) => {
     switch (columnKey) {
-      case 'subscriptionStartDate':
-        case 'subscriptionEndDate':
+      case "subscriptionEndDate":
+        return moment(item[columnKey]).isValid()
+          ? moment(item[columnKey]).format("DD/MM/YYYY hh:mm A")
+          : "N/A";
+      case "isActive":
         return (
-          <div>
-            {moment(item[columnKey]).isValid()
-              ? moment(item[columnKey]).format('DD/MM/YYYY hh:mmA') // Format date here
-              : 'N/A'}
-          </div>
-        );
-      case 'isActive':
-        return (
-          <span
-            className={` py-1 rounded ${
-              item[columnKey] ? 'bg-green-200 text-green-700' : 'bg-gray-200 text-gray-700'
+          <Chip
+            className={`text-xs h-6 font-bold ${
+              item[columnKey]
+                ? "bg-green-100 text-green-700"
+                : "bg-gray-100 text-gray-700"
             }`}
           >
-            {item[columnKey] ? 'Active' : 'Inactive'}
-          </span>
+            {item[columnKey] ? "Active" : "Inactive"}
+          </Chip>
         );
-      case 'isExpired':
+      case "invoice":
         return (
-          <span
-            className={` py-1 rounded ${
-              item[columnKey] ? 'bg-red-200 text-red-700' : 'bg-gray-200 text-gray-700'
-            }`}
-          >
-            {item[columnKey] ? 'Expired' : 'Valid'}
-          </span>
-        );
-        case 'invoice': // Handle the Invoice column
-        return (
-          <div className="flex gap-5">
+          <div className="flex flex-row gap-3">
             <button
-              className=" py-1 rounded flex flex-row gap-2 items-center"
-              onClick={() => showInvoiceModal(item)}
+              className="text-blue-500 flex items-center gap-1 hover:underline"
+              onClick={() => openInvoiceModal(item)}
             >
               <VscEye />
               View
             </button>
+
             <button
-              className=" py-1 rounded text-primaryColor flex flex-row gap-2 items-center"
-              onClick={() => showInvoiceModal(item)}
+              className="text-primaryColor flex items-center gap-1 hover:underline"
+              onClick={() => downloadInvoice(item)}
+              disabled={downloadingInvoiceId === item.id}
             >
-            <AiOutlineCloudDownload /> Download
+              <AiOutlineCloudDownload />
+              Download
+              {downloadingInvoiceId === item.id && <Spinner size="sm" color="secondary" />}
             </button>
+
+
           </div>
         );
+      case "plan":
+        return mapPlan(item[columnKey]);
+      case "amount":
+        return mapAmount(item[columnKey]);
+      case "paymentPeriod":
+        return mapPaymentPeriod(item[columnKey]);
       default:
-        return item[columnKey] || 'N/A';
+        return item[columnKey] || "N/A";
     }
+  }, [downloadingInvoiceId]);
+
+
+  const downloadInvoice = (details: any) => {
+    setInvoiceDetails(details);
+    setDownloadClickedInvoice(true);
+    setDownloadingInvoiceId(details.id); // Set the specific invoice ID being downloaded
+
+ 
+    // Simulate an async operation (e.g., API call to download the invoice)
+    setTimeout(() => {
+      console.log("Invoice downloaded:", details.id);
+      setDownloadingInvoiceId(null); // Reset after the download completes
+    }, 2000);
   };
 
-  const showInvoiceModal =(details: SubscriptionHistory) => {
-    // console.log(details);
+
+
+
+  const openInvoiceModal = (details: any) => {
     setInvoiceDetails(details);
-    setShowInvoice(true)
-   
-  } 
+    onOpen();
+  };
 
   return (
-    <section className="border border-primaryGrey rounded-lg">
+    <section className="border border-secondaryGrey rounded-lg overflow-hidden">
+      <div className="overflow-x-auto">
+
       <Table
         aria-label="Subscription List"
         radius="lg"
         isCompact
+        removeWrapper
+        allowsSorting
         bottomContentPlacement="outside"
-        emptyContent="No subscriptions found"
+        classNames={classNames}
+        topContentPlacement="outside"
       >
-        <TableHeader>
-          {/* <TableColumn>Cooperate ID</TableColumn>
-          <TableColumn>Business ID</TableColumn>
-          <TableColumn>Subscribed By</TableColumn> */}
-          <TableColumn className='text-black'>Plan</TableColumn>
-          <TableColumn className='text-black'>Bill Date</TableColumn>
-          <TableColumn className='text-black'>Duration</TableColumn>
-          {/* <TableColumn>Start Date</TableColumn> */}
-          <TableColumn className='text-black'>Amount</TableColumn> 
-          {/* <TableColumn>Status</TableColumn> */}
-          <TableColumn className='text-black'>Invoice</TableColumn>
+        <TableHeader columns={headerColumns}>
+       
+
+          {(column) => (
+            <TableColumn
+              key={column.uid}
+              // align={column.uid === 'actions' ? 'center' : 'start'}
+              allowsSorting={column.sortable}
+            >
+              {column.name}
+            </TableColumn>
+          )}
         </TableHeader>
-        <TableBody items={filteredData}>
+        <TableBody items={paginatedData} emptyContent={"No subscriptions found"}>
           {(item) => (
             <TableRow key={item.id}>
-              {/* <TableCell>{item.cooperateID}</TableCell>
-              <TableCell>{item.businessID}</TableCell> */}
-              {/* <TableCell>{item.subcribedByID}</TableCell> */}
-              <TableCell>{mapPlan(item.plan)}</TableCell>
-              <TableCell>{renderCell(item, 'subscriptionEndDate')}</TableCell>
+              <TableCell className="text-left font-medium">
+                {mapPlan(item.plan)}
+              </TableCell>
+              <TableCell>{renderCell(item, "subscriptionEndDate")}</TableCell>
               <TableCell>{mapPaymentPeriod(item.paymentPeriod)}</TableCell>
-              {/* <TableCell>{renderCell(item, 'subscriptionStartDate')}</TableCell> */}
               <TableCell>{mapAmount(item.totalAmount)}</TableCell>
-              {/* <TableCell>{renderCell(item, 'isActive')}</TableCell> */}
-              <TableCell>{renderCell(item, 'invoice')}</TableCell>
+              <TableCell className="text-center">
+                {renderCell(item, "invoice")}
+              </TableCell>
             </TableRow>
           )}
+          {/* {(item) => (
+            <TableRow key={item?.name}>
+              {(columnKey) => (
+                <TableCell>{renderCell(item, columnKey)}</TableCell>
+              )}
+            </TableRow>
+          )} */}
         </TableBody>
       </Table>
+      </div>
+      
+    
+      <CustomPagination 
+       currentPage={currentPage}
+       totalPages={totalPages}
+       onPageChange={handlePageChange}
+       onNext={handleNext}
+       onPrevious={handlePrevious}
+      
+      />
 
-      {
-        showInvoice && (
-          <Modal
-        isOpen={isOpen}
-        onClose={handleClose}
-        onOpenChange={onOpenChange}
-        backdrop="blur"
+      {downloadClickedInvoice && (
+        <div className=""  style={{ visibility: 'hidden', height: 0, overflow: 'hidden' }}>
+          <InvoiceSection
+            data={invoiceDetails}
+            download={downloadClickedInvoice}
+            setDownloadClickedInvoice={setDownloadClickedInvoice}
+          />
+        </div>
+       )} 
 
-        style={{ width: "1000px", height: "700px" }}
-      >
-        <ModalContent className="w-[600px] h-auto max-w-full">
-          {(onClose) => (
-            <>
-              <ModalBody className='overflow-y-auto bg-[#fafafa]'>
-                <InvoiceSection data={invoiceDetails} />
-              </ModalBody>
-            </>
-          )}
-        </ModalContent>
+      {invoiceDetails && (
+        // <Modal isOpen={isOpen} onClose={onClose}>
+        //   <div className="fixed inset-0 flex items-center justify-center">
+        //     <ModalContent className="w-full max-w-[90%] sm:max-w-[600px] h-auto max-h-[90%] bg-white shadow-lg rounded-lg overflow-hidden">
+        //       <ModalBody className="p-4 overflow-y-auto max-h-[80vh]">
+        //         <InvoiceSection
+        //           data={invoiceDetails}
+        //           download={downloadClickedInvoice}
+        //           setDownloadClickedInvoice={setDownloadClickedInvoice}
+        //         />
+        //       </ModalBody>
+        //     </ModalContent>
+        //   </div>
+        // </Modal>
+
+        <Modal isOpen={isOpen} onClose={onClose}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <ModalContent className="relative w-full max-w-[90%] sm:max-w-[600px] bg-white shadow-lg rounded-lg overflow-hidden">
+            <ModalBody className="p-4 overflow-y-auto max-h-[80vh]">
+              <InvoiceSection
+                data={invoiceDetails}
+                download={downloadClickedInvoice}
+                setDownloadClickedInvoice={setDownloadClickedInvoice}
+              />
+            </ModalBody>
+          </ModalContent>
+        </div>
       </Modal>
-        )
-      }
+      )}
     </section>
   );
 };
