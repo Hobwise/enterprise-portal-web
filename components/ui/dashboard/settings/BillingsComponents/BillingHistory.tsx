@@ -196,6 +196,7 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
         radius="lg"
         isCompact
         removeWrapper
+        className="overflow-x-auto"
         allowsSorting
         bottomContentPlacement="outside"
         classNames={classNames}
