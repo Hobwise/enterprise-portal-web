@@ -114,7 +114,7 @@ const CheckoutModal = ({
         ...order,
         comment: '',
       });
-    } else if (data?.data?.error) {
+    } else {
       toast.error(data?.data?.error);
     }
   };

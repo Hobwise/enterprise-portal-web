@@ -2,6 +2,7 @@
 import { createBooking } from '@/app/api/controllers/dashboard/bookings';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
+import { CustomTextArea } from '@/components/customTextArea';
 import { selectClassNames } from '@/components/selectInput';
 import useReservation from '@/hooks/cachedEndpoints/useReservation';
 import {
@@ -10,12 +11,14 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from '@/lib/utils';
+import { InfoCircle } from '@/public/assets/svg';
 import { getLocalTimeZone, now, today } from '@internationalized/date';
 import { DatePicker } from '@nextui-org/date-picker';
 import {
   Modal,
   ModalBody,
   ModalContent,
+  ScrollShadow,
   Select,
   SelectItem,
   Spacer,
@@ -38,12 +41,14 @@ const CreateBooking = ({
 
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
+  const [quantity, setQuantity] = useState<number>(1);
   const [timeNdate, setTimeNdate] = useState(now(getLocalTimeZone()));
   const [bookings, setBookings] = useState<any>({
     firstName: '',
     lastName: '',
     email: '',
     phoneNumber: '',
+    description: '',
   });
 
   const [id, setId] = useState('');
@@ -78,6 +83,8 @@ const CreateBooking = ({
       emailAddress: bookings.email,
       phoneNumber: bookings.phoneNumber,
       bookingDateTime: formatDateTime(timeNdate),
+      description: bookings.description,
+      quantity: quantity,
     };
 
     setIsLoading(true);
@@ -102,8 +109,10 @@ const CreateBooking = ({
         lastName: '',
         email: '',
         phoneNumber: '',
+        description: '',
         id: '',
       });
+      setQuantity(1);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -147,6 +156,7 @@ const CreateBooking = ({
 
   return (
     <Modal
+      size='2xl'
       isDismissable={false}
       isOpen={openCreateBookingModal}
       onOpenChange={() => closeCreateBookingModal()}
@@ -158,112 +168,156 @@ const CreateBooking = ({
               <h2 className='text-[24px] leading-3 py-8 text-black font-semibold'>
                 Complete booking
               </h2>
-
-              <form onSubmit={placeBooking}>
-                <div className='flex gap-4'>
-                  <CustomInput
-                    type='text'
-                    value={bookings.firstName}
-                    errorMessage={response?.errors?.firstName?.[0]}
+              <ScrollShadow size={5} className='w-full h-[500px]'>
+                <form onSubmit={placeBooking}>
+                  <div className='flex gap-4'>
+                    <CustomInput
+                      type='text'
+                      value={bookings.firstName}
+                      errorMessage={response?.errors?.firstName?.[0]}
+                      onChange={handleInputChange}
+                      name='firstName'
+                      label='First name'
+                      placeholder='First name'
+                    />
+                    <CustomInput
+                      type='text'
+                      value={bookings.lastName}
+                      errorMessage={response?.errors?.lastName?.[0]}
+                      onChange={handleInputChange}
+                      name='lastName'
+                      label='Last name'
+                      placeholder='Last name'
+                    />
+                  </div>
+                  <Spacer y={5} />
+                  <div className='flex gap-4'>
+                    <CustomInput
+                      type='text'
+                      value={bookings.email}
+                      errorMessage={response?.errors?.email?.[0]}
+                      onChange={handleInputChange}
+                      name='email'
+                      endContent={
+                        <MdOutlineMailOutline className='text-grey500' />
+                      }
+                      label='Email address'
+                      placeholder='Enter email'
+                    />
+                    <CustomInput
+                      type='text'
+                      value={bookings.phoneNumber}
+                      errorMessage={response?.errors?.phoneNumber?.[0]}
+                      onChange={handleInputChange}
+                      name='phoneNumber'
+                      endContent={<MdOutlinePhone className='text-grey500' />}
+                      label='Phone number'
+                      placeholder='Enter phone number'
+                    />
+                  </div>
+                  <Spacer y={5} />
+                  <CustomTextArea
+                    value={bookings.description}
+                    name='description'
+                    errorMessage={response?.errors?.description?.[0]}
                     onChange={handleInputChange}
-                    name='firstName'
-                    label='First name'
-                    placeholder='First name'
+                    label='Add a description to this booking'
+                    placeholder='Add a description'
                   />
-                  <CustomInput
-                    type='text'
-                    value={bookings.lastName}
-                    errorMessage={response?.errors?.lastName?.[0]}
-                    onChange={handleInputChange}
-                    name='lastName'
-                    label='Last name'
-                    placeholder='Last name'
-                  />
-                </div>
-                <Spacer y={5} />
-                <CustomInput
-                  type='text'
-                  value={bookings.email}
-                  errorMessage={response?.errors?.email?.[0]}
-                  onChange={handleInputChange}
-                  name='email'
-                  endContent={<MdOutlineMailOutline className='text-grey500' />}
-                  label='Email address'
-                  placeholder='Enter email'
-                />
-                <Spacer y={5} />
-                <Select
-                  labelPlacement='outside'
-                  key='outside'
-                  variant={'bordered'}
-                  errorMessage={response?.errors?.reservationId?.[0]}
-                  items={data?.reservations}
-                  value={id}
-                  onChange={(e) => setId(e.target.value)}
-                  size='lg'
-                  className='text-black'
-                  label='Choose reservation'
-                  placeholder='Select reservation to book'
-                  classNames={selectClassNames}
-                  renderValue={(items) => {
-                    return items.map((item) => (
-                      <span className='text-black'>{item.textValue}</span>
-                    ));
-                  }}
-                >
-                  {(reservation) => (
-                    <SelectItem
-                      className='text-black'
-                      key={reservation.id}
-                      textValue={reservation.reservationName}
-                    >
-                      <Reservations reservation={reservation} />
-                    </SelectItem>
-                  )}
-                </Select>
-                <Spacer y={5} />
-                <CustomInput
-                  type='text'
-                  value={bookings.phoneNumber}
-                  errorMessage={response?.errors?.phoneNumber?.[0]}
-                  onChange={handleInputChange}
-                  name='phoneNumber'
-                  endContent={<MdOutlinePhone className='text-grey500' />}
-                  label='Phone number'
-                  placeholder='Enter phone number'
-                />
-                <Spacer y={5} />
+                  <Spacer y={5} />
 
-                <div>
-                  <label className='font-[500] text-black text-[14px] pb-1'>
-                    Time and date
-                  </label>
-
-                  <DatePicker
-                    calendarWidth={270}
-                    variant='bordered'
-                    hideTimeZone
+                  <Select
+                    labelPlacement='outside'
+                    key='outside'
+                    variant={'bordered'}
+                    errorMessage={response?.errors?.reservationId?.[0]}
+                    items={data?.reservations}
+                    value={id}
+                    onChange={(e) => setId(e.target.value)}
                     size='lg'
-                    radius='sm'
-                    errorMessage={response?.errors?.timeNdate?.[0]}
-                    value={timeNdate}
-                    onChange={setTimeNdate}
-                    showMonthAndYearPickers
-                    minValue={today(getLocalTimeZone())}
-                    defaultValue={now(getLocalTimeZone())}
-                  />
-                </div>
-                <Spacer y={6} />
+                    className='text-black'
+                    label='Choose reservation'
+                    placeholder='Select reservation to book'
+                    classNames={selectClassNames}
+                    renderValue={(items) => {
+                      return items.map((item) => (
+                        <span className='text-black'>{item.textValue}</span>
+                      ));
+                    }}
+                  >
+                    {(reservation) => (
+                      <SelectItem
+                        className='text-black'
+                        key={reservation.id}
+                        textValue={reservation.reservationName}
+                      >
+                        <Reservations reservation={reservation} />
+                      </SelectItem>
+                    )}
+                  </Select>
 
-                <CustomButton
-                  loading={isLoading}
-                  disabled={isLoading || !formSubmit()}
-                  type='submit'
-                >
-                  {' '}
-                  {isLoading ? 'Loading' : 'Proceed to checkout'}
-                </CustomButton>
-              </form>
+                  <Spacer y={5} />
+
+                  <div>
+                    <label className='font-[500] text-black text-[14px] pb-1'>
+                      Time and date
+                    </label>
+
+                    <DatePicker
+                      calendarWidth={270}
+                      variant='bordered'
+                      hideTimeZone
+                      size='lg'
+                      radius='sm'
+                      errorMessage={response?.errors?.timeNdate?.[0]}
+                      value={timeNdate}
+                      onChange={setTimeNdate}
+                      showMonthAndYearPickers
+                      minValue={today(getLocalTimeZone())}
+                      defaultValue={now(getLocalTimeZone())}
+                    />
+                  </div>
+                  <Spacer y={5} />
+
+                  <div className='text-sm flex justify-between'>
+                    <div className='text-[#404245] flex space-x-2 items-center'>
+                      <p>Quantity</p>
+                      <InfoCircle />
+                    </div>
+                    <div className='flex space-x-4 text-[#000] items-center'>
+                      <button
+                        className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
+                        disabled={quantity <= 1}
+                        role='button'
+                        onClick={() => {
+                          quantity > 1 ? setQuantity((prev) => prev - 1) : null;
+                        }}
+                      >
+                        -
+                      </button>
+                      <p className='font-medium w-4 flex justify-center items-center'>
+                        {quantity}
+                      </p>
+                      <div
+                        className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
+                        role='button'
+                        onClick={() => setQuantity((prev) => prev + 1)}
+                      >
+                        +
+                      </div>
+                    </div>
+                  </div>
+                  <Spacer y={6} />
+                  <CustomButton
+                    loading={isLoading}
+                    disabled={isLoading || !formSubmit()}
+                    type='submit'
+                  >
+                    {' '}
+                    {isLoading ? 'Loading' : 'Proceed to checkout'}
+                  </CustomButton>
+                </form>
+              </ScrollShadow>
               <Spacer y={4} />
             </ModalBody>
           </>

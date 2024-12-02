@@ -214,25 +214,22 @@ const Menu: React.FC = () => {
             </>
           )}
 
-          {(role === 0 || userRolePermissions?.canCreateMenu === true) && (
-            // <div>
+          {data?.length > 0 &&
+            (role === 0 || userRolePermissions?.canCreateMenu === true) && (
+              // <div>
 
-            <CustomButton
-              onClick={
-                data?.length > 0
-                  ? () => router.push('/dashboard/menu/add-menu-item')
-                  : onOpen
-              }
-              className='py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white'
-              backgroundColor='bg-primaryColor'
-            >
-              <div className='flex gap-2 items-center justify-center'>
-                <IoAddCircleOutline className='text-[22px]' />
-                <p>{data?.length > 0 ? 'Add menu items' : 'Add menu'} </p>
-              </div>
-            </CustomButton>
-            // </div>
-          )}
+              <CustomButton
+                onClick={() => router.push('/dashboard/menu/add-menu-item')}
+                className='py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white'
+                backgroundColor='bg-primaryColor'
+              >
+                <div className='flex gap-2 items-center justify-center'>
+                  <IoAddCircleOutline className='text-[22px]' />
+                  <p>{'Add menu items'} </p>
+                </div>
+              </CustomButton>
+              // </div>
+            )}
         </div>
       </div>
       {isLoading ? <CustomLoading /> : <>{getScreens()} </>}

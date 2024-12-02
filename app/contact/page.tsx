@@ -1,24 +1,28 @@
 'use client';
-import Navbar from '@/components/ui/landingPage/navBar';
-import { ContactIcon } from '@/public/assets/svg';
-import ContactUsBg from '@/public/assets/images/contact-us-bg.png';
-import DashboardImage from '@/public/assets/images/dashboard-image-2.png';
-import HobinkLogo from '@/public/assets/icons/hobink-iconpng.png';
-import Image from 'next/image';
+import { CustomButton } from '@/components/customButton';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomTextArea } from '@/components/customTextArea';
-import { CustomButton } from '@/components/customButton';
 import FAQs from '@/components/ui/landingPage/faq';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
 import Footer from '@/components/ui/landingPage/footer';
-import { useState } from 'react';
+import Navbar from '@/components/ui/landingPage/navBar';
 import { notify, validateEmail } from '@/lib/utils';
-import { ContactUs } from '../api/controllers/landingPage';
+import HobinkLogo from '@/public/assets/icons/hobink-iconpng.png';
+import ContactUsBg from '@/public/assets/images/contact-us-bg.png';
+import DashboardImage from '@/public/assets/images/dashboard-image-2.png';
+import { ContactIcon } from '@/public/assets/svg';
+import Image from 'next/image';
+import { useState } from 'react';
 import { toast } from 'react-toastify';
+import { ContactUs } from '../api/controllers/landingPage';
 
 export default function Contact() {
   const defaultErrorValue = { name: '', email: '', message: '' };
-  const [contactInfo, setContactInfo] = useState<{ name: string; email: string; message: string }>({ name: '', email: '', message: '' });
+  const [contactInfo, setContactInfo] = useState<{
+    name: string;
+    email: string;
+    message: string;
+  }>({ name: '', email: '', message: '' });
   const [error, setError] = useState(defaultErrorValue);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -31,7 +35,10 @@ export default function Contact() {
       setError((prev) => ({ ...prev, name: 'Name is compulsory' }));
     }
     if (!contactInfo.email || !validateEmail(contactInfo.email)) {
-      setError((prev) => ({ ...prev, email: 'Please enter a valid email address.' }));
+      setError((prev) => ({
+        ...prev,
+        email: 'Please enter a valid email address.',
+      }));
     }
     if (!contactInfo.message) {
       setError((prev) => ({ ...prev, message: 'Question is compulsory' }));
@@ -102,7 +109,10 @@ export default function Contact() {
                   value={contactInfo.email}
                   onChange={({ target }: any) => {
                     setError((prev) => ({ ...prev, email: '' }));
-                    setContactInfo((prev) => ({ ...prev, email: target.value }));
+                    setContactInfo((prev) => ({
+                      ...prev,
+                      email: target.value,
+                    }));
                   }}
                   errorMessage={error.email}
                 />
@@ -115,7 +125,10 @@ export default function Contact() {
                   value={contactInfo.message}
                   onChange={({ target }: any) => {
                     setError((prev) => ({ ...prev, message: '' }));
-                    setContactInfo((prev) => ({ ...prev, message: target.value }));
+                    setContactInfo((prev) => ({
+                      ...prev,
+                      message: target.value,
+                    }));
                   }}
                   errorMessage={error.message}
                 />
@@ -127,11 +140,11 @@ export default function Contact() {
               </form>
 
               <div className="font-satoshi space-y-8 w-[55%]">
-                <Image src={HobinkLogo} alt="hobink logo" width={50} height={50} />
+                <Image src={HobinkLogo} alt="hobwise logo" width={50} height={50} />
                 <div className="space-y-6">
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer email?</h4>
-                  <a href="mailto: hello@hobink.com" target="_blank" className="text-primaryColor underline font-medium">
-                    hello@hobink.com
+                  <a href="mailto: hello@hobwise.com" target="_blank" className="text-primaryColor underline font-medium">
+                    hello@hobwise.com
                   </a>
                 </div>
                 <div className="space-y-6">

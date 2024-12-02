@@ -14,6 +14,7 @@ const Settings: React.FC = () => {
       <section className='xl:max-w-[80%] w-full'>
         <SettingsComponent />
       </section>
+
     </>
   );
 };

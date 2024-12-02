@@ -3,6 +3,7 @@ import { createBusiness } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
+import { businessTypes } from '@/lib/businessTypes';
 import { companyInfo } from '@/lib/companyInfo';
 import {
   getJsonItemFromLocalStorage,
@@ -100,7 +101,7 @@ const BusinessInformationForm = () => {
       <CustomInput
         type='text'
         name='name'
-        label='Business name'
+        label='Business Name'
         errorMessage={response?.errors?.name?.[0]}
         onChange={handleInputChange}
         value={businessFormData.name}
@@ -108,26 +109,26 @@ const BusinessInformationForm = () => {
       />
       <Spacer y={4} />
 
-      <div className='flex flex-col md:flex-row  gap-3'>
-        <CustomInput
-          type='email'
-          name='contactEmailAddress'
-          errorMessage={response?.errors?.contactEmailAddress?.[0]}
-          onChange={handleInputChange}
-          value={businessFormData.contactEmailAddress}
-          label='Business email'
-          placeholder={`${companyInfo.name}@gmail.com`}
-        />
-        <CustomInput
+      {/* <div className='flex flex-col md:flex-row  gap-3'> */}
+      <CustomInput
+        type='text'
+        name='contactEmailAddress'
+        errorMessage={response?.errors?.contactEmailAddress?.[0]}
+        onChange={handleInputChange}
+        value={businessFormData.contactEmailAddress}
+        label='Business Email'
+        placeholder={`${companyInfo.name}@gmail.com`}
+      />
+      {/* <CustomInput
           type='text'
           name='contactPhoneNumber'
           errorMessage={response?.errors?.contactPhoneNumber?.[0]}
           onChange={handleInputChange}
           value={businessFormData.contactPhoneNumber}
-          label='Business phone number'
+          label='Business Phone Number'
           placeholder='09034545454'
         />
-      </div>
+      </div> */}
       <Spacer y={4} />
       <CustomInput
         type='text'
@@ -135,7 +136,7 @@ const BusinessInformationForm = () => {
         errorMessage={response?.errors?.address?.[0]}
         onChange={handleInputChange}
         value={businessFormData.address}
-        label='Business address'
+        label='Business Address'
         placeholder='Where is your business located '
       />
 
@@ -143,62 +144,33 @@ const BusinessInformationForm = () => {
       <div className='flex flex-col md:flex-row  gap-3'>
         <SelectInput
           errorMessage={response?.errors?.state?.[0]}
-          label={'Business state'}
+          label={'Business State'}
           name='state'
           onChange={handleInputChange}
           value={businessFormData.state}
-          placeholder={'Select a state'}
+          placeholder={'Select state'}
           contents={getStates()}
         />
 
         <SelectInput
           errorMessage={response?.errors?.city?.[0]}
-          label={'Business city'}
+          label={'Business LGA'}
           name='city'
           onChange={handleInputChange}
           value={businessFormData.city}
-          placeholder={'Select a city'}
+          placeholder={'Select lga'}
           contents={getCities()}
         />
       </div>
       <Spacer y={4} />
       <SelectInput
         errorMessage={response?.errors?.businessCategory?.[0]}
-        label={'Business category'}
+        label={'Business Category'}
         name='businessCategory'
         onChange={handleInputChange}
         value={businessFormData.businessCategory}
         placeholder={'Business category'}
-        contents={[
-          {
-            label: 'Business center',
-            value: 0,
-          },
-          {
-            label: 'Logistics',
-            value: 1,
-          },
-          {
-            label: 'Bar',
-            value: 2,
-          },
-          {
-            label: 'Restaurant',
-            value: 3,
-          },
-          {
-            label: 'Club',
-            value: 4,
-          },
-          {
-            label: 'Cafe',
-            value: 5,
-          },
-          {
-            label: 'Hotel',
-            value: 6,
-          },
-        ]}
+        contents={businessTypes}
       />
 
       <Spacer y={8} />

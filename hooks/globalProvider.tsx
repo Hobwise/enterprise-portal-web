@@ -24,6 +24,7 @@ const AppProvider = ({ children }: any) => {
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [businessProfileNavigate, setBusinessProfileNavigate] =
     useState<number>(0);
+  const [expireTime, setExpireTime] = useState<any>('');
 
   const [isOpenDeleteVariety, setIsOpenDeleteVariety] = useState(false);
   const [isOpenEditVariety, setIsOpenEditVariety] = useState(false);
@@ -87,6 +88,8 @@ const AppProvider = ({ children }: any) => {
         setLoginDetails,
         setBackgroundColor,
         selectedTextColor,
+        expireTime,
+        setExpireTime,
         setSelectedTextColor,
         isOpenEditVariety,
         setIsOpenEditVariety,

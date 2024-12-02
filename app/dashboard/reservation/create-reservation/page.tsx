@@ -19,12 +19,15 @@ import {
   saveJsonItemToLocalStorage,
   saveToLocalStorage,
 } from '@/lib/utils';
+import { InfoCircle } from '@/public/assets/svg';
 import {
   Button,
+  Chip,
   Modal,
   ModalBody,
   ModalContent,
   Spacer,
+  Switch,
   useDisclosure,
 } from '@nextui-org/react';
 import imageCompression from 'browser-image-compression';
@@ -61,8 +64,11 @@ const AddNewReservation = () => {
       minimumSpend: getReservationSavedToDraft?.minimumSpend || 0,
       reservationRequirement:
         getReservationSavedToDraft?.reservationRequirement || '',
-      quantity: getReservationSavedToDraft?.quantity || '',
+      quantity: getReservationSavedToDraft?.quantity || 1,
       imageReference: getReservationSavedToDraft?.imageReference || '',
+      allowSystemAdvert: getReservationSavedToDraft?.allowSystemAdvert || true,
+      reservationDuration:
+        getReservationSavedToDraft?.reservationDuration || null,
     });
 
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -162,7 +168,6 @@ const AddNewReservation = () => {
     setResponse(data);
 
     setIsLoading(false);
-
     if (data?.data?.isSuccessful) {
       onOpen();
       clearItemLocalStorage('saveReservationToDraft');
@@ -173,7 +178,9 @@ const AddNewReservation = () => {
         reservationFee: 0,
         minimumSpend: 0,
         reservationRequirement: '',
-        quantity: '',
+        allowSystemAdvert: true,
+        reservationDuration: null,
+        quantity: 1,
         imageReference: '',
       });
       // setSelectedFile();
@@ -192,6 +199,15 @@ const AddNewReservation = () => {
     saveToLocalStorage('selectedImage', selectedImage);
     toast.success('Saved to draft!');
   };
+  const handleQuantityChange = (type: 'increment' | 'decrement') => {
+    setReservationPayload((prevState) => ({
+      ...prevState,
+      quantity:
+        type === 'increment'
+          ? Number(prevState.quantity || 0) + 1
+          : Math.max(1, Number(prevState.quantity || 0) - 1),
+    }));
+  };
 
   useEffect(() => {
     setReservationPayload({
@@ -202,11 +218,49 @@ const AddNewReservation = () => {
       minimumSpend: getReservationSavedToDraft?.minimumSpend || 0,
       reservationRequirement:
         getReservationSavedToDraft?.reservationRequirement || '',
-      quantity: getReservationSavedToDraft?.quantity || '',
+      quantity: getReservationSavedToDraft?.quantity || 1,
       imageReference: getReservationSavedToDraft?.imageReference || '',
+      allowSystemAdvert: getReservationSavedToDraft?.allowSystemAdvert || true,
+      reservationDuration:
+        getReservationSavedToDraft?.reservationDuration || '',
     });
     setSelectedImage(selectedImageSavedToDraft || '');
   }, []);
+
+  const duration = [
+    {
+      label: '1hr',
+      value: 1,
+    },
+    {
+      label: '1hr 30m',
+      value: 1.5,
+    },
+    { label: '2hrs', value: 2 },
+    {
+      label: '2hrs 30m',
+      value: 2.5,
+    },
+    {
+      label: '3hrs',
+      value: 3,
+    },
+  ];
+
+  const handleDurationSelect = (value: number) => {
+    setReservationPayload((prev) => ({
+      ...prev,
+      reservationDuration:
+        prev.reservationDuration === value ? undefined : value,
+    }));
+  };
+
+  const handleToggle = async (isSelected: boolean) => {
+    setReservationPayload({
+      ...reservationPayload,
+      allowSystemAdvert: isSelected,
+    });
+  };
 
   return (
     <>
@@ -249,10 +303,16 @@ const AddNewReservation = () => {
             placeholder='Add a description'
           />
           <Spacer y={6} />
-          <div className='flex gap-6'>
+          <div className='flex lg:flex-row flex-col gap-6'>
             <CustomInput
               type='text'
+              disabled={true}
               startContent={<div>₦</div>}
+              endContent={
+                <div className='text-xs  whitespace-nowrap text-white text-center px-2 py-[2px] bg-success-500 rounded-full '>
+                  Coming soon
+                </div>
+              }
               name='reservationFee'
               errorMessage={response?.errors?.reservationFee?.[0]}
               onChange={handleInputChange}
@@ -272,16 +332,116 @@ const AddNewReservation = () => {
               placeholder='Minimum spend'
             />
           </div>
+
           <Spacer y={6} />
-          <CustomInput
-            type='text'
-            name='quantity'
-            errorMessage={response?.errors?.quantity?.[0]}
-            onChange={handleInputChange}
-            value={`${reservationPayload.quantity}`}
-            label={'Quantity'}
-            placeholder={'Quantity'}
-          />
+          <div className='text-sm flex justify-between'>
+            <div className='text-[#404245] flex space-x-2 items-center'>
+              <p>Quantity</p>
+              <InfoCircle />
+            </div>
+            <div className='flex space-x-4 text-[#000] items-center'>
+              <button
+                className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
+                disabled={Number(reservationPayload.quantity) <= 1}
+                role='button'
+                onClick={() => handleQuantityChange('decrement')}
+              >
+                -
+              </button>
+              <p className='font-medium w-4 flex justify-center items-center'>
+                {reservationPayload.quantity || 1}
+              </p>
+              <button
+                className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
+                role='button'
+                onClick={() => handleQuantityChange('increment')}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <Spacer y={6} />
+          <div className='bg-[#F0F2F4] p-4 text-[#5A5A63]  items-baseline space-x-2 space-y-2 rounded-lg'>
+            <p className='text-sm'>
+              Duration: Select a duration if this reservation is time-sensitive.
+              (Optional)
+            </p>
+            <div className='flex justify-between items-center'>
+              <div className='flex gap-2'>
+                {duration.map((item) => (
+                  <Chip
+                    key={item.value}
+                    onClick={() => handleDurationSelect(item.value)}
+                    className={`cursor-pointer transition-colors ${
+                      reservationPayload.reservationDuration === item.value
+                        ? 'bg-primaryColor text-white'
+                        : 'bg-white text-[#5A5A63]'
+                    }`}
+                    classNames={{
+                      base: 'text-xs h-7',
+                      content: 'px-3',
+                    }}
+                  >
+                    {item.label}
+                  </Chip>
+                ))}
+              </div>
+
+              {/* <MdCancel
+                onClick={() =>
+                  setReservationPayload({
+                    ...reservationPayload,
+                    reservationDuration: null,
+                  })
+                }
+                className='text-danger-500 cursor-pointer text-xl'
+              /> */}
+            </div>
+            <Spacer y={3} />
+            <hr className='my-4 text-secondaryGrey' />
+            <Spacer y={3} />
+            <p className='text-sm'>
+              Allow System Advertisement: Disable this option if you do not wish
+              for the system to promote this reservation.
+            </p>
+            <div className='bg-primaryGrey inline-flex px-4 py-2 rounded-lg  gap-3 items-center'>
+              <span
+                className={
+                  !reservationPayload.allowSystemAdvert
+                    ? 'text-primaryColor text-bold text-sm'
+                    : 'text-grey400 text-sm'
+                }
+              >
+                Disable
+              </span>
+
+              <Switch
+                size='sm'
+                classNames={{
+                  wrapper: `m-0 ${
+                    reservationPayload.allowSystemAdvert
+                      ? '!bg-primaryColor'
+                      : 'bg-[#E4E7EC]'
+                  } `,
+                }}
+                name='allowSystemAdvert'
+                defaultChecked={reservationPayload.allowSystemAdvert}
+                onChange={(e) => handleToggle(e.target.checked)}
+                isSelected={reservationPayload.allowSystemAdvert}
+                aria-label='allow system advert'
+              />
+
+              <span
+                className={
+                  reservationPayload.allowSystemAdvert
+                    ? 'text-primaryColor text-bold text-sm'
+                    : 'text-grey400 text-sm'
+                }
+              >
+                Enable
+              </span>
+            </div>
+          </div>
         </div>
         <div
           className={`flex-grow xl:h-auto lg:w-1/2 full  p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}

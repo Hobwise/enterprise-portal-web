@@ -41,7 +41,7 @@ const PreviewCampaign = () => {
           </Button>
         </div>
         <section className='mt-6 pt-10 flex-grow bg-[#F9F8FF] overflow-scroll rounded-xl flex justify-center items-center'>
-          <div className='xl:block relative  p-4 overflow-scroll hidden w-[320px] border-[8px]  border-black rounded-[40px] h-full shadow-lg'>
+          <div className='relative  p-4 overflow-scroll  w-[320px] border-[8px]  border-black rounded-[40px] h-full shadow-lg'>
             <Image
               className='h-[144px] w-full bg-cover rounded-lg'
               width={120}

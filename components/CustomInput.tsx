@@ -38,7 +38,6 @@ export const CustomInput = ({
   defaultValue,
   classnames = 'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
   errorMessage,
-
   size = 'lg',
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -60,6 +59,18 @@ export const CustomInput = ({
       )}
     </button>
   );
+
+  const handleCopy = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    if (type === 'password') {
+      event.preventDefault();
+    }
+  };
+
+  const handlePaste = (event: React.ClipboardEvent<HTMLInputElement>) => {
+    if (type === 'password') {
+      event.preventDefault();
+    }
+  };
 
   return (
     <Input
@@ -95,6 +106,8 @@ export const CustomInput = ({
       size={size}
       endContent={type === 'password' ? passwordEndContent : endContent}
       startContent={startContent}
+      onCopy={handleCopy}
+      onPaste={handlePaste}
     />
   );
 };

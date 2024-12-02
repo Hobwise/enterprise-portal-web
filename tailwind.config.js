@@ -1,5 +1,4 @@
 import { nextui } from '@nextui-org/react';
-import { Bricolage_Grotesque } from 'next/font/google';
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -17,6 +16,7 @@ module.exports = {
       primaryColor: '#5F35D2',
       textGrey: '#475367',
       primary100: '#C3ADFF',
+      grey300: '#F9FAFB',
       grey400: '#98A2B3',
       grey500: '#667185',
       grey600: '#645D5D',
@@ -34,18 +34,20 @@ module.exports = {
       },
       fontFamily: {
         satoshi: ['Satoshi'], // Define your custom font
-        bricolage_grotesque: ['Bricolage Grotesque']
+        bricolage_grotesque: ['Bricolage Grotesque'],
       },
       boxShadow: {
-        'custom': '0px 4px 12px 0px rgba(49, 54, 63, 0.1)',
+        custom: '0px 4px 12px 0px rgba(49, 54, 63, 0.1)',
         'custom-inset': '0px 7.4px 18.5px 0px rgba(255, 255, 255, 0.11) inset',
-        'custom_shadow': '0px 12px 27px 0px rgba(16, 24, 40, 0.07)',
-        'custom_double': 'inset 0px 7.4px 18.5px rgba(255, 255, 255, 0.11), 0px 0px 0px 3.7px rgba(190, 202, 234, 0.03)',
-        'custom_inset_2': 'inset 0px 7.4px 18.5px 0px #FFFFFF1C, 0px 0px 0px 3.7px #BECAEA08',
-        'custom_inset_3': 'box-shadow: 0px 67.4px 98.5px 0px #FFFFFF0D inset',
-        'custom_inset_4': 'inset 0px 7.4px 18.5px 0px rgba(255, 255, 255, 0.11)',
-        'custom_shadow_2': 'box-shadow: 0px 7.4px 18.5px 0px #FFFFFF1C inset',
-        'custom_shadow_3': '-4.69px 7.03px 4.69px 0px rgba(0, 0, 0, 0.06)'
+        custom_shadow: '0px 12px 27px 0px rgba(16, 24, 40, 0.07)',
+        custom_double:
+          'inset 0px 7.4px 18.5px rgba(255, 255, 255, 0.11), 0px 0px 0px 3.7px rgba(190, 202, 234, 0.03)',
+        custom_inset_2:
+          'inset 0px 7.4px 18.5px 0px #FFFFFF1C, 0px 0px 0px 3.7px #BECAEA08',
+        custom_inset_3: 'box-shadow: 0px 67.4px 98.5px 0px #FFFFFF0D inset',
+        custom_inset_4: 'inset 0px 7.4px 18.5px 0px rgba(255, 255, 255, 0.11)',
+        custom_shadow_2: 'box-shadow: 0px 7.4px 18.5px 0px #FFFFFF1C inset',
+        custom_shadow_3: '-4.69px 7.03px 4.69px 0px rgba(0, 0, 0, 0.06)',
       },
       animation: {
         'infinite-scroll': 'infinite-scroll 25s linear infinite',
@@ -53,14 +55,14 @@ module.exports = {
       },
       keyframes: {
         'infinite-scroll': {
-            from: { transform: 'translateX(0)' },
-            to: { transform: 'translateX(-100%)' },
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-100%)' },
         },
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
         },
-      } 
+      },
     },
   },
   darkMode: 'class',

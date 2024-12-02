@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
-const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
+const AddMultipleMenu = ({ selectedMenu }: any) => {
   const router = useRouter();
   const { refetch } = useMenu();
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -34,11 +34,14 @@ const AddMultipleMenu = ({ selectedMenu, setActiveScreen }: any) => {
       toast.success('Upload Successful');
       refetch();
       router.push('/dashboard/menu');
-    } else if (data?.data?.error) {
-      setImageError(data?.data?.error);
+    } else {
       notify({
         title: 'Error!',
-        text: data?.data?.error,
+        text: data?.data?.errors.map((item: any) => (
+          <span className='flex flex-col gap-1'>
+            <span>{item.responseDescription}</span>
+          </span>
+        )),
         type: 'error',
       });
     }

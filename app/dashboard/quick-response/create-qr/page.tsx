@@ -1,8 +1,8 @@
 import QRform from '@/components/ui/dashboard/qrCode/QRform';
 
 export const metadata = {
-  title: 'Create QR',
-  description: ' Create QR Code',
+  title: 'Create Quick Response',
+  description: ' Create Quick Response',
 };
 const CreateQrPage = () => {
   return (
@@ -11,7 +11,7 @@ const CreateQrPage = () => {
         <section className='max-w-[448px] w-full'>
           <div>
             <h2 className='text-[24px] leading-8 font-semibold'>
-              Create QR Code
+              Create Quick Response
             </h2>
             <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
               Add an item to your menu

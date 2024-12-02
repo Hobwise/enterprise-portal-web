@@ -70,13 +70,13 @@ const businessSchema = z.object({
   state: z.string().trim().min(1, { message: 'Select a state' }),
   city: z.string().trim().min(1, { message: 'Select a city' }),
   contactEmailAddress: emailValidation(),
-  contactPhoneNumber: z
-    .string()
-    .length(11, 'Phone number must be 11 digits long')
-    .startsWith('0', 'Phone number must start with 0')
-    .refine((value) => /^\d+$/.test(value), {
-      message: 'Phone number must only contain digits',
-    }),
+  // contactPhoneNumber: z
+  //   .string()
+  //   .length(11, 'Phone number must be 11 digits long')
+  //   .startsWith('0', 'Phone number must start with 0')
+  //   .refine((value) => /^\d+$/.test(value), {
+  //     message: 'Phone number must only contain digits',
+  //   }),
 });
 
 export async function getUserByBusiness(
@@ -201,7 +201,6 @@ export async function createBusiness(formData: any) {
     state: formData.state,
     city: formData.city,
     contactEmailAddress: formData.contactEmailAddress,
-    contactPhoneNumber: formData.contactPhoneNumber,
   });
 
   if (!validatedFields.success) {

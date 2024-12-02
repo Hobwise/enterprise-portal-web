@@ -24,6 +24,7 @@ import { useState } from 'react';
 import { FiLogOut } from 'react-icons/fi';
 import { IoIosArrowDown, IoIosSettings } from 'react-icons/io';
 import { IoChatbubblesOutline } from 'react-icons/io5';
+import { PiBookOpenTextLight } from 'react-icons/pi';
 import { SlBell } from 'react-icons/sl';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS, headerRouteMapping } from './constants';
@@ -79,11 +80,15 @@ const Header = () => {
           <div className='flex items-center gap-2'>
             {navItem ? (
               <>
-                <Image
-                  className={'dashboardLogo'}
-                  src={navItem?.icon}
-                  alt={navItem?.title}
-                />
+                {navItem?.title === 'Menu' ? (
+                  <PiBookOpenTextLight className='font-bold text-grey500 text-xl' />
+                ) : (
+                  <Image
+                    className={'dashboardLogo'}
+                    src={navItem?.icon}
+                    alt={navItem?.title}
+                  />
+                )}
                 <span className='text-[#494E58] font-[600]'>
                   {navItem?.title}
                 </span>

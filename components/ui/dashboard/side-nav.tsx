@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 
-import { TOKEN_EXPIRY_DURATION } from '@/app/api/apiService';
 import { generateRefreshToken } from '@/app/api/controllers/auth';
 import CompanyLogo from '@/components/logo';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
@@ -11,6 +10,7 @@ import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import {
   getJsonItemFromLocalStorage,
   saveJsonItemToLocalStorage,
+  setTokenCookie,
 } from '@/lib/utils';
 import {
   Avatar,
@@ -28,15 +28,17 @@ import { usePathname } from 'next/navigation';
 import { FiLogOut } from 'react-icons/fi';
 import { GoPlus } from 'react-icons/go';
 import { IoIosArrowDown } from 'react-icons/io';
+import { PiBookOpenTextLight } from 'react-icons/pi';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
+import AddBusiness from './settings/addBusiness';
 import { SideNavItem } from './types';
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
 
   const { data: businessDetails, isLoading } = useGetBusiness();
-  const { data: businessDetailsList } = useGetBusinessByCooperate();
+  const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
 
   const { userRolePermissions, role } = usePermission();
 
@@ -57,13 +59,11 @@ const SideNav = () => {
 
       const newToken = response?.data?.data?.jwtToken;
 
-      const newExpiry = Date.now() + TOKEN_EXPIRY_DURATION;
       saveJsonItemToLocalStorage('userInformation', {
         ...userData,
         token: newToken,
-        tokenExpiry: newExpiry,
       });
-
+      setTokenCookie('token', newToken);
       return newToken;
     } catch (error) {
       console.log(error);
@@ -145,7 +145,7 @@ const SideNav = () => {
     )
       return false;
     if (
-      item.title === 'QR Code' &&
+      item.title === 'Quick Response' &&
       userRolePermissions?.canViewQR === false &&
       role === 1
     )
@@ -153,69 +153,15 @@ const SideNav = () => {
     return true;
   });
 
-  const arr = [
-    {
-      address: 'Lagos',
-      businessCategory: 2,
-      city: '',
-      contactEmailAddress: '',
-      contactPhoneNumber: '',
-      cooperateID: 'aed6bf03-5c1a-4654-bd06-71fe4bc4607f',
-      dateCreated: '2024-03-30T21:56:38.5837607',
-      dateUpdated: '2024-03-30T21:56:38.5838341',
-      id: '5ae4ad45-b94b-4060-a407-897ff8dad559',
-      identificationImage: '',
-      identificationImageReference: 'string',
-      isVerified: false,
-      logoImage: '',
-      logoImageReference: 'string',
-      name: 'Oga Ade',
-      nin: 'string',
-      primaryBrandColour: '#EAE5FF',
-      resistrationCertificateImage: '',
-      resistrationCertificateImageReference: 'string',
-      resistrationNumber: 'string',
-      secondaryBrandColour: 'string',
-      state: '',
-      verificationDate: '0001-01-01T00:00:00',
-      verificationOfficer: '',
-      verificationRemark: '',
-      verificationStage: 0,
-    },
-    {
-      address: 'Abuja',
-      businessCategory: 3,
-      city: '',
-      contactEmailAddress: '',
-      contactPhoneNumber: '',
-      cooperateID: 'aed6bf03-5c1a-4654-bd06-71fe4bc4607f',
-      dateCreated: '2024-03-30T21:56:38.5837607',
-      dateUpdated: '2024-03-30T21:56:38.5838341',
-      id: '5ae4ad45-b94b-4060-a407-897ff8dad558',
-      identificationImage: '',
-      identificationImageReference: 'string',
-      isVerified: true,
-      logoImage: '',
-      logoImageReference: 'string',
-      name: 'Olajide',
-      nin: 'string',
-      primaryBrandColour: '#EAE5FF',
-      resistrationCertificateImage: '',
-      resistrationCertificateImageReference: 'string',
-      resistrationNumber: 'string',
-      secondaryBrandColour: 'string',
-      state: '',
-      verificationDate: '0001-01-01T00:00:00',
-      verificationOfficer: '',
-      verificationRemark: '',
-      verificationStage: 0,
-    },
-  ];
+  const [isOpenBusinessModal, setIsOpenBusinessModal] = useState(false);
+  const toggleBusinessModal = () => {
+    setIsOpenBusinessModal(!isOpenBusinessModal);
+  };
 
   return (
     <div className='md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex'>
       <div className='flex flex-col  w-full'>
-        <div className='h-[83%] scrollbarstyles overflow-y-scroll'>
+        <div className=' scrollbarstyles mb-3 overflow-y-scroll'>
           <Link
             prefetch={true}
             href='/dashboard'
@@ -234,117 +180,123 @@ const SideNav = () => {
           </div>
         </div>
 
-        <Divider className='bg-[#27272A]  w-[90%] mx-auto h-[1px]' />
-        <Dropdown
-          style={{
-            width: '245px',
-          }}
-          classNames={{
-            content: 'bg-[#2B3342] mb-3',
-          }}
-        >
-          <DropdownTrigger>
-            {isLoading ? (
-              <div className='w-full flex items-center gap-3  mt-7 px-5'>
-                <div>
-                  <Skeleton className='animate-pulse flex rounded-full w-12 h-12' />
-                </div>
-                <div className='w-full flex flex-col gap-2 '>
-                  <Skeleton className='animate-pulse h-2 w-3/5 rounded-lg' />
-                  <Skeleton className='animate-pulse h-2 w-4/5 rounded-lg' />
-                </div>
-              </div>
-            ) : (
-              <div className='flex cursor-pointer justify-center items-center mt-7 gap-4 w-full '>
-                <div>
-                  <Avatar
-                    isBordered
-                    src={`data:image/jpeg;base64,${businessDetails?.logoImage}`}
-                    showFallback={true}
-                    name={business[0]?.businessName}
-                  />
-                </div>
-                <div className='flex flex-col w-[45%]'>
-                  <span className='text-[14px] font-[600]'>
-                    {business[0]?.businessName}
-                  </span>
-                  <div className='text-[12px]  font-[400] pr-5'>
-                    {business[0]?.city}
-                    {business[0]?.city && ','} {business[0]?.state}
+        <div className='absolute bottom-0 bg-black w-full '>
+          <Divider className='bg-[#27272A] mx-auto h-[1px] w-[90%]' />
+          <Dropdown
+            style={{
+              width: '245px',
+            }}
+            classNames={{
+              content: 'bg-[#2B3342] mb-3',
+            }}
+          >
+            <DropdownTrigger>
+              {isLoading ? (
+                <div className='w-full flex items-center gap-3   px-5 py-8'>
+                  <div>
+                    <Skeleton className='animate-pulse flex rounded-full w-12 h-12' />
+                  </div>
+                  <div className='w-full flex flex-col gap-2 '>
+                    <Skeleton className='animate-pulse h-2 w-3/5 rounded-lg' />
+                    <Skeleton className='animate-pulse h-2 w-4/5 rounded-lg' />
                   </div>
                 </div>
-                <div className='cursor-pointer'>
-                  <IoIosArrowDown className='text-[20px]' />
-                </div>
-              </div>
-            )}
-          </DropdownTrigger>
-          <DropdownMenu
-            variant='light'
-            aria-label='Dropdown menu to switch businesses'
-          >
-            {userInformation?.isOwner &&
-              businessDetailsList?.map((item: any) => {
-                return (
-                  <DropdownItem
-                    classNames={{
-                      base: 'hover:bg-none max-h-[100px] overflow-scroll',
-                    }}
-                    key={item?.id}
-                    onClick={() => toggleBtwBusiness(item)}
-                  >
-                    <div className='flex items-center gap-3'>
-                      <Avatar
-                        showFallback={true}
-                        src={`data:image/jpeg;base64,${item?.logoImage}`}
-                        name={item?.name}
-                      />
-                      <div className='flex flex-col'>
-                        <span className='font-[500] text-[14px]'>
-                          {item?.name}
-                        </span>
-
-                        <span className='text-xs text-secondaryGrey'>
-                          {item?.city}
-                        </span>
-                      </div>
+              ) : (
+                <div className='flex cursor-pointer justify-center items-center px-5 py-8 gap-4 w-full '>
+                  <div>
+                    <Avatar
+                      isBordered
+                      src={`data:image/jpeg;base64,${businessDetails?.logoImage}`}
+                      showFallback={true}
+                      name={business[0]?.businessName}
+                    />
+                  </div>
+                  <div className='flex flex-col w-[45%]'>
+                    <span className='text-[14px] font-[600]'>
+                      {business[0]?.businessName}
+                    </span>
+                    <div className='text-[12px]  font-[400] pr-5'>
+                      {business[0]?.city}
+                      {business[0]?.city && ','} {business[0]?.state}
                     </div>
-                  </DropdownItem>
-                );
-              })}
+                  </div>
+                  <div className='cursor-pointer'>
+                    <IoIosArrowDown className='text-[20px]' />
+                  </div>
+                </div>
+              )}
+            </DropdownTrigger>
+            <DropdownMenu
+              variant='light'
+              aria-label='Dropdown menu to switch businesses'
+            >
+              {userInformation?.isOwner &&
+                businessDetailsList?.map((item: any) => {
+                  return (
+                    <DropdownItem
+                      classNames={{
+                        base: 'hover:bg-none max-h-[100px] overflow-scroll',
+                      }}
+                      key={item?.id}
+                      onClick={() => toggleBtwBusiness(item)}
+                    >
+                      <div className='flex items-center gap-3'>
+                        <Avatar
+                          showFallback={true}
+                          src={`data:image/jpeg;base64,${item?.logoImage}`}
+                          name={item?.name}
+                        />
+                        <div className='flex flex-col'>
+                          <span className='font-[500] text-[14px]'>
+                            {item?.name}
+                          </span>
 
-            {userInformation?.isOwner && (
+                          <span className='text-xs text-secondaryGrey'>
+                            {item?.city}
+                          </span>
+                        </div>
+                      </div>
+                    </DropdownItem>
+                  );
+                })}
+
+              {userInformation?.isOwner && (
+                <DropdownItem
+                  key='add another business'
+                  onClick={toggleBusinessModal}
+                >
+                  <div className='flex items-center gap-3 '>
+                    <div className='p-2 rounded-md bg-[#7182A3]'>
+                      <GoPlus className='text-[20px] font-[700]' />
+                    </div>
+                    <span className='font-[500] text-[14px]'>
+                      Add another business
+                    </span>
+                  </div>
+                </DropdownItem>
+              )}
               <DropdownItem
-                key='add another business'
-
-                // onClick={onOpenChange}
+                key='logout'
+                className='text-danger'
+                color='danger'
+                onClick={onOpenChange}
               >
                 <div className='flex items-center gap-3 '>
-                  <div className='p-2 rounded-md bg-[#7182A3]'>
-                    <GoPlus className='text-[20px] font-[700]' />
+                  <div className='p-2 rounded-md'>
+                    <FiLogOut className='text-[20px]' />
                   </div>
-                  <span className='font-[500] text-[14px]'>
-                    Add another business
-                  </span>
+                  <span className='font-[500] text-[14px]'>Logout</span>
                 </div>
               </DropdownItem>
-            )}
-            <DropdownItem
-              key='logout'
-              className='text-danger'
-              color='danger'
-              onClick={onOpenChange}
-            >
-              <div className='flex items-center gap-3 '>
-                <div className='p-2 rounded-md'>
-                  <FiLogOut className='text-[20px]' />
-                </div>
-                <span className='font-[500] text-[14px]'>Logout</span>
-              </div>
-            </DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
+            </DropdownMenu>
+          </Dropdown>
+        </div>
       </div>
+      <AddBusiness
+        refetch={refetch}
+        toggleBusinessModal={toggleBusinessModal}
+        isOpenBusinessModal={isOpenBusinessModal}
+      />
       <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
     </div>
   );
@@ -406,7 +358,11 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
             item.path === pathname ? 'bg-[#2B3342]' : ''
           }`}
         >
-          <Image src={item.icon} alt={item.title} />
+          {item.title === 'Menu' ? (
+            <PiBookOpenTextLight className='font-bold text-xl' />
+          ) : (
+            <Image src={item.icon} alt={item.title} />
+          )}
 
           <span className='font-[400] text-[14px] flex'>{item.title}</span>
         </Link>

@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
 const SignupForm = () => {
   const router = useRouter();
-  const { setUserData } = useGlobalContext();
+  const { setUserData, setExpireTime } = useGlobalContext();
 
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
@@ -43,6 +43,7 @@ const SignupForm = () => {
     setResponse(data);
 
     if (data?.data?.isSuccessful) {
+      setExpireTime(new Date(data.data.data));
       router.push('/auth/confirm-email');
     } else if (data?.data?.error) {
       notify({
@@ -59,7 +60,7 @@ const SignupForm = () => {
         <CustomInput
           type='text'
           name='firstName'
-          label='First name'
+          label='First Name'
           errorMessage={response?.errors?.firstName?.[0]}
           onChange={handleInputChange}
           value={signupFormData.firstName}
@@ -72,13 +73,13 @@ const SignupForm = () => {
           errorMessage={response?.errors?.lastName?.[0]}
           onChange={handleInputChange}
           value={signupFormData.lastName}
-          label='Last name'
+          label='Last Name'
           placeholder='Last name'
         />
       </div>
       <Spacer y={6} />
       <CustomInput
-        type='email'
+        type='text'
         name='email'
         errorMessage={response?.errors?.email?.[0]}
         onChange={handleInputChange}

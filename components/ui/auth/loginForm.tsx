@@ -1,5 +1,4 @@
 'use client';
-import { TOKEN_EXPIRY_DURATION } from '@/app/api/apiService';
 import { loginUser } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
@@ -44,10 +43,7 @@ const LoginForm = () => {
 
     setLoading(false);
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage('userInformation', {
-        ...data?.data?.data,
-        tokenExpiry: Date.now() + TOKEN_EXPIRY_DURATION,
-      });
+      saveJsonItemToLocalStorage('userInformation', data?.data?.data);
       setLoginDetails(loginFormData);
       saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
       setTokenCookie('token', data?.data?.data.token);
@@ -70,7 +66,7 @@ const LoginForm = () => {
   return (
     <form onSubmit={submitFormData} autoComplete='off'>
       <CustomInput
-        type='email'
+        type='text'
         name='email'
         errorMessage={response?.errors?.email?.[0]}
         onChange={handleInputChange}

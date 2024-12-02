@@ -1,3 +1,4 @@
+'use client'
 import dynamic from 'next/dynamic';
 
 const DynamicMetaTag = dynamic(() => import('@/components/dynamicMetaTag'), {

@@ -1,5 +1,4 @@
 'use client';
-import { TOKEN_EXPIRY_DURATION } from '@/app/api/apiService';
 import {
   getBusinessDetails,
   loginUserSelectedBusiness,
@@ -26,10 +25,7 @@ const SelectBusinessForm = () => {
   const callLogin = async (businessId: string) => {
     const data = await loginUserSelectedBusiness(loginDetails, businessId);
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage('userInformation', {
-        ...data?.data?.data,
-        tokenExpiry: Date.now() + TOKEN_EXPIRY_DURATION,
-      });
+      saveJsonItemToLocalStorage('userInformation', data?.data?.data);
 
       setTokenCookie('token', data?.data?.data.token);
       router.push('/dashboard');
@@ -71,6 +67,7 @@ const SelectBusinessForm = () => {
         return (
           <ScrollShadow size={10} className='w-full max-h-[350px]'>
             <article
+              key={item.id}
               className={`bg-[#F1F2F480] rounded-xl p-3 cursor-pointer ${
                 isLoading &&
                 item.name === business?.name &&

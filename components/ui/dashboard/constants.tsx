@@ -29,8 +29,8 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
     icon: Orders,
   },
   {
-    title: 'QR Code',
-    path: '/dashboard/qr-code',
+    title: 'Quick Response',
+    path: '/dashboard/quick-response',
     icon: QRCode,
   },
   {
@@ -73,9 +73,11 @@ export const headerRouteMapping = {
     title: 'Orders',
     icon: <Image src={Orders} className='dashboardLogo' alt='order logo' />,
   },
-  'qr-code': {
-    title: 'QR Code',
-    icon: <Image src={QRCode} className='dashboardLogo' alt='Qr code logo' />,
+  'quick-response': {
+    title: 'Quick Response',
+    icon: (
+      <Image src={QRCode} className='dashboardLogo' alt='Quick response logo' />
+    ),
   },
   reservation: {
     title: 'Reservation',
