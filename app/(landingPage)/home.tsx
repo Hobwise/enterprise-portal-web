@@ -132,23 +132,6 @@ export default function HomeComponent() {
 
         <Demo />
 
-        {/* <section className="bg-[#5F35D2] py-10 lg:py-20 font-satoshi space-y-4 lg:space-y-8 px-6 lg:px-12 price-plan-section relative">
-          <Image src={PricePlan} alt="" className="absolute top-0 w-[90%]" priority />
-          <Transition>
-            <div className="bg-[#703CFF] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom-inset">
-              <TagIcon />
-              <p className="font-normal text-white">Pricing Plan</p>
-            </div>
-
-            <div className="w-[85%] mx-auto text-satoshi space-y-2">
-              <h2 className="text-[24px] lg:text-[40px] text-white lg:leading-[64px] font-bricolage_grotesque">Plans That Fit Your Business</h2>
-              <p className="text-[#ACB5BB] text-sm lg:text-base">From startups to enterprises, find the right solution to streamline your HR processes</p>
-            </div>
-          </Transition>
-
-          <PricingComponent />
-        </section> */}
-
         <FAQs />
 
         <JoinCommunity />

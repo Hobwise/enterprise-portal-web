@@ -40,7 +40,7 @@ export default function Pricing() {
             <Companies type="min" />
           </div>
 
-          <div className="space-y-4 pb-24">
+          {/* <div className="space-y-4 pb-24">
             <div className="lg:mt-24 space-y-4">
               <div className="bg-[#9F7CFE] border border-white/30 flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full shadow-custom_inset_2">
                 <SettingsIcon className="text-white" />
@@ -56,14 +56,12 @@ export default function Pricing() {
             </div>
 
             <PricingExtended plan={plan} setPlan={setPlan} />
-          </div>
+          </div> */}
         </section>
 
-        <section className="bg-white pt-12 lg:pt-20 px-6 lg:px-12 text-center">
+        <section className="bg-white py-12 lg:py-20 px-6 lg:px-12 text-center">
           <BestToolsComponent />
         </section>
-
-        <FAQs className="pt-10 lg:pt-20" />
 
         <section className="text-center">
           <JoinCommunity className="mt-0" />

@@ -10,7 +10,6 @@ import { CustomTextArea } from '@/components/customTextArea';
 import { CustomButton } from '@/components/customButton';
 import FAQs from '@/components/ui/landingPage/faq';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
-import { Transition } from '@/components/ui/landingPage/transition';
 import Footer from '@/components/ui/landingPage/footer';
 import { useState } from 'react';
 import { notify, validateEmail } from '@/lib/utils';
@@ -78,7 +77,7 @@ export default function Contact() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white lg:bg-[#DDD1FF] px-8 py-10 rounded-b-xl">
-              <form autoComplete="off" className="">
+              <form autoComplete="off" className="space-y-6">
                 <CustomInput
                   type="text"
                   name="name"
