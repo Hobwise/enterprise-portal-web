@@ -12,6 +12,8 @@ import { RESERVATIONS_URL } from '@/utilities/routes';
 import Footer from '@/components/ui/landingPage/footer';
 import { formatNumber, getInitials2, notify, validateEmail } from '@/lib/utils';
 import { BookReservationApi } from '@/app/api/controllers/landingPage';
+import { IoCall } from 'react-icons/io5';
+import { MdEmail } from 'react-icons/md';
 
 interface IDetails {
   firstName: string;
@@ -278,6 +280,22 @@ export default function BookReservation() {
               <CustomButton className={btnClassName} onClick={handleBookReservation} loading={isLoading}>
                 Book Reservation
               </CustomButton>
+            </div>
+
+            <div className="text-[#161618] border border-[#E4E7EC] py-2 px-4 rounded-lg space-y-2">
+              <p className="font-semibold">Locate {reservation?.businessName || '-'}</p>
+              <div className="flex space-x-2 items-center">
+                <LocationIcon />
+                <p>{reservation?.businessAddress || '-'}</p>
+              </div>
+              <div className="flex space-x-2 items-center">
+                <IoCall color="848E9E" />
+                <p>{reservation?.businessPhoneNumber || '-'}</p>
+              </div>
+              <div className="flex space-x-2 items-center">
+                <MdEmail color="848E9E" />
+                <p>{reservation?.businessEmailAddress || '-'}</p>
+              </div>
             </div>
           </div>
         </div>
