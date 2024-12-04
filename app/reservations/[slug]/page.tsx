@@ -5,15 +5,15 @@ import { CustomTextArea } from '@/components/customTextArea';
 import { ArrowLeftIcon, ArrowRightIcon, InfoCircle, LocationIcon } from '@/public/assets/svg';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
-import { Modal, ModalBody, ModalContent } from '@nextui-org/react';
+import { Modal, ModalBody, ModalContent, Select, SelectItem, Selection } from '@nextui-org/react';
 import CheckImage from '@/public/assets/images/success-image.png';
 import { redirect, usePathname, useRouter } from 'next/navigation';
 import { RESERVATIONS_URL } from '@/utilities/routes';
 import Footer from '@/components/ui/landingPage/footer';
-import { formatNumber, getInitials2, notify, validateEmail } from '@/lib/utils';
+import { cn, convertToISO, formatNumber, formatTo12Hour, generateTimeSlots, getInitials2, notify, validateEmail } from '@/lib/utils';
 import { BookReservationApi } from '@/app/api/controllers/landingPage';
 import { IoCall } from 'react-icons/io5';
-import { MdEmail } from 'react-icons/md';
+import { MdEmail, MdTimer } from 'react-icons/md';
 
 interface IDetails {
   firstName: string;
@@ -21,8 +21,9 @@ interface IDetails {
   emailAddress: string;
   bookingDateTime: string;
   description: string;
+  time: string;
 }
-const defaultValues = { firstName: '', lastName: '', emailAddress: '', bookingDateTime: '', description: '' };
+const defaultValues = { firstName: '', lastName: '', emailAddress: '', bookingDateTime: '', description: '', time: '' };
 
 export default function BookReservation() {
   const { back } = useRouter();
@@ -30,6 +31,7 @@ export default function BookReservation() {
   const pathname = usePathname();
   const pathnameLength = pathname.split('/').length;
   const [quantity, setQuantity] = useState<number>(1);
+  const [selectedTime, setSelectedTime] = useState<Selection>(new Set([]));
   const [details, setDetails] = useState<IDetails>(defaultValues);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<IDetails>(defaultValues);
@@ -60,14 +62,19 @@ export default function BookReservation() {
     if (!details.emailAddress || !validateEmail(details.emailAddress)) {
       setError((prev) => ({ ...prev, emailAddress: 'Please enter a valid email address.' }));
     }
-    if (!details.bookingDateTime) {
+    if (!details.bookingDateTime || !Array.from(selectedTime).join(', ')) {
       setError((prev) => ({ ...prev, bookingDateTime: 'Preferred date and time is compulsory' }));
+    }
+    if (!details.time) {
+      setError((prev) => ({ ...prev, time: 'Time is compulsory' }));
     }
     if (details.firstName && details.lastName && details.emailAddress && validateEmail(details.emailAddress) && details.bookingDateTime) {
       setIsLoading(true);
+      const { time, ...others } = details;
+
       const updateDetails = {
-        ...details,
-        bookingDateTime: new Date(details.bookingDateTime).toISOString(),
+        ...others,
+        bookingDateTime: convertToISO(details.bookingDateTime, Array.from(selectedTime).join(', ')),
         reservationId: reservation?.id,
         cooperateId: reservation?.cooperateID,
         businessId: reservation?.businessID,
@@ -89,6 +96,15 @@ export default function BookReservation() {
       }
     }
   };
+
+  const currentSelection: string = Array.from(selectedTime).join(', ');
+
+  useEffect(() => {
+    if (selectedTime) {
+      setDetails((prev) => ({ ...prev, time: Array.from(selectedTime).join(', ') }));
+      setError((prev) => ({ ...prev, time: '' }));
+    }
+  }, [selectedTime]);
 
   return (
     <div className="font-satoshi px-6 lg:px-24 space-y-4 mt-8">
@@ -123,7 +139,7 @@ export default function BookReservation() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
-          <div>
+          <div className="space-y-8">
             <form autoComplete="off" className="block">
               <div className="flex space-x-8">
                 <CustomInput
@@ -133,7 +149,10 @@ export default function BookReservation() {
                   placeholder="Enter your first name"
                   defaultValue={details.firstName}
                   value={details.firstName}
-                  onChange={({ target }: any) => setDetails((prev) => ({ ...prev, firstName: target.value }))}
+                  onChange={({ target }: any) => {
+                    setError((prev) => ({ ...prev, firstName: '' }));
+                    setDetails((prev) => ({ ...prev, firstName: target.value }));
+                  }}
                   errorMessage={error.firstName}
                 />
                 <CustomInput
@@ -143,7 +162,10 @@ export default function BookReservation() {
                   placeholder="Enter your last name"
                   defaultValue={details.lastName}
                   value={details.lastName}
-                  onChange={({ target }: any) => setDetails((prev) => ({ ...prev, lastName: target.value }))}
+                  onChange={({ target }: any) => {
+                    setError((prev) => ({ ...prev, lastName: '' }));
+                    setDetails((prev) => ({ ...prev, lastName: target.value }));
+                  }}
                   errorMessage={error.lastName}
                 />
               </div>
@@ -155,20 +177,49 @@ export default function BookReservation() {
                 classnames="mt-6"
                 defaultValue={details.emailAddress}
                 value={details.emailAddress}
-                onChange={({ target }: any) => setDetails((prev) => ({ ...prev, emailAddress: target.value }))}
+                onChange={({ target }: any) => {
+                  setError((prev) => ({ ...prev, emailAddress: '' }));
+                  setDetails((prev) => ({ ...prev, emailAddress: target.value }));
+                }}
                 errorMessage={error.emailAddress}
               />
-              <CustomInput
-                name="date"
-                type="datetime-local"
-                label="Reservation date"
-                placeholder="DD/MM/YY, 00 : 00 AM"
-                classnames="mt-6"
-                defaultValue={details.bookingDateTime}
-                value={details.bookingDateTime}
-                onChange={({ target }: any) => setDetails((prev) => ({ ...prev, bookingDateTime: target.value }))}
-                errorMessage={error.bookingDateTime}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <CustomInput
+                  name="date"
+                  type="date"
+                  // type="datetime-local"
+                  label="Reservation date"
+                  placeholder="DD/MM/YY, 00 : 00 AM"
+                  classnames="mt-6"
+                  defaultValue={details.bookingDateTime}
+                  value={details.bookingDateTime}
+                  onChange={({ target }: any) => {
+                    setError((prev) => ({ ...prev, bookingDateTime: '' }));
+                    setDetails((prev) => ({ ...prev, bookingDateTime: target.value }));
+                  }}
+                  errorMessage={error.bookingDateTime}
+                />
+
+                <div className="space-y-2.5 mt-5">
+                  <p className="text-[#000] font-[500] text-[14px]">Reservation time</p>
+                  <Select
+                    label=""
+                    className="w-full"
+                    variant="bordered"
+                    size="lg"
+                    labelPlacement="inside"
+                    selectedKeys={selectedTime}
+                    onSelectionChange={setSelectedTime}
+                    placeholder="Select Time"
+                    errorMessage={error.time ? 'You must select a reservation time' : ''}
+                    isInvalid={error.time ? true : false}
+                  >
+                    {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 1).map((each) => (
+                      <SelectItem key={each || ''}>{each}</SelectItem>
+                    ))}
+                  </Select>
+                </div>
+              </div>
               <div className="mt-4">
                 <CustomTextArea
                   name="description"
@@ -176,7 +227,10 @@ export default function BookReservation() {
                   placeholder="Describe your reservation"
                   defaultValue={details.description}
                   value={details.description}
-                  onChange={({ target }: any) => setDetails((prev) => ({ ...prev, description: target.value }))}
+                  onChange={({ target }: any) => {
+                    setError((prev) => ({ ...prev, description: '' }));
+                    setDetails((prev) => ({ ...prev, description: target.value }));
+                  }}
                   errorMessage={error.description}
                 />
               </div>
@@ -186,6 +240,32 @@ export default function BookReservation() {
                 </CustomButton>
               </div>
             </form>
+
+            <div className="space-y-4">
+              <p className="text-[#161618] text-xs font-medium">
+                Restaurant opens from{' '}
+                <span className="font-bold">
+                  {formatTo12Hour(reservation?.startDate) || '10:00AM'} to {formatTo12Hour(reservation?.endDate) || '10:00PM'}
+                </span>
+              </p>
+
+              <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
+                {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 2).map((each) => (
+                  <div
+                    className={cn(
+                      'bg-primaryColor text-white rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor',
+                      currentSelection === each && 'bg-white text-primaryColor'
+                    )}
+                    key={each}
+                    onClick={() => setSelectedTime(new Set([each || '']))}
+                    role="button"
+                  >
+                    <MdTimer />
+                    <p className="">{each}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div className="lg:space-y-6 space-y-6 lg:-mt-16">

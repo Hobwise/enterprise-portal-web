@@ -11,7 +11,7 @@ import ReservationCard from '@/components/ui/landingPage/reservationCard';
 import { LoadingReservations } from '@/components/ui/landingPage/skeleton-loading';
 import { Select, SelectItem } from '@nextui-org/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/ui/customPagination';
 import Image from 'next/image';
 import EmptyIcon from '@/public/assets/images/empty-image.png';
 import { useQuery } from 'react-query';

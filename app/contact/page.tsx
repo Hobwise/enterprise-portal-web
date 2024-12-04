@@ -13,8 +13,8 @@ import DashboardImage from '@/public/assets/images/dashboard-image-2.png';
 import { ContactIcon } from '@/public/assets/svg';
 import Image from 'next/image';
 import { useState } from 'react';
-import { toast } from 'react-toastify';
 import { ContactUs } from '../api/controllers/landingPage';
+import { toast } from 'sonner';
 
 export default function Contact() {
   const defaultErrorValue = { name: '', email: '', message: '' };
@@ -120,7 +120,7 @@ export default function Contact() {
                   name="question"
                   label="What’s your question?"
                   placeholder="Describe your questions here.."
-                  classnames="font-light pt-6"
+                  classnames="font-light"
                   defaultValue=""
                   value={contactInfo.message}
                   onChange={({ target }: any) => {
