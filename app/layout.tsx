@@ -13,23 +13,16 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { companyInfo } from '../lib/companyInfo';
 import './globals.css';
+import { Toaster as SonnerToast } from 'sonner';
 
 export const metadata = {
   title: companyInfo.name,
   description: 'Streamline your business processes',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang='en'
-      className={` ${bricolage_grotesque.className}`}
-      suppressHydrationWarning
-    >
+    <html lang="en" className={` ${bricolage_grotesque.className}`} suppressHydrationWarning>
       <body>
         <QueryProvider>
           <AppProvider>
@@ -52,7 +45,8 @@ export default function RootLayout({
                   },
                 }}
               />
-              <ToastContainer theme='light' />
+              <ToastContainer theme="light" />
+              <SonnerToast closeButton duration={2500} richColors />
             </Providers>
           </AppProvider>
         </QueryProvider>

@@ -4,11 +4,7 @@ import FedEx from '@/public/assets/icons/fedex.png';
 import Google from '@/public/assets/icons/google.png';
 import Hubspot from '@/public/assets/icons/hubspot.png';
 import Microsoft from '@/public/assets/icons/microsoft.png';
-import {
-  CalendarDateTime,
-  parseAbsolute,
-  parseZonedDateTime,
-} from '@internationalized/date';
+import { CalendarDateTime, parseAbsolute, parseZonedDateTime } from '@internationalized/date';
 import { clsx, type ClassValue } from 'clsx';
 import download from 'downloadjs';
 import { toPng } from 'html-to-image';
@@ -26,15 +22,13 @@ export const cn = (...inputs: ClassValue[]) => {
 };
 export function capitalizeFirstLetterOfEachWord(str: string): string {
   return str
-    .split(" ")
+    .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    .join(' ');
 }
 
 export const saveToLocalStorage = (name, itemToSave) => {
-  return typeof window !== 'undefined'
-    ? localStorage.setItem(name, itemToSave)
-    : false;
+  return typeof window !== 'undefined' ? localStorage.setItem(name, itemToSave) : false;
 };
 export const getFromLocalStorage = (name) => {
   return typeof window !== 'undefined' ? localStorage.getItem(name) : false;
@@ -44,15 +38,10 @@ export const clearItemLocalStorage = (name) => {
   return typeof window !== 'undefined' ? localStorage.removeItem(name) : false;
 };
 export const getJsonItemFromLocalStorage = (name) => {
-  return typeof window !== 'undefined'
-    ? JSON.parse(localStorage.getItem(name))
-    : false;
+  return typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(name)) : false;
 };
 
-export const saveJsonItemToLocalStorage = (
-  name: string,
-  itemToSave: any
-): void => {
+export const saveJsonItemToLocalStorage = (name: string, itemToSave: any): void => {
   localStorage.setItem(name, JSON.stringify(itemToSave));
 };
 
@@ -61,7 +50,7 @@ export const formatSubscriptionEndDate = (date: string): string => {
   if (!moment(date, 'MMMM Do YYYY, h:mm:ss a', true).isValid()) {
     return 'Invalid Date';
   }
-  
+
   // Convert and format the date
   return moment(date, 'MMMM Do YYYY, h:mm:ss a').format('MM/DD/YYYY hh:mmA');
 };
@@ -75,11 +64,7 @@ export const formatSubscriptionEndDate = (date: string): string => {
 //   });
 // };
 
-export const setTokenCookie = (
-  name: string,
-  value: string,
-  options?: cookie.CookieAttributes
-) => {
+export const setTokenCookie = (name: string, value: string, options?: cookie.CookieAttributes) => {
   if (typeof window !== 'undefined') {
     cookie.set(name, value, options);
   }
@@ -99,13 +84,7 @@ export const removeCookie = (name: string) => {
 };
 
 type ToastData = {
-  position:
-    | 'top-right'
-    | 'top-left'
-    | 'top-center'
-    | 'bottom-right'
-    | 'bottom-left'
-    | 'bottom-center';
+  position: 'top-right' | 'top-left' | 'top-center' | 'bottom-right' | 'bottom-left' | 'bottom-center';
   autoClose: number | false;
   hideProgressBar: boolean;
   closeOnClick: boolean;
@@ -134,16 +113,14 @@ interface notifyType {
 const Msg = ({ title, text }: { title: string; text: string }) => {
   return (
     <div>
-      <p className='font-bold text-[17px] pb-1'>{title}</p>
+      <p className="font-bold text-[17px] pb-1">{title}</p>
       <p>{text}</p>
     </div>
   );
 };
 export const notify = ({ title, text, type }: notifyType) => {
-  type === 'warning' &&
-    toast.warn(<Msg title={title} text={text} />, toastData);
-  type === 'success' &&
-    toast.success(<Msg title={title} text={text} />, toastData);
+  type === 'warning' && toast.warn(<Msg title={title} text={text} />, toastData);
+  type === 'success' && toast.success(<Msg title={title} text={text} />, toastData);
   type === 'error' && toast.error(<Msg title={title} text={text} />, toastData);
 };
 export function getInitials(name: string) {
@@ -154,10 +131,7 @@ export function getInitials(name: string) {
 export const ONEMB = 1048576;
 export const THREEMB = 3145728;
 export const convertBase64ToImageURL = (base64String: string) => {
-  const base64WithoutPrefix = base64String.replace(
-    /^data:image\/[a-z]+;base64,/,
-    ''
-  );
+  const base64WithoutPrefix = base64String.replace(/^data:image\/[a-z]+;base64,/, '');
 
   const byteCharacters = atob(base64WithoutPrefix);
   const byteArrays = [];
@@ -186,25 +160,14 @@ export const imageCompressOptions = {
 
 export const CustomLoading = () => {
   return (
-    <div
-      className={`absolute top-0 left-0 w-full h-full  flex flex-col justify-center items-center`}
-    >
-      <div className='animate-bounce'>
-        <Image
-          src={LoadingAvatar}
-          style={{ objectFit: 'cover' }}
-          alt={`${companyInfo.name} logo`}
-          className='w-[60px] h-[60px]'
-        />
+    <div className={`absolute top-0 left-0 w-full h-full  flex flex-col justify-center items-center`}>
+      <div className="animate-bounce">
+        <Image src={LoadingAvatar} style={{ objectFit: 'cover' }} alt={`${companyInfo.name} logo`} className="w-[60px] h-[60px]" />
       </div>
-      <div className='leading-tight flex flex-col text-center'>
-        <span className=' font-[600] text-[24px]   text-black'>
-          Hang on a Sec!
-        </span>
+      <div className="leading-tight flex flex-col text-center">
+        <span className=" font-[600] text-[24px]   text-black">Hang on a Sec!</span>
 
-        <span className='text-sm font-[400]    text-[#475367] '>
-          Just a moment...
-        </span>
+        <span className="text-sm font-[400]    text-[#475367] ">Just a moment...</span>
       </div>
     </div>
   );
@@ -241,24 +204,12 @@ export const downloadQRImage = async (qrObject, qrRef) => {
 // };
 export const SmallLoader = () => {
   return (
-    <svg
-      className='animate-spin h-5 w-5 text-current'
-      fill='none'
-      viewBox='0 0 24 24'
-      xmlns='http://www.w3.org/2000/svg'
-    >
-      <circle
-        className='opacity-25'
-        cx='12'
-        cy='12'
-        r='10'
-        stroke='currentColor'
-        strokeWidth='4'
-      />
+    <svg className="animate-spin h-5 w-5 text-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
-        className='opacity-75'
-        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-        fill='currentColor'
+        className="opacity-75"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        fill="currentColor"
       />
     </svg>
   );
@@ -322,62 +273,30 @@ export const reverseFormatDateTime = (formattedDate) => {
   if (formattedDate === undefined) {
     return null;
   }
-  const dateString = formattedDate?.endsWith('Z')
-    ? formattedDate
-    : formattedDate + 'Z';
+  const dateString = formattedDate?.endsWith('Z') ? formattedDate : formattedDate + 'Z';
   const parsedDate = parseAbsolute(dateString, 'UTC');
 
   const { year, month, day, hour, minute, second, millisecond } = parsedDate;
 
-  return new CalendarDateTime(
-    year,
-    month,
-    day,
-    hour,
-    minute,
-    second,
-    millisecond
-  );
+  return new CalendarDateTime(year, month, day, hour, minute, second, millisecond);
 };
 
 export const formatDateTimeForPayload = (dateTime) => {
   const { year, month, day, hour, minute, second, millisecond } = dateTime;
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(
+  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(
     2,
     '0'
-  )}T${String(hour).padStart(2, '0')}:${String(minute).padStart(
-    2,
-    '0'
-  )}:${String(second).padStart(2, '0')}.${String(millisecond).padStart(
-    3,
-    '0'
-  )}`;
+  )}:${String(second).padStart(2, '0')}.${String(millisecond).padStart(3, '0')}`;
 };
 export const formatDateTimeForPayload3 = (dateTime) => {
-  return `${dateTime?.year}-${String(dateTime?.month).padStart(
-    2,
-    '0'
-  )}-${String(dateTime?.day).padStart(2, '0')}`;
+  return `${dateTime?.year}-${String(dateTime?.month).padStart(2, '0')}-${String(dateTime?.day).padStart(2, '0')}`;
 };
 export const formatDateTimeForPayload2 = (dateTime) => {
-  const {
-    year,
-    month,
-    day,
-    hour = 0,
-    minute = 0,
-    second = 0,
-    millisecond = 0,
-  } = dateTime;
+  const { year, month, day, hour = 0, minute = 0, second = 0, millisecond = 0 } = dateTime;
 
-  const datePart = `${year}-${String(month).padStart(2, '0')}-${String(
-    day
-  ).padStart(2, '0')}`;
+  const datePart = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const timePart = `T${String(hour).padStart(2, '0')}:${String(minute).padStart(
-    2,
-    '0'
-  )}:${String(second).padStart(2, '0')}.${String(millisecond).padStart(
+  const timePart = `T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}.${String(millisecond).padStart(
     3,
     '0'
   )}`;
@@ -385,10 +304,7 @@ export const formatDateTimeForPayload2 = (dateTime) => {
   return datePart + timePart;
 };
 
-export const saveAsPDF = async (
-  invoiceRef: any,
-  filename: string = 'invoice.pdf'
-) => {
+export const saveAsPDF = async (invoiceRef: any, filename: string = 'invoice.pdf') => {
   const html2pdf = (await import('html2pdf.js/dist/html2pdf.min.js')).default;
   const element = invoiceRef.current;
   const options = {
@@ -402,10 +318,7 @@ export const saveAsPDF = async (
   html2pdf().from(element).set(options).save();
 };
 
-export const printPDF = async (
-  invoiceRef: any,
-  filename: string = 'invoice.pdf'
-) => {
+export const printPDF = async (invoiceRef: any, filename: string = 'invoice.pdf') => {
   const html2pdf = (await import('html2pdf.js/dist/html2pdf.min.js')).default;
   const element = invoiceRef.current;
   const options = {
@@ -459,15 +372,8 @@ export const encrypt = (text: any) => {
 };
 
 export const decrypt = (hash: any) => {
-  const decipher = crypto.createDecipheriv(
-    algorithm,
-    secretKey,
-    Buffer.from(hash.iv, 'hex')
-  );
-  const decrpyted = Buffer.concat([
-    decipher.update(Buffer.from(hash.content, 'hex')),
-    decipher.final(),
-  ]);
+  const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(hash.iv, 'hex'));
+  const decrpyted = Buffer.concat([decipher.update(Buffer.from(hash.content, 'hex')), decipher.final()]);
   return decrpyted.toString();
 };
 
@@ -532,26 +438,17 @@ export const validateEmail = (email: string) => {
   return emailRegex.test(email);
 };
 
-export const getInitials2 = (
-  businessName: string | undefined | null
-): string => {
+export const getInitials2 = (businessName: string | undefined | null): string => {
   if (!businessName) return '';
   const names = businessName.split(' ');
   const firstName = names[0] ?? '';
   const secondName = names[1] ?? '';
-  return `${
-    firstName && secondName
-      ? firstName[0] + secondName[0]
-      : firstName
-      ? firstName[0]
-      : ''
-  }`;
+  return `${firstName && secondName ? firstName[0] + secondName[0] : firstName ? firstName[0] : ''}`;
 };
 
 export function addCommasToNumber(number: number) {
-  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
-
 
 export function formatDate(dateString: string) {
   const date = new Date(dateString);
@@ -560,15 +457,51 @@ export function formatDate(dateString: string) {
   const month = date.toLocaleString('default', { month: 'short' });
   const year = date.getFullYear();
 
-  const dayWithSuffix =
-    day +
-    (day % 10 === 1 && day !== 11
-      ? 'st'
-      : day % 10 === 2 && day !== 12
-      ? 'nd'
-      : day % 10 === 3 && day !== 13
-      ? 'rd'
-      : 'th');
+  const dayWithSuffix = day + (day % 10 === 1 && day !== 11 ? 'st' : day % 10 === 2 && day !== 12 ? 'nd' : day % 10 === 3 && day !== 13 ? 'rd' : 'th');
 
   return `${dayWithSuffix} ${month}., ${year}`;
+}
+
+export function generateTimeSlots(start: string, end: string, interval: number) {
+  const times = [];
+  const startHour = parseInt(start.split(':')[0]);
+  const endHour = parseInt(end.split(':')[0]);
+
+  for (let hour = startHour; hour < endHour; hour += interval) {
+    const formattedTime = formatTo12Hour(hour);
+    times.push(formattedTime);
+  }
+  times.push(formatTo12Hour(endHour)); // Include the end time
+  return times;
+}
+
+export function formatTo12Hour(hour: number) {
+  if (hour) {
+    const isPM = hour >= 12;
+    const adjustedHour = hour % 12 === 0 ? 12 : hour % 12;
+    const period = isPM ? 'PM' : 'AM';
+    return `${adjustedHour}:00${period}`;
+  } else {
+    return null;
+  }
+}
+
+export function convertToISO(date: string, time: any) {
+  // Parse the time into hours and minutes
+  const [timePart, meridiem] = time.match(/(\d+:\d+)(AM|PM)/i).slice(1);
+  let [hours, minutes] = timePart.split(':').map(Number);
+
+  // Adjust hours based on AM/PM
+  if (meridiem.toUpperCase() === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (meridiem.toUpperCase() === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  // Combine into a Date object
+  const dateTime = new Date(date);
+  dateTime.setHours(hours + 1, minutes, 0, 0); // Set hours, minutes, and reset seconds/milliseconds
+
+  // Convert to ISO string
+  return dateTime.toISOString();
 }
