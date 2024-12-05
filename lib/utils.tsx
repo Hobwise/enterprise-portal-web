@@ -26,9 +26,9 @@ export const cn = (...inputs: ClassValue[]) => {
 };
 export function capitalizeFirstLetterOfEachWord(str: string): string {
   return str
-    .split(" ")
+    .split(' ')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+    .join(' ');
 }
 
 export const saveToLocalStorage = (name, itemToSave) => {
@@ -61,7 +61,7 @@ export const formatSubscriptionEndDate = (date: string): string => {
   if (!moment(date, 'MMMM Do YYYY, h:mm:ss a', true).isValid()) {
     return 'Invalid Date';
   }
-  
+
   // Convert and format the date
   return moment(date, 'MMMM Do YYYY, h:mm:ss a').format('MM/DD/YYYY hh:mmA');
 };
@@ -134,7 +134,7 @@ interface notifyType {
 const Msg = ({ title, text }: { title: string; text: string }) => {
   return (
     <div>
-      <p className='font-bold text-[17px] pb-1'>{title}</p>
+      <p className="font-bold text-[17px] pb-1">{title}</p>
       <p>{text}</p>
     </div>
   );
@@ -189,20 +189,20 @@ export const CustomLoading = () => {
     <div
       className={`absolute top-0 left-0 w-full h-full  flex flex-col justify-center items-center`}
     >
-      <div className='animate-bounce'>
+      <div className="animate-bounce">
         <Image
           src={LoadingAvatar}
           style={{ objectFit: 'cover' }}
           alt={`${companyInfo.name} logo`}
-          className='w-[60px] h-[60px]'
+          className="w-[60px] h-[60px]"
         />
       </div>
-      <div className='leading-tight flex flex-col text-center'>
-        <span className=' font-[600] text-[24px]   text-black'>
+      <div className="leading-tight flex flex-col text-center">
+        <span className=" font-[600] text-[24px]   text-black">
           Hang on a Sec!
         </span>
 
-        <span className='text-sm font-[400]    text-[#475367] '>
+        <span className="text-sm font-[400]    text-[#475367] ">
           Just a moment...
         </span>
       </div>
@@ -242,23 +242,23 @@ export const downloadQRImage = async (qrObject, qrRef) => {
 export const SmallLoader = () => {
   return (
     <svg
-      className='animate-spin h-5 w-5 text-current'
-      fill='none'
-      viewBox='0 0 24 24'
-      xmlns='http://www.w3.org/2000/svg'
+      className="animate-spin h-5 w-5 text-current"
+      fill="none"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
     >
       <circle
-        className='opacity-25'
-        cx='12'
-        cy='12'
-        r='10'
-        stroke='currentColor'
-        strokeWidth='4'
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
       />
       <path
-        className='opacity-75'
-        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-        fill='currentColor'
+        className="opacity-75"
+        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        fill="currentColor"
       />
     </svg>
   );
@@ -549,9 +549,8 @@ export const getInitials2 = (
 };
 
 export function addCommasToNumber(number: number) {
-  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
-
 
 export function formatDate(dateString: string) {
   const date = new Date(dateString);
@@ -571,4 +570,11 @@ export function formatDate(dateString: string) {
       : 'th');
 
   return `${dayWithSuffix} ${month}., ${year}`;
+}
+
+export function resetLoginInfo() {
+  sessionStorage.clear();
+  localStorage.clear();
+  removeCookie('token');
+  window.location.href = '/auth/login';
 }

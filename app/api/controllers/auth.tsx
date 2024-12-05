@@ -262,14 +262,17 @@ export async function loginUserSelectedBusiness(
     handleError(error);
   }
 }
-export async function generateRefreshToken(formData: any) {
-  try {
-    const data = await api.post(AUTH.refreshToken, formData);
+// export async function generateRefreshToken(formData: any) {
+//   try {
+//     const data = await api.post(AUTH.refreshToken, formData);
 
-    return data;
-  } catch (error) {
-    handleError(error);
-  }
+//     return data;
+//   } catch (error) {
+//     handleError(error);
+//   }
+// }
+export async function generateRefreshToken(formData: any) {
+  return api.post(AUTH.refreshToken, formData);
 }
 export async function forgetPassword(formData: any) {
   const validatedFields = forgetPasswordSchema.safeParse({
@@ -312,6 +315,15 @@ export async function changePassword(formData: any) {
     return data;
   } catch (error) {
     handleError(error);
+  }
+}
+export async function logout() {
+  try {
+    const data = await api.post(AUTH.logout);
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
   }
 }
 export async function getBusinessDetails(formData: any) {
