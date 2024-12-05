@@ -25,6 +25,10 @@ import usePagination from "@/hooks/usePagination";
 import CustomPagination from "./CustomPagination";
 
 const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
+
+  console.log("TABLE STUFF", subscriptions)
+
+
   const [filteredData, setFilteredData] = useState(subscriptions);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [invoiceDetails, setInvoiceDetails] = useState(null);
@@ -49,11 +53,11 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
       setTotalPages(Math.ceil(filtered.length / ITEMS_PER_PAGE));
     } else {
       setFilteredData(subscriptions);
-      setTotalPages(Math.ceil(subscriptions.length / ITEMS_PER_PAGE));
+      setTotalPages(Math.ceil(subscriptions?.length / ITEMS_PER_PAGE));
     }
   }, [searchQuery, subscriptions]);
 
-  const paginatedData = filteredData.slice(
+  const paginatedData = filteredData?.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
@@ -169,12 +173,12 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
   const downloadInvoice = (details: any) => {
     setInvoiceDetails(details);
     setDownloadClickedInvoice(true);
-    setDownloadingInvoiceId(details.id); // Set the specific invoice ID being downloaded
+    setDownloadingInvoiceId(details?.id); // Set the specific invoice ID being downloaded
 
  
     // Simulate an async operation (e.g., API call to download the invoice)
     setTimeout(() => {
-      console.log("Invoice downloaded:", details.id);
+      console.log("Invoice downloaded:", details?.id);
       setDownloadingInvoiceId(null); // Reset after the download completes
     }, 2000);
   };
@@ -215,7 +219,7 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody items={paginatedData} emptyContent={"No subscriptions found"}>
+        <TableBody items={paginatedData || []} emptyContent={"No subscriptions found"}>
           {(item) => (
             <TableRow key={item.id}>
               <TableCell className="text-left font-medium">
@@ -229,26 +233,20 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
               </TableCell>
             </TableRow>
           )}
-          {/* {(item) => (
-            <TableRow key={item?.name}>
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
-              )}
-            </TableRow>
-          )} */}
+         
         </TableBody>
       </Table>
       </div>
       
     
-      <CustomPagination 
+     <CustomPagination 
        currentPage={currentPage}
        totalPages={totalPages}
        onPageChange={handlePageChange}
        onNext={handleNext}
        onPrevious={handlePrevious}
       
-      />
+      /> 
 
       {downloadClickedInvoice && (
         <div className="" style={{ height: 0 }}  >

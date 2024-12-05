@@ -65,7 +65,7 @@ const Pricing = () => {
     setNoSubscription(false);
     setBillingHistory(subscriptionHistories)
   
-  console.log("CURRENT SUB", currentSub)
+  // console.log("CURRENT SUB", currentSub)
     if (!currentSub || status =='non-renewing') {
       setNoSubscription(true);
       return;
@@ -92,6 +92,11 @@ const Pricing = () => {
     { name: "Invoice" },
     { name: "Action" },
   ];
+
+  useEffect(() => {
+ console.log("BILLING HISTORY", billingHistory)
+  }, [billingHistory])
+  
 
   return (
     <div className="w-full">
