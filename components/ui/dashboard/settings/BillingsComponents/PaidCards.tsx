@@ -99,7 +99,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   return (
     <div>
       <div className="flex flex-col gap-0 lg:flex-row md:flex-row sm:gap-4">
-        <div className="border border-secondaryGrey w-full rounded-lg my-6 px-4 py-6 sm:w-1/2">
+        <div className="border border-secondaryGrey w-full rounded-lg my-6 px-4 py-6 sm:w-1/2 ">
           <div>
             <div className="flex flex-row my-2 w-full justify-between">
               <div>{image}</div>
@@ -109,7 +109,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
               </div>
             </div>
             <div className="flex flex-row space-x-4">
-              <h2 className="text-lg font-bold">
+              <h2 className="text-lg xl:text-sm font-bold">
                 {capitalizeFirstLetterOfEachWord(cardDetails?.brand!)} ending in{" "}
                 {cardDetails?.last4}
               </h2>
@@ -117,12 +117,12 @@ export const PaidCards: React.FC<PaidCardsData> = ({
                 Default
               </div> */}
             </div>
-            <p className="text-base my-1 font-medium">
+            <p className="text-base xl:text-sm my-1 font-medium">
               Expiry {cardDetails?.exp_Month}/{cardDetails?.exp_Year}
             </p>
           </div>
         </div>
-        <div className="border border-secondaryGrey w-full  rounded-lg my-6 sm:w-1/2">
+        <div className="border border-secondaryGrey w-full rounded-lg my-6 xl:my-4 sm:w-1/2">
           <div className="p-4 px-6 border-b border-secondaryGrey">
             <div className="flex justify-between">
               <h2 className="text-lg font-bold">{plan} plan</h2>
