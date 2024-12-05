@@ -6,15 +6,15 @@ import { IoSearchOutline } from 'react-icons/io5';
 import { CustomButton } from '@/components/customButton';
 import Footer from '@/components/ui/landingPage/footer';
 import { getReservations } from '../api/controllers/landingPage';
-import { notify } from '@/lib/utils';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
 import ReservationCard from '@/components/ui/landingPage/reservationCard';
 import { LoadingReservations } from '@/components/ui/landingPage/skeleton-loading';
 import { Select, SelectItem } from '@nextui-org/react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import CustomPagination from '@/components/ui/custom-pagination';
+import CustomPagination from '@/components/ui/customPagination';
 import Image from 'next/image';
 import EmptyIcon from '@/public/assets/images/empty-image.png';
+import { useQuery } from 'react-query';
 
 export default function Reservations() {
   const searchParams = useSearchParams();
@@ -24,7 +24,6 @@ export default function Reservations() {
   const [searchKey, setSearchKey] = useState<string>('');
   const pathname = usePathname();
   const { replace } = useRouter();
-  const [error, setError] = useState<string>('');
 
   const handleChangeParams = (term: string, key: string) => {
     const params = new URLSearchParams(searchParams);
@@ -37,29 +36,12 @@ export default function Reservations() {
     replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [reservations, setReservations] = useState<{ totalCount: number; reservations: any[]; totalPages: number }>({
-    reservations: [],
-    totalCount: 0,
-    totalPages: 0,
+  const { data, isLoading, error } = useQuery({
+    queryFn: () => getReservations(Number(currentPage), pageSize, searchKeyWord),
+    queryKey: ['reservations', pageSize, currentPage, searchKeyWord],
   });
 
-  const getAllReservations = async (loading = true) => {
-    setIsLoading(loading);
-    const data = await getReservations(Number(currentPage), pageSize, searchKeyWord);
-    setIsLoading(false);
-
-    if (data?.data?.isSuccessful) {
-      setReservations(data?.data?.data);
-    } else if (data?.data?.error) {
-      setError(data?.data?.error);
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
-    }
-  };
+  console.log(data, '-> data');
 
   const sizes: string[] = ['10', '20', '50', '100'];
 
@@ -69,14 +51,7 @@ export default function Reservations() {
     }
   }, [searchKey]);
 
-  useEffect(() => {
-    localStorage.removeItem('reservation');
-    getAllReservations();
-  }, [pageSize, currentPage, searchKeyWord]);
-
   if (error) return null;
-
-  console.log(reservations, '');
 
   const sectionHeaderClass: string =
     'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1.5 rounded-full text-xs mx-auto shadow_custom-inset';
@@ -86,13 +61,12 @@ export default function Reservations() {
         <main className="lg:gap-3 relative text-center bg-white overflow-x-hidden main-section px-6 lg:px-0 lg:h-[500px] h-[400px]">
           <section className="w-full lg:w-[50%] mx-auto space-y-4 lg:space-y-6 font-satoshi pt-12 lg:pt-24">
             <div className={sectionHeaderClass}>
-              <p className="font-normal">Businesses Trust Us</p>
+              <p className="font-normal">Reserve Your Perfect Spot</p>
               <ArrowRight />
             </div>
-            <h1 className="text-[24px] lg:text-[50px] lg:leading-[64px] text-[#161618] font-bricolage_grotesque">Meet some of the Businesses That Trust Us</h1>
+            <h1 className="text-[24px] lg:text-[50px] lg:leading-[50px] text-[#161618] font-bricolage_grotesque">Reserve Your Perfect Spot</h1>
             <p className="font-normal text-dark">
-              Explore the restaurants, bars, and lounges elevating their operations with our platform. Enhance guest experiences, and drive growth all in one
-              place.
+              From exclusive dining to luxury stays, secure your reservations effortlessly and start creating unforgettable moments.
             </p>
 
             <div className="flex space-x-4 justify-center mx-6 lg:mx-36">
@@ -103,7 +77,7 @@ export default function Reservations() {
                 isRequired={false}
                 startContent={<IoSearchOutline />}
                 type="search"
-                placeholder="Search here..."
+                placeholder="Search by reservation name ..."
                 value={searchKey}
                 defaultValue={searchKey}
                 onChange={({ target }: any) => setSearchKey(target.value)}
@@ -127,7 +101,7 @@ export default function Reservations() {
                 <LoadingReservations />
               ) : (
                 <div className="px-6 lg:px-24 py-6 lg:py-16">
-                  {reservations.reservations.length === 0 ? (
+                  {data?.data.data.reservations.length === 0 ? (
                     <div className="flex justify-center text-center">
                       <div className="w-1/2 lg:w-[30%] mx-auto">
                         <Image src={EmptyIcon} alt="empty" width={120} height={120} className="mx-auto" />
@@ -139,7 +113,7 @@ export default function Reservations() {
                   ) : (
                     <React.Fragment>
                       <section className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                        {reservations.reservations.map((each, index) => (
+                        {data?.data.data.reservations.map((each: any, index: number) => (
                           <ReservationCard key={each.id + index} {...each} each={each} />
                         ))}
                       </section>
@@ -161,11 +135,11 @@ export default function Reservations() {
                             ))}
                           </Select>
                           <p>
-                            Showing {pageSize} of {reservations.totalCount} reservations
+                            Showing {pageSize} of {data?.data?.data.totalCount} reservations
                           </p>
                         </div>
                         <div>
-                          <CustomPagination totalPage={reservations.totalPages} initialPage={Number(currentPage)} />
+                          <CustomPagination totalPage={data?.data?.data.totalPages} initialPage={Number(currentPage)} />
                         </div>
                       </div>
                     </React.Fragment>

@@ -2,7 +2,8 @@
 import Navbar from '@/components/ui/landingPage/navBar';
 import Image from 'next/image';
 import React, { useState } from 'react';
-import PricePlan from '@/public/assets/images/price-bg.png';
+import PricePlan from '@/public/assets/images/pricing-bg-2.png';
+import Bg from '@/public/assets/imageslanding-page-bg.png';
 import { SettingsIcon, TagIcon } from '@/public/assets/svg';
 import PricingComponent, { PricingExtended, SwitchPlan } from '@/components/ui/landingPage/pricing';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
@@ -15,32 +16,34 @@ export default function Pricing() {
   const [plan, setPlan] = useState<string>('monthly');
 
   return (
-    <div className="bg-primaryColor">
+    <div className="bg-white">
       <header className="z-50 backdrop-filter backdrop-blur-md fixed w-full">
-        <Navbar type="colored" />
+        <Navbar type="default" />
       </header>
 
       <main className="w-full pt-12 font-satoshi">
-        <section className="px-6 lg:px-12 font-satoshi py-12 space-y-8 bg-primaryColor">
-          <Image src={PricePlan} alt="" className="absolute top-0 w-[90%]" priority />
-          <div className="bg-[#6840D50D] border border-[#5F35D2] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom_inset_2">
-            <TagIcon />
-            <p className="font-normal text-white text-sm">Pricing</p>
+        <section className=" font-satoshi py-12 space-y-12 bg-white  main-section">
+          <Image src={PricePlan} alt="" className="absolute top-0 w-[60%] right-[20%] px-6 lg:px-12" priority />
+          <div className="bg-[#6840D50D] text-[#5F35D2] px-6 lg:px-12 border border-[#5F35D2] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom_inset_2">
+            <TagIcon className="text-[#5F35D2]" />
+            <p className="font-normal text-[#5F35D2] text-sm">Pricing</p>
           </div>
 
-          <div className="w-[100%] mx-auto text-satoshi space-y-2 text-center">
-            <h2 className="text-[32px] lg:text-[56px] text-white lg:leading-[64px] font-bricolage_grotesque">Simple Pricing for Every Business</h2>
-            <p className="text-[#ACB5BB]">Our transparent and straightforward pricing plans are designed to meet the needs of businesses of all sizes.</p>
+          <div className="w-[100%] mx-auto px-6 lg:px-12 text-satoshi space-y-2 text-center">
+            <h2 className="text-[32px] lg:text-[56px] text-[#0E0E33] lg:leading-[64px] font-bricolage_grotesque">Simple Pricing for Every Business</h2>
+            <p className="text-[#565A5D]">Our transparent and straightforward pricing plans are designed to meet the needs of businesses of all sizes.</p>
           </div>
 
-          <PricingComponent />
+          <div className="px-6 lg:px-12">
+            <PricingComponent />
+          </div>
 
-          <div className="mt-12 space-y-12">
-            <p className="text-center text-white text-[20px] mt-16">More than 10,000 companies enjoy using our product</p>
+          <div className="py-6 space-y-10 bg-[#5F35D2]">
+            <p className="text-center text-white text-[20px]">More than 10,000 companies enjoy using our product</p>
             <Companies type="min" />
           </div>
 
-          <div className="space-y-4 pb-24">
+          {/* <div className="space-y-4 pb-24">
             <div className="lg:mt-24 space-y-4">
               <div className="bg-[#9F7CFE] border border-white/30 flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full shadow-custom_inset_2">
                 <SettingsIcon className="text-white" />
@@ -56,14 +59,12 @@ export default function Pricing() {
             </div>
 
             <PricingExtended plan={plan} setPlan={setPlan} />
-          </div>
+          </div> */}
         </section>
 
-        <section className="bg-white pt-12 lg:pt-20 px-6 lg:px-12 text-center">
+        <section className="bg-white py-12 lg:py-20 px-6 lg:px-12 text-center">
           <BestToolsComponent />
         </section>
-
-        <FAQs className="pt-10 lg:pt-20" />
 
         <section className="text-center">
           <JoinCommunity className="mt-0" />

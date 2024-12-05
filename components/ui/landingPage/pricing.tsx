@@ -88,27 +88,27 @@ export default function PricingComponent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div
-          className="border relative border-[#FFFFFF61] bg-[#FFFFFF1A] p-8 rounded-[10px] space-y-8 
+          className="border relative border-[#C4C4C4] bg-[#FFFFFF] p-8 rounded-[10px] space-y-8 
         min-h-[900px]"
         >
           <Transition>
             <div className="space-y-2.5">
-              <h4 className="text-left text-white text-base lg:text-[20px]">Basic Plan</h4>
+              <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Basic Plan</h4>
               <div className="flex items-baseline space-x-2">
-                <p className="text-[24px] lg:text-[42px] text-white font-medium font-sans">₦{formatNumber(starterFee)}</p>
+                <p className="text-[24px] lg:text-[42px] text-[#161618] font-medium font-sans">₦{formatNumber(starterFee)}</p>
                 {/* <p className="text-white/65 lg:text-base text-sm">per {pricings?.Starter?.maxUsers} Users |</p> */}
-                <p className="text-white/65 lg:text-base text-sm">per month</p>
+                <p className="text-[#ACB5BB] lg:text-base text-sm">per month</p>
               </div>
-              <p className="text-white text-left lg:text-base text-sm">
+              <p className="text-[#000000] text-left lg:text-base text-sm">
                 Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
               </p>
             </div>
           </Transition>
           <Transition>
-            <div className="flex items-center space-x-2">
-              <div className="w-[25%] lg:w-[35%] border-[#FFFFFF61] border" />
-              <p className="uppercase w-[45%] font-medium text-[10px] text-white">WHAT YOU WILL GET</p>
-              <div className="w-[25%] lg:w-[35%] border-[#FFFFFF61] border" />
+            <div className="flex items-center space-x-2 justify-center">
+              <div className="w-[25%] lg:w-[35%] border-[#00000040] border" />
+              <p className="uppercase w-[45%] font-medium text-[10px] text-[#00000040] text-center">WHAT YOU WILL GET</p>
+              <div className="w-[25%] lg:w-[35%] border-[#00000040] border" />
             </div>
           </Transition>
 
@@ -116,7 +116,7 @@ export default function PricingComponent() {
             <Transition>
               <div className="flex items-start space-x-2">
                 <TickIcon className="w-[10%]" />
-                <p className="text-left text-white text-sm w-[90%]">Up to {pricings?.Starter?.maxUsers} users</p>
+                <p className="text-left text-[#000000] text-sm w-[90%]">Up to {pricings?.Starter?.maxUsers} users</p>
               </div>
             </Transition>
             {starterArray?.splice(3)?.map((each) => (
@@ -125,7 +125,7 @@ export default function PricingComponent() {
                   <Transition key={each + 'basic'}>
                     <div className="flex items-start space-x-2">
                       <TickIcon className="w-[10%]" />
-                      <p className="text-left text-white text-sm w-[90%]">{formatKey(each?.key)}</p>
+                      <p className="text-left text-[#000000] text-sm w-[90%]">{formatKey(each?.key)}</p>
                     </div>
                   </Transition>
                 ) : (
@@ -137,13 +137,13 @@ export default function PricingComponent() {
 
           <div className="mt-2 absolute bottom-10 w-[85%]">
             <Link href={SIGN_UP_URL}>
-              <CustomButton className="text-[#2020A6] bg-white w-full font-medium mt-20">Get Started</CustomButton>
+              <CustomButton className="w-full text-white font-medium mt-20">Get Started</CustomButton>
             </Link>
           </div>
         </div>
 
         <div
-          className="border border-[#44444A] bg-white p-8 rounded-[10px] space-y-8 
+          className="border border-[#C4C4C4] bg-white p-8 rounded-[10px] space-y-8 
         min-h-[900px] relative"
         >
           <Transition>
@@ -160,9 +160,9 @@ export default function PricingComponent() {
             </div>
           </Transition>
           <Transition>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 justify-center">
               <div className="w-[25%] lg:w-[35%] border-[#00000040] border" />
-              <p className="uppercase w-[45%] font-medium text-[10px] text-[#00000040]">WHAT YOU WILL GET</p>
+              <p className="uppercase w-[45%] font-medium text-[10px] text-[#00000040] text-center">WHAT YOU WILL GET</p>
               <div className="w-[25%] lg:w-[35%] border-[#00000040] border" />
             </div>
           </Transition>
@@ -197,27 +197,27 @@ export default function PricingComponent() {
         </div>
 
         <div
-          className="border border-[#FFFFFF61] bg-[#FFFFFF1A] p-8 rounded-[10px] space-y-8 
+          className="border border-[#C4C4C4] bg-white p-8 rounded-[10px] space-y-8 
         min-h-[900px] relative"
         >
           <Transition>
             <div className="space-y-2.5">
-              <h4 className="text-left text-white text-base lg:text-[20px]">Professional Plan</h4>
+              <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Professional Plan</h4>
               <div className="flex items-baseline space-x-2">
-                <p className="text-[24px] lg:text-[42px] text-white font-medium font-sans">₦{formatNumber(premiumFee)}</p>
-                <p className="text-white/65 lg:text-base text-sm">/month</p>
+                <p className="text-[24px] lg:text-[42px] text-[#000000] font-medium font-sans">₦{formatNumber(premiumFee)}</p>
+                <p className="text-[#ACB5BB] lg:text-base text-sm">/month</p>
                 {/* <p className="text-white/65 lg:text-base text-sm">/Unlimited</p> */}
               </div>
-              <p className="text-white text-left lg:text-base text-sm">
+              <p className="text-[#161618] text-left lg:text-base text-sm">
                 Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
               </p>
             </div>
           </Transition>
           <Transition>
-            <div className="flex items-center space-x-2">
-              <div className="w-[25%] lg:w-[35%] border-[#FFFFFF61] border" />
-              <p className="uppercase lg:w-[45%] font-medium text-[10px] text-white">WHAT YOU WILL GET</p>
-              <div className="w-[25%] lg:w-[35%] border-[#FFFFFF61] border" />
+            <div className="flex items-center space-x-2 justify-center">
+              <div className="w-[25%] lg:w-[35%] border-[#00000040] border" />
+              <p className="uppercase lg:w-[45%] text-center font-medium text-[10px] text-[#00000040]">WHAT YOU WILL GET</p>
+              <div className="w-[25%] lg:w-[35%] border-[#00000040] border" />
             </div>
           </Transition>
 
@@ -225,7 +225,7 @@ export default function PricingComponent() {
             <Transition>
               <div className="flex items-start space-x-2">
                 <TickIcon className="w-[10%]" />
-                <p className="text-left text-white text-sm w-[90%]">Unlimited users</p>
+                <p className="text-left text-[#000000] text-sm w-[90%]">Unlimited users</p>
               </div>
             </Transition>
             {premiumArray?.splice(3)?.map((each) => (
@@ -234,7 +234,7 @@ export default function PricingComponent() {
                   <Transition key={each + 'basic'}>
                     <div className="flex items-start space-x-2">
                       <TickIcon className="w-[10%]" />
-                      <p className="text-left text-white text-sm w-[90%]">{formatKey(each?.key)}</p>
+                      <p className="text-left text-[#000000] text-sm w-[90%]">{formatKey(each?.key)}</p>
                     </div>
                   </Transition>
                 ) : (
@@ -245,14 +245,14 @@ export default function PricingComponent() {
             <Transition>
               <div className="flex items-start space-x-2">
                 <TickIcon className="w-[10%]" />
-                <p className="text-left text-white text-sm w-[90%]">Support and help center</p>
+                <p className="text-left text-[#000000] text-sm w-[90%]">Support and help center</p>
               </div>
             </Transition>
           </div>
 
           <div className="mt-2 absolute bottom-10 w-[85%]">
             <Link href={SIGN_UP_URL}>
-              <CustomButton className="text-[#2020A6] bg-white w-full font-medium mt-20">Get Started</CustomButton>
+              <CustomButton className="w-full text-white font-medium mt-20">Get Started</CustomButton>
             </Link>
           </div>
         </div>

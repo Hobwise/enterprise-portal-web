@@ -76,12 +76,12 @@ const SettingsComponent: React.FC = () => {
         inline-flex flex-col
           border-secondaryGrey w-full xl:w-[284px] p-3 rounded-[8px] h-fit`}
       >
-        <ul className='flex xl:flex-col flex-row xl:gap-1 gap-3'>
+        <ul className='flex xl:flex-col flex-row xl:gap-1 gap-3 overflow-x-auto'>
           {listItems.map((item) => (
             <li
               key={item.screenNumber}
               onClick={() => handleListItemClick(item.screenNumber)}
-              className={`${li} ${
+              className={`${li} flex-shrink-0 ${
                 activeScreen === item.screenNumber
                   ? 'bg-secondaryGrey text-black '
                   : 'text-[#98A2B3]'

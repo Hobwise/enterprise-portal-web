@@ -36,7 +36,7 @@ export default function LandingPageHeader() {
   return (
     <div className="wrapper bg-primaryColor">
       {news.map((each, index) => (
-        <p className={`itemLeft font-satoshi font-light item${index}`} key={each.title}>
+        <p className={`itemLeft font-satoshi font-light item${index}`} key={each.title + index}>
           {each.title}
         </p>
       ))}

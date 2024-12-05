@@ -578,3 +578,51 @@ export function resetLoginInfo() {
   removeCookie('token');
   window.location.href = '/auth/login';
 }
+
+export function generateTimeSlots(
+  start: string,
+  end: string,
+  interval: number
+) {
+  const times = [];
+  const startHour = parseInt(start.split(':')[0]);
+  const endHour = parseInt(end.split(':')[0]);
+
+  for (let hour = startHour; hour < endHour; hour += interval) {
+    const formattedTime = formatTo12Hour(hour);
+    times.push(formattedTime);
+  }
+  times.push(formatTo12Hour(endHour)); // Include the end time
+  return times;
+}
+
+export function formatTo12Hour(hour: number) {
+  if (hour) {
+    const isPM = hour >= 12;
+    const adjustedHour = hour % 12 === 0 ? 12 : hour % 12;
+    const period = isPM ? 'PM' : 'AM';
+    return `${adjustedHour}:00${period}`;
+  } else {
+    return null;
+  }
+}
+
+export function convertToISO(date: string, time: any) {
+  // Parse the time into hours and minutes
+  const [timePart, meridiem] = time.match(/(\d+:\d+)(AM|PM)/i).slice(1);
+  let [hours, minutes] = timePart.split(':').map(Number);
+
+  // Adjust hours based on AM/PM
+  if (meridiem.toUpperCase() === 'PM' && hours !== 12) {
+    hours += 12;
+  } else if (meridiem.toUpperCase() === 'AM' && hours === 12) {
+    hours = 0;
+  }
+
+  // Combine into a Date object
+  const dateTime = new Date(date);
+  dateTime.setHours(hours + 1, minutes, 0, 0); // Set hours, minutes, and reset seconds/milliseconds
+
+  // Convert to ISO string
+  return dateTime.toISOString();
+}
