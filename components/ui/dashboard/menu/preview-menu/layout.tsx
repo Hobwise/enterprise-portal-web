@@ -189,12 +189,12 @@ const Layout: React.FC = () => {
     fetchMenuConfig();
   }, []);
   return (
-    <article className='xl:w-[70%] w-full h-full p-5 border border-[#E4E7EC] rounded-lg'>
-      <div className='flex justify-between'>
+    <article className="xl:w-[70%] w-full h-full p-5 border border-[#E4E7EC] rounded-lg">
+      <div className="flex justify-between">
         <div>
-          <h1 className='text-[16px] leading-8 font-semibold'>Layout</h1>
-          <p className='text-sm xl:w-full w-[150px] text-grey600 md:mb-10 mb-4'>
-            Select how your menu appear to users
+          <h1 className="text-[16px] leading-8 font-semibold">Layout</h1>
+          <p className="text-sm xl:w-full w-[150px] text-grey600 md:mb-10 mb-4">
+            Select how your menu appears to users{' '}
           </p>
         </div>
         <CustomButton
@@ -204,45 +204,45 @@ const Layout: React.FC = () => {
           className={`py-2 px-4 md:mb-0 mb-4 ${
             isLoading ? 'text-white' : 'text-primaryColor'
           }  bg-white border-2 border-primaryColor`}
-          backgroundColor='bg-primaryColor'
+          backgroundColor="bg-primaryColor"
         >
           {isLoading ? 'Loading...' : 'Save Changes'}
         </CustomButton>
       </div>
-      <div className='flex flex-wrap gap-6'>
+      <div className="flex flex-wrap gap-6">
         {previewColumn.map((column) => {
           return (
             <div
               onClick={() => handleListItemClick(column.name)}
               key={column.name}
-              className='grid cursor-pointer place-content-center'
+              className="grid cursor-pointer place-content-center"
             >
               <div
                 className={`w-[104px] grid place-content-center h-[56px] bg-[#EAE5FF80] rounded-lg  `}
               >
                 {column.icon(column.name)}
               </div>
-              <p className='text-center text-[13px] font-[400] pt-1'>
+              <p className="text-center text-[13px] font-[400] pt-1">
                 {column.name}
               </p>
             </div>
           );
         })}
       </div>
-      <Divider className='my-6 text-[#E4E7EC]' />
+      <Divider className="my-6 text-[#E4E7EC]" />
       <div>
         <div>
-          <h1 className='text-[16px] leading-8 font-semibold'>Text Color</h1>
-          <p className='text-sm  text-grey600 '>
+          <h1 className="text-[16px] leading-8 font-semibold">Text Color</h1>
+          <p className="text-sm  text-grey600 ">
             Select whether your text should be white or black
           </p>
         </div>
         <Spacer y={5} />
-        <div className='flex items-center gap-3'>
+        <div className="flex items-center gap-3">
           <Chip
             onClick={() => handleClick('#000')}
             startContent={<CheckIcon size={18} />}
-            variant='bordered'
+            variant="bordered"
             classNames={{
               base: ` cursor-pointer h-8 text-[12px] ${
                 selectedTextColor === '#000'
@@ -256,7 +256,7 @@ const Layout: React.FC = () => {
           <Chip
             onClick={() => handleClick('#fff')}
             startContent={<CheckIcon size={18} />}
-            variant='bordered'
+            variant="bordered"
             classNames={{
               base: ` cursor-pointer h-8 text-[12px] ${
                 selectedTextColor === '#fff'
@@ -269,13 +269,13 @@ const Layout: React.FC = () => {
           </Chip>
         </div>
       </div>
-      <Divider className='my-6 text-[#E4E7EC]' />
-      <div className='flex justify-between'>
+      <Divider className="my-6 text-[#E4E7EC]" />
+      <div className="flex justify-between">
         <div>
-          <h1 className='text-[16px] leading-8 font-semibold'>
+          <h1 className="text-[16px] leading-8 font-semibold">
             Thumbnail Images
           </h1>
-          <p className='text-sm  text-grey600 '>Toggle images on and off</p>
+          <p className="text-sm  text-grey600 ">Toggle images on and off</p>
         </div>
         <Switch
           classNames={{
@@ -287,11 +287,11 @@ const Layout: React.FC = () => {
           onValueChange={setIsSelectedPreview}
         />
       </div>
-      <Divider className='my-6 text-[#E4E7EC]' />
-      <div className='flex justify-between'>
+      <Divider className="my-6 text-[#E4E7EC]" />
+      <div className="flex justify-between">
         <div>
-          <h1 className='text-[16px] leading-8 font-semibold'>Background</h1>
-          <p className='text-sm xl:w-full w-[150px] text-grey600 md:mb-10 mb-4'>
+          <h1 className="text-[16px] leading-8 font-semibold">Background</h1>
+          <p className="text-sm xl:w-full w-[150px] text-grey600 md:mb-10 mb-4">
             Set a background for your menu
           </p>
         </div>
@@ -305,33 +305,33 @@ const Layout: React.FC = () => {
           Save Changes
         </CustomButton> */}
       </div>
-      <div className='xl:flex w-full justify-between block'>
-        <div className='xl:w-[calc(50%-1rem)] w-full'>
-          <label className='font-[500]'>Choose a colour</label>
-          <div className='rounded-lg w-full  pt-2'>
+      <div className="xl:flex w-full justify-between block">
+        <div className="xl:w-[calc(50%-1rem)] w-full">
+          <label className="font-[500]">Choose a colour</label>
+          <div className="rounded-lg w-full  pt-2">
             <SketchPicker
               color={backgroundColor}
               onChangeComplete={handleChangeColor}
-              className='!bg-[#F5F5F5] !w-[calc(100%-1.2rem)] !rounded-[8px]'
+              className="!bg-[#F5F5F5] !w-[calc(100%-1.2rem)] !rounded-[8px]"
             />
           </div>
         </div>
-        <p className='text-[20px] xl:my-0 my-2 xl:mx-4 mx-0 grid place-content-center text-grey600'>
+        <p className="text-[20px] xl:my-0 my-2 xl:mx-4 mx-0 grid place-content-center text-grey600">
           OR
         </p>
 
-        <div className='xl:w-[calc(50%-1rem)] w-full'>
-          <label className='font-[500]'>Upload image</label>
-          <div className='flex relative flex-col p-3 mt-2 h-[calc(100%-2rem)]  border border-dashed rounded-lg justify-center items-center'>
-            <div className='flex flex-col mt-0 text-black  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
+        <div className="xl:w-[calc(50%-1rem)] w-full">
+          <label className="font-[500]">Upload image</label>
+          <div className="flex relative flex-col p-3 mt-2 h-[calc(100%-2rem)]  border border-dashed rounded-lg justify-center items-center">
+            <div className="flex flex-col mt-0 text-black  text-center xl:w-[240px]  w-full gap-2 justify-center items-center">
               {isLoadingImage ? (
                 <SmallLoader />
               ) : (
                 <>
-                  <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                  <span className='text-black'>
+                  <MdOutlineAddPhotoAlternate className="text-[42px] text-primaryColor" />
+                  <span className="text-black">
                     Drag and drop files to upload or{' '}
-                    <span className='text-primaryColor'>click here</span> to
+                    <span className="text-primaryColor">click here</span> to
                     browse
                   </span>
                 </>
@@ -339,18 +339,18 @@ const Layout: React.FC = () => {
             </div>
 
             <input
-              title='upload an image'
-              alt='upload a menu'
-              type='file'
-              id='menu-upload'
-              accept='image/*'
+              title="upload an image"
+              alt="upload a menu"
+              type="file"
+              id="menu-upload"
+              accept="image/*"
               onChange={(event) => handleImageChange(event)}
-              className='opacity-0 cursor-pointer absolute h-full bottom-0'
+              className="opacity-0 cursor-pointer absolute h-full bottom-0"
             />
           </div>
         </div>
 
-        <span className='text-sm float-left text-danger-600'>{imageError}</span>
+        <span className="text-sm float-left text-danger-600">{imageError}</span>
       </div>
     </article>
   );

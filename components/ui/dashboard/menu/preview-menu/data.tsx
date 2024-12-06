@@ -34,7 +34,7 @@ interface PreviewStyles {
 export const togglePreview = (activeTile: string): PreviewStyles => {
   const previewStyles: { [key: string]: PreviewStyles } = {
     'List left': {
-      container: '',
+      container: '',  
       textContainer: 'ml-3',
       imageClass: 'h-[60px] w-[60px]',
       divider: true,
