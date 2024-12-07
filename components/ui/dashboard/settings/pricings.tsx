@@ -66,7 +66,7 @@ const Pricing = () => {
     setBillingHistory(subscriptionHistories)
   
   // console.log("CURRENT SUB", currentSub)
-    if (!currentSub || status =='non-renewing') {
+    if (!currentSub || status =='non-renewing' || status == null) {
       setNoSubscription(true);
       return;
     }
