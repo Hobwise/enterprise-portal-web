@@ -183,11 +183,37 @@ export default function BookReservation() {
                 }}
                 errorMessage={error.emailAddress}
               />
+
+              <div className="space-y-4 mt-6">
+                <p className="text-[#161618] text-xs font-medium">
+                  Restaurant opens from{' '}
+                  <span className="font-bold">
+                    {formatTo12Hour(reservation?.startDate) || '10:00AM'} to {formatTo12Hour(reservation?.endDate) || '10:00PM'}
+                  </span>
+                </p>
+
+                <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
+                  {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 2).map((each) => (
+                    <div
+                      className={cn(
+                        'bg-primaryColor text-white rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor',
+                        currentSelection === each && 'bg-white text-primaryColor'
+                      )}
+                      key={each}
+                      onClick={() => setSelectedTime(new Set([each || '']))}
+                      role="button"
+                    >
+                      <MdTimer />
+                      <p className="">{each}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <CustomInput
                   name="date"
                   type="date"
-                  // type="datetime-local"
                   label="Reservation date"
                   placeholder="DD/MM/YY, 00 : 00 AM"
                   classnames="mt-6"
@@ -215,7 +241,9 @@ export default function BookReservation() {
                     isInvalid={error.time ? true : false}
                   >
                     {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 1).map((each) => (
-                      <SelectItem key={each || ''}>{each}</SelectItem>
+                      <SelectItem key={each || ''} className="text-[#000]">
+                        {each}
+                      </SelectItem>
                     ))}
                   </Select>
                 </div>
@@ -234,11 +262,6 @@ export default function BookReservation() {
                   errorMessage={error.description}
                 />
               </div>
-              {/* <div className="lg:flex hidden">
-                <CustomButton className={btnClassName} onClick={handleBookReservation} loading={isLoading}>
-                  Book Reservation
-                </CustomButton>
-              </div> */}
             </form>
 
             <div className="space-y-10">
@@ -250,7 +273,7 @@ export default function BookReservation() {
                 </p>
               </div>
 
-              <div className="space-y-4">
+              {/* <div className="space-y-4">
                 <p className="text-[#161618] text-xs font-medium">
                   Restaurant opens from{' '}
                   <span className="font-bold">
@@ -274,17 +297,13 @@ export default function BookReservation() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
 
           <div className="lg:space-y-6 space-y-6 lg:-mt-16">
             <div className="space-y-1.5">
               <p className="text-lg font-medium text-[#161618]">Selected Reservation</p>
-              <div className="flex space-x-2 items-center text-sm text-[#161618]">
-                <LocationIcon />
-                <p>{reservation?.businessAddress}</p>
-              </div>
             </div>
             {isClient && (
               <div className="border border-[#E4E7EC] py-4 px-5 rounded-lg space-y-4">
@@ -372,11 +391,6 @@ export default function BookReservation() {
                 </div>
               </div>
             )}
-            {/* <div className="lg:hidden flex">
-              <CustomButton className={btnClassName} onClick={handleBookReservation} loading={isLoading}>
-                Book Reservation
-              </CustomButton>
-            </div> */}
 
             <div className="text-[#161618] border border-[#E4E7EC] py-2 px-4 rounded-lg space-y-2">
               <p className="font-medium">
