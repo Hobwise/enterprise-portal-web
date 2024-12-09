@@ -3,14 +3,13 @@ import Navbar from '@/components/ui/landingPage/navBar';
 import Image from 'next/image';
 import React, { useState } from 'react';
 import PricePlan from '@/public/assets/images/pricing-bg-2.png';
-import Bg from '@/public/assets/imageslanding-page-bg.png';
-import { SettingsIcon, TagIcon } from '@/public/assets/svg';
-import PricingComponent, { PricingExtended, SwitchPlan } from '@/components/ui/landingPage/pricing';
+import { TagIcon } from '@/public/assets/svg';
+import PricingComponent from '@/components/ui/landingPage/pricing';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
-import FAQs from '@/components/ui/landingPage/faq';
 import BestToolsComponent from '@/components/ui/landingPage/bestTools';
 import Footer from '@/components/ui/landingPage/footer';
 import Companies from '@/components/ui/landingPage/companies';
+import LandingPageHeader from '@/components/ui/landingPage/header';
 
 export default function Pricing() {
   const [plan, setPlan] = useState<string>('monthly');
@@ -18,6 +17,7 @@ export default function Pricing() {
   return (
     <div className="bg-white">
       <header className="z-50 backdrop-filter backdrop-blur-md fixed w-full">
+        <LandingPageHeader />
         <Navbar type="default" />
       </header>
 

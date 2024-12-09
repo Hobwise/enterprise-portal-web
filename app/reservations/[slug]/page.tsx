@@ -39,7 +39,7 @@ export default function BookReservation() {
   const router = useRouter();
   const [open, setOpen] = useState<boolean>(false);
   const btnClassName =
-    'before:ease relative h-[40px] mt-6 w-full overflow-hidden border border-[#FFFFFF26] px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40';
+    'before:ease relative h-[40px] w-full overflow-hidden border border-[#FFFFFF26] px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40';
 
   useEffect(() => {
     const reservation = typeof window !== 'undefined' && localStorage.getItem('reservation');
@@ -107,7 +107,7 @@ export default function BookReservation() {
   }, [selectedTime]);
 
   return (
-    <div className="font-satoshi px-6 lg:px-24 space-y-4 mt-8">
+    <div className="font-satoshi px-6 lg:px-24 space-y-4 mt-12">
       <div className="flex items-center space-x-2.5 text-sm">
         <div className="bg-[#EDE7FD] border border-[#5F35D24D] rounded-md w-8 h-8 flex items-center justify-center" role="button" onClick={() => back()}>
           <ArrowLeftIcon width={20} height={20} />
@@ -234,36 +234,46 @@ export default function BookReservation() {
                   errorMessage={error.description}
                 />
               </div>
-              <div className="lg:flex hidden">
+              {/* <div className="lg:flex hidden">
                 <CustomButton className={btnClassName} onClick={handleBookReservation} loading={isLoading}>
                   Book Reservation
                 </CustomButton>
-              </div>
+              </div> */}
             </form>
 
-            <div className="space-y-4">
-              <p className="text-[#161618] text-xs font-medium">
-                Restaurant opens from{' '}
-                <span className="font-bold">
-                  {formatTo12Hour(reservation?.startDate) || '10:00AM'} to {formatTo12Hour(reservation?.endDate) || '10:00PM'}
-                </span>
-              </p>
+            <div className="space-y-10">
+              <div className="bg-[#F0F2F4] p-4 text-[#5A5A63] space-y-2 rounded-lg">
+                <p className="text-primaryColor font-semibold text-lg">Important Note</p>
+                <p className="text-sm">
+                  We offer a 15-minute grace period. If you anticipate arriving more than 15 minutes past your reservation time, kindly give us a call in
+                  advance.
+                </p>
+              </div>
 
-              <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
-                {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 2).map((each) => (
-                  <div
-                    className={cn(
-                      'bg-primaryColor text-white rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor',
-                      currentSelection === each && 'bg-white text-primaryColor'
-                    )}
-                    key={each}
-                    onClick={() => setSelectedTime(new Set([each || '']))}
-                    role="button"
-                  >
-                    <MdTimer />
-                    <p className="">{each}</p>
-                  </div>
-                ))}
+              <div className="space-y-4">
+                <p className="text-[#161618] text-xs font-medium">
+                  Restaurant opens from{' '}
+                  <span className="font-bold">
+                    {formatTo12Hour(reservation?.startDate) || '10:00AM'} to {formatTo12Hour(reservation?.endDate) || '10:00PM'}
+                  </span>
+                </p>
+
+                <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
+                  {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 2).map((each) => (
+                    <div
+                      className={cn(
+                        'bg-primaryColor text-white rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor',
+                        currentSelection === each && 'bg-white text-primaryColor'
+                      )}
+                      key={each}
+                      onClick={() => setSelectedTime(new Set([each || '']))}
+                      role="button"
+                    >
+                      <MdTimer />
+                      <p className="">{each}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -277,7 +287,7 @@ export default function BookReservation() {
               </div>
             </div>
             {isClient && (
-              <div className="border border-[#E4E7EC] py-4 px-5 rounded-lg space-y-6">
+              <div className="border border-[#E4E7EC] py-4 px-5 rounded-lg space-y-4">
                 <div className="flex border-b border-b-[#E4E7EC] pb-6 items-start space-x-4">
                   <div className="w-[75px] lg:w-[150px] h-fit rounded-lg">
                     {reservation?.image ? (
@@ -354,25 +364,33 @@ export default function BookReservation() {
                   <InfoCircle className="mt-1" />
                   <p>The minimum spend is the amount you’re required to spend when visiting this restaurant.</p>
                 </div>
+
+                <div>
+                  <CustomButton className={btnClassName} onClick={handleBookReservation} loading={isLoading}>
+                    Book Reservation
+                  </CustomButton>
+                </div>
               </div>
             )}
-            <div className="lg:hidden flex">
+            {/* <div className="lg:hidden flex">
               <CustomButton className={btnClassName} onClick={handleBookReservation} loading={isLoading}>
                 Book Reservation
               </CustomButton>
-            </div>
+            </div> */}
 
             <div className="text-[#161618] border border-[#E4E7EC] py-2 px-4 rounded-lg space-y-2">
-              <p className="font-semibold">Locate {reservation?.businessName || '-'}</p>
-              <div className="flex space-x-2 items-center">
+              <p className="font-medium">
+                Locate <span className="uppercase font-medium text-[18px]">{reservation?.businessName || '-'}</span>
+              </p>
+              <div className="flex space-x-2 items-center text-sm">
                 <LocationIcon />
                 <p>{reservation?.businessAddress || '-'}</p>
               </div>
-              <div className="flex space-x-2 items-center">
+              <div className="flex space-x-2 items-center text-sm">
                 <IoCall color="848E9E" />
                 <p>{reservation?.businessPhoneNumber || '-'}</p>
               </div>
-              <div className="flex space-x-2 items-center">
+              <div className="flex space-x-2 items-center text-sm">
                 <MdEmail color="848E9E" />
                 <p>{reservation?.businessEmailAddress || '-'}</p>
               </div>

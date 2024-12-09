@@ -48,19 +48,20 @@ export default function HomeComponent() {
 
           <div className="relative">
             <Image src={LandingPageBg} alt="background" className="absolute" />
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 pt-36 lg:pt-44 px-6 lg:px-16 text-center lg:text-left">
-              <div className="space-y-6 lg:space-y-10 mt-12">
-                <div className={sectionHeaderClass2}>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 pt-36 lg:pt-48 px-6 lg:px-16 text-center lg:text-left">
+              <div className="space-y-6 lg:space-y-10 mt-20">
+                {/* <div className={sectionHeaderClass2}>
                   <p className="font-normal text-[#5F35D2] lg:text-base text-sm">New: Contactless Service with QR Codes</p>
                   <ArrowRight className="text-[#5F35D2]" />
-                </div>
+                </div> */}
 
                 <div>
                   <h1 className="text-[30px] lg:text-[50px] lg:leading-[64px] text-[#161618] font-bricolage_grotesque font-medium">
-                    Effortless Management for Restaurants, Hotels, and Bars
+                    Effortless Management For Your Hospitality Business
                   </h1>
                   <p className="font-normal text-[#44444A] lg:text-base text-sm">
-                    Streamline your business with real-time analytics, seamless order management, and easy booking—all in one platform.
+                    From restaurants to hotels, cafe, club, bars, lounges and many more — streamline your operations and boost efficiency all from one powerful
+                    platform.
                   </p>
                 </div>
 

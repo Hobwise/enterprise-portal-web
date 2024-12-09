@@ -15,8 +15,11 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { ContactUs } from '../api/controllers/landingPage';
 import { toast } from 'sonner';
+import LandingPageHeader from '@/components/ui/landingPage/header';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from '@nextui-org/react';
 
 export default function Contact() {
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const defaultErrorValue = { name: '', email: '', message: '' };
   const [contactInfo, setContactInfo] = useState<{
     name: string;
@@ -65,10 +68,11 @@ export default function Contact() {
   return (
     <div className="w-full bg-white">
       <header className="z-[100] backdrop-filter backdrop-blur-md fixed w-full">
+        <LandingPageHeader />
         <Navbar type="default" />
       </header>
       <main>
-        <section className="font-satoshi bg-white w-full pt-32 space-y-12">
+        <section className="font-satoshi bg-white w-full pt-36 space-y-12">
           <div className={sectionHeaderClass}>
             <ContactIcon className="text-[#5F35D2]" />
             <p className="font-normal">Content</p>
@@ -151,10 +155,8 @@ export default function Contact() {
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer docs?</h4>
                   <p className="text-[#252525]">
                     Check out our{' '}
-                    <span>
-                      <a href="#" target="_blank" className="text-primaryColor underline">
-                        documentation
-                      </a>
+                    <span onClick={onOpen} className="cursor-pointer underline text-primaryColor">
+                      documentation
                     </span>
                   </p>
                 </div>
@@ -175,6 +177,24 @@ export default function Contact() {
         <JoinCommunity className="text-center" />
       </main>
       <Footer />
+
+      <Modal isDismissable={false} isKeyboardDismissDisabled={true} isOpen={isOpen} onOpenChange={onOpenChange} size="3xl">
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Hobwise Documentation</ModalHeader>
+              <ModalBody>
+                <iframe src={'/assets/document/policy.pdf'} className="lg:h-[45vh] h-[70vh]" />
+              </ModalBody>
+              <ModalFooter>
+                <Button variant="light" onPress={onClose}>
+                  Close
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

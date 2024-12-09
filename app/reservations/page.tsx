@@ -62,7 +62,7 @@ export default function Reservations() {
           <section className="w-full lg:w-[50%] mx-auto space-y-4 lg:space-y-6 font-satoshi pt-12 lg:pt-24">
             <div className={sectionHeaderClass}>
               <p className="font-normal">Reserve Your Perfect Spot</p>
-              <ArrowRight />
+              {/* <ArrowRight /> */}
             </div>
             <h1 className="text-[24px] lg:text-[50px] lg:leading-[50px] text-[#161618] font-bricolage_grotesque">Reserve Your Perfect Spot</h1>
             <p className="font-normal text-dark">
