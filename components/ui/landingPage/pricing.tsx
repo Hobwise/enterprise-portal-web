@@ -6,7 +6,7 @@ import { Transition } from './transition';
 import React, { useEffect, useState } from 'react';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import Link from 'next/link';
-import { SIGN_UP_URL } from '@/utilities/routes';
+import { REQUEST_DEMO_URL, SIGN_UP_URL } from '@/utilities/routes';
 import { getPricings } from '@/app/api/controllers/landingPage';
 import PricingLoading from './skeleton-loading';
 
@@ -99,8 +99,8 @@ export default function PricingComponent() {
                 {/* <p className="text-white/65 lg:text-base text-sm">per {pricings?.Starter?.maxUsers} Users |</p> */}
                 <p className="text-[#ACB5BB] lg:text-base text-sm">per month</p>
               </div>
-              <p className="text-[#000000] text-left lg:text-base text-sm">
-                Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
+              <p className="text-[#000000] text-left lg:text-base text-sm h-[70px]">
+                Recommended for small businesses, looking to streamline their menu & order management process
               </p>
             </div>
           </Transition>
@@ -148,14 +148,14 @@ export default function PricingComponent() {
         >
           <Transition>
             <div className="space-y-2.5">
-              <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Premium Plan (Recommended)</h4>
+              <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Professional Plan (Recommended)</h4>
               <div className="flex items-baseline space-x-2">
                 <p className="text-[24px] lg:text-[42px] text-[#161618] font-medium font-sans">₦{formatNumber(professionalFee)}</p>
                 <p className="text-[#ACB5BB] lg:text-base text-sm">/month</p>
                 {/* <p className="text-[#ACB5BB] lg:text-base text-sm">/{pricings?.Professional?.maxUsers} Users</p> */}
               </div>
               <p className="text-[#161618] text-left lg:text-base text-sm">
-                Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
+                Suitable for medium size businesses looking to manage booking, process order & menu while leveraging the campaign feature also
               </p>
             </div>
           </Transition>
@@ -202,14 +202,14 @@ export default function PricingComponent() {
         >
           <Transition>
             <div className="space-y-2.5">
-              <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Professional Plan</h4>
+              <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Premium Plan</h4>
               <div className="flex items-baseline space-x-2">
                 <p className="text-[24px] lg:text-[42px] text-[#000000] font-medium font-sans">₦{formatNumber(premiumFee)}</p>
                 <p className="text-[#ACB5BB] lg:text-base text-sm">/month</p>
                 {/* <p className="text-white/65 lg:text-base text-sm">/Unlimited</p> */}
               </div>
               <p className="text-[#161618] text-left lg:text-base text-sm">
-                Lorem ipsum dolor sit amet consectetur. Pellentesque purus odio nec purus lectus faucibus. Nulla leo ac egestas.
+                For large scale businesses operations, enabling businesses with multiple locations manage their operations effectively
               </p>
             </div>
           </Transition>
@@ -251,8 +251,8 @@ export default function PricingComponent() {
           </div>
 
           <div className="mt-2 absolute bottom-10 w-[85%]">
-            <Link href={SIGN_UP_URL}>
-              <CustomButton className="w-full text-white font-medium mt-20">Get Started</CustomButton>
+            <Link href={REQUEST_DEMO_URL}>
+              <CustomButton className="w-full text-white font-medium mt-20">Contact Sales</CustomButton>
             </Link>
           </div>
         </div>
