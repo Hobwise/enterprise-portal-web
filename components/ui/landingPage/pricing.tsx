@@ -97,7 +97,7 @@ export default function PricingComponent() {
               <div className="flex items-baseline space-x-2">
                 <p className="text-[24px] lg:text-[42px] text-[#161618] font-medium font-sans">₦{formatNumber(starterFee)}</p>
                 {/* <p className="text-white/65 lg:text-base text-sm">per {pricings?.Starter?.maxUsers} Users |</p> */}
-                <p className="text-[#ACB5BB] lg:text-base text-sm">per month</p>
+                <p className="text-[#ACB5BB] lg:text-base text-sm">per {plan === 'monthly' ? 'month' : 'year'}</p>
               </div>
               <p className="text-[#000000] text-left lg:text-base text-sm h-[70px]">
                 Recommended for small businesses, looking to streamline their menu & order management process
@@ -151,7 +151,7 @@ export default function PricingComponent() {
               <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Professional Plan (Recommended)</h4>
               <div className="flex items-baseline space-x-2">
                 <p className="text-[24px] lg:text-[42px] text-[#161618] font-medium font-sans">₦{formatNumber(professionalFee)}</p>
-                <p className="text-[#ACB5BB] lg:text-base text-sm">/month</p>
+                <p className="text-[#ACB5BB] lg:text-base text-sm">per {plan === 'monthly' ? 'month' : 'year'}</p>
                 {/* <p className="text-[#ACB5BB] lg:text-base text-sm">/{pricings?.Professional?.maxUsers} Users</p> */}
               </div>
               <p className="text-[#161618] text-left lg:text-base text-sm">
@@ -204,9 +204,9 @@ export default function PricingComponent() {
             <div className="space-y-2.5">
               <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Premium Plan</h4>
               <div className="flex items-baseline space-x-2">
-                <p className="text-[24px] lg:text-[42px] text-[#000000] font-medium font-sans">₦{formatNumber(premiumFee)}</p>
-                <p className="text-[#ACB5BB] lg:text-base text-sm">/month</p>
-                {/* <p className="text-white/65 lg:text-base text-sm">/Unlimited</p> */}
+                <p className="text-[24px] lg:text-[42px] text-[#000000] font-medium font-sans">Contact Sales</p>
+                {/* <p className="text-[#ACB5BB] lg:text-base text-sm">per month</p>
+                <p className="text-white/65 lg:text-base text-sm">/Unlimited</p> */}
               </div>
               <p className="text-[#161618] text-left lg:text-base text-sm">
                 For large scale businesses operations, enabling businesses with multiple locations manage their operations effectively
