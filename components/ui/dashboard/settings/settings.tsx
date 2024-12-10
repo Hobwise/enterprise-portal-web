@@ -40,14 +40,13 @@ const SettingsComponent: React.FC = () => {
   //   { title: 'Roles and Privileges', screenNumber: 6 },
   //   { title: 'Pricings', screenNumber: 7 },
   // ];
-  console.log(userInformation?.isOwner, 'userInformation?.isOwne');
   const getListItems = (): ListItemProps[] => {
     const baseListItems: ListItemProps[] = [
-      { title: 'Profile', screenNumber: 1 },
-      { title: 'Password', screenNumber: 2 },
-      { title: 'Business profile', screenNumber: 3 },
-      { title: 'Business settings', screenNumber: 4 },
-      { title: 'Team', screenNumber: 5 },
+      { title: 'Personal Information', screenNumber: 1 },
+      { title: 'Password Management', screenNumber: 2 },
+      { title: 'Business Information', screenNumber: 3 },
+      { title: 'Kyc Compliance', screenNumber: 4 },
+      { title: 'Billing & S', screenNumber: 5 },
       { title: 'Roles and Privileges', screenNumber: 6 },
     ];
 

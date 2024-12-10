@@ -24,9 +24,6 @@ const Preview = () => {
 
   const baseString = 'data:image/jpeg;base64,';
 
-  console.log('menus', menus);
-  console.log('activeTile', activeTile);
-
   const items = data?.flatMap((obj) => obj.items);
 
   return (
@@ -46,7 +43,7 @@ const Preview = () => {
       )}
 
       <h1 className="text-[28px] font-[700] relative p-4 pt-6">Menu</h1>
-      <div className="overflow-scroll w-full px-4">
+      {/* <div className="overflow-scroll w-full px-4">
         <Tabs
           classNames={{
             tabList:
@@ -81,7 +78,7 @@ const Preview = () => {
             );
           })}
         </Tabs>
-      </div>
+      </div> */}
 
       <div className={`${togglePreview(activeTile)?.main} relative  px-4`}>
         {items?.map((item) => {
@@ -135,12 +132,13 @@ const Preview = () => {
                     togglePreview(activeTile)?.textContainer
                   } flex flex-col justify-center`}
                 >
+                  <p>{item.menuName}</p>
                   <p className="font-[700]">{item.itemName}</p>
                   <p className="text-[13px]">{formatPrice(item.price)}</p>
                   {activeTile && activeTile !== 'Single column 1' && (
                     <p className="text-[13px]">
                       {/* {togglePreview(activeTile)?.text3} */}
-                      item.itemDescription
+                      {item.itemDescription}
                     </p>
                   )}
                 </div>
