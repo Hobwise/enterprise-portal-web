@@ -8,7 +8,7 @@ import { cn, notify } from '@/lib/utils';
 import React, { useEffect, useState } from 'react';
 import { getCompanies } from '@/app/api/controllers/landingPage';
 
-export default function Companies({ companies: initCompanies, className, type }: { className?: string; type: string; companies?: any }) {
+export default function Companies() {
   const [isLoading, setIsLoading] = useState(true);
 
   const initialCompanies = [
@@ -19,7 +19,7 @@ export default function Companies({ companies: initCompanies, className, type }:
     { image: FedEx, title: 'FedEx' },
   ];
 
-  const [companies, setCompanies] = useState<{ image: any; title: string | null }[]>(initCompanies);
+  const [companies, setCompanies] = useState<{ image: any; title: string | null }[]>([]);
 
   const getAllCompanies = async (loading = true) => {
     setIsLoading(loading);
@@ -29,11 +29,7 @@ export default function Companies({ companies: initCompanies, className, type }:
     if (data?.data?.isSuccessful) {
       const updatedCompanies = data?.data?.data?.filter((logo: any) => logo).map((each: any) => ({ image: each, title: '' }));
 
-      if (type === 'all') {
-        setCompanies([...updatedCompanies, ...initCompanies]);
-      } else {
-        setCompanies(updatedCompanies);
-      }
+      setCompanies(updatedCompanies);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -49,7 +45,10 @@ export default function Companies({ companies: initCompanies, className, type }:
 
   return (
     <React.Fragment>
-      {type === 'all' ? (
+      {/* {type === 'all' ? ( */}
+      {isLoading ? (
+        <div className="h-24" />
+      ) : (
         <>
           {companies.map((logo, index) => (
             <li key={index}>
@@ -62,13 +61,14 @@ export default function Companies({ companies: initCompanies, className, type }:
             </li>
           ))}
         </>
-      ) : (
+      )}
+      {/* ) : (
         <div className={cn('grid gap-10 w-[50%] items-center mx-auto grid-cols-5', className)}>
           {initialCompanies.map((each, index) => (
             <img src={each.title ? each.image.src : `data:image/jpeg;base64,${each.image}`} alt={each.title || ''} key={each.title || index} />
           ))}
         </div>
-      )}
+      )} */}
     </React.Fragment>
   );
 }
