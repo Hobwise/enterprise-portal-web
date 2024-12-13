@@ -10,6 +10,7 @@ import BestToolsComponent from '@/components/ui/landingPage/bestTools';
 import Footer from '@/components/ui/landingPage/footer';
 import Companies from '@/components/ui/landingPage/companies';
 import LandingPageHeader from '@/components/ui/landingPage/header';
+import { Transition } from '@/components/ui/landingPage/transition';
 
 export default function Pricing() {
   const [plan, setPlan] = useState<string>('monthly');
@@ -24,7 +25,7 @@ export default function Pricing() {
       <main className="w-full pt-12 font-satoshi">
         <section className=" font-satoshi py-12 space-y-12 bg-white  main-section">
           <Image src={PricePlan} alt="" className="absolute top-0 w-[60%] right-[20%] px-6 lg:px-12" priority />
-          <div className="bg-[#6840D50D] text-[#5F35D2] px-6 lg:px-12 border border-[#5F35D2] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom_inset_2">
+          <div className="bg-[#6840D50D] text-[#5F35D2] lg:px-12 border border-[#5F35D2] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom_inset_2">
             <TagIcon className="text-[#5F35D2]" />
             <p className="font-normal text-[#5F35D2] text-sm">Pricing</p>
           </div>
@@ -38,10 +39,30 @@ export default function Pricing() {
             <PricingComponent />
           </div>
 
-          <div className="py-6 space-y-10 bg-[#5F35D2]">
-            <p className="text-center text-white text-[20px]">More than 10,000 companies enjoy using our product</p>
-            <Companies type="min" />
-          </div>
+          <section className="lg:space-y-6 p-6 lg:py-4 px-6 lg:px-0 bg-white">
+            <Transition>
+              <div className="space-y-4 lg:space-y-10 overflow-hidden">
+                <p className="font-bricolage_grotesque text-[#677182] text-center font-light text-sm lg:text-base">Some companies enjoy using our product</p>
+
+                <div
+                  x-data="{}"
+                  x-init="$nextTick(() => {
+                  let ul = $refs.logos;
+                  ul.insertAdjacentHTML('afterend', ul.outerHTML);
+                  ul.nextSibling.setAttribute('aria-hidden', 'true');
+              })"
+                  className="inline-flex w-[95%] lg:w-[100%] flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]"
+                >
+                  <ul className="flex animate-infinite-scroll items-center justify-center md:justify-start [&_img]:max-w-none [&_li]:mx-8">
+                    <Companies />
+                  </ul>
+                  <ul className="flex animate-infinite-scroll items-center justify-center md:justify-start [&_img]:max-w-none [&_li]:mx-8" aria-hidden="true">
+                    <Companies />
+                  </ul>
+                </div>
+              </div>
+            </Transition>
+          </section>
 
           {/* <div className="space-y-4 pb-24">
             <div className="lg:mt-24 space-y-4">
@@ -62,7 +83,7 @@ export default function Pricing() {
           </div> */}
         </section>
 
-        <section className="bg-white py-12 lg:py-20 px-6 lg:px-12 text-center">
+        <section className="bg-white pb-12 pt-4 lg:pb-20 px-6 lg:px-12 text-center">
           <BestToolsComponent />
         </section>
 
