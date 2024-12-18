@@ -1,7 +1,7 @@
-import logo from '../public/assets/images/hobink.png';
+import Hobwise from '@/public/assets/images/hobwise.png';
 
 export const companyInfo = {
   name: 'Hobwise',
-  logo: logo,
+  logo: Hobwise,
   webUrl: 'https://hobink-corporate-web.vercel.app',
 };

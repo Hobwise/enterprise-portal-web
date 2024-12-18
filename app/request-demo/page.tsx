@@ -14,6 +14,8 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { BookDemo } from '../api/controllers/landingPage';
 import { toast } from 'sonner';
+import { PRIVACY_POLICY } from '@/utilities/routes';
+import Link from 'next/link';
 
 export default function Contact() {
   const defaultValue = {
@@ -200,9 +202,9 @@ export default function Contact() {
                   <p className="text-[#252525]">
                     Check out our{' '}
                     <span>
-                      <a href="#" target="_blank" className="text-primaryColor underline">
+                      <Link href={`${PRIVACY_POLICY}`} className="text-primaryColor underline">
                         documentation
-                      </a>
+                      </Link>
                     </span>
                   </p>
                 </div>

@@ -16,10 +16,11 @@ import { useState } from 'react';
 import { ContactUs } from '../api/controllers/landingPage';
 import { toast } from 'sonner';
 import LandingPageHeader from '@/components/ui/landingPage/header';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from '@nextui-org/react';
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@nextui-org/react';
+import { PRIVACY_POLICY } from '@/utilities/routes';
+import Link from 'next/link';
 
 export default function Contact() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const defaultErrorValue = { name: '', email: '', message: '' };
   const [contactInfo, setContactInfo] = useState<{
     name: string;
@@ -155,9 +156,9 @@ export default function Contact() {
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer docs?</h4>
                   <p className="text-[#252525]">
                     Check out our{' '}
-                    <span onClick={onOpen} className="cursor-pointer underline text-primaryColor">
+                    <Link href={`${PRIVACY_POLICY}`} className="text-primaryColor underline">
                       documentation
-                    </span>
+                    </Link>
                   </p>
                 </div>
                 <div className="space-y-6">
@@ -177,24 +178,6 @@ export default function Contact() {
         <JoinCommunity className="text-center" />
       </main>
       <Footer />
-
-      <Modal isDismissable={false} isKeyboardDismissDisabled={true} isOpen={isOpen} onOpenChange={onOpenChange} size="3xl">
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">Hobwise Documentation</ModalHeader>
-              <ModalBody>
-                <iframe src={'/assets/document/policy.pdf'} className="lg:h-[45vh] h-[70vh]" />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  Close
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
     </div>
   );
 }

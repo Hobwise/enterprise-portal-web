@@ -1,7 +1,6 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
 import { cn } from '@/lib/utils';
-import HobinkLogoWhite from '@/public/assets/images/hobink-logo-white.png';
 import Hobwise from '@/public/assets/images/hobwise.png';
 import SmallScreenBackground from '@/public/assets/images/small-screen-bg.png';
 import { CloseIcon, FlashIcon, HamburgerIcon } from '@/public/assets/svg';
@@ -105,7 +104,9 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
             <div className="text-left px-2 space-y-4">
               <div className="">
                 <p className="text-[#16161866] font-light">Get in touch</p>
-                <p className="text-primaryColor underline">hello@hobwise.com</p>
+                <a href="mailto: hello@hobwise.com" target="_blank" className="text-primaryColor underline">
+                  hello@hobwise.com
+                </a>
               </div>
 
               <div className="flex space-x-4">
