@@ -16,9 +16,9 @@ import { useState } from 'react';
 import { ContactUs } from '../api/controllers/landingPage';
 import { toast } from 'sonner';
 import LandingPageHeader from '@/components/ui/landingPage/header';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from '@nextui-org/react';
 import { PRIVACY_POLICY } from '@/utilities/routes';
 import Link from 'next/link';
+import BackgroundImage from '@/public/assets/images/pricing-bg-2.png';
 
 export default function Contact() {
   const defaultErrorValue = { name: '', email: '', message: '' };
@@ -73,7 +73,8 @@ export default function Contact() {
         <Navbar type="default" />
       </header>
       <main>
-        <section className="font-satoshi bg-white w-full pt-36 space-y-12">
+        <section className="font-satoshi bg-white w-full pt-24 space-y-12">
+          <Image src={BackgroundImage} alt="" className="absolute top-0 w-[60%] right-[20%] px-6 lg:px-12" priority />
           <div className={sectionHeaderClass}>
             <ContactIcon className="text-[#5F35D2]" />
             <p className="font-normal">Content</p>

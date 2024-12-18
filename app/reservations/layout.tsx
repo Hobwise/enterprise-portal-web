@@ -17,7 +17,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <Navbar type="default" />
       </header>
       <Suspense fallback={<LoadingReservations />}>
-        <div className="pt-24 pb-6">{children}</div>
+        <div className="pt-12 pb-6">{children}</div>
       </Suspense>
     </div>
   );
