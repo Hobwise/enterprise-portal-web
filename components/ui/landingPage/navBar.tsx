@@ -2,7 +2,6 @@
 import { CustomButton } from '@/components/customButton';
 import { cn } from '@/lib/utils';
 import Hobwise from '@/public/assets/images/hobwise.png';
-import SmallScreenBackground from '@/public/assets/images/small-screen-bg.png';
 import { CloseIcon, FlashIcon, HamburgerIcon } from '@/public/assets/svg';
 import { CONTACT_URL, HOME_URL, LOGIN_URL, PRICING_URL, RESERVATIONS_URL, SIGN_UP_URL } from '@/utilities/routes';
 import Image from 'next/image';
@@ -35,8 +34,6 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
 
   return (
     <div className={cn(openNav && 'w-full bg-white h-screen relative')}>
-      {openNav && <Image src={SmallScreenBackground} alt="" className="absolute top-0 right-0 w-[90%] lg:hidden" priority />}
-
       <div className={cn('flex items-center font-satoshi w-full z-[999] justify-between px-6 lg:px-12 py-2.5', className)}>
         <Link href={HOME_URL}>
           <Image src={Hobwise} alt="Hobwise logo" width={type === 'default' ? 150 : 240} />
@@ -73,7 +70,7 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
       </div>
 
       {openNav && (
-        <div className="my-6 px-6 space-y-6 lg:hidden">
+        <div className="my-6 px-6 space-y-6 lg:hidden nav-bar-bg">
           <Transition>
             <div className="flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-2.5 py-1.5 rounded-full text-xs shadow_custom-inset">
               <FlashIcon />
@@ -81,23 +78,23 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
             </div>
           </Transition>
 
-          <nav className={cn('block text-left text-[32px] space-y-4 text-[#616B7C] font-bricolage_grotesque')}>
-            {navItem.map((each) => {
-              const isActive = pathname.slice(1).startsWith(each.href) || (each.href === '/' && pathname === each.href);
+          <nav className={cn('block text-left text-[32px] space-y-4 text-[#616B7C] font-bricolage_grotesque z-[999]')}>
+            <ul className="space-y-4">
+              {navItem.map((each) => {
+                const isActive = pathname.slice(1).startsWith(each.href) || (each.href === '/' && pathname === each.href);
 
-              return (
-                <Transition key={each.title}>
-                  <Link href={`/${each.href}`} className={cn('cursor-pointer w-full', isActive && 'text-primaryColor')}>
-                    <ul>
+                return (
+                  <Transition key={each.title}>
+                    <Link href={`/${each.href}`} className={cn('cursor-pointer w-full', isActive && 'text-primaryColor')}>
                       <li>
                         {each.title}
                         {isActive && <div className="border border-primaryColor w-full" />}
                       </li>
-                    </ul>
-                  </Link>
-                </Transition>
-              );
-            })}
+                    </Link>
+                  </Transition>
+                );
+              })}
+            </ul>
           </nav>
 
           <Transition>
@@ -111,7 +108,9 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
 
               <div className="flex space-x-4">
                 {socialMedia.map((each) => (
-                  <div key={each.url}>{each.icon}</div>
+                  <Link href={each.url} target="_blank">
+                    <div key={each.url}>{each.icon}</div>
+                  </Link>
                 ))}
               </div>
             </div>

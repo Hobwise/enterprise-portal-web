@@ -8,9 +8,9 @@ import Hobwise from '@/public/assets/images/hobwise.png';
 import { PRIVACY_POLICY } from '@/utilities/routes';
 
 export const socialMedia = [
-  { icon: <FacebookIcon />, url: '#' },
-  { icon: <TwitterIcon />, url: '#' },
-  { icon: <InstgramIcon />, url: '#' },
+  { icon: <FacebookIcon />, url: 'https://www.facebook.com/profile.php?id=61570807141575&mibextid=ZbWKwL' },
+  { icon: <TwitterIcon />, url: 'https://x.com/HobwiseApp' },
+  { icon: <InstgramIcon />, url: 'https://www.instagram.com/hobwise' },
   { icon: <LinkedInIcon />, url: '#' },
 ];
 export default function Footer() {
