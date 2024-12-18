@@ -11,7 +11,7 @@ export default function PrivacyPolicy() {
     'Contact us',
   ];
   return (
-    <div className="w-full flex space-x-4 px-10 font-satoshi">
+    <div className="w-full flex space-x-4 px-10 font-satoshi text-[#000000CC]">
       <div className="w-[20%] border-r border-r-[#C4C4C480] py-8 space-y-8">
         {items.map((each) => (
           <a href={`#${each}`} className="py-8">

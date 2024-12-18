@@ -12,7 +12,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       </header>
 
       <Suspense fallback={<Skeleton className="w-full h-screen" />}>
-        <div>{children}</div>
+        <div className="text-[#000000CC]">{children}</div>
       </Suspense>
     </div>
   );
