@@ -13,8 +13,8 @@ export default function UserGuide() {
     'Bills and Subscription',
   ];
   return (
-    <div className="w-full flex space-x-4 px-10 font-satoshi">
-      <div className="w-[20%] border-r border-r-[#C4C4C480] py-8 space-y-8">
+    <div className="w-full flex space-x-4 px-4 lg:px-10 font-satoshi pt-[32%] lg:pt-[10%]">
+      <div className="w-[20%] border-r border-r-[#C4C4C480] py-8 space-y-8 fixed h-screen hidden lg:block">
         {items.map((each) => (
           <a href={`#${each}`} className="py-8">
             <p className="text-sm cursor-pointer py-3" key={each}>
@@ -24,7 +24,7 @@ export default function UserGuide() {
         ))}
       </div>
 
-      <div className="w-[80%] pt-8 space-y-8 pl-8">
+      <div className="w-full lg:w-[80%] py-8 space-y-8 lg:pl-[24%]">
         <div className="space-y-2" id={items[0]}>
           <h1 className="text-xl font-bold">{items[0]}</h1>
           <p className="text-sm">
@@ -112,16 +112,16 @@ export default function UserGuide() {
               </li>
               <li>
                 4. Enter the customer’s details:
-                <p className="font-bold">
+                <p className="font-bold ml-4">
                   &#8226; <span className="font-fold">Name</span>
                 </p>
-                <p className="font-bold">
+                <p className="font-bold ml-4">
                   &#8226; <span className="font-fold">Phone Number</span>
                 </p>
-                <p className="font-bold">
+                <p className="font-bold ml-4">
                   &#8226; Select a <span className="font-fold">Table</span>
                 </p>
-                <p className="font-bold">
+                <p className="font-bold ml-4">
                   &#8226; Add a <span className="font-fold">Comment</span> (optional).
                 </p>
               </li>

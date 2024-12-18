@@ -5,7 +5,7 @@ import { ReactNode, Suspense } from 'react';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="space-y-4 py-4 bg-white">
+    <div className="space-y-4 py-4 bg-white h-screen">
       <header className="z-[100] w-full top-0 lg:mx-auto font-satoshi fixed bg-white backdrop-filter backdrop-blur-md right-0 left-0">
         <LandingPageHeader />
         <Navbar className="bg-none py-4 lg:py-2" type="default" />

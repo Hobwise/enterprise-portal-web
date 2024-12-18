@@ -144,7 +144,7 @@ export default function Contact() {
                 </div>
               </form>
 
-              <div className="font-satoshi space-y-8 w-[55%]">
+              <div className="font-satoshi space-y-8 lg:w-[55%]">
                 <Image src={HobinkLogo} alt="hobwise logo" width={50} height={50} />
                 <div className="space-y-6">
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer email?</h4>

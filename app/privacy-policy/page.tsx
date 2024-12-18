@@ -25,7 +25,7 @@ export default function PrivacyView() {
 
   return (
     <div>
-      <div className="border-b w-full flex border-b-[#C4C4C480] space-x-8 px-10 pt-24">
+      <div className="border-b w-full flex border-b-[#C4C4C480] space-x-8 px-6 lg:px-10 bg-white pt-24 fixed">
         {tabs.map((tab) => (
           <div
             className={cn(
