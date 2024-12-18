@@ -41,8 +41,6 @@ export default function Reservations() {
     queryKey: ['reservations', pageSize, currentPage, searchKeyWord],
   });
 
-  console.log(data, '-> data');
-
   const sizes: string[] = ['10', '20', '50', '100'];
 
   useEffect(() => {
