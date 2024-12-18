@@ -56,7 +56,7 @@ export default function Reservations() {
   return (
     <div className="bg-white">
       <div className="w-full bg-white h-full">
-        <main className="lg:gap-3 relative text-center bg-white overflow-x-hidden main-section px-6 lg:px-0 lg:h-[500px] h-[400px]">
+        <main className="lg:gap-3 relative text-center bg-white overflow-x-hidden main-section px-6 lg:px-0 lg:h-[400px] h-[400px]">
           <section className="w-full lg:w-[50%] mx-auto space-y-4 lg:space-y-6 font-satoshi pt-12 lg:pt-24">
             <div className={sectionHeaderClass}>
               <p className="font-normal">Reserve Your Perfect Spot</p>
