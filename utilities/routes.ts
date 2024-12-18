@@ -8,3 +8,5 @@ export const REQUEST_DEMO_URL: string = 'request-demo';
 // Auth
 export const LOGIN_URL: string = '/auth/login';
 export const SIGN_UP_URL: string = '/auth/signup';
+
+export const SETTINGS_URL = '/dashboard/settings';

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { CustomButton } from '@/components/customButton';
@@ -10,7 +12,6 @@ import { IoCheckmarkCircleOutline } from 'react-icons/io5';
 import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,
-  notify,
   THREEMB,
 } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -50,7 +51,6 @@ const Profile = () => {
 
   const { data } = useUser();
   const [isEditing, setIsEditing] = useState(false);
-  const [file, setFile] = useState<any>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [userFormData, setUserFormData] = useState<UserData | null>(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -78,7 +78,6 @@ const Profile = () => {
       ),
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
-        setFile(null);
         setPreviewUrl(null);
         setUserFormData((prevState: any) => ({
           ...prevState,
@@ -126,8 +125,6 @@ const Profile = () => {
       const compressedFile = await imageCompression(file, imageCompressOptions);
 
       if (compressedFile) {
-        setFile(compressedFile);
-
         // Generate a preview URL
         const reader = new FileReader();
         reader.onload = () => setPreviewUrl(reader.result as string);

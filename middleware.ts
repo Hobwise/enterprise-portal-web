@@ -30,7 +30,7 @@ export const config = {
     '/dashboard/reservation',
     '/dashboard/bookings',
     '/dashboard/reservation/create-reservation',
-    '/dashboard/settings',
+    '/dashboard/settings/personal-information',
     '/dashboard/reports',
     '/dashboard/reports/booking',
     '/dashboard/reports/orders',
