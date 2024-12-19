@@ -141,34 +141,6 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
               <p className="font-medium text-sm text-dark">Note</p>
               <p className="text-sm text-dark">Thank you for your order.</p>
             </div>
-            {/* <table className="w-full divide-y divide-gray-200 text-sm">
-              <thead>
-                <tr>
-                  <th className="py-4 text-left font-semibold text-dark">
-                    ITEM
-                  </th>
-                  <th className="py-3 text-left font-semibold text-dark">Hello</th>
-                  <th className="py-3 text-left font-semibold text-dark">
-                    AMOUNT
-                  </th>
-
-                  <th className="py-3 text-left font-semibold text-dark"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                <tr>
-                  <td className="px-9 py-5 whitespace-nowrap text-black space-x-1 flex items-center">
-                    <div>
-                      <p>{mapPlan(data?.plan!)}</p>
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap text-black truncate"></td>
-                  <td className="whitespace-nowrap text-black truncate">
-                    {mapAmount(data?.totalAmount!)}
-                  </td>
-                </tr>
-              </tbody>
-            </table> */}
             <div className="px-3 py-6">
               <table className="text-black">
                 <thead className="text-sm border-b">

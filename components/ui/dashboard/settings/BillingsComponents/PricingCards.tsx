@@ -280,7 +280,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
               {isActive ? (
                 <button
                   disabled
-                  className="mt-6 w-56 mx-auto bg-[#F1F2F4] rounded-lg px-8 py-2 font-normal text-sm text-grey500"
+                  className="mt-6 w-full mx-auto bg-[#F1F2F4] rounded-lg px-8 py-2 font-normal text-sm text-grey500"
                 >
                   Current Plan
                 </button>
@@ -291,7 +291,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                       ? (e) => initializeTrnx(index + 1, e)
                       : activePlan
                   }
-                  className="mt-6 w-56 mx-auto border border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
+                  className="mt-6 w-full mx-auto border border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
                 >
                   {planLoading[index] ? <Spinner size="sm" /> : 'Select Plan'}
                 </button>
