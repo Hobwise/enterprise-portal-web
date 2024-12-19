@@ -38,18 +38,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
       'Unknown'
     );
   };
-    const mapAmount = (amount: number) => `₦${addCommasToNumber(amount)}`;
-    
-  const mapPeriod = (paymentPeriod: number) => {
-    switch (paymentPeriod) {
-      case 0:
-        return 'Monthly';
-      case 1:
-        return 'Yearly';
-      default:
-        return 'Unknown';
-    }
-  };
+  const mapAmount = (amount: number) => `₦${addCommasToNumber(amount)}`;
 
   useEffect(() => {
     // console.log("BUSINESS", business)
@@ -89,11 +78,14 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
   };
 
   return (
-    <section ref={invoiceRef}>
-      <div className="mx-auto py-0 md:py-16">
-        <article className="shadow-none ">
+    <section>
+      <div className="max-w-2xl mx-auto py-0 md:py-16">
+        <article
+          className="shadow-none md:shadow-md md:rounded-md overflow-hidden"
+          ref={invoiceRef}
+        >
           <div className="md:rounded-b-md bg-white">
-            <div className="p-3 border-b border-gray-200">
+            <div className="p-9 border-b border-gray-200">
               <div className="space-y-6">
                 <div className="flex justify-between items-top">
                   <div className="space-y-4">
@@ -105,10 +97,16 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                       <p className="font-bold text-lg">Invoice</p>
                       <p>Hobink</p>
                     </div>
-                    <div className="text-sm text-grey500">
-                      <p className="font-semibold text-black">BILLED TO</p>
-                      <p>{business?.businessName}</p>
-                      <p>{business?.businessContactEmail}</p>
+                    <div>
+                      <p className="font-medium text-sm text-black">
+                        Billed To
+                      </p>
+                      <p className="font-medium text-black">
+                        {business?.businessName}
+                      </p>
+                      <p className="font-medium text-sm text-dark">
+                        {business?.businessContactEmail}
+                      </p>
                       <p className="font-medium text-sm text-dark">
                         {business?.businessContactNumber}
                       </p>
@@ -116,16 +114,16 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                   </div>
                   <div className="space-y-2">
                     <div>
-                      <p className="font-bold text-sm text-dark">
-                        INVOICE NUMBER
+                      <p className="font-medium text-sm text-dark">
+                        Invoice Number
                       </p>
                       <p className="font-medium text-sm text-black">
-                        {data?.reference}
+                        {data?.subscriptionPlanCode}
                       </p>
                     </div>
                     <div>
-                      <p className="font-bold text-sm text-dark">
-                        INVOICE DATE
+                      <p className="font-medium text-sm text-dark">
+                        Invoice Date
                       </p>
                       <p className="font-medium text-sm text-black">
                         {moment(data?.subscriptionStartDate).format(
@@ -137,25 +135,25 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                 </div>
               </div>
             </div>
-            <div className="p-3 border-b border-gray-200">
+            <div className="p-9 border-b border-dark">
               <p className="font-medium text-sm text-dark">Note</p>
               <p className="text-sm text-dark">Thank you for your order.</p>
             </div>
-            {/* <table className="w-full divide-y divide-gray-200 text-sm">
+            <table className="w-full divide-y divide-dark text-sm">
               <thead>
                 <tr>
-                  <th className="py-4 text-left font-semibold text-dark">
-                    ITEM
+                  <th className="px-9 py-4 text-left font-semibold text-dark">
+                    Item
                   </th>
-                  <th className="py-3 text-left font-semibold text-dark">Hello</th>
+                  <th className="py-3 text-left font-semibold text-dark"></th>
                   <th className="py-3 text-left font-semibold text-dark">
-                    AMOUNT
+                    Amount
                   </th>
 
                   <th className="py-3 text-left font-semibold text-dark"></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-dark">
                 <tr>
                   <td className="px-9 py-5 whitespace-nowrap text-black space-x-1 flex items-center">
                     <div>
@@ -168,30 +166,8 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                   </td>
                 </tr>
               </tbody>
-            </table> */}
-            <div className="px-3 py-6">
-              <table className="text-black">
-                <thead className="text-sm border-b">
-                  <tr>
-                    <th className="text-left py-2">ITEM</th>
-                    <th className="text-center py-2">PERIOD</th>
-                    <th className="text-right py-2">AMOUNT</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="text-sm">
-                    <td className="text-left py-2">{mapPlan(data?.plan!)}</td>
-                    <td className="text-center py-2">
-                      {mapPeriod(data?.paymentPeriod!)}
-                    </td>
-                    <td className="text-right py-2">
-                      {mapAmount(data?.totalAmount!)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div className="p-3 border-b border-gray-200">
+            </table>
+            <div className="p-9 border-b border-dark">
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <div>
@@ -217,13 +193,13 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                 </div>
               </div>
             </div>
-            <div className="p-3 border-b border-gray-200">
+            <div className="p-9 border-b border-gray-200">
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <div>
-                    <p className="font-bold text-black">Amount Paid</p>
+                    <p className="font-bold text-black text-lg">Amount Paid</p>
                   </div>
-                  <p className="font-bold text-black">
+                  <p className="font-bold text-black text-lg">
                     {mapAmount(data?.totalAmount!)}
                   </p>
                 </div>
