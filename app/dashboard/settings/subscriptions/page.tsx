@@ -1,6 +1,7 @@
+import Pricing from '@/components/ui/dashboard/settings/pricings';
 
 const SubsriptionsPage = () => {
-  return <div>Subscriptions page</div>;
+  return <Pricing />;
 };
 
 export default SubsriptionsPage;

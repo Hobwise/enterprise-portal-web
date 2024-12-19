@@ -1,49 +1,54 @@
-import React, { useEffect, useState } from "react";
-import mastercardLogo from "../../../../../public/assets/images/mastercard-logo.svg";
-import Image from "next/image";
-import visa from "../../../../../public/assets/images/visa.png";
-import verve from "../../../../../public/assets/images/verve.png";
-import { PaidCardsData } from "./Interfaces";
-import { Spinner } from "@nextui-org/react";
+import React, { useEffect, useState } from 'react';
+import mastercardLogo from '../../../../../public/assets/images/mastercard-logo.svg';
+import Image from 'next/image';
+import visa from '../../../../../public/assets/images/visa.png';
+import verve from '../../../../../public/assets/images/verve.png';
+import { PaidCardsData } from './Interfaces';
+import { Divider, Spinner } from '@nextui-org/react';
 
 import {
   capitalizeFirstLetterOfEachWord,
   getJsonItemFromLocalStorage,
   notify,
-} from "@/lib/utils";
+} from '@/lib/utils';
 // import useManageSubscription from "@/hooks/cachedEndpoints/useManageSubscription";
 import {
   manageSubscription,
   manageSubscriptionv2,
-} from "@/app/api/controllers/dashboard/settings";
-import IframeComponent from "./Iframe";
-import LoadingSpinner from "@/app/dashboard/menu/[menuId]/loading";
+} from '@/app/api/controllers/dashboard/settings';
+import IframeComponent from './Iframe';
+import LoadingSpinner from '@/app/dashboard/menu/[menuId]/loading';
 
 export const PaidCards: React.FC<PaidCardsData> = ({
   cardDetails,
   currentSubscriptionDetails,
 }) => {
-  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
   const businessID = userInformation?.businesses[0]?.businessId;
 
-  const [manageSubUrl, setManageSubUrl] = useState<string>("");
+  const [manageSubUrl, setManageSubUrl] = useState<string>('');
   const [triggerIframe, setTriggerIframe] = useState(false);
   const [loadingModal, setLoadingModal] = useState(false);
   // const { bindings,  } = useModal();
 
   //* HANDLE TYPES
   const TYPE_OF_CARD = {
-    VISA: <Image alt="Visa" src={visa} height={40} layout="intrinsic" />,
-    VERVE: <Image alt="Verve" src={verve} layout="intrinsic" />,
+    VISA: <Image alt="Visa" src={visa} height={32} layout="intrinsic" />,
+    VERVE: <Image alt="Verve" src={verve} height={32} layout="intrinsic" />,
     MASTERCARD: (
-      <Image alt="Mastercard" src={mastercardLogo} layout="intrinsic" />
+      <Image
+        alt="Mastercard"
+        src={mastercardLogo}
+        height={32}
+        layout="intrinsic"
+      />
     ),
   };
 
   const TYPE_OF_PLAN = {
-    1: "Premium",
-    2: "Professional",
-    3: "Starter",
+    1: 'Premium',
+    2: 'Professional',
+    3: 'Starter',
   };
 
   //* SET VALUES
@@ -54,9 +59,9 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   const planType = currentSubscriptionDetails?.plan;
 
   image =
-    cardBrand === "VISA"
+    cardBrand === 'VISA'
       ? TYPE_OF_CARD.VISA
-      : cardBrand === "VERVE"
+      : cardBrand === 'VERVE'
       ? TYPE_OF_CARD.VERVE
       : TYPE_OF_CARD.MASTERCARD;
 
@@ -68,14 +73,16 @@ export const PaidCards: React.FC<PaidCardsData> = ({
       : TYPE_OF_PLAN[3];
 
   const nextPayment =
-    currentSubscriptionDetails?.nextPaymentDate?.split("T")[0];
-  const isActive = currentSubscriptionDetails?.isActive ? "Active" : "False";
+    currentSubscriptionDetails?.nextPaymentDate?.split('T')[0];
+  const isActive = currentSubscriptionDetails?.isActive ? 'Active' : 'False';
+
+  const paystackStatus = cardDetails?.status;
 
   //*================== MANAGE SUBSCRIPTION ==================
 
   const manageYourSubscription = async () => {
     setLoadingModal(true);
-    const token = getJsonItemFromLocalStorage("userInformation").token;
+    const token = getJsonItemFromLocalStorage('userInformation').token;
     const data = await manageSubscriptionv2(businessID, token);
     if (data !== null && data.error == null) {
       setManageSubUrl(data?.data);
@@ -98,56 +105,45 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   //*================== MANAGE SUBSCRIPTION ==================
   return (
     <div>
-      <div className="flex flex-col gap-0 lg:flex-row md:flex-row sm:gap-4">
-        <div className="border border-secondaryGrey w-full rounded-lg my-6 px-4 py-6 sm:w-1/2 ">
-          <div>
-            <div className="flex flex-row my-2 w-full justify-between">
-              <div>{image}</div>
-           
-               <div className="px-3 py-0 border-2 border-cyan text-cyan rounded-full flex justify-center items-center">
-                Default
-              </div>
-            </div>
-            <div className="flex flex-row space-x-4">
-              <h2 className="text-lg xl:text-sm font-bold">
-                {capitalizeFirstLetterOfEachWord(cardDetails?.brand!)} ending in{" "}
-                {cardDetails?.last4}
-              </h2>
-              {/* <div className="px-3 border-2 border-cyan text-cyan rounded-full">
-                Default
-              </div> */}
-            </div>
-            <p className="text-base xl:text-sm my-1 font-medium">
-              Expiry {cardDetails?.exp_Month}/{cardDetails?.exp_Year}
+      <div className="flex flex-col gap-0 lg:flex-row md:flex-row sm:gap-4 mb-5">
+        <div className="flex flex-col justify-center w-full h-[157px] border border-secondaryGrey py-6 px-4 rounded-lg">
+          {image}
+          <div className="flex items-center gap-2">
+            <p className="font-semibold text-[#344054] text-sm">
+              {capitalizeFirstLetterOfEachWord(cardDetails?.brand!)} ending in{' '}
+              {cardDetails?.last4}
             </p>
+            <div className="border border-[#04326B] py-[2px] px-3 rounded-xl text-[#04326B] text-sm font-medium">
+              Default
+            </div>
           </div>
+          <p className="font-medium text-sm text-[#344054]">
+            Expiry {cardDetails?.exp_Month}/{cardDetails?.exp_Year}
+          </p>
         </div>
-        <div className="border border-secondaryGrey w-full rounded-lg my-6 xl:my-4 sm:w-1/2">
-          <div className="p-4 px-6 border-b border-secondaryGrey">
-            <div className="flex justify-between">
-              <h2 className="text-lg font-bold">{plan} plan</h2>
-              <div className="px-3 py-0 border-2 border-cyan text-cyan rounded-full">
+        <div className="flex flex-col justify-center w-full border border-secondaryGrey py-4 px-4 rounded-lg">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-semibold">{plan} plan</p>
+              <p className="text-sm text-[#344054] font-medium">
+                Next payment date{' '}
+                <span className="font-normal">{nextPayment}</span>
+              </p>
+            </div>
+            <div className="flex flex-col">
+              <div className="border border-[#04326B] py-[2px] px-3 rounded-xl text-[#04326B] text-sm font-medium">
                 {isActive}
               </div>
+              <span className='text-center text-sm text-secondaryGrey'>{paystackStatus}</span>
             </div>
-            <p className="text-base my-1 font-medium">
-              Next payment date{" "}
-              <span className="font-normal">{nextPayment}</span>
-            </p>
           </div>
-          <div className="p-4 flex justify-center items-center">
+          <Divider className="my-4" />
+          <div className="flex justify-center">
             <button
               onClick={() => manageYourSubscription()}
-              className="border-2 border-secondary-500 rounded-lg px-6 py-2 font-bold text-secondary-500 hover:bg-secondary-500 hover:text-white"
-              style={{ minWidth: "200px" }} // Ensures the button width doesn't shrink
+              className="font-semibold text-sm text-primaryColor"
             >
-              {loadingModal ? (
-                <div className="flex justify-center items-center">
-                  <Spinner size="sm" />
-                </div>
-              ) : (
-                "Manage subscription"
-              )}
+              Manage subscriptions
             </button>
           </div>
         </div>
@@ -158,7 +154,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
           trigger={triggerIframe}
           setTriggerIframe={setTriggerIframe}
         />
-      )}{" "}
+      )}{' '}
     </div>
   );
 };

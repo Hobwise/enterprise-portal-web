@@ -25,10 +25,6 @@ import usePagination from "@/hooks/usePagination";
 import CustomPagination from "./CustomPagination";
 
 const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
-
-  console.log("TABLE STUFF", subscriptions)
-
-
   const [filteredData, setFilteredData] = useState(subscriptions);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [invoiceDetails, setInvoiceDetails] = useState(null);
