@@ -200,6 +200,11 @@ export const PricingCards: React.FC<PlansFromParent> = ({
         {[starterPlan, professionalPlan, premiumPlan].map((plan, index) => {
           const isActive = planType === index + 1;
           const planNames = ['Basic plan', 'Professional', 'Premium plan'];
+          const planDescriptions = [
+            'Recommended for small businesses, looking to streamline their menu & order management process',
+            'Suitable for medium size businesses looking to manage booking, process order & menu while leveraging the campaign feature also',
+            'For large scale businesses operations, enabling businesses with multiple locations manage their operations effectively',
+          ];
           const planLoading = [
             starterLoading,
             professionalLoading,
@@ -257,10 +262,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 </div>
               </div>
 
-              <p className="text-sm mt-4">
-                Lorem ipsum dolor sit amet consectetur. Mi aliquam amet velit
-                felis.
-              </p>
+              <p className="text-sm mt-4">{planDescriptions[index]}</p>
 
               <div className="flex items-center my-6">
                 <hr className="flex-grow border-t border-secondaryGrey" />
