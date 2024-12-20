@@ -19,12 +19,7 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
 }
 
 table {
@@ -317,4 +312,13 @@ input:-webkit-autofill:focus {
   100% {
     transform: translateY(-20px);
   }
+}
+
+.nav-bar-bg {
+  background-image: url('/assets/images/small-screen-bg.png');
+  height: 100%;
+  background-position: right;
+  background-repeat: no-repeat;
+  background-size: cover;
+  padding-top: 30px;
 }

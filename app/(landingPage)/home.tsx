@@ -1,13 +1,8 @@
 'use client';
 import Image from 'next/image';
 import React from 'react';
-import { ArrowRight, CampaignIcon } from '@/public/assets/svg';
+import { CampaignIcon } from '@/public/assets/svg';
 import { CustomButton } from '@/components/customButton';
-import Airbnb from '@/public/assets/icons/airbnb.png';
-import Hubspot from '@/public/assets/icons/hubspot.png';
-import Google from '@/public/assets/icons/google.png';
-import Microsoft from '@/public/assets/icons/microsoft.png';
-import FedEx from '@/public/assets/icons/fedex.png';
 import { Transition } from '@/components/ui/landingPage/transition';
 import Link from 'next/link';
 import { REQUEST_DEMO_URL, SIGN_UP_URL } from '@/utilities/routes';
@@ -25,17 +20,8 @@ import MainSideImage from '@/public/assets/images/main-side-image.png';
 import Demo from '@/components/ui/landingPage/demo';
 
 export default function HomeComponent() {
-  const companies = [
-    { image: Airbnb, title: 'Airbnb' },
-    { image: Hubspot, title: 'Hubspot' },
-    { image: Google, title: 'Google' },
-    { image: Microsoft, title: 'Microsoft' },
-    { image: FedEx, title: 'FedEx' },
-  ];
   const sectionHeaderClass: string =
     'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1 rounded-full text-xs lg:mx-auto shadow_custom-inset';
-  const sectionHeaderClass2: string =
-    'flex items-center font-medium w-fit space-x-2 text-[#5F35D2] bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1 rounded-full text-xs shadow_custom-inset mx-auto lg:mx-0';
 
   return (
     <div className="overflow-y-scroll scroll-smooth h-screen bg-white">
@@ -86,7 +72,7 @@ export default function HomeComponent() {
         <section className="lg:space-y-6 p-6 lg:py-10 px-6 lg:px-0">
           <Transition>
             <div className="space-y-4 lg:space-y-10 overflow-hidden">
-              <p className="font-bricolage_grotesque text-[#677182] font-light text-sm lg:text-base">More than 10,000 companies enjoy using our product</p>
+              <p className="font-bricolage_grotesque text-[#677182] font-light text-sm lg:text-base">Some companies enjoy using our product</p>
 
               <div
                 x-data="{}"
@@ -98,10 +84,10 @@ export default function HomeComponent() {
                 className="inline-flex w-[95%] lg:w-[70%] flex-nowrap overflow-hidden [mask-image:_linear-gradient(to_right,transparent_0,_black_128px,_black_calc(100%-128px),transparent_100%)]"
               >
                 <ul className="flex animate-infinite-scroll items-center justify-center md:justify-start [&_img]:max-w-none [&_li]:mx-8">
-                  <Companies type="all" companies={companies} />
+                  <Companies />
                 </ul>
                 <ul className="flex animate-infinite-scroll items-center justify-center md:justify-start [&_img]:max-w-none [&_li]:mx-8" aria-hidden="true">
-                  <Companies type="all" companies={companies} />
+                  <Companies />
                 </ul>
               </div>
             </div>

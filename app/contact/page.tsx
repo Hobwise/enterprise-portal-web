@@ -16,10 +16,11 @@ import { useState } from 'react';
 import { ContactUs } from '../api/controllers/landingPage';
 import { toast } from 'sonner';
 import LandingPageHeader from '@/components/ui/landingPage/header';
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, useDisclosure } from '@nextui-org/react';
+import { PRIVACY_POLICY } from '@/utilities/routes';
+import Link from 'next/link';
+import BackgroundImage from '@/public/assets/images/pricing-bg-2.png';
 
 export default function Contact() {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const defaultErrorValue = { name: '', email: '', message: '' };
   const [contactInfo, setContactInfo] = useState<{
     name: string;
@@ -72,7 +73,8 @@ export default function Contact() {
         <Navbar type="default" />
       </header>
       <main>
-        <section className="font-satoshi bg-white w-full pt-36 space-y-12">
+        <section className="font-satoshi bg-white w-full pt-24 space-y-12">
+          <Image src={BackgroundImage} alt="" className="absolute top-0 w-[60%] right-[20%] px-6 lg:px-12" priority />
           <div className={sectionHeaderClass}>
             <ContactIcon className="text-[#5F35D2]" />
             <p className="font-normal">Content</p>
@@ -143,7 +145,7 @@ export default function Contact() {
                 </div>
               </form>
 
-              <div className="font-satoshi space-y-8 w-[55%]">
+              <div className="font-satoshi space-y-8 lg:w-[55%]">
                 <Image src={HobinkLogo} alt="hobwise logo" width={50} height={50} />
                 <div className="space-y-6">
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer email?</h4>
@@ -155,9 +157,9 @@ export default function Contact() {
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer docs?</h4>
                   <p className="text-[#252525]">
                     Check out our{' '}
-                    <span onClick={onOpen} className="cursor-pointer underline text-primaryColor">
+                    <Link href={`${PRIVACY_POLICY}`} className="text-primaryColor underline">
                       documentation
-                    </span>
+                    </Link>
                   </p>
                 </div>
                 <div className="space-y-6">
@@ -177,24 +179,6 @@ export default function Contact() {
         <JoinCommunity className="text-center" />
       </main>
       <Footer />
-
-      <Modal isDismissable={false} isKeyboardDismissDisabled={true} isOpen={isOpen} onOpenChange={onOpenChange} size="3xl">
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">Hobwise Documentation</ModalHeader>
-              <ModalBody>
-                <iframe src={'/assets/document/policy.pdf'} className="lg:h-[45vh] h-[70vh]" />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="light" onPress={onClose}>
-                  Close
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
     </div>
   );
 }
