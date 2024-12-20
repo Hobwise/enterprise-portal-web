@@ -89,7 +89,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
   };
 
   return (
-    <section ref={invoiceRef}>
+    <section ref={invoiceRef} >
       <div className="mx-auto py-0 md:py-16">
         <article className="shadow-none ">
           <div className="md:rounded-b-md bg-white">
@@ -119,7 +119,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                       <p className="font-bold text-sm text-dark">
                         INVOICE NUMBER
                       </p>
-                      <p className="font-medium text-sm text-black">
+                      <p className="font-medium text-xs text-black">
                         {data?.reference}
                       </p>
                     </div>
