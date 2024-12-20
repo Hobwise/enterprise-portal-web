@@ -123,7 +123,7 @@ const Pricing = () => {
       {/* <SubscriptionCard /> */}
 
       {isLoading ? (
-        <CustomLoading />
+        <p>Loading...</p>
       ) : (
         <>
           {noSubscription && <NoSubscriptionCard />}
