@@ -9,18 +9,21 @@ const lists = [
     title: 'Personal Information',
     href: '/dashboard/settings/personal-information',
   },
-  { title: 'Password Management', href: '/dashboard/settings/password-management' },
+  {
+    title: 'Password Management',
+    href: '/dashboard/settings/password-management',
+  },
   {
     title: 'Business Information',
     href: '/dashboard/settings/business-information',
   },
-  { title: 'Kyc Compliance', href: '/dashboard/settings/kyc-compliance' },
+  { title: 'KYC Compliance', href: '/dashboard/settings/kyc-compliance' },
   {
     title: 'Billing & Subscription',
-    href: '/dashboard/settings/subscriptions',
+    href: '/dashboard/settings/subscriptions'
   },
-//   { title: 'Staff Management', href: '/dashboard/settings/staff-management' },
-//   { title: 'Business Settings', href: '/dashboard/settings/bussiness' },
+  { title: 'Staff Management', href: '/dashboard/settings/staff-management' },
+  { title: 'Business Settings', href: '/dashboard/settings/business-settings' },
 ];
 
 const SettingsSidebar = () => {
