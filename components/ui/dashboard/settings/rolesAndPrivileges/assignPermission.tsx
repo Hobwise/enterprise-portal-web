@@ -40,7 +40,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
   const initialState = {
     userRole: {
       cooperateId: userInformation.cooperateID,
-      businessId: businessInformation[0].businessId,
+      businessId: businessInformation[0]?.businessId,
       canCreateBusiness: false,
       canCreateCampaign: false,
       canCreateMenu: true,
@@ -80,7 +80,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
     },
     managerRole: {
       cooperateId: userInformation.cooperateID,
-      businessId: businessInformation[0].businessId,
+      businessId: businessInformation[0]?.businessId,
       canCreateBusiness: true,
       canCreateCampaign: true,
       canCreateMenu: true,
