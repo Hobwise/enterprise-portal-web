@@ -1,5 +1,6 @@
 import LoginForm from '@/components/ui/auth/loginForm';
 import { companyInfo } from '@/lib/companyInfo';
+import { HOME_URL } from '@/utilities/routes';
 
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
@@ -36,7 +37,17 @@ export default function Login() {
           <div className="pt-8 px-8 lg:pt-16 lg:px-16">
             <div className="flex justify-center">
               <div className="flex items-center gap-2">
-                <Image src={companyInfo.logo} height={150} width={150} style={{ objectFit: 'cover' }} alt="company logo" />
+                <Link href={HOME_URL}>
+                  <Image
+                    src={companyInfo.logo}
+                    height={30}
+                    width={30}
+                    style={{ objectFit: 'cover' }}
+                    alt="company logo"
+                  />
+                </Link>
+
+                <span className="text-xl font-bold">{companyInfo.name}</span>
               </div>
             </div>
           </div>

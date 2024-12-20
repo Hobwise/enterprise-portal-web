@@ -56,7 +56,7 @@ const BusinessSettingsDashboardPrompt = () => {
                   onClick={() => {
                     onOpenChange();
                     saveToLocalStorage('businessSettingPrompt', true);
-                    router.push('/dashboard/settings');
+                    router.push('/dashboard/settings/personal-information');
                   }}
                   type='submit'
                 >

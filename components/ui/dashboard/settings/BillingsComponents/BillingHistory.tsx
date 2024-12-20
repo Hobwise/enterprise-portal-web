@@ -25,10 +25,6 @@ import usePagination from "@/hooks/usePagination";
 import CustomPagination from "./CustomPagination";
 
 const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
-
-  console.log("TABLE STUFF", subscriptions)
-
-
   const [filteredData, setFilteredData] = useState(subscriptions);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [invoiceDetails, setInvoiceDetails] = useState(null);
@@ -261,9 +257,11 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
 
       {invoiceDetails && (
         <Modal isOpen={isOpen} onClose={onClose}>
-          <div className=" inset-0 z-20 flex items-center justify-center">
-            <ModalContent className="w-full max-w-[90%] sm:max-w-[600px] h-auto max-h-[90%] bg-white shadow-lg rounded-lg overflow-hidden">
-              <ModalBody className="p-4 overflow-y-auto max-h-[80vh]">
+          {/* <div className=" inset-0 z-20 flex items-center justify-center"> */}
+            {/* <ModalContent className="w-full max-w-[90%] sm:max-w-[600px] h-auto max-h-[90%] bg-white shadow-lg rounded-lg overflow-hidden"> */}
+            <ModalContent className="sm:w-[800px]">
+              {/* <ModalBody className="p-4 overflow-y-auto max-h-[80vh]"> */}
+              <ModalBody className="flex justify-center w-full max-h-[80vh] overflow-y-auto">
                 <InvoiceSection
                   data={invoiceDetails}
                   download={downloadClickedInvoice}
@@ -271,7 +269,7 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
                 />
               </ModalBody>
             </ModalContent>
-          </div>
+          {/* </div> */}
         </Modal>
 
       //   <Modal isOpen={isOpen} onClose={onClose}>

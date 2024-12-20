@@ -160,7 +160,7 @@ const Header = () => {
                 <DropdownItem key=' Account settings'>
                   <Link
                     prefetch={true}
-                    href={'/dashboard/settings'}
+                    href={'/dashboard/settings/personal-information'}
                     className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2'
                   >
                     <IoIosSettings className='text-[20px]' />

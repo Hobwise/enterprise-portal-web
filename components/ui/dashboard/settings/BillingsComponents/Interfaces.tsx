@@ -113,6 +113,7 @@ export interface CurrentSubscriptionDetails {
     subcribedByID: string; 
     plan: number; 
     paymentPeriod: number; 
+    reference: string;
     subscriptionStartDate: string; 
     subscriptionEndDate: string; 
     subscriptionPlanCode: string;

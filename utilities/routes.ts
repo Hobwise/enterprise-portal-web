@@ -9,3 +9,5 @@ export const PRIVACY_POLICY: string = '/privacy-policy';
 // Auth
 export const LOGIN_URL: string = '/auth/login';
 export const SIGN_UP_URL: string = '/auth/signup';
+
+export const SETTINGS_URL = '/dashboard/settings';

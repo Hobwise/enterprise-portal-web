@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import { CustomButton } from '@/components/customButton';
 import { BiEditAlt } from 'react-icons/bi';
-import { CiUser } from 'react-icons/ci';
 import { Avatar, cn, Divider } from '@nextui-org/react';
 import { MdLockOutline } from 'react-icons/md';
 import { CustomInput } from '@/components/CustomInput';
@@ -12,6 +11,7 @@ import { IoCheckmarkCircleOutline } from 'react-icons/io5';
 import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,
+  mapBusinessCategory,
   THREEMB,
 } from '@/lib/utils';
 import toast from 'react-hot-toast';
@@ -24,45 +24,40 @@ import {
   ModalFooter,
   useDisclosure,
 } from '@nextui-org/react';
-import useUser from '@/hooks/cachedEndpoints/useUser';
-import SelectInput from '@/components/selectInput';
 import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
 import { useMutation, useQueryClient } from 'react-query';
-import { updateUser } from '@/app/api/controllers/auth';
+import { PiBuildingOffice } from 'react-icons/pi';
+import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
+import api from '@/app/api/apiService';
+import { AUTH } from '@/app/api/api-url';
 
-interface UserData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phoneNumber: string;
-  userName?: string;
-  gender?: string;
-  image?: string;
-  imageReference?: string;
-  isActive?: boolean;
+interface BusinessData {
   [key: string]: any;
 }
 
-const Profile = () => {
+const BusinessInformation = () => {
   const queryClient = useQueryClient();
 
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
   const businessInformation = getJsonItemFromLocalStorage('business');
 
-  const { data } = useUser();
+  const { data: businessData } = useGetBusiness();
   const [isEditing, setIsEditing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [userFormData, setUserFormData] = useState<UserData | null>(null);
+  const [businessFormData, setBusinessFormData] = useState<BusinessData | null>(
+    null
+  );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  console.log(businessData);
 
   const uploadFileMutation = useMutation({
     mutationFn: (formData: FormData) =>
       uploadFile(businessInformation[0]?.businessId, formData),
     onSuccess: (data) => {
       if (data?.data?.isSuccessful) {
-        setUserFormData((prevState: any) => ({
+        setBusinessFormData((prevState: any) => ({
           ...prevState,
-          imageReference: data?.data.data,
+          logoImageReference: data?.data.data,
         }));
       } else {
         setPreviewUrl(null);
@@ -74,46 +69,42 @@ const Profile = () => {
     mutationFn: () =>
       deleteFile(
         businessInformation[0]?.businessId,
-        userFormData?.imageReference as string
+        businessFormData?.logoImageReference as string
       ),
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
         setPreviewUrl(null);
-        setUserFormData((prevState: any) => ({
+        setBusinessFormData((prevState: any) => ({
           ...prevState,
-          imageReference: '',
+          logoImageReference: '',
         }));
       }
     },
   });
 
-  const updateUserMutation = useMutation({
-    mutationFn: () => updateUser(userFormData, userInformation?.id),
+  const updateBusinessMutation = useMutation({
+    mutationFn: () =>
+      api.put(AUTH.registerBusiness, businessFormData, {
+        headers: {
+          businessId: businessInformation[0]?.businessId,
+        },
+      }),
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
-        console.log(data);
         onOpen();
-        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ['getBusiness'] });
       }
     },
   });
 
   React.useEffect(() => {
-    if (data) {
-      setUserFormData({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        image: data.image,
-        imageReference: data.imageReference,
+    if (businessData) {
+      setBusinessFormData({
+        ...businessData,
         businessID: businessInformation[0]?.businessId,
-        cooperateID: userInformation?.cooperateID,
-        phoneNumber: data.phoneNumber ?? '',
-        isActive: data.isActive,
-        gender: data.gender ?? '',
       });
     }
-  }, [data]);
+  }, [businessData]);
 
   const handleFileChange = async (event: any) => {
     if (event.target.files) {
@@ -138,7 +129,7 @@ const Profile = () => {
 
   const handleInputChange = (e: React.FormEvent<HTMLInputElement>) => {
     const { name, value } = e.currentTarget;
-    setUserFormData((prevFormData: any) => ({
+    setBusinessFormData((prevFormData: any) => ({
       ...prevFormData,
       [name]: value,
     }));
@@ -147,23 +138,23 @@ const Profile = () => {
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="font-semibold text-[#101928]">Personal information</h2>
+        <h2 className="font-semibold text-[#101928]">Business information</h2>
         <p className="text-sm text-[#667185]">
-          See your full personal information
+          See your full business information
         </p>
       </div>
       <div className="border border-secondaryGrey rounded-[10px] p-4 space-y-8">
         <div className="flex items-center justify-between w-full">
-          {userFormData?.image ? (
+          {businessFormData?.logoImage ? (
             <Avatar
               size="lg"
               className="h-[120px] w-[120px]"
-              src={`data:image/jpeg;base64,${userFormData.image}`}
+              src={`data:image/jpeg;base64,${businessFormData.logoImage}`}
             />
           ) : !previewUrl ? (
-            <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[#5F35D20A]">
+            <div className="flex items-center justify-center w-[200px] h-[120px] rounded-[10px] bg-[#5F35D20A]">
               <label
-                htmlFor="profile-photo"
+                htmlFor="logo-photo"
                 className="flex flex-col items-center justify-center space-y-4"
               >
                 <Image
@@ -173,11 +164,11 @@ const Profile = () => {
                   alt="Video audio icon"
                 />
                 <span className="font-semibold text-[8px] text-primaryColor">
-                  No Profile Photo
+                  No Cover Photo
                 </span>
                 <input
                   type="file"
-                  id="profile-photo"
+                  id="logo-photo"
                   onChange={handleFileChange}
                   className="hidden"
                 />
@@ -185,10 +176,13 @@ const Profile = () => {
             </div>
           ) : (
             <div className="relative">
-              <Avatar
-                size="lg"
-                className="h-[120px] w-[120px]"
+              <Image
                 src={previewUrl}
+                width={200}
+                height={120}
+                alt="Business profile"
+                objectFit="contain"
+                className="w-[200px] h-[120px] object-contain"
               />
               <div
                 className="absolute top-0 right-0 cursor-pointer"
@@ -200,47 +194,6 @@ const Profile = () => {
               </div>
             </div>
           )}
-
-          {/* {!previewUrl ? (
-            <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[#5F35D20A]">
-              <label
-                htmlFor="profile-photo"
-                className="flex flex-col items-center justify-center space-y-4"
-              >
-                <Image
-                  src="/assets/icons/video-audio-icon.svg"
-                  width={24}
-                  height={24}
-                  alt="Video audio icon"
-                />
-                <span className="font-semibold text-[8px] text-primaryColor">
-                  No Profile Photo
-                </span>
-                <input
-                  type="file"
-                  id="profile-photo"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          ) : (
-            <div className="relative">
-              <Avatar
-                size="lg"
-                className="h-[120px] w-[120px]"
-                src={previewUrl}
-              />
-              <div
-                className="absolute top-0 right-0 cursor-pointer"
-                onClick={() => removeFileMutation.mutate()}
-              >
-                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
-                  <RxCross2 />
-                </div>
-              </div>
-            </div>
-          )} */}
 
           {!isEditing ? (
             <CustomButton
@@ -255,8 +208,9 @@ const Profile = () => {
           ) : (
             <CustomButton
               disableRipple
+              loading={updateBusinessMutation.isLoading}
               className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
-              onClick={() => updateUserMutation.mutate()}
+              onClick={() => updateBusinessMutation.mutate()}
             >
               <IoCheckmarkCircleOutline className="text-base" />
               Save Changes
@@ -265,55 +219,45 @@ const Profile = () => {
         </div>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <CiUser className="text-black" />
-            <span className="font-medium text-sm">Personal Details</span>
+            <PiBuildingOffice className="text-black" />
+            <span className="font-medium text-sm">Business Details</span>
           </div>
           <Divider />
         </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3 ">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-3 ">
           {!isEditing ? (
             <>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1" />
+              <div className="col-span-1 flex gap-2 ">
+                <MdLockOutline className="mt-1 text-[#AFAFAF]" />
                 <div className="flex flex-col">
-                  <span className="text-sm">First Name</span>
+                  <span className="text-sm">Business Name</span>
+                  <span className="text-sm">{businessFormData?.name}</span>
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2">
+                <MdLockOutline className="mt-1 text-[#AFAFAF]" />
+                <div className="flex flex-col">
+                  <span className="text-sm">Business Category</span>
+                  <span className="text-sm">
+                    {mapBusinessCategory(businessFormData?.businessCategory)}
+                  </span>
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2 ">
+                <MdLockOutline className="mt-1 text-[#AFAFAF]" />
+                <div className="flex flex-col">
+                  <span className="text-sm">Business Email</span>
                   <span
                     className={cn(
                       'text-sm',
-                      data?.firstName.length > 0 ? 'text-black' : 'text-red-500'
+                      businessFormData?.contactEmailAddress.length > 0
+                        ? 'text-black'
+                        : 'text-red-500'
                     )}
                   >
-                    {data?.firstName.length > 0
-                      ? data?.firstName
+                    {businessFormData?.contactEmailAddress.length > 0
+                      ? businessFormData?.contactEmailAddress
                       : 'Not updated'}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1" />
-                <div className="flex flex-col">
-                  <span className="text-sm">Last Name</span>
-                  <span
-                    className={cn(
-                      'text-sm',
-                      data?.lastName.length > 0 ? 'text-black' : 'text-red-500'
-                    )}
-                  >
-                    {data?.lastName.length > 0 ? data?.lastName : 'Not updated'}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1" />
-                <div className="flex flex-col">
-                  <span className="text-sm">Email</span>
-                  <span
-                    className={cn(
-                      'text-sm',
-                      data?.email.length > 0 ? 'text-black' : 'text-red-500'
-                    )}
-                  >
-                    {data?.email.length > 0 ? data?.email : 'Not updated'}
                   </span>
                 </div>
               </div>
@@ -324,13 +268,13 @@ const Profile = () => {
                   <span
                     className={cn(
                       'text-sm',
-                      data?.phoneNumber?.length > 0
+                      businessFormData?.contactPhoneNumber?.length > 0
                         ? 'text-black'
                         : 'text-red-500'
                     )}
                   >
-                    {data?.phoneNumber?.length > 0
-                      ? data?.phoneNumber
+                    {businessFormData?.contactPhoneNumber?.length > 0
+                      ? businessFormData?.contactPhoneNumber
                       : 'Not updated'}
                   </span>
                 </div>
@@ -338,15 +282,17 @@ const Profile = () => {
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
                 <div className="h-4 w-4"></div>
                 <div className="flex flex-col">
-                  <span className="text-sm">Username</span>
+                  <span className="text-sm">Business Address</span>
                   <span
                     className={cn(
                       'text-sm',
-                      data?.userName?.length > 0 ? 'text-black' : 'text-red-500'
+                      businessFormData?.address?.length > 0
+                        ? 'text-black'
+                        : 'text-red-500'
                     )}
                   >
-                    {data?.userName?.length > 0
-                      ? data?.userName
+                    {businessFormData?.address?.length > 0
+                      ? businessFormData?.address
                       : 'Not updated'}
                   </span>
                 </div>
@@ -354,70 +300,92 @@ const Profile = () => {
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
                 <div className="h-4 w-4"></div>
                 <div className="flex flex-col">
-                  <span className="text-sm">Gender</span>
+                  <span className="text-sm">LGA</span>
                   <span
                     className={cn(
                       'text-sm',
-                      data?.gender?.length > 0 ? 'text-black' : 'text-red-500'
+                      businessFormData?.city?.length > 0
+                        ? 'text-black'
+                        : 'text-red-500'
                     )}
                   >
-                    {data?.gender?.length > 0 ? data?.gender : 'Not updated'}
+                    {businessFormData?.city?.length > 0
+                      ? businessFormData?.city
+                      : 'Not updated'}
+                  </span>
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                <div className="h-4 w-4"></div>
+                <div className="flex flex-col">
+                  <span className="text-sm">State</span>
+                  <span
+                    className={cn(
+                      'text-sm',
+                      businessFormData?.state?.length > 0
+                        ? 'text-black'
+                        : 'text-red-500'
+                    )}
+                  >
+                    {businessFormData?.state?.length > 0
+                      ? businessFormData?.state
+                      : 'Not updated'}
                   </span>
                 </div>
               </div>
             </>
           ) : (
             <>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+              <div className="col-span-1 w-full flex gap-2 text-[#AFAFAF]">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
-                    name="firstName"
-                    label="First name"
+                    name="name"
+                    label="Business Name"
                     disabled
                     onChange={handleInputChange}
-                    value={userFormData?.firstName}
-                    placeholder="First name"
+                    value={businessFormData?.name}
+                    placeholder="Business name"
                   />
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
-                    name="lastName"
+                    name="businessCategory"
                     disabled
-                    // errorMessage={response?.errors?.lastName?.[0]}
-                    // onChange={handleInputChange}
-                    value={userFormData?.lastName}
-                    label="Last name"
-                    placeholder="Last name"
+                    value={mapBusinessCategory(
+                      businessFormData?.businessCategory
+                    )}
+                    label="Business Category"
+                    placeholder="Business category"
                   />
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
-                    name="email"
+                    name="contactEmailAddress"
                     disabled
                     // errorMessage={response?.errors?.email?.[0]}
                     onChange={handleInputChange}
-                    value={userFormData?.email}
-                    label="Email"
+                    value={businessFormData?.contactEmailAddress}
+                    label="Business Email"
                     placeholder="Enter email"
                   />
                 </div>
               </div>
 
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
-                    name="phoneNumber"
+                    name="contactPhoneNumber"
                     // errorMessage={response?.errors?.lastName?.[0]}
                     onChange={handleInputChange}
-                    value={userFormData?.phoneNumber}
+                    value={businessFormData?.contactPhoneNumber}
                     label="Phone number"
                     placeholder="Enter phone number"
                   />
@@ -425,33 +393,39 @@ const Profile = () => {
               </div>
 
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
-                    name="userName"
+                    name="address"
                     // errorMessage={response?.errors?.lastName?.[0]}
-                    onChange={handleInputChange}
-                    value={userFormData?.userName}
-                    label="Username"
-                    placeholder="Enter username"
+                    disabled
+                    value={businessFormData?.address}
+                    label="Business Address"
+                    placeholder="Enter business address"
                   />
                 </div>
               </div>
-
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-[184.5px]">
-                  <SelectInput
+                <div className="flex flex-col w-full">
+                  <CustomInput
                     type="text"
-                    name="gender"
-                    // errorMessage={response?.errors?.role?.[0]}
-                    onChange={handleInputChange}
-                    value={userFormData?.gender}
-                    label="Gender"
-                    placeholder="Pick a gender"
-                    contents={[
-                      { label: 'Male', value: 'male' },
-                      { label: 'Female', value: 'female' },
-                    ]}
+                    name="city"
+                    disabled
+                    value={businessFormData?.city}
+                    label="LGA"
+                    placeholder="Enter business city"
+                  />
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                <div className="flex flex-col w-full">
+                  <CustomInput
+                    type="text"
+                    name="state"
+                    disabled
+                    value={businessFormData?.state}
+                    label="State"
+                    placeholder="Enter business state"
                   />
                 </div>
               </div>
@@ -481,7 +455,7 @@ const Profile = () => {
                 </div>
 
                 <p className="font-semibold text-black text-center mt-4">
-                  Personal Details Updated Successfully
+                  Business Details Updated Successfully
                 </p>
                 <ModalFooter>
                   <CustomButton
@@ -500,4 +474,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default BusinessInformation;
