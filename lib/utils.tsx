@@ -626,3 +626,26 @@ export function convertToISO(date: string, time: any) {
   // Convert to ISO string
   return dateTime.toISOString();
 }
+
+export const mapBusinessCategory = (value: number) => {
+  switch (value) {
+    case 0:
+      return 'Lounge';
+    case 1:
+      return 'Game House';
+    case 2:
+      return 'Bar';
+    case 3:
+      return 'Restaurant';
+    case 4:
+      return 'Club';
+    case 5:
+      return 'Cafe';
+    case 6:
+      return 'Hotel';
+    case 7:
+      return 'Gallery';
+    default:
+      return 'Unknown';
+  }
+};

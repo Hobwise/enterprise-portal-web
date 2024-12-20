@@ -245,7 +245,6 @@ const BusinessVerificationForm = () => {
     },
   });
 
-  console.log(businessQuery.data);
   const handlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
