@@ -25,13 +25,13 @@ const KycComplaincePage = () => {
       case 0:
         return 'Not Submitted';
       case 1:
-        return 'Pending';
+        return 'pending';
       case 2:
-        return 'Approved';
+        return 'approved';
       case 3:
-        return 'Failed';
+        return 'failed';
       default:
-        return 'Unknown';
+        return 'unknown';
     }
   };
 
