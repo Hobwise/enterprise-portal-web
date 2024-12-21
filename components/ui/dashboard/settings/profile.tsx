@@ -88,7 +88,11 @@ const Profile = () => {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: () => updateUser(userFormData, userInformation?.id),
+    mutationFn: () =>
+      updateUser(
+        { ...userFormData, gender: Number(userFormData?.gender) },
+        userInformation?.id
+      ),
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
         console.log(data);
@@ -101,16 +105,9 @@ const Profile = () => {
   React.useEffect(() => {
     if (data) {
       setUserFormData({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        image: data.image,
-        imageReference: data.imageReference,
+        ...data,
         businessID: businessInformation[0]?.businessId,
         cooperateID: userInformation?.cooperateID,
-        phoneNumber: data.phoneNumber ?? '',
-        isActive: data.isActive,
-        gender: data.gender ?? '',
       });
     }
   }, [data]);
@@ -144,6 +141,16 @@ const Profile = () => {
     }));
   };
 
+  const mapGender = (gender: number) => {
+    switch (gender) {
+      case 0:
+        return 'Male';
+      case 1:
+        return 'Female';
+      default:
+        return 'Unknown';
+    }
+  };
   return (
     <div className="space-y-5">
       <div>
@@ -255,6 +262,7 @@ const Profile = () => {
           ) : (
             <CustomButton
               disableRipple
+              loading={updateUserMutation.isLoading}
               className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
               onClick={() => updateUserMutation.mutate()}
             >
@@ -358,10 +366,14 @@ const Profile = () => {
                   <span
                     className={cn(
                       'text-sm',
-                      data?.gender?.length > 0 ? 'text-black' : 'text-red-500'
+                      !Number.isNaN(data?.gender)
+                        ? 'text-black'
+                        : 'text-red-500'
                     )}
                   >
-                    {data?.gender?.length > 0 ? data?.gender : 'Not updated'}
+                    {!Number.isNaN(data?.gender)
+                      ? mapGender(data?.gender)
+                      : 'Not updated'}
                   </span>
                 </div>
               </div>
@@ -369,7 +381,7 @@ const Profile = () => {
           ) : (
             <>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-4/5">
                   <CustomInput
                     type="text"
                     name="firstName"
@@ -382,7 +394,7 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-4/5">
                   <CustomInput
                     type="text"
                     name="lastName"
@@ -396,7 +408,7 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-4/5">
                   <CustomInput
                     type="text"
                     name="email"
@@ -411,7 +423,7 @@ const Profile = () => {
               </div>
 
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-4/5">
                   <CustomInput
                     type="text"
                     name="phoneNumber"
@@ -425,7 +437,7 @@ const Profile = () => {
               </div>
 
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-4/5">
                   <CustomInput
                     type="text"
                     name="userName"
@@ -439,18 +451,19 @@ const Profile = () => {
               </div>
 
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-[184.5px]">
+                <div className="flex flex-col w-4/5">
                   <SelectInput
                     type="text"
                     name="gender"
                     // errorMessage={response?.errors?.role?.[0]}
                     onChange={handleInputChange}
                     value={userFormData?.gender}
+                    defaultSelectedKeys={[String(userFormData?.gender)]}
                     label="Gender"
                     placeholder="Pick a gender"
                     contents={[
-                      { label: 'Male', value: 'male' },
-                      { label: 'Female', value: 'female' },
+                      { label: 'Male', value: '0' },
+                      { label: 'Female', value: '1' },
                     ]}
                   />
                 </div>
