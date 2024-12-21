@@ -11,13 +11,13 @@ const Teams = ({ setActiveScreen }: any) => {
   if (isLoading) {
     return (
       <>
-        <div className='w-[220px]'>
-          <h1 className='text-[16px] leading-8 font-semibold'>Team members</h1>
-          <p className='text-sm  text-grey600 md:mb-10 mb-4'>
+        <div className="w-[220px]">
+          <h1 className="text-[16px] leading-8 font-semibold">Team members</h1>
+          <p className="text-sm  text-grey600 md:mb-10 mb-4">
             Invite your colleagues to work faster and collaborate together
           </p>
         </div>
-        <div className='grid mt-5 place-content-center'>
+        <div className="grid mt-5 place-content-center">
           <SmallLoader />
         </div>
       </>
@@ -28,7 +28,7 @@ const Teams = ({ setActiveScreen }: any) => {
   }
   return (
     <section>
-      {data?.length > 0 ? (
+      {data && data.length > 0 ? (
         <Users data={data} refetch={refetch} />
       ) : (
         <EmptyPage />
