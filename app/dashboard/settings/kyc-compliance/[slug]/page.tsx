@@ -12,7 +12,7 @@ import {
   notify,
   THREEMB,
 } from '@/lib/utils';
-import { uploadFile } from '@/app/api/controllers/dashboard/menu';
+import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
 import toast from 'react-hot-toast';
 import imageCompression from 'browser-image-compression';
 import { updateUser } from '@/app/api/controllers/auth';
@@ -22,6 +22,8 @@ import { SETTINGS_URL } from '@/utilities/routes';
 import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
 import api from '@/app/api/apiService';
 import { AUTH } from '@/app/api/api-url';
+import { RxCross2 } from 'react-icons/rx';
+import { LuLoader } from 'react-icons/lu';
 
 const FileUploadInput = ({
   id,
@@ -60,7 +62,10 @@ const PersonalVerificationForm = () => {
   const router = useRouter();
 
   const [selfieReference, setSelfieReference] = useState('');
+  const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [idReference, setIdReference] = useState('');
+  const [idFile, setIdFile] = useState<File | null>(null);
+
   const [nin, setNin] = useState('');
   const [type, setType] = useState('');
 
@@ -84,6 +89,27 @@ const PersonalVerificationForm = () => {
     },
   });
 
+  const removeFileMutation = useMutation({
+    mutationFn: () => {
+      const imageReference = type === 'selfie' ? selfieReference : idReference;
+      return deleteFile(
+        businessInformation[0]?.businessId,
+        imageReference as string
+      );
+    },
+    onSuccess: (data) => {
+      if (data?.data.isSuccessful) {
+        if (type === 'selfie') {
+          setSelfieFile(null);
+          setSelfieReference('');
+        } else {
+          setIdFile(null);
+          setIdReference(data?.data.data);
+        }
+      }
+    },
+  });
+
   const handleFileChange = async (event: any) => {
     setType(event.target.id);
     if (event.target.files) {
@@ -92,6 +118,11 @@ const PersonalVerificationForm = () => {
         return toast.error('File too large');
       }
       const compressedFile = await imageCompression(file, imageCompressOptions);
+      if (event.target.id === 'selfie') {
+        setSelfieFile(compressedFile);
+      } else {
+        setIdFile(compressedFile);
+      }
       const formData = new FormData();
       formData.append('file', compressedFile);
       uploadFileMutation.mutate(formData);
@@ -120,6 +151,8 @@ const PersonalVerificationForm = () => {
 
   if (userQuery.isLoading) return <p>Loading...</p>;
 
+  console.log(idFile);
+
   return (
     <form className="space-y-3 w-[67.5%]" onSubmit={handlSubmit}>
       {!userQuery.data?.imageReference && (
@@ -133,6 +166,16 @@ const PersonalVerificationForm = () => {
             placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
             onChange={handleFileChange}
           />
+          {selfieFile && (
+            <div className="flex items-center gap-3 text-primary text-xs">
+              <p>{selfieFile.name}</p>
+              {type === 'selfie' && removeFileMutation.isLoading ? (
+                <LuLoader className="animate-spin" />
+              ) : (
+                <RxCross2 onClick={() => removeFileMutation.mutate()} />
+              )}
+            </div>
+          )}
         </div>
       )}
       <div className="space-y-2">
@@ -145,10 +188,21 @@ const PersonalVerificationForm = () => {
           placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
           onChange={handleFileChange}
         />
-        <p className="text-[10px] text-[#AFAFAF]">
-          You can submit your National identification card, NIN slip, Drivers
-          license, International passport or Voters card
-        </p>
+        {idFile ? (
+          <div className="flex items-center gap-3 text-primary text-xs">
+            <p>{idFile.name}</p>
+            {type !== 'selfie' && removeFileMutation.isLoading ? (
+              <LuLoader className="animate-spin" />
+            ) : (
+              <RxCross2 onClick={() => removeFileMutation.mutate()} />
+            )}
+          </div>
+        ) : (
+          <p className="text-[10px] text-[#AFAFAF]">
+            You can submit your National identification card, NIN slip, Drivers
+            license, International passport or Voters card
+          </p>
+        )}
         <div className="flex flex-col space-y-2">
           <label htmlFor="nin" className="font-medium text-sm text-[#344054]">
             National Identification Number ( NIN )
@@ -231,7 +285,6 @@ const BusinessVerificationForm = () => {
         },
       }),
     onSuccess: (data) => {
-      console.log(data);
       if (data?.data.isSuccessful) {
         router.replace(`${SETTINGS_URL}/kyc-compliance`);
       }
