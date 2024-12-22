@@ -1,6 +1,7 @@
 'use client';
 
 import { CustomButton } from '@/components/customButton';
+import TermsCondition from '@/components/ui/dashboard/settings/business-settings/terms&condition';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
@@ -8,8 +9,9 @@ import { Divider } from '@nextui-org/react';
 import { useCallback, useState } from 'react';
 import { IoCheckmarkOutline } from 'react-icons/io5';
 import { TbCopy } from 'react-icons/tb';
+import { Tab, Tabs } from '@nextui-org/react';
 
-const BusinessSettingsPage = ({ setActiveScreen }: any) => {
+const BusinessSettings = () => {
   const { data } = useGetBusiness();
   const { setBusinessProfileNavigate } = useGlobalContext();
 
@@ -131,6 +133,44 @@ const BusinessSettingsPage = ({ setActiveScreen }: any) => {
         </article>
       )}
     </section>
+  );
+};
+
+const BusinessSettingsPage = () => {
+  const { businessProfileNavigate } = useGlobalContext();
+
+  let tabs = [
+    {
+      id: 'Update business',
+      label: 'Update business',
+
+      content: <BusinessSettings />,
+    },
+
+    {
+      id: 'Terms and condition',
+      label: 'Terms and condition',
+
+      content: <TermsCondition />,
+    },
+  ];
+  return (
+    <div className="flex w-full flex-col">
+      <Tabs
+        size="lg"
+        fullWidth={true}
+        defaultSelectedKey={tabs[businessProfileNavigate].id}
+        className="w-full mb-2"
+        aria-label="Business settings tab"
+        items={tabs}
+      >
+        {(item) => (
+          <Tab key={item.id} title={item.label}>
+            {item.content}
+          </Tab>
+        )}
+      </Tabs>
+    </div>
   );
 };
 
