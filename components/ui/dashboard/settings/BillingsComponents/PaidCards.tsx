@@ -22,6 +22,7 @@ import LoadingSpinner from '@/app/dashboard/menu/[menuId]/loading';
 export const PaidCards: React.FC<PaidCardsData> = ({
   cardDetails,
   currentSubscriptionDetails,
+  paystackStatus,
 }) => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const businessID = userInformation?.businesses[0]?.businessId;
@@ -75,8 +76,6 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   const nextPayment =
     currentSubscriptionDetails?.nextPaymentDate?.split('T')[0];
   const isActive = currentSubscriptionDetails?.isActive ? 'Active' : 'False';
-
-  const paystackStatus = cardDetails?.status;
 
   //*================== MANAGE SUBSCRIPTION ==================
 
@@ -134,7 +133,9 @@ export const PaidCards: React.FC<PaidCardsData> = ({
               <div className="border border-[#04326B] py-[2px] px-3 rounded-xl text-[#04326B] text-sm font-medium">
                 {isActive}
               </div>
-              <span className='text-center text-sm text-secondaryGrey'>{paystackStatus}</span>
+              <span className="text-center text-sm text-secondaryGrey">
+                {paystackStatus}
+              </span>
             </div>
           </div>
           <Divider className="my-4" />
