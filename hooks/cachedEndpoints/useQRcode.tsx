@@ -10,6 +10,7 @@ interface Qr {
   dateCreated: string;
   id: string;
   name: string;
+  quickResponses?: any[];
 }
 
 const useQR = () => {
@@ -22,10 +23,10 @@ const useQR = () => {
       page,
       rowsPerPage
     );
-    return responseData?.data?.data as Qr[];
+    return responseData?.data?.data;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<Qr[]>(
+  const { data, isLoading, isError, refetch } = useQuery(
     ['qr', { page, rowsPerPage }],
     getAllQRcode,
     {
