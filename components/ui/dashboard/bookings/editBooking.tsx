@@ -424,6 +424,7 @@ const EditBooking = ({
   useEffect(() => {
     if (eachBooking && data?.reservations) {
       setBookings({
+        reservationId: eachBooking.reservationId || '',
         firstName: eachBooking.firstName || '',
         lastName: eachBooking.lastName || '',
         email: eachBooking.emailAddress || '',
@@ -462,7 +463,7 @@ const EditBooking = ({
   const updateBookingHandler = async (e) => {
     e.preventDefault();
     const payload = {
-      reservationId: id,
+      reservationId: bookings.reservationId,
       firstName: bookings.firstName,
       lastName: bookings.lastName,
       emailAddress: bookings.email,

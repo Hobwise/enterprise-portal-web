@@ -155,48 +155,48 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
     switch (columnKey) {
       case 'firstName':
         return (
-          <div className='text-sm'>
-            <p className='font-medium text-black'>
+          <div className="text-sm">
+            <p className="font-medium text-black">
               {booking?.firstName} {booking?.lastName}
             </p>
-            <p className='text-[13px] text-textGrey'>{booking?.phoneNumber}</p>
+            <p className="text-[13px] text-textGrey">{booking?.phoneNumber}</p>
           </div>
         );
 
       case 'bookingDateTime':
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             {moment(booking?.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
       case 'reference':
-        return <div className='text-textGrey text-sm'>{booking.reference}</div>;
+        return <div className="text-textGrey text-sm">{booking.reference}</div>;
       case 'bookingStatus':
         return (
           <Chip
-            className='capitalize'
+            className="capitalize"
             color={statusColorMap[booking?.bookingStatus]}
-            size='sm'
-            variant='bordered'
+            size="sm"
+            variant="bordered"
           >
             {statusDataMap[booking?.bookingStatus]}
           </Chip>
         );
       case 'actions':
         return (
-          <div className='relative flexjustify-center items-center gap-2'>
-            <Dropdown aria-label='drop down' className=''>
-              <DropdownTrigger aria-label='actions'>
-                <div className='cursor-pointer flex justify-center items-center text-black'>
-                  <HiOutlineDotsVertical className='text-[22px] ' />
+          <div className="relative flexjustify-center items-center gap-2">
+            <Dropdown aria-label="drop down" className="">
+              <DropdownTrigger aria-label="actions">
+                <div className="cursor-pointer flex justify-center items-center text-black">
+                  <HiOutlineDotsVertical className="text-[22px] " />
                 </div>
               </DropdownTrigger>
-              <DropdownMenu className='text-black'>
+              <DropdownMenu className="text-black">
                 <DropdownSection>
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     booking?.bookingStatus === 1 && (
                       <DropdownItem
-                        aria-label='admit'
+                        aria-label="admit"
                         onClick={() =>
                           updateBookingStatus(
                             submitBookingStatus(booking?.bookingStatus),
@@ -207,7 +207,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                         <div
                           className={` flex gap-2  items-center text-grey500`}
                         >
-                          <IoCheckmark className='text-[20px]' />
+                          <IoCheckmark className="text-[20px]" />
                           <p>Admit</p>
                         </div>
                       </DropdownItem>
@@ -215,7 +215,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     booking?.bookingStatus === 0 && (
                       <DropdownItem
-                        aria-label='confirm booking'
+                        aria-label="confirm booking"
                         onClick={() =>
                           updateBookingStatus(
                             submitBookingStatus(booking?.bookingStatus),
@@ -226,7 +226,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                         <div
                           className={` flex gap-2  items-center text-grey500`}
                         >
-                          <IoCheckmark className='text-[20px]' />
+                          <IoCheckmark className="text-[20px]" />
 
                           <p>Confirm booking</p>
                         </div>
@@ -234,24 +234,22 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                     )}
                   {/* {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     booking?.bookingStatus === 0 && ( */}
-                      <DropdownItem
-                        aria-label='edit booking'
-                        onClick={() => toggleEditBookingModal(booking)}
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <MdOutlineModeEditOutline className='text-[20px]' />
+                  <DropdownItem
+                    aria-label="edit booking"
+                    onClick={() => toggleEditBookingModal(booking)}
+                  >
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <MdOutlineModeEditOutline className="text-[20px]" />
 
-                          <p>Edit booking</p>
-                        </div>
-                      </DropdownItem>
-                    {/* )} */}
+                      <p>Edit booking</p>
+                    </div>
+                  </DropdownItem>
+                  {/* )} */}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     (booking?.bookingStatus === 0 ||
                       booking?.bookingStatus === 1) && (
                       <DropdownItem
-                        aria-label='cancel'
+                        aria-label="cancel"
                         onClick={() => {
                           toggleDeleteModal(booking?.id);
                         }}
@@ -260,7 +258,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                         <div
                           className={` flex gap-2  items-center text-danger-500`}
                         >
-                          <LiaTimesSolid className='text-[20px]' />
+                          <LiaTimesSolid className="text-[20px]" />
 
                           <p>Cancel booking</p>
                         </div>
@@ -270,7 +268,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     booking?.bookingStatus === 2 && (
                       <DropdownItem
-                        aria-label='close booking'
+                        aria-label="close booking"
                         onClick={() =>
                           updateBookingStatus(
                             submitBookingStatus(booking?.bookingStatus),
@@ -281,7 +279,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                         <div
                           className={` flex gap-2  items-center text-grey500`}
                         >
-                          <CiCalendar className='text-[20px]' />
+                          <CiCalendar className="text-[20px]" />
 
                           <p>Close booking</p>
                         </div>
@@ -317,21 +315,21 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
   ]);
 
   return (
-    <section className='border border-primaryGrey rounded-lg'>
+    <section className="border border-primaryGrey rounded-lg">
       <Table
-        radius='lg'
+        radius="lg"
         isCompact
         removeWrapper
         allowsSorting
-        aria-label='list of bookings'
+        aria-label="list of bookings"
         bottomContent={bottomContent}
         topContent={topContent}
-        bottomContentPlacement='outside'
+        bottomContentPlacement="outside"
         classNames={classNames}
         selectedKeys={selectedKeys}
         // selectionMode='multiple'
         sortDescriptor={sortDescriptor}
-        topContentPlacement='outside'
+        topContentPlacement="outside"
         onSelectionChange={setSelectedKeys}
         onSortChange={setSortDescriptor}
       >
@@ -369,7 +367,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
 
       <DeleteModal
         isOpen={isOpenDelete}
-        text='Are you sure you want to cancel this booking?'
+        text="Are you sure you want to cancel this booking?"
         handleDelete={() => updateBookingStatus(3, id)}
         setIsOpen={setIsOpenDelete}
         toggleModal={toggleDeleteModal}
