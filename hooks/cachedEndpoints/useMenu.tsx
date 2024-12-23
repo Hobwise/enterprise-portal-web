@@ -18,6 +18,7 @@ type MenuData = {
     image: string;
     varieties: null | any;
   }>;
+  totalCount: number;
 };
 
 const useMenu = (businessIdOutsideApp?: any, cooperateID?: any) => {

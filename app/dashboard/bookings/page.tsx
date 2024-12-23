@@ -98,7 +98,6 @@ const Bookings: React.FC = () => {
       return <Error onClick={() => refetch()} />;
     } else {
       return (
-        <CreateReservation showCreateBookingModal={showCreateBookingModal} />
       );
     }
   };
@@ -149,13 +148,16 @@ const Bookings: React.FC = () => {
     }
   };
 
+  if (isLoading) return <CustomLoading />;
+  if (isError) return <Error onClick={() => refetch()} />;
+
   return (
     <>
-      <div className='flex flex-row flex-wrap mb-4 xl:mb-8 item-center justify-between'>
+      <div className="flex flex-row flex-wrap mb-4 xl:mb-8 item-center justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
+          <div className="text-[24px] leading-8 font-semibold">
             {data?.[0]?.bookings.length > 0 ? (
-              <div className='flex items-center'>
+              <div className="flex items-center">
                 <span>All Bookings</span>
                 <Chip
                   classNames={{
@@ -169,48 +171,48 @@ const Bookings: React.FC = () => {
               <span>Bookings</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] w-full '>
+          <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
             Showing all bookings
           </p>
         </div>
-        <div className='flex items-center gap-3'>
+        <div className="flex items-center gap-3">
           {dropdownComponent}
           {data?.[0]?.bookings.length > 0 && (
             <>
               <div>
                 <CustomInput
                   classnames={'w-[242px]'}
-                  label=''
-                  size='md'
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
 
-              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
                   onClick={() => downloadCSV(newArray)}
-                  className='flex text-grey600 bg-white'
+                  className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className='text-[22px]' />
+                  <MdOutlineFileDownload className="text-[22px]" />
                   <p>Export csv</p>
                 </Button>
                 {(role === 0 ||
                   userRolePermissions?.canCreateOrder === true) && (
                   <Button
                     onClick={showCreateBookingModal}
-                    className='flex text-grey600 bg-white'
+                    className="flex text-grey600 bg-white"
                   >
                     <p>Create a booking</p>
                   </Button>
                 )}
               </ButtonGroup>
               {(role === 0 || userRolePermissions?.canEditOrder === true) && (
-                <CustomButton onClick={onOpen} className='flex text-white'>
+                <CustomButton onClick={onOpen} className="flex text-white">
                   <p>Admit booking</p>
                 </CustomButton>
               )}
@@ -218,7 +220,14 @@ const Bookings: React.FC = () => {
           )}
         </div>
       </div>
-      {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+      {data[0]?.bookings.length > 0 ? ( <BookingsList
+          bookings={filteredItems}
+          refetch={refetch}
+          searchQuery={searchQuery}
+      />) :
+        (
+          <CreateReservation showCreateBookingModal={showCreateBookingModal} />
+        )}
       {datePickerModal}
       <CreateBooking
         openCreateBookingModal={openCreateBookingModal}

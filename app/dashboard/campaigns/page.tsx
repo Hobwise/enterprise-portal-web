@@ -49,28 +49,15 @@ const Compaigns: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  const getScreens = () => {
-    if (data?.[0]?.campaigns?.length > 0) {
-      return (
-        <CampaignList
-          campaigns={filteredItems}
-          searchQuery={searchQuery}
-          refetch={refetch}
-        />
-      );
-    } else if (isError) {
-      return <Error onClick={() => refetch()} />;
-    } else {
-      return <CreateCampaign />;
-    }
-  };
+  if (isLoading) return <CustomLoading />;
+  if (isError) return <Error onClick={() => refetch()} />;
 
   return (
     <>
-      <div className='flex flex-row flex-wrap xl:mb-8 mb-4 justify-between'>
+      <div className="flex flex-row flex-wrap xl:mb-8 mb-4 justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
-            <div className='flex items-center'>
+          <div className="text-[24px] leading-8 font-semibold">
+            <div className="flex items-center">
               <span>Campaigns</span>
 
               {data?.[0]?.campaigns?.length > 0 && (
@@ -84,24 +71,24 @@ const Compaigns: React.FC = () => {
               )}
             </div>
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] w-full '>
+          <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
             Showing all campaigns
           </p>
         </div>
-        <div className='flex items-center gap-3'>
+        <div className="flex items-center gap-3">
           {data?.[0]?.campaigns?.length > 0 && (
             <>
               <div>
                 <CustomInput
                   classnames={'w-[242px]'}
-                  label=''
-                  size='md'
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
             </>
@@ -114,11 +101,11 @@ const Compaigns: React.FC = () => {
                   onClick={() =>
                     router.push('/dashboard/campaigns/create-campaign')
                   }
-                  className='py-2 px-4 md:mb-0 mb-4 text-white'
-                  backgroundColor='bg-primaryColor'
+                  className="py-2 px-4 md:mb-0 mb-4 text-white"
+                  backgroundColor="bg-primaryColor"
                 >
-                  <div className='flex gap-2 items-center justify-center'>
-                    <IoMdAdd className='text-[22px]' />
+                  <div className="flex gap-2 items-center justify-center">
+                    <IoMdAdd className="text-[22px]" />
 
                     <p>Add campaign</p>
                   </div>
@@ -128,7 +115,15 @@ const Compaigns: React.FC = () => {
           )}
         </div>
       </div>
-
+      {data?.[0]?.campaigns?.length > 0 ? (
+        <CampaignList
+          campaigns={filteredItems}
+          searchQuery={searchQuery}
+          refetch={refetch}
+        />
+      ) : (
+        <CreateCampaign />
+      )}
       {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
     </>
   );
