@@ -232,8 +232,8 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                         </div>
                       </DropdownItem>
                     )}
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 0 && (
+                  {/* {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    booking?.bookingStatus === 0 && ( */}
                       <DropdownItem
                         aria-label='edit booking'
                         onClick={() => toggleEditBookingModal(booking)}
@@ -246,7 +246,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                           <p>Edit booking</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    {/* )} */}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     (booking?.bookingStatus === 0 ||
                       booking?.bookingStatus === 1) && (
