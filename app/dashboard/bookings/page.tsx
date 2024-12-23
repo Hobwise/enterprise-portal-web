@@ -85,23 +85,6 @@ const Bookings: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  const getScreens = () => {
-    if (data?.[0]?.bookings.length > 0) {
-      return (
-        <BookingsList
-          bookings={filteredItems}
-          refetch={refetch}
-          searchQuery={searchQuery}
-        />
-      );
-    } else if (isError) {
-      return <Error onClick={() => refetch()} />;
-    } else {
-      return (
-      );
-    }
-  };
-
   const newArray = data?.flatMap((item) =>
     item?.bookings?.map((payment) => ({
       reservationName: payment.reservationName,
@@ -220,14 +203,15 @@ const Bookings: React.FC = () => {
           )}
         </div>
       </div>
-      {data[0]?.bookings.length > 0 ? ( <BookingsList
+      {data[0]?.bookings.length > 0 ? (
+        <BookingsList
           bookings={filteredItems}
           refetch={refetch}
           searchQuery={searchQuery}
-      />) :
-        (
-          <CreateReservation showCreateBookingModal={showCreateBookingModal} />
-        )}
+        />
+      ) : (
+        <CreateReservation showCreateBookingModal={showCreateBookingModal} />
+      )}
       {datePickerModal}
       <CreateBooking
         openCreateBookingModal={openCreateBookingModal}
