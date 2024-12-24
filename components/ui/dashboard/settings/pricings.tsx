@@ -122,6 +122,8 @@ const Pricing = () => {
   if (subscriptionQuery.isError)
     return <Error onClick={() => subscriptionQuery.refetch()} />;
 
+  console.log('billingHistory', billingHistory);
+
   return (
     <div className="w-full">
       <div className="w-full mb-2">
@@ -173,10 +175,10 @@ const Pricing = () => {
             currentSubscriptionDetails={currentSubDetails}
           />
           {/* )} */}
-          {billingHistory && billingHistory.length > 0 && (
+          {subscriptionQuery.data.subscriptionHistories.length > 0 && (
             <>
               <h2 className="text-lg font-bold mt-10 mb-3">Billing history</h2>
-              <SubscriptionTable subscriptions={billingHistory} />
+              <SubscriptionTable subscriptions={subscriptionQuery.data.subscriptionHistories} />
             </>
           )}
         </>
