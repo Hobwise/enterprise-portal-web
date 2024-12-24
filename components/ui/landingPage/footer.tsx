@@ -11,7 +11,7 @@ export const socialMedia = [
   { icon: <FacebookIcon />, url: 'https://www.facebook.com/profile.php?id=61570807141575&mibextid=ZbWKwL' },
   { icon: <TwitterIcon />, url: 'https://x.com/HobwiseApp' },
   { icon: <InstgramIcon />, url: 'https://www.instagram.com/hobwise' },
-  { icon: <LinkedInIcon />, url: '#' },
+  { icon: <LinkedInIcon />, url: 'https://www.linkedin.com/company/hobwise/' },
 ];
 export default function Footer() {
   return (

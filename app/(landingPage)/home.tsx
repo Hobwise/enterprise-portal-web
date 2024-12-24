@@ -57,7 +57,7 @@ export default function HomeComponent() {
                       Request a Demo
                     </CustomButton>
                   </Link>
-                  <Link href={SIGN_UP_URL}>
+                  <Link href={SIGN_UP_URL} target="_blank">
                     <CustomButton className="bg-white border border-primaryColor  text-primaryColor h-[38px] px-8">Get Started</CustomButton>
                   </Link>
                 </div>
