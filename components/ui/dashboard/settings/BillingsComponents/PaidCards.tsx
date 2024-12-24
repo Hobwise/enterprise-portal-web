@@ -9,6 +9,7 @@ import { Divider, Spinner } from '@nextui-org/react';
 import {
   capitalizeFirstLetterOfEachWord,
   getJsonItemFromLocalStorage,
+  mapPaymentStatus,
   notify,
 } from '@/lib/utils';
 // import useManageSubscription from "@/hooks/cachedEndpoints/useManageSubscription";
@@ -75,7 +76,9 @@ export const PaidCards: React.FC<PaidCardsData> = ({
 
   const nextPayment =
     currentSubscriptionDetails?.nextPaymentDate?.split('T')[0];
-  const isActive = currentSubscriptionDetails?.isActive ? 'Active' : 'False';
+  const isActive = mapPaymentStatus(
+    currentSubscriptionDetails?.subscription.status!
+  );
 
   //*================== MANAGE SUBSCRIPTION ==================
 
@@ -130,7 +133,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
               </p>
             </div>
             <div className="flex flex-col">
-              <div className="border border-[#04326B] py-[2px] px-3 rounded-xl text-[#04326B] text-sm font-medium">
+              <div className="border border-[#04326B] py-[2px] px-3 rounded-xl text-[#04326B] text-sm font-medium capitalize">
                 {isActive}
               </div>
               <span className="text-center text-sm text-secondaryGrey">

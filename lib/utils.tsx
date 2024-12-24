@@ -649,3 +649,20 @@ export const mapBusinessCategory = (value: number) => {
       return 'Unknown';
   }
 };
+
+export const mapPaymentStatus = (status: number) => {
+  switch (status) {
+    case 0:
+      return 'pending';
+    case 1:
+      return 'active';
+    case 2:
+      return 'expired';
+    case 3:
+      return 'failed';
+    case 4:
+      return 'cancel';
+    default:
+      return 'Unknown'
+  }
+};
