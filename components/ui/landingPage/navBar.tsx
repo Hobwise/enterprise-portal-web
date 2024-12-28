@@ -56,10 +56,10 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
           })}
         </nav>
         <div className="flex space-x-4 items-center">
-          <Link href={LOGIN_URL} className="hidden lg:flex">
+          <Link href={LOGIN_URL} className="hidden lg:flex" target="_blank">
             <CustomButton className={cn('bg-white text-primaryColor h-[38px] lg:px-8', type === 'default' && 'border border-primaryColor')}>Login</CustomButton>
           </Link>
-          <Link href={SIGN_UP_URL}>
+          <Link href={SIGN_UP_URL} target="_blank">
             <CustomButton className={btnClassName}>Get Started</CustomButton>
           </Link>
 
