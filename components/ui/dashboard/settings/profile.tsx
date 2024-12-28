@@ -95,8 +95,7 @@ const Profile = () => {
       ),
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
-        console.log(data);
-        onOpen();
+         onOpen();
         queryClient.invalidateQueries({ queryKey: ['user'] });
       }
     },

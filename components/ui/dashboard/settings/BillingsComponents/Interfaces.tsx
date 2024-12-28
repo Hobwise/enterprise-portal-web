@@ -96,6 +96,9 @@ export interface CurrentSubscriptionDetails {
   isExpired: boolean;
   id: string;
   nextPaymentDate: string | null;
+  subscription: {
+    status: number;
+  };
 }
 
 export interface PaidCardsData {

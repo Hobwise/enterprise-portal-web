@@ -29,13 +29,13 @@ import dynamic from 'next/dynamic';
 import Error from '@/components/error';
 
 const Pricing = () => {
-  const [selectedPlan, setSelectedPlan] = useState('Free');
-  const [showDowngradeWarning, setShowDowngradeWarning] = useState(false);
-  const [noSubscription, setNoSubscription] = useState(false);
-  const [pendingSubscription, setPendingSubscription] = useState(false);
-  const [hasSubscription, setHasSubscription] = useState(false);
-  const [showPlans, setShowPlans] = useState(false);
-  const [plansArray, setPlansArray] = useState<Plans | null>(null);
+  // const [selectedPlan, setSelectedPlan] = useState('Free');
+  // const [showDowngradeWarning, setShowDowngradeWarning] = useState(false);
+  // const [noSubscription, setNoSubscription] = useState(false);
+  // const [pendingSubscription, setPendingSubscription] = useState(false);
+  // const [hasSubscription, setHasSubscription] = useState(false);
+  // const [showPlans, setShowPlans] = useState(false);
+  // const [plansArray, setPlansArray] = useState<Plans | null>(null);
   const [billingHistory, setBillingHistory] = useState<
     SubscriptionHistory[] | null
   >(null);
@@ -122,8 +122,6 @@ const Pricing = () => {
   if (subscriptionQuery.isError)
     return <Error onClick={() => subscriptionQuery.refetch()} />;
 
-  console.log('billingHistory', billingHistory);
-
   return (
     <div className="w-full">
       <div className="w-full mb-2">
@@ -178,7 +176,9 @@ const Pricing = () => {
           {subscriptionQuery.data.subscriptionHistories.length > 0 && (
             <>
               <h2 className="text-lg font-bold mt-10 mb-3">Billing history</h2>
-              <SubscriptionTable subscriptions={subscriptionQuery.data.subscriptionHistories} />
+              <SubscriptionTable
+                subscriptions={subscriptionQuery.data.subscriptionHistories}
+              />
             </>
           )}
         </>
