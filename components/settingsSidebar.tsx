@@ -22,8 +22,8 @@ const lists = [
     title: 'Billing & Subscription',
     href: '/dashboard/settings/subscriptions'
   },
-  { title: 'Teams', href: '/dashboard/settings/teams' },
-  { title: 'Staff Management', href: '/dashboard/settings/staff-management' },
+  { title: 'Teams Management', href: '/dashboard/settings/teams' },
+  { title: 'Roles and Permissions', href: '/dashboard/settings/staff-management' },
   { title: 'Business Settings', href: '/dashboard/settings/business-settings' },
 ];
 
