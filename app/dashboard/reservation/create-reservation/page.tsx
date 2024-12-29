@@ -264,96 +264,96 @@ const AddNewReservation = () => {
 
   return (
     <>
-      <div className='flex  justify-between '>
+      <div className="flex  justify-between ">
         <div>
-          <h1 className='text-[24px] leading-8 font-semibold'>
+          <h1 className="text-[24px] leading-8 font-semibold">
             {' '}
             Create a new reservation
           </h1>
-          <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
+          <p className="text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4">
             Setup a new reservation.
           </p>
         </div>
         <Button
           onClick={() => router.back()}
-          className=' text-grey600 bg-white'
+          className=" text-grey600 bg-white"
         >
-          <IoIosArrowRoundBack className='text-[22px]' />
+          <IoIosArrowRoundBack className="text-[22px]" />
           <p>Go back</p>
         </Button>
       </div>
-      <div className='flex lg:flex-row flex-col'>
-        <div className='flex-grow lg:w-1/2 w-full lg:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
+      <div className="flex lg:flex-row flex-col">
+        <div className="flex-grow lg:w-1/2 w-full lg:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg">
           <CustomInput
-            type='text'
+            type="text"
             value={reservationPayload.reservationName}
             errorMessage={response?.errors?.reservationName?.[0]}
             onChange={handleInputChange}
-            name='reservationName'
-            label='Name of reservation'
-            placeholder='name of reservation'
+            name="reservationName"
+            label="Name of reservation"
+            placeholder="name of reservation"
           />
           <Spacer y={6} />
           <CustomTextArea
             value={reservationPayload.reservationDescription}
-            name='reservationDescription'
+            name="reservationDescription"
             errorMessage={response?.errors?.reservationDescription?.[0]}
             onChange={handleInputChange}
-            label='Add a description for this reservation'
-            placeholder='Add a description'
+            label="Add a description for this reservation"
+            placeholder="Add a description"
           />
           <Spacer y={6} />
-          <div className='flex lg:flex-row flex-col gap-6'>
+          <div className="flex lg:flex-row flex-col gap-6">
             <CustomInput
-              type='text'
+              type="text"
               disabled={true}
               startContent={<div>₦</div>}
               endContent={
-                <div className='text-xs  whitespace-nowrap text-white text-center px-2 py-[2px] bg-success-500 rounded-full '>
+                <div className="text-xs  whitespace-nowrap text-white text-center px-2 py-[2px] bg-success-500 rounded-full ">
                   Coming soon
                 </div>
               }
-              name='reservationFee'
+              name="reservationFee"
               errorMessage={response?.errors?.reservationFee?.[0]}
               onChange={handleInputChange}
               value={`${reservationPayload.reservationFee}`}
-              label='Reservation fee'
-              placeholder='Reservation fee'
+              label="Reservation fee"
+              placeholder="Reservation fee"
             />
 
             <CustomInput
-              type='text'
+              type="text"
               startContent={<div>₦</div>}
-              name='minimumSpend'
+              name="minimumSpend"
               errorMessage={response?.errors?.minimumSpend?.[0]}
               onChange={handleInputChange}
               value={`${reservationPayload.minimumSpend}`}
-              label='Minimum spend'
-              placeholder='Minimum spend'
+              label="Minimum spend (Optional)"
+              placeholder="Minimum spend"
             />
           </div>
 
           <Spacer y={6} />
-          <div className='text-sm flex justify-between'>
-            <div className='text-[#404245] flex space-x-2 items-center'>
+          <div className="text-sm flex justify-between">
+            <div className="text-[#404245] flex space-x-2 items-center">
               <p>Quantity</p>
               <InfoCircle />
             </div>
-            <div className='flex space-x-4 text-[#000] items-center'>
+            <div className="flex space-x-4 text-[#000] items-center">
               <button
-                className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
+                className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
                 disabled={Number(reservationPayload.quantity) <= 1}
-                role='button'
+                role="button"
                 onClick={() => handleQuantityChange('decrement')}
               >
                 -
               </button>
-              <p className='font-medium w-4 flex justify-center items-center'>
+              <p className="font-medium w-4 flex justify-center items-center">
                 {reservationPayload.quantity || 1}
               </p>
               <button
-                className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
-                role='button'
+                className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                role="button"
                 onClick={() => handleQuantityChange('increment')}
               >
                 +
@@ -361,13 +361,13 @@ const AddNewReservation = () => {
             </div>
           </div>
           <Spacer y={6} />
-          <div className='bg-[#F0F2F4] p-4 text-[#5A5A63]  items-baseline space-x-2 space-y-2 rounded-lg'>
-            <p className='text-sm'>
+          <div className="bg-[#F0F2F4] p-4 text-[#5A5A63]  items-baseline space-x-2 space-y-2 rounded-lg">
+            <p className="text-sm">
               Duration: Select a duration if this reservation is time-sensitive.
               (Optional)
             </p>
-            <div className='flex justify-between items-center'>
-              <div className='flex gap-2'>
+            <div className="flex justify-between items-center">
+              <div className="flex gap-2">
                 {duration.map((item) => (
                   <Chip
                     key={item.value}
@@ -398,13 +398,13 @@ const AddNewReservation = () => {
               /> */}
             </div>
             <Spacer y={3} />
-            <hr className='my-4 text-secondaryGrey' />
+            <hr className="my-4 text-secondaryGrey" />
             <Spacer y={3} />
-            <p className='text-sm'>
+            <p className="text-sm">
               Allow System Advertisement: Disable this option if you do not wish
               for the system to promote this reservation.
             </p>
-            <div className='bg-primaryGrey inline-flex px-4 py-2 rounded-lg  gap-3 items-center'>
+            <div className="bg-primaryGrey inline-flex px-4 py-2 rounded-lg  gap-3 items-center">
               <span
                 className={
                   !reservationPayload.allowSystemAdvert
@@ -416,7 +416,7 @@ const AddNewReservation = () => {
               </span>
 
               <Switch
-                size='sm'
+                size="sm"
                 classNames={{
                   wrapper: `m-0 ${
                     reservationPayload.allowSystemAdvert
@@ -424,11 +424,11 @@ const AddNewReservation = () => {
                       : 'bg-[#E4E7EC]'
                   } `,
                 }}
-                name='allowSystemAdvert'
+                name="allowSystemAdvert"
                 defaultChecked={reservationPayload.allowSystemAdvert}
                 onChange={(e) => handleToggle(e.target.checked)}
                 isSelected={reservationPayload.allowSystemAdvert}
-                aria-label='allow system advert'
+                aria-label="allow system advert"
               />
 
               <span
@@ -446,14 +446,14 @@ const AddNewReservation = () => {
         <div
           className={`flex-grow xl:h-auto lg:w-1/2 full  p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
         >
-          <label className='flex xl:mx-4 xl:my-2 m-0 justify-between  bg-white'>
+          <label className="flex xl:mx-4 xl:my-2 m-0 justify-between  bg-white">
             <div>
-              <p className='font-[500] text-[14px]'>Image</p>
-              <p className=' text-grey400 text-[12px]'>
+              <p className="font-[500] text-[14px]">Image</p>
+              <p className=" text-grey400 text-[12px]">
                 Add an image to this campaign
               </p>
             </div>
-            <p className='text-[#475467] text-[14px] font-[400]'>
+            <p className="text-[#475467] text-[14px] font-[400]">
               Maximum of 3MB
             </p>
           </label>
@@ -468,67 +468,67 @@ const AddNewReservation = () => {
                   src={selectedImage}
                   width={200}
                   height={200}
-                  className='object-cover h-full rounded-md w-full'
-                  aria-label='uploaded image'
-                  alt='uploaded image(s)'
+                  className="object-cover h-full rounded-md w-full"
+                  aria-label="uploaded image"
+                  alt="uploaded image(s)"
                 />
                 <span
                   onClick={removeUploadedFile}
-                  className='text-danger-500 float-left cursor-pointer'
+                  className="text-danger-500 float-left cursor-pointer"
                 >
                   Remove
                 </span>
               </>
             ) : (
               <>
-                <div className='flex flex-col h-full justify-center items-center'>
-                  <div className='flex flex-col mt-0 text-black text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
+                <div className="flex flex-col h-full justify-center items-center">
+                  <div className="flex flex-col mt-0 text-black text-center xl:w-[240px]  w-full gap-2 justify-center items-center">
                     {isLoadingImage ? (
                       <SmallLoader />
                     ) : (
                       <>
-                        <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                        <span className='text-black'>
+                        <MdOutlineAddPhotoAlternate className="text-[42px] text-primaryColor" />
+                        <span className="text-black">
                           Drag and drop files to upload or{' '}
-                          <span className='text-primaryColor'>click here</span>{' '}
+                          <span className="text-primaryColor">click here</span>{' '}
                           to browse
                         </span>
                       </>
                     )}
                   </div>
                   <input
-                    title='upload an image'
-                    alt='upload a reservation'
-                    type='file'
-                    id='reservation-upload'
-                    accept='image/*'
+                    title="upload an image"
+                    alt="upload a reservation"
+                    type="file"
+                    id="reservation-upload"
+                    accept="image/*"
                     onChange={(event) => handleImageChange(event)}
-                    className='h-full w-full opacity-0 cursor-pointer absolute top-0'
+                    className="h-full w-full opacity-0 cursor-pointer absolute top-0"
                   />
                 </div>
               </>
             )}
 
-            <span className='text-sm float-left text-danger-600'>
+            <span className="text-sm float-left text-danger-600">
               {imageError}
             </span>
           </div>
         </div>
       </div>
       <Spacer y={1} />
-      <div className='flex justify-end gap-3'>
+      <div className="flex justify-end gap-3">
         <CustomButton
-          className='w-32  text-black bg-transparent border rounded-lg border-grey500'
+          className="w-32  text-black bg-transparent border rounded-lg border-grey500"
           onClick={saveToDraft}
-          type='submit'
+          type="submit"
         >
           {'Save to draft'}
         </CustomButton>
         <CustomButton
-          className='w-36  text-white'
+          className="w-36  text-white"
           loading={isLoading}
           onClick={postReservation}
-          type='submit'
+          type="submit"
         >
           {isLoading ? 'Loading' : 'Add Reservation'}
         </CustomButton>
@@ -538,33 +538,33 @@ const AddNewReservation = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <div className='grid place-content-center mt-8'>
-                  <Image src={Success} alt='success' />
+                <div className="grid place-content-center mt-8">
+                  <Image src={Success} alt="success" />
                 </div>
 
-                <h2 className='text-[16px] text-center leading-3 mt-3 text-black font-semibold'>
+                <h2 className="text-[16px] text-center leading-3 mt-3 text-black font-semibold">
                   Fantastic!
                 </h2>
-                <h3 className='text-sm text-center text-grey600     mb-4'>
+                <h3 className="text-sm text-center text-grey600     mb-4">
                   Your reservation has been created
                 </h3>
 
-                <div className='flex gap-3'>
+                <div className="flex gap-3">
                   <CustomButton
                     onClick={async () => {
                       await refetch();
                       router.push('/dashboard/reservation');
                     }}
-                    className='h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 '
-                    backgroundColor='bg-white'
-                    type='submit'
+                    className="h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 "
+                    backgroundColor="bg-white"
+                    type="submit"
                   >
                     View reservations
                   </CustomButton>
                   <CustomButton
-                    className='text-white h-[49px]  flex-grow w-full'
+                    className="text-white h-[49px]  flex-grow w-full"
                     onClick={onClose}
-                    type='submit'
+                    type="submit"
                   >
                     Add another reservation
                   </CustomButton>
