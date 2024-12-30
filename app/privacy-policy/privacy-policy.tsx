@@ -10,21 +10,22 @@ export default function PrivacyPolicy() {
     'Update to this privacy policy',
     'Contact us',
   ];
+
   return (
     <div className="w-full flex space-x-4 px-4 lg:px-10 font-satoshi text-[#000000CC] pt-[32%] lg:pt-[10%]">
       <div className="w-[20%] border-r border-r-[#C4C4C480] py-8 space-y-8 fixed h-screen lg:block hidden">
         {items.map((each) => (
-          <a href={`#${each}`} className="py-8">
-            <p className="text-sm cursor-pointer py-3" key={each}>
-              {each}
-            </p>
+          <a href={`#${each}`} className="py-8" key={each}>
+            <p className="text-sm cursor-pointer py-3">{each}</p>
           </a>
         ))}
       </div>
-      <div className="w-full lg:w-[80%] py-8 space-y-8 overflow-y-auto lg:pl-[24%]">
+      <div className="w-full lg:w-[80%] py-8 space-y-8 overflow-y-auto lg:pl-[24%] lg:h-[77vh]">
         <div className="space-y-2" id={items[0]}>
-          <h1 className="text-xl font-bold">{items[0]}</h1>
-          <p className="text-sm">
+          <h1 className="text-xl font-bold" id={items[0]}>
+            {items[0]}
+          </h1>
+          <p className="text-sm" id={items[0]}>
             Hobwise is a modern hospitality management app designed to streamline operations for hotels, restaurants, bars, lounges, clubs, and coffee shops. It
             offers features like reservations, menu management, bookings, business analytics, and customer engagement tools, making it easier for businesses to
             enhance efficiency and provide exceptional service.  Your privacy is important to us. This Privacy Policy explains how we collect, use, disclose,
@@ -33,7 +34,9 @@ export default function PrivacyPolicy() {
         </div>
 
         <div className="space-y-2" id={items[1]}>
-          <h1 className="text-xl font-bold">Information We Collect</h1>
+          <h1 className="text-xl font-bold" id={items[1]}>
+            Information We Collect
+          </h1>
           <div className="text-sm space-y-2.5">
             <p>We collect the following types of information: </p>
             <ul className="space-y-2.5">
