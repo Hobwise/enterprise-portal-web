@@ -5,14 +5,16 @@ import { ReactNode, Suspense } from 'react';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
-    <div className="space-y-4 py-4 bg-white h-screen">
-      <header className="z-[100] w-full top-0 lg:mx-auto font-satoshi fixed bg-white backdrop-filter backdrop-blur-md right-0 left-0">
+    <div className="space-y-4 py-4 bg-white h-screen" id="wrapper">
+      <header className="z-[100] w-full top-0 lg:mx-auto font-satoshi fixed bg-white backdrop-filter backdrop-blur-md right-0 left-0" id="header">
         <LandingPageHeader />
         <Navbar className="bg-none py-4 lg:py-2" type="default" />
       </header>
 
       <Suspense fallback={<Skeleton className="w-full h-screen" />}>
-        <div className="text-[#000000CC]">{children}</div>
+        <div className="text-[#000000CC]" id="content">
+          {children}
+        </div>
       </Suspense>
     </div>
   );
