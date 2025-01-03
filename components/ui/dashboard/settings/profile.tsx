@@ -95,7 +95,7 @@ const Profile = () => {
       ),
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
-         onOpen();
+        onOpen();
         queryClient.invalidateQueries({ queryKey: ['user'] });
       }
     },
@@ -132,8 +132,8 @@ const Profile = () => {
     }
   };
 
-  const handleInputChange = (e: React.FormEvent<HTMLInputElement>) => {
-    const { name, value } = e.currentTarget;
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setUserFormData((prevFormData: any) => ({
       ...prevFormData,
       [name]: value,
