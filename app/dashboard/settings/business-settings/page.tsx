@@ -86,7 +86,7 @@ const BusinessSettings = () => {
           text2={data?.secondaryBrandColour}
         />
       </article>
-      {userInformation.role === 0 && (
+      {/* {userInformation.role === 0 && (
         <article className="bg-white border border-[#F0F2F5] rounded-lg px-3 md:px-6 py-2 mb-6">
           <div className="flex justify-between text-black items-center py-4">
             <div>
@@ -131,7 +131,7 @@ const BusinessSettings = () => {
             </div>
           </div>
         </article>
-      )}
+      )} */}
     </section>
   );
 };
