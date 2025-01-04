@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { Chip } from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { IoSearchOutline } from 'react-icons/io5';
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { Chip } from "@nextui-org/react";
+import { useRouter } from "next/navigation";
+import { IoSearchOutline } from "react-icons/io5";
 
-import Error from '@/components/error';
-import CampaignList from '@/components/ui/dashboard/campaign/campaignList';
-import CreateCampaign from '@/components/ui/dashboard/campaign/createCampaign';
-import useCampaign from '@/hooks/cachedEndpoints/useCampaign';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { CustomLoading } from '@/lib/utils';
-import { IoMdAdd } from 'react-icons/io';
+import Error from "@/components/error";
+import CampaignList from "@/components/ui/dashboard/campaign/campaignList";
+import CreateCampaign from "@/components/ui/dashboard/campaign/createCampaign";
+import useCampaign from "@/hooks/cachedEndpoints/useCampaign";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { CustomLoading } from "@/lib/utils";
+import { IoMdAdd } from "react-icons/io";
 
 const Compaigns: React.FC = () => {
   const router = useRouter();
@@ -27,11 +27,11 @@ const Compaigns: React.FC = () => {
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All Campaigns');
+    setTableStatus("All Campaigns");
     setPage(1);
   }, []);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -80,7 +80,7 @@ const Compaigns: React.FC = () => {
             <>
               <div>
                 <CustomInput
-                  classnames={'w-[242px]'}
+                  classnames={"w-[242px]"}
                   label=""
                   size="md"
                   value={searchQuery}
@@ -99,7 +99,7 @@ const Compaigns: React.FC = () => {
               {data?.[0]?.campaigns?.length > 0 && (
                 <CustomButton
                   onClick={() =>
-                    router.push('/dashboard/campaigns/create-campaign')
+                    router.push("/dashboard/campaigns/create-campaign")
                   }
                   className="py-2 px-4 md:mb-0 mb-4 text-white"
                   backgroundColor="bg-primaryColor"
@@ -124,7 +124,6 @@ const Compaigns: React.FC = () => {
       ) : (
         <CreateCampaign />
       )}
-      {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
     </>
   );
 };

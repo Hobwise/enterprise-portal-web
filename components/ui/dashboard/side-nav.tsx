@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
 
-import { generateRefreshToken } from '@/app/api/controllers/auth';
-import CompanyLogo from '@/components/logo';
-import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
-import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
+import { generateRefreshToken } from "@/app/api/controllers/auth";
+import CompanyLogo from "@/components/logo";
+import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
+import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import {
   getJsonItemFromLocalStorage,
   saveJsonItemToLocalStorage,
   setTokenCookie,
-} from '@/lib/utils';
+} from "@/lib/utils";
 import {
   Avatar,
   Divider,
@@ -21,18 +21,18 @@ import {
   DropdownTrigger,
   Skeleton,
   useDisclosure,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { FiLogOut } from 'react-icons/fi';
-import { GoPlus } from 'react-icons/go';
-import { IoIosArrowDown } from 'react-icons/io';
-import { PiBookOpenTextLight } from 'react-icons/pi';
-import LogoutModal from '../logoutModal';
-import { SIDENAV_ITEMS } from './constants';
-import AddBusiness from './settings/addBusiness';
-import { SideNavItem } from './types';
+} from "@nextui-org/react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { FiLogOut } from "react-icons/fi";
+import { GoPlus } from "react-icons/go";
+import { IoIosArrowDown } from "react-icons/io";
+import { PiBookOpenTextLight } from "react-icons/pi";
+import LogoutModal from "../logoutModal";
+import { SIDENAV_ITEMS } from "./constants";
+import AddBusiness from "./settings/addBusiness";
+import { SideNavItem } from "./types";
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
@@ -42,12 +42,12 @@ const SideNav = () => {
 
   const { userRolePermissions, role } = usePermission();
 
-  const business = getJsonItemFromLocalStorage('business') || [];
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const business = getJsonItemFromLocalStorage("business") || [];
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
 
   const refreshToken = async () => {
-    const userData = getJsonItemFromLocalStorage('userInformation');
-    const businesses = getJsonItemFromLocalStorage('business');
+    const userData = getJsonItemFromLocalStorage("userInformation");
+    const businesses = getJsonItemFromLocalStorage("business");
 
     if (!userData) return null;
 
@@ -67,13 +67,13 @@ const SideNav = () => {
         tokenExpiration,
       } = response?.data?.data;
 
-      saveJsonItemToLocalStorage('userInformation', {
+      saveJsonItemToLocalStorage("userInformation", {
         ...userData,
         token: newToken,
         refreshToken: newRefreshToken,
         tokenExpiration,
       });
-      setTokenCookie('token', newToken);
+      setTokenCookie("token", newToken);
       return newToken;
     } catch (error) {
       console.log(error);
@@ -98,7 +98,7 @@ const SideNav = () => {
     }));
 
     if (!exists) {
-      saveJsonItemToLocalStorage('business', transformedArray);
+      saveJsonItemToLocalStorage("business", transformedArray);
       await refreshToken();
 
       window.location.reload();
@@ -107,55 +107,55 @@ const SideNav = () => {
 
   const filteredItems = SIDENAV_ITEMS.filter((item) => {
     if (
-      item.title === 'Menu' &&
+      item.title === "Menu" &&
       role === 1 &&
       userRolePermissions?.canViewMenu === false
     )
       return false;
     if (
-      item.title === 'Campaigns' &&
+      item.title === "Campaigns" &&
       role === 1 &&
       userRolePermissions?.canViewCampaign === false
     )
       return false;
     if (
-      item.title === 'Reservation' &&
+      item.title === "Reservation" &&
       role === 1 &&
       userRolePermissions?.canViewReservation === false
     )
       return false;
     if (
-      item.title === 'Payments' &&
+      item.title === "Payments" &&
       userRolePermissions?.canViewPayment === false &&
       role === 1
     )
       return false;
     if (
-      item.title === 'Orders' &&
+      item.title === "Orders" &&
       userRolePermissions?.canViewOrder === false &&
       role === 1
     )
       return false;
     if (
-      item.title === 'Reports' &&
+      item.title === "Reports" &&
       userRolePermissions?.canViewReport === false &&
       role === 1
     )
       return false;
     if (
-      item.title === 'Bookings' &&
+      item.title === "Bookings" &&
       userRolePermissions?.canViewBooking === false &&
       role === 1
     )
       return false;
     if (
-      item.title === 'Dashboard' &&
+      item.title === "Dashboard" &&
       userRolePermissions?.canViewDashboard === false &&
       role === 1
     )
       return false;
     if (
-      item.title === 'Quick Response' &&
+      item.title === "Quick Response" &&
       userRolePermissions?.canViewQR === false &&
       role === 1
     )
@@ -167,6 +167,10 @@ const SideNav = () => {
   const toggleBusinessModal = () => {
     setIsOpenBusinessModal(!isOpenBusinessModal);
   };
+
+  const userData = getJsonItemFromLocalStorage("userInformation");
+  const canAccessMultipleLocations =
+    userData?.subscription?.planCapabilities?.canAccessMultipleLocations;
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex">
@@ -194,10 +198,10 @@ const SideNav = () => {
           <Divider className="bg-[#27272A] mx-auto h-[1px] w-[90%]" />
           <Dropdown
             style={{
-              width: '245px',
+              width: "245px",
             }}
             classNames={{
-              content: 'bg-[#2B3342] mb-3',
+              content: "bg-[#2B3342] mb-3",
             }}
           >
             <DropdownTrigger>
@@ -227,7 +231,7 @@ const SideNav = () => {
                     </span>
                     <div className="text-[12px]  font-[400] pr-5">
                       {business[0]?.city}
-                      {business[0]?.city && ','} {business[0]?.state}
+                      {business[0]?.city && ","} {business[0]?.state}
                     </div>
                   </div>
                   <div className="cursor-pointer">
@@ -241,11 +245,12 @@ const SideNav = () => {
               aria-label="Dropdown menu to switch businesses"
             >
               {userInformation?.isOwner &&
+                canAccessMultipleLocations &&
                 businessDetailsList?.map((item: any) => {
                   return (
                     <DropdownItem
                       classNames={{
-                        base: 'hover:bg-none max-h-[100px] overflow-scroll',
+                        base: "hover:bg-none max-h-[100px] overflow-scroll",
                       }}
                       key={item?.id}
                       onClick={() => toggleBtwBusiness(item)}
@@ -270,7 +275,7 @@ const SideNav = () => {
                   );
                 })}
 
-              {userInformation?.isOwner && (
+              {userInformation?.isOwner && canAccessMultipleLocations && (
                 <DropdownItem
                   key="add another business"
                   onClick={toggleBusinessModal}
@@ -328,7 +333,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
           <button
             onClick={toggleSubMenu}
             className={`flex flex-row items-center p-2 rounded-lg  w-full justify-between  ${
-              pathname.includes(item.path) ? 'bg-zinc-100' : ''
+              pathname.includes(item.path) ? "bg-zinc-100" : ""
             }`}
           >
             <div className="flex flex-row space-x-4 items-center">
@@ -336,7 +341,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
               <span className="font-semibold text-xl  flex">{item.title}</span>
             </div>
 
-            <div className={`${subMenuOpen ? 'rotate-180' : ''} flex`}>
+            <div className={`${subMenuOpen ? "rotate-180" : ""} flex`}>
               {/* <Icon icon='lucide:chevron-down' width='24' height='24' /> */}
             </div>
           </button>
@@ -350,7 +355,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
                     key={idx}
                     href={subItem.path}
                     className={`text-white ${
-                      subItem.path === pathname ? 'font-bold' : ''
+                      subItem.path === pathname ? "font-bold" : ""
                     }`}
                   >
                     <span>{subItem.title}</span>
@@ -365,10 +370,10 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
           prefetch={true}
           href={item.path}
           className={`text-white flex flex-row space-x-4 items-center py-[13px] px-6 rounded-[4px] transition hover:bg-[#2B3342] ${
-            item.path === pathname ? 'bg-[#2B3342]' : ''
+            item.path === pathname ? "bg-[#2B3342]" : ""
           }`}
         >
-          {item.title === 'Menu' ? (
+          {item.title === "Menu" ? (
             <PiBookOpenTextLight className="font-bold text-xl" />
           ) : (
             <Image src={item.icon} alt={item.title} />

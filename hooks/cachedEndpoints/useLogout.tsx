@@ -1,8 +1,8 @@
-import { logout } from '@/app/api/controllers/dashboard/settings';
-import { notify, removeCookie } from '@/lib/utils';
-import { useRouter } from 'next/navigation';
-import { useCallback, useState } from 'react';
-import { useQueryClient } from 'react-query';
+import { logout } from "@/app/api/controllers/dashboard/settings";
+import { notify, removeCookie } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
+import { useQueryClient } from "react-query";
 
 const useLogout = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -16,24 +16,27 @@ const useLogout = () => {
       const isSuccessful = response?.data?.isSuccessful;
 
       if (isSuccessful) {
-        router.push('/auth/login');
+        router.push("/auth/login");
         queryClient.clear();
         localStorage.clear();
-        removeCookie('token');
+        removeCookie("token");
+        removeCookie("planCapabilities");
+        removeCookie("username");
+        removeCookie("jwt");
       } else {
         notify({
-          title: 'Error!',
-          text: 'An error occurred, please try again',
-          type: 'error',
+          title: "Error!",
+          text: "An error occurred, please try again",
+          type: "error",
         });
       }
 
       return isSuccessful;
     } catch (error) {
       notify({
-        title: 'Error!',
-        text: 'An error occurred, please try again',
-        type: 'error',
+        title: "Error!",
+        text: "An error occurred, please try again",
+        type: "error",
       });
       return false;
     } finally {

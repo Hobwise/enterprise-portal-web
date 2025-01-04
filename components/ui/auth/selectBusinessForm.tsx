@@ -1,19 +1,20 @@
-'use client';
+"use client";
 import {
   getBusinessDetails,
   loginUserSelectedBusiness,
-} from '@/app/api/controllers/auth';
-import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
-import { useGlobalContext } from '@/hooks/globalProvider';
+} from "@/app/api/controllers/auth";
+import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { setJsonCookie } from "@/lib/cookies";
 import {
   SmallLoader,
   notify,
   saveJsonItemToLocalStorage,
   setTokenCookie,
-} from '@/lib/utils';
-import { Avatar, ScrollShadow } from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+} from "@/lib/utils";
+import { Avatar, ScrollShadow } from "@nextui-org/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const SelectBusinessForm = () => {
   const router = useRouter();
@@ -25,15 +26,18 @@ const SelectBusinessForm = () => {
   const callLogin = async (businessId: string) => {
     const data = await loginUserSelectedBusiness(loginDetails, businessId);
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage('userInformation', data?.data?.data);
-
-      setTokenCookie('token', data?.data?.data.token);
-      router.push('/dashboard');
+      saveJsonItemToLocalStorage("userInformation", data?.data?.data);
+      setJsonCookie(
+        "planCapabilities",
+        data?.data?.data?.subscription?.planCapabilities
+      );
+      setTokenCookie("token", data?.data?.data.token);
+      router.push("/dashboard");
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -45,7 +49,7 @@ const SelectBusinessForm = () => {
     const data = await getBusinessDetails(item);
 
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage('business', [data?.data?.data]);
+      saveJsonItemToLocalStorage("business", [data?.data?.data]);
       await callLogin(data?.data?.data.businessId);
 
       setIsLoading(false);
@@ -55,7 +59,7 @@ const SelectBusinessForm = () => {
   };
   if (loading) {
     return (
-      <div className='grid place-content-center'>
+      <div className="grid place-content-center">
         <SmallLoader />
       </div>
     );
@@ -65,31 +69,31 @@ const SelectBusinessForm = () => {
     <div className={`flex flex-col gap-3 w-full`}>
       {data?.map((item: any) => {
         return (
-          <ScrollShadow size={10} className='w-full max-h-[350px]'>
+          <ScrollShadow size={10} className="w-full max-h-[350px]">
             <article
               key={item.id}
               className={`bg-[#F1F2F480] rounded-xl p-3 cursor-pointer ${
                 isLoading &&
                 item.name === business?.name &&
-                'border-grey500 border'
+                "border-grey500 border"
               }`}
               onClick={() => handleSelectedBusiness(item)}
               key={item.name}
             >
-              <div className='flex items-center justify-between'>
-                <div className='flex items-center gap-3'>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
                   <Avatar
                     showFallback={true}
-                    size='lg'
+                    size="lg"
                     src={`data:image/jpeg;base64,${item?.logoImage}`}
                     name={item?.name}
                   />
-                  <div className='flex flex-col'>
-                    <span className='font-[600] text-[14px]'>{item?.name}</span>
+                  <div className="flex flex-col">
+                    <span className="font-[600] text-[14px]">{item?.name}</span>
 
-                    <span className='text-[12px] font-[400]'>
+                    <span className="text-[12px] font-[400]">
                       {item?.city}
-                      {item?.city && ','} {item?.state}
+                      {item?.city && ","} {item?.state}
                     </span>
                   </div>
                 </div>
