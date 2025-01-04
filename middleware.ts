@@ -10,7 +10,7 @@ export function middleware(request: NextRequest) {
   const matchedBaseRoute = Object.keys(routePermissions).find((route) =>
     pathname.startsWith(route)
   );
-  if (matchedBaseRoute && token) {
+  if (matchedBaseRoute && token && planCapabilities !== "undefined") {
     const requiredPermission = routePermissions[matchedBaseRoute];
     if (!JSON.parse(planCapabilities)[requiredPermission]) {
       return NextResponse.rewrite(
