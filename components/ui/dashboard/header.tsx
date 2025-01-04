@@ -70,7 +70,8 @@ const Header = () => {
   const userData = getJsonItemFromLocalStorage("userInformation");
 
   const { message, showBanner } = useCheckExpiry(
-    userData?.subscription?.nextPaymentDate
+    userData?.subscription?.nextPaymentDate,
+    7
   );
   const isActive = userData?.subscription?.isActive;
   const onTrialVersion = userData?.subscription?.onTrialVersion;
@@ -91,7 +92,7 @@ const Header = () => {
           desc="Upgrade to a paid plan to continue enjoying uninterrupted access"
         />
       )}
-      {onTrialVersion && isActive && showBanner && (
+      {onTrialVersion && isActive === false && showBanner && (
         <NavigationBanner
           title="Trial Expiry Notice!"
           desc={

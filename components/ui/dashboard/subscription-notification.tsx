@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@nextui-org/react";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { LuShieldAlert } from "react-icons/lu";
 import moment from "moment";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
@@ -50,22 +50,24 @@ interface CheckExpiryResult {
   showBanner: boolean;
 }
 
-export const useCheckExpiry = (nextPaymentDate: string): CheckExpiryResult => {
-  const [message, setMessage] = React.useState<string>("");
-  const [showBanner, setShowBanner] = React.useState<boolean>(false);
+export const useCheckExpiry = (
+  nextPaymentDate: string,
+  daysThreshold: number
+): CheckExpiryResult => {
+  const [message, setMessage] = useState<string>("");
+  const [showBanner, setShowBanner] = useState<boolean>(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const updateMessage = () => {
       const now = moment();
       const dueMoment = moment(nextPaymentDate);
       const daysUntilDue = dueMoment.diff(now, "days");
 
-      if (daysUntilDue <= 3 && dueMoment.isAfter(now)) {
+      if (daysUntilDue <= daysThreshold && dueMoment.isAfter(now)) {
         setShowBanner(true);
-        if (daysUntilDue === 3) {
-          setMessage("in 3 days");
-        } else if (daysUntilDue === 2) {
-          setMessage("in 2 days");
+
+        if (daysUntilDue > 1) {
+          setMessage(`in ${daysUntilDue} days`);
         } else if (daysUntilDue === 1) {
           setMessage("tomorrow");
         } else {
@@ -84,7 +86,7 @@ export const useCheckExpiry = (nextPaymentDate: string): CheckExpiryResult => {
     updateMessage();
     const interval = setInterval(updateMessage, 86400000);
     return () => clearInterval(interval);
-  }, [nextPaymentDate]);
+  }, [nextPaymentDate, daysThreshold]);
 
   return { message, showBanner };
 };
@@ -93,7 +95,8 @@ export const SubscriptionNoticePopup = () => {
   const userData = getJsonItemFromLocalStorage("userInformation");
 
   const { message, showBanner } = useCheckExpiry(
-    userData?.subscription?.nextPaymentDate
+    userData?.subscription?.nextPaymentDate,
+    2
   );
 
   const router = useRouter();
