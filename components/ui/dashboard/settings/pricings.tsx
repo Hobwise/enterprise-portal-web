@@ -160,7 +160,7 @@ const Pricing = () => {
               currentSubscriptionDetails={currentSubDetails}
             />
           )} */}
-          {subscriptionQuery.data.status === 'pending' && (
+          {subscriptionQuery?.data?.status === 'pending' && (
             <SubscriptionPendingCard
               cardDetails={subscriptionQuery?.data?.authorization}
               currentSubscriptionDetails={currentSubDetails}
