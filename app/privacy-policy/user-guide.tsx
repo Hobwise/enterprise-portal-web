@@ -24,7 +24,7 @@ export default function UserGuide() {
         ))}
       </div>
 
-      <div className="w-full lg:w-[80%] py-8 space-y-8 lg:pl-[24%]">
+      <div className="w-full lg:w-[80%] py-8 space-y-8 overflow-y-auto lg:pl-[24%] lg:h-[77vh]">
         <div className="space-y-2" id={items[0]}>
           <h1 className="text-xl font-bold">{items[0]}</h1>
           <p className="text-sm">

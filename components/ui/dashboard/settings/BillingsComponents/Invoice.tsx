@@ -22,9 +22,9 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
   // console.log("DOWNLOAD", download)
 
   useEffect(() => {
-    console.log('data', data);
+    // console.log('data', data);
     // alert(data);
-    console.log('download', download);
+    // console.log('download', download);
     console.log('setDownloadClickedInvoice', setDownloadClickedInvoice);
   }, []);
 
@@ -34,7 +34,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
 
   const mapPlan = (plan: number) => {
     return (
-      ['Unknown', 'Premium Plan', 'Professional Plan', 'Starter Plan'][plan] ||
+      ['Unknown', 'Basic', 'Professional Plan', 'Premium'][plan] ||
       'Unknown'
     );
   };
@@ -69,7 +69,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
 
     try {
       if (invoiceRef.current) {
-        console.log('REF TINGZ', invoiceRef.current);
+        // console.log('REF TINGZ', invoiceRef.current);
         const canvas = await html2canvas(invoiceRef.current, { scale: 2 });
         const imgData = canvas.toDataURL('image/png');
 

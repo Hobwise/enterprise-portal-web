@@ -98,6 +98,7 @@ export interface CurrentSubscriptionDetails {
   nextPaymentDate: string | null;
   subscription: {
     status: number;
+    plan: number
   };
 }
 

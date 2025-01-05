@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import PrivacyPolicy from './privacy-policy';
 import TermsOfUse from './terms-of-use';
 import UserGuide from './user-guide';
+import React from 'react';
 
 export default function PrivacyView() {
   const router = useRouter();
@@ -24,8 +25,8 @@ export default function PrivacyView() {
   };
 
   return (
-    <div>
-      <div className="border-b w-full flex border-b-[#C4C4C480] space-x-8 px-6 lg:px-10 bg-white pt-24 fixed">
+    <React.Fragment>
+      <div className="border-b w-full flex border-b-[#C4C4C480] space-x-8 px-6 lg:px-10 bg-white pt-24 fixed" id="tabs">
         {tabs.map((tab) => (
           <div
             className={cn(
@@ -45,6 +46,6 @@ export default function PrivacyView() {
       {defaultTab === tabs[1] && <TermsOfUse />}
       {defaultTab === tabs[2] && <UserGuide />}
       {tabs.find((each) => each !== defaultTab) && defaultTab !== tabs[0] && defaultTab !== tabs[1] && defaultTab !== tabs[2] && <PrivacyPolicy />}
-    </div>
+    </React.Fragment>
   );
 }
