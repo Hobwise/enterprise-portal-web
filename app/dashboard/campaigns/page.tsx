@@ -124,8 +124,7 @@ const Compaigns: React.FC = () => {
       ) : (
         <CreateCampaign />
       )}
-      {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
-    </>
+     </>
   );
 };
 

@@ -156,7 +156,7 @@ const BusinessSettingsPage = () => {
   ];
   return (
     <div className="flex w-full flex-col">
-      <Tabs
+      {/* <Tabs
         size="lg"
         fullWidth={true}
         defaultSelectedKey={tabs[businessProfileNavigate].id}
@@ -169,7 +169,8 @@ const BusinessSettingsPage = () => {
             {item.content}
           </Tab>
         )}
-      </Tabs>
+      </Tabs> */}
+      <TermsCondition />
     </div>
   );
 };

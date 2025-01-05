@@ -24,7 +24,7 @@ const lists = [
   },
   { title: 'Teams Management', href: '/dashboard/settings/teams' },
   { title: 'Roles and Permissions', href: '/dashboard/settings/staff-management' },
-  { title: 'Business Settings', href: '/dashboard/settings/business-settings' },
+  { title: 'Terms and Condition', href: '/dashboard/settings/business-settings' },
 ];
 
 const SettingsSidebar = () => {
