@@ -111,6 +111,7 @@ const Pricing = () => {
 
   useEffect(() => {
     if (subscriptionQuery.data) {
+      // console.log("DATA",subscriptionQuery.data)
       setCurrentSubDetails({
         ...subscriptionQuery.data,
         nextPaymentDate: subscriptionQuery.data.nextPaymentDate,
