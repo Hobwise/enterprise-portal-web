@@ -30,6 +30,7 @@ import { PiBuildingOffice } from 'react-icons/pi';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import api from '@/app/api/apiService';
 import { AUTH } from '@/app/api/api-url';
+import { TbCopy } from 'react-icons/tb';
 
 interface BusinessData {
   [key: string]: any;
@@ -47,8 +48,6 @@ const BusinessInformation = () => {
     null
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
-  console.log(businessData);
 
   const uploadFileMutation = useMutation({
     mutationFn: (formData: FormData) =>
@@ -105,6 +104,10 @@ const BusinessInformation = () => {
       });
     }
   }, [businessData]);
+
+  const copyTextToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+  };
 
   const handleFileChange = async (event: any) => {
     if (event.target.files) {
@@ -206,15 +209,26 @@ const BusinessInformation = () => {
               Edit
             </CustomButton>
           ) : (
-            <CustomButton
-              disableRipple
-              loading={updateBusinessMutation.isLoading}
-              className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
-              onClick={() => updateBusinessMutation.mutate()}
-            >
-              <IoCheckmarkCircleOutline className="text-base" />
-              Save Changes
-            </CustomButton>
+            <div className="flex">
+              <CustomButton
+                disableRipple
+                loading={updateBusinessMutation.isLoading}
+                className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
+                onClick={() => updateBusinessMutation.mutate()}
+              >
+                <IoCheckmarkCircleOutline className="text-base" />
+                Save Changes
+              </CustomButton>
+              <CustomButton
+                disableRipple
+                className="flex rounded-[10px] text-xs p-2 h-[30px] text-danger"
+                backgroundColor="bg-transparent"
+                onClick={() => setIsEditing(false)}
+              >
+                <RxCross2 className="text-base" />
+                Cancel
+              </CustomButton>
+            </div>
           )}
         </div>
         <div className="space-y-2">
@@ -333,6 +347,67 @@ const BusinessInformation = () => {
                   </span>
                 </div>
               </div>
+              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                <div className="h-4 w-4"></div>
+                <div className="flex flex-col">
+                  <span className="text-sm">Primary Brand color</span>
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={cn(
+                        'text-sm',
+                        businessFormData?.primaryBrandColour?.length > 0
+                          ? 'text-black'
+                          : 'text-red-500'
+                      )}
+                    >
+                      {businessFormData?.primaryBrandColour?.length > 0
+                        ? businessFormData?.primaryBrandColour
+                        : 'Not updated'}
+                    </span>
+
+                    {businessFormData?.primaryBrandColour.length > 0 && (
+                      <TbCopy
+                        onClick={() =>
+                          copyTextToClipboard(
+                            businessFormData?.primaryBrandColour
+                          )
+                        }
+                        className="text-[20px] cursor-pointer text-grey400"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                <div className="h-4 w-4"></div>
+                <div className="flex flex-col">
+                  <span className="text-sm">Secondary Brand color</span>
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={cn(
+                        'text-sm',
+                        businessFormData?.secondaryBrandColour?.length > 0
+                          ? 'text-black'
+                          : 'text-red-500'
+                      )}
+                    >
+                      {businessFormData?.secondaryBrandColour?.length > 0
+                        ? businessFormData?.secondaryBrandColour
+                        : 'Not updated'}
+                    </span>
+                    {businessFormData?.secondaryBrandColour.length > 0 && (
+                      <TbCopy
+                        onClick={() =>
+                          copyTextToClipboard(
+                            businessFormData?.secondaryBrandColour
+                          )
+                        }
+                        className="text-[20px] cursor-pointer text-grey400"
+                      />
+                    )}
+                  </div>
+                </div>
+              </div>
             </>
           ) : (
             <>
@@ -426,6 +501,30 @@ const BusinessInformation = () => {
                     value={businessFormData?.state}
                     label="State"
                     placeholder="Enter business state"
+                  />
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                <div className="flex flex-col w-full">
+                  <CustomInput
+                    type="text"
+                    name="primaryBrandColour"
+                    onChange={handleInputChange}
+                    value={businessFormData?.primaryBrandColour}
+                    label="Primary Brand Color"
+                    placeholder="Enter primary brand color"
+                  />
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                <div className="flex flex-col w-full">
+                  <CustomInput
+                    type="text"
+                    name="secondaryBrandColour"
+                    onChange={handleInputChange}
+                    value={businessFormData?.secondaryBrandColour}
+                    label="Secondary Brand Color"
+                    placeholder="Enter secondary brand color"
                   />
                 </div>
               </div>
