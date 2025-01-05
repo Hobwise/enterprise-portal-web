@@ -111,6 +111,7 @@ const Pricing = () => {
 
   useEffect(() => {
     if (subscriptionQuery.data) {
+      // console.log("DATA",subscriptionQuery.data)
       setCurrentSubDetails({
         ...subscriptionQuery.data,
         nextPaymentDate: subscriptionQuery.data.nextPaymentDate,
@@ -160,7 +161,7 @@ const Pricing = () => {
               currentSubscriptionDetails={currentSubDetails}
             />
           )} */}
-          {subscriptionQuery.data.status === 'pending' && (
+          {subscriptionQuery?.data?.status === 'pending' && (
             <SubscriptionPendingCard
               cardDetails={subscriptionQuery?.data?.authorization}
               currentSubscriptionDetails={currentSubDetails}

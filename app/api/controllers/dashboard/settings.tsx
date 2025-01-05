@@ -324,6 +324,7 @@ export async function getSubscription(
     // console.log("SUCCESS", data)
     return data;
   } catch (error) {
+    console.log("ERROR", error)
     handleError(error, false);
   }
 }
