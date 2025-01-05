@@ -102,7 +102,7 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
   } = usePagination(subscriptions, columns, INITIAL_VISIBLE_COLUMNS);
 
   const mapPlan = (plan: number) => {
-    return ['Unknown', 'Premium', 'Professional', 'Starter'][plan] || 'Unknown';
+    return ['Unknown', 'Basic', 'Professional', 'Premium'][plan] || 'Unknown';
   };
 
   const mapAmount = (amount: number) => `₦${addCommasToNumber(amount)}`;
