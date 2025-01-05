@@ -139,13 +139,13 @@ const Pricing = () => {
       ) : (
         <>
           {/* {noSubscription && <NoSubscriptionCard />} */}
-          {!subscriptionQuery.data.subscription ? (
+          {!subscriptionQuery?.data?.subscription ? (
             <NoSubscriptionCard />
           ) : (
             <PaidCards
-              cardDetails={subscriptionQuery.data.authorization}
+              cardDetails={subscriptionQuery.data?.authorization}
               currentSubscriptionDetails={currentSubDetails}
-              paystackStatus={subscriptionQuery.data.status}
+              paystackStatus={subscriptionQuery?.data?.status}
             />
           )}
           {/* {hasSubscription && (
@@ -162,18 +162,18 @@ const Pricing = () => {
           )} */}
           {subscriptionQuery.data.status === 'pending' && (
             <SubscriptionPendingCard
-              cardDetails={subscriptionQuery.data.authorization}
+              cardDetails={subscriptionQuery?.data?.authorization}
               currentSubscriptionDetails={currentSubDetails}
             />
           )}
           {/* {showPlans && ( */}
           <PricingCards
-            plans={subscriptionQuery.data.plans}
+            plans={subscriptionQuery?.data?.plans}
             disableButtons={disableButtons}
             currentSubscriptionDetails={currentSubDetails}
           />
           {/* )} */}
-          {subscriptionQuery.data.subscriptionHistories.length > 0 && (
+          {subscriptionQuery?.data?.subscriptionHistories?.length > 0 && (
             <>
               <h2 className="text-lg font-bold mt-10 mb-3">Billing history</h2>
               <SubscriptionTable
