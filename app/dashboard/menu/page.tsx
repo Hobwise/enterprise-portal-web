@@ -53,9 +53,15 @@ const Menu: React.FC = () => {
   const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [name, setName] = useState('');
+  const [packingCost, setPackingCost] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
 
-  const { data: allMenus, refetch: getMenu } = useAllMenus();
+  const {
+    data: allMenus,
+    isLoading: isMenuLoading,
+    isError: isMenuError,
+    refetch: getMenu,
+  } = useAllMenus();
   const { data, isLoading, isError, refetch } = useMenu();
 
   useEffect(() => {
@@ -73,7 +79,10 @@ const Menu: React.FC = () => {
 
   const handleCreateMenu = async () => {
     setLoading(true);
-    const data = await createMenu(businessInformation[0]?.businessId, { name });
+    const data = await createMenu(businessInformation[0]?.businessId, {
+      name,
+      packingCost,
+    });
     setLoading(false);
     if (data?.data?.isSuccessful) {
       notify({
@@ -135,9 +144,10 @@ const Menu: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
-  if (isError) return <Error onClick={() => refetch()} />;
+  if (isLoading || isMenuLoading) return <CustomLoading />;
+  if (isError || isMenuError) return <Error onClick={() => refetch()} />;
 
+  console.log(data)
   return (
     <>
       <div className="flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between">
@@ -247,6 +257,15 @@ const Menu: React.FC = () => {
                   value={name}
                   label="Name of menu"
                   placeholder="E.g Drinks"
+                />
+                <CustomInput
+                  type="number"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setPackingCost(Number(e.target.value))
+                  }
+                  value={String(packingCost)}
+                  label="Packing cost (Optional)"
+                  placeholder="This is a cost required to pack any item in this menus"
                 />
                 <Spacer y={2} />
 
