@@ -540,27 +540,41 @@ const BusinessInformation = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="primaryBrandColour"
-                    onChange={handleInputChange}
-                    value={businessFormData?.primaryBrandColour}
-                    label="Primary Brand Color"
-                    placeholder="Enter primary brand color"
-                  />
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="secondaryBrandColour"
-                    onChange={handleInputChange}
-                    value={businessFormData?.secondaryBrandColour}
-                    label="Secondary Brand Color"
-                    placeholder="Enter secondary brand color"
-                  />
+                <div className="w-full flex gap-2">
+                  <div className="flex flex-col w-full gap-2">
+                    <label
+                      className="text-black font-medium text-sm"
+                      htmlFor="primaryBrandColor"
+                    >
+                      Primary Brand Color
+                    </label>
+                    <input
+                      type="color"
+                      id="primaryBrandColour"
+                      name="primaryBrandColour"
+                      className=" w-full h-[46px] border border-[#E0E0E0] rounded-[6px] px-2"
+                      onChange={handleInputChange}
+                      value={businessFormData?.primaryBrandColour}
+                      placeholder="Enter primary brand color"
+                    />
+                  </div>
+                  <div className="flex flex-col w-full gap-2">
+                    <label
+                      className="text-black font-medium text-sm"
+                      htmlFor="primaryBrandColor"
+                    >
+                      Secondary Brand Color
+                    </label>
+                    <input
+                      type="color"
+                      id="secondaryBrandColour"
+                      name="secondaryBrandColour"
+                      className=" w-full h-[46px] border border-[#E0E0E0] rounded-[6px] px-2"
+                      onChange={handleInputChange}
+                      value={businessFormData?.secondaryBrandColour}
+                      placeholder="Enter secondary brand color"
+                    />
+                  </div>
                 </div>
               </div>
             </>
