@@ -31,6 +31,8 @@ import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import api from '@/app/api/apiService';
 import { AUTH } from '@/app/api/api-url';
 import { TbCopy } from 'react-icons/tb';
+import States from '@/lib/cities.json';
+import SelectInput from '@/components/selectInput';
 
 interface BusinessData {
   [key: string]: any;
@@ -48,6 +50,26 @@ const BusinessInformation = () => {
     null
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const getStates = () => {
+    return States.map((state) => ({
+      label: state.name,
+      value: state.name,
+    }));
+  };
+
+  const getCities = () => {
+    const state = States.find((state) => state.name === businessFormData.state);
+
+    if (state) {
+      return state?.cities.map((city) => ({
+        label: city,
+        value: city,
+      }));
+    } else {
+      return [];
+    }
+  };
 
   const uploadFileMutation = useMutation({
     mutationFn: (formData: FormData) =>
@@ -482,25 +504,38 @@ const BusinessInformation = () => {
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
                 <div className="flex flex-col w-full">
-                  <CustomInput
+                  {/* <CustomInput
                     type="text"
                     name="city"
                     disabled
                     value={businessFormData?.city}
                     label="LGA"
                     placeholder="Enter business city"
+                  /> */}
+
+                  <SelectInput
+                    label="State"
+                    name="state"
+                    onChange={handleInputChange}
+                    disabled={businessFormData?.state}
+                    defaultSelectedKeys={[businessFormData?.state]}
+                    value={businessFormData?.state}
+                    placeholder={'Select state'}
+                    contents={getStates()}
                   />
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
                 <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="state"
-                    disabled
-                    value={businessFormData?.state}
-                    label="State"
-                    placeholder="Enter business state"
+                  <SelectInput
+                    label="City"
+                    name="city"
+                    onChange={handleInputChange}
+                    disabled={businessFormData?.state}
+                    defaultSelectedKeys={[businessFormData?.city]}
+                    value={businessFormData?.city}
+                    placeholder={'Select city'}
+                    contents={getCities()}
                   />
                 </div>
               </div>
