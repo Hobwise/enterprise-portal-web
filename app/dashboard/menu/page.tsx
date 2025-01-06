@@ -216,7 +216,7 @@ const Menu: React.FC = () => {
             )}
         </div>
       </div>
-      {data && data.length > 1 ? (
+      {data && data.length > 0 ? (
         <MenuList
           menus={filteredItems}
           onOpen={onOpen}
