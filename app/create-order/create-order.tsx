@@ -1,7 +1,7 @@
 'use client';
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
@@ -11,7 +11,7 @@ import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
 
 import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
 import { useGlobalContext } from '@/hooks/globalProvider';
-import { formatPrice } from '@/lib/utils';
+import { cn, formatPrice } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import { HiArrowLongLeft } from 'react-icons/hi2';
 import noMenu from '../../public/assets/images/no-menu.png';
@@ -81,7 +81,7 @@ const CreateOrder = () => {
 
   if (isError) {
     return (
-      <div className='h-screen grid place-content-center bg-white'>
+      <div className="h-screen grid place-content-center bg-white">
         {' '}
         <Error imageHeight={'h-32'} onClick={() => refetch()} />
       </div>
@@ -182,29 +182,31 @@ const CreateOrder = () => {
 
   const baseString = 'data:image/jpeg;base64,';
 
+  console.log(menuConfig);
+
   return (
-    <main className=' '>
+    <main className=" ">
       <article
         style={{
           backgroundColor: menuConfig?.backgroundColour || 'white',
         }}
-        className='xl:block relative  h-screen   overflow-scroll    shadow-lg'
+        className="xl:block relative  h-screen   overflow-scroll    shadow-lg"
       >
         {menuConfig?.image.length > baseString.length && (
           <Image
             fill
-            className='absolute backdrop-brightness-125 bg-cover opacity-25'
+            className="absolute backdrop-brightness-125 bg-cover opacity-25"
             src={baseString + menuConfig?.image}
-            alt='background'
+            alt="background"
           />
         )}
 
-        <div className='p-4 pt-6 flex justify-between'>
+        <div className="p-4 pt-6 flex justify-between">
           <div>
-            <h1 className='text-[28px] font-[700] text-black relative '>
+            <h1 className="text-[28px] font-[700] text-black relative ">
               Menu
             </h1>
-            <p className='text-sm  text-grey600  w-full '>
+            <p className="text-sm  text-grey600  w-full ">
               {selectedItems.length > 0
                 ? `${selectedItems.length} items selected`
                 : 'Select items from the menu'}
@@ -212,27 +214,29 @@ const CreateOrder = () => {
           </div>
           <CustomButton
             onClick={selectedItems.length > 0 ? onOpen : {}}
-            className='py-2 px-4 mb-0 text-white'
-            backgroundColor='bg-primaryColor'
+            className="py-2 px-4 mb-0 text-white"
+            backgroundColor="bg-primaryColor"
           >
-            <div className='flex gap-2 items-center justify-center'>
+            <div className="flex gap-2 items-center justify-center">
               {selectedItems.length > 0 && (
-                <span className='font-bold'>
+                <span className="font-bold">
                   {' '}
                   {formatPrice(calculateTotalPrice())}{' '}
                 </span>
               )}
               <p>{'Proceed'} </p>
-              <HiArrowLongLeft className='text-[22px] rotate-180' />
+              <HiArrowLongLeft className="text-[22px] rotate-180" />
             </div>
           </CustomButton>
         </div>
         {topContent}
 
         <div
-          className={`${
-            togglePreview(convertActiveTile(menuConfig?.layout))?.main
-          } relative  px-4`}
+          className={cn(
+            'relative px-4',
+            menuConfig?.layout &&
+              togglePreview(convertActiveTile(menuConfig?.layout))?.main
+          )}
         >
           {matchingObjectArray?.map((item) => {
             const isSelected =
@@ -242,18 +246,18 @@ const CreateOrder = () => {
               );
 
             return (
-              <>
+              <React.Fragment key={item.menuID}>
                 <div
                   onClick={() => toggleVarietyModal(item)}
-                  key={item.menuID}
-                  className={`${
-                    togglePreview(convertActiveTile(menuConfig?.layout))
-                      ?.container
-                  } ${
-                    convertActiveTile(menuConfig?.layout) === 'List Right' &&
+                  className={cn(
+                    'flex my-4',
+                    menuConfig?.layout &&
+                      togglePreview(convertActiveTile(menuConfig.layout))
+                        ?.container,
                     menuConfig?.useBackground &&
-                    'flex-row-reverse'
-                  } flex  my-4`}
+                      convertActiveTile(menuConfig?.layout) === 'List Right' &&
+                      'flex-row-reverse'
+                  )}
                 >
                   {menuConfig?.useBackground && (
                     <div
@@ -270,26 +274,26 @@ const CreateOrder = () => {
                         width={60}
                         height={60}
                         src={item.image ? `${baseString}${item.image}` : noMenu}
-                        alt='menu'
+                        alt="menu"
                       />
                     </div>
                   )}
                   <div
-                    style={{
-                      color: menuConfig?.textColour,
-                    }}
-                    className={`text-[14px]  ${
-                      togglePreview(convertActiveTile(menuConfig?.layout))
-                        ?.textContainer
-                    } flex flex-col justify-center w-[70%]`}
+                    className={cn(
+                      'flex flex-col justify-center w-[70%] text-sm',
+                      menuConfig?.layout
+                        ? togglePreview(convertActiveTile(menuConfig?.layout))
+                            ?.textContainer
+                        : 'text-black'
+                    )}
                   >
-                    <p className='font-[700]'>{item.itemName}</p>
-                    <p className='text-[13px]'>{item.menuName}</p>
-                    <p className='text-[13px]'>{formatPrice(item.price)}</p>
+                    <p className="font-[700]">{item.itemName}</p>
+                    <p className="text-[13px]">{item.menuName}</p>
+                    <p className="text-[13px]">{formatPrice(item.price)}</p>
                     {isSelected && (
                       <Chip
                         startContent={<CheckIcon size={18} />}
-                        variant='flat'
+                        variant="flat"
                         classNames={{
                           base: 'bg-primaryColor text-white text-[10px] mt-1',
                         }}
@@ -300,8 +304,8 @@ const CreateOrder = () => {
                   </div>
                 </div>
                 {togglePreview(convertActiveTile(menuConfig?.layout))
-                  ?.divider && <Divider className='text-[#E4E7EC] h-[1px]' />}
-              </>
+                  ?.divider && <Divider className="text-[#E4E7EC] h-[1px]" />}
+              </React.Fragment>
             );
           })}
         </div>
