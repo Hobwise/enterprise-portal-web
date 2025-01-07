@@ -147,7 +147,6 @@ const Menu: React.FC = () => {
   if (isLoading || isMenuLoading) return <CustomLoading />;
   if (isError || isMenuError) return <Error onClick={() => refetch()} />;
 
-  console.log(data)
   return (
     <>
       <div className="flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between">

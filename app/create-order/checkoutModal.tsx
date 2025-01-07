@@ -9,6 +9,8 @@ import { CustomTextArea } from '@/components/customTextArea';
 import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
 import {
   Button,
+  Checkbox,
+  cn,
   Divider,
   Modal,
   ModalBody,
@@ -50,6 +52,7 @@ const CheckoutModal = ({
   businessId,
   cooperateID,
   qrId,
+  handlePackingCost,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
 
@@ -149,7 +152,7 @@ const CheckoutModal = ({
   };
 
   return (
-    <div className=''>
+    <div className="">
       <Modal
         hideCloseButton={true}
         isKeyboardDismissDisabled={true}
@@ -174,35 +177,35 @@ const CheckoutModal = ({
           {(onClose) => (
             <>
               <>
-                <ModalHeader className='flex flex-col mt-3 gap-1'>
-                  <div className='flex flex-row flex-wrap  justify-between'>
+                <ModalHeader className="flex flex-col mt-3 gap-1">
+                  <div className="flex flex-row flex-wrap  justify-between">
                     {changeTitle ? (
                       <div>
-                        <div className='text-[24px] leading-8 font-semibold'>
-                          <span className='text-black'>
+                        <div className="text-[24px] leading-8 font-semibold">
+                          <span className="text-black">
                             Hello, {order.placedByName}
                           </span>
                         </div>
-                        <p className='text-sm  text-grey600 xl:mb-8 w-full mb-4'>
+                        <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
                           Your orders
                         </p>
                       </div>
                     ) : (
                       <div>
-                        <div className='text-[24px] leading-8 font-semibold'>
-                          <span className='text-black'>Confirm order</span>
+                        <div className="text-[24px] leading-8 font-semibold">
+                          <span className="text-black">Confirm order</span>
                         </div>
-                        <p className='text-sm  text-grey600 xl:mb-8 w-full mb-4'>
+                        <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
                           Confirm order before checkout
                         </p>
                       </div>
                     )}
                   </div>
-                  <Divider className='bg-primaryGrey' />
+                  <Divider className="bg-primaryGrey" />
                 </ModalHeader>
                 <ModalBody>
-                  <div className=''>
-                    <div className='flex lg:flex-row flex-col gap-3 mb-4'>
+                  <div className="">
+                    <div className="flex lg:flex-row flex-col gap-3 mb-4">
                       <div
                         className={`lg:w-[60%] ${
                           changeTitle ? 'h-full' : 'max-h-[300px]'
@@ -210,12 +213,9 @@ const CheckoutModal = ({
                       >
                         {selectedItems?.map((item, index) => {
                           return (
-                            <>
-                              <div
-                                key={item.id}
-                                className='flex justify-between gap-2'
-                              >
-                                <div className='py-3 w-[250px] rounded-lg  text-black  flex'>
+                            <React.Fragment key={item.id}>
+                              <div className="flex justify-between gap-2">
+                                <div className="py-3 w-[250px] rounded-lg  text-black  flex">
                                   <Image
                                     src={
                                       item?.image
@@ -224,88 +224,100 @@ const CheckoutModal = ({
                                     }
                                     width={20}
                                     height={20}
-                                    className='object-cover rounded-lg w-20 h-20'
-                                    aria-label='uploaded image'
-                                    alt='uploaded image(s)'
+                                    className="object-cover rounded-lg w-20 h-20"
+                                    aria-label="uploaded image"
+                                    alt="uploaded image(s)"
                                   />
 
-                                  <div className='pl-2 flex  flex-col text-sm justify-center'>
-                                    <p className='font-[600]'>
+                                  <div className="pl-2 flex  flex-col text-sm justify-center">
+                                    <p className="font-[600]">
                                       {item.itemName}
                                     </p>
+
                                     <Spacer y={1} />
-                                    <p className='text-grey600'>
+                                    <p className="text-grey600">
                                       {item.menuName}
                                     </p>
+                                    <Checkbox
+                                      size="sm"
+                                      isSelected={item.isPacking}
+                                      onValueChange={(isSelected) =>
+                                        handlePackingCost(item.id, isSelected)
+                                      }
+                                    >
+                                      <span className="text-grey600 text-sm">
+                                        Packing cost
+                                      </span>
+                                    </Checkbox>
                                     <Spacer y={1} />
-                                    <div className='text-black md:w-[150px] md:hidden w-auto grid'>
-                                      <h3 className='font-[600]'>
+                                    <div className="text-black md:w-[150px] md:hidden w-auto grid">
+                                      <h3 className="font-[600]">
                                         {formatPrice(item?.price)}
                                       </h3>
                                     </div>
                                   </div>
                                 </div>
-                                <div className='flex  items-center'>
+                                <div className="flex  items-center">
                                   <Button
                                     onClick={() => handleDecrement(item.id)}
                                     isIconOnly
-                                    radius='sm'
-                                    variant='faded'
-                                    className='border h-[35px] w-[30px] border-primaryGrey bg-white'
-                                    aria-label='minus'
+                                    radius="sm"
+                                    variant="faded"
+                                    className="border h-[35px] w-[30px] border-primaryGrey bg-white"
+                                    aria-label="minus"
                                   >
                                     <FaMinus />
                                   </Button>
-                                  <span className='font-bold  text-black py-2 px-4'>
+                                  <span className="font-bold  text-black py-2 px-4">
                                     {item.count}
                                   </span>
                                   <Button
                                     onClick={() => handleIncrement(item.id)}
                                     isIconOnly
-                                    radius='sm'
-                                    variant='faded'
-                                    className='border border-primaryGrey h-[35px] w-[30px] bg-white '
-                                    aria-label='plus'
+                                    radius="sm"
+                                    variant="faded"
+                                    className="border border-primaryGrey h-[35px] w-[30px] bg-white "
+                                    aria-label="plus"
                                   >
                                     <FaPlus />
                                   </Button>
                                 </div>
-                                <div className='text-black md:w-[150px] hidden w-auto md:grid place-content-center'>
-                                  <h3 className='font-[600]'>
+                                <div className="text-black md:w-[150px] hidden w-auto md:grid place-content-center">
+                                  <h3 className="font-[600]">
                                     {formatPrice(item?.price)}
                                   </h3>
                                 </div>
                               </div>
                               {index !== selectedItems?.length - 1 && (
-                                <Divider className='bg-[#E4E7EC80]' />
+                                <Divider className="bg-[#E4E7EC80]" />
                               )}
-                            </>
+                            </React.Fragment>
                           );
                         })}
                       </div>
-                      <div className='flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4'>
+                      <div className="flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4">
                         {changeTitle === false && (
                           <>
                             <CustomInput
-                              type='text'
+                              type="text"
                               onChange={handleInputChange}
                               errorMessage={response?.errors?.placedByName?.[0]}
                               value={order.placedByName}
-                              name='placedByName'
-                              label='Name'
-                              placeholder='Enter name'
+                              name="placedByName"
+                              label="Name"
+                              placeholder="Enter name"
                             />
                             <Spacer y={2} />
                             <CustomInput
-                              type='text'
+                              type="text"
                               errorMessage={
                                 response?.errors?.placedByPhoneNumber?.[0]
                               }
                               onChange={handleInputChange}
                               value={order.placedByPhoneNumber}
-                              name='placedByPhoneNumber'
-                              label='Phone number'
-                              placeholder='Enter phone number'
+                              name="placedByPhoneNumber"
+                              label="Phone number"
+                              placeholder="Enter phone number"
                             />
                             <Spacer y={2} />
                           </>
@@ -314,21 +326,21 @@ const CheckoutModal = ({
                         <CustomTextArea
                           // defaultValue={menuItem?.itemDescription}
                           value={order.comment}
-                          name='comment'
+                          name="comment"
                           onChange={handleInputChange}
-                          label='Add comment'
-                          placeholder='Add a comment to this order. (optional)'
+                          label="Add comment"
+                          placeholder="Add a comment to this order. (optional)"
                         />
                       </div>
                     </div>
-                    <div className='gap-3 flex px-3 flex-col'>
+                    <div className="gap-3 flex px-3 flex-col">
                       {changeTitle ? (
-                        <div className='flex flex-col gap-3'>
+                        <div className="flex flex-col gap-3">
                           <CustomButton
                             loading={loading}
                             disabled={loading}
                             onClick={updateOrder}
-                            className='py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey'
+                            className="py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey"
                           >
                             Update order
                           </CustomButton>
@@ -336,7 +348,7 @@ const CheckoutModal = ({
                             onClick={() => {
                               window.location.reload();
                             }}
-                            className='py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey'
+                            className="py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey"
                           >
                             Close
                           </CustomButton>
@@ -347,23 +359,23 @@ const CheckoutModal = ({
                             loading={loading}
                             disabled={loading}
                             onClick={placeOrder}
-                            className='py-2 h-[50px] px-4 mb-0 text-white'
-                            backgroundColor='bg-primaryColor'
+                            className="py-2 h-[50px] px-4 mb-0 text-white"
+                            backgroundColor="bg-primaryColor"
                           >
-                            <div className='flex gap-2  w-full items-center justify-between'>
+                            <div className="flex gap-2  w-full items-center justify-between">
                               <p>Place order</p>
-                              <div className='flex gap-2 items-center'>
-                                <span className='font-bold'>
+                              <div className="flex gap-2 items-center">
+                                <span className="font-bold">
                                   {' '}
                                   {formatPrice(totalPrice)}{' '}
                                 </span>
-                                <HiArrowLongLeft className='text-[22px] rotate-180' />
+                                <HiArrowLongLeft className="text-[22px] rotate-180" />
                               </div>
                             </div>
                           </CustomButton>
                           <CustomButton
                             onClick={onOpenChange}
-                            className='py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey'
+                            className="py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey"
                           >
                             Close
                           </CustomButton>

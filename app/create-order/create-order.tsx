@@ -28,6 +28,7 @@ const CreateOrder = () => {
   let businessId = searchParams.get('businessID');
   let cooperateID = searchParams.get('cooperateID');
   let qrId = searchParams.get('id');
+  const packingCost = 1000;
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -36,6 +37,7 @@ const CreateOrder = () => {
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [addPackingCost, setAddPackingCost] = useState<boolean>(false);
 
   const { data, isLoading, isError, refetch } = useMenuUser(
     businessId,
@@ -110,6 +112,7 @@ const CreateOrder = () => {
     price: number;
     image: string;
     isVariety: boolean;
+    isPacking?: boolean;
   };
   type MenuItem = {
     name: string;
@@ -151,6 +154,7 @@ const CreateOrder = () => {
           menuName: menuItem.menuName,
           price: menuItem.price,
           image: menuItem.image,
+          isPacking: false,
         },
       ]);
     }
@@ -173,16 +177,32 @@ const CreateOrder = () => {
       })
     );
   };
-  const calculateTotalPrice = () => {
-    return selectedItems.reduce(
-      (acc, item) => acc + item.price * item.count,
-      0
+
+  const handlePackingCost = (itemId: string, isPacking: boolean) => {
+    let selectedItemsCopy = [...selectedItems];
+    const existingItem = selectedItems.find((item) => item.id === itemId);
+
+    if (!existingItem) {
+      return;
+    }
+
+    const existingItemIndex = selectedItems.findIndex(
+      (item) => item.id === itemId
     );
+    const updatedItem = { ...existingItem, isPacking };
+    selectedItemsCopy[existingItemIndex] = updatedItem;
+
+    setSelectedItems(selectedItemsCopy);
+  };
+
+  const calculateTotalPrice = () => {
+    return selectedItems.reduce((acc, item) => {
+      const additionalCost = item.isPacking ? packingCost : 0;
+      return acc + item.price * item.count + additionalCost;
+    }, 0);
   };
 
   const baseString = 'data:image/jpeg;base64,';
-
-  console.log(menuConfig);
 
   return (
     <main className=" ">
@@ -317,6 +337,7 @@ const CreateOrder = () => {
           handleDecrement={handleDecrement}
           handleIncrement={handleIncrement}
           selectedItems={selectedItems}
+          handlePackingCost={handlePackingCost}
           totalPrice={calculateTotalPrice()}
           onOpenChange={onOpenChange}
           isOpen={isOpen}
@@ -331,6 +352,8 @@ const CreateOrder = () => {
         handleCardClick={handleCardClick}
         handleDecrement={handleDecrement}
         handleIncrement={handleIncrement}
+        packingCost={packingCost}
+        handlePackingCost={handlePackingCost}
         selectedMenu={selectedMenu}
         isOpenVariety={isOpenVariety}
         totalPrice={calculateTotalPrice()}
