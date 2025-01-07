@@ -55,6 +55,7 @@ const CheckoutModal = ({
   handlePackingCost,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
+  const additionalCost = 0;
 
   const [response, setResponse] = useState(null);
   const [orderId, setOrderId] = useState<string>('');
@@ -151,6 +152,8 @@ const CheckoutModal = ({
     }
   };
 
+  const finalTotal = totalPrice + totalPrice * (7.5 / 100) + additionalCost;
+
   return (
     <div className="">
       <Modal
@@ -207,7 +210,7 @@ const CheckoutModal = ({
                   <div className="">
                     <div className="flex lg:flex-row flex-col gap-3 mb-4">
                       <div
-                        className={`lg:w-[60%] ${
+                        className={`flex flex-col lg:w-[60%] ${
                           changeTitle ? 'h-full' : 'max-h-[300px]'
                         }   overflow-y-scroll w-full  px-2`}
                       >
@@ -294,6 +297,28 @@ const CheckoutModal = ({
                             </React.Fragment>
                           );
                         })}
+                        <div className="flex justify-end mt-auto">
+                          <div className="flex flex-col gap-2">
+                            <div className="flex justify-between">
+                              <p className="text-black font-bold">Subtotal: </p>
+                              <p className="text-black">
+                                {formatPrice(totalPrice)}
+                              </p>
+                            </div>
+                            <div className="flex justify-between">
+                              <p className="text-black font-bold">Vat: </p>
+                              <p className="text-black">7.5</p>
+                            </div>
+                            <div className="flex gap-2">
+                              <p className="text-black font-bold">
+                                Additional cost:{' '}
+                              </p>
+                              <p className="text-black">
+                                {formatPrice(additionalCost)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                       <div className="flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4">
                         {changeTitle === false && (
@@ -367,7 +392,7 @@ const CheckoutModal = ({
                               <div className="flex gap-2 items-center">
                                 <span className="font-bold">
                                   {' '}
-                                  {formatPrice(totalPrice)}{' '}
+                                  {formatPrice(finalTotal)}{' '}
                                 </span>
                                 <HiArrowLongLeft className="text-[22px] rotate-180" />
                               </div>
