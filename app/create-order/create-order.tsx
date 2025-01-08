@@ -37,7 +37,6 @@ const CreateOrder = () => {
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
-  const [addPackingCost, setAddPackingCost] = useState<boolean>(false);
 
   const { data, isLoading, isError, refetch } = useMenuUser(
     businessId,

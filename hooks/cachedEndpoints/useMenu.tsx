@@ -17,6 +17,7 @@ type MenuData = {
     hasVariety: boolean;
     image: string;
     varieties: null | any;
+    packingCost: number;
   }>;
   totalCount: number;
 };
