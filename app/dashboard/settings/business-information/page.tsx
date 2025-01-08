@@ -31,6 +31,8 @@ import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import api from '@/app/api/apiService';
 import { AUTH } from '@/app/api/api-url';
 import { TbCopy } from 'react-icons/tb';
+import States from '@/lib/cities.json';
+import SelectInput from '@/components/selectInput';
 
 interface BusinessData {
   [key: string]: any;
@@ -48,6 +50,26 @@ const BusinessInformation = () => {
     null
   );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const getStates = () => {
+    return States.map((state) => ({
+      label: state.name,
+      value: state.name,
+    }));
+  };
+
+  const getCities = () => {
+    const state = States.find((state) => state.name === businessFormData.state);
+
+    if (state) {
+      return state?.cities.map((city) => ({
+        label: city,
+        value: city,
+      }));
+    } else {
+      return [];
+    }
+  };
 
   const uploadFileMutation = useMutation({
     mutationFn: (formData: FormData) =>
@@ -482,50 +504,77 @@ const BusinessInformation = () => {
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
                 <div className="flex flex-col w-full">
-                  <CustomInput
+                  {/* <CustomInput
                     type="text"
                     name="city"
                     disabled
                     value={businessFormData?.city}
                     label="LGA"
                     placeholder="Enter business city"
-                  />
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="state"
-                    disabled
-                    value={businessFormData?.state}
+                  /> */}
+
+                  <SelectInput
                     label="State"
-                    placeholder="Enter business state"
+                    name="state"
+                    onChange={handleInputChange}
+                    disabled={businessFormData?.state}
+                    defaultSelectedKeys={[businessFormData?.state]}
+                    value={businessFormData?.state}
+                    placeholder={'Select state'}
+                    contents={getStates()}
                   />
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
                 <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="primaryBrandColour"
+                  <SelectInput
+                    label="City"
+                    name="city"
                     onChange={handleInputChange}
-                    value={businessFormData?.primaryBrandColour}
-                    label="Primary Brand Color"
-                    placeholder="Enter primary brand color"
+                    disabled={businessFormData?.state}
+                    defaultSelectedKeys={[businessFormData?.city]}
+                    value={businessFormData?.city}
+                    placeholder={'Select city'}
+                    contents={getCities()}
                   />
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="secondaryBrandColour"
-                    onChange={handleInputChange}
-                    value={businessFormData?.secondaryBrandColour}
-                    label="Secondary Brand Color"
-                    placeholder="Enter secondary brand color"
-                  />
+                <div className="w-full flex gap-2">
+                  <div className="flex flex-col w-full gap-2">
+                    <label
+                      className="text-black font-medium text-sm"
+                      htmlFor="primaryBrandColor"
+                    >
+                      Primary Brand Color
+                    </label>
+                    <input
+                      type="color"
+                      id="primaryBrandColour"
+                      name="primaryBrandColour"
+                      className=" w-full h-[46px] border border-[#E0E0E0] rounded-[6px] px-2"
+                      onChange={handleInputChange}
+                      value={businessFormData?.primaryBrandColour}
+                      placeholder="Enter primary brand color"
+                    />
+                  </div>
+                  <div className="flex flex-col w-full gap-2">
+                    <label
+                      className="text-black font-medium text-sm"
+                      htmlFor="primaryBrandColor"
+                    >
+                      Secondary Brand Color
+                    </label>
+                    <input
+                      type="color"
+                      id="secondaryBrandColour"
+                      name="secondaryBrandColour"
+                      className=" w-full h-[46px] border border-[#E0E0E0] rounded-[6px] px-2"
+                      onChange={handleInputChange}
+                      value={businessFormData?.secondaryBrandColour}
+                      placeholder="Enter secondary brand color"
+                    />
+                  </div>
                 </div>
               </div>
             </>

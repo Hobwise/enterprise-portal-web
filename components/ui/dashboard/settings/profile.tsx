@@ -259,15 +259,26 @@ const Profile = () => {
               Edit
             </CustomButton>
           ) : (
-            <CustomButton
-              disableRipple
-              loading={updateUserMutation.isLoading}
-              className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
-              onClick={() => updateUserMutation.mutate()}
-            >
-              <IoCheckmarkCircleOutline className="text-base" />
-              Save Changes
-            </CustomButton>
+            <div className="flex">
+              <CustomButton
+                disableRipple
+                loading={updateUserMutation.isLoading}
+                className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
+                onClick={() => updateUserMutation.mutate()}
+              >
+                <IoCheckmarkCircleOutline className="text-base" />
+                Save Changes
+              </CustomButton>
+              <CustomButton
+                disableRipple
+                className="flex rounded-[10px] text-xs p-2 h-[30px] text-danger"
+                backgroundColor="bg-transparent"
+                onClick={() => setIsEditing(false)}
+              >
+                <RxCross2 className="text-base" />
+                Cancel
+              </CustomButton>
+            </div>
           )}
         </div>
         <div className="space-y-2">

@@ -128,6 +128,7 @@ export async function getMenuByBusinessUser(
 
 type payloadMenu = {
   name: string;
+  packingCost?: number;
 };
 export async function createMenu(businessId: string, payload: payloadMenu) {
   const headers = businessId ? { businessId } : {};

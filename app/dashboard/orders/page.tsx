@@ -76,12 +76,13 @@ const Orders: React.FC = () => {
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
+  console.log(data);
   return (
     <>
       <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data?.[0]?.orders.length > 0 ? (
+            {data[0].orders?.length > 0 ? (
               <div className="flex items-center">
                 <span>All orders</span>
                 <Chip
@@ -102,7 +103,7 @@ const Orders: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           {dropdownComponent}
-          {data?.[0]?.orders.length > 0 && (
+          {data[0].orders.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -142,7 +143,7 @@ const Orders: React.FC = () => {
           )}
         </div>
       </div>
-      {data[0].orders.length > 1 ? (
+      {data.length > 0 ? (
         <OrdersList
           orders={filteredItems}
           refetch={refetch}
