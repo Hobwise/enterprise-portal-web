@@ -76,7 +76,6 @@ const Orders: React.FC = () => {
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
-  console.log(data);
   return (
     <>
       <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">

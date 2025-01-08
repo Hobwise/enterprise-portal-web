@@ -20,8 +20,9 @@ const ViewModal = ({
   handleCardClick,
   handlePackingCost,
 }: any) => {
+  
   const itemIsPacked = (itemId: string) =>
-    selectedItems.find((item: any) => item.id === itemId)?.isPacking;
+    selectedItems.find((item: any) => item.id === itemId)?.isPacked;
 
   const isItemSelected = (itemId: string) => {
     return selectedItems.some((item: any) => item.id === itemId);

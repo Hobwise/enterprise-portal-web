@@ -128,7 +128,7 @@ const CheckoutModal = ({
       quantity: item.count,
       unitPrice: item.price,
       isVariety: item.isVariety,
-      isPacked: item.isPacking,
+      isPacked: item.isPacked,
     }));
     const payload = {
       status: 0,
@@ -166,7 +166,7 @@ const CheckoutModal = ({
       quantity: item.count,
       unitPrice: item.price,
       isVariety: item.isVariety,
-      isPacked: item.isPacking,
+      isPacked: item.isPacked,
     }));
     const payload = {
       status: 0,
@@ -360,8 +360,8 @@ const CheckoutModal = ({
                                     </p>
                                     <Checkbox
                                       size="sm"
-                                      defaultSelected={item.isPacking}
-                                      isSelected={item.isPacking}
+                                      defaultSelected={item.isPacked}
+                                      isSelected={item.isPacked}
                                       onValueChange={(isSelected) =>
                                         handlePackingCost(item.id, isSelected)
                                       }
@@ -411,7 +411,7 @@ const CheckoutModal = ({
                                     <span
                                       className={cn(
                                         'text-xs text-gray-200',
-                                        item.isPacking && 'font-bold text-black'
+                                        item.isPacked && 'font-bold text-black'
                                       )}
                                     >
                                       {formatPrice(item.packingCost)}
