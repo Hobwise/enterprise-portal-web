@@ -49,7 +49,7 @@ type Item = {
   varieties: null | any;
   count: number;
   packingCost: number;
-  isPacking?: boolean;
+  isPacked?: boolean;
 };
 type MenuItem = {
   name: string;
@@ -57,7 +57,6 @@ type MenuItem = {
 };
 
 type MenuData = Array<MenuItem>;
-
 
 const MenuList = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -118,7 +117,7 @@ const MenuList = () => {
       //     count: quantity,
       //   };
       // });
-      const updatedArray = response?.data?.data.orderDetails.map((item) => {
+       const updatedArray = response?.data?.data.orderDetails.map((item) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
         return {
           ...rest,
@@ -181,7 +180,7 @@ const MenuList = () => {
     } else {
       setSelectedItems((prevItems: any) => [
         ...prevItems,
-        { ...menuItem, count: 1, isPacking: isItemPacked },
+        { ...menuItem, count: 1, isPacked: isItemPacked },
       ]);
     }
   };
@@ -207,7 +206,7 @@ const MenuList = () => {
   };
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
-      const additionalCost = item.isPacking ? item.packingCost : 0;
+      const additionalCost = item.isPacked ? item.packingCost : 0;
       return acc + item.price * item.count + additionalCost;
     }, 0);
   };
@@ -232,7 +231,7 @@ const MenuList = () => {
     }
   }, [order?.id, data]);
 
-  const handlePackingCost = (itemId: string, isPacking: boolean) => {
+  const handlePackingCost = (itemId: string, isPacked: boolean) => {
     let selectedItemsCopy = [...selectedItems];
     const existingItem = selectedItemsCopy.find((item) => item.id === itemId);
     if (!existingItem) {
@@ -242,7 +241,7 @@ const MenuList = () => {
     const existingItemIndex = selectedItemsCopy.findIndex(
       (item) => item.id === itemId
     );
-    const updatedItem = { ...existingItem, isPacking };
+    const updatedItem = { ...existingItem, isPacked };
     selectedItemsCopy[existingItemIndex] = updatedItem;
 
     setSelectedItems(selectedItemsCopy);
