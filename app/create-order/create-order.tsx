@@ -193,7 +193,7 @@ const CreateOrder = () => {
 
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
-      const additionalCost = item.isPacking ? packingCost : 0;
+      const additionalCost = item.isPacking ? item.packingCost : 0;
       return acc + item.price * item.count + additionalCost;
     }, 0);
   };

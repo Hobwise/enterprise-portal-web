@@ -367,7 +367,7 @@ const CheckoutModal = ({
                                       }
                                     >
                                       <span className="text-grey600 text-sm">
-                                        Packing cost
+                                        Pack In
                                       </span>
                                     </Checkbox>
                                     <Spacer y={2} />

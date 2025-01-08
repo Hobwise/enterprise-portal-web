@@ -93,7 +93,7 @@ const ViewModal = ({
                           >
                             <div className="flex flex-col">
                               <span className="text-grey600 text-sm">
-                                Packing cost
+                                Pack In
                               </span>
                               <span
                                 className={cn(
