@@ -403,10 +403,20 @@ const CheckoutModal = ({
                                     <FaPlus />
                                   </Button>
                                 </div>
-                                <div className="text-black md:w-[150px] hidden w-auto md:grid place-content-center">
-                                  <h3 className="font-[600]">
-                                    {formatPrice(item?.price)}
-                                  </h3>
+                                <div className=" md:w-[150px] hidden w-auto md:grid place-content-center">
+                                  <div className="flex flex-col">
+                                    <h3 className="font-semibold text-black">
+                                      {formatPrice(item?.price)}
+                                    </h3>
+                                    <span
+                                      className={cn(
+                                        'text-xs text-gray-200',
+                                        item.isPacking && 'font-bold text-black'
+                                      )}
+                                    >
+                                      {formatPrice(item.packingCost)}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
                               {index !== selectedItems?.length - 1 && (
