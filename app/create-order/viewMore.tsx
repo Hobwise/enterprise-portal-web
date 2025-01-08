@@ -23,7 +23,6 @@ const ViewModal = ({
   handleDecrement,
   handleIncrement,
   totalPrice,
-  packingCost,
   handlePackingCost,
 }: any) => {
   const getItemCount = (itemId: string) => {
@@ -86,7 +85,8 @@ const ViewModal = ({
                               base: cn('items-start'),
                               label: 'w-full',
                             }}
-                            isSelected={selectedMenu.isPacking}
+                            defaultSelected={itemIsPacked(selectedMenu.id)}
+                            isSelected={itemIsPacked(selectedMenu.id)}
                             onValueChange={(isSelected) =>
                               handlePackingCost(selectedMenu.id, isSelected)
                             }
@@ -102,7 +102,7 @@ const ViewModal = ({
                                     'font-bold text-black'
                                 )}
                               >
-                                {formatPrice(packingCost)}
+                                {formatPrice(selectedMenu.packingCost)}
                               </span>
                             </div>
                           </Checkbox>

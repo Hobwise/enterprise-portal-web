@@ -47,6 +47,7 @@ type Item = {
   image: string;
   isVariety: boolean;
   varieties: null | any;
+  count: number;
   packingCost: number;
   isPacking?: boolean;
 };
@@ -57,16 +58,6 @@ type MenuItem = {
 
 type MenuData = Array<MenuItem>;
 
-type SelectedItem = {
-  id: string;
-  count: number;
-  itemID: string;
-  itemName: string;
-  price: number;
-  image: string;
-  isVariety: boolean;
-  isPacking: boolean;
-};
 
 const MenuList = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -188,20 +179,6 @@ const MenuList = () => {
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
-      // setSelectedItems([
-      //   ...menuItem,
-      //   {
-      //     id: menuItem.id,
-      //     count: 1,
-      //     isVariety: menuItem.isVariety,
-      //     itemName: menuItem.itemName,
-      //     menuName: menuItem.menuName,
-      //     price: menuItem.price,
-      //     image: menuItem.image,
-      //     isPacking: false,
-      //   },
-      // ]);
-
       setSelectedItems((prevItems: any) => [
         ...prevItems,
         { ...menuItem, count: 1, isPacking: isItemPacked },
@@ -210,7 +187,7 @@ const MenuList = () => {
   };
 
   const handleDecrement = (id: string) => {
-    setSelectedItems((prevItems) =>
+    setSelectedItems((prevItems: any) =>
       prevItems.map((item) => {
         if (item.id === id && item.count > 1) {
           return { ...item, count: item.count - 1 };
@@ -231,7 +208,6 @@ const MenuList = () => {
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
       const additionalCost = item.isPacking ? item.packingCost : 0;
-      // !item.isPacking || !selectedMenu ? 0 : selectedMenu.packingCost;
       return acc + item.price * item.count + additionalCost;
     }, 0);
   };

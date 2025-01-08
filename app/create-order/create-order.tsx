@@ -28,7 +28,6 @@ const CreateOrder = () => {
   let businessId = searchParams.get('businessID');
   let cooperateID = searchParams.get('cooperateID');
   let qrId = searchParams.get('id');
-  const packingCost = 1000;
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -105,12 +104,19 @@ const CreateOrder = () => {
 
   type SelectedItem = {
     id: string;
-    count: number;
     itemID: string;
     itemName: string;
+    menuName: string;
+    itemDescription: string;
     price: number;
+    currency: string;
+    isAvailable: boolean;
+    hasVariety: boolean;
     image: string;
     isVariety: boolean;
+    varieties: null | any;
+    count: number;
+    packingCost: number;
     isPacking?: boolean;
   };
   type MenuItem = {
@@ -137,27 +143,19 @@ const CreateOrder = () => {
     setIsOpenVariety(!isOpenVariety);
   };
 
-  const handleCardClick = (menuItem: MenuItem) => {
+  const handleCardClick = (menuItem: SelectedItem, isItemPacked: boolean) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
 
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
-      setSelectedItems([
-        ...selectedItems,
-        {
-          id: menuItem.id,
-          count: 1,
-          isVariety: menuItem.isVariety,
-          itemName: menuItem.itemName,
-          menuName: menuItem.menuName,
-          price: menuItem.price,
-          image: menuItem.image,
-          isPacking: false,
-        },
+      setSelectedItems((prevItems: any) => [
+        ...prevItems,
+        { ...menuItem, count: 1, isPacking: isItemPacked },
       ]);
     }
   };
+
   const handleIncrement = (id: string) => {
     setSelectedItems((prevItems) =>
       prevItems.map((item) =>
@@ -179,13 +177,12 @@ const CreateOrder = () => {
 
   const handlePackingCost = (itemId: string, isPacking: boolean) => {
     let selectedItemsCopy = [...selectedItems];
-    const existingItem = selectedItems.find((item) => item.id === itemId);
-
+    const existingItem = selectedItemsCopy.find((item) => item.id === itemId);
     if (!existingItem) {
       return;
     }
 
-    const existingItemIndex = selectedItems.findIndex(
+    const existingItemIndex = selectedItemsCopy.findIndex(
       (item) => item.id === itemId
     );
     const updatedItem = { ...existingItem, isPacking };
@@ -351,7 +348,6 @@ const CreateOrder = () => {
         handleCardClick={handleCardClick}
         handleDecrement={handleDecrement}
         handleIncrement={handleIncrement}
-        packingCost={packingCost}
         handlePackingCost={handlePackingCost}
         selectedMenu={selectedMenu}
         isOpenVariety={isOpenVariety}

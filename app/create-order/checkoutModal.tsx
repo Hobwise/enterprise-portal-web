@@ -95,6 +95,7 @@ const CheckoutModal = ({
       quantity: item.count,
       unitPrice: item.price,
       isVariety: item.isVariety,
+      isPacked: item.isPacking,
     }));
     const payload = {
       status: 0,
@@ -129,6 +130,7 @@ const CheckoutModal = ({
       quantity: item.count,
       unitPrice: item.price,
       isVariety: item.isVariety,
+      isPacked: item.isPacking,
     }));
     const payload = {
       status: 0,
@@ -299,7 +301,7 @@ const CheckoutModal = ({
                         })}
                         <div className="flex justify-end mt-auto">
                           <div className="flex flex-col gap-2">
-                            <div className="flex justify-between">
+                            <div className="flex gap-2">
                               <p className="text-black font-bold">Subtotal: </p>
                               <p className="text-black">
                                 {formatPrice(totalPrice)}
