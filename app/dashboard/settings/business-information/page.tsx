@@ -495,7 +495,6 @@ const BusinessInformation = () => {
                     type="text"
                     name="address"
                     // errorMessage={response?.errors?.lastName?.[0]}
-                    disabled
                     value={businessFormData?.address}
                     label="Business Address"
                     placeholder="Enter business address"
@@ -517,7 +516,6 @@ const BusinessInformation = () => {
                     label="State"
                     name="state"
                     onChange={handleInputChange}
-                    disabled={businessFormData?.state}
                     defaultSelectedKeys={[businessFormData?.state]}
                     value={businessFormData?.state}
                     placeholder={'Select state'}
@@ -531,7 +529,6 @@ const BusinessInformation = () => {
                     label="City"
                     name="city"
                     onChange={handleInputChange}
-                    disabled={businessFormData?.state}
                     defaultSelectedKeys={[businessFormData?.city]}
                     value={businessFormData?.city}
                     placeholder={'Select city'}
