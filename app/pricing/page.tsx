@@ -13,8 +13,6 @@ import LandingPageHeader from '@/components/ui/landingPage/header';
 import { Transition } from '@/components/ui/landingPage/transition';
 
 export default function Pricing() {
-  const [plan, setPlan] = useState<string>('monthly');
-
   return (
     <div className="bg-white">
       <header className="z-50 backdrop-filter backdrop-blur-md fixed w-full">

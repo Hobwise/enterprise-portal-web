@@ -6,7 +6,7 @@ import { Transition } from './transition';
 import React, { useEffect, useState } from 'react';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import Link from 'next/link';
-import { REQUEST_DEMO_URL, SIGN_UP_URL } from '@/utilities/routes';
+import { SIGN_UP_URL } from '@/utilities/routes';
 import { getPricings } from '@/app/api/controllers/landingPage';
 import PricingLoading from './skeleton-loading';
 
@@ -89,7 +89,7 @@ export default function PricingComponent() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div
           className="border relative border-[#C4C4C4] bg-[#FFFFFF] p-8 rounded-[10px] space-y-8 
-        min-h-[900px]"
+        lg:min-h-[900px]"
         >
           <Transition>
             <div className="space-y-2.5">
@@ -135,7 +135,7 @@ export default function PricingComponent() {
             ))}
           </div>
 
-          <div className="mt-2 absolute bottom-10 w-[85%]">
+          <div className="mt-2 lg:absolute w-full lg:bottom-10 lg:w-[85%]">
             <Link href={SIGN_UP_URL}>
               <CustomButton className="w-full text-white font-medium mt-20">Get Started</CustomButton>
             </Link>
@@ -144,7 +144,7 @@ export default function PricingComponent() {
 
         <div
           className="border border-[#C4C4C4] bg-white p-8 rounded-[10px] space-y-8 
-        min-h-[900px] relative"
+        lg:min-h-[900px] relative"
         >
           <Transition>
             <div className="space-y-2.5">
@@ -152,7 +152,6 @@ export default function PricingComponent() {
               <div className="flex items-baseline space-x-2">
                 <p className="text-[24px] lg:text-[42px] text-[#161618] font-medium font-sans">₦{formatNumber(professionalFee)}</p>
                 <p className="text-[#ACB5BB] lg:text-base text-sm">per {plan === 'monthly' ? 'month' : 'year'}</p>
-                {/* <p className="text-[#ACB5BB] lg:text-base text-sm">/{pricings?.Professional?.maxUsers} Users</p> */}
               </div>
               <p className="text-[#161618] text-left lg:text-base text-sm">
                 Suitable for medium size businesses looking to manage booking, process order & menu while leveraging the campaign feature also
@@ -189,7 +188,7 @@ export default function PricingComponent() {
               </React.Fragment>
             ))}
           </div>
-          <div className="mt-2 absolute bottom-10 w-[85%]">
+          <div className="mt-2 lg:absolute lg:bottom-10 w-full lg:w-[85%]">
             <Link href={SIGN_UP_URL}>
               <CustomButton className="text-white shadow-custom_inset_2 bg-[#5F35D2] w-full font-medium mt-20">Get Started</CustomButton>
             </Link>
@@ -198,15 +197,14 @@ export default function PricingComponent() {
 
         <div
           className="border border-[#C4C4C4] bg-white p-8 rounded-[10px] space-y-8 
-        min-h-[900px] relative"
+        lg:min-h-[900px] relative"
         >
           <Transition>
             <div className="space-y-2.5">
               <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Premium Plan</h4>
               <div className="flex items-baseline space-x-2">
-                <p className="text-[24px] lg:text-[42px] text-[#000000] font-medium font-sans">Contact Sales</p>
-                {/* <p className="text-[#ACB5BB] lg:text-base text-sm">per month</p>
-                <p className="text-white/65 lg:text-base text-sm">/Unlimited</p> */}
+                <p className="text-[24px] lg:text-[42px] text-[#000000] font-medium font-sans">₦{formatNumber(premiumFee)}</p>
+                <p className="text-[#ACB5BB] lg:text-base text-sm">per {plan === 'monthly' ? 'month' : 'year'}</p>
               </div>
               <p className="text-[#161618] text-left lg:text-base text-sm">
                 For large scale businesses operations, enabling businesses with multiple locations manage their operations effectively
@@ -250,9 +248,9 @@ export default function PricingComponent() {
             </Transition>
           </div>
 
-          <div className="mt-2 absolute bottom-10 w-[85%]">
-            <Link href={REQUEST_DEMO_URL}>
-              <CustomButton className="w-full text-white font-medium mt-20">Contact Sales</CustomButton>
+          <div className="mt-2 lg:absolute lg:bottom-10 w-full lg:w-[85%]">
+            <Link href={SIGN_UP_URL}>
+              <CustomButton className="w-full text-white font-medium mt-20">Get Started</CustomButton>
             </Link>
           </div>
         </div>
