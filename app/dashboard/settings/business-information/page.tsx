@@ -59,7 +59,7 @@ const BusinessInformation = () => {
   };
 
   const getCities = () => {
-    const state = States.find((state) => state.name === businessFormData.state);
+    const state = States.find((state) => state.name === businessFormData?.state);
 
     if (state) {
       return state?.cities.map((city) => ({
