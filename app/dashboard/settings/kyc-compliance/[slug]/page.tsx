@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { IoIosArrowBack } from 'react-icons/io';
 import { options } from '@/app/dashboard/settings/kyc-compliance/verification-types';
@@ -82,6 +82,24 @@ const PersonalVerificationForm = () => {
   const [type, setType] = useState('');
   const [isSelfie, setIsSelfie] = useState<boolean | null>(null);
 
+  useEffect(() => {
+    if (userQuery.data) {
+      setNin(userQuery.data.identificationNumber || '');
+      setSelfieReference(userQuery.data.imageReference || '');
+      setSelfiePreviewUrl(
+        userQuery.data.image
+          ? `data:image/png;base64,${userQuery.data.image}`
+          : ''
+      );
+      setIdReference(userQuery.data.identificationNumberImageReference || '');
+      setIdPreviewUrl(
+        userQuery.data.identificationNumberImage
+          ? `data:image/png;base64,${userQuery.data.identificationNumberImage}`
+          : ''
+      );
+    }
+  }, [userQuery.data]);
+
   const uploadFileMutation = useMutation({
     mutationFn: (formData: FormData) =>
       uploadFile(businessInformation[0]?.businessId, formData),
@@ -93,6 +111,13 @@ const PersonalVerificationForm = () => {
           setIdReference(data?.data.data);
         }
       } else {
+        if (type === 'selfie') {
+          setSelfieFile(null);
+          setSelfiePreviewUrl(null);
+        } else {
+          setIdFile(null);
+          setIdPreviewUrl(null);
+        }
         notify({
           title: 'Error!',
           text: data?.data?.error,
@@ -179,40 +204,38 @@ const PersonalVerificationForm = () => {
   return (
     <>
       <form className="space-y-3 w-[67.5%]" onSubmit={handlSubmit}>
-        {!userQuery.data?.imageReference && (
-          <div className="space-y-2">
-            <div className="font-medium text-sm text-[#344054]">
-              Selfie Upload
-            </div>
-            <FileUploadInput
-              id="selfie"
-              label="your SELFIE"
-              placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
-              onChange={handleFileChange}
-            />
-            {selfieFile && (
-              <div className="flex items-center gap-3 text-primary text-xs">
-                <p
-                  className="cursor-pointer"
-                  onClick={() => {
-                    setIsSelfie(true);
-                    onOpen();
-                  }}
-                >
-                  {selfieFile.name}
-                </p>
-                {removeFileMutation.variables === 'selfie' &&
-                removeFileMutation.isLoading ? (
-                  <LuLoader className="animate-spin" />
-                ) : (
-                  <RxCross2
-                    onClick={() => removeFileMutation.mutate('selfie')}
-                  />
-                )}
-              </div>
-            )}
+        <div className="space-y-2">
+          <div className="font-medium text-sm text-[#344054]">
+            Selfie Upload
           </div>
-        )}
+          <FileUploadInput
+            id="selfie"
+            label="your SELFIE"
+            placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
+            onChange={handleFileChange}
+          />
+          {selfieReference || selfieFile ? (
+            <div className="flex items-center gap-3 text-primaryColor text-xs">
+              <p
+                className="cursor-pointer"
+                onClick={() => {
+                  setIsSelfie(true);
+                  onOpen();
+                }}
+              >
+                {selfieFile?.name || selfieReference}
+              </p>
+              {removeFileMutation.variables === 'selfie' &&
+              removeFileMutation.isLoading ? (
+                <LuLoader className="animate-spin" />
+              ) : (
+                <RxCross2 onClick={() => removeFileMutation.mutate('selfie')} />
+              )}
+            </div>
+          ) : (
+            ''
+          )}
+        </div>
         <div className="space-y-2">
           <div className="font-medium text-sm text-[#344054]">
             Submit means of identification
@@ -223,8 +246,8 @@ const PersonalVerificationForm = () => {
             placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
             onChange={handleFileChange}
           />
-          {idFile ? (
-            <div className="flex items-center gap-3 text-primary text-xs">
+          {idReference || idFile ? (
+            <div className="flex items-center gap-3 text-primaryColor text-xs">
               <p
                 className="cursor-pointer"
                 onClick={() => {
@@ -232,7 +255,7 @@ const PersonalVerificationForm = () => {
                   onOpen();
                 }}
               >
-                {idFile.name}
+                {idFile?.name ?? idReference}
               </p>
               {removeFileMutation.variables === 'id' &&
               removeFileMutation.isLoading ? (
@@ -318,6 +341,26 @@ const BusinessVerificationForm = () => {
 
   const [tin, setTin] = useState('');
   const [type, setType] = useState('');
+
+  useEffect(() => {
+    if (businessQuery.data && businessQuery.data[0]) {
+      const businessData = businessQuery.data[0];
+      setRegistrationNumber(businessData.registrationNumber || '');
+      setPobReference(businessData.logoImageReference || '');
+      setPobPreviewUrl(
+        businessData.logoImage
+          ? `data:image/png;base64,${businessData.logoImage}`
+          : ''
+      );
+      setPobaReference(businessData.addressProofImageReference || '');
+      setPobaPreviewUrl(
+        businessData.addressProofImage
+          ? `data:image/png;base64,${businessData.addressProofImage}`
+          : ''
+      );
+      setTin(businessData.taxIdentificationNumber || '');
+    }
+  }, [businessQuery.data]);
 
   const uploadFileMutation = useMutation({
     mutationFn: (formData: FormData) =>
@@ -452,7 +495,7 @@ const BusinessVerificationForm = () => {
             placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
             onChange={handleFileChange}
           />
-          {pobFile ? (
+          {pobReference ? (
             <div className="flex items-center gap-3 text-primary text-xs">
               <p
                 className="cursor-pointer"
@@ -461,7 +504,7 @@ const BusinessVerificationForm = () => {
                   onOpen();
                 }}
               >
-                {pobFile.name}
+                {pobFile?.name || pobReference}
               </p>
               {removeFileMutation.variables === 'pob' &&
               removeFileMutation.isLoading ? (
@@ -487,7 +530,7 @@ const BusinessVerificationForm = () => {
             placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
             onChange={handleFileChange}
           />
-          {pobaFile ? (
+          {pobaReference ? (
             <div className="flex items-center gap-3 text-primary text-xs">
               <p
                 className="cursor-pointer"
@@ -496,7 +539,7 @@ const BusinessVerificationForm = () => {
                   onOpen();
                 }}
               >
-                {pobaFile.name}
+                {pobaFile?.name || pobaReference}
               </p>
               {removeFileMutation.variables === 'poba' &&
               removeFileMutation.isLoading ? (
