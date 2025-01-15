@@ -42,7 +42,7 @@ export default function Signup() {
               <p className="text-center mt-8 text-sm text-grey600">
                 Already have an account?{' '}
                 <Link href="/auth/login" className="text-primaryColor font-medium">
-                  Log in
+                  Log In
                 </Link>
               </p>
             </div>
