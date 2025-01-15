@@ -1,6 +1,7 @@
 import { uploadFilemultipleMenuItem } from '@/app/api/controllers/dashboard/menu';
+import { CustomButton } from '@/components/customButton';
 import useMenu from '@/hooks/cachedEndpoints/useMenu';
-import { THREEMB, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { THREEMB, generateXLSX, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Spacer,
   Table,
@@ -69,6 +70,8 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
     }
   };
 
+  const excelColumns = ["Name", "Role", "Status"]
+
   return (
     <section>
       <div className='mt-8'>
@@ -132,6 +135,8 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
         </TableBody>
       </Table>
       <Spacer y={8} />
+      <CustomButton className='bg-transparent w-full border border-grey600' onClick={() => generateXLSX(excelColumns, [])}>Download Sample</CustomButton>
+      <Spacer y={4} />
       <div className='flex justify-center items-center'>
         <label className='cursor-pointer relative bg-primaryColor  rounded-lg font-semibold  w-full h-[55px]  text-center'>
           <span className='absolute top-4 left-[40%]'>

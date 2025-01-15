@@ -60,22 +60,6 @@ const Orders: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  const getScreens = () => {
-    if (data?.[0]?.orders.length > 0) {
-      return (
-        <OrdersList
-          orders={filteredItems}
-          refetch={refetch}
-          searchQuery={searchQuery}
-        />
-      );
-    } else if (isError) {
-      return <Error onClick={() => refetch()} />;
-    } else {
-      return <CreateOrder />;
-    }
-  };
-
   const newArray = useMemo(() => {
     return data?.flatMap((item: any) =>
       item.orders.map((order: any) => ({
@@ -89,13 +73,16 @@ const Orders: React.FC = () => {
     );
   }, [data]);
 
+  if (isLoading) return <CustomLoading />;
+  if (isError) return <Error onClick={() => refetch()} />;
+
   return (
     <>
-      <div className='flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between'>
+      <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
-            {data?.[0]?.orders.length > 0 ? (
-              <div className='flex items-center'>
+          <div className="text-[24px] leading-8 font-semibold">
+            {data[0].orders?.length > 0 ? (
+              <div className="flex items-center">
                 <span>All orders</span>
                 <Chip
                   classNames={{
@@ -109,33 +96,33 @@ const Orders: React.FC = () => {
               <span>Orders</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px]  w-full '>
+          <p className="text-sm  text-grey600  xl:w-[231px]  w-full ">
             Showing all orders
           </p>
         </div>
-        <div className='flex items-center gap-3'>
+        <div className="flex items-center gap-3">
           {dropdownComponent}
-          {data?.[0]?.orders.length > 0 && (
+          {data[0].orders.length > 0 && (
             <>
               <div>
                 <CustomInput
                   classnames={'w-[242px]'}
-                  label=''
-                  size='md'
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
                   onClick={() => downloadCSV(newArray)}
-                  className='flex text-grey600 bg-white'
+                  className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className='text-[22px]' />
+                  <MdOutlineFileDownload className="text-[22px]" />
                   <p>Export csv</p>
                 </Button>
               </ButtonGroup>
@@ -144,18 +131,26 @@ const Orders: React.FC = () => {
           {(role === 0 || userRolePermissions?.canCreateOrder === true) && (
             <CustomButton
               onClick={() => router.push('/dashboard/orders/place-order')}
-              className='py-2 px-4 mb-0 text-white'
-              backgroundColor='bg-primaryColor'
+              className="py-2 px-4 mb-0 text-white"
+              backgroundColor="bg-primaryColor"
             >
-              <div className='flex gap-2 items-center justify-center'>
-                <IoAddCircleOutline className='text-[22px]' />
+              <div className="flex gap-2 items-center justify-center">
+                <IoAddCircleOutline className="text-[22px]" />
                 <p>{'Create order'} </p>
               </div>
             </CustomButton>
           )}
         </div>
       </div>
-      {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+      {data.length > 0 ? (
+        <OrdersList
+          orders={filteredItems}
+          refetch={refetch}
+          searchQuery={searchQuery}
+        />
+      ) : (
+        <CreateOrder />
+      )}
       {datePickerModal}
     </>
   );

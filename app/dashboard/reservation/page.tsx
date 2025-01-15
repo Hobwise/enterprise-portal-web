@@ -62,30 +62,19 @@ const Reservation: React.FC = () => {
       .filter((item) => Object.keys(item).length > 0);
   }, [data, searchQuery]);
 
-  const getScreens = () => {
-    if (data?.reservations?.length > 0) {
-      return (
-        <ReservationList
-          data={data}
-          reservation={filteredItems}
-          searchQuery={searchQuery}
-        />
-      );
-    } else if (isError) {
-      return <Error onClick={() => refetch()} />;
-    } else {
-      return <CreateReservation />;
-    }
-  };
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
     `${companyInfo.webUrl}/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
   );
+
+  if (isLoading) return <CustomLoading />;
+  if (isError) return <Error onClick={() => refetch()} />;
+
   return (
     <>
-      <div className='flex flex-row flex-wrap xl:mb-8 mb-4 justify-between'>
+      <div className="flex flex-row flex-wrap xl:mb-8 mb-4 justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
-            <div className='flex items-center'>
+          <div className="text-[24px] leading-8 font-semibold">
+            <div className="flex items-center">
               <span>Reservation</span>
 
               {data?.reservations?.length > 0 && (
@@ -99,27 +88,27 @@ const Reservation: React.FC = () => {
               )}
             </div>
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] w-full '>
+          <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
             Showing all Reservations
           </p>
         </div>
-        <div className='flex items-center gap-3'>
+        <div className="flex items-center gap-3">
           {data?.reservations?.length > 0 && (
             <>
               <div>
                 <CustomInput
                   classnames={'w-[242px]'}
-                  label=''
-                  size='md'
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-xl'>
+              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-xl">
                 <Popover
                   showArrow={true}
                   isOpen={isOpen}
@@ -128,14 +117,14 @@ const Reservation: React.FC = () => {
                   <PopoverTrigger>
                     <Button
                       onClick={handleCopyClick}
-                      className='flex text-grey600 bg-white'
+                      className="flex text-grey600 bg-white"
                     >
                       <VscCopy />
                       <p>Copy link</p>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent>
-                    <div className='text-small text-black'>
+                    <div className="text-small text-black">
                       Reservation url copied!
                     </div>
                   </PopoverContent>
@@ -152,11 +141,11 @@ const Reservation: React.FC = () => {
                   onClick={() =>
                     router.push('/dashboard/reservation/create-reservation')
                   }
-                  className='py-2 px-4 md:mb-0 mb-4 text-white'
-                  backgroundColor='bg-primaryColor'
+                  className="py-2 px-4 md:mb-0 mb-4 text-white"
+                  backgroundColor="bg-primaryColor"
                 >
-                  <div className='flex gap-2 items-center justify-center'>
-                    <IoMdAdd className='text-[22px]' />
+                  <div className="flex gap-2 items-center justify-center">
+                    <IoMdAdd className="text-[22px]" />
 
                     <p>Add reservation</p>
                   </div>
@@ -166,8 +155,15 @@ const Reservation: React.FC = () => {
           )}
         </div>
       </div>
-
-      {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
+      {data?.reservations?.length > 0 ? (
+        <ReservationList
+          data={data}
+          reservation={filteredItems}
+          searchQuery={searchQuery}
+        />
+      ) : (
+        <CreateReservation />
+      )}
     </>
   );
 };

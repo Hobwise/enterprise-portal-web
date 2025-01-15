@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { Chip } from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { IoSearchOutline } from 'react-icons/io5';
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { Chip } from "@nextui-org/react";
+import { useRouter } from "next/navigation";
+import { IoSearchOutline } from "react-icons/io5";
 
-import Error from '@/components/error';
-import CampaignList from '@/components/ui/dashboard/campaign/campaignList';
-import CreateCampaign from '@/components/ui/dashboard/campaign/createCampaign';
-import useCampaign from '@/hooks/cachedEndpoints/useCampaign';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { CustomLoading } from '@/lib/utils';
-import { IoMdAdd } from 'react-icons/io';
+import Error from "@/components/error";
+import CampaignList from "@/components/ui/dashboard/campaign/campaignList";
+import CreateCampaign from "@/components/ui/dashboard/campaign/createCampaign";
+import useCampaign from "@/hooks/cachedEndpoints/useCampaign";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { CustomLoading } from "@/lib/utils";
+import { IoMdAdd } from "react-icons/io";
 
 const Compaigns: React.FC = () => {
   const router = useRouter();
@@ -27,11 +27,11 @@ const Compaigns: React.FC = () => {
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All Campaigns');
+    setTableStatus("All Campaigns");
     setPage(1);
   }, []);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -49,28 +49,15 @@ const Compaigns: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  const getScreens = () => {
-    if (data?.[0]?.campaigns?.length > 0) {
-      return (
-        <CampaignList
-          campaigns={filteredItems}
-          searchQuery={searchQuery}
-          refetch={refetch}
-        />
-      );
-    } else if (isError) {
-      return <Error onClick={() => refetch()} />;
-    } else {
-      return <CreateCampaign />;
-    }
-  };
+  if (isLoading) return <CustomLoading />;
+  if (isError) return <Error onClick={() => refetch()} />;
 
   return (
     <>
-      <div className='flex flex-row flex-wrap xl:mb-8 mb-4 justify-between'>
+      <div className="flex flex-row flex-wrap xl:mb-8 mb-4 justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
-            <div className='flex items-center'>
+          <div className="text-[24px] leading-8 font-semibold">
+            <div className="flex items-center">
               <span>Campaigns</span>
 
               {data?.[0]?.campaigns?.length > 0 && (
@@ -84,24 +71,24 @@ const Compaigns: React.FC = () => {
               )}
             </div>
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] w-full '>
+          <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
             Showing all campaigns
           </p>
         </div>
-        <div className='flex items-center gap-3'>
+        <div className="flex items-center gap-3">
           {data?.[0]?.campaigns?.length > 0 && (
             <>
               <div>
                 <CustomInput
-                  classnames={'w-[242px]'}
-                  label=''
-                  size='md'
+                  classnames={"w-[242px]"}
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
             </>
@@ -112,13 +99,13 @@ const Compaigns: React.FC = () => {
               {data?.[0]?.campaigns?.length > 0 && (
                 <CustomButton
                   onClick={() =>
-                    router.push('/dashboard/campaigns/create-campaign')
+                    router.push("/dashboard/campaigns/create-campaign")
                   }
-                  className='py-2 px-4 md:mb-0 mb-4 text-white'
-                  backgroundColor='bg-primaryColor'
+                  className="py-2 px-4 md:mb-0 mb-4 text-white"
+                  backgroundColor="bg-primaryColor"
                 >
-                  <div className='flex gap-2 items-center justify-center'>
-                    <IoMdAdd className='text-[22px]' />
+                  <div className="flex gap-2 items-center justify-center">
+                    <IoMdAdd className="text-[22px]" />
 
                     <p>Add campaign</p>
                   </div>
@@ -128,8 +115,15 @@ const Compaigns: React.FC = () => {
           )}
         </div>
       </div>
-
-      {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
+      {data?.[0]?.campaigns?.length > 0 ? (
+        <CampaignList
+          campaigns={filteredItems}
+          searchQuery={searchQuery}
+          refetch={refetch}
+        />
+      ) : (
+        <CreateCampaign />
+      )}
     </>
   );
 };

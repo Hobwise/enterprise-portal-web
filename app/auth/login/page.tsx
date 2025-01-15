@@ -1,5 +1,6 @@
 import LoginForm from '@/components/ui/auth/loginForm';
 import { companyInfo } from '@/lib/companyInfo';
+import { HOME_URL } from '@/utilities/routes';
 
 import { Spacer } from '@nextui-org/react';
 import Image from 'next/image';
@@ -19,17 +20,14 @@ export default function Login() {
         <div className="relative h-full">
           <Suspense fallback={<div className="absolute inset-0 w-full h-full object-cover bg-primaryGrey rounded-[32px]" />}>
             <Image src={ReaceptionImage} alt="reception" className="w-full h-full" />
-            {/* <video className="absolute inset-0 w-full h-full object-cover bg-primaryGrey rounded-[32px]" autoPlay loop muted playsInline>
-              <source src="/onboarding-vids.mp4" type="video/mp4" />
-            </video> */}
           </Suspense>
 
-          {/* <div className="absolute bottom-10  left-10 text-white max-w-md">
+          <div className="absolute bottom-10  left-10 text-white max-w-md">
             <h1 className="text-5xl font-display mb-4">Streamline your business processes</h1>
             <p className="text-primaryGrey">
               Increase efficiency and improve user experience, from reservation to checkout. Manage orders and inventory like a pro.
             </p>
-          </div> */}
+          </div>
         </div>
       </div>
 
@@ -37,9 +35,9 @@ export default function Login() {
         <div className="min-h-screen flex flex-col">
           <div className="pt-8 px-8 lg:pt-16 lg:px-16">
             <div className="flex justify-center">
-              <div className="flex items-center gap-2">
-                <Image src={companyInfo.logo} height={150} width={150} style={{ objectFit: 'cover' }} alt="company logo" />
-              </div>
+              <Link className="block" href={HOME_URL}>
+                <Image src={companyInfo.logo} height={100} width={100} style={{ objectFit: 'cover' }} alt="company logo" />
+              </Link>
             </div>
           </div>
 

@@ -29,7 +29,7 @@ interface PlanFeatureListProps {
 
 const FeatureList: React.FC<PlanFeatureListProps> = ({ plan, handleIcons }) => {
 
-    console.log("PLAN", plan)
+    // console.log("PLAN", plan)
   const features: PlanFeature[] = [
     { key: "canAccessDashboard", label: "Can Access Dashboard", value: plan.canAccessDashboard },
     { key: "canAccessMenu", label: "Can Access Menu", value: plan.canAccessMenu },

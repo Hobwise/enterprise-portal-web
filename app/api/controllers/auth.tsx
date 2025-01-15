@@ -28,7 +28,10 @@ const updateUserSchema = z.object({
   firstName: inputNameValidation('First name'),
   lastName: inputNameValidation('Last name'),
   email: emailValidation(),
-  role: z.string().trim().min(1, 'Select a role'),
+  // role: z.string().trim().min(1, 'Select a role'),
+  phoneNumber: z.string().min(1, 'Phone number is required'),
+  userName: inputNameValidation('User name'),
+  gender: z.string().trim().min(1, 'Select a gender'),
 });
 const additionalUserSchema = z.object({
   firstName: inputNameValidation('First name'),
@@ -152,38 +155,40 @@ export async function createAdditionalUser(formData: any) {
     handleError(error);
   }
 }
-export async function updateUser(formData: any) {
-  const validatedFields = updateUserSchema.safeParse({
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    email: formData.email,
-    role: formData.role,
-  });
+export async function updateUser(payload: any, userId: string) {
+  // const validatedFields = updateUserSchema.safeParse({
+  //   firstName: formData.firstName,
+  //   lastName: formData.lastName,
+  //   email: formData.email,
+  //   role: formData.role,
+  // });
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
-  }
-  const payload = {
-    firstName: formData.firstName,
-    lastName: formData.lastName,
-    email: formData.email,
-    role: +formData.role,
-    businessID: formData.businessID,
-    cooperateID: formData.cooperateID,
-    isActive: formData.isActive,
-    imageReference: formData.imageReference,
-  };
+  // if (!validatedFields.success) {
+  //   return {
+  //     errors: validatedFields.error.flatten().fieldErrors,
+  //   };
+  // }
+  // const payload = {
+  //   firstName: formData.firstName,
+  //   lastName: formData.lastName,
+  //   email: formData.email,
+  //   role: +formData.role,
+  //   businessID: formData.businessID,
+  //   cooperateID: formData.cooperateID,
+  //   isActive: formData.isActive,
+  //   imageReference: formData.imageReference,
+  // };
 
   try {
-    const data = await api.put(`${AUTH.user}?userId=${formData.id}`, payload);
+    // const data = await api.put(`${AUTH.user}?userId=${formData.id}`, payload);
+    const data = await api.put(`${AUTH.user}?userId=${userId}`, payload);
 
     return data;
   } catch (error) {
     handleError(error);
   }
 }
+
 export async function confirmEmail(formData: any) {
   try {
     const data = await api.post(AUTH.user, formData);
@@ -262,14 +267,17 @@ export async function loginUserSelectedBusiness(
     handleError(error);
   }
 }
-export async function generateRefreshToken(formData: any) {
-  try {
-    const data = await api.post(AUTH.refreshToken, formData);
+// export async function generateRefreshToken(formData: any) {
+//   try {
+//     const data = await api.post(AUTH.refreshToken, formData);
 
-    return data;
-  } catch (error) {
-    handleError(error);
-  }
+//     return data;
+//   } catch (error) {
+//     handleError(error);
+//   }
+// }
+export async function generateRefreshToken(formData: any) {
+  return api.post(AUTH.refreshToken, formData);
 }
 export async function forgetPassword(formData: any) {
   const validatedFields = forgetPasswordSchema.safeParse({
@@ -312,6 +320,15 @@ export async function changePassword(formData: any) {
     return data;
   } catch (error) {
     handleError(error);
+  }
+}
+export async function logout() {
+  try {
+    const data = await api.post(AUTH.logout);
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
   }
 }
 export async function getBusinessDetails(formData: any) {

@@ -43,31 +43,35 @@ import { MdOutlineFileDownload } from 'react-icons/md';
 import { RiDeleteBin6Line } from 'react-icons/ri';
 
 const Menu: React.FC = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
-
-  const onOpenChangeViewMenu = () => {
-    setIsOpenViewMenu(!isOpenViewMenu);
-  };
-
-  const { userRolePermissions, role } = usePermission();
-  const { data: allMenus, refetch: getMenu } = useAllMenus();
-
   const businessInformation = getJsonItemFromLocalStorage('business');
 
+  const { userRolePermissions, role } = usePermission();
+  const router = useRouter();
+  const { setPage } = useGlobalContext();
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
+  const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [name, setName] = useState('');
+  const [packingCost, setPackingCost] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
+  const {
+    data: allMenus,
+    isLoading: isMenuLoading,
+    isError: isMenuError,
+    refetch: getMenu,
+  } = useAllMenus();
   const { data, isLoading, isError, refetch } = useMenu();
-  const { setPage, setMenuIdTable } = useGlobalContext();
 
   useEffect(() => {
     // setMenuIdTable(data[0].id);
     setPage(1);
   }, []);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const onOpenChangeViewMenu = () => {
+    setIsOpenViewMenu(!isOpenViewMenu);
+  };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -75,7 +79,10 @@ const Menu: React.FC = () => {
 
   const handleCreateMenu = async () => {
     setLoading(true);
-    const data = await createMenu(businessInformation[0]?.businessId, { name });
+    const data = await createMenu(businessInformation[0]?.businessId, {
+      name,
+      packingCost,
+    });
     setLoading(false);
     if (data?.data?.isSuccessful) {
       notify({
@@ -105,24 +112,6 @@ const Menu: React.FC = () => {
       ),
     }));
   }, [data, searchQuery]);
-
-  const getScreens = () => {
-    if (data?.length > 0) {
-      return (
-        <MenuList
-          menus={filteredItems}
-          onOpen={onOpen}
-          onOpenViewMenu={onOpenChangeViewMenu}
-          refetch={refetch}
-          searchQuery={searchQuery}
-        />
-      );
-    } else if (isError) {
-      return <Error onClick={() => refetch()} />;
-    } else {
-      return <CreateMenu onOpen={onOpen} />;
-    }
-  };
 
   const newArray = data?.map((item) => {
     const menuName = item?.items[0]?.menuName;
@@ -155,13 +144,16 @@ const Menu: React.FC = () => {
     }
   };
 
+  if (isLoading || isMenuLoading) return <CustomLoading />;
+  if (isError || isMenuError) return <Error onClick={() => refetch()} />;
+
   return (
     <>
-      <div className='flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between'>
+      <div className="flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
-            {data?.length > 0 ? (
-              <div className='flex items-center'>
+          <div className="text-[24px] leading-8 font-semibold">
+            {data && data?.length > 0 ? (
+              <div className="flex items-center">
                 <span>All menu</span>
                 <Chip
                   classNames={{
@@ -175,29 +167,29 @@ const Menu: React.FC = () => {
               <span>Menu</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] w-full'>
+          <p className="text-sm  text-grey600  xl:w-[231px] w-full">
             Show all menu items
           </p>
         </div>
-        <div className='flex items-center flex-wrap gap-3'>
-          {data?.length > 0 && (
+        <div className="flex items-center flex-wrap gap-3">
+          {data && data.length > 0 && (
             <>
-              <div className='md:w-[242px] w-full'>
+              <div className="md:w-[242px] w-full">
                 <CustomInput
-                  label=''
-                  size='md'
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
                   onClick={() => router.push('/dashboard/menu/preview-menu')}
-                  className='flex text-grey600 bg-white'
+                  className="flex text-grey600 bg-white"
                 >
                   <IoPhonePortraitOutline />
                   <p>Preview menu</p>
@@ -205,26 +197,27 @@ const Menu: React.FC = () => {
 
                 <Button
                   onClick={() => downloadCSV(newArray)}
-                  className='flex text-grey600 bg-white'
+                  className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className='text-[22px]' />
+                  <MdOutlineFileDownload className="text-[22px]" />
                   <p>Export csv</p>
                 </Button>
               </ButtonGroup>
             </>
           )}
 
-          {data?.length > 0 &&
+          {data &&
+            data.length > 0 &&
             (role === 0 || userRolePermissions?.canCreateMenu === true) && (
               // <div>
 
               <CustomButton
                 onClick={() => router.push('/dashboard/menu/add-menu-item')}
-                className='py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white'
-                backgroundColor='bg-primaryColor'
+                className="py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white"
+                backgroundColor="bg-primaryColor"
               >
-                <div className='flex gap-2 items-center justify-center'>
-                  <IoAddCircleOutline className='text-[22px]' />
+                <div className="flex gap-2 items-center justify-center">
+                  <IoAddCircleOutline className="text-[22px]" />
                   <p>{'Add menu items'} </p>
                 </div>
               </CustomButton>
@@ -232,27 +225,46 @@ const Menu: React.FC = () => {
             )}
         </div>
       </div>
-      {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
+      {data && data.length > 0 ? (
+        <MenuList
+          menus={filteredItems}
+          onOpen={onOpen}
+          onOpenViewMenu={onOpenChangeViewMenu}
+          refetch={refetch}
+          searchQuery={searchQuery}
+        />
+      ) : (
+        <CreateMenu onOpen={onOpen} />
+      )}
 
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
         <ModalContent>
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
+                <h2 className="text-[24px] leading-3 mt-8 text-black font-semibold">
                   Create Menu
                 </h2>
-                <p className='text-sm  text-grey600  xl:w-[231px]  w-full mb-4'>
+                <p className="text-sm  text-grey600  xl:w-[231px]  w-full mb-4">
                   Create a menu to add item
                 </p>
                 <CustomInput
-                  type='text'
+                  type="text"
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setName(e.target.value)
                   }
                   value={name}
-                  label='Name of menu'
-                  placeholder='E.g Drinks'
+                  label="Name of menu"
+                  placeholder="E.g Drinks"
+                />
+                <CustomInput
+                  type="number"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setPackingCost(Number(e.target.value))
+                  }
+                  value={String(packingCost)}
+                  label="Packing cost (Optional)"
+                  placeholder="This is a cost required to pack any item in this menus"
                 />
                 <Spacer y={2} />
 
@@ -260,7 +272,7 @@ const Menu: React.FC = () => {
                   loading={loading}
                   onClick={handleCreateMenu}
                   disabled={!name || loading}
-                  type='submit'
+                  type="submit"
                 >
                   {loading ? 'Loading' : 'Proceed'}
                 </CustomButton>
@@ -276,25 +288,25 @@ const Menu: React.FC = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className='text-[24px] leading-3 mt-8 mb-2 text-black font-semibold'>
+                <h2 className="text-[24px] leading-3 mt-8 mb-2 text-black font-semibold">
                   All menus
                 </h2>
 
-                <ScrollShadow size={5} className='w-full max-h-[350px]'>
+                <ScrollShadow size={5} className="w-full max-h-[350px]">
                   {allMenus?.map((item: any) => {
                     return (
                       <div
-                        className=' text-black flex justify-between text-sm border-b border-primaryGrey py-3'
+                        className=" text-black flex justify-between text-sm border-b border-primaryGrey py-3"
                         key={item.id}
                       >
                         <p>{item.name}</p>
-                        <Tooltip color='danger' content={'Delete'}>
+                        <Tooltip color="danger" content={'Delete'}>
                           <span>
                             <RiDeleteBin6Line
                               onClick={() => {
                                 removeMenu(item.id);
                               }}
-                              className='text-[18px] text-[#dc2626] mr-4 cursor-pointer'
+                              className="text-[18px] text-[#dc2626] mr-4 cursor-pointer"
                             />
                           </span>
                         </Tooltip>

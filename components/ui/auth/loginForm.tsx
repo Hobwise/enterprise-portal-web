@@ -3,6 +3,7 @@ import { loginUser } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
+import { setJsonCookie } from '@/lib/cookies';
 import { notify, saveJsonItemToLocalStorage, setTokenCookie } from '@/lib/utils';
 import { Spacer } from '@nextui-org/react';
 import Link from 'next/link';
@@ -43,6 +44,7 @@ const LoginForm = () => {
       setLoginDetails(loginFormData);
       saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
       setTokenCookie('token', data?.data?.data.token);
+      setJsonCookie('planCapabilities', data?.data?.data?.subscription?.planCapabilities);
       router.push(businesses.length === 1 ? '/dashboard' : businesses.length === 0 ? '/auth/business-information' : '/auth/select-business');
     } else if (data?.data?.error) {
       notify({

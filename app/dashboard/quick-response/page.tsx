@@ -48,18 +48,6 @@ const QRCode: React.FC = () => {
       .filter((item) => Object.keys(item).length > 0);
   }, [data, searchQuery]);
 
-  const getScreens = () => {
-    if (data?.quickResponses?.length > 0) {
-      return (
-        <QrList qr={filteredItems} searchQuery={searchQuery} data={data} />
-      );
-    } else if (isError) {
-      return <Error onClick={() => refetch()} />;
-    } else {
-      return <CreateQRcode />;
-    }
-  };
-
   const newArray = data?.quickResponses.map((item) => {
     return {
       allOrder: item.allOrdersCount,
@@ -71,13 +59,16 @@ const QRCode: React.FC = () => {
     };
   });
 
+  if (isLoading) return <CustomLoading />;
+  if (isError) return <Error onClick={() => refetch()} />;
+
   return (
     <>
-      <div className='flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between'>
+      <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
+          <div className="text-[24px] leading-8 font-semibold">
             {data?.quickResponses?.length > 0 ? (
-              <div className='flex items-center'>
+              <div className="flex items-center">
                 <span>Quick response</span>
                 <Chip
                   classNames={{
@@ -91,32 +82,32 @@ const QRCode: React.FC = () => {
               <span>Quick response</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px]  w-full '>
+          <p className="text-sm  text-grey600  xl:w-[231px]  w-full ">
             Showing all Quick Response
           </p>
         </div>
-        <div className='flex items-center flex-wrap gap-3'>
+        <div className="flex items-center flex-wrap gap-3">
           {data?.quickResponses?.length > 0 && (
             <>
               <div>
                 <CustomInput
                   classnames={'md:w-[242px] w-full'}
-                  label=''
-                  size='md'
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
                   onClick={() => downloadCSV(newArray)}
-                  className='flex text-grey600 bg-white'
+                  className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className='text-[22px]' />
+                  <MdOutlineFileDownload className="text-[22px]" />
                   <p>Export csv</p>
                 </Button>
               </ButtonGroup>
@@ -129,11 +120,11 @@ const QRCode: React.FC = () => {
                 onClick={() =>
                   router.push('/dashboard/quick-response/create-qr')
                 }
-                className='py-2 w-full md:w-auto px-4 md:mb-0 mb-4 text-white'
-                backgroundColor='bg-primaryColor'
+                className="py-2 w-full md:w-auto px-4 md:mb-0 mb-4 text-white"
+                backgroundColor="bg-primaryColor"
               >
-                <div className='flex gap-2 items-center justify-center'>
-                  <IoAddCircleOutline className='text-[22px]' />
+                <div className="flex gap-2 items-center justify-center">
+                  <IoAddCircleOutline className="text-[22px]" />
                   <p>{'Create quick response'} </p>
                 </div>
               </CustomButton>
@@ -141,7 +132,11 @@ const QRCode: React.FC = () => {
         </div>
       </div>
       {/* <CreateQRcode /> */}
-      {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
+      {data?.quickResponses?.length > 0 ? (
+        <QrList qr={filteredItems} searchQuery={searchQuery} data={data} />
+      ) : (
+        <CreateQRcode />
+      )}
     </>
   );
 };

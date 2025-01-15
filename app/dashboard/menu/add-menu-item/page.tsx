@@ -378,7 +378,7 @@ const AddItemToMenu = () => {
         size='xl'
         isOpen={isOpenMultipleMenu}
         onOpenChange={() => {
-          setActiveScreen(1);
+        setActiveScreen(1);
           setSelectedMenu('');
           toggleMultipleMenu();
         }}

@@ -1,11 +1,14 @@
 'use client';
+import * as React from 'react';
 import { Chip, Divider, Tab, Tabs } from '@nextui-org/react';
 import Image from 'next/image';
 
-import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import Champagne from '../../../../../public/assets/images/champage.webp';
 import { menus, togglePreview } from './data';
+import useAllMenus from '@/hooks/cachedEndpoints/useAllMenus';
+import useMenu from '@/hooks/cachedEndpoints/useMenu';
+import { formatPrice } from '@/lib/utils';
 
 const Preview = () => {
   const {
@@ -16,26 +19,31 @@ const Preview = () => {
     imageReference,
     selectedTextColor,
   } = useGlobalContext();
-  console.log(backgroundColor, 'backgroundColor');
+
+  const { data } = useMenu();
+
   const baseString = 'data:image/jpeg;base64,';
+
+  const items = data?.flatMap((obj) => obj.items);
+
   return (
     <article
       style={{
         backgroundColor: backgroundColor || 'white',
       }}
-      className='xl:block relative  hidden w-[320px] border-[8px] overflow-scroll  border-black rounded-[40px] h-[684px] shadow-lg'
+      className="xl:block relative  hidden w-[320px] border-[8px] overflow-scroll  border-black rounded-[40px] h-[684px] shadow-lg"
     >
       {selectedImage.length > baseString.length && (
         <Image
           fill
-          className='absolute backdrop-brightness-125 bg-cover opacity-25'
+          className="absolute backdrop-brightness-125 bg-cover opacity-25"
           src={selectedImage}
-          alt='background'
+          alt="background"
         />
       )}
 
-      <h1 className='text-[28px] font-[700] relative p-4 pt-6'>Menu</h1>
-      <div className='overflow-scroll w-full px-4'>
+      <h1 className="text-[28px] font-[700] relative p-4 pt-6">Menu</h1>
+      {/* <div className="overflow-scroll w-full px-4">
         <Tabs
           classNames={{
             tabList:
@@ -45,14 +53,16 @@ const Preview = () => {
             tabContent: 'group-data-[selected=true]:text-primaryColor',
           }}
           variant={'underlined'}
-          aria-label='menu filter'
+          aria-label="menu filter"
+          // isDisabled
+          disabledKeys={['Drinks', 'Dessert', 'Breakfast']}
         >
           {menus.map((menu) => {
             return (
               <Tab
                 key={menu.name}
                 title={
-                  <div className='flex items-center space-x-2'>
+                  <div className="flex items-center space-x-2">
                     <span>{menu.name}</span>
 
                     <Chip
@@ -68,12 +78,12 @@ const Preview = () => {
             );
           })}
         </Tabs>
-      </div>
+      </div> */}
 
       <div className={`${togglePreview(activeTile)?.main} relative  px-4`}>
-        {[1, 2, 3, 4].map((item) => {
+        {items?.map((item) => {
           return (
-            <>
+            <React.Fragment key={item.menuID}>
               <div
                 className={`${togglePreview(activeTile)?.container} ${
                   activeTile === 'List Right' &&
@@ -110,7 +120,7 @@ const Preview = () => {
                       width={60}
                       height={60}
                       src={Champagne}
-                      alt='menu'
+                      alt="menu"
                     />
                   </div>
                 )}
@@ -122,28 +132,23 @@ const Preview = () => {
                     togglePreview(activeTile)?.textContainer
                   } flex flex-col justify-center`}
                 >
-                  <p className='font-[700]'>Moet & Chandon</p>
-                  <p className='text-[13px]'>₦2,500,000</p>
-                  <p className='text-[13px]'>
-                    {togglePreview(activeTile)?.text3}
-                  </p>
+                  <p>{item.menuName}</p>
+                  <p className="font-[700]">{item.itemName}</p>
+                  <p className="text-[13px]">{formatPrice(item.price)}</p>
+                  {activeTile && activeTile !== 'Single column 1' && (
+                    <p className="text-[13px]">
+                      {/* {togglePreview(activeTile)?.text3} */}
+                      {item.itemDescription}
+                    </p>
+                  )}
                 </div>
               </div>
               {togglePreview(activeTile)?.divider && (
-                <Divider className='text-[#E4E7EC] h-[1px]' />
+                <Divider className="text-[#E4E7EC] h-[1px]" />
               )}
-            </>
+            </React.Fragment>
           );
         })}
-      </div>
-
-      <div className='flex mt-6 gap-3 px-4'>
-        <CustomButton className='flex-grow w-full bg-white border border-[#E4E7EC] rounded-lg'>
-          Previous
-        </CustomButton>
-        <CustomButton className='flex-grow w-full bg-white border border-[#E4E7EC] rounded-lg'>
-          Next
-        </CustomButton>
       </div>
     </article>
   );

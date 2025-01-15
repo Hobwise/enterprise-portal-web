@@ -1,5 +1,6 @@
-import BusinessSettingsDashboardPrompt from '@/components/businessSettingsDashboardPrompt';
-import Container from '@/components/dashboardContainer';
+import BusinessSettingsDashboardPrompt from "@/components/businessSettingsDashboardPrompt";
+import Container from "@/components/dashboardContainer";
+import { SubscriptionNoticePopup } from "@/components/ui/dashboard/subscription-notification";
 
 export default function DashboardLayout({
   children,
@@ -7,9 +8,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className='font-satoshi'>
+    <div className="font-satoshi">
       <Container>{children}</Container>
       <BusinessSettingsDashboardPrompt />
+      <SubscriptionNoticePopup />
     </div>
   );
 }

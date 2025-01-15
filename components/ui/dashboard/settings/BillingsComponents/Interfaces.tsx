@@ -26,19 +26,18 @@ export interface Plans {
   Starter: PlanDetails;
   Professional: PlanDetails;
   Premium: PlanDetails;
-  
 }
 
 export const TYPE_OF_PLAN = {
-  1: "Premium",
-  2: "Professional",
-  3: "Starter",
+  1: 'Premium',
+  2: 'Professional',
+  3: 'Starter',
 };
 
 export interface PlansFromParent {
   plans: Plans | null;
   disableButtons?: boolean;
-  currentSubscriptionDetails?: CurrentSubscriptionDetails | null
+  currentSubscriptionDetails?: CurrentSubscriptionDetails | null;
 }
 
 export interface PaymentDetails {
@@ -51,12 +50,10 @@ export interface PaymentDetails {
   paymentPeriod: number;
 }
 
-
-
 export const PAYMENT_PLAN = {
   PREMIUM: 0,
   PROFESSIONAL: 1,
-  STARTER: 2
+  STARTER: 2,
 };
 
 export interface SubscriptionData {
@@ -69,7 +66,7 @@ export interface SubscriptionData {
 }
 
 export interface CardDetails {
-  status : string | null;
+  status: string | null;
   last4: string | null;
   exp_Month: string | null;
   exp_Year: string | null;
@@ -78,61 +75,65 @@ export interface CardDetails {
 }
 
 export interface CurrentSubscriptionDetails {
-  
-    cooperateID: string;
-    businessID: string;
-    subcribedByID: string;
-    subcriptionCode: string;
-    subcriptionCustomerCode: string;
-    subcriptionPlanCode: string;
-    subcriptionEmailToken: string;
-    reference: string;
-    subcribedByName: string;
-    message: string;
-    plan: number;
-    paymentPeriod: number;
-    subscriptionStartDate: string;
-    subscriptionEndDate: string;
-    totalAmount: number;
-    perAmount: number;
-    isActive: boolean;
-    checkSum: string;
-    isExpired: boolean;
-    id: string;
-    nextPaymentDate: string | null
-  }
+  cooperateID: string;
+  businessID: string;
+  subcribedByID: string;
+  subcriptionCode: string;
+  subcriptionCustomerCode: string;
+  subcriptionPlanCode: string;
+  subcriptionEmailToken: string;
+  reference: string;
+  subcribedByName: string;
+  message: string;
+  plan: number;
+  paymentPeriod: number;
+  subscriptionStartDate: string;
+  subscriptionEndDate: string;
+  totalAmount: number;
+  perAmount: number;
+  isActive: boolean;
+  checkSum: string;
+  isExpired: boolean;
+  id: string;
+  nextPaymentDate: string | null;
+  subscription: {
+    status: number;
+    plan: number
+  };
+}
 
-  export interface PaidCardsData {
-    cardDetails: CardDetails | null,
-    currentSubscriptionDetails: CurrentSubscriptionDetails | null
-  }
+export interface PaidCardsData {
+  cardDetails: CardDetails | null;
+  currentSubscriptionDetails: CurrentSubscriptionDetails | null;
+  paystackStatus?: string;
+}
 
-  export interface SubscriptionHistory {
-    cooperateID: string; 
-    businessID: string; 
-    subcribedByID: string; 
-    plan: number; 
-    paymentPeriod: number; 
-    subscriptionStartDate: string; 
-    subscriptionEndDate: string; 
-    subscriptionPlanCode: string;
-    isActive: boolean; 
-    isExpired: boolean;
-    id: string;
-    perAmount: number;
-    totalAmount: number;
-  }
+export interface SubscriptionHistory {
+  cooperateID: string;
+  businessID: string;
+  subcribedByID: string;
+  plan: number;
+  paymentPeriod: number;
+  reference: string;
+  subscriptionStartDate: string;
+  subscriptionEndDate: string;
+  subscriptionPlanCode: string;
+  isActive: boolean;
+  isExpired: boolean;
+  id: string;
+  perAmount: number;
+  totalAmount: number;
+}
 
-  export interface SubscriptionTableProps {
-    subscriptions: SubscriptionHistory[] | null;
-    searchQuery?: string;
-  }
-  
-  export interface ManageSubscriptionIframe {
-    url : string;
-    trigger: boolean;
-  }
+export interface SubscriptionTableProps {
+  subscriptions: SubscriptionHistory[] | null;
+  searchQuery?: string;
+}
 
+export interface ManageSubscriptionIframe {
+  url: string;
+  trigger: boolean;
+}
 
 //   {
 //     "data": {
@@ -161,7 +162,7 @@ export interface CurrentSubscriptionDetails {
 //         "nextPaymentDate": "2024-11-14T19:09:00Z",
 //         "status": "active",
 //         "subscriptionHistories": [],
-       
+
 //         "authorization": {
 //             "last4": "4081",
 //             "exp_Month": "12",

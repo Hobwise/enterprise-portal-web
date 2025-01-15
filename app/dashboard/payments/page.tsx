@@ -54,24 +54,6 @@ const Payments: React.FC = () => {
     }));
   }, [data?.paymentComposites, searchQuery]);
 
-  const getScreens = () => {
-    if (data?.paymentComposites?.[0]?.payments.length > 0) {
-      return (
-        <PaymentsList
-          data={data}
-          isLoading={isLoading}
-          payments={filteredItems}
-          refetch={refetch}
-          searchQuery={searchQuery}
-        />
-      );
-    } else if (isError) {
-      return <Error onClick={() => refetch()} />;
-    } else {
-      return <NoPaymentsScreen />;
-    }
-  };
-
   const newArray = data?.paymentComposites?.flatMap((item) =>
     item?.payments?.map((payment) => ({
       reference: payment.reference,
@@ -84,13 +66,16 @@ const Payments: React.FC = () => {
     }))
   );
 
+  if (isLoading) return <CustomLoading />;
+  if (isError) return <Error onClick={() => refetch()} />;
+
   return (
     <>
-      <div className='flex flex-row flex-wrap  xl:mb-8 mb-4 items-center justify-between'>
+      <div className="flex flex-row flex-wrap  xl:mb-8 mb-4 items-center justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
+          <div className="text-[24px] leading-8 font-semibold">
             {data?.paymentComposites?.[0]?.payments.length > 0 ? (
-              <div className='flex items-center'>
+              <div className="flex items-center">
                 <span>All Payment</span>
                 <Chip
                   classNames={{
@@ -104,33 +89,33 @@ const Payments: React.FC = () => {
               <span>Payments</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] w-full '>
+          <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
             Showing all payments
           </p>
         </div>
-        <div className='flex  gap-3'>
+        <div className="flex  gap-3">
           {dropdownComponent}
           {data?.paymentComposites?.[0]?.payments.length > 0 && (
             <>
               <div>
                 <CustomInput
                   classnames={'w-[242px]'}
-                  label=''
-                  size='md'
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
                   onClick={() => downloadCSV(newArray)}
-                  className='flex text-grey600 bg-white'
+                  className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className='text-[22px]' />
+                  <MdOutlineFileDownload className="text-[22px]" />
                   <p>Export csv</p>
                 </Button>
               </ButtonGroup>
@@ -139,7 +124,17 @@ const Payments: React.FC = () => {
         </div>
       </div>
 
-      {isLoading ? <CustomLoading /> : <>{getScreens()}</>}
+      {data?.paymentComposites[0]?.payments.length > 0 ? (
+        <PaymentsList
+          data={data}
+          isLoading={isLoading}
+          payments={filteredItems}
+          refetch={refetch}
+          searchQuery={searchQuery}
+        />
+      ) : (
+        <NoPaymentsScreen />
+      )}
       {datePickerModal}
     </>
   );

@@ -1,5 +1,4 @@
-'use client';
-
+import { refreshToken } from './apiService';
 import {
   getJsonItemFromLocalStorage,
   notify,
@@ -8,68 +7,68 @@ import {
 } from '@/lib/utils';
 import axios, { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
-import { generateRefreshToken } from './controllers/auth';
+import { generateRefreshToken, logout } from './controllers/auth';
 
 let refreshTimer: NodeJS.Timeout | null = null;
 
-const logout = async () => {
-  toast.error('Session Expired, please log in again.');
-  window.location.href = '/auth/login';
-  localStorage.clear();
-  removeCookie('token');
-};
+// const logout = async () => {
+//   toast.error('Session Expired, please log in again.');
+//   window.location.href = '/auth/login';
+//   localStorage.clear();
+//   removeCookie('token');
+// };
 
-export const refreshToken = async () => {
-  const userData = getJsonItemFromLocalStorage('userInformation');
-  if (!userData) return null;
+// export const refreshToken = async () => {
+//   const userData = getJsonItemFromLocalStorage('userInformation');
+//   if (!userData) return null;
 
-  const { token, email } = userData;
+//   const { token, email } = userData;
 
-  try {
-    const response = await generateRefreshToken({
-      token,
-      email,
-    });
+//   try {
+//     const response = await generateRefreshToken({
+//       token,
+//       email,
+//     });
 
-    const { jwtToken: newToken, tokenExpiration: newExpiration } =
-      response?.data?.data;
+//     const { jwtToken: newToken, tokenExpiration: newExpiration } =
+//       response?.data?.data;
 
-    saveJsonItemToLocalStorage('userInformation', {
-      ...userData,
-      token: newToken,
-      tokenExpiration: newExpiration,
-    });
+//     saveJsonItemToLocalStorage('userInformation', {
+//       ...userData,
+//       token: newToken,
+//       tokenExpiration: newExpiration,
+//     });
 
-    scheduleTokenRefresh();
-    return newToken;
-  } catch (error) {
-    logout();
-    return null;
-  }
-};
+//     scheduleTokenRefresh();
+//     return newToken;
+//   } catch (error) {
+//     logout();
+//     return null;
+//   }
+// };
 
-export const scheduleTokenRefresh = () => {
-  if (refreshTimer) {
-    clearTimeout(refreshTimer);
-  }
+// export const scheduleTokenRefresh = () => {
+//   if (refreshTimer) {
+//     clearTimeout(refreshTimer);
+//   }
 
-  const userData = getJsonItemFromLocalStorage('userInformation');
-  if (!userData || !userData.tokenExpiration) return;
+//   const userData = getJsonItemFromLocalStorage('userInformation');
+//   if (!userData || !userData.tokenExpiration) return;
 
-  const expirationTime = new Date(userData.tokenExpiration).getTime();
-  const currentTime = Date.now();
+//   const expirationTime = new Date(userData.tokenExpiration).getTime();
+//   const currentTime = Date.now();
 
-  const timeUntilRefresh = expirationTime - currentTime - 120 * 1000;
+//   const timeUntilRefresh = expirationTime - currentTime - 120 * 1000;
 
-  if (timeUntilRefresh <= 0) {
-    refreshToken();
-    return;
-  }
+//   if (timeUntilRefresh <= 0) {
+//     refreshToken();
+//     return;
+//   }
 
-  refreshTimer = setTimeout(() => {
-    refreshToken();
-  }, timeUntilRefresh);
-};
+//   refreshTimer = setTimeout(() => {
+//     refreshToken();
+//   }, timeUntilRefresh);
+// };
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -109,9 +108,55 @@ api.interceptors.request.use(async (config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  async (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      logout();
+  async (error) => {
+    let originalConfig = error.config;
+
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalConfig._retry
+    ) {
+      originalConfig._retry = true;
+      try {
+        const userData = getJsonItemFromLocalStorage('userInformation');
+        const businesses = getJsonItemFromLocalStorage('business');
+
+        const { refreshToken, email } = userData;
+        const businessId = businesses[0].businessId;
+
+        const rs = await generateRefreshToken({
+          refreshToken,
+          businessId,
+          email,
+        });
+
+        if (!rs) {
+          throw new Error('Failed to generate new token');
+        }
+
+        const {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          tokenExpiration: newExpiration,
+        } = rs.data.data;
+
+        saveJsonItemToLocalStorage('userInformation', {
+          ...userData,
+          token: newToken,
+          refreshToken: newRefreshToken,
+          tokenExpiration: newExpiration,
+        });
+
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        return api(originalConfig);
+      } catch (_error) {
+        if (error.response && error.response.data) {
+          console.log('error', error);
+          return Promise.reject(error.response.data);
+        }
+
+        return Promise.reject(_error);
+      }
     } else {
       handleError(error, false);
     }
@@ -151,6 +196,6 @@ export const handleError = (error: any, showError: boolean = true) => {
   }
 };
 
-scheduleTokenRefresh();
+// scheduleTokenRefresh();
 
 export default api;
