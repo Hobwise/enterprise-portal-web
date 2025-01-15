@@ -34,35 +34,29 @@ import {
 import Filters from './filter';
 import ViewModal from './view';
 
+type Item = {
+  id: string;
+  itemID: string;
+  itemName: string;
+  menuName: string;
+  itemDescription: string;
+  price: number;
+  currency: string;
+  isAvailable: boolean;
+  hasVariety: boolean;
+  image: string;
+  isVariety: boolean;
+  varieties: null | any;
+  count: number;
+  packingCost: number;
+  isPacked?: boolean;
+};
 type MenuItem = {
   name: string;
-  items: Array<{
-    id: string;
-    itemID: string;
-    itemName: string;
-    menuName: string;
-    itemDescription: string;
-    price: number;
-    currency: string;
-    isAvailable: boolean;
-    hasVariety: boolean;
-    image: string;
-    isVariety: boolean;
-    varieties: null | any;
-  }>;
+  items: Item[];
 };
 
 type MenuData = Array<MenuItem>;
-
-type SelectedItem = {
-  id: string;
-  count: number;
-  itemID: string;
-  itemName: string;
-  price: number;
-  image: string;
-  isVariety: boolean;
-};
 
 const MenuList = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -93,10 +87,10 @@ const MenuList = () => {
   const [loading, setLoading] = useState<Boolean>(false);
 
   const [value, setValue] = useState('');
-  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
 
-  const [selectedMenu, setSelectedMenu] = useState([]);
+  const [selectedMenu, setSelectedMenu] = useState<Item>();
   const [orderDetails, setOrderDetails] = useState([]);
   const [filteredMenu, setFilteredMenu] = React.useState(data?.[0]?.items);
 
@@ -123,7 +117,7 @@ const MenuList = () => {
       //     count: quantity,
       //   };
       // });
-      const updatedArray = response?.data?.data.orderDetails.map((item) => {
+       const updatedArray = response?.data?.data.orderDetails.map((item) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
         return {
           ...rest,
@@ -178,29 +172,21 @@ const MenuList = () => {
     }
   }, [filterValue, filteredItems]);
 
-  const handleCardClick = (menuItem: MenuItem) => {
+  const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
 
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
-      setSelectedItems([
-        ...selectedItems,
-        {
-          id: menuItem.id,
-          count: 1,
-          isVariety: menuItem.isVariety,
-          itemName: menuItem.itemName,
-          menuName: menuItem.menuName,
-          price: menuItem.price,
-          image: menuItem.image,
-        },
+      setSelectedItems((prevItems: any) => [
+        ...prevItems,
+        { ...menuItem, count: 1, isPacked: isItemPacked },
       ]);
     }
   };
 
   const handleDecrement = (id: string) => {
-    setSelectedItems((prevItems) =>
+    setSelectedItems((prevItems: any) =>
       prevItems.map((item) => {
         if (item.id === id && item.count > 1) {
           return { ...item, count: item.count - 1 };
@@ -219,11 +205,12 @@ const MenuList = () => {
     );
   };
   const calculateTotalPrice = () => {
-    return selectedItems.reduce(
-      (acc, item) => acc + item.price * item.count,
-      0
-    );
+    return selectedItems.reduce((acc, item) => {
+      const additionalCost = item.isPacked ? item.packingCost : 0;
+      return acc + item.price * item.count + additionalCost;
+    }, 0);
   };
+
   const handleTabChange = (index) => {
     setValue(index);
   };
@@ -244,23 +231,39 @@ const MenuList = () => {
     }
   }, [order?.id, data]);
 
+  const handlePackingCost = (itemId: string, isPacked: boolean) => {
+    let selectedItemsCopy = [...selectedItems];
+    const existingItem = selectedItemsCopy.find((item) => item.id === itemId);
+    if (!existingItem) {
+      return;
+    }
+
+    const existingItemIndex = selectedItemsCopy.findIndex(
+      (item) => item.id === itemId
+    );
+    const updatedItem = { ...existingItem, isPacked };
+    selectedItemsCopy[existingItemIndex] = updatedItem;
+
+    setSelectedItems(selectedItemsCopy);
+  };
+
   return (
     <>
-      <div className='flex flex-row flex-wrap  justify-between'>
+      <div className="flex flex-row flex-wrap  justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
+          <div className="text-[24px] leading-8 font-semibold">
             <span>Place an order</span>
           </div>
-          <p className='text-sm  text-grey600 xl:mb-8 w-full mb-4'>
+          <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
             Select items from the menu to place order
           </p>
         </div>
-        <div className='flex items-center justify-center gap-3'>
+        <div className="flex items-center justify-center gap-3">
           <div>
             <CustomInput
               classnames={'w-[242px]'}
-              label=''
-              size='md'
+              label=""
+              size="md"
               value={filterValue}
               onChange={(e: any) => {
                 const value = e.target.value;
@@ -273,18 +276,18 @@ const MenuList = () => {
               }}
               isRequired={false}
               startContent={<IoSearchOutline />}
-              type='text'
-              placeholder='Search here...'
+              type="text"
+              placeholder="Search here..."
             />
           </div>
           <CustomButton
             onClick={selectedItems.length > 0 ? onOpen : {}}
-            className='py-2 px-4 mb-0 text-white'
-            backgroundColor='bg-primaryColor'
+            className="py-2 px-4 mb-0 text-white"
+            backgroundColor="bg-primaryColor"
           >
-            <div className='flex gap-2 items-center justify-center'>
+            <div className="flex gap-2 items-center justify-center">
               <p>{'Proceed'} </p>
-              <HiArrowLongLeft className='text-[22px] rotate-180' />
+              <HiArrowLongLeft className="text-[22px] rotate-180" />
             </div>
           </CustomButton>
         </div>
@@ -296,17 +299,17 @@ const MenuList = () => {
           handleTabChange={handleTabChange}
           handleTabClick={handleTabClick}
         />
-        <article className='flex mt-6 gap-3'>
-          <div className='xl:max-w-[65%] w-full'>
+        <article className="flex mt-6 gap-3">
+          <div className="xl:max-w-[65%] w-full">
             {isLoading ? (
               <MenuSkeletonLoading />
             ) : isError ? (
-              <Error imageWidth='w-16' onClick={() => refetch()} />
+              <Error imageWidth="w-16" onClick={() => refetch()} />
             ) : (
-              <div className='grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4'>
+              <div className="grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
                 {matchingObjectArray?.map((menu, index) => (
                   <div
-                    title='select menu'
+                    title="select menu"
                     onClick={() => toggleVarietyModal(menu)}
                     key={menu.id}
                     className={'relative cursor-pointer'}
@@ -315,9 +318,9 @@ const MenuList = () => {
                       (selected) => selected.id === menu.id
                     ) && (
                       <Chip
-                        className='absolute top-2 left-2'
+                        className="absolute top-2 left-2"
                         startContent={<CheckIcon size={18} />}
-                        variant='flat'
+                        variant="flat"
                         classNames={{
                           base: 'bg-primaryColor text-white text-[12px]',
                         }}
@@ -329,9 +332,9 @@ const MenuList = () => {
                       menu.varieties?.some((variety) => variety.id === item.id)
                     ) && (
                       <Chip
-                        className='absolute top-2 left-2'
+                        className="absolute top-2 left-2"
                         startContent={<CheckIcon size={18} />}
-                        variant='flat'
+                        variant="flat"
                         classNames={{
                           base: 'bg-primaryColor text-white text-[12px]',
                         }}
@@ -352,13 +355,13 @@ const MenuList = () => {
                       style={{
                         objectFit: 'cover',
                       }}
-                      className='w-full md:h-[100.54px] h-[150px] rounded-lg border border-primaryGrey mb-2 bg-cover'
+                      className="w-full md:h-[100.54px] h-[150px] rounded-lg border border-primaryGrey mb-2 bg-cover"
                     />
-                    <div className=''>
-                      <h3 className='text-[14px] font-[500]'>
+                    <div className="">
+                      <h3 className="text-[14px] font-[500]">
                         {menu.itemName}
                       </h3>
-                      <p className='text-gray-600 text-[13px] font-[400]'>
+                      <p className="text-gray-600 text-[13px] font-[400]">
                         {formatPrice(menu.price)}
                       </p>
                     </div>
@@ -371,21 +374,21 @@ const MenuList = () => {
             <div>{!isLoading && bottomContent}</div>
           </div>
 
-          <div className='hidden xl:block max-h-[360px] overflow-scroll bg-[#F7F6FA] p-4 rounded-lg flex-grow'>
+          <div className="hidden xl:block max-h-[360px] overflow-scroll bg-[#F7F6FA] p-4 rounded-lg flex-grow">
             {selectedItems.length > 0 ? (
               <>
-                <h2 className='font-[600] mx-2 mb-2'>
+                <h2 className="font-[600] mx-2 mb-2">
                   {selectedItems.length} Items selected
                 </h2>
-                <div className='rounded-lg border border-[#E4E7EC80] p-2 '>
+                <div className="rounded-lg border border-[#E4E7EC80] p-2 ">
                   {selectedItems?.map((item, index) => {
                     return (
                       <>
                         <div
                           key={item.id}
-                          className='flex py-3 justify-between'
+                          className="flex py-3 justify-between"
                         >
-                          <div className=' rounded-lg text-black  flex'>
+                          <div className=" rounded-lg text-black  flex">
                             <div>
                               <Image
                                 src={
@@ -395,49 +398,49 @@ const MenuList = () => {
                                 }
                                 width={20}
                                 height={20}
-                                className='object-cover rounded-lg w-20 h-20'
-                                aria-label='uploaded image'
-                                alt='uploaded image(s)'
+                                className="object-cover rounded-lg w-20 h-20"
+                                aria-label="uploaded image"
+                                alt="uploaded image(s)"
                               />
                             </div>
-                            <div className='ml-3 flex flex-col text-sm justify-center'>
-                              <p className='font-[600]'>{item.menuName}</p>
+                            <div className="ml-3 flex flex-col text-sm justify-center">
+                              <p className="font-[600]">{item.menuName}</p>
                               <Spacer y={1} />
-                              <p className='text-grey600 '>{item.itemName}</p>
+                              <p className="text-grey600 ">{item.itemName}</p>
 
-                              <p className='font-[600] text-primaryColor'>
+                              <p className="font-[600] text-primaryColor">
                                 {formatPrice(item?.price)}
                               </p>
                             </div>
                           </div>
-                          <div className='flex items-center'>
+                          <div className="flex items-center">
                             <Button
                               onClick={() => handleDecrement(item.id)}
                               isIconOnly
-                              radius='sm'
-                              variant='faded'
-                              className='border border-grey400'
-                              aria-label='minus'
+                              radius="sm"
+                              variant="faded"
+                              className="border border-grey400"
+                              aria-label="minus"
                             >
                               <FaMinus />
                             </Button>
-                            <span className='font-bold py-2 px-4'>
+                            <span className="font-bold py-2 px-4">
                               {item.count}
                             </span>
                             <Button
                               onClick={() => handleIncrement(item.id)}
                               isIconOnly
-                              radius='sm'
-                              variant='faded'
-                              className='border border-grey400'
-                              aria-label='plus'
+                              radius="sm"
+                              variant="faded"
+                              className="border border-grey400"
+                              aria-label="plus"
                             >
                               <FaPlus />
                             </Button>
                           </div>
                         </div>
                         {index !== selectedItems?.length - 1 && (
-                          <Divider className='bg-[#E4E7EC80]' />
+                          <Divider className="bg-[#E4E7EC80]" />
                         )}
                       </>
                     );
@@ -445,8 +448,8 @@ const MenuList = () => {
                 </div>
                 <Spacer y={2} />
                 <div>
-                  <h3 className='text-[13px] font-[500]'>Total</h3>
-                  <p className='text-[] font-[700]'>
+                  <h3 className="text-[13px] font-[500]">Total</h3>
+                  <p className="text-[] font-[700]">
                     {formatPrice(calculateTotalPrice())}
                   </p>
                 </div>
@@ -456,14 +459,14 @@ const MenuList = () => {
                 {loading ? (
                   <SelectedSkeletonLoading />
                 ) : (
-                  <div className='flex flex-col h-full rounded-xl justify-center items-center'>
+                  <div className="flex flex-col h-full rounded-xl justify-center items-center">
                     <Image
-                      className='w-[50px] h-[50px]'
+                      className="w-[50px] h-[50px]"
                       src={noMenu}
-                      alt='no menu illustration'
+                      alt="no menu illustration"
                     />
                     <Spacer y={3} />
-                    <p className='text-sm text-grey400'>
+                    <p className="text-sm text-grey400">
                       Selected menu(s) will appear here
                     </p>
                   </div>
@@ -481,6 +484,7 @@ const MenuList = () => {
           isOpen={isOpen}
           id={order?.id}
           orderDetails={orderDetails}
+          handlePackingCost={handlePackingCost}
         />
         <ViewModal
           handleCardClick={handleCardClick}
@@ -488,6 +492,7 @@ const MenuList = () => {
           isOpenVariety={isOpenVariety}
           toggleVarietyModal={toggleVarietyModal}
           selectedItems={selectedItems}
+          handlePackingCost={handlePackingCost}
         />
       </section>
     </>

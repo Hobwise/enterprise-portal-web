@@ -48,10 +48,7 @@ const LoginForm = () => {
       setLoginDetails(loginFormData);
       saveJsonItemToLocalStorage("business", data?.data?.data.businesses);
       setTokenCookie("token", data?.data?.data.token);
-      setJsonCookie(
-        "planCapabilities",
-        data?.data?.data?.subscription?.planCapabilities
-      );
+
       router.push(
         businesses.length === 1
           ? "/dashboard"

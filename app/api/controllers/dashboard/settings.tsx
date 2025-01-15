@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { AUTH, DASHBOARD } from '../../api-url';
-import api, { handleError } from '../../apiService';
-import { businessAddressValidation, emailValidation } from '../validations';
+import { z } from "zod";
+import { AUTH, DASHBOARD } from "../../api-url";
+import api, { handleError } from "../../apiService";
+import { businessAddressValidation, emailValidation } from "../validations";
 import axios from "axios";
 type termsNcondition = {
   content: string;
@@ -14,31 +14,31 @@ const businessSettingSchema = z.object({
   resistrationNumber: z
     .string()
     .trim()
-    .min(1, 'Registration name is required')
-    .max(8, 'Registration name should not be more than 8 digits'),
+    .min(1, "Registration name is required")
+    .max(8, "Registration name should not be more than 8 digits"),
   resistrationCertificateImageReference: z
     .string()
     .trim()
-    .min(1, 'Certificate of registration is required'),
+    .min(1, "Certificate of registration is required"),
   nin: z
     .string()
-    .min(1, 'Nin is required')
-    .max(11, 'Nin should not be more than 11 numbers'),
+    .min(1, "Nin is required")
+    .max(11, "Nin should not be more than 11 numbers"),
   identificationImageReference: z
     .string()
     .trim()
-    .min(1, 'Means of identification is required'),
-  logoImageReference: z.string().trim().min(1, 'Business logo is required'),
+    .min(1, "Means of identification is required"),
+  logoImageReference: z.string().trim().min(1, "Business logo is required"),
   address: businessAddressValidation(),
-  state: z.string().trim().min(1, { message: 'Select a state' }),
-  city: z.string().trim().min(1, { message: 'Select a city' }),
+  state: z.string().trim().min(1, { message: "Select a state" }),
+  city: z.string().trim().min(1, { message: "Select a city" }),
   contactEmailAddress: emailValidation(),
   contactPhoneNumber: z
     .string()
-    .length(11, 'Phone number must be 11 digits long')
-    .startsWith('0', 'Phone number must start with 0')
+    .length(11, "Phone number must be 11 digits long")
+    .startsWith("0", "Phone number must start with 0")
     .refine((value) => /^\d+$/.test(value), {
-      message: 'Phone number must only contain digits',
+      message: "Phone number must only contain digits",
     }),
   // primaryBrandColour: z
   //   .string()
@@ -298,16 +298,13 @@ export async function initializeTransactionv2(
 
   return axios(config)
     .then((response) => {
-      console.log(response)
+      console.log(response);
       return response?.data?.data?.data;
     })
     .catch((error) => {
       console.log("ERROR", error);
     });
 }
-
-
-
 
 export async function getSubscription(
   businessId: string,
@@ -324,11 +321,25 @@ export async function getSubscription(
     // console.log("SUCCESS", data)
     return data;
   } catch (error) {
+    console.log("ERROR", error);
+    handleError(error, false);
+  }
+}
+export async function getUserSubscription(businessId: string) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.userSubscription, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
     handleError(error, false);
   }
 }
 
-export async function manageSubscription(businessId:string){
+export async function manageSubscription(businessId: string) {
   const headers = businessId ? { businessId } : {};
   try {
     const data = await api.post(DASHBOARD.manage, {
@@ -342,11 +353,7 @@ export async function manageSubscription(businessId:string){
   }
 }
 
-
-export async function manageSubscriptionv2(
-  businessId: string,
-  token: string
-) {
+export async function manageSubscriptionv2(businessId: string, token: string) {
   // const headers = businessId ? { businessId: businessId } : {};
 
   // const body = JSON.stringify(payload);
@@ -371,8 +378,6 @@ export async function manageSubscriptionv2(
       console.log("ERROR", error);
     });
 }
-
-
 
 export async function logout() {
   try {

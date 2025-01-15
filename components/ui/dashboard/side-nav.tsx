@@ -33,6 +33,7 @@ import LogoutModal from "../logoutModal";
 import { SIDENAV_ITEMS } from "./constants";
 import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
+import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
@@ -168,9 +169,9 @@ const SideNav = () => {
     setIsOpenBusinessModal(!isOpenBusinessModal);
   };
 
-  const userData = getJsonItemFromLocalStorage("userInformation");
+  const { data: subscription } = useSubscription();
   const canAccessMultipleLocations =
-    userData?.subscription?.planCapabilities?.canAccessMultipleLocations;
+    subscription?.planCapabilities?.canAccessMultipleLocations;
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex">

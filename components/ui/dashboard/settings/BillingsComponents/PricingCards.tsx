@@ -30,6 +30,7 @@ import { usePaystackPayment } from 'react-paystack';
 
 import LoadingSpinner from '@/app/dashboard/reservation/[reservationId]/loading';
 import FeatureList from './FeatureList';
+import { getUser } from '@/app/api/controllers/auth';
 
 export const PricingCards: React.FC<PlansFromParent> = ({
   plans,
@@ -37,12 +38,13 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   currentSubscriptionDetails,
 }) => {
   const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const business = getJsonItemFromLocalStorage('business'); 
   const popup = new PaystackPop();
-  const planType = currentSubscriptionDetails?.plan;
+  const planType = currentSubscriptionDetails?.subscription?.plan;
 
   const token = userInformation?.token;
   const cooperateID = userInformation?.cooperateID;
-  const businessID = userInformation?.businesses[0]?.businessId;
+  const businessID = business[0]?.businessId || null;
   const userId = userInformation?.id;
   const emailAddress = userInformation?.email;
   const [activeTab, setActiveTab] = useState<string>('Monthly');
@@ -134,18 +136,20 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       return notify(notificationBody);
     }
 
-    const body = {
-      businessID,
-      cooperateID,
-      userId,
-      emailAddress,
-      amount,
-      plan: selectedPlan,
-      paymentPeriod: activeTab === 'Monthly' ? 0 : 1,
-    };
-    // console.log("BODY", body);
+    if (businessID) {
+      const body = {
+        businessID,
+        cooperateID,
+        userId,
+        emailAddress,
+        amount,
+        plan: selectedPlan,
+        paymentPeriod: activeTab === "Monthly" ? 0 : 1,
+      };
+      // console.log("BODY", body);
 
-    init(body);
+      init(body);
+    }
   };
 
   const init = async (payload: any) => {
@@ -158,9 +162,18 @@ export const PricingCards: React.FC<PlansFromParent> = ({
     // console.log("INITIALIZED TRANSACTION", initializedTransaction);
     const access_code = initializedTransaction.access_code;
 
+    const handleSuccess = async () => {
+      const userDetailss = await getUser(userId).then((response) =>
+        window.location.reload()
+      );
+
+      // console.log("USER", userDetailss);
+      // window.location.reload()
+    };
+
     popup.resumeTransaction({
       accessCode: access_code,
-      onSuccess: () => window.location.reload(),
+      onSuccess: () => handleSuccess(),
     });
 
     // popup.resumeTransaction(access_code);

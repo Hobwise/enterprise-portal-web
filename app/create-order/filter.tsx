@@ -8,7 +8,7 @@ const Filters = ({
 }: any) => {
   return (
     <>
-      <div className='flex   w-full  px-3 justify-between'>
+      <div className="flex w-full px-3 justify-between">
         <Tabs
           classNames={{
             tabList:
@@ -20,7 +20,7 @@ const Filters = ({
           }}
           fullWidth={true}
           variant={'underlined'}
-          aria-label='menu filter'
+          aria-label="menu filter"
         >
           {menus?.map((menu: any) => {
             return (
@@ -29,7 +29,7 @@ const Filters = ({
                 title={
                   <div
                     onClick={() => handleTabClick(menu.name)}
-                    className='flex items-center h-10 space-x-2 capitalize'
+                    className="flex items-center h-10 space-x-2 capitalize"
                   >
                     <span>{menu.name}</span>
 
