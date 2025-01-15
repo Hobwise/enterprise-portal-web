@@ -59,7 +59,7 @@ const BusinessInformation = () => {
   };
 
   const getCities = () => {
-    const state = States.find((state) => state.name === businessFormData.state);
+    const state = States.find((state) => state.name === businessFormData?.state);
 
     if (state) {
       return state?.cities.map((city) => ({
@@ -152,8 +152,8 @@ const BusinessInformation = () => {
     }
   };
 
-  const handleInputChange = (e: React.FormEvent<HTMLInputElement>) => {
-    const { name, value } = e.currentTarget;
+  const handleInputChange = (e: React.FormEvent<HTMLFormElement>) => {
+    const { name, value } = e.target as HTMLInputElement | HTMLSelectElement;
     setBusinessFormData((prevFormData: any) => ({
       ...prevFormData,
       [name]: value,
@@ -336,24 +336,6 @@ const BusinessInformation = () => {
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
                 <div className="h-4 w-4"></div>
                 <div className="flex flex-col">
-                  <span className="text-sm">LGA</span>
-                  <span
-                    className={cn(
-                      'text-sm',
-                      businessFormData?.city?.length > 0
-                        ? 'text-black'
-                        : 'text-red-500'
-                    )}
-                  >
-                    {businessFormData?.city?.length > 0
-                      ? businessFormData?.city
-                      : 'Not updated'}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
                   <span className="text-sm">State</span>
                   <span
                     className={cn(
@@ -365,6 +347,24 @@ const BusinessInformation = () => {
                   >
                     {businessFormData?.state?.length > 0
                       ? businessFormData?.state
+                      : 'Not updated'}
+                  </span>
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                <div className="h-4 w-4"></div>
+                <div className="flex flex-col">
+                  <span className="text-sm">LGA</span>
+                  <span
+                    className={cn(
+                      'text-sm',
+                      businessFormData?.city?.length > 0
+                        ? 'text-black'
+                        : 'text-red-500'
+                    )}
+                  >
+                    {businessFormData?.city?.length > 0
+                      ? businessFormData?.city
                       : 'Not updated'}
                   </span>
                 </div>

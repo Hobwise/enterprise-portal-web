@@ -107,7 +107,7 @@ const LoginForm = () => {
       </div>
       <Spacer y={7} />
       <CustomButton loading={loading} disabled={loading} type="submit">
-        Log into Account
+        Log In
       </CustomButton>
     </form>
   );

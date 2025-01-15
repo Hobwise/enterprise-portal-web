@@ -14,10 +14,9 @@ import useUser from '@/hooks/cachedEndpoints/useUser';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
 import Image from 'next/image';
 
-const KycComplaincePage = () => {
+const KycCompliancePage = () => {
   const userQuery = useUser();
   const businessQuery = useGetBusiness();
-
 
   //   Function to map isVerified values to status strings
   const mapVerificationStage = (stage: number) => {
@@ -55,8 +54,7 @@ const KycComplaincePage = () => {
     status: determineStatus(option),
   }));
 
-if (userQuery.isLoading || businessQuery.isLoading)
-      return <p>Loading...</p>;
+  if (userQuery.isLoading || businessQuery.isLoading) return <p>Loading...</p>;
 
   return (
     <div className="space-y-5">
@@ -116,4 +114,4 @@ if (userQuery.isLoading || businessQuery.isLoading)
   );
 };
 
-export default KycComplaincePage;
+export default KycCompliancePage;
