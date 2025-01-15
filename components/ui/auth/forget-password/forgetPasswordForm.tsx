@@ -41,34 +41,32 @@ const ForgetPasswordForm = ({ setScreen, email, setEmail }: any) => {
   };
   return (
     <>
-      <h2 className='text-[28px] font-bold '>Forgot Password</h2>
-      <p className='text-sm  text-grey500 mb-8'>
-        Enter your email to request a temporary password
-      </p>
+      <h2 className="text-[28px] font-bold ">Forgot Password</h2>
+      <p className="text-sm  text-grey500 mb-8">Enter your email to request a temporary password</p>
       <Spacer y={8} />
-      <form onSubmit={submitFormData} autoComplete='off'>
+      <form onSubmit={submitFormData} autoComplete="off">
         <CustomInput
-          type='text'
-          label='Email Address'
+          type="text"
+          label="Email Address"
           errorMessage={response?.errors?.email?.[0]}
           onChange={(e) => {
             setResponse(null);
             setEmail(e.target.value);
           }}
           value={email}
-          placeholder='Enter email'
-          endContent={<FaRegEnvelope className='text-foreground-500 text-l' />}
+          placeholder="Enter email"
+          endContent={<FaRegEnvelope className="text-foreground-500 text-l" />}
         />
         <Spacer y={8} />
-        <CustomButton loading={loading} disabled={loading} type='submit'>
-          Send me a password
+        <CustomButton loading={loading} disabled={loading} type="submit">
+          Send password
         </CustomButton>
       </form>
       <Spacer y={8} />
-      <div className='flex items-center gap-2'>
-        <p className='text-grey400 text-xs m-0'>{`Remember password?`}</p>
-        <Link className='text-primaryColor text-sm' href='/auth/login'>
-          Log in
+      <div className="flex items-center gap-2">
+        <p className="text-grey400 text-xs m-0">{`Remember password?`}</p>
+        <Link className="text-primaryColor text-sm" href="/auth/login">
+          Log In
         </Link>
       </div>
     </>

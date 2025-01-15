@@ -1,27 +1,23 @@
-"use client";
-import { loginUser } from "@/app/api/controllers/auth";
-import { CustomInput } from "@/components/CustomInput";
-import { CustomButton } from "@/components/customButton";
-import { useGlobalContext } from "@/hooks/globalProvider";
-import { setJsonCookie } from "@/lib/cookies";
-import {
-  notify,
-  saveJsonItemToLocalStorage,
-  setTokenCookie,
-} from "@/lib/utils";
-import { Spacer } from "@nextui-org/react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { FaRegEnvelope } from "react-icons/fa6";
+'use client';
+import { loginUser } from '@/app/api/controllers/auth';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
+import { useGlobalContext } from '@/hooks/globalProvider';
+import { setJsonCookie } from '@/lib/cookies';
+import { notify, saveJsonItemToLocalStorage, setTokenCookie } from '@/lib/utils';
+import { Spacer } from '@nextui-org/react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { FaRegEnvelope } from 'react-icons/fa6';
 const LoginForm = () => {
   const router = useRouter();
   const { setLoginDetails } = useGlobalContext();
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [loginFormData, setLoginFormData] = useState({
-    email: "",
-    password: "",
+    email: '',
+    password: '',
   });
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
@@ -44,26 +40,17 @@ const LoginForm = () => {
 
     setLoading(false);
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage("userInformation", data?.data?.data);
+      saveJsonItemToLocalStorage('userInformation', data?.data?.data);
       setLoginDetails(loginFormData);
-      saveJsonItemToLocalStorage("business", data?.data?.data.businesses);
-      setTokenCookie("token", data?.data?.data.token);
-      setJsonCookie(
-        "planCapabilities",
-        data?.data?.data?.subscription?.planCapabilities
-      );
-      router.push(
-        businesses.length === 1
-          ? "/dashboard"
-          : businesses.length === 0
-          ? "/auth/business-information"
-          : "/auth/select-business"
-      );
+      saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
+      setTokenCookie('token', data?.data?.data.token);
+      setJsonCookie('planCapabilities', data?.data?.data?.subscription?.planCapabilities);
+      router.push(businesses.length === 1 ? '/dashboard' : businesses.length === 0 ? '/auth/business-information' : '/auth/select-business');
     } else if (data?.data?.error) {
       notify({
-        title: "Error!",
+        title: 'Error!',
         text: data?.data?.error,
-        type: "error",
+        type: 'error',
       });
     }
   };
@@ -100,17 +87,13 @@ const LoginForm = () => {
           Remember me
          
         </Checkbox> */}
-        <Link
-          prefetch={true}
-          className="text-primaryColor text-sm"
-          href="/auth/forget-password"
-        >
+        <Link prefetch={true} className="text-primaryColor text-sm" href="/auth/forget-password">
           Forget Password?
         </Link>
       </div>
       <Spacer y={7} />
       <CustomButton loading={loading} disabled={loading} type="submit">
-        Log into Account
+        Log In
       </CustomButton>
     </form>
   );
