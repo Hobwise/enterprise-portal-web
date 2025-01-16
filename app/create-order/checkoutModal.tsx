@@ -318,8 +318,10 @@ const CheckoutModal = ({
                               </p>
                             </div>
                             <div className="flex justify-between">
-                              <p className="text-black font-bold">Vat: </p>
-                              <p className="text-black">7.5</p>
+                              <p className="text-black font-bold">Vat(7.5%):</p>
+                              <p className="text-black">
+                                {totalPrice * (7.5 / 100)}
+                              </p>
                             </div>
                             <div className="flex gap-2">
                               <p className="text-black font-bold">
