@@ -82,6 +82,14 @@ const CheckoutModal = ({
   });
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
+  const [additionalCost, setAdditionalCost] = useState(0);
+
+  
+  useEffect(() => { 
+    if(orderDetails){
+      setAdditionalCost(orderDetails.additionalCost);
+    }
+  }, [orderDetails]);
 
   const handleClick = (methodId: number) => {
     if (methodId === 3) {
@@ -102,6 +110,8 @@ const CheckoutModal = ({
     },
     { text: 'Pay Later', subText: 'Keep this order open', id: 3 },
   ];
+
+  const finalTotalPrice = totalPrice + totalPrice * (7.5 / 100) + additionalCost;
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -136,6 +146,8 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: order.quickResponseID,
       comment: order.comment,
+      additionalCost,
+      totalAmount: finalTotalPrice,
       orderDetails: transformedArray,
     };
     const id = businessId ? businessId : businessInformation[0]?.businessId;
@@ -174,6 +186,8 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: order.quickResponseID,
       comment: order.comment,
+      totalAmount: finalTotalPrice,
+      additionalCost,
       orderDetails: transformedArray,
     };
     const data = await editOrder(id, payload);
@@ -256,8 +270,6 @@ const CheckoutModal = ({
   useEffect(() => {
     getQrID();
   }, []);
-
-  const finalTotalPrice = totalPrice + totalPrice * (7.5 / 100);
 
   return (
     <div className="">
@@ -427,15 +439,41 @@ const CheckoutModal = ({
                         })}
                         <div className="flex justify-end mt-auto">
                           <div className="flex flex-col gap-2">
-                            <div className="flex gap-2">
+                            <div className="flex justify-between">
                               <p className="text-black font-bold">Subtotal: </p>
                               <p className="text-black">
                                 {formatPrice(totalPrice)}
                               </p>
                             </div>
                             <div className="flex justify-between">
-                              <p className="text-black font-bold">Vat: </p>
-                              <p className="text-black">7.5</p>
+                              <p className="text-black font-bold">
+                                Vat (7.5%):{' '}
+                              </p>
+                              <p className="text-black">
+                                {formatPrice(totalPrice * (7.5 / 100))}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <p className="text-black font-bold">
+                                Additional cost:{' '}
+                              </p>
+                              <div className="w-20">
+                                <CustomInput
+                                  type="number"
+                                  onChange={(e: any) =>
+                                    setAdditionalCost(+e.target.value)
+                                  }
+                                  value={String(additionalCost)}
+                                  name="additionalCost"
+                                  placeholder="Amount"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-between">
+                              <p className="text-black font-bold">Total: </p>
+                              <p className="text-black">
+                                {formatPrice(finalTotalPrice)}
+                              </p>
                             </div>
                             {/* <div className="flex gap-2">
                               <p className="text-black font-bold">
