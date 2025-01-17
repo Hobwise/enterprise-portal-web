@@ -3,9 +3,15 @@ import { useState } from 'react';
 import ChangePasswordForm from './changePassword';
 import ForgetPasswordForm from './forgetPasswordForm';
 
-const EntryPoint = () => {
-  const [screen, setScreen] = useState<number>(1);
-  const [email, setEmail] = useState('');
+const EntryPoint = ({
+  userEmail,
+  screenNumber,
+}: {
+  userEmail?: string;
+  screenNumber?: number;
+}) => {
+  const [screen, setScreen] = useState<number>(screenNumber || 1);
+  const [email, setEmail] = useState(userEmail || '');
   return (
     <>
       {screen === 1 && (
@@ -16,7 +22,6 @@ const EntryPoint = () => {
           setScreen={setScreen}
         />
       )}
-
       {screen === 2 && <ChangePasswordForm email={email} />}
     </>
   );
