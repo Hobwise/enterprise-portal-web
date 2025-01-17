@@ -69,6 +69,8 @@ const AddNewReservation = () => {
       allowSystemAdvert: getReservationSavedToDraft?.allowSystemAdvert || true,
       reservationDuration:
         getReservationSavedToDraft?.reservationDuration || null,
+      startTime: getReservationSavedToDraft?.startTime || '',
+      endTime: getReservationSavedToDraft?.endTime || '',
     });
 
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -223,6 +225,8 @@ const AddNewReservation = () => {
       allowSystemAdvert: getReservationSavedToDraft?.allowSystemAdvert || true,
       reservationDuration:
         getReservationSavedToDraft?.reservationDuration || '',
+      startTime: getReservationSavedToDraft?.startTime || '',
+      endTime: getReservationSavedToDraft?.endTime || '',
     });
     setSelectedImage(selectedImageSavedToDraft || '');
   }, []);
@@ -330,6 +334,29 @@ const AddNewReservation = () => {
               value={`${reservationPayload.minimumSpend}`}
               label="Minimum spend (Optional)"
               placeholder="Minimum spend"
+            />
+          </div>
+          <Spacer y={6} />
+          <div className="flex lg:flex-row flex-col gap-6">
+            <CustomInput
+              type="time"
+              name="startTime"
+              errorMessage={response?.errors?.startTime?.[0]}
+              onChange={handleInputChange}
+              value={`${reservationPayload.startTime}`}
+              label="Start Time"
+              placeholder="Start Time"
+            />
+
+            <CustomInput
+              type="time"
+              name="endTime"
+              min={reservationPayload.startTime}
+              errorMessage={response?.errors?.endTime?.[0]}
+              onChange={handleInputChange}
+              value={`${reservationPayload.endTime}`}
+              label="End Time"
+              placeholder="End Time"
             />
           </div>
 

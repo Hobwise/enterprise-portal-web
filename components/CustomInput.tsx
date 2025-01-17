@@ -21,6 +21,8 @@ interface CustomInputProps {
   hidden?: boolean;
   onChange?: any;
   startContent?: string | JSX.Element;
+  min?: string;
+  max?: string;
 }
 
 export const CustomInput = ({
@@ -39,6 +41,8 @@ export const CustomInput = ({
   classnames = 'bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]',
   errorMessage,
   size = 'lg',
+  min,
+  max
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -108,6 +112,8 @@ export const CustomInput = ({
       startContent={startContent}
       onCopy={handleCopy}
       onPaste={handlePaste}
-    />
+      min={min}
+      max={max}
+     />
   );
 };
