@@ -12,19 +12,32 @@ export type payloadReservationItem = {
   reservationRequirement?: number;
   quantity: number;
   imageReference: string;
+  startTime: string;
+  endTime: string;
 };
 
-const reservationSchema = z.object({
-  reservationName: z.string().trim().min(1, 'Reservation name is required'),
-  reservationDescription: z
-    .string()
-    .trim()
-    .min(1, 'Reservation description is required'),
-  // reservationFee: z.number().min(1, 'Reservation fee is required'),
-  // minimumSpend: z.number().min(1, 'Minimum spend is required'),
-  quantity: z.number().min(1, 'Quantity is required'),
-  // reservationRequirement: z.string().trim().min(1, 'Requirement is required'),
-});
+const reservationSchema = z
+  .object({
+    reservationName: z.string().trim().min(1, 'Reservation name is required'),
+    reservationDescription: z
+      .string()
+      .trim()
+      .min(1, 'Reservation description is required'),
+    // reservationFee: z.number().min(1, 'Reservation fee is required'),
+    // minimumSpend: z.number().min(1, 'Minimum spend is required'),
+    quantity: z.number().min(1, 'Quantity is required'),
+    // reservationRequirement: z.string().trim().min(1, 'Requirement is required'),
+    startTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'), // HH:MM
+    endTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+  })
+  .refine((data) => data.startTime < data.endTime, {
+    message: 'End time must be later than start time',
+    path: ['endTime'], // This will associate the error message with the `endTime` field
+  });
 
 export async function getReservations(
   businessId: string,
@@ -69,6 +82,8 @@ export async function createReservations(
     reservationDescription: payload?.reservationDescription,
 
     quantity: payload.quantity,
+    startTime: payload.startTime,
+    endTime: payload.endTime,
   });
 
   if (!validatedFields.success) {

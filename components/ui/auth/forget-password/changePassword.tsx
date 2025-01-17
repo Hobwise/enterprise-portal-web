@@ -56,22 +56,22 @@ const ChangePasswordForm = ({ email }) => {
   };
   return (
     <>
-      <h2 className='text-[28px] font-bold'>Enter password</h2>
-      <p className='text-sm  text-tomato mb-8'>
+      <h2 className="text-[28px] font-bold">Enter password</h2>
+      <p className="text-sm  text-tomato mb-8">
         Enter the password that was sent to{' '}
-        <span className='font-bold'>{email}</span>
+        <span className="font-bold">{email}</span>
       </p>
 
       <Spacer y={8} />
-      <form onSubmit={submitFormData} autoComplete='off'>
+      <form onSubmit={submitFormData} autoComplete="off">
         <CustomInput
           errorMessage={response?.errors?.oldPassword?.[0]}
           value={passwordFormData?.oldPassword}
           onChange={handleInputChange}
-          name='oldPassword'
-          type='password'
-          label='Enter Password'
-          placeholder='Enter password'
+          name="oldPassword"
+          type="password"
+          label="Enter Password"
+          placeholder="Enter password"
           // isRequired={true}
         />
         <Spacer y={6} />
@@ -79,10 +79,10 @@ const ChangePasswordForm = ({ email }) => {
           errorMessage={response?.errors?.newPassword?.[0]}
           value={passwordFormData?.password}
           onChange={handleInputChange}
-          type='password'
-          name='password'
-          label='Enter New Password'
-          placeholder='Enter password'
+          type="password"
+          name="password"
+          label="Enter New Password"
+          placeholder="Enter password"
           // isRequired={true}
         />
         <Spacer y={6} />
@@ -90,14 +90,14 @@ const ChangePasswordForm = ({ email }) => {
           errorMessage={response?.errors?.confirmPassword?.[0]}
           value={passwordFormData?.confirmPassword}
           onChange={handleInputChange}
-          type='password'
-          name='confirmPassword'
-          label='Confirm New Password'
-          placeholder='Confirm password'
+          type="password"
+          name="confirmPassword"
+          label="Confirm New Password"
+          placeholder="Confirm password"
           // isRequired={true}
         />
         <Spacer y={8} />
-        <CustomButton loading={loading} disabled={loading} type='submit'>
+        <CustomButton loading={loading} disabled={loading} type="submit">
           Save new password
         </CustomButton>
       </form>
