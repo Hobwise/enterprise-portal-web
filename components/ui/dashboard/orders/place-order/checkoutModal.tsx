@@ -457,7 +457,7 @@ const CheckoutModal = ({
                               <p className="text-black font-bold">
                                 Additional cost:{' '}
                               </p>
-                              <div className="w-20">
+                              <div className="w-40">
                                 <CustomInput
                                   type="number"
                                   onChange={(e: any) =>
