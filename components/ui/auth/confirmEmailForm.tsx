@@ -49,10 +49,7 @@ const ConfirmEmailForm = () => {
     if (data?.data?.isSuccessful) {
       setTokenCookie("token", data?.data?.data.token);
       saveJsonItemToLocalStorage("userInformation", data?.data?.data);
-      setJsonCookie(
-        "planCapabilities",
-        data?.data?.data?.subscription?.planCapabilities
-      );
+
       router.push("/auth/business-information");
     } else if (data?.data?.error) {
       notify({

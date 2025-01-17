@@ -13,7 +13,7 @@ export default function Unauthorized() {
 
         <div className="space-y-2">
           <h2 className="text-2xl font-bold text-gray-900">
-            Subscribe to Continue
+            Subscribe To Continue
           </h2>
           <p className="text-gray-600">
             It looks like you've reached the limit of your current plan. Upgrade

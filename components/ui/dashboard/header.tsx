@@ -32,6 +32,7 @@ import { SIDENAV_ITEMS, headerRouteMapping } from "./constants";
 import Notifications from "./notifications/notifications";
 import { useCheckExpiry, NavigationBanner } from "./subscription-notification";
 import { getJsonCookie, setJsonCookie } from "@/lib/cookies";
+import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 
 const Header = () => {
   const page = 1;
@@ -67,14 +68,15 @@ const Header = () => {
       setPageSize((prevSize) => prevSize + 10);
     }
   };
-  const userData = getJsonItemFromLocalStorage("userInformation");
+
+  const { data: subscription } = useSubscription();
 
   const { message, showBanner } = useCheckExpiry(
-    userData?.subscription?.nextPaymentDate,
+    subscription?.nextPaymentDate,
     7
   );
-  const isActive = userData?.subscription?.isActive;
-  const onTrialVersion = userData?.subscription?.onTrialVersion;
+  const isActive = subscription?.isActive;
+  const onTrialVersion = subscription?.onTrialVersion;
 
   return (
     <div

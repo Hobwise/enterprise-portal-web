@@ -51,12 +51,9 @@ const LoginForm = () => {
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage('userInformation', data?.data?.data);
       setLoginDetails(loginFormData);
-      saveJsonItemToLocalStorage('business', data?.data?.data.businesses);
-      setTokenCookie('token', data?.data?.data.token);
-      setJsonCookie(
-        'planCapabilities',
-        data?.data?.data?.subscription?.planCapabilities
-      );
+      saveJsonItemToLocalStorage("business", data?.data?.data.businesses);
+      setTokenCookie("token", data?.data?.data.token);
+
       router.push(
         businesses.length === 1
           ? '/dashboard'
@@ -117,7 +114,7 @@ const LoginForm = () => {
       </div>
       <Spacer y={7} />
       <CustomButton loading={loading} disabled={loading} type="submit">
-        Log into Account
+        Log In
       </CustomButton>
     </form>
   );

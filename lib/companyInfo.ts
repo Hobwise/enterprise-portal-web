@@ -1,7 +1,7 @@
-import Hobwise from '@/public/assets/images/hobwise.png';
+import Hobwise from "@/public/assets/images/hobwise.png";
 
 export const companyInfo = {
-  name: 'Hobwise',
+  name: "Hobwise",
   logo: Hobwise,
-  webUrl: 'https://sandbox.hobwise.com',
+  webUrl: "https://sandbox.hobwise.com",
 };

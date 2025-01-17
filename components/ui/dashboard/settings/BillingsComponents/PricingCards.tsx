@@ -1,6 +1,6 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import { FcLock, FcOk } from 'react-icons/fc';
+"use client";
+import React, { useEffect, useState } from "react";
+import { FcLock, FcOk } from "react-icons/fc";
 import {
   Tabs,
   Tab,
@@ -8,7 +8,7 @@ import {
   CardBody,
   CardHeader,
   Spinner,
-} from '@nextui-org/react';
+} from "@nextui-org/react";
 
 import {
   PlanDetails,
@@ -18,27 +18,27 @@ import {
   PaymentDetails,
   PAYMENT_PLAN,
   TYPE_OF_PLAN,
-} from './Interfaces';
+} from "./Interfaces";
 
-import { MdVerified } from 'react-icons/md';
-import { cn, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
-import { initializeTransactionv2 } from '@/app/api/controllers/dashboard/settings';
+import { MdVerified } from "react-icons/md";
+import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
 // import PaystackPop from 'paystack-inline-ts';
-import PaystackPop from 'paystack-inline-ts';
-import { usePaystackPayment } from 'react-paystack';
+import PaystackPop from "paystack-inline-ts";
+import { usePaystackPayment } from "react-paystack";
 // import {PaystackPop} from '../Paystack'
 
-import LoadingSpinner from '@/app/dashboard/reservation/[reservationId]/loading';
-import FeatureList from './FeatureList';
-import { getUser } from '@/app/api/controllers/auth';
+import LoadingSpinner from "@/app/dashboard/reservation/[reservationId]/loading";
+import FeatureList from "./FeatureList";
+import { getUser } from "@/app/api/controllers/auth";
 
 export const PricingCards: React.FC<PlansFromParent> = ({
   plans,
   disableButtons,
   currentSubscriptionDetails,
 }) => {
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const business = getJsonItemFromLocalStorage('business'); 
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const business = getJsonItemFromLocalStorage("business");
   const popup = new PaystackPop();
   const planType = currentSubscriptionDetails?.subscription?.plan;
 
@@ -47,7 +47,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   const businessID = business[0]?.businessId || null;
   const userId = userInformation?.id;
   const emailAddress = userInformation?.email;
-  const [activeTab, setActiveTab] = useState<string>('Monthly');
+  const [activeTab, setActiveTab] = useState<string>("Monthly");
   const [professionalPlan, setProfessionalPlan] = useState<PlanDetails | null>(
     null
   );
@@ -72,8 +72,8 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   }, [plans]);
 
   const tabs: TabContentProps[] = [
-    { id: 'Monthly', label: 'Monthly' },
-    { id: 'Yearly', label: 'Yearly' },
+    { id: "Monthly", label: "Monthly" },
+    { id: "Yearly", label: "Yearly" },
   ];
   const handleTabChange = (newValue: string) => {
     setActiveTab(newValue);
@@ -97,7 +97,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   // Destructure data from the hook, but only call the hook when there's a payload
 
   const initializeTrnx = (selectedPlan: number, e: any) => {
-    console.log('initializeTrnx', selectedPlan);
+    console.log("initializeTrnx", selectedPlan);
     e.preventDefault();
 
     // Align plans array with selectedPlan (1-based indexing)
@@ -112,9 +112,9 @@ export const PricingCards: React.FC<PlansFromParent> = ({
     // Boundary check for selectedPlan
     if (selectedPlan < 1 || selectedPlan >= plans.length) {
       return notify({
-        title: 'Payment Plan Error',
-        text: 'Invalid payment plan selected.',
-        type: 'error',
+        title: "Payment Plan Error",
+        text: "Invalid payment plan selected.",
+        type: "error",
       });
     }
 
@@ -122,16 +122,16 @@ export const PricingCards: React.FC<PlansFromParent> = ({
     setLoading[selectedPlan]?.(true);
 
     const amount =
-      activeTab === 'Monthly'
+      activeTab === "Monthly"
         ? plans[selectedPlan]?.monthlyFee || 0
         : plans[selectedPlan]?.yearlyFee || 0;
 
     // Error handling for undefined or null plans
     if (!plans[selectedPlan]) {
       const notificationBody = {
-        title: 'Payment Plan Error',
-        text: 'Invalid payment plan selected.',
-        type: 'error',
+        title: "Payment Plan Error",
+        text: "Invalid payment plan selected.",
+        type: "error",
       };
       return notify(notificationBody);
     }
@@ -153,7 +153,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   };
 
   const init = async (payload: any) => {
-    const token = getJsonItemFromLocalStorage('userInformation').token;
+    const token = getJsonItemFromLocalStorage("userInformation").token;
     const initializedTransaction = await initializeTransactionv2(
       businessID,
       payload,
@@ -185,9 +185,9 @@ export const PricingCards: React.FC<PlansFromParent> = ({
 
   const activePlan = () => {
     const notificationBody = {
-      title: 'Active Plan',
-      text: 'You have an active plan',
-      type: 'warning',
+      title: "Active Plan",
+      text: "You have an active plan",
+      type: "warning",
     };
     return notify(notificationBody);
   };
@@ -212,11 +212,11 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3">
         {[starterPlan, professionalPlan, premiumPlan].map((plan, index) => {
           const isActive = planType === index + 1;
-          const planNames = ['Basic plan', 'Professional', 'Premium plan'];
+          const planNames = ["Basic plan", "Professional", "Premium plan"];
           const planDescriptions = [
-            'Recommended for small businesses, looking to streamline their menu & order management process',
-            'Suitable for medium size businesses looking to manage booking, process order & menu while leveraging the campaign feature also',
-            'For large scale businesses operations, enabling businesses with multiple locations manage their operations effectively',
+            "Recommended for small businesses, looking to streamline their menu & order management process",
+            "Suitable for medium size businesses looking to manage booking, process order & menu while leveraging the campaign feature also",
+            "For large scale businesses operations, enabling businesses with multiple locations manage their operations effectively",
           ];
           const planLoading = [
             starterLoading,
@@ -228,10 +228,10 @@ export const PricingCards: React.FC<PlansFromParent> = ({
             <div
               key={index}
               className={cn(
-                'col-span-1 border p-4 transition-all duration-300',
+                "col-span-1 border p-4 transition-all duration-300",
                 isActive
-                  ? 'border-[#5F35D2] bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF]'
-                  : 'border-secondaryGrey hover:border-[#5F35D2]'
+                  ? "border-[#5F35D2] bg-gradient-to-br from-[#F6F3FF] to-[#FFFFFF]"
+                  : "border-secondaryGrey hover:border-[#5F35D2]"
               )}
             >
               <div className="flex flex-row gap-4 items-center">
@@ -250,10 +250,10 @@ export const PricingCards: React.FC<PlansFromParent> = ({
               <div className="flex flex-row gap-4 mt-6">
                 <div
                   className={`transition-opacity duration-500 ${
-                    activeTab === 'Monthly' ? 'opacity-100' : 'opacity-0'
+                    activeTab === "Monthly" ? "opacity-100" : "opacity-0"
                   }`}
                 >
-                  {activeTab === 'Monthly' && (
+                  {activeTab === "Monthly" && (
                     <p className="font-extrabold text-2xl">
                       ₦{plan?.monthlyFee}
                       <span className="text-[#ACB5BB] font-normal">/month</span>
@@ -263,10 +263,10 @@ export const PricingCards: React.FC<PlansFromParent> = ({
 
                 <div
                   className={`transition-opacity duration-500 ${
-                    activeTab === 'Yearly' ? 'opacity-100' : 'opacity-0'
+                    activeTab === "Yearly" ? "opacity-100" : "opacity-0"
                   }`}
                 >
-                  {activeTab === 'Yearly' && (
+                  {activeTab === "Yearly" && (
                     <p className="font-extrabold text-2xl">
                       ₦{plan?.yearlyFee}
                       <span className="text-[#ACB5BB] font-normal">/year</span>
@@ -308,7 +308,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                   }
                   className="mt-6 w-full mx-auto border border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
                 >
-                  {planLoading[index] ? <Spinner size="sm" /> : 'Select Plan'}
+                  {planLoading[index] ? <Spinner size="sm" /> : "Select Plan"}
                 </button>
               )}
             </div>

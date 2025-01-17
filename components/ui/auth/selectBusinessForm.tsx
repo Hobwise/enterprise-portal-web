@@ -27,10 +27,6 @@ const SelectBusinessForm = () => {
     const data = await loginUserSelectedBusiness(loginDetails, businessId);
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage("userInformation", data?.data?.data);
-      setJsonCookie(
-        "planCapabilities",
-        data?.data?.data?.subscription?.planCapabilities
-      );
       setTokenCookie("token", data?.data?.data.token);
       router.push("/dashboard");
     } else if (data?.data?.error) {

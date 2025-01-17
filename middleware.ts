@@ -18,6 +18,11 @@ export function middleware(request: NextRequest) {
       );
     }
   }
+  if (matchedBaseRoute && planCapabilities === "undefined" && token) {
+    return NextResponse.rewrite(
+      new URL("/dashboard/subscription-error", request.url)
+    );
+  }
   if (!token) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
