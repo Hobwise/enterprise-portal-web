@@ -53,10 +53,10 @@ const BusinessVerificationForm = () => {
     if (businessQuery.data && businessQuery.data[0]) {
       const businessData = businessQuery.data[0];
       setRegistrationNumber(businessData.registrationNumber || '');
-      setPobReference(businessData.logoImageReference || '');
+      setPobReference(businessData.registrationCertificateImageReference || '');
       setPobPreviewUrl(
         businessData.logoImage
-          ? `data:image/png;base64,${businessData.logoImage}`
+          ? `data:image/png;base64,${businessData.registrationCertificateImage}`
           : ''
       );
       setPobaReference(businessData.addressProofImageReference || '');
@@ -170,8 +170,8 @@ const BusinessVerificationForm = () => {
     const payload = {
       ...businessQuery.data[0],
       registrationNumber,
-      resistrationCertificateImageReference: pobReference,
-      addressProofImageReference: pobaReference,
+      registrationCertificateImageReference: pobReference ?? '',
+      addressProofImageReference: pobaReference ?? '',
       taxIdentificationNumber: tin,
     };
     updateBusinessMutation.mutate(payload);
