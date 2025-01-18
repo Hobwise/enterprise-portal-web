@@ -2,11 +2,9 @@ import React, { useEffect, useRef } from 'react';
 import { SubscriptionHistory } from './Interfaces';
 import { addCommasToNumber, getJsonItemFromLocalStorage } from '@/lib/utils';
 import moment from 'moment';
-import CompanyLogo from '@/components/logo';
-import hobinkLogo from '../../../../../public/assets/images/hobink-logo.png';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import { log } from 'console';
+import Image from 'next/image';
 
 interface InvoiceDetails {
   data: SubscriptionHistory | null;
@@ -19,27 +17,17 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
   download,
   setDownloadClickedInvoice,
 }) => {
-  // console.log("DOWNLOAD", download)
-
-  useEffect(() => {
-    // console.log('data', data);
-    // alert(data);
-    // console.log('download', download);
-    console.log('setDownloadClickedInvoice', setDownloadClickedInvoice);
-  }, []);
-
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const business = userInformation?.businesses[0];
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const mapPlan = (plan: number) => {
     return (
-      ['Unknown', 'Basic', 'Professional Plan', 'Premium'][plan] ||
-      'Unknown'
+      ['Unknown', 'Basic', 'Professional Plan', 'Premium'][plan] || 'Unknown'
     );
   };
-    const mapAmount = (amount: number) => `₦${addCommasToNumber(amount)}`;
-    
+  const mapAmount = (amount: number) => `₦${addCommasToNumber(amount)}`;
+
   const mapPeriod = (paymentPeriod: number) => {
     switch (paymentPeriod) {
       case 0:
@@ -89,7 +77,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
   };
 
   return (
-    <section ref={invoiceRef} >
+    <section ref={invoiceRef}>
       <div className="mx-auto py-0 md:py-16">
         <article className="shadow-none ">
           <div className="md:rounded-b-md bg-white">
@@ -97,17 +85,22 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
               <div className="space-y-6">
                 <div className="flex justify-between items-top">
                   <div className="space-y-4">
-                    <div>
-                      <CompanyLogo
-                        textColor="text-black font-lexend text-[28px] font-[600]"
-                        containerClass="flex gap-2 items-center "
+                    <div className="flex flex-col gap-2 mb-6">
+                      <Image
+                        src="/assets/images/hobwise.png"
+                        height={150}
+                        width={150}
+                        style={{ objectFit: 'cover' }}
+                        alt="company logo"
                       />
-                      <p className="font-bold text-lg">Invoice</p>
-                      <p>Hobink</p>
+                      <div className="text-black">
+                        <p className="font-bold text-lg">Invoice</p>
+                        <p className="">{business?.businessName}</p>
+                      </div>
                     </div>
                     <div className="text-sm text-grey500">
                       <p className="font-semibold text-black">BILLED TO</p>
-                      <p>{business?.businessName}</p>
+                      <p>{data?.subcribedByName}</p>
                       <p>{business?.businessContactEmail}</p>
                       <p className="font-medium text-sm text-dark">
                         {business?.businessContactNumber}

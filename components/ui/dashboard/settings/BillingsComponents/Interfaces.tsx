@@ -123,6 +123,7 @@ export interface SubscriptionHistory {
   id: string;
   perAmount: number;
   totalAmount: number;
+  subcribedByName: string;
 }
 
 export interface SubscriptionTableProps {
