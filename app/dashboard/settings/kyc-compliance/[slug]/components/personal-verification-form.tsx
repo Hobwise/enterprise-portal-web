@@ -158,8 +158,8 @@ const PersonalVerificationForm = () => {
     e.preventDefault();
     const payload = {
       ...userQuery.data,
-      ...(selfieReference && { imageReference: selfieReference }),
-      identificationNumberImageReference: idReference,
+      imageReference: selfieReference ?? '',
+      identificationNumberImageReference: idReference ?? '',
       identificationNumber: nin,
     };
     updateUserMutation.mutate(payload);
