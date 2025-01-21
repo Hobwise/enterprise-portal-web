@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation } from 'react-query';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "react-query";
 import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
   THREEMB,
-} from '@/lib/utils';
-import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
-import toast from 'react-hot-toast';
-import imageCompression from 'browser-image-compression';
-import { updateUser } from '@/app/api/controllers/auth';
-import { CustomButton } from '@/components/customButton';
-import useUser from '@/hooks/cachedEndpoints/useUser';
-import { SETTINGS_URL } from '@/utilities/routes';
-import { RxCross2 } from 'react-icons/rx';
-import { LuLoader } from 'react-icons/lu';
+} from "@/lib/utils";
+import { deleteFile, uploadFile } from "@/app/api/controllers/dashboard/menu";
+import toast from "react-hot-toast";
+import imageCompression from "browser-image-compression";
+import { updateUser } from "@/app/api/controllers/auth";
+import { CustomButton } from "@/components/customButton";
+import useUser from "@/hooks/cachedEndpoints/useUser";
+import { SETTINGS_URL } from "@/utilities/routes";
+import { RxCross2 } from "react-icons/rx";
+import { LuLoader } from "react-icons/lu";
 import {
   Modal,
   ModalContent,
@@ -25,43 +25,43 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-} from '@nextui-org/modal';
-import Image from 'next/image';
-import FileUploadInput from './file-upload-input';
+} from "@nextui-org/modal";
+import Image from "next/image";
+import FileUploadInput from "./file-upload-input";
 
 const PersonalVerificationForm = () => {
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const userQuery = useUser();
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [selfieReference, setSelfieReference] = useState('');
+  const [selfieReference, setSelfieReference] = useState("");
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreviewUrl, setSelfiePreviewUrl] = useState<string | null>(null);
-  const [idReference, setIdReference] = useState('');
+  const [idReference, setIdReference] = useState("");
   const [idFile, setIdFile] = useState<File | null>(null);
   const [idPreviewUrl, setIdPreviewUrl] = useState<string | null>(null);
 
-  const [nin, setNin] = useState('');
-  const [type, setType] = useState('');
+  const [nin, setNin] = useState("");
+  const [type, setType] = useState("");
   const [isSelfie, setIsSelfie] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (userQuery.data) {
-      setNin(userQuery.data.identificationNumber || '');
-      setSelfieReference(userQuery.data.imageReference || '');
+      setNin(userQuery.data.identificationNumber || "");
+      setSelfieReference(userQuery.data.imageReference || "");
       setSelfiePreviewUrl(
         userQuery.data.image
           ? `data:image/png;base64,${userQuery.data.image}`
-          : ''
+          : ""
       );
-      setIdReference(userQuery.data.identificationNumberImageReference || '');
+      setIdReference(userQuery.data.identificationNumberImageReference || "");
       setIdPreviewUrl(
         userQuery.data.identificationNumberImage
           ? `data:image/png;base64,${userQuery.data.identificationNumberImage}`
-          : ''
+          : ""
       );
     }
   }, [userQuery.data]);
@@ -71,13 +71,13 @@ const PersonalVerificationForm = () => {
       uploadFile(businessInformation[0]?.businessId, formData),
     onSuccess: (data) => {
       if (data?.data?.isSuccessful) {
-        if (type === 'selfie') {
+        if (type === "selfie") {
           setSelfieReference(data?.data.data);
         } else {
           setIdReference(data?.data.data);
         }
       } else {
-        if (type === 'selfie') {
+        if (type === "selfie") {
           setSelfieFile(null);
           setSelfiePreviewUrl(null);
         } else {
@@ -85,18 +85,18 @@ const PersonalVerificationForm = () => {
           setIdPreviewUrl(null);
         }
         notify({
-          title: 'Error!',
+          title: "Error!",
           text: data?.data?.error,
-          type: 'error',
+          type: "error",
         });
       }
     },
   });
 
   const removeFileMutation = useMutation({
-    mutationFn: (idType: 'selfie' | 'id') => {
+    mutationFn: (idType: "selfie" | "id") => {
       const imageReference =
-        idType === 'selfie' ? selfieReference : idReference;
+        idType === "selfie" ? selfieReference : idReference;
       return deleteFile(
         businessInformation[0]?.businessId,
         imageReference as string
@@ -104,10 +104,10 @@ const PersonalVerificationForm = () => {
     },
     onSuccess: (data, idType) => {
       if (data?.data.isSuccessful) {
-        if (idType === 'selfie') {
+        if (idType === "selfie") {
           setSelfieFile(null);
           setSelfiePreviewUrl(null);
-          setSelfieReference('');
+          setSelfieReference("");
         } else {
           setIdFile(null);
           setIdPreviewUrl(null);
@@ -121,12 +121,26 @@ const PersonalVerificationForm = () => {
     setType(event.target.id);
     if (event.target.files) {
       const file = event.target.files[0];
+
+      // Check file format
+      const allowedFormats = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/svg+xml",
+        "image/webp",
+      ];
+      if (!allowedFormats.includes(file.type)) {
+        return toast.error(
+          "Invalid file format. Please upload an image (JPG, PNG, GIF, SVG, or WebP)"
+        );
+      }
       if (file.size > THREEMB) {
-        return toast.error('File too large');
+        return toast.error("File too large");
       }
       const compressedFile = await imageCompression(file, imageCompressOptions);
 
-      if (event.target.id === 'selfie') {
+      if (event.target.id === "selfie") {
         // Generate a preview URL
         const reader = new FileReader();
         reader.onload = () => setSelfiePreviewUrl(reader.result as string);
@@ -140,7 +154,7 @@ const PersonalVerificationForm = () => {
         setIdFile(compressedFile);
       }
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append("file", compressedFile);
       uploadFileMutation.mutate(formData);
     }
   };
@@ -158,8 +172,8 @@ const PersonalVerificationForm = () => {
     e.preventDefault();
     const payload = {
       ...userQuery.data,
-      imageReference: selfieReference ?? '',
-      identificationNumberImageReference: idReference ?? '',
+      imageReference: selfieReference ?? "",
+      identificationNumberImageReference: idReference ?? "",
       identificationNumber: nin,
     };
     updateUserMutation.mutate(payload);
@@ -177,7 +191,7 @@ const PersonalVerificationForm = () => {
           <FileUploadInput
             id="selfie"
             label="your SELFIE"
-            placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
+            placeholder="SVG, PNG, JPG or GIF (max. 3mb)"
             onChange={handleFileChange}
           />
           {selfieReference || selfieFile ? (
@@ -189,17 +203,17 @@ const PersonalVerificationForm = () => {
                   onOpen();
                 }}
               >
-                {selfieFile?.name || 'Click to view uploaded file'}
+                {selfieFile?.name || "Click to view uploaded file"}
               </p>
-              {removeFileMutation.variables === 'selfie' &&
+              {removeFileMutation.variables === "selfie" &&
               removeFileMutation.isLoading ? (
                 <LuLoader className="animate-spin" />
               ) : (
-                <RxCross2 onClick={() => removeFileMutation.mutate('selfie')} />
+                <RxCross2 onClick={() => removeFileMutation.mutate("selfie")} />
               )}
             </div>
           ) : (
-            ''
+            ""
           )}
         </div>
         <div className="space-y-2">
@@ -209,7 +223,7 @@ const PersonalVerificationForm = () => {
           <FileUploadInput
             id="id"
             label="a a VALID ID"
-            placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
+            placeholder="SVG, PNG, JPG or GIF (max. 3mb)"
             onChange={handleFileChange}
           />
           {idReference || idFile ? (
@@ -221,17 +235,17 @@ const PersonalVerificationForm = () => {
                   onOpen();
                 }}
               >
-                {idFile?.name ?? 'Click to view uploaded file'}
+                {idFile?.name ?? "Click to view uploaded file"}
               </p>
-              {removeFileMutation.variables === 'id' &&
+              {removeFileMutation.variables === "id" &&
               removeFileMutation.isLoading ? (
                 <LuLoader className="animate-spin" />
               ) : (
-                <RxCross2 onClick={() => removeFileMutation.mutate('id')} />
+                <RxCross2 onClick={() => removeFileMutation.mutate("id")} />
               )}
             </div>
           ) : (
-            <p className="text-[10px] text-[#AFAFAF]">
+            <p className="text-[12px] text-[#AFAFAF]">
               You can submit your National identification card, NIN slip,
               Drivers license, International passport or Voters card
             </p>
@@ -248,7 +262,7 @@ const PersonalVerificationForm = () => {
               onChange={(e) => setNin(e.target.value)}
             />
           </div>
-          <p className="text-[10px] text-[#AFAFAF]">
+          <p className="text-[12px] text-[#AFAFAF]">
             Ensure the name on your NIN matches your name
           </p>
         </div>
@@ -260,7 +274,7 @@ const PersonalVerificationForm = () => {
             Submit
           </CustomButton>
         </div>
-      </form>{' '}
+      </form>{" "}
       <Modal isOpen={isOpen} size="sm" onClose={onClose}>
         <ModalContent>
           {(onClose) => (

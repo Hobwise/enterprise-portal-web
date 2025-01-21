@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import useGetRoleByBusiness from './useGetRoleBusiness';
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import useGetRoleByBusiness from "./useGetRoleBusiness";
 
 interface Permission {
   canViewMenu?: boolean;
@@ -19,7 +19,7 @@ interface Permission {
 }
 
 const extractPermissions = (permissions: any, roleType: string) => {
-  if (!permissions?.data?.data) return {};
+  if (!permissions?.data?.data?.data?.data) return {};
 
   const rolePermissions = permissions.data.data[roleType] || {};
 
@@ -74,11 +74,11 @@ const extractPermissions = (permissions: any, roleType: string) => {
 };
 
 const usePermission = () => {
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const { data: permission } = useGetRoleByBusiness();
 
-  const userRolePermissions = extractPermissions(permission, 'userRole');
-  const managerRolePermissions = extractPermissions(permission, 'managerRole');
+  const userRolePermissions = extractPermissions(permission, "userRole");
+  const managerRolePermissions = extractPermissions(permission, "managerRole");
 
   const role = userInformation?.role;
 

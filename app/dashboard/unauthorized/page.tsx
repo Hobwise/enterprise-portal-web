@@ -1,9 +1,12 @@
+"use client";
 import { CustomButton } from "@/components/customButton";
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import Link from "next/link";
-import { redirect } from "next/navigation";
+
 import { CiLock } from "react-icons/ci";
 
 export default function Unauthorized() {
+  const userInfo = getJsonItemFromLocalStorage("userInformation");
   return (
     <div className="flex items-center justify-center min-h-[400px]   p-4">
       <div className="flex flex-col items-center text-center space-y-6 pt-6 max-w-lg w-full">
@@ -28,12 +31,13 @@ export default function Unauthorized() {
             exclusive content.
           </div>
         </div>
-
-        <div className="space-y-3 w-full">
-          <Link href={"/dashboard/settings/subscriptions"}>
-            <CustomButton>Upgrade Now</CustomButton>
-          </Link>
-        </div>
+        {userInfo.isOwner && (
+          <div className="space-y-3 w-full">
+            <Link href={"/dashboard/settings/subscriptions"}>
+              <CustomButton>Upgrade Now</CustomButton>
+            </Link>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ export function middleware(request: NextRequest) {
       new URL("/dashboard/subscription-error", request.url)
     );
   }
+
   if (!token) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }

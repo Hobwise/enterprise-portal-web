@@ -25,3 +25,12 @@ export const routePermissions: Record<string, keyof typeof permissions> = {
   "/dashboard/quick-response": "canAccessQuickResponses",
   "/dashboard/multiple-locations": "canAccessMultipleLocations",
 };
+
+export const EXCLUDE_SETTINGS_PATHS = [
+  "/dashboard/settings/business-information",
+  "/dashboard/settings/teams",
+  "/dashboard/settings/kyc-compliance",
+  "/dashboard/settings/staff-management",
+  "/dashboard/settings/subscriptions",
+  "/dashboard/settings/business-settings",
+];

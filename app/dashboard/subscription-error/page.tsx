@@ -1,9 +1,11 @@
+"use client";
 import { CustomButton } from "@/components/customButton";
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 import { CiLock } from "react-icons/ci";
+import { IoReload } from "react-icons/io5";
 
 export default function Unauthorized() {
+  const { refetch, isLoading } = useSubscription();
   return (
     <div className="flex items-center justify-center min-h-[400px]   p-4">
       <div className="flex flex-col items-center text-center space-y-6 pt-6 max-w-lg w-full">
@@ -20,6 +22,15 @@ export default function Unauthorized() {
             Please try again later or contact support.
           </p>
         </div>
+        <CustomButton
+          onClick={() => refetch()}
+          className="text-white border px-6 py-4 bg-primaryColor rounded-lg "
+        >
+          <div className="flex items-center gap-2">
+            <p>Retry</p>
+            <IoReload className={`${isLoading && "animate-spin"}`} />
+          </div>
+        </CustomButton>
       </div>
     </div>
   );

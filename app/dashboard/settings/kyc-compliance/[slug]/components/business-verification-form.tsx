@@ -1,24 +1,24 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation } from 'react-query';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMutation } from "react-query";
 import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
   THREEMB,
-} from '@/lib/utils';
-import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
-import toast from 'react-hot-toast';
-import imageCompression from 'browser-image-compression';
-import { CustomButton } from '@/components/customButton';
-import { SETTINGS_URL } from '@/utilities/routes';
-import useGetBusinessByCooperate from '@/hooks/cachedEndpoints/useGetBusinessByCooperate';
-import api from '@/app/api/apiService';
-import { AUTH } from '@/app/api/api-url';
-import { RxCross2 } from 'react-icons/rx';
-import { LuLoader } from 'react-icons/lu';
+} from "@/lib/utils";
+import { deleteFile, uploadFile } from "@/app/api/controllers/dashboard/menu";
+import toast from "react-hot-toast";
+import imageCompression from "browser-image-compression";
+import { CustomButton } from "@/components/customButton";
+import { SETTINGS_URL } from "@/utilities/routes";
+import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
+import api from "@/app/api/apiService";
+import { AUTH } from "@/app/api/api-url";
+import { RxCross2 } from "react-icons/rx";
+import { LuLoader } from "react-icons/lu";
 import {
   Modal,
   ModalContent,
@@ -26,46 +26,46 @@ import {
   ModalBody,
   ModalFooter,
   useDisclosure,
-} from '@nextui-org/modal';
-import Image from 'next/image';
-import FileUploadInput from './file-upload-input';
+} from "@nextui-org/modal";
+import Image from "next/image";
+import FileUploadInput from "./file-upload-input";
 
 const BusinessVerificationForm = () => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const businessQuery = useGetBusinessByCooperate();
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const [registrationNumber, setRegistrationNumber] = useState('');
-  const [pobReference, setPobReference] = useState('');
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [pobReference, setPobReference] = useState("");
   const [pobFile, setPobFile] = useState<File | null>(null);
   const [pobPreviewUrl, setPobPreviewUrl] = useState<string | null>(null);
-  const [pobaReference, setPobaReference] = useState('');
+  const [pobaReference, setPobaReference] = useState("");
   const [pobaFile, setPobaFile] = useState<File | null>(null);
   const [pobaPreviewUrl, setPobaPreviewUrl] = useState<string | null>(null);
   const [isPob, setIsPob] = useState<boolean | null>(null);
 
-  const [tin, setTin] = useState('');
-  const [type, setType] = useState('');
+  const [tin, setTin] = useState("");
+  const [type, setType] = useState("");
 
   useEffect(() => {
     if (businessQuery.data && businessQuery.data[0]) {
       const businessData = businessQuery.data[0];
-      setRegistrationNumber(businessData.registrationNumber || '');
-      setPobReference(businessData.registrationCertificateImageReference || '');
+      setRegistrationNumber(businessData.registrationNumber || "");
+      setPobReference(businessData.registrationCertificateImageReference || "");
       setPobPreviewUrl(
         businessData.logoImage
           ? `data:image/png;base64,${businessData.registrationCertificateImage}`
-          : ''
+          : ""
       );
-      setPobaReference(businessData.addressProofImageReference || '');
+      setPobaReference(businessData.addressProofImageReference || "");
       setPobaPreviewUrl(
         businessData.addressProofImage
           ? `data:image/png;base64,${businessData.addressProofImage}`
-          : ''
+          : ""
       );
-      setTin(businessData.taxIdentificationNumber || '');
+      setTin(businessData.taxIdentificationNumber || "");
     }
   }, [businessQuery.data]);
 
@@ -74,7 +74,7 @@ const BusinessVerificationForm = () => {
       uploadFile(businessInformation[0]?.businessId, formData),
     onSuccess: (data) => {
       if (data?.data?.isSuccessful) {
-        if (type === 'pob') {
+        if (type === "pob") {
           setPobReference(data?.data.data);
         } else {
           setPobaReference(data?.data.data);
@@ -85,17 +85,17 @@ const BusinessVerificationForm = () => {
         setPobaFile(null);
         setPobaPreviewUrl(null);
         notify({
-          title: 'Error!',
+          title: "Error!",
           text: data?.data?.error,
-          type: 'error',
+          type: "error",
         });
       }
     },
   });
 
   const removeFileMutation = useMutation({
-    mutationFn: (idType: 'pob' | 'poba') => {
-      const imageReference = idType === 'pob' ? pobReference : pobaReference;
+    mutationFn: (idType: "pob" | "poba") => {
+      const imageReference = idType === "pob" ? pobReference : pobaReference;
       return deleteFile(
         businessInformation[0]?.businessId,
         imageReference as string
@@ -103,14 +103,14 @@ const BusinessVerificationForm = () => {
     },
     onSuccess: (data, idType) => {
       if (data?.data.isSuccessful) {
-        if (idType === 'pob') {
+        if (idType === "pob") {
           setPobFile(null);
           setPobPreviewUrl(null);
-          setPobReference('');
+          setPobReference("");
         } else {
           setPobaFile(null);
           setPobaPreviewUrl(null);
-          setPobaReference('');
+          setPobaReference("");
         }
       }
     },
@@ -120,12 +120,28 @@ const BusinessVerificationForm = () => {
     setType(event.target.id);
     if (event.target.files) {
       const file = event.target.files[0];
-      if (file.size > THREEMB) {
-        return toast.error('File too large');
+
+      // Check file format
+      const allowedFormats = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/svg+xml",
+        "image/webp",
+      ];
+      if (!allowedFormats.includes(file.type)) {
+        return toast.error(
+          "Invalid file format. Please upload an image (JPG, PNG, GIF, SVG, or WebP)"
+        );
       }
+
+      if (file.size > THREEMB) {
+        return toast.error("File too large");
+      }
+
       const compressedFile = await imageCompression(file, imageCompressOptions);
 
-      if (event.target.id === 'pob') {
+      if (event.target.id === "pob") {
         // Generate a preview URL
         const reader = new FileReader();
         reader.onload = () => setPobPreviewUrl(reader.result as string);
@@ -138,8 +154,9 @@ const BusinessVerificationForm = () => {
         reader.readAsDataURL(compressedFile);
         setPobaFile(compressedFile);
       }
+
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append("file", compressedFile);
       uploadFileMutation.mutate(formData);
     }
   };
@@ -158,9 +175,9 @@ const BusinessVerificationForm = () => {
     },
     onError: () => {
       notify({
-        title: 'Error!',
-        text: 'Failed to update record',
-        type: 'error',
+        title: "Error!",
+        text: "Failed to update record",
+        type: "error",
       });
     },
   });
@@ -170,8 +187,8 @@ const BusinessVerificationForm = () => {
     const payload = {
       ...businessQuery.data[0],
       registrationNumber,
-      registrationCertificateImageReference: pobReference ?? '',
-      addressProofImageReference: pobaReference ?? '',
+      registrationCertificateImageReference: pobReference ?? "",
+      addressProofImageReference: pobaReference ?? "",
       taxIdentificationNumber: tin,
     };
     updateBusinessMutation.mutate(payload);
@@ -199,7 +216,7 @@ const BusinessVerificationForm = () => {
           <FileUploadInput
             id="pob"
             label="your CAC CERTIFICATE"
-            placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
+            placeholder="SVG, PNG, JPG or GIF (max. 3mb)"
             onChange={handleFileChange}
           />
           {pobReference ? (
@@ -211,17 +228,17 @@ const BusinessVerificationForm = () => {
                   onOpen();
                 }}
               >
-                {pobFile?.name || 'Click to view uploaded file'}
+                {pobFile?.name || "Click to view uploaded file"}
               </p>
-              {removeFileMutation.variables === 'pob' &&
+              {removeFileMutation.variables === "pob" &&
               removeFileMutation.isLoading ? (
                 <LuLoader className="animate-spin" />
               ) : (
-                <RxCross2 onClick={() => removeFileMutation.mutate('pob')} />
+                <RxCross2 onClick={() => removeFileMutation.mutate("pob")} />
               )}
             </div>
           ) : (
-            <p className="text-[10px] text-[#AFAFAF]">
+            <p className="text-[12px] text-[#AFAFAF]">
               Ensure that RC/BN number matches with your registration document
               provided
             </p>
@@ -234,7 +251,7 @@ const BusinessVerificationForm = () => {
           <FileUploadInput
             id="poba"
             label="your BUSINESS UTILITY BILL"
-            placeholder="SVG, PNG, JPG or GIF (max. 800x400px)"
+            placeholder="SVG, PNG, JPG or GIF (max. 3mb)"
             onChange={handleFileChange}
           />
           {pobaReference ? (
@@ -246,21 +263,21 @@ const BusinessVerificationForm = () => {
                   onOpen();
                 }}
               >
-                {pobaFile?.name || 'Click to view uploaded file'}
+                {pobaFile?.name || "Click to view uploaded file"}
               </p>
-              {removeFileMutation.variables === 'poba' &&
+              {removeFileMutation.variables === "poba" &&
               removeFileMutation.isLoading ? (
                 <LuLoader className="animate-spin" />
               ) : (
                 <RxCross2
                   onClick={() => {
-                    removeFileMutation.mutate('poba');
+                    removeFileMutation.mutate("poba");
                   }}
                 />
               )}
             </div>
           ) : (
-            <p className="text-[10px] text-[#AFAFAF]">
+            <p className="text-[12px] text-[#AFAFAF]">
               The address on the utlity bill will be used to verify your
               business location
             </p>
@@ -277,7 +294,7 @@ const BusinessVerificationForm = () => {
               onChange={(e) => setTin(e.target.value)}
             />
           </div>
-          <p className="text-[10px] text-[#AFAFAF]">
+          <p className="text-[12px] text-[#AFAFAF]">
             Ensure name on your Tax verification number (TIN) matches your
             business name provided.
           </p>

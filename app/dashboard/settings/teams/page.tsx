@@ -1,4 +1,4 @@
-import Teams from '@/components/ui/dashboard/settings/teams/teams';
+import Teams from "@/components/ui/dashboard/settings/teams/teams";
 
 const TeamsPage = () => {
   return <Teams />;

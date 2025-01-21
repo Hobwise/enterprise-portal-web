@@ -23,6 +23,9 @@ export const NavigationBanner = ({
   desc: string | React.ReactNode;
 }) => {
   const router = useRouter();
+
+  const userInfo = getJsonItemFromLocalStorage("userInformation");
+
   return (
     <div className="bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3 justify-between mx-auto">
       <div className="flex items-center space-x-3">
@@ -34,13 +37,15 @@ export const NavigationBanner = ({
           <div className="text-amber-600">{desc}</div>
         </div>
       </div>
-      <Button
-        onClick={() => router.push("/dashboard/settings/subscriptions")}
-        className="px-4 py-1.5 rounded-xl border border-amber-500 text-sm font-medium bg-amber-100 hover:bg-amber-200 text-amber-700  relative group"
-      >
-        <span className="absolute -inset-1 bg-amber-200 rounded-md opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
-        Upgrade
-      </Button>
+      {userInfo.isOwner && (
+        <Button
+          onClick={() => router.push("/dashboard/settings/subscriptions")}
+          className="px-4 py-1.5 rounded-xl border border-amber-500 text-sm font-medium bg-amber-100 hover:bg-amber-200 text-amber-700  relative group"
+        >
+          <span className="absolute -inset-1 bg-amber-200 rounded-md opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
+          Upgrade
+        </Button>
+      )}
     </div>
   );
 };
