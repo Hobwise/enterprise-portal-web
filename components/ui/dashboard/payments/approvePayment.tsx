@@ -81,6 +81,7 @@ const ApprovePayment = ({
       getOrderDetails();
     }
   }, [singlePayment?.orderID]);
+
   return (
     <>
       <Modal
@@ -111,14 +112,31 @@ const ApprovePayment = ({
                         {singlePayment.qrName}
                       </Chip>
                     </div>
-                    <div>
-                      <p className="font-[600] text-sm text-black">
-                        Total value
-                      </p>
-
-                      <h2 className="text-[18px] text-black leading-8 font-semibold">
-                        {formatPrice(singlePayment.totalAmount)}
-                      </h2>
+                    <div className="md:w-[15rem] w-full">
+                      <div className="flex item-center justify-between">
+                        <p className="font-[600]  text-sm text-black">
+                          Total value
+                        </p>
+                        <h2 className="text-[18px] text-black  font-semibold">
+                          {formatPrice(order.totalAmount)}
+                        </h2>
+                      </div>
+                      <div className="flex item-center justify-between">
+                        <p className="text-xs text-gray-500">VAT</p>
+                        <h2 className="text-sm text-gray-500 font-semibold">
+                          {formatPrice(order.vatAmount)}
+                        </h2>
+                      </div>
+                      {order.additionalCost && (
+                        <div className="flex item-center justify-between">
+                          <p className=" text-xs text-gray-500">
+                            {order.additionalCostName}
+                          </p>
+                          <h2 className="text-sm text-gray-500 font-semibold">
+                            {formatPrice(order.additionalCost)}
+                          </h2>
+                        </div>
+                      )}
                     </div>
                   </div>
 

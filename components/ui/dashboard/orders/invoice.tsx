@@ -131,9 +131,25 @@ const InvoiceModal = ({
                     })}
                   </div>
                   <Divider />
-                  <div className="flex justify-between gap-3 text-sm text-black font-bold">
-                    <p>Total</p>
-                    <p>{formatPrice(order.totalAmount)}</p>
+                  <div className="text-sm text-black font-bold">
+                    {order.additionalCost && (
+                      <div className="flex justify-between text-gray-500 font-medium gap-3">
+                        <p>{order.additionalCostName}</p>
+                        <p>{formatPrice(order.vatAmount)}</p>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-gray-500 font-medium gap-3">
+                      <p>VAT</p>
+                      <p>{formatPrice(order.vatAmount)}</p>
+                    </div>
+                    <div className="flex justify-between text-gray-500 font-medium gap-3">
+                      <p>Vat</p>
+                      <p>{formatPrice(order.vatAmount)}</p>
+                    </div>
+                    <div className="flex justify-between gap-3 ">
+                      <p>Total</p>
+                      <p>{formatPrice(order.totalAmount)}</p>
+                    </div>
                   </div>
                   <Divider />
                 </>
