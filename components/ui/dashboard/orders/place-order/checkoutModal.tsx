@@ -465,6 +465,9 @@ const CheckoutModal = ({
                                 <CustomInput
                                   type="number"
                                   size="sm"
+                                  startContent={
+                                    <span className="text-gray-500">₦</span>
+                                  }
                                   onChange={(e: any) =>
                                     setAdditionalCost(+e.target.value)
                                   }
