@@ -1,38 +1,38 @@
-'use client';
-import { getOrder } from '@/app/api/controllers/dashboard/orders';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import Error from '@/components/error';
-import useMenu from '@/hooks/cachedEndpoints/useMenu';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import usePagination from '@/hooks/usePagination';
+"use client";
+import { getOrder } from "@/app/api/controllers/dashboard/orders";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
+import useMenu from "@/hooks/cachedEndpoints/useMenu";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import usePagination from "@/hooks/usePagination";
 import {
   clearItemLocalStorage,
   formatPrice,
   getJsonItemFromLocalStorage,
-} from '@/lib/utils';
+} from "@/lib/utils";
 import {
   Button,
   Chip,
   Divider,
   Spacer,
   useDisclosure,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import React, { useEffect, useMemo, useState } from 'react';
-import { FaMinus, FaPlus } from 'react-icons/fa6';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import { IoSearchOutline } from 'react-icons/io5';
-import noImage from '../../../../../public/assets/images/no-image.svg';
-import noMenu from '../../../../../public/assets/images/no-menu.png';
-import CheckoutModal from './checkoutModal';
+} from "@nextui-org/react";
+import Image from "next/image";
+import React, { useEffect, useMemo, useState } from "react";
+import { FaMinus, FaPlus } from "react-icons/fa6";
+import { HiArrowLongLeft } from "react-icons/hi2";
+import { IoSearchOutline } from "react-icons/io5";
+import noImage from "../../../../../public/assets/images/no-image.svg";
+import noMenu from "../../../../../public/assets/images/no-menu.png";
+import CheckoutModal from "./checkoutModal";
 import {
   CheckIcon,
   MenuSkeletonLoading,
   SelectedSkeletonLoading,
-} from './data';
-import Filters from './filter';
-import ViewModal from './view';
+} from "./data";
+import Filters from "./filter";
+import ViewModal from "./view";
 
 type Item = {
   id: string;
@@ -63,9 +63,9 @@ const MenuList = () => {
   const { page, setPage, rowsPerPage, menuIdTable, setMenuIdTable } =
     useGlobalContext();
 
-  const [order] = useState<any>(getJsonItemFromLocalStorage('order'));
+  const [order] = useState<any>(getJsonItemFromLocalStorage("order"));
   const { data, isLoading, isError, refetch } = useMenu();
-  const [filterValue, setFilterValue] = React.useState('');
+  const [filterValue, setFilterValue] = React.useState("");
 
   const filteredItems = useMemo(() => {
     return data?.map((item) => ({
@@ -86,7 +86,7 @@ const MenuList = () => {
 
   const [loading, setLoading] = useState<Boolean>(false);
 
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
 
@@ -117,7 +117,7 @@ const MenuList = () => {
       //     count: quantity,
       //   };
       // });
-       const updatedArray = response?.data?.data.orderDetails.map((item) => {
+      const updatedArray = response?.data?.data.orderDetails.map((item) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
         return {
           ...rest,
@@ -130,7 +130,7 @@ const MenuList = () => {
       setOrderDetails(response?.data?.data);
       setSelectedItems(updatedArray);
 
-      clearItemLocalStorage('order');
+      clearItemLocalStorage("order");
     } else if (response?.data?.error) {
     }
   };
@@ -261,7 +261,7 @@ const MenuList = () => {
         <div className="flex items-center justify-center gap-3">
           <div>
             <CustomInput
-              classnames={'w-[242px]'}
+              classnames={"w-[242px]"}
               label=""
               size="md"
               value={filterValue}
@@ -271,7 +271,7 @@ const MenuList = () => {
                   setFilterValue(value);
                   setPage(1);
                 } else {
-                  setFilterValue('');
+                  setFilterValue("");
                 }
               }}
               isRequired={false}
@@ -286,7 +286,7 @@ const MenuList = () => {
             backgroundColor="bg-primaryColor"
           >
             <div className="flex gap-2 items-center justify-center">
-              <p>{'Proceed'} </p>
+              <p>{"Proceed"} </p>
               <HiArrowLongLeft className="text-[22px] rotate-180" />
             </div>
           </CustomButton>
@@ -312,7 +312,7 @@ const MenuList = () => {
                     title="select menu"
                     onClick={() => toggleVarietyModal(menu)}
                     key={menu.id}
-                    className={'relative cursor-pointer'}
+                    className={"relative cursor-pointer"}
                   >
                     {selectedItems.find(
                       (selected) => selected.id === menu.id
@@ -322,7 +322,7 @@ const MenuList = () => {
                         startContent={<CheckIcon size={18} />}
                         variant="flat"
                         classNames={{
-                          base: 'bg-primaryColor text-white text-[12px]',
+                          base: "bg-primaryColor text-white text-[12px]",
                         }}
                       >
                         Selected
@@ -336,7 +336,7 @@ const MenuList = () => {
                         startContent={<CheckIcon size={18} />}
                         variant="flat"
                         classNames={{
-                          base: 'bg-primaryColor text-white text-[12px]',
+                          base: "bg-primaryColor text-white text-[12px]",
                         }}
                       >
                         Selected
@@ -353,7 +353,7 @@ const MenuList = () => {
                       }
                       alt={index + menu?.id}
                       style={{
-                        objectFit: 'cover',
+                        objectFit: "cover",
                       }}
                       className="w-full md:h-[100.54px] h-[150px] rounded-lg border border-primaryGrey mb-2 bg-cover"
                     />
@@ -418,6 +418,7 @@ const MenuList = () => {
                               onClick={() => handleDecrement(item.id)}
                               isIconOnly
                               radius="sm"
+                              size="sm"
                               variant="faded"
                               className="border border-grey400"
                               aria-label="minus"
@@ -431,6 +432,7 @@ const MenuList = () => {
                               onClick={() => handleIncrement(item.id)}
                               isIconOnly
                               radius="sm"
+                              size="sm"
                               variant="faded"
                               className="border border-grey400"
                               aria-label="plus"

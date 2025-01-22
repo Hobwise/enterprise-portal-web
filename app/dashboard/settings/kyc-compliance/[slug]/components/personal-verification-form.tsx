@@ -245,7 +245,7 @@ const PersonalVerificationForm = () => {
               )}
             </div>
           ) : (
-            <p className="text-[12px] text-[#AFAFAF]">
+            <p className="text-[12px] text-gray-600">
               You can submit your National identification card, NIN slip,
               Drivers license, International passport or Voters card
             </p>
@@ -262,7 +262,7 @@ const PersonalVerificationForm = () => {
               onChange={(e) => setNin(e.target.value)}
             />
           </div>
-          <p className="text-[12px] text-[#AFAFAF]">
+          <p className="text-[12px] text-gray-600">
             Ensure the name on your NIN matches your name
           </p>
         </div>

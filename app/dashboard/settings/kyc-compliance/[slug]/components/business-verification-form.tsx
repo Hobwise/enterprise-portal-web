@@ -238,7 +238,7 @@ const BusinessVerificationForm = () => {
               )}
             </div>
           ) : (
-            <p className="text-[12px] text-[#AFAFAF]">
+            <p className="text-[12px] text-gray-600">
               Ensure that RC/BN number matches with your registration document
               provided
             </p>
@@ -277,7 +277,7 @@ const BusinessVerificationForm = () => {
               )}
             </div>
           ) : (
-            <p className="text-[12px] text-[#AFAFAF]">
+            <p className="text-[12px] text-gray-600">
               The address on the utlity bill will be used to verify your
               business location
             </p>
@@ -294,7 +294,7 @@ const BusinessVerificationForm = () => {
               onChange={(e) => setTin(e.target.value)}
             />
           </div>
-          <p className="text-[12px] text-[#AFAFAF]">
+          <p className="text-[12px] text-gray-600">
             Ensure name on your Tax verification number (TIN) matches your
             business name provided.
           </p>
