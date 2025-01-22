@@ -1,20 +1,20 @@
-'use client';
+"use client";
 import {
   completeOrder,
   createOrder,
   editOrder,
-} from '@/app/api/controllers/dashboard/orders';
-import { getQRByBusiness } from '@/app/api/controllers/dashboard/quickResponse';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { CustomTextArea } from '@/components/customTextArea';
-import SelectInput from '@/components/selectInput';
+} from "@/app/api/controllers/dashboard/orders";
+import { getQRByBusiness } from "@/app/api/controllers/dashboard/quickResponse";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { CustomTextArea } from "@/components/customTextArea";
+import SelectInput from "@/components/selectInput";
 import {
   cn,
   formatPrice,
   getJsonItemFromLocalStorage,
   notify,
-} from '@/lib/utils';
+} from "@/lib/utils";
 import {
   Button,
   Checkbox,
@@ -24,15 +24,15 @@ import {
   ModalContent,
   ModalHeader,
   Spacer,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import { FaMinus, FaPlus } from 'react-icons/fa6';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import { IoIosArrowRoundBack } from 'react-icons/io';
-import { MdKeyboardArrowRight } from 'react-icons/md';
-import noImage from '../../../../../public/assets/images/no-image.svg';
+} from "@nextui-org/react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import { FaMinus, FaPlus } from "react-icons/fa6";
+import { HiArrowLongLeft } from "react-icons/hi2";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { MdKeyboardArrowRight } from "react-icons/md";
+import noImage from "../../../../../public/assets/images/no-image.svg";
 
 interface Order {
   placedByName: string;
@@ -63,37 +63,38 @@ const CheckoutModal = ({
   cooperateID,
   handlePackingCost,
 }: any) => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const router = useRouter();
   const [response, setResponse] = useState(null);
-  const [orderId, setOrderId] = useState<string>('');
+  const [orderId, setOrderId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [reference, setReference] = useState('');
+  const [reference, setReference] = useState("");
   const [screen, setScreen] = useState(1);
 
   const [qr, setQr] = useState([]);
   const [order, setOrder] = useState<Order>({
-    placedByName: orderDetails?.placedByName || '',
-    placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
-    quickResponseID: orderDetails?.quickResponseID || '',
-    comment: orderDetails?.comment || '',
+    placedByName: orderDetails?.placedByName || "",
+    placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
+    quickResponseID: orderDetails?.quickResponseID || "",
+    comment: orderDetails?.comment || "",
   });
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [additionalCost, setAdditionalCost] = useState(0);
+  const [additionalCostName, setAdditionalCostName] = useState("");
 
-  
-  useEffect(() => { 
-    if(orderDetails){
+  useEffect(() => {
+    if (orderDetails) {
       setAdditionalCost(orderDetails.additionalCost);
+      setAdditionalCostName(orderDetails.additionalCostName);
     }
   }, [orderDetails]);
 
   const handleClick = (methodId: number) => {
     if (methodId === 3) {
-      router.push('/dashboard/orders');
+      router.push("/dashboard/orders");
     } else {
       setSelectedPaymentMethod(methodId);
       setScreen(3);
@@ -101,22 +102,23 @@ const CheckoutModal = ({
   };
 
   const paymentMethods = [
-    { text: 'Pay with cash', subText: ' Accept payment using cash', id: 0 },
-    { text: 'Pay with Pos', subText: ' Accept payment using Pos', id: 1 },
+    { text: "Pay with cash", subText: " Accept payment using cash", id: 0 },
+    { text: "Pay with Pos", subText: " Accept payment using Pos", id: 1 },
     {
-      text: 'Pay with bank transfer',
-      subText: 'Accept payment via bank transfer',
+      text: "Pay with bank transfer",
+      subText: "Accept payment via bank transfer",
       id: 2,
     },
-    { text: 'Pay Later', subText: 'Keep this order open', id: 3 },
+    { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
 
-  const finalTotalPrice = totalPrice + totalPrice * (7.5 / 100) + additionalCost;
+  const finalTotalPrice =
+    totalPrice + totalPrice * (7.5 / 100) + (additionalCost || 0);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = event.target;
-    if (name === 'placedByPhoneNumber') {
+    if (name === "placedByPhoneNumber") {
       if (/^\d{0,11}$/.test(value)) {
         setOrder((prevOrder) => ({
           ...prevOrder,
@@ -147,6 +149,7 @@ const CheckoutModal = ({
       quickResponseID: order.quickResponseID,
       comment: order.comment,
       additionalCost,
+      additionalCostName,
       totalAmount: finalTotalPrice,
       orderDetails: transformedArray,
     };
@@ -157,17 +160,17 @@ const CheckoutModal = ({
     if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
       notify({
-        title: 'Success!',
-        text: 'Order placed',
-        type: 'success',
+        title: "Success!",
+        text: "Order placed",
+        type: "success",
       });
 
       setScreen(2);
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -188,6 +191,7 @@ const CheckoutModal = ({
       comment: order.comment,
       totalAmount: finalTotalPrice,
       additionalCost,
+      additionalCostName,
       orderDetails: transformedArray,
     };
     const data = await editOrder(id, payload);
@@ -196,16 +200,16 @@ const CheckoutModal = ({
     if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
       notify({
-        title: 'Success!',
-        text: 'Order placed',
-        type: 'success',
+        title: "Success!",
+        text: "Order placed",
+        type: "success",
       });
       setScreen(2);
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -225,17 +229,17 @@ const CheckoutModal = ({
 
     if (data?.data?.isSuccessful) {
       notify({
-        title: 'Payment made!',
-        text: 'Payment has been made, awaiting confirmation',
-        type: 'success',
+        title: "Payment made!",
+        text: "Payment has been made, awaiting confirmation",
+        type: "success",
       });
 
-      router.push('/dashboard/orders');
+      router.push("/dashboard/orders");
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -260,10 +264,10 @@ const CheckoutModal = ({
 
   useEffect(() => {
     setOrder({
-      placedByName: orderDetails?.placedByName || '',
-      placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
-      quickResponseID: orderDetails?.quickResponseID || '',
-      comment: orderDetails?.comment || '',
+      placedByName: orderDetails?.placedByName || "",
+      placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
+      quickResponseID: orderDetails?.quickResponseID || "",
+      comment: orderDetails?.comment || "",
     });
   }, [orderDetails]);
 
@@ -275,24 +279,24 @@ const CheckoutModal = ({
     <div className="">
       <Modal
         classNames={{
-          base: 'md:overflow-none overflow-scroll h-full md:h-auto',
-          body: 'px-1 md:px-6',
-          header: 'px-3 md:px-6',
+          base: "md:overflow-none overflow-scroll h-full md:h-auto",
+          body: "px-1 md:px-6",
+          header: "px-3 md:px-6",
         }}
         isDismissable={false}
-        size={screen === 1 ? '4xl' : 'md'}
+        size={screen === 1 ? "4xl" : "md"}
         isOpen={isOpen}
         onOpenChange={() => {
           setScreen(1);
           onOpenChange();
-          setReference('');
+          setReference("");
           setIsLoading(false);
           setSelectedPaymentMethod(0);
           setOrder({
-            placedByName: orderDetails?.placedByName || '',
-            placedByPhoneNumber: orderDetails?.placedByPhoneNumber || '',
-            quickResponseID: orderDetails?.quickResponseID || '',
-            comment: orderDetails?.comment || '',
+            placedByName: orderDetails?.placedByName || "",
+            placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
+            quickResponseID: orderDetails?.quickResponseID || "",
+            comment: orderDetails?.comment || "",
           });
         }}
       >
@@ -422,8 +426,8 @@ const CheckoutModal = ({
                                     </h3>
                                     <span
                                       className={cn(
-                                        'text-xs text-gray-200',
-                                        item.isPacked && 'font-bold text-black'
+                                        "text-xs text-gray-200",
+                                        item.isPacked && "font-bold text-black"
                                       )}
                                     >
                                       {formatPrice(item.packingCost)}
@@ -447,25 +451,43 @@ const CheckoutModal = ({
                             </div>
                             <div className="flex justify-between">
                               <p className="text-black font-bold">
-                                Vat (7.5%):{' '}
+                                Vat (7.5%):{" "}
                               </p>
                               <p className="text-black">
                                 {formatPrice(totalPrice * (7.5 / 100))}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-between gap-2">
                               <p className="text-black font-bold">
-                                Additional cost:{' '}
+                                Additional cost:{" "}
                               </p>
                               <div className="w-40">
                                 <CustomInput
                                   type="number"
+                                  size="sm"
                                   onChange={(e: any) =>
                                     setAdditionalCost(+e.target.value)
                                   }
                                   value={String(additionalCost)}
                                   name="additionalCost"
                                   placeholder="Amount"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between  gap-2">
+                              <p className="text-black font-bold">
+                                Additional cost Name:{" "}
+                              </p>
+                              <div className="w-40">
+                                <CustomInput
+                                  type="text"
+                                  size="sm"
+                                  onChange={(e: any) =>
+                                    setAdditionalCostName(e.target.value)
+                                  }
+                                  value={additionalCostName}
+                                  name="additionalCostName"
+                                  placeholder="Enter cost name"
                                 />
                               </div>
                             </div>
@@ -553,8 +575,8 @@ const CheckoutModal = ({
                         onClick={() => handleClick(item.id)}
                         className={`flex  cursor-pointer items-center gap-2 p-4 rounded-lg justify-between  ${
                           selectedPaymentMethod === item.id
-                            ? 'bg-[#EAE5FF80]'
-                            : ''
+                            ? "bg-[#EAE5FF80]"
+                            : ""
                         } `}
                       >
                         <div>
@@ -591,7 +613,7 @@ const CheckoutModal = ({
                       <div>
                         <p className="text-sm text-grey500">TOTAL ORDER</p>
                         <p className="font-bold text-black text-[20px]">
-                          {' '}
+                          {" "}
                           {formatPrice(totalPrice)}
                         </p>
                       </div>
@@ -622,7 +644,7 @@ const CheckoutModal = ({
                         className="text-white w-full h-[50px]"
                       >
                         <div className="flex gap-2 items-center justify-center">
-                          <p>{'Confirm payment'} </p>
+                          <p>{"Confirm payment"} </p>
                           <HiArrowLongLeft className="text-[22px] rotate-180" />
                         </div>
                       </CustomButton>
@@ -633,7 +655,7 @@ const CheckoutModal = ({
             </>
           )}
         </ModalContent>
-      </Modal>{' '}
+      </Modal>{" "}
     </div>
   );
 };

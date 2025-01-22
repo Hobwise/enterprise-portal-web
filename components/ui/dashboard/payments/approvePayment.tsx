@@ -112,31 +112,34 @@ const ApprovePayment = ({
                         {singlePayment.qrName}
                       </Chip>
                     </div>
-                    <div className="md:w-[15rem] w-full">
-                      <div className="flex item-center justify-between">
-                        <p className="font-[600]  text-sm text-black">
-                          Total value
-                        </p>
-                        <h2 className="text-[18px] text-black  font-semibold">
-                          {formatPrice(order.totalAmount)}
+                    <div
+                      className={`${
+                        order?.length === 0 ? "hidden" : "block"
+                      } md:w-[15rem] w-full`}
+                    >
+                      <div className="flex item-center  text-xs text-black font-bold justify-between">
+                        <p>Subtotal</p>
+                        <h2>
+                          {formatPrice(order.totalAmount - order.vatAmount)}
                         </h2>
                       </div>
-                      <div className="flex item-center justify-between">
-                        <p className="text-xs text-gray-500">VAT</p>
-                        <h2 className="text-sm text-gray-500 font-semibold">
-                          {formatPrice(order.vatAmount)}
-                        </h2>
+                      <div className="flex item-center  text-xs text-black font-bold justify-between">
+                        <p>VAT</p>
+                        <h2>{formatPrice(order.vatAmount)}</h2>
                       </div>
-                      {order.additionalCost && (
-                        <div className="flex item-center justify-between">
-                          <p className=" text-xs text-gray-500">
-                            {order.additionalCostName}
-                          </p>
-                          <h2 className="text-sm text-gray-500 font-semibold">
-                            {formatPrice(order.additionalCost)}
-                          </h2>
-                        </div>
-                      )}
+
+                      <div
+                        className={`
+                          ${order.additionalCost ? "flex" : "hidden"} 
+                        flex item-center justify-between  text-xs text-black font-bold`}
+                      >
+                        <p>{order.additionalCostName || "Additional Cost"}</p>
+                        <h2>{formatPrice(order.additionalCost)}</h2>
+                      </div>
+                      <div className="flex item-center font-bold   text-black justify-between">
+                        <p>Total</p>
+                        <h2>{formatPrice(order.totalAmount)}</h2>
+                      </div>
                     </div>
                   </div>
 
@@ -193,9 +196,9 @@ const ApprovePayment = ({
                                     </div>
                                   </div>
                                   <div className="text-black flex items-center text-[12px]">
-                                    <span>QTY:</span>
+                                    <span>QTY: </span>
                                     <span className="font-[600]">
-                                      {" "}
+                                      {"  "}
                                       {item.quantity}
                                     </span>
                                   </div>
@@ -203,8 +206,12 @@ const ApprovePayment = ({
                                     <div className="font-bold  text-end">
                                       <p>{formatPrice(item.unitPrice)}</p>
 
-                                      <p className="text-xs text-grey500 font-normal">
-                                        Take out:{" "}
+                                      <p
+                                        className={` ${
+                                          item.packingCost ? "block" : "hidden"
+                                        } text-xs text-grey500 font-normal`}
+                                      >
+                                        Pack cost:{" "}
                                         {formatPrice(item.packingCost)}
                                       </p>
                                     </div>

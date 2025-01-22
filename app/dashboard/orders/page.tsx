@@ -1,23 +1,23 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import { CustomLoading } from '@/lib/utils';
+import { CustomLoading } from "@/lib/utils";
 
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import Error from '@/components/error';
-import CreateOrder from '@/components/ui/dashboard/orders/createOrder';
-import OrdersList from '@/components/ui/dashboard/orders/order';
-import useOrder from '@/hooks/cachedEndpoints/useOrder';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import useDateFilter from '@/hooks/useDateFilter';
-import { downloadCSV } from '@/lib/downloadToExcel';
-import { Button, ButtonGroup, Chip } from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { IoAddCircleOutline, IoSearchOutline } from 'react-icons/io5';
-import { MdOutlineFileDownload } from 'react-icons/md';
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
+import CreateOrder from "@/components/ui/dashboard/orders/createOrder";
+import OrdersList from "@/components/ui/dashboard/orders/order";
+import useOrder from "@/hooks/cachedEndpoints/useOrder";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import useDateFilter from "@/hooks/useDateFilter";
+import { downloadCSV } from "@/lib/downloadToExcel";
+import { Button, ButtonGroup, Chip } from "@nextui-org/react";
+import { useRouter } from "next/navigation";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
+import { MdOutlineFileDownload } from "react-icons/md";
 
 const Orders: React.FC = () => {
   const router = useRouter();
@@ -32,12 +32,12 @@ const Orders: React.FC = () => {
   } = useDateFilter(useOrder);
   const { userRolePermissions, role } = usePermission();
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All');
+    setTableStatus("All");
     setPage(1);
   }, []);
 
@@ -81,7 +81,7 @@ const Orders: React.FC = () => {
       <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data[0].orders?.length > 0 ? (
+            {data?.[0].orders?.length > 0 ? (
               <div className="flex items-center">
                 <span>All orders</span>
                 <Chip
@@ -89,7 +89,7 @@ const Orders: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data[0]?.totalCount}
+                  {data?.[0]?.totalCount}
                 </Chip>
               </div>
             ) : (
@@ -102,11 +102,11 @@ const Orders: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           {dropdownComponent}
-          {data[0].orders.length > 0 && (
+          {data?.[0].orders.length > 0 && (
             <>
               <div>
                 <CustomInput
-                  classnames={'w-[242px]'}
+                  classnames={"w-[242px]"}
                   label=""
                   size="md"
                   value={searchQuery}
@@ -130,19 +130,19 @@ const Orders: React.FC = () => {
           )}
           {(role === 0 || userRolePermissions?.canCreateOrder === true) && (
             <CustomButton
-              onClick={() => router.push('/dashboard/orders/place-order')}
+              onClick={() => router.push("/dashboard/orders/place-order")}
               className="py-2 px-4 mb-0 text-white"
               backgroundColor="bg-primaryColor"
             >
               <div className="flex gap-2 items-center justify-center">
                 <IoAddCircleOutline className="text-[22px]" />
-                <p>{'Create order'} </p>
+                <p>{"Create order"} </p>
               </div>
             </CustomButton>
           )}
         </div>
       </div>
-      {data.length > 0 ? (
+      {data?.length > 0 ? (
         <OrdersList
           orders={filteredItems}
           refetch={refetch}

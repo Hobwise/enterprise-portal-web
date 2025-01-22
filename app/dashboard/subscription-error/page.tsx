@@ -1,11 +1,14 @@
 "use client";
 import { CustomButton } from "@/components/customButton";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useRouter } from "next/router";
 import { CiLock } from "react-icons/ci";
 import { IoReload } from "react-icons/io5";
 
 export default function Unauthorized() {
   const { refetch, isLoading } = useSubscription();
+  const router = useRouter();
+
   return (
     <div className="flex items-center justify-center min-h-[400px]   p-4">
       <div className="flex flex-col items-center text-center space-y-6 pt-6 max-w-lg w-full">
@@ -23,7 +26,10 @@ export default function Unauthorized() {
           </p>
         </div>
         <CustomButton
-          onClick={() => refetch()}
+          onClick={async () => {
+            await refetch();
+            router.replace(router.asPath);
+          }}
           className="text-white border px-6 py-4 bg-primaryColor rounded-lg "
         >
           <div className="flex items-center gap-2">

@@ -122,8 +122,13 @@ const InvoiceModal = ({
                           </div>
                           <div className="font-bold  text-end">
                             <p>{formatPrice(item.totalPrice)}</p>
-                            <p className="text-xs text-grey500 font-normal">
-                              Take out: {formatPrice(item.packingCost)}
+
+                            <p
+                              className={`text-xs ${
+                                item.packingCost ? "block" : "hidden"
+                              } text-grey500 font-normal`}
+                            >
+                              Pack cost: {formatPrice(item.packingCost)}
                             </p>
                           </div>
                         </div>
@@ -132,20 +137,24 @@ const InvoiceModal = ({
                   </div>
                   <Divider />
                   <div className="text-sm text-black font-bold">
-                    {order.additionalCost && (
-                      <div className="flex justify-between text-gray-500 font-medium gap-3">
-                        <p>{order.additionalCostName}</p>
-                        <p>{formatPrice(order.vatAmount)}</p>
-                      </div>
-                    )}
-                    <div className="flex justify-between text-gray-500 font-medium gap-3">
+                    <div className="flex justify-between gap-3 ">
+                      <p>Subtotal</p>
+                      <p>{formatPrice(order.totalAmount - order.vatAmount)}</p>
+                    </div>
+                    <div className="flex justify-between text-sm text-black font-bold gap-3">
                       <p>VAT</p>
                       <p>{formatPrice(order.vatAmount)}</p>
                     </div>
-                    <div className="flex justify-between text-gray-500 font-medium gap-3">
-                      <p>Vat</p>
-                      <p>{formatPrice(order.vatAmount)}</p>
+
+                    <div
+                      className={`${
+                        order.additionalCost ? "flex" : "hidden"
+                      } justify-between text-sm text-black font-bold gap-3`}
+                    >
+                      <p>{order.additionalCostName || "Additional Cost"} </p>
+                      <p>{formatPrice(order.additionalCost)}</p>
                     </div>
+
                     <div className="flex justify-between gap-3 ">
                       <p>Total</p>
                       <p>{formatPrice(order.totalAmount)}</p>
