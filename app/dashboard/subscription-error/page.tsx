@@ -7,7 +7,6 @@ import { IoReload } from "react-icons/io5";
 
 export default function Unauthorized() {
   const { refetch, isLoading } = useSubscription();
-  const router = useRouter();
 
   return (
     <div className="flex items-center justify-center min-h-[400px]   p-4">
@@ -28,7 +27,7 @@ export default function Unauthorized() {
         <CustomButton
           onClick={async () => {
             await refetch();
-            router.replace(router.asPath);
+            window.location.reload();
           }}
           className="text-white border px-6 py-4 bg-primaryColor rounded-lg "
         >
