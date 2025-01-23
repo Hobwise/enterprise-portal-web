@@ -113,7 +113,7 @@ const InvoiceModal = ({
                       return (
                         <div
                           key={item.id}
-                          className="flex justify-between gap-3 text-sm space-y-3 text-black"
+                          className="flex justify-between items-center gap-3 text-sm space-y-3 text-black"
                         >
                           <div className="text-grey500">
                             <p>
@@ -139,10 +139,10 @@ const InvoiceModal = ({
                   <div className="text-sm text-black font-bold">
                     <div className="flex justify-between gap-3 ">
                       <p>Subtotal</p>
-                      <p>{formatPrice(order.totalAmount - order.vatAmount)}</p>
+                      <p>{formatPrice(order.subTotalAmount)}</p>
                     </div>
                     <div className="flex justify-between text-sm text-black font-bold gap-3">
-                      <p>VAT (7.5%): </p>
+                      <p>VAT (7.5%) </p>
                       <p>{formatPrice(order.vatAmount)}</p>
                     </div>
 
@@ -155,7 +155,7 @@ const InvoiceModal = ({
                       <p>{formatPrice(order.additionalCost)}</p>
                     </div>
 
-                    <div className="flex justify-between gap-3 ">
+                    <div className="flex text-lg justify-between gap-3 ">
                       <p>Total</p>
                       <p>{formatPrice(order.totalAmount)}</p>
                     </div>

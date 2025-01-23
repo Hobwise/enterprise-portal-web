@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import ReaceptionImage from "@/public/assets/images/reception-vector.png";
 import { LampContainer } from "@/components/ui/lampEffect";
+import { FlipWords } from "@/components/ui/flipword";
 
 export const metadata = {
   title: `${companyInfo.name} | Log in to ${companyInfo.name}`,
@@ -15,17 +16,21 @@ export const metadata = {
 };
 
 export default function Login() {
+  const words = ["bookings", "orders", "campaigns", "payments"];
   return (
     <main className="flex min-h-screen bg-white text-black">
       <div className="hidden lg:block lg:fixed inset-y-0 left-0 w-1/2 m-3">
-        {/* <LampContainer>
-          <h1>
-            Manage bookings, orders and more <br /> ensuring smooth business
-            operation
+        <LampContainer>
+          <h1 className=" mx-auto">
+            Manage
+            <FlipWords className="text-white" words={words} /> <br />
+            <span className="text-2xl">
+              Ensuring smooth business operation.
+            </span>
           </h1>
-        </LampContainer> */}
+        </LampContainer>
 
-        <div className="relative h-full">
+        {/* <div className="relative h-full">
           <Suspense
             fallback={
               <div className="absolute inset-0 w-full h-full object-cover bg-primaryGrey rounded-[32px]" />
@@ -47,7 +52,7 @@ export default function Login() {
               to checkout. Manage orders and inventory like a pro.
             </p>
           </div>
-        </div>
+        </div> */}
       </div>
 
       <div className="w-full lg:w-1/2 lg:ml-[50%]">

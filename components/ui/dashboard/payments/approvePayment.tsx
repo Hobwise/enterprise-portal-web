@@ -119,12 +119,10 @@ const ApprovePayment = ({
                     >
                       <div className="flex item-center  text-xs text-black font-bold justify-between">
                         <p>Subtotal</p>
-                        <h2>
-                          {formatPrice(order.totalAmount - order.vatAmount)}
-                        </h2>
+                        <h2>{formatPrice(order.subTotalAmount)}</h2>
                       </div>
                       <div className="flex item-center  text-xs text-black font-bold justify-between">
-                        <p>VAT (7.5%): </p>
+                        <p>VAT (7.5%) </p>
                         <h2>{formatPrice(order.vatAmount)}</h2>
                       </div>
 
