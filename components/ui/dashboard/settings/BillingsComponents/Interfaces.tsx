@@ -18,7 +18,7 @@ export interface PlanDetails {
   canAccessCampaigns: boolean;
   canAccessReports: boolean;
   canAccessSettings: boolean;
-  canAccessQR: boolean;
+  canAccessQuickResponses: boolean;
   canAccessMultipleLocations: boolean;
 }
 
@@ -29,9 +29,9 @@ export interface Plans {
 }
 
 export const TYPE_OF_PLAN = {
-  1: 'Premium',
-  2: 'Professional',
-  3: 'Starter',
+  1: "Premium",
+  2: "Professional",
+  3: "Starter",
 };
 
 export interface PlansFromParent {
@@ -98,7 +98,7 @@ export interface CurrentSubscriptionDetails {
   nextPaymentDate: string | null;
   subscription: {
     status: number;
-    plan: number
+    plan: number;
   };
 }
 
