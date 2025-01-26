@@ -185,7 +185,10 @@ const ApprovePayment = ({
                                       </p>
                                       <Spacer y={2} />
                                       <p className="text-grey600">
-                                        {item.itemName}
+                                        {item.itemName}{" "}
+                                        <span className="text-black">
+                                          {item.unit && `(${item.unit})`}
+                                        </span>
                                       </p>
 
                                       <p className="text-sm">

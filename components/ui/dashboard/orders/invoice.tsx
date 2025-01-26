@@ -117,7 +117,11 @@ const InvoiceModal = ({
                         >
                           <div className="text-grey500">
                             <p>
-                              {item.itemName} x {item.quantity}
+                              {item.itemName}{" "}
+                              <span className="text-black">
+                                {item.unit && `(${item.unit})`}
+                              </span>{" "}
+                              x {item.quantity}{" "}
                             </p>
                           </div>
                           <div className="font-bold  text-end">

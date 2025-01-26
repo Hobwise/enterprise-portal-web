@@ -1,5 +1,5 @@
-import { CustomButton } from '@/components/customButton';
-import { cn, formatPrice } from '@/lib/utils';
+import { CustomButton } from "@/components/customButton";
+import { cn, formatPrice } from "@/lib/utils";
 import {
   Checkbox,
   Chip,
@@ -7,10 +7,10 @@ import {
   ModalBody,
   ModalContent,
   Spacer,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import noImage from '../../../../../public/assets/images/no-image.svg';
-import { CheckIcon } from './data';
+} from "@nextui-org/react";
+import Image from "next/image";
+import noImage from "../../../../../public/assets/images/no-image.svg";
+import { CheckIcon } from "./data";
 
 const ViewModal = ({
   selectedItems,
@@ -20,7 +20,6 @@ const ViewModal = ({
   handleCardClick,
   handlePackingCost,
 }: any) => {
-  
   const itemIsPacked = (itemId: string) =>
     selectedItems.find((item: any) => item.id === itemId)?.isPacked;
 
@@ -43,7 +42,7 @@ const ViewModal = ({
                 }
                 width={200}
                 height={200}
-                style={{ objectFit: 'cover' }}
+                style={{ objectFit: "cover" }}
                 className="bg-cover h-[200px]  rounded-lg w-full"
                 aria-label="uploaded image"
                 alt="uploaded image(s)"
@@ -67,38 +66,40 @@ const ViewModal = ({
                       {selectedMenu?.itemName}
                     </p>
                     <Spacer y={3} />
-                    {isItemSelected(selectedMenu.id) && (
-                      <>
-                        <Checkbox
-                          size="sm"
-                          classNames={{
-                            base: cn('items-start'),
-                            label: 'w-full',
-                          }}
-                          defaultSelected={itemIsPacked(selectedMenu.id)}
-                          isSelected={itemIsPacked(selectedMenu.id)}
-                          onValueChange={(isSelected) =>
-                            handlePackingCost(selectedMenu.id, isSelected)
-                          }
-                        >
-                          <div className="flex flex-col">
-                            <span className="text-grey600 text-sm">
-                              Pack In
-                            </span>
-                            <span
-                              className={cn(
-                                'text-xs text-gray-200',
-                                itemIsPacked(selectedMenu.id) &&
-                                  'font-bold text-black'
-                              )}
-                            >
-                              {formatPrice(selectedMenu.packingCost)}
-                            </span>
-                          </div>
-                        </Checkbox>
-                        <Spacer y={3} />
-                      </>
+                    {selectedItems.find(
+                      (selected) =>
+                        selected.id === selectedMenu.id ||
+                        selectedMenu.varieties?.some(
+                          (variety) => selected.id === variety.id
+                        )
+                    ) && (
+                      <Checkbox
+                        size="sm"
+                        classNames={{
+                          base: cn("items-start"),
+                          label: "w-full",
+                        }}
+                        isSelected={itemIsPacked(selectedMenu.id)}
+                        onValueChange={(isSelected) =>
+                          handlePackingCost(selectedMenu.id, isSelected)
+                        }
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-grey600 text-sm">Pack In</span>
+                          <span
+                            className={cn(
+                              "text-xs text-gray-200",
+                              itemIsPacked(selectedMenu.id) &&
+                                "font-bold text-black"
+                            )}
+                          >
+                            {formatPrice(selectedMenu.packingCost)}
+                          </span>
+                        </div>
+                      </Checkbox>
                     )}
+
+                    <Spacer y={3} />
                   </div>
                   {selectedMenu?.varieties && (
                     <div>
@@ -119,7 +120,7 @@ const ViewModal = ({
                           startContent={<CheckIcon size={18} />}
                           variant="flat"
                           classNames={{
-                            base: 'bg-primaryColor cursor-pointer text-white  text-[12px]',
+                            base: "bg-primaryColor cursor-pointer text-white  text-[12px]",
                           }}
                         >
                           Selected
@@ -132,7 +133,7 @@ const ViewModal = ({
                                 ...selectedMenu,
                                 isVariety: false,
                               },
-                              itemIsPacked(selectedMenu.id)
+                              false // Always set isPacked to false when initially selecting
                             )
                           }
                           className="h-8 w-4 text-black bg-white border border-primaryGrey"
@@ -148,6 +149,9 @@ const ViewModal = ({
                 {selectedMenu?.varieties ? (
                   <>
                     {selectedMenu?.varieties?.map((item) => {
+                      const isItemSelected = selectedItems.find(
+                        (selected) => selected.id === item.id
+                      );
                       return (
                         <div
                           key={item.id}
@@ -174,12 +178,43 @@ const ViewModal = ({
                               </span>
 
                               <span className="text-grey600 ">
-                                {selectedMenu.itemName}
+                                {selectedMenu.itemName}{" "}
+                                <span className="text-black">
+                                  {item.unit && `(${item.unit})`}
+                                </span>
                               </span>
 
                               <span className="font-[600] text-primaryColor">
                                 {formatPrice(item?.price)}
                               </span>
+                              {isItemSelected && (
+                                <Checkbox
+                                  size="sm"
+                                  classNames={{
+                                    base: cn("items-start"),
+                                    label: "w-full",
+                                  }}
+                                  isSelected={itemIsPacked(item.id)}
+                                  onValueChange={(isSelected) =>
+                                    handlePackingCost(item.id, isSelected)
+                                  }
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="text-grey600 text-sm">
+                                      Pack In
+                                    </span>
+                                    <span
+                                      className={cn(
+                                        "text-xs text-gray-200",
+                                        itemIsPacked(item.id) &&
+                                          "font-bold text-black"
+                                      )}
+                                    >
+                                      {formatPrice(selectedMenu.packingCost)}
+                                    </span>
+                                  </div>
+                                </Checkbox>
+                              )}
                             </div>
                           </div>
                           {selectedItems.find(
@@ -195,14 +230,15 @@ const ViewModal = ({
                                     itemName: selectedMenu.itemName,
                                     menuName: selectedMenu.menuName,
                                     image: selectedMenu.image,
+                                    packingCost: selectedMenu.packingCost,
                                   },
-                                  itemIsPacked(selectedMenu.id)
+                                  itemIsPacked(item.id)
                                 )
                               }
                               startContent={<CheckIcon size={18} />}
                               variant="flat"
                               classNames={{
-                                base: 'bg-primaryColor text-white  text-[12px]',
+                                base: "bg-primaryColor text-white  text-[12px]",
                               }}
                             >
                               Selected
@@ -217,8 +253,9 @@ const ViewModal = ({
                                     itemName: selectedMenu.itemName,
                                     menuName: selectedMenu.menuName,
                                     image: selectedMenu.image,
+                                    packingCost: selectedMenu.packingCost,
                                   },
-                                  itemIsPacked(selectedMenu.id)
+                                  false
                                 )
                               }
                               className="h-8 text-sm w-4 text-black bg-white border border-primaryGrey"
@@ -259,9 +296,9 @@ const ViewModal = ({
                               ...selectedMenu,
                               isVariety: false,
                             },
-                            itemIsPacked(selectedMenu.id)
+                            false
                           );
-                          toggleVarietyModal();
+                          // toggleVarietyModal();
                         }}
                         className="md:bg-white bg-primaryGrey h-10  w-full text-black border border-primaryGrey"
                       >

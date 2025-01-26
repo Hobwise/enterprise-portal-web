@@ -372,7 +372,10 @@ const CheckoutModal = ({
                                     </p>
                                     <Spacer y={2} />
                                     <p className="text-grey600">
-                                      {item.itemName}
+                                      {item.itemName}{" "}
+                                      <span className="text-black">
+                                        {item.unit && `(${item.unit})`}
+                                      </span>
                                     </p>
                                     <Checkbox
                                       size="sm"
@@ -398,6 +401,7 @@ const CheckoutModal = ({
                                   <Button
                                     onClick={() => handleDecrement(item.id)}
                                     isIconOnly
+                                    size="sm"
                                     radius="sm"
                                     variant="faded"
                                     className="border h-[35px] w-[30px] border-primaryGrey bg-white"
@@ -412,6 +416,7 @@ const CheckoutModal = ({
                                     onClick={() => handleIncrement(item.id)}
                                     isIconOnly
                                     radius="sm"
+                                    size="sm"
                                     variant="faded"
                                     className="border h-[35px] w-[30px] border-primaryGrey bg-white"
                                     aria-label="plus"

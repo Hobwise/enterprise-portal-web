@@ -172,15 +172,35 @@ const MenuList = () => {
     }
   }, [filterValue, filteredItems]);
 
+  // const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
+  //   const existingItem = selectedItems.find((item) => item.id === menuItem.id);
+
+  //   if (existingItem) {
+  //     setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
+  //   } else {
+  //     setSelectedItems((prevItems: any) => [
+  //       ...prevItems,
+  //       { ...menuItem, count: 1, isPacked: isItemPacked },
+  //     ]);
+  //   }
+  // };
+
   const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
-
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
       setSelectedItems((prevItems: any) => [
         ...prevItems,
-        { ...menuItem, count: 1, isPacked: isItemPacked },
+        {
+          ...menuItem,
+          count: 1,
+          isPacked: isItemPacked,
+
+          packingCost:
+            menuItem.packingCost ||
+            (menuItem.isVariety ? menuItem.packingCost : 0),
+        },
       ]);
     }
   };
@@ -204,13 +224,23 @@ const MenuList = () => {
       )
     );
   };
+  // const calculateTotalPrice = () => {
+  //   return selectedItems.reduce((acc, item) => {
+  //     const itemTotal = item.price * item.count;
+  //     const packingTotal = item.isPacked ? item.packingCost * item.count : 0;
+  //     return acc + itemTotal + packingTotal;
+  //   }, 0);
+  // };
+
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
-      const additionalCost = item.isPacked ? item.packingCost : 0;
-      return acc + item.price * item.count + additionalCost;
+      const itemTotal = item.price * item.count;
+      const packingTotal = item.isPacked
+        ? (item.packingCost || 0) * item.count
+        : 0;
+      return acc + itemTotal + packingTotal;
     }, 0);
   };
-
   const handleTabChange = (index) => {
     setValue(index);
   };
@@ -232,19 +262,11 @@ const MenuList = () => {
   }, [order?.id, data]);
 
   const handlePackingCost = (itemId: string, isPacked: boolean) => {
-    let selectedItemsCopy = [...selectedItems];
-    const existingItem = selectedItemsCopy.find((item) => item.id === itemId);
-    if (!existingItem) {
-      return;
-    }
-
-    const existingItemIndex = selectedItemsCopy.findIndex(
-      (item) => item.id === itemId
+    setSelectedItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === itemId ? { ...item, isPacked } : item
+      )
     );
-    const updatedItem = { ...existingItem, isPacked };
-    selectedItemsCopy[existingItemIndex] = updatedItem;
-
-    setSelectedItems(selectedItemsCopy);
   };
 
   return (
