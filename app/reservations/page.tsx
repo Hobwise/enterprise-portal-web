@@ -1,6 +1,5 @@
 'use client';
 import { CustomInput } from '@/components/CustomInput';
-import { ArrowRight } from '@/public/assets/svg';
 import React, { useEffect, useState } from 'react';
 import { IoSearchOutline } from 'react-icons/io5';
 import { CustomButton } from '@/components/customButton';
@@ -60,7 +59,6 @@ export default function Reservations() {
           <section className="w-full lg:w-[50%] mx-auto space-y-4 lg:space-y-6 font-satoshi pt-12 lg:pt-24">
             <div className={sectionHeaderClass}>
               <p className="font-normal">Reserve Your Perfect Spot</p>
-              {/* <ArrowRight /> */}
             </div>
             <h1 className="text-[24px] lg:text-[50px] lg:leading-[50px] text-[#161618] font-bricolage_grotesque">Reserve Your Perfect Spot</h1>
             <p className="font-normal text-dark">
@@ -121,7 +119,7 @@ export default function Reservations() {
                           <p className="">Items per page</p>
                           <Select
                             label=""
-                            className="w-[100px]"
+                            className="w-[100px] text-[#000]"
                             variant="bordered"
                             size="sm"
                             labelPlacement="inside"
@@ -129,11 +127,14 @@ export default function Reservations() {
                             placeholder={pageSize}
                           >
                             {sizes.map((size) => (
-                              <SelectItem key={size}>{size}</SelectItem>
+                              <SelectItem key={size} className="text-[#000]">
+                                {size}
+                              </SelectItem>
                             ))}
                           </Select>
+
                           <p>
-                            Showing {pageSize} of {data?.data?.data.totalCount} reservations
+                            Showing {data?.data?.data.currentPage} of {data?.data?.data.totalPages} pages
                           </p>
                         </div>
                         <div>

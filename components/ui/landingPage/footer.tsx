@@ -36,7 +36,9 @@ export default function Footer() {
 
             <div className="flex space-x-4 justify-center">
               {socialMedia.map((each, index) => (
-                <div key={each.url + index}>{each.icon}</div>
+                <Link href={each.url} target="_blank" key={each.url + index}>
+                  <div>{each.icon}</div>
+                </Link>
               ))}
             </div>
 
