@@ -1,15 +1,15 @@
-import { z } from 'zod';
-import { DASHBOARD } from '../../api-url';
-import api, { handleError } from '../../apiService';
+import { z } from "zod";
+import { DASHBOARD } from "../../api-url";
+import api, { handleError } from "../../apiService";
 
 const menuItemSchema = z.object({
-  itemName: z.string().trim().min(1, 'Item name is required'),
-  price: z.number().min(1, 'Price is required'),
-  menuID: z.string().trim().min(1, 'Select a menu'),
+  itemName: z.string().trim().min(1, "Item name is required"),
+  price: z.number().min(1, "Price is required"),
+  menuID: z.string().trim().min(1, "Select a menu"),
 });
 const menuVarietySchema = z.object({
-  unit: z.string().trim().min(1, 'Unit is required'),
-  price: z.number().min(1, 'Price is required'),
+  unit: z.string().trim().min(1, "Unit is required"),
+  price: z.number().min(1, "Price is required"),
 });
 export async function getMenu(businessId: string) {
   const headers = businessId ? { businessId } : {};
@@ -36,7 +36,7 @@ export async function getMenuItem(menuId: string) {
 }
 export async function uploadFile(businessId: string, formData: FormData) {
   const headers = businessId
-    ? { businessId, 'Content-Type': 'multipart/form-data' }
+    ? { businessId, "Content-Type": "multipart/form-data" }
     : {};
   try {
     const data = await api.post(DASHBOARD.uploadFile, formData, {
@@ -66,7 +66,7 @@ export async function uploadFilemultipleMenuItem(
   menuId: string
 ) {
   const headers = businessId
-    ? { businessId, menuId, 'Content-Type': 'multipart/form-data' }
+    ? { businessId, menuId, "Content-Type": "multipart/form-data" }
     : {};
   try {
     const data = await api.post(DASHBOARD.uploadBulkMenuItem, formData, {
@@ -89,7 +89,7 @@ export async function getMenuByBusiness(
 
   const payload = [
     {
-      menuId: menuIdTable || '',
+      menuId: menuIdTable || "",
       page: page || 1,
       pageSize: rowsPerPage || 10,
     },

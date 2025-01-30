@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { DASHBOARD } from '../../api-url';
-import api, { handleError } from '../../apiService';
+import { z } from "zod";
+import { DASHBOARD } from "../../api-url";
+import api, { handleError } from "../../apiService";
 
 interface Order {
   placedByName: string;
@@ -17,24 +17,24 @@ interface OrderDetail {
 }
 
 export const orderSchema = z.object({
-  placedByName: z.string().trim().min(1, 'Name is required'),
+  placedByName: z.string().trim().min(1, "Name is required"),
   placedByPhoneNumber: z
     .string()
-    .length(11, 'Phone number must be 11 digits long')
-    .startsWith('0', 'Phone number must start with 0')
+    .length(11, "Phone number must be 11 digits long")
+    .startsWith("0", "Phone number must start with 0")
     .refine((value) => /^\d+$/.test(value), {
-      message: 'Phone number must only contain digits',
+      message: "Phone number must only contain digits",
     }),
-  quickResponseID: z.string().trim().min(1, 'Select a Table'),
+  quickResponseID: z.string().trim().min(1, "Select a Table"),
 });
 export const orderSchemaUser = z.object({
-  placedByName: z.string().trim().min(1, 'Name is required'),
+  placedByName: z.string().trim().min(1, "Name is required"),
   placedByPhoneNumber: z
     .string()
-    .length(11, 'Phone number must be 11 digits long')
-    .startsWith('0', 'Phone number must start with 0')
+    .length(11, "Phone number must be 11 digits long")
+    .startsWith("0", "Phone number must start with 0")
     .refine((value) => /^\d+$/.test(value), {
-      message: 'Phone number must only contain digits',
+      message: "Phone number must only contain digits",
     }),
 });
 
@@ -56,7 +56,7 @@ export async function getOrderByBusiness(
     businessId: businessId,
     statusPaginationInfoList: [
       {
-        status: tableStatus || 'All',
+        status: tableStatus || "All",
         page: page || 1,
         pageSize: rowsPerPage || 10,
       },
@@ -79,6 +79,24 @@ export async function getOrder(orderId: string) {
 
   try {
     const data = await api.get(DASHBOARD.order, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+export async function getOrderByRef(
+  reference: string,
+  businessId: string,
+
+  cooperateID?: string
+) {
+  const headers = { reference, businessId, cooperateID };
+
+  try {
+    const data = await api.get(DASHBOARD.orderByRef, {
       headers,
     });
 

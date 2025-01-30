@@ -1,6 +1,6 @@
-import { CustomButton } from '@/components/customButton';
-import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
-import { cn, formatPrice } from '@/lib/utils';
+import { CustomButton } from "@/components/customButton";
+import { CheckIcon } from "@/components/ui/dashboard/orders/place-order/data";
+import { cn, formatPrice } from "@/lib/utils";
 import {
   Button,
   Chip,
@@ -9,10 +9,10 @@ import {
   ModalContent,
   Spacer,
   Checkbox,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import { FaMinus, FaPlus } from 'react-icons/fa6';
-import noImage from '../../public/assets/images/no-image.svg';
+} from "@nextui-org/react";
+import Image from "next/image";
+import { FaMinus, FaPlus } from "react-icons/fa6";
+import noImage from "../../public/assets/images/no-image.svg";
 
 const ViewModal = ({
   selectedItems,
@@ -31,7 +31,7 @@ const ViewModal = ({
   };
 
   const itemIsPacked = (itemId: string) =>
-    selectedItems.find((item: any) => item.id === itemId)?.isPacking;
+    selectedItems.find((item: any) => item.id === itemId)?.isPacked;
 
   const isItemSelected = (itemId: string) => {
     return selectedItems.some((item: any) => item.id === itemId);
@@ -52,7 +52,7 @@ const ViewModal = ({
                 }
                 width={200}
                 height={200}
-                style={{ objectFit: 'cover' }}
+                style={{ objectFit: "cover" }}
                 className="bg-cover h-[200px] rounded-lg w-full"
                 aria-label="uploaded image"
                 alt="uploaded image(s)"
@@ -82,10 +82,9 @@ const ViewModal = ({
                           <Checkbox
                             size="sm"
                             classNames={{
-                              base: cn('items-start'),
-                              label: 'w-full',
+                              base: cn("items-start"),
+                              label: "w-full",
                             }}
-                            defaultSelected={itemIsPacked(selectedMenu.id)}
                             isSelected={itemIsPacked(selectedMenu.id)}
                             onValueChange={(isSelected) =>
                               handlePackingCost(selectedMenu.id, isSelected)
@@ -97,9 +96,9 @@ const ViewModal = ({
                               </span>
                               <span
                                 className={cn(
-                                  'text-xs text-gray-200',
+                                  "text-xs text-gray-200",
                                   itemIsPacked(selectedMenu.id) &&
-                                    'font-bold text-black'
+                                    "font-bold text-black"
                                 )}
                               >
                                 {formatPrice(selectedMenu.packingCost)}
@@ -144,15 +143,18 @@ const ViewModal = ({
                         <Chip
                           title="remove"
                           onClick={() =>
-                            handleCardClick({
-                              ...selectedMenu,
-                              isVariety: false,
-                            })
+                            handleCardClick(
+                              {
+                                ...selectedMenu,
+                                isVariety: false,
+                              },
+                              itemIsPacked(selectedMenu.id)
+                            )
                           }
                           startContent={<CheckIcon size={18} />}
                           variant="flat"
                           classNames={{
-                            base: 'bg-primaryColor cursor-pointer text-white text-[12px]',
+                            base: "bg-primaryColor cursor-pointer text-white text-[12px]",
                           }}
                         >
                           Selected
@@ -160,10 +162,13 @@ const ViewModal = ({
                       ) : (
                         <CustomButton
                           onClick={() =>
-                            handleCardClick({
-                              ...selectedMenu,
-                              isVariety: false,
-                            })
+                            handleCardClick(
+                              {
+                                ...selectedMenu,
+                                isVariety: false,
+                              },
+                              false
+                            )
                           }
                           className="h-8 w-8 text-black bg-primaryGrey border border-primaryGrey"
                         >
@@ -179,6 +184,7 @@ const ViewModal = ({
                   <>
                     {selectedMenu?.varieties?.map((item: any) => {
                       const isVarietySelected = isItemSelected(item.id);
+
                       return (
                         <div
                           key={item.id}
@@ -190,11 +196,44 @@ const ViewModal = ({
                                 {selectedMenu.menuName}
                               </span>
                               <span className="text-grey600">
-                                {selectedMenu.itemName}
+                                {selectedMenu.itemName}{" "}
+                                <span className="text-black">
+                                  {item.unit && `(${item.unit})`}
+                                </span>
                               </span>
+
                               <span className="font-[600] text-primaryColor">
                                 {formatPrice(item?.price)}
                               </span>
+
+                              {isItemSelected(item.id) && (
+                                <Checkbox
+                                  size="sm"
+                                  classNames={{
+                                    base: cn("items-start"),
+                                    label: "w-full",
+                                  }}
+                                  isSelected={itemIsPacked(item.id)}
+                                  onValueChange={(isSelected) =>
+                                    handlePackingCost(item.id, isSelected)
+                                  }
+                                >
+                                  <div className="flex flex-col">
+                                    <span className="text-grey600 text-sm">
+                                      Pack In
+                                    </span>
+                                    <span
+                                      className={cn(
+                                        "text-xs text-gray-200",
+                                        itemIsPacked(item.id) &&
+                                          "font-bold text-black"
+                                      )}
+                                    >
+                                      {formatPrice(selectedMenu.packingCost)}
+                                    </span>
+                                  </div>
+                                </Checkbox>
+                              )}
                             </div>
                           </div>
                           {isVarietySelected && (
@@ -229,18 +268,22 @@ const ViewModal = ({
                               <Chip
                                 title="remove"
                                 onClick={() =>
-                                  handleCardClick({
-                                    ...item,
-                                    isVariety: false,
-                                    itemName: selectedMenu.itemName,
-                                    menuName: selectedMenu.menuName,
-                                    image: selectedMenu.image,
-                                  })
+                                  handleCardClick(
+                                    {
+                                      ...item,
+                                      isVariety: false,
+                                      itemName: selectedMenu.itemName,
+                                      menuName: selectedMenu.menuName,
+                                      image: selectedMenu.image,
+                                      packingCost: selectedMenu.packingCost,
+                                    },
+                                    itemIsPacked(item.id)
+                                  )
                                 }
                                 startContent={<CheckIcon size={18} />}
                                 variant="flat"
                                 classNames={{
-                                  base: 'bg-primaryColor text-white text-[12px]',
+                                  base: "bg-primaryColor text-white text-[12px]",
                                 }}
                               >
                                 Selected
@@ -248,13 +291,17 @@ const ViewModal = ({
                             ) : (
                               <CustomButton
                                 onClick={() =>
-                                  handleCardClick({
-                                    ...item,
-                                    isVariety: true,
-                                    itemName: selectedMenu.itemName,
-                                    menuName: selectedMenu.menuName,
-                                    image: selectedMenu.image,
-                                  })
+                                  handleCardClick(
+                                    {
+                                      ...item,
+                                      isVariety: true,
+                                      itemName: selectedMenu.itemName,
+                                      menuName: selectedMenu.menuName,
+                                      image: selectedMenu.image,
+                                      packingCost: selectedMenu.packingCost,
+                                    },
+                                    false
+                                  )
                                 }
                                 className="h-8 text-sm w-4 text-black bg-primaryGrey border border-primaryGrey"
                               >
@@ -271,10 +318,13 @@ const ViewModal = ({
                     {isItemSelected(selectedMenu.id) ? (
                       <CustomButton
                         onClick={() => {
-                          handleCardClick({
-                            ...selectedMenu,
-                            isVariety: false,
-                          });
+                          handleCardClick(
+                            {
+                              ...selectedMenu,
+                              isVariety: false,
+                            },
+                            itemIsPacked(selectedMenu.id)
+                          );
                           toggleVarietyModal();
                         }}
                         title="remove this item"
@@ -285,10 +335,13 @@ const ViewModal = ({
                     ) : (
                       <CustomButton
                         onClick={() => {
-                          handleCardClick({
-                            ...selectedMenu,
-                            isVariety: false,
-                          });
+                          handleCardClick(
+                            {
+                              ...selectedMenu,
+                              isVariety: false,
+                            },
+                            false
+                          );
                         }}
                         className="md:bg-white bg-primaryGrey h-10 w-full text-black border border-primaryGrey"
                       >
@@ -302,7 +355,7 @@ const ViewModal = ({
                 <div className="flex gap-2 text-black text-sm bg-primaryGrey rounded-md p-3 w-full items-center mb-2 justify-between">
                   <p className="text-grey500">Total Amount</p>
                   <div className="flex gap-2 font-bold items-center">
-                    {formatPrice(totalPrice)}{' '}
+                    {formatPrice(totalPrice)}{" "}
                   </div>
                 </div>
               )}

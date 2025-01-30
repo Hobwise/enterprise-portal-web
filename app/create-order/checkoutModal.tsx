@@ -1,12 +1,14 @@
-'use client';
+"use client";
 import {
   createUserOrder,
   editUserOrder,
-} from '@/app/api/controllers/dashboard/orders';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { CustomTextArea } from '@/components/customTextArea';
-import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
+  getOrder,
+  getOrderByRef,
+} from "@/app/api/controllers/dashboard/orders";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { CustomTextArea } from "@/components/customTextArea";
+import { formatPrice, getJsonItemFromLocalStorage } from "@/lib/utils";
 import {
   Button,
   Checkbox,
@@ -17,13 +19,13 @@ import {
   ModalContent,
   ModalHeader,
   Spacer,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import React, { useState } from 'react';
-import toast from 'react-hot-toast';
-import { FaMinus, FaPlus } from 'react-icons/fa6';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import noImage from '../../public/assets/images/no-image.svg';
+} from "@nextui-org/react";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { FaMinus, FaPlus } from "react-icons/fa6";
+import { HiArrowLongLeft } from "react-icons/hi2";
+import noImage from "../../public/assets/images/no-image.svg";
 
 interface Order {
   placedByName: string;
@@ -45,8 +47,7 @@ const CheckoutModal = ({
   totalPrice,
   handleDecrement,
   handleIncrement,
-  orderDetails,
-
+  selectedMenu,
   closeModal = false,
   setSelectedItems,
   businessId,
@@ -54,25 +55,27 @@ const CheckoutModal = ({
   qrId,
   handlePackingCost,
 }: any) => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
-  const additionalCost = 0;
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const [costInfo, setCostInfo] = useState<any>({});
+  // const additionalCost = 0;
 
   const [response, setResponse] = useState(null);
-  const [orderId, setOrderId] = useState<string>('');
+  const [orderId, setOrderId] = useState<string>("");
+  const [orderReference, setOrderReference] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [order, setOrder] = useState<Order>({
-    placedByName: '',
-    placedByPhoneNumber: '',
+    placedByName: "",
+    placedByPhoneNumber: "",
 
-    comment: '',
+    comment: "",
   });
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = event.target;
-    if (name === 'placedByPhoneNumber') {
+    if (name === "placedByPhoneNumber") {
       if (/^\d{0,11}$/.test(value)) {
         setOrder((prevOrder) => ({
           ...prevOrder,
@@ -86,16 +89,31 @@ const CheckoutModal = ({
       }));
     }
   };
+  const [loadingCostInfo, setLoadingCostInfo] = useState(false);
+  const getOrderDetails = async () => {
+    const id = businessId ? businessId : businessInformation[0]?.businessId;
+    setLoadingCostInfo(true);
+
+    const data = await getOrderByRef(orderReference, id, cooperateID);
+    setLoadingCostInfo(false);
+
+    if (data?.data?.isSuccessful) {
+      setCostInfo(data?.data?.data);
+    }
+  };
 
   const [changeTitle, setChangeTitle] = useState(false);
+  const finalTotal =
+    totalPrice + totalPrice * (7.5 / 100) + (costInfo?.additionalCost || 0);
+
   const placeOrder = async () => {
     setLoading(true);
-    const transformedArray = selectedItems.map((item) => ({
+    const transformedArray = selectedItems.map((item: any) => ({
       itemId: item.id,
       quantity: item.count,
       unitPrice: item.price,
       isVariety: item.isVariety,
-      isPacked: item.isPacking,
+      isPacked: item.isPacked,
     }));
     const payload = {
       status: 0,
@@ -103,6 +121,7 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: qrId,
       comment: order.comment,
+      totalAmount: finalTotal,
       orderDetails: transformedArray,
     };
     const id = businessId ? businessId : businessInformation[0]?.businessId;
@@ -111,18 +130,19 @@ const CheckoutModal = ({
     setLoading(false);
     if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
-
-      toast.success('Order placed');
+      setCostInfo(data.data.data);
+      setOrderReference(data.data.data.reference);
+      getOrderDetails();
+      toast.success("Order placed");
       closeModal === true && setChangeTitle(true);
 
       setOrder({
         ...order,
-        comment: '',
+        comment: "",
       });
-    } else {
-      toast.error(data?.data?.error);
     }
   };
+
   const updateOrder = async () => {
     setLoading(true);
     const transformedArray = selectedItems.map((item) => ({
@@ -130,7 +150,7 @@ const CheckoutModal = ({
       quantity: item.count,
       unitPrice: item.price,
       isVariety: item.isVariety,
-      isPacked: item.isPacking,
+      isPacked: item.isPacked,
     }));
     const payload = {
       status: 0,
@@ -138,6 +158,7 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: qrId,
       comment: order.comment,
+      totalAmount: finalTotal,
       orderDetails: transformedArray,
     };
 
@@ -147,14 +168,14 @@ const CheckoutModal = ({
     setLoading(false);
     if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
-
-      toast.success('Order updated');
+      setOrderReference(data.data.data.reference);
+      getOrderDetails();
+      setCostInfo(data.data.data);
+      toast.success("Order updated");
     } else if (data?.data?.error) {
       toast.error(data?.data?.error);
     }
   };
-
-  const finalTotal = totalPrice + totalPrice * (7.5 / 100) + additionalCost;
 
   return (
     <div className="">
@@ -162,15 +183,15 @@ const CheckoutModal = ({
         hideCloseButton={true}
         isKeyboardDismissDisabled={true}
         classNames={{
-          base: `${changeTitle ? 'h-full' : 'max-h-full'} overflow-scroll`,
+          base: `${changeTitle ? "h-full" : "max-h-full"} overflow-scroll`,
           // base: `md:overflow-none overflow-scroll ${
           //   changeTitle ? 'h-full' : 'h-screen'
           // }`,
-          body: 'px-1 md:px-6',
-          header: 'px-3 md:px-6',
+          body: "px-1 md:px-6",
+          header: "px-3 md:px-6",
         }}
         isDismissable={false}
-        size={'4xl'}
+        size={"4xl"}
         isOpen={isOpen}
         onOpenChange={() => {
           onOpenChange();
@@ -185,15 +206,27 @@ const CheckoutModal = ({
                 <ModalHeader className="flex flex-col mt-3 gap-1">
                   <div className="flex flex-row flex-wrap  justify-between">
                     {changeTitle ? (
-                      <div>
-                        <div className="text-[24px] leading-8 font-semibold">
-                          <span className="text-black">
-                            Hello, {order.placedByName}
-                          </span>
+                      <div className="flex justify-between w-full items-center">
+                        <div>
+                          <div className="text-[24px] leading-8 font-semibold">
+                            <span className="text-black">
+                              Hello, {order.placedByName}
+                            </span>
+                          </div>
+                          <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
+                            Your orders
+                          </p>
                         </div>
-                        <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
-                          Your orders
-                        </p>
+                        <div>
+                          <CustomButton
+                            loading={loadingCostInfo}
+                            disabled={loadingCostInfo}
+                            onClick={getOrderDetails}
+                            className="py-2 px-4 h-[50px] mb-0 bg-gray-100 border border-primaryGrey"
+                          >
+                            Refresh Cost
+                          </CustomButton>
+                        </div>
                       </div>
                     ) : (
                       <div>
@@ -213,7 +246,7 @@ const CheckoutModal = ({
                     <div className="flex lg:flex-row flex-col gap-3 mb-4">
                       <div
                         className={`flex flex-col lg:w-[60%] ${
-                          changeTitle ? 'h-full' : 'max-h-[300px]'
+                          changeTitle ? "h-full" : "max-h-[300px]"
                         }   overflow-y-scroll w-full  px-2`}
                       >
                         {selectedItems?.map((item, index) => {
@@ -236,7 +269,10 @@ const CheckoutModal = ({
 
                                   <div className="pl-2 flex  flex-col text-sm justify-center">
                                     <p className="font-[600]">
-                                      {item.itemName}
+                                      {item.itemName}{" "}
+                                      <span className="text-black">
+                                        {item.unit && `(${item.unit})`}
+                                      </span>
                                     </p>
 
                                     <Spacer y={1} />
@@ -245,7 +281,8 @@ const CheckoutModal = ({
                                     </p>
                                     <Checkbox
                                       size="sm"
-                                      isSelected={item.isPacking}
+                                      defaultSelected={item.isPacked}
+                                      isSelected={item.isPacked}
                                       onValueChange={(isSelected) =>
                                         handlePackingCost(item.id, isSelected)
                                       }
@@ -294,8 +331,8 @@ const CheckoutModal = ({
                                     </h3>
                                     <span
                                       className={cn(
-                                        'text-xs text-gray-200',
-                                        item.isPacking && 'font-bold text-black'
+                                        "text-xs text-gray-200",
+                                        item.isPacked && "font-bold text-black"
                                       )}
                                     >
                                       {formatPrice(item.packingCost)}
@@ -311,26 +348,39 @@ const CheckoutModal = ({
                         })}
                         <div className="flex justify-end mt-auto">
                           <div className="flex flex-col gap-2">
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 justify-between">
                               <p className="text-black font-bold">Subtotal: </p>
                               <p className="text-black">
                                 {formatPrice(totalPrice)}
                               </p>
                             </div>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between gap-2">
                               <p className="text-black font-bold">Vat(7.5%):</p>
+
                               <p className="text-black">
-                                {totalPrice * (7.5 / 100)}
+                                ₦{totalPrice * (7.5 / 100)}
                               </p>
                             </div>
-                            <div className="flex gap-2">
-                              <p className="text-black font-bold">
-                                Additional cost:{' '}
-                              </p>
-                              <p className="text-black">
-                                {formatPrice(additionalCost)}
-                              </p>
-                            </div>
+                            {costInfo?.additionalCost && (
+                              <>
+                                <div className="flex gap-2 justify-between">
+                                  <p className="text-black font-bold">
+                                    {costInfo?.additionalCostName}:{" "}
+                                  </p>
+                                  <p className="text-black">
+                                    {formatPrice(costInfo?.additionalCost || 0)}
+                                  </p>
+                                </div>
+                                <div className="flex gap-2 justify-between">
+                                  <p className="text-black font-bold">
+                                    Total Amount:
+                                  </p>
+                                  <p className="text-black">
+                                    {formatPrice(finalTotal)}
+                                  </p>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -405,8 +455,8 @@ const CheckoutModal = ({
                               <p>Place order</p>
                               <div className="flex gap-2 items-center">
                                 <span className="font-bold">
-                                  {' '}
-                                  {formatPrice(finalTotal)}{' '}
+                                  {" "}
+                                  {formatPrice(finalTotal)}{" "}
                                 </span>
                                 <HiArrowLongLeft className="text-[22px] rotate-180" />
                               </div>
@@ -427,7 +477,7 @@ const CheckoutModal = ({
             </>
           )}
         </ModalContent>
-      </Modal>{' '}
+      </Modal>{" "}
     </div>
   );
 };

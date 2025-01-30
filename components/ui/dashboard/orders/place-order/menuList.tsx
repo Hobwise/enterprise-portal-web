@@ -247,9 +247,9 @@ const MenuList = () => {
 
   const handleTabClick = (index) => {
     setPage(1);
-    const filteredMenu = filteredItems.filter((item) => item.name === index);
-    setMenuIdTable(filteredMenu[0]?.id);
-    setFilteredMenu(filteredMenu[0]?.items);
+    const filteredMenu = filteredItems?.filter((item) => item.name === index);
+    setMenuIdTable(filteredMenu?.[0]?.id);
+    setFilteredMenu(filteredMenu?.[0]?.items);
   };
 
   useEffect(() => {

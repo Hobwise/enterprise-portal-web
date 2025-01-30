@@ -54,6 +54,7 @@ export const DASHBOARD = {
   orderByPaged: "api/v1/Order/paged",
   orderByReference: "api/v1/Order/by-reference",
   order: "api/v1/Order",
+  orderByRef: "api/v1/Order/by-reference",
   placeOrder: "api/v1/Order/place",
   completeOrder: "api/v1/Order/complete",
 

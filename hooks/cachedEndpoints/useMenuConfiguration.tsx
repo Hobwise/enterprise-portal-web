@@ -1,7 +1,7 @@
-'use client';
-import { getMenuConfiguration } from '@/app/api/controllers/dashboard/menu';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+"use client";
+import { getMenuConfiguration } from "@/app/api/controllers/dashboard/menu";
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import { useQuery } from "react-query";
 
 interface DesignOptions {
   layout: number;
@@ -13,7 +13,7 @@ interface DesignOptions {
   textColour: string;
 }
 const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const businessId = businessInformation
     ? businessInformation[0]?.businessId
     : businessIdOutsideApp;
@@ -23,11 +23,12 @@ const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
 
       cooperateID
     );
+
     return responseData?.data?.data as DesignOptions;
   };
 
   const { data, isLoading, isError, refetch } = useQuery<DesignOptions>(
-    'menuConfig',
+    "menuConfig",
     getMenuConfig,
     {
       refetchOnWindowFocus: false,

@@ -1,33 +1,33 @@
-'use client';
-import { Chip, Divider, useDisclosure } from '@nextui-org/react';
-import Image from 'next/image';
-import React, { useEffect, useMemo, useState } from 'react';
+"use client";
+import { Chip, Divider, useDisclosure } from "@nextui-org/react";
+import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 
-import { CustomButton } from '@/components/customButton';
-import Error from '@/components/error';
-import { togglePreview } from '@/components/ui/dashboard/menu/preview-menu/data';
+import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
+import { togglePreview } from "@/components/ui/dashboard/menu/preview-menu/data";
 
-import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
+import { CheckIcon } from "@/components/ui/dashboard/orders/place-order/data";
 
-import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { cn, formatPrice } from '@/lib/utils';
-import { useSearchParams } from 'next/navigation';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import noMenu from '../../public/assets/images/no-menu.png';
+import useMenuConfig from "@/hooks/cachedEndpoints/useMenuConfiguration";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { formatPrice } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
+import { HiArrowLongLeft } from "react-icons/hi2";
+import noMenu from "../../public/assets/images/no-menu.png";
 
-import useMenuUser from '@/hooks/cachedEndpoints/userMenuUser';
-import SplashScreen from '../reservation/splash-screen';
-import CheckoutModal from './checkoutModal';
-import Filters from './filter';
-import ViewModal from './viewMore';
+import useMenuUser from "@/hooks/cachedEndpoints/userMenuUser";
+import SplashScreen from "../reservation/splash-screen";
+import CheckoutModal from "./checkoutModal";
+import Filters from "./filter";
+import ViewModal from "./viewMore";
 
 const CreateOrder = () => {
   const searchParams = useSearchParams();
-  let businessName = searchParams.get('businessName');
-  let businessId = searchParams.get('businessID');
-  let cooperateID = searchParams.get('cooperateID');
-  let qrId = searchParams.get('id');
+  let businessName = searchParams.get("businessName");
+  let businessId = searchParams.get("businessID");
+  let cooperateID = searchParams.get("cooperateID");
+  let qrId = searchParams.get("id");
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -35,7 +35,7 @@ const CreateOrder = () => {
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
-  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Item[]>([]);
 
   const { data, isLoading, isError, refetch } = useMenuUser(
     businessId,
@@ -45,14 +45,20 @@ const CreateOrder = () => {
   useEffect(() => {
     setMenuIdTable(data?.[0]?.id);
   }, []);
-  const [filteredMenu, setFilteredMenu] = useState(data?.[0]?.items);
-  const handleTabClick = (index) => {
+  const [filteredMenu, setFilteredMenu] = useState<any[]>([]);
+  const handleTabClick = (index: any) => {
     setPage(1);
     const filteredMenu = data?.filter((item) => item.name === index);
 
-    setMenuIdTable(filteredMenu[0]?.id);
-    setFilteredMenu(filteredMenu[0]?.items);
+    setMenuIdTable(filteredMenu?.[0]?.id);
+    setFilteredMenu(filteredMenu?.[0]?.items);
   };
+
+  useEffect(() => {
+    if (data?.[0]?.items) {
+      setFilteredMenu(data[0].items);
+    }
+  }, [data]);
 
   const topContent = useMemo(() => {
     return <Filters menus={data} handleTabClick={handleTabClick} />;
@@ -61,29 +67,29 @@ const CreateOrder = () => {
   const matchingObject = data?.find((category) => category?.id === menuIdTable);
 
   const matchingObjectArray = matchingObject
-    ? matchingObject?.items
-    : data?.[0]?.items;
+    ? matchingObject.items
+    : filteredMenu || data?.[0]?.items || [];
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      event.returnValue = '';
+      event.returnValue = "";
     };
 
     if (selectedItems.length > 0) {
-      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener("beforeunload", handleBeforeUnload);
     }
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [selectedItems]);
 
   if (isError) {
     return (
       <div className="h-screen grid place-content-center bg-white">
-        {' '}
-        <Error imageHeight={'h-32'} onClick={() => refetch()} />
+        {" "}
+        <Error imageHeight={"h-32"} onClick={() => refetch()} />
       </div>
     );
   }
@@ -92,17 +98,17 @@ const CreateOrder = () => {
   }
   const convertActiveTile = (activeTile: number) => {
     const previewStyles: { [key: string]: string } = {
-      0: 'List left',
-      1: 'List Right',
-      2: 'Single column 1',
-      3: 'Single column 2',
-      4: 'Double column',
+      0: "List left",
+      1: "List Right",
+      2: "Single column 1",
+      3: "Single column 2",
+      4: "Double column",
     };
 
     return previewStyles[activeTile];
   };
 
-  type SelectedItem = {
+  type Item = {
     id: string;
     itemID: string;
     itemName: string;
@@ -117,24 +123,7 @@ const CreateOrder = () => {
     varieties: null | any;
     count: number;
     packingCost: number;
-    isPacking?: boolean;
-  };
-  type MenuItem = {
-    name: string;
-    items: Array<{
-      id: string;
-      itemID: string;
-      itemName: string;
-      menuName: string;
-      itemDescription: string;
-      price: number;
-      currency: string;
-      isAvailable: boolean;
-      hasVariety: boolean;
-      image: string;
-      isVariety: boolean;
-      varieties: null | any;
-    }>;
+    isPacked?: boolean;
   };
 
   const toggleVarietyModal = (menu: any) => {
@@ -143,29 +132,29 @@ const CreateOrder = () => {
     setIsOpenVariety(!isOpenVariety);
   };
 
-  const handleCardClick = (menuItem: SelectedItem, isItemPacked: boolean) => {
+  const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
-
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
+      // setSelectedMenu(menuItem);
       setSelectedItems((prevItems: any) => [
         ...prevItems,
-        { ...menuItem, count: 1, isPacking: isItemPacked },
+        {
+          ...menuItem,
+          count: 1,
+          isPacked: isItemPacked,
+          packingCost: menuItem.isVariety
+            ? selectedMenu.packingCost
+            : menuItem.packingCost || 0,
+        },
       ]);
     }
   };
 
-  const handleIncrement = (id: string) => {
-    setSelectedItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, count: item.count + 1 } : item
-      )
-    );
-  };
   const handleDecrement = (id: string) => {
-    setSelectedItems((prevItems) =>
-      prevItems.map((item) => {
+    setSelectedItems((prevItems: any) =>
+      prevItems.map((item: any) => {
         if (item.id === id && item.count > 1) {
           return { ...item, count: item.count - 1 };
         }
@@ -175,36 +164,46 @@ const CreateOrder = () => {
     );
   };
 
-  const handlePackingCost = (itemId: string, isPacking: boolean) => {
-    let selectedItemsCopy = [...selectedItems];
-    const existingItem = selectedItemsCopy.find((item) => item.id === itemId);
-    if (!existingItem) {
-      return;
-    }
-
-    const existingItemIndex = selectedItemsCopy.findIndex(
-      (item) => item.id === itemId
+  const handleIncrement = (id: string) => {
+    setSelectedItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id ? { ...item, count: item.count + 1 } : item
+      )
     );
-    const updatedItem = { ...existingItem, isPacking };
-    selectedItemsCopy[existingItemIndex] = updatedItem;
-
-    setSelectedItems(selectedItemsCopy);
   };
-
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
-      const additionalCost = item.isPacking ? item.packingCost : 0;
-      return acc + item.price * item.count + additionalCost;
+      const itemTotal = item.price * item.count;
+      const packingTotal = item.isPacked
+        ? (item.packingCost || 0) * item.count
+        : 0;
+      return acc + itemTotal + packingTotal;
     }, 0);
   };
 
-  const baseString = 'data:image/jpeg;base64,';
+  const handlePackingCost = (itemId: string, isPacked: boolean) => {
+    setSelectedItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === itemId ? { ...item, isPacked } : item
+      )
+    );
+  };
+
+  const baseString = "data:image/jpeg;base64,";
+  const handleCheckoutOpen = () => {
+    if (selectedItems.length > 0) {
+      if (!selectedMenu || Object.keys(selectedMenu).length === 0) {
+        setSelectedMenu(selectedItems[0]);
+      }
+      onOpen();
+    }
+  };
 
   return (
     <main className=" ">
       <article
         style={{
-          backgroundColor: menuConfig?.backgroundColour || 'white',
+          backgroundColor: menuConfig?.backgroundColour || "white",
         }}
         className="xl:block relative  h-screen   overflow-scroll    shadow-lg"
       >
@@ -225,22 +224,22 @@ const CreateOrder = () => {
             <p className="text-sm  text-grey600  w-full ">
               {selectedItems.length > 0
                 ? `${selectedItems.length} items selected`
-                : 'Select items from the menu'}
+                : "Select items from the menu"}
             </p>
           </div>
           <CustomButton
-            onClick={selectedItems.length > 0 ? onOpen : {}}
+            onClick={handleCheckoutOpen}
             className="py-2 px-4 mb-0 text-white"
             backgroundColor="bg-primaryColor"
           >
             <div className="flex gap-2 items-center justify-center">
               {selectedItems.length > 0 && (
                 <span className="font-bold">
-                  {' '}
-                  {formatPrice(calculateTotalPrice())}{' '}
+                  {" "}
+                  {formatPrice(calculateTotalPrice())}{" "}
                 </span>
               )}
-              <p>{'Proceed'} </p>
+              <p>{"Proceed"} </p>
               <HiArrowLongLeft className="text-[22px] rotate-180" />
             </div>
           </CustomButton>
@@ -248,11 +247,9 @@ const CreateOrder = () => {
         {topContent}
 
         <div
-          className={cn(
-            'relative px-4',
-            menuConfig?.layout &&
-              togglePreview(convertActiveTile(menuConfig?.layout))?.main
-          )}
+          className={`${
+            togglePreview(convertActiveTile(menuConfig?.layout))?.main
+          } relative  px-4`}
         >
           {matchingObjectArray?.map((item) => {
             const isSelected =
@@ -262,18 +259,18 @@ const CreateOrder = () => {
               );
 
             return (
-              <React.Fragment key={item.menuID}>
+              <>
                 <div
                   onClick={() => toggleVarietyModal(item)}
-                  className={cn(
-                    'flex my-4',
-                    menuConfig?.layout &&
-                      togglePreview(convertActiveTile(menuConfig.layout))
-                        ?.container,
+                  key={item.menuID}
+                  className={`${
+                    togglePreview(convertActiveTile(menuConfig?.layout))
+                      ?.container
+                  } ${
+                    convertActiveTile(menuConfig?.layout) === "List Right" &&
                     menuConfig?.useBackground &&
-                      convertActiveTile(menuConfig?.layout) === 'List Right' &&
-                      'flex-row-reverse'
-                  )}
+                    "flex-row-reverse"
+                  } flex  my-4 text-black cursor-pointer`}
                 >
                   {menuConfig?.useBackground && (
                     <div
@@ -295,13 +292,13 @@ const CreateOrder = () => {
                     </div>
                   )}
                   <div
-                    className={cn(
-                      'flex flex-col justify-center w-[70%] text-sm',
-                      menuConfig?.layout
-                        ? togglePreview(convertActiveTile(menuConfig?.layout))
-                            ?.textContainer
-                        : 'text-black'
-                    )}
+                    style={{
+                      color: menuConfig?.textColour,
+                    }}
+                    className={`text-[14px]  ${
+                      togglePreview(convertActiveTile(menuConfig?.layout))
+                        ?.textContainer
+                    } flex flex-col justify-center `}
                   >
                     <p className="font-[700]">{item.itemName}</p>
                     <p className="text-[13px]">{item.menuName}</p>
@@ -311,7 +308,7 @@ const CreateOrder = () => {
                         startContent={<CheckIcon size={18} />}
                         variant="flat"
                         classNames={{
-                          base: 'bg-primaryColor text-white text-[10px] mt-1',
+                          base: "bg-primaryColor text-white text-[10px] mt-1",
                         }}
                       >
                         Selected
@@ -321,7 +318,7 @@ const CreateOrder = () => {
                 </div>
                 {togglePreview(convertActiveTile(menuConfig?.layout))
                   ?.divider && <Divider className="text-[#E4E7EC] h-[1px]" />}
-              </React.Fragment>
+              </>
             );
           })}
         </div>
@@ -333,13 +330,14 @@ const CreateOrder = () => {
           handleDecrement={handleDecrement}
           handleIncrement={handleIncrement}
           selectedItems={selectedItems}
-          handlePackingCost={handlePackingCost}
           totalPrice={calculateTotalPrice()}
           onOpenChange={onOpenChange}
           isOpen={isOpen}
+          selectedMenu={selectedMenu}
           closeModal={true}
           businessId={businessId}
           cooperateID={cooperateID}
+          handlePackingCost={handlePackingCost}
           setSelectedItems={setSelectedItems}
         />
       )}
@@ -348,10 +346,10 @@ const CreateOrder = () => {
         handleCardClick={handleCardClick}
         handleDecrement={handleDecrement}
         handleIncrement={handleIncrement}
-        handlePackingCost={handlePackingCost}
         selectedMenu={selectedMenu}
         isOpenVariety={isOpenVariety}
         totalPrice={calculateTotalPrice()}
+        handlePackingCost={handlePackingCost}
         toggleVarietyModal={toggleVarietyModal}
         selectedItems={selectedItems}
       />

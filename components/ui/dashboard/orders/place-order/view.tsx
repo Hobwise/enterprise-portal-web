@@ -133,7 +133,7 @@ const ViewModal = ({
                                 ...selectedMenu,
                                 isVariety: false,
                               },
-                              false // Always set isPacked to false when initially selecting
+                              false
                             )
                           }
                           className="h-8 w-4 text-black bg-white border border-primaryGrey"
