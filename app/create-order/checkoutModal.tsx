@@ -245,9 +245,7 @@ const CheckoutModal = ({
                   <div className="">
                     <div className="flex lg:flex-row flex-col gap-3 mb-4">
                       <div
-                        className={`flex flex-col lg:w-[60%] ${
-                          changeTitle ? "h-full" : "max-h-[300px]"
-                        }   overflow-y-scroll w-full  px-2`}
+                        className={`flex flex-col lg:w-[60%]   w-full  px-2`}
                       >
                         {selectedItems?.map((item, index) => {
                           return (
