@@ -1,7 +1,6 @@
 'use client';
 import Image from 'next/image';
 import React from 'react';
-import { CampaignIcon } from '@/public/assets/svg';
 import { CustomButton } from '@/components/customButton';
 import { Transition } from '@/components/ui/landingPage/transition';
 import Link from 'next/link';
@@ -20,9 +19,6 @@ import MainSideImage from '@/public/assets/images/main-side-image.png';
 import Demo from '@/components/ui/landingPage/demo';
 
 export default function HomeComponent() {
-  const sectionHeaderClass: string =
-    'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1 rounded-full text-xs lg:mx-auto shadow_custom-inset';
-
   return (
     <div className="overflow-y-scroll scroll-smooth h-screen bg-white">
       <main className="gap-3 text-center relative bg-white overflow-x-hidden font-satoshi h-full">
@@ -103,7 +99,7 @@ export default function HomeComponent() {
         </section>
 
         <Transition>
-          <section className="bg-white py-8 lg:py-16 font-satoshi space-y-4 lg:space-y-8 px-6 lg:px-12">
+          {/* <section className="bg-white py-8 lg:py-16 font-satoshi space-y-4 lg:space-y-8 px-6 lg:px-12">
             <div className={sectionHeaderClass}>
               <CampaignIcon />
               <p className="font-normal">Campaigns</p>
@@ -112,9 +108,9 @@ export default function HomeComponent() {
               <h2 className="text-[24px] text-left lg:text-center lg:text-[40px] text-[#161618] lg:leading-[64px] font-bricolage_grotesque">
                 Checkout amazing deals from brands registered with us
               </h2>
-            </div>
-            <Campaigns />
-          </section>
+            </div> */}
+          <Campaigns />
+          {/* </section> */}
         </Transition>
 
         <Demo />
