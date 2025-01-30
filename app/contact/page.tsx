@@ -122,22 +122,27 @@ export default function Contact() {
                   }}
                   errorMessage={error.email}
                 />
-                <CustomTextArea
-                  name="question"
-                  label="What’s your question?"
-                  placeholder="Describe your questions here.."
-                  classnames="font-light"
-                  defaultValue=""
-                  value={contactInfo.message}
-                  onChange={({ target }: any) => {
-                    setError((prev) => ({ ...prev, message: '' }));
-                    setContactInfo((prev) => ({
-                      ...prev,
-                      message: target.value,
-                    }));
-                  }}
-                  errorMessage={error.message}
-                />
+                <div className="relative h-[136px]">
+                  <CustomTextArea
+                    name="question"
+                    label="What’s your question?"
+                    placeholder="Describe your questions here.."
+                    classnames="font-light"
+                    defaultValue=""
+                    value={contactInfo.message}
+                    onChange={({ target }: any) => {
+                      setError((prev) => ({ ...prev, message: '' }));
+                      target.value.length <= 100
+                        ? setContactInfo((prev) => ({
+                            ...prev,
+                            message: target.value,
+                          }))
+                        : setError((prev) => ({ ...prev, message: 'Question should be less than 100 characters' }));
+                    }}
+                    errorMessage={error.message}
+                  />
+                  <p className="text-xs absolute bottom-0 text-primaryColor right-0">{100 - contactInfo.message.length} character(s)</p>
+                </div>
                 <div>
                   <CustomButton className="h-10 w-full text-white -mt-6" type="button" onClick={submitFormData} loading={isLoading} disabled={isLoading}>
                     Submit
@@ -165,7 +170,7 @@ export default function Contact() {
                 <div className="space-y-6">
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Office Headquarters</h4>
 
-                  <p className="text-[#252525]">San Francisco, West Coast Headquarter Suite 3241</p>
+                  <p className="text-[#252525]">Bouvardia Court Ota Iku Street Off Gbangbala Street Ikate Lekki</p>
                 </div>
               </div>
             </div>
