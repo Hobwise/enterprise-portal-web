@@ -191,13 +191,13 @@ export default function Contact() {
 
               <div className="font-satoshi space-y-8 w-[55%]">
                 <Image src={HobinkLogo} alt="hobwise logo" width={50} height={50} />
-                <div className="space-y-6">
+                <div className="space-y-1.5">
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer email?</h4>
                   <a href="mailto: hello@hobwise.com" target="_blank" className="text-primaryColor underline font-medium">
                     hello@hobwise.com
                   </a>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-1.5">
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer docs?</h4>
                   <p className="text-[#252525]">
                     Check out our{' '}
@@ -208,10 +208,10 @@ export default function Contact() {
                     </span>
                   </p>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-1.5">
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Office Headquarters</h4>
 
-                  <p className="text-[#252525]">San Francisco, West Coast Headquarter Suite 3241</p>
+                  <p className="text-[#252525]">Bouvardia Court Ota Iku Street Off Gbangbala Street Ikate Lekki</p>
                 </div>
               </div>
             </div>
