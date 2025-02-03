@@ -33,6 +33,7 @@ import Notifications from "./notifications/notifications";
 import { useCheckExpiry, NavigationBanner } from "./subscription-notification";
 import { getJsonCookie, setJsonCookie } from "@/lib/cookies";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { MdOutlinePerson } from "react-icons/md";
 
 const Header = () => {
   const page = 1;
@@ -188,14 +189,16 @@ const Header = () => {
                 </div>
               </DropdownTrigger>
               <DropdownMenu aria-label="settings Actions" variant="flat">
-                <DropdownItem key=" Account settings">
+                <DropdownItem key="Profile Management">
                   <Link
                     prefetch={true}
                     href={"/dashboard/settings/personal-information"}
                     className="flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2"
                   >
-                    <IoIosSettings className="text-[20px]" />
-                    <span className="  text-sm font-md">Account settings</span>
+                    <MdOutlinePerson className="text-[22px]" />
+                    <span className="  text-sm font-md">
+                      Profile Management
+                    </span>
                   </Link>
                 </DropdownItem>
                 <DropdownItem key="logout">

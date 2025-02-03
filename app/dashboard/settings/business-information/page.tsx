@@ -1,38 +1,38 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { CustomButton } from '@/components/customButton';
-import { BiEditAlt } from 'react-icons/bi';
-import { Avatar, cn, Divider } from '@nextui-org/react';
-import { MdLockOutline } from 'react-icons/md';
-import { CustomInput } from '@/components/CustomInput';
-import { IoCheckmarkCircleOutline } from 'react-icons/io5';
+import React, { useState } from "react";
+import Image from "next/image";
+import { CustomButton } from "@/components/customButton";
+import { BiEditAlt } from "react-icons/bi";
+import { Avatar, cn, Divider } from "@nextui-org/react";
+import { MdLockOutline } from "react-icons/md";
+import { CustomInput } from "@/components/CustomInput";
+import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   mapBusinessCategory,
   THREEMB,
-} from '@/lib/utils';
-import toast from 'react-hot-toast';
-import imageCompression from 'browser-image-compression';
-import { RxCross2 } from 'react-icons/rx';
+} from "@/lib/utils";
+import toast from "react-hot-toast";
+import imageCompression from "browser-image-compression";
+import { RxCross2 } from "react-icons/rx";
 import {
   Modal,
   ModalContent,
   ModalBody,
   ModalFooter,
   useDisclosure,
-} from '@nextui-org/react';
-import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
-import { useMutation, useQueryClient } from 'react-query';
-import { PiBuildingOffice } from 'react-icons/pi';
-import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
-import api from '@/app/api/apiService';
-import { AUTH } from '@/app/api/api-url';
-import { TbCopy } from 'react-icons/tb';
-import States from '@/lib/cities.json';
-import SelectInput from '@/components/selectInput';
+} from "@nextui-org/react";
+import { deleteFile, uploadFile } from "@/app/api/controllers/dashboard/menu";
+import { useMutation, useQueryClient } from "react-query";
+import { PiBuildingOffice } from "react-icons/pi";
+import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
+import api from "@/app/api/apiService";
+import { AUTH } from "@/app/api/api-url";
+import { TbCopy } from "react-icons/tb";
+import States from "@/lib/cities.json";
+import SelectInput from "@/components/selectInput";
 
 interface BusinessData {
   [key: string]: any;
@@ -41,7 +41,7 @@ interface BusinessData {
 const BusinessInformation = () => {
   const queryClient = useQueryClient();
 
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const { data: businessData } = useGetBusiness();
   const [isEditing, setIsEditing] = useState(false);
@@ -59,7 +59,9 @@ const BusinessInformation = () => {
   };
 
   const getCities = () => {
-    const state = States.find((state) => state.name === businessFormData?.state);
+    const state = States.find(
+      (state) => state.name === businessFormData?.state
+    );
 
     if (state) {
       return state?.cities.map((city) => ({
@@ -97,7 +99,7 @@ const BusinessInformation = () => {
         setPreviewUrl(null);
         setBusinessFormData((prevState: any) => ({
           ...prevState,
-          logoImageReference: '',
+          logoImageReference: "",
         }));
       }
     },
@@ -113,7 +115,7 @@ const BusinessInformation = () => {
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
         onOpen();
-        queryClient.invalidateQueries({ queryKey: ['getBusiness'] });
+        queryClient.invalidateQueries({ queryKey: ["getBusiness"] });
       }
     },
   });
@@ -135,7 +137,7 @@ const BusinessInformation = () => {
     if (event.target.files) {
       const file = event.target.files[0];
       if (file.size > THREEMB) {
-        return toast.error('File too large');
+        return toast.error("File too large");
       }
 
       const compressedFile = await imageCompression(file, imageCompressOptions);
@@ -147,7 +149,7 @@ const BusinessInformation = () => {
         reader.readAsDataURL(compressedFile);
       }
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append("file", compressedFile);
       uploadFileMutation.mutate(formData);
     }
   };
@@ -285,15 +287,15 @@ const BusinessInformation = () => {
                   <span className="text-sm">Business Email</span>
                   <span
                     className={cn(
-                      'text-sm',
+                      "text-sm",
                       businessFormData?.contactEmailAddress.length > 0
-                        ? 'text-black'
-                        : 'text-red-500'
+                        ? "text-black"
+                        : "text-red-500"
                     )}
                   >
                     {businessFormData?.contactEmailAddress.length > 0
                       ? businessFormData?.contactEmailAddress
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -303,15 +305,15 @@ const BusinessInformation = () => {
                   <span className="text-sm">Phone No</span>
                   <span
                     className={cn(
-                      'text-sm',
+                      "text-sm",
                       businessFormData?.contactPhoneNumber?.length > 0
-                        ? 'text-black'
-                        : 'text-red-500'
+                        ? "text-black"
+                        : "text-red-500"
                     )}
                   >
                     {businessFormData?.contactPhoneNumber?.length > 0
                       ? businessFormData?.contactPhoneNumber
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -321,15 +323,15 @@ const BusinessInformation = () => {
                   <span className="text-sm">Business Address</span>
                   <span
                     className={cn(
-                      'text-sm',
+                      "text-sm",
                       businessFormData?.address?.length > 0
-                        ? 'text-black'
-                        : 'text-red-500'
+                        ? "text-black"
+                        : "text-red-500"
                     )}
                   >
                     {businessFormData?.address?.length > 0
                       ? businessFormData?.address
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -339,15 +341,15 @@ const BusinessInformation = () => {
                   <span className="text-sm">State</span>
                   <span
                     className={cn(
-                      'text-sm',
+                      "text-sm",
                       businessFormData?.state?.length > 0
-                        ? 'text-black'
-                        : 'text-red-500'
+                        ? "text-black"
+                        : "text-red-500"
                     )}
                   >
                     {businessFormData?.state?.length > 0
                       ? businessFormData?.state
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -357,15 +359,15 @@ const BusinessInformation = () => {
                   <span className="text-sm">LGA</span>
                   <span
                     className={cn(
-                      'text-sm',
+                      "text-sm",
                       businessFormData?.city?.length > 0
-                        ? 'text-black'
-                        : 'text-red-500'
+                        ? "text-black"
+                        : "text-red-500"
                     )}
                   >
                     {businessFormData?.city?.length > 0
                       ? businessFormData?.city
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -376,15 +378,15 @@ const BusinessInformation = () => {
                   <div className="flex items-center justify-between">
                     <span
                       className={cn(
-                        'text-sm',
+                        "text-sm",
                         businessFormData?.primaryBrandColour?.length > 0
-                          ? 'text-black'
-                          : 'text-red-500'
+                          ? "text-black"
+                          : "text-red-500"
                       )}
                     >
                       {businessFormData?.primaryBrandColour?.length > 0
                         ? businessFormData?.primaryBrandColour
-                        : 'Not updated'}
+                        : "Not updated"}
                     </span>
 
                     {businessFormData?.primaryBrandColour.length > 0 && (
@@ -407,15 +409,15 @@ const BusinessInformation = () => {
                   <div className="flex items-center justify-between">
                     <span
                       className={cn(
-                        'text-sm',
+                        "text-sm",
                         businessFormData?.secondaryBrandColour?.length > 0
-                          ? 'text-black'
-                          : 'text-red-500'
+                          ? "text-black"
+                          : "text-red-500"
                       )}
                     >
                       {businessFormData?.secondaryBrandColour?.length > 0
                         ? businessFormData?.secondaryBrandColour
-                        : 'Not updated'}
+                        : "Not updated"}
                     </span>
                     {businessFormData?.secondaryBrandColour.length > 0 && (
                       <TbCopy
@@ -494,7 +496,11 @@ const BusinessInformation = () => {
                   <CustomInput
                     type="text"
                     name="address"
-                    // errorMessage={response?.errors?.lastName?.[0]}
+                    onChange={handleInputChange}
+                    errorMessage={
+                      businessFormData?.address.length < 5 &&
+                      "Business address must contain at least 5 characters"
+                    }
                     value={businessFormData?.address}
                     label="Business Address"
                     placeholder="Enter business address"
@@ -518,7 +524,7 @@ const BusinessInformation = () => {
                     onChange={handleInputChange}
                     defaultSelectedKeys={[businessFormData?.state]}
                     value={businessFormData?.state}
-                    placeholder={'Select state'}
+                    placeholder={"Select state"}
                     contents={getStates()}
                   />
                 </div>
@@ -531,7 +537,7 @@ const BusinessInformation = () => {
                     onChange={handleInputChange}
                     defaultSelectedKeys={[businessFormData?.city]}
                     value={businessFormData?.city}
-                    placeholder={'Select city'}
+                    placeholder={"Select city"}
                     contents={getCities()}
                   />
                 </div>

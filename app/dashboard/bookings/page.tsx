@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import { CustomLoading, notify } from '@/lib/utils';
+import { CustomLoading, notify } from "@/lib/utils";
 
-import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import Error from '@/components/error';
-import BookingDetails from '@/components/ui/dashboard/bookings/bookingDetails';
-import BookingsList from '@/components/ui/dashboard/bookings/bookingList';
-import ConfirmBooking from '@/components/ui/dashboard/bookings/confirmBooking';
-import CreateBooking from '@/components/ui/dashboard/bookings/createBooking';
-import CreateReservation from '@/components/ui/dashboard/bookings/createReservation';
-import SuccessModal from '@/components/ui/dashboard/bookings/successModal';
-import useBookings from '@/hooks/cachedEndpoints/useBookings';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import useDateFilter from '@/hooks/useDateFilter';
-import { downloadCSV } from '@/lib/downloadToExcel';
-import { Button, ButtonGroup, Chip, useDisclosure } from '@nextui-org/react';
-import { IoSearchOutline } from 'react-icons/io5';
-import { MdOutlineFileDownload } from 'react-icons/md';
+import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
+import BookingDetails from "@/components/ui/dashboard/bookings/bookingDetails";
+import BookingsList from "@/components/ui/dashboard/bookings/bookingList";
+import ConfirmBooking from "@/components/ui/dashboard/bookings/confirmBooking";
+import CreateBooking from "@/components/ui/dashboard/bookings/createBooking";
+import CreateReservation from "@/components/ui/dashboard/bookings/createReservation";
+import SuccessModal from "@/components/ui/dashboard/bookings/successModal";
+import useBookings from "@/hooks/cachedEndpoints/useBookings";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import useDateFilter from "@/hooks/useDateFilter";
+import { downloadCSV } from "@/lib/downloadToExcel";
+import { Button, ButtonGroup, Chip, useDisclosure } from "@nextui-org/react";
+import { IoSearchOutline } from "react-icons/io5";
+import { MdOutlineFileDownload } from "react-icons/md";
 
 const Bookings: React.FC = () => {
   const {
@@ -34,7 +34,7 @@ const Bookings: React.FC = () => {
   } = useDateFilter(useBookings);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { userRolePermissions, role } = usePermission();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [openBookingModal, setOpenBookingModal] = useState(false);
   const [openCreateBookingModal, setOpenCreateBookingModal] = useState(false);
   const [openSuccessModal, setOpenSuccessModal] = useState(false);
@@ -61,7 +61,7 @@ const Bookings: React.FC = () => {
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All Bookings');
+    setTableStatus("All Bookings");
     setPage(1);
   }, []);
 
@@ -101,7 +101,7 @@ const Bookings: React.FC = () => {
     }))
   );
 
-  const [bookingId, setBookingId] = useState('');
+  const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
   const [completedBooking, setCompletedBooking] = useState<any>(null);
@@ -111,22 +111,22 @@ const Bookings: React.FC = () => {
     checkingLoading: boolean = true
   ) => {
     setLoading(checkingLoading);
-    const data = await postBookingStatus(bookingId, id);
+    const data = await postBookingStatus(bookingDetails?.id, id);
     setLoading(false);
     if (data?.data?.isSuccessful) {
       notify({
-        title: 'Success!',
-        text: 'Operation successful',
-        type: 'success',
+        title: "Success!",
+        text: "Operation successful",
+        type: "success",
       });
       refetch();
-      setBookingId('');
+      setBookingId("");
       closeBookingModal();
     } else {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data.response?.data?.error?.responseDescription,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -164,7 +164,7 @@ const Bookings: React.FC = () => {
             <>
               <div>
                 <CustomInput
-                  classnames={'w-[242px]'}
+                  classnames={"w-[242px]"}
                   label=""
                   size="md"
                   value={searchQuery}

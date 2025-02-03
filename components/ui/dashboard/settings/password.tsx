@@ -1,21 +1,21 @@
-'use client';
-import { changePassword } from '@/app/api/controllers/auth';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
-import { Spacer } from '@nextui-org/react';
-import React, { useState } from 'react';
-import { toast } from 'react-toastify';
+"use client";
+import { changePassword } from "@/app/api/controllers/auth";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+import { Spacer } from "@nextui-org/react";
+import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 const Password = () => {
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isLoading, setIsLoading] = useState(false);
 
   const [response, setResponse] = useState(null);
   const [passwordFormData, setChangePasswordFormData] = useState({
-    password: '',
-    confirmPassword: '',
-    oldPassword: '',
+    password: "",
+    confirmPassword: "",
+    oldPassword: "",
   });
 
   const handleInputChange = (e) => {
@@ -43,28 +43,28 @@ const Password = () => {
     setResponse(data);
 
     if (data?.data?.isSuccessful) {
-      toast.success('Your password has been changed');
+      toast.success("Your password has been changed");
       setChangePasswordFormData({
-        password: '',
-        confirmPassword: '',
-        oldPassword: '',
+        password: "",
+        confirmPassword: "",
+        oldPassword: "",
       });
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
   return (
     <div>
-      <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
+      <div className="flex md:flex-row flex-col justify-between md:items-center items-start">
         <div>
-          <h1 className='text-[16px] leading-8 font-semibold'>
+          <h1 className="text-[16px] leading-8 font-semibold">
             Update password
           </h1>
-          <p className='text-sm  text-grey600 md:mb-10 mb-4'>
+          <p className="text-sm  text-grey600 md:mb-10 mb-4">
             Protect your account with secure password
           </p>
         </div>
@@ -72,41 +72,41 @@ const Password = () => {
           loading={isLoading}
           disabled={isLoading}
           onClick={submitFormData}
-          className='py-2 px-4 md:mb-0 mb-4 text-white'
-          backgroundColor='bg-primaryColor'
+          className="py-2 px-4 md:mb-0 mb-4 text-white"
+          backgroundColor="bg-primaryColor"
         >
           Save Changes
         </CustomButton>
       </div>
-      <form autoComplete='off'>
+      <form autoComplete="off">
         <CustomInput
           errorMessage={response?.errors?.oldPassword?.[0]}
           value={passwordFormData?.oldPassword}
           onChange={handleInputChange}
-          name='oldPassword'
-          type='text'
-          label='Enter old password'
-          placeholder='**********'
+          name="oldPassword"
+          type="password"
+          label="Enter old password"
+          placeholder="**********"
         />
         <Spacer y={6} />
         <CustomInput
           errorMessage={response?.errors?.newPassword?.[0]}
           value={passwordFormData?.password}
           onChange={handleInputChange}
-          type='text'
-          name='password'
-          label='Enter new password'
-          placeholder='**********'
+          type="password"
+          name="password"
+          label="Enter new password"
+          placeholder="**********"
         />
         <Spacer y={6} />
         <CustomInput
           errorMessage={response?.errors?.confirmPassword?.[0]}
           value={passwordFormData?.confirmPassword}
           onChange={handleInputChange}
-          type='text'
-          name='confirmPassword'
-          label='Enter new password'
-          placeholder='Confirm new password'
+          type="password"
+          name="confirmPassword"
+          label="Enter new password"
+          placeholder="Confirm new password"
         />
       </form>
     </div>
