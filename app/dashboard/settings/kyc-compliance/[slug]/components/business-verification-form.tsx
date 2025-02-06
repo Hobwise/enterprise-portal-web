@@ -215,6 +215,7 @@ const BusinessVerificationForm = () => {
           </div>
           <FileUploadInput
             id="pob"
+            accept="image/*"
             label="your CAC CERTIFICATE"
             placeholder="SVG, PNG, JPG or GIF (max. 3mb)"
             onChange={handleFileChange}
@@ -250,6 +251,7 @@ const BusinessVerificationForm = () => {
           </div>
           <FileUploadInput
             id="poba"
+            accept="image/*"
             label="your BUSINESS UTILITY BILL"
             placeholder="SVG, PNG, JPG or GIF (max. 3mb)"
             onChange={handleFileChange}

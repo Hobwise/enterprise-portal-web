@@ -196,8 +196,9 @@ const BusinessInformation = () => {
                 <input
                   type="file"
                   id="logo-photo"
-                  onChange={handleFileChange}
+                  accept="image/*"
                   className="hidden"
+                  onChange={handleFileChange}
                 />
               </label>
             </div>

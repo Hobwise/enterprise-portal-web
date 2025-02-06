@@ -190,6 +190,7 @@ const PersonalVerificationForm = () => {
           </div>
           <FileUploadInput
             id="selfie"
+            accept="image/*"
             label="your SELFIE"
             placeholder="SVG, PNG, JPG or GIF (max. 3mb)"
             onChange={handleFileChange}
@@ -222,6 +223,7 @@ const PersonalVerificationForm = () => {
           </div>
           <FileUploadInput
             id="id"
+            accept="image/*"
             label="a a VALID ID"
             placeholder="SVG, PNG, JPG or GIF (max. 3mb)"
             onChange={handleFileChange}

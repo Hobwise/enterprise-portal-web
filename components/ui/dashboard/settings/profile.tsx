@@ -1,34 +1,34 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { CustomButton } from '@/components/customButton';
-import { BiEditAlt } from 'react-icons/bi';
-import { CiUser } from 'react-icons/ci';
-import { Avatar, cn, Divider } from '@nextui-org/react';
-import { MdLockOutline } from 'react-icons/md';
-import { CustomInput } from '@/components/CustomInput';
-import { IoCheckmarkCircleOutline } from 'react-icons/io5';
+import React, { useState } from "react";
+import Image from "next/image";
+import { CustomButton } from "@/components/customButton";
+import { BiEditAlt } from "react-icons/bi";
+import { CiUser } from "react-icons/ci";
+import { Avatar, cn, Divider } from "@nextui-org/react";
+import { MdLockOutline } from "react-icons/md";
+import { CustomInput } from "@/components/CustomInput";
+import { IoCheckmarkCircleOutline } from "react-icons/io5";
 import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   THREEMB,
-} from '@/lib/utils';
-import toast from 'react-hot-toast';
-import imageCompression from 'browser-image-compression';
-import { RxCross2 } from 'react-icons/rx';
+} from "@/lib/utils";
+import toast from "react-hot-toast";
+import imageCompression from "browser-image-compression";
+import { RxCross2 } from "react-icons/rx";
 import {
   Modal,
   ModalContent,
   ModalBody,
   ModalFooter,
   useDisclosure,
-} from '@nextui-org/react';
-import useUser from '@/hooks/cachedEndpoints/useUser';
-import SelectInput from '@/components/selectInput';
-import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
-import { useMutation, useQueryClient } from 'react-query';
-import { updateUser } from '@/app/api/controllers/auth';
+} from "@nextui-org/react";
+import useUser from "@/hooks/cachedEndpoints/useUser";
+import SelectInput from "@/components/selectInput";
+import { deleteFile, uploadFile } from "@/app/api/controllers/dashboard/menu";
+import { useMutation, useQueryClient } from "react-query";
+import { updateUser } from "@/app/api/controllers/auth";
 
 interface UserData {
   firstName: string;
@@ -46,8 +46,8 @@ interface UserData {
 const Profile = () => {
   const queryClient = useQueryClient();
 
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const { data } = useUser();
   const [isEditing, setIsEditing] = useState(false);
@@ -81,7 +81,7 @@ const Profile = () => {
         setPreviewUrl(null);
         setUserFormData((prevState: any) => ({
           ...prevState,
-          imageReference: '',
+          imageReference: "",
         }));
       }
     },
@@ -96,7 +96,7 @@ const Profile = () => {
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
         onOpen();
-        queryClient.invalidateQueries({ queryKey: ['user'] });
+        queryClient.invalidateQueries({ queryKey: ["user"] });
       }
     },
   });
@@ -115,7 +115,7 @@ const Profile = () => {
     if (event.target.files) {
       const file = event.target.files[0];
       if (file.size > THREEMB) {
-        return toast.error('File too large');
+        return toast.error("File too large");
       }
 
       const compressedFile = await imageCompression(file, imageCompressOptions);
@@ -127,7 +127,7 @@ const Profile = () => {
         reader.readAsDataURL(compressedFile);
       }
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append("file", compressedFile);
       uploadFileMutation.mutate(formData);
     }
   };
@@ -143,11 +143,11 @@ const Profile = () => {
   const mapGender = (gender: number) => {
     switch (gender) {
       case 0:
-        return 'Male';
+        return "Male";
       case 1:
-        return 'Female';
+        return "Female";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   };
   return (
@@ -183,6 +183,7 @@ const Profile = () => {
                 </span>
                 <input
                   type="file"
+                  accept="image/*"
                   id="profile-photo"
                   onChange={handleFileChange}
                   className="hidden"
@@ -297,13 +298,13 @@ const Profile = () => {
                   <span className="text-sm">First Name</span>
                   <span
                     className={cn(
-                      'text-sm',
-                      data?.firstName.length > 0 ? 'text-black' : 'text-red-500'
+                      "text-sm",
+                      data?.firstName.length > 0 ? "text-black" : "text-red-500"
                     )}
                   >
                     {data?.firstName.length > 0
                       ? data?.firstName
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -313,11 +314,11 @@ const Profile = () => {
                   <span className="text-sm">Last Name</span>
                   <span
                     className={cn(
-                      'text-sm',
-                      data?.lastName.length > 0 ? 'text-black' : 'text-red-500'
+                      "text-sm",
+                      data?.lastName.length > 0 ? "text-black" : "text-red-500"
                     )}
                   >
-                    {data?.lastName.length > 0 ? data?.lastName : 'Not updated'}
+                    {data?.lastName.length > 0 ? data?.lastName : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -327,11 +328,11 @@ const Profile = () => {
                   <span className="text-sm">Email</span>
                   <span
                     className={cn(
-                      'text-sm',
-                      data?.email.length > 0 ? 'text-black' : 'text-red-500'
+                      "text-sm",
+                      data?.email.length > 0 ? "text-black" : "text-red-500"
                     )}
                   >
-                    {data?.email.length > 0 ? data?.email : 'Not updated'}
+                    {data?.email.length > 0 ? data?.email : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -341,15 +342,15 @@ const Profile = () => {
                   <span className="text-sm">Phone No</span>
                   <span
                     className={cn(
-                      'text-sm',
+                      "text-sm",
                       data?.phoneNumber?.length > 0
-                        ? 'text-black'
-                        : 'text-red-500'
+                        ? "text-black"
+                        : "text-red-500"
                     )}
                   >
                     {data?.phoneNumber?.length > 0
                       ? data?.phoneNumber
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -359,13 +360,13 @@ const Profile = () => {
                   <span className="text-sm">Username</span>
                   <span
                     className={cn(
-                      'text-sm',
-                      data?.userName?.length > 0 ? 'text-black' : 'text-red-500'
+                      "text-sm",
+                      data?.userName?.length > 0 ? "text-black" : "text-red-500"
                     )}
                   >
                     {data?.userName?.length > 0
                       ? data?.userName
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -375,15 +376,15 @@ const Profile = () => {
                   <span className="text-sm">Gender</span>
                   <span
                     className={cn(
-                      'text-sm',
+                      "text-sm",
                       !Number.isNaN(data?.gender)
-                        ? 'text-black'
-                        : 'text-red-500'
+                        ? "text-black"
+                        : "text-red-500"
                     )}
                   >
                     {!Number.isNaN(data?.gender)
                       ? mapGender(data?.gender)
-                      : 'Not updated'}
+                      : "Not updated"}
                   </span>
                 </div>
               </div>
@@ -472,8 +473,8 @@ const Profile = () => {
                     label="Gender"
                     placeholder="Pick a gender"
                     contents={[
-                      { label: 'Male', value: '0' },
-                      { label: 'Female', value: '1' },
+                      { label: "Male", value: "0" },
+                      { label: "Female", value: "1" },
                     ]}
                   />
                 </div>

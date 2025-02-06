@@ -39,10 +39,12 @@ const FileUploadInput = ({
   label,
   placeholder,
   onChange,
+  accept,
 }: {
   id: string;
   label: string;
   placeholder: string;
+  accept?: string;
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 }) => (
   <label
@@ -59,7 +61,13 @@ const FileUploadInput = ({
       </p>
       <p className="text-[#98A2B3]">{placeholder}</p>
     </div>
-    <input type="file" id={id} className="hidden" onChange={onChange} />
+    <input
+      accept={accept}
+      type="file"
+      id={id}
+      className="hidden"
+      onChange={onChange}
+    />
   </label>
 );
 
