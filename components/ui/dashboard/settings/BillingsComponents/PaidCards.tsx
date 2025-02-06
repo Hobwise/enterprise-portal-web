@@ -1,34 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import mastercardLogo from '../../../../../public/assets/images/mastercard-logo.svg';
-import Image from 'next/image';
-import visa from '../../../../../public/assets/images/visa.png';
-import verve from '../../../../../public/assets/images/verve.png';
-import { PaidCardsData } from './Interfaces';
-import { Divider, Spinner } from '@nextui-org/react';
+import React, { useEffect, useState } from "react";
+import mastercardLogo from "../../../../../public/assets/images/mastercard-logo.svg";
+import Image from "next/image";
+import visa from "../../../../../public/assets/images/visa.png";
+import verve from "../../../../../public/assets/images/verve.png";
+import { PaidCardsData } from "./Interfaces";
+import { Divider, Spinner } from "@nextui-org/react";
 
 import {
   capitalizeFirstLetterOfEachWord,
   getJsonItemFromLocalStorage,
   mapPaymentStatus,
   notify,
-} from '@/lib/utils';
+} from "@/lib/utils";
 // import useManageSubscription from "@/hooks/cachedEndpoints/useManageSubscription";
 import {
   manageSubscription,
   manageSubscriptionv2,
-} from '@/app/api/controllers/dashboard/settings';
-import IframeComponent from './Iframe';
-import LoadingSpinner from '@/app/dashboard/menu/[menuId]/loading';
+} from "@/app/api/controllers/dashboard/settings";
+import IframeComponent from "./Iframe";
+import LoadingSpinner from "@/app/dashboard/menu/[menuId]/loading";
 
 export const PaidCards: React.FC<PaidCardsData> = ({
   cardDetails,
   currentSubscriptionDetails,
   paystackStatus,
 }) => {
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const businessID = userInformation?.businesses[0]?.businessId;
 
-  const [manageSubUrl, setManageSubUrl] = useState<string>('');
+  const [manageSubUrl, setManageSubUrl] = useState<string>("");
   const [triggerIframe, setTriggerIframe] = useState(false);
   const [loadingModal, setLoadingModal] = useState(false);
   // const { bindings,  } = useModal();
@@ -48,9 +48,9 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   };
 
   const TYPE_OF_PLAN = {
-    1: 'Premium',
-    2: 'Professional',
-    3: 'Starter',
+    1: "Premium",
+    2: "Professional",
+    3: "Basic",
   };
 
   //* SET VALUES
@@ -61,9 +61,9 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   const planType = currentSubscriptionDetails?.plan;
 
   image =
-    cardBrand === 'VISA'
+    cardBrand === "VISA"
       ? TYPE_OF_CARD.VISA
-      : cardBrand === 'VERVE'
+      : cardBrand === "VERVE"
       ? TYPE_OF_CARD.VERVE
       : TYPE_OF_CARD.MASTERCARD;
 
@@ -75,7 +75,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
       : TYPE_OF_PLAN[3];
 
   const nextPayment =
-    currentSubscriptionDetails?.nextPaymentDate?.split('T')[0];
+    currentSubscriptionDetails?.nextPaymentDate?.split("T")[0];
   const isActive = mapPaymentStatus(
     currentSubscriptionDetails?.subscription.status!
   );
@@ -84,7 +84,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
 
   const manageYourSubscription = async () => {
     setLoadingModal(true);
-    const token = getJsonItemFromLocalStorage('userInformation').token;
+    const token = getJsonItemFromLocalStorage("userInformation").token;
     const data = await manageSubscriptionv2(businessID, token);
     if (data !== null && data.error == null) {
       setManageSubUrl(data?.data);
@@ -112,7 +112,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
           {image}
           <div className="flex items-center gap-2">
             <p className="font-semibold text-[#344054] text-sm">
-              {capitalizeFirstLetterOfEachWord(cardDetails?.brand!)} ending in{' '}
+              {capitalizeFirstLetterOfEachWord(cardDetails?.brand!)} ending in{" "}
               {cardDetails?.last4}
             </p>
             <div className="border border-[#04326B] py-[2px] px-3 rounded-xl text-[#04326B] text-sm font-medium">
@@ -128,7 +128,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
             <div>
               <p className="font-semibold">{plan} plan</p>
               <p className="text-sm text-[#344054] font-medium">
-                Next payment date{' '}
+                Next payment date{" "}
                 <span className="font-normal">{nextPayment}</span>
               </p>
             </div>
@@ -158,7 +158,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
           trigger={triggerIframe}
           setTriggerIframe={setTriggerIframe}
         />
-      )}{' '}
+      )}{" "}
     </div>
   );
 };
