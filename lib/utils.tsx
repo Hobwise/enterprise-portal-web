@@ -23,6 +23,7 @@ import { saveAs } from "file-saver";
 
 import LoadingAvatar from "../public/assets/images/loadingAvatar.svg";
 import { companyInfo } from "./companyInfo";
+import { useQueryClient } from "react-query";
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -576,8 +577,11 @@ export function formatDate(dateString: string) {
 }
 
 export function resetLoginInfo() {
+  const queryClient = useQueryClient();
   sessionStorage.clear();
   localStorage.clear();
+  queryClient.clear();
+  queryClient.clear();
   removeCookie("token");
   window.location.href = "/auth/login";
 }
