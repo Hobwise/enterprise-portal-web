@@ -261,7 +261,9 @@ const CreateOrder = () => {
             return (
               <>
                 <div
-                  onClick={() => toggleVarietyModal(item)}
+                  onClick={() => {
+                    item?.isAvailable ? toggleVarietyModal(item) : null;
+                  }}
                   key={item.menuID}
                   className={`${
                     togglePreview(convertActiveTile(menuConfig?.layout))
@@ -270,8 +272,18 @@ const CreateOrder = () => {
                     convertActiveTile(menuConfig?.layout) === "List Right" &&
                     menuConfig?.useBackground &&
                     "flex-row-reverse"
-                  } flex  my-4 text-black cursor-pointer`}
+                  } flex  my-4 text-black cursor-pointer relative`}
                 >
+                  {item?.isAvailable === false && (
+                    <Chip
+                      className="capitalize absolute top-1 right-1"
+                      color={"danger"}
+                      size="sm"
+                      variant="bordered"
+                    >
+                      {"Out of stock"}
+                    </Chip>
+                  )}
                   {menuConfig?.useBackground && (
                     <div
                       className={

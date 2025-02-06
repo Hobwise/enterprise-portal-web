@@ -28,11 +28,18 @@ const ViewModal = ({
   };
 
   return (
-    <Modal isOpen={isOpenVariety} onOpenChange={toggleVarietyModal}>
+    <Modal
+      classNames={{
+        base: "max-h-[90%]",
+        wrapper: "overflow-hidden",
+      }}
+      isOpen={isOpenVariety}
+      onOpenChange={toggleVarietyModal}
+    >
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalBody>
+            <ModalBody className="overflow-y-auto max-h-[90%]">
               <Spacer y={5} />
               <Image
                 src={
@@ -145,7 +152,7 @@ const ViewModal = ({
                   )}
                 </div>
               </div>
-              <div className="max-h-[200px] overflow-scroll">
+              <div>
                 {selectedMenu?.varieties ? (
                   <>
                     {selectedMenu?.varieties?.map((item) => {

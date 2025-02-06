@@ -331,11 +331,25 @@ const MenuList = () => {
               <div className="grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
                 {matchingObjectArray?.map((menu, index) => (
                   <div
-                    title="select menu"
-                    onClick={() => toggleVarietyModal(menu)}
+                    title={menu?.isAvailable ? "select menu" : ""}
+                    onClick={() =>
+                      menu?.isAvailable ? toggleVarietyModal(menu) : null
+                    }
                     key={menu.id}
-                    className={"relative cursor-pointer"}
+                    className={`relative ${
+                      menu?.isAvailable && "cursor-pointer"
+                    }`}
                   >
+                    {menu?.isAvailable === false && (
+                      <Chip
+                        className="capitalize absolute top-2 right-2"
+                        color={"danger"}
+                        size="sm"
+                        variant="bordered"
+                      >
+                        {"Out of stock"}
+                      </Chip>
+                    )}
                     {selectedItems.find(
                       (selected) => selected.id === menu.id
                     ) && (
