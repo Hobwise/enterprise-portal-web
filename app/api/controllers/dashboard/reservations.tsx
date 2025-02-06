@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { DASHBOARD } from '../../api-url';
-import api, { handleError } from '../../apiService';
+import { z } from "zod";
+import { DASHBOARD } from "../../api-url";
+import api, { handleError } from "../../apiService";
 
 export type payloadReservationItem = {
   reservationName: string;
@@ -18,25 +18,25 @@ export type payloadReservationItem = {
 
 const reservationSchema = z
   .object({
-    reservationName: z.string().trim().min(1, 'Reservation name is required'),
+    reservationName: z.string().trim().min(1, "Reservation name is required"),
     reservationDescription: z
       .string()
       .trim()
-      .min(1, 'Reservation description is required'),
+      .min(1, "Reservation description is required"),
     // reservationFee: z.number().min(1, 'Reservation fee is required'),
     // minimumSpend: z.number().min(1, 'Minimum spend is required'),
-    quantity: z.number().min(1, 'Quantity is required'),
+    quantity: z.number().min(1, "Quantity is required"),
     // reservationRequirement: z.string().trim().min(1, 'Requirement is required'),
     startTime: z
       .string()
-      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'), // HH:MM
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format"), // HH:MM
     endTime: z
       .string()
-      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format"),
   })
   .refine((data) => data.startTime < data.endTime, {
-    message: 'End time must be later than start time',
-    path: ['endTime'], // This will associate the error message with the `endTime` field
+    message: "End time must be later than start time",
+    path: ["endTime"], // This will associate the error message with the `endTime` field
   });
 
 export async function getReservations(
@@ -112,7 +112,7 @@ export async function getReservation(
 ) {
   const payload = [
     {
-      status: tableStatus || 'All',
+      status: tableStatus || "All",
       page: page || 1,
       pageSize: rowsPerPage || 10,
     },
@@ -149,7 +149,8 @@ export async function editReservations(
   const validatedFields = reservationSchema.safeParse({
     reservationName: payload?.reservationName,
     reservationDescription: payload?.reservationDescription,
-
+    startTime: payload?.startTime,
+    endTime: payload?.endTime,
     quantity: payload.quantity,
   });
 

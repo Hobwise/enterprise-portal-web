@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import React from 'react';
-import { FaCheckCircle } from 'react-icons/fa';
-import { PiWarningCircleFill } from 'react-icons/pi';
-import { RiArrowRightSLine } from 'react-icons/ri';
-import { VscRefresh } from 'react-icons/vsc';
+import Link from "next/link";
+import React from "react";
+import { FaCheckCircle } from "react-icons/fa";
+import { PiWarningCircleFill } from "react-icons/pi";
+import { RiArrowRightSLine } from "react-icons/ri";
+import { VscRefresh } from "react-icons/vsc";
 
-import { options } from '@/app/dashboard/settings/kyc-compliance/verification-types';
-import { cn } from '@/lib/cn';
-import { SETTINGS_URL } from '@/utilities/routes';
-import useUser from '@/hooks/cachedEndpoints/useUser';
-import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
-import Image from 'next/image';
+import { options } from "@/app/dashboard/settings/kyc-compliance/verification-types";
+import { cn } from "@/lib/cn";
+import { SETTINGS_URL } from "@/utilities/routes";
+import useUser from "@/hooks/cachedEndpoints/useUser";
+import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
+import Image from "next/image";
 
 const KycCompliancePage = () => {
   const userQuery = useUser();
@@ -22,15 +22,15 @@ const KycCompliancePage = () => {
   const mapVerificationStage = (stage: number) => {
     switch (stage) {
       case 0:
-        return 'Not Submitted';
+        return "Not Submitted";
       case 1:
-        return 'pending';
+        return "pending";
       case 2:
-        return 'approved';
+        return "approved";
       case 3:
-        return 'failed';
+        return "failed";
       default:
-        return 'unknown';
+        return "unknown";
     }
   };
 
@@ -78,16 +78,16 @@ const KycCompliancePage = () => {
                   <p className="text-sm text-[#AFAFAF]">{option.description}</p>
                   <div
                     className={cn(
-                      'flex items-center w-fit gap-2 h-6 p-2 border border-[#E53030] text-[#E53030] text-[10px] rounded-2xl capitalize',
-                      option.status === 'approved' &&
-                        ' border-[#45773B] text-[#45773B] bg-[#45773B]/10',
-                      option.status === 'pending' &&
-                        ' border-[#FFD700] text-[#FFD700] bg-[#FFD700]/5'
+                      "flex items-center w-fit gap-2 h-6 p-2 border border-[#E53030] text-[#E53030] text-[10px] rounded-2xl capitalize",
+                      option.status === "approved" &&
+                        " border-[#45773B] text-[#45773B] bg-[#45773B]/10",
+                      option.status === "pending" &&
+                        " border-[#FFD700] text-[#FFD700] bg-[#FFD700]/5"
                     )}
                   >
-                    {option.status === 'approved' ? (
+                    {option.status === "approved" ? (
                       <FaCheckCircle />
-                    ) : option.status === 'pending' ? (
+                    ) : option.status === "pending" ? (
                       <VscRefresh />
                     ) : (
                       <PiWarningCircleFill />

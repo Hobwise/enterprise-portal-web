@@ -1,49 +1,49 @@
-import { z } from 'zod';
-import { AUTH } from '../api-url';
-import api, { handleError } from '../apiService';
+import { z } from "zod";
+import { AUTH } from "../api-url";
+import api, { handleError } from "../apiService";
 import {
   businessAddressValidation,
   businessNameValidation,
   emailValidation,
   inputNameValidation,
   passwordValidation,
-} from './validations';
+} from "./validations";
 
 const userSchema = z
   .object({
-    firstName: inputNameValidation('First name'),
-    lastName: inputNameValidation('Last name'),
+    firstName: inputNameValidation("First name"),
+    lastName: inputNameValidation("Last name"),
     email: emailValidation(),
     password: passwordValidation(),
     confirmPassword: z
       .string()
       .trim()
-      .min(1, { message: 'Enter your password' }),
+      .min(1, { message: "Enter your password" }),
   })
   .refine((data) => data.password === data?.confirmPassword, {
     message: "Password don't match",
-    path: ['confirmPassword'],
+    path: ["confirmPassword"],
   });
 const updateUserSchema = z.object({
-  firstName: inputNameValidation('First name'),
-  lastName: inputNameValidation('Last name'),
+  firstName: inputNameValidation("First name"),
+  lastName: inputNameValidation("Last name"),
   email: emailValidation(),
   // role: z.string().trim().min(1, 'Select a role'),
-  phoneNumber: z.string().min(1, 'Phone number is required'),
-  userName: inputNameValidation('User name'),
-  gender: z.string().trim().min(1, 'Select a gender'),
+  phoneNumber: z.string().min(1, "Phone number is required"),
+  userName: inputNameValidation("User name"),
+  gender: z.string().trim().min(1, "Select a gender"),
 });
 const additionalUserSchema = z.object({
-  firstName: inputNameValidation('First name'),
-  lastName: inputNameValidation('Last name'),
+  firstName: inputNameValidation("First name"),
+  lastName: inputNameValidation("Last name"),
   email: emailValidation(),
-  role: z.number().min(0, 'Select a role'),
+  role: z.number().min(0, "Select a role"),
   password: passwordValidation(),
 });
 
 const loginSchema = z.object({
   email: emailValidation(),
-  password: z.string().trim().min(1, { message: 'Password field is required' }),
+  password: z.string().trim().min(1, { message: "Password field is required" }),
 });
 const forgetPasswordSchema = z.object({
   email: emailValidation(),
@@ -53,25 +53,25 @@ const changePasswordSchema = z
     oldPassword: z
       .string()
       .trim()
-      .min(1, { message: 'Enter your old password' }),
+      .min(1, { message: "Enter your old password" }),
     newPassword: passwordValidation(),
     confirmPassword: z
       .string()
       .trim()
-      .min(1, { message: 'Enter your new password' }),
+      .min(1, { message: "Enter your new password" }),
   })
   .refine((data) => data.newPassword === data?.confirmPassword, {
     message: "Password don't match",
-    path: ['confirmPassword'],
+    path: ["confirmPassword"],
   });
 const businessSchema = z.object({
   name: businessNameValidation(),
   address: businessAddressValidation(),
   businessCategory: z
     .number()
-    .min(1, { message: 'Please select your business category' }),
-  state: z.string().trim().min(1, { message: 'Select a state' }),
-  city: z.string().trim().min(1, { message: 'Select a city' }),
+    .min(1, { message: "Please select your business category" }),
+  state: z.string().trim().min(1, { message: "Select a state" }),
+  city: z.string().trim().min(1, { message: "Select a city" }),
   contactEmailAddress: emailValidation(),
   // contactPhoneNumber: z
   //   .string()

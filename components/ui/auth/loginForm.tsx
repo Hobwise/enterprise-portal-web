@@ -1,27 +1,27 @@
-'use client';
-import { loginUser } from '@/app/api/controllers/auth';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { setJsonCookie } from '@/lib/cookies';
+"use client";
+import { loginUser } from "@/app/api/controllers/auth";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { setJsonCookie } from "@/lib/cookies";
 import {
   notify,
   saveJsonItemToLocalStorage,
   setTokenCookie,
-} from '@/lib/utils';
-import { Spacer } from '@nextui-org/react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { FaRegEnvelope } from 'react-icons/fa6';
+} from "@/lib/utils";
+import { Spacer } from "@nextui-org/react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { FaRegEnvelope } from "react-icons/fa6";
 const LoginForm = () => {
   const router = useRouter();
   const { setLoginDetails } = useGlobalContext();
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [loginFormData, setLoginFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
 
   const handleInputChange = (e: { target: { name: any; value: any } }) => {
@@ -31,6 +31,11 @@ const LoginForm = () => {
       ...prevFormData,
       [name]: value,
     }));
+  };
+  const routePaths: Record<number | "default", string> = {
+    0: "/auth/business-information",
+    1: "/dashboard",
+    default: "/auth/select-business",
   };
 
   const submitFormData = async (e: { preventDefault: () => void }) => {
@@ -43,31 +48,25 @@ const LoginForm = () => {
     const businesses = data?.data?.data?.businesses || [];
 
     setLoading(false);
-    if (data?.response?.data?.error?.responseCode === 'HB016') {
+    if (data?.response?.data?.error?.responseCode === "HB016") {
       return router.push(
         `/auth/forget-password?email=${loginFormData.email}&screen=${2}`
       );
     }
     if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage('userInformation', data?.data?.data);
+      saveJsonItemToLocalStorage("userInformation", data?.data?.data);
       setLoginDetails(loginFormData);
       saveJsonItemToLocalStorage("business", data?.data?.data.businesses);
       setTokenCookie("token", data?.data?.data.token);
 
-      router.push(
-        businesses.length === 1
-          ? '/dashboard'
-          : businesses.length === 0
-          ? '/auth/business-information'
-          : '/auth/select-business'
-      );
+      router.push(routePaths[businesses.length] || routePaths.default);
     } else if (data?.data?.error) {
-      console.log('error here');
+      console.log("error here");
       console.log(data?.data?.error);
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
