@@ -126,6 +126,10 @@ const EditReservation = ({
 
   const updateReservation = async (loading = true) => {
     loading && setIsLoading(true);
+    function convertTimeFormat(time: string): string {
+      const parts = time.split(":"); // Split the time string by ':'
+      return parts.slice(0, 2).join(":"); // Join the first two parts
+    }
     const payload = {
       reservationName: reservationState?.reservationName,
       reservationDescription: reservationState?.reservationDescription,
@@ -134,8 +138,8 @@ const EditReservation = ({
       quantity: Number(reservationState?.quantity),
       reservationRequirement: reservationRequirement(),
       imageReference: reservationState?.imageReference,
-      startTime: reservationState?.startTime,
-      endTime: reservationState?.endTime,
+      startTime: convertTimeFormat(reservationState?.startTime),
+      endTime: convertTimeFormat(reservationState?.endTime),
     };
 
     const data = await editReservations(

@@ -48,7 +48,7 @@ const LoginForm = () => {
     const businesses = data?.data?.data?.businesses || [];
 
     setLoading(false);
-    console.log(data, "data");
+
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage("userInformation", data?.data?.data);
       setLoginDetails(loginFormData);
