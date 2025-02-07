@@ -238,7 +238,7 @@ export async function loginUser(formData: any) {
 
     return data;
   } catch (error) {
-    handleError(error);
+    handleError(error, false);
     return error;
   }
 }

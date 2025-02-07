@@ -48,11 +48,7 @@ const LoginForm = () => {
     const businesses = data?.data?.data?.businesses || [];
 
     setLoading(false);
-    if (data?.response?.data?.error?.responseCode === "HB016") {
-      return router.push(
-        `/auth/forget-password?email=${loginFormData.email}&screen=${2}`
-      );
-    }
+    console.log(data, "data");
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage("userInformation", data?.data?.data);
       setLoginDetails(loginFormData);
@@ -60,14 +56,18 @@ const LoginForm = () => {
       setTokenCookie("token", data?.data?.data.token);
 
       router.push(routePaths[businesses.length] || routePaths.default);
-    } else if (data?.data?.error) {
-      console.log("error here");
-      console.log(data?.data?.error);
-      notify({
-        title: "Error!",
-        text: data?.data?.error,
-        type: "error",
-      });
+    } else {
+      if (data?.response?.data?.error?.responseCode === "HB016") {
+        return router.push(
+          `/auth/forget-password?email=${loginFormData.email}&screen=${2}`
+        );
+      } else {
+        notify({
+          title: "Error!",
+          text: data?.response?.data?.error?.responseDescription,
+          type: "error",
+        });
+      }
     }
   };
 
