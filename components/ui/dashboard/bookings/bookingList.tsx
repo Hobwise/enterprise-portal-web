@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 import {
   columns,
   statusColorMap,
   statusDataMap,
-} from '@/app/dashboard/reservation/[reservationId]/data';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import usePagination from '@/hooks/usePagination';
+} from "@/app/dashboard/reservation/[reservationId]/data";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import usePagination from "@/hooks/usePagination";
 import {
   Chip,
   Dropdown,
@@ -22,33 +22,34 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-} from '@nextui-org/react';
-import moment from 'moment';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
+} from "@nextui-org/react";
+import moment from "moment";
+import { HiOutlineDotsVertical } from "react-icons/hi";
 
-import { postBookingStatus } from '@/app/api/controllers/dashboard/bookings';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { notify, submitBookingStatus } from '@/lib/utils';
-import { CiCalendar } from 'react-icons/ci';
-import { IoCheckmark } from 'react-icons/io5';
-import { LiaTimesSolid } from 'react-icons/lia';
-import { MdOutlineModeEditOutline } from 'react-icons/md';
-import DeleteModal from '../../deleteModal';
-import EditBooking from './editBooking';
-import Filters from './filters';
+import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { notify, submitBookingStatus } from "@/lib/utils";
+import { CiCalendar } from "react-icons/ci";
+import { IoCheckmark } from "react-icons/io5";
+import { LiaTimesSolid } from "react-icons/lia";
+import { MdOutlineModeEditOutline } from "react-icons/md";
+import DeleteModal from "../../deleteModal";
+import EditBooking from "./editBooking";
+import Filters from "./filters";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  'reservationName',
-  'firstName',
-  'lastName',
-  'id',
-  'emailAddress',
-  'quantity',
-  'phoneNumber',
-  'reference',
-  'bookingDateTime',
-  'bookingStatus',
-  'actions',
+  "reservationName",
+  "firstName",
+  "lastName",
+  "reservationName",
+  "id",
+  "emailAddress",
+  "quantity",
+  "phoneNumber",
+  "reference",
+  "bookingDateTime",
+  "bookingStatus",
+  "actions",
 ];
 
 const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
@@ -124,7 +125,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
     hasSearchFilter,
   } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
 
   const handleTabChange = (index) => {
     setValue(index);
@@ -134,17 +135,17 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
     const data = await postBookingStatus(id, status);
     if (data?.data?.isSuccessful) {
       notify({
-        title: 'Success!',
-        text: 'Operation successful',
-        type: 'success',
+        title: "Success!",
+        text: "Operation successful",
+        type: "success",
       });
       refetch();
       status === 3 && toggleDeleteModal();
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -153,7 +154,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
     const cellValue = booking[columnKey];
 
     switch (columnKey) {
-      case 'firstName':
+      case "firstName":
         return (
           <div className="text-sm">
             <p className="font-medium text-black">
@@ -163,15 +164,15 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
           </div>
         );
 
-      case 'bookingDateTime':
+      case "bookingDateTime":
         return (
           <div className="text-textGrey text-sm">
-            {moment(booking?.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+            {moment(booking?.bookingDateTime).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
-      case 'reference':
+      case "reference":
         return <div className="text-textGrey text-sm">{booking.reference}</div>;
-      case 'bookingStatus':
+      case "bookingStatus":
         return (
           <Chip
             className="capitalize"
@@ -182,7 +183,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
             {statusDataMap[booking?.bookingStatus]}
           </Chip>
         );
-      case 'actions':
+      case "actions":
         return (
           <div className="relative flexjustify-center items-center gap-2">
             <Dropdown aria-label="drop down" className="">
@@ -337,7 +338,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
           {(column) => (
             <TableColumn
               key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
+              align={column.uid === "actions" ? "center" : "start"}
               allowsSorting={column.sortable}
             >
               {column.name}
@@ -345,7 +346,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={'No booking(s) found'}
+          emptyContent={"No booking(s) found"}
           items={matchingObjectArray}
         >
           {(item) => (

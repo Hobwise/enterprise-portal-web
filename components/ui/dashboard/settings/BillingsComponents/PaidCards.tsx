@@ -48,9 +48,9 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   };
 
   const TYPE_OF_PLAN = {
-    1: "Premium",
+    1: "Basic",
     2: "Professional",
-    3: "Basic",
+    3: "Premium",
   };
 
   //* SET VALUES

@@ -127,8 +127,8 @@ const EditReservation = ({
   const updateReservation = async (loading = true) => {
     loading && setIsLoading(true);
     function convertTimeFormat(time: string): string {
-      const parts = time.split(":"); // Split the time string by ':'
-      return parts.slice(0, 2).join(":"); // Join the first two parts
+      const parts = time.split(":");
+      return parts.slice(0, 2).join(":");
     }
     const payload = {
       reservationName: reservationState?.reservationName,

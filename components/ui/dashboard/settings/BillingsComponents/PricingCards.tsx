@@ -213,7 +213,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       <div className="grid grid-cols-1 sm:grid-cols-3">
         {[starterPlan, professionalPlan, premiumPlan].map((plan, index) => {
           const isActive = planType === index + 1;
-          const planNames = ["Basic plan", "Professional", "Premium plan"];
+          const planNames = ["Basic", "Professional", "Premium"];
           const planDescriptions = [
             "Recommended for small businesses, looking to streamline their menu & order management process",
             "Suitable for medium size businesses looking to manage booking, process order & menu while leveraging the campaign feature also",

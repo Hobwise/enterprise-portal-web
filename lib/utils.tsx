@@ -674,19 +674,35 @@ export const mapPaymentStatus = (status: number) => {
   }
 };
 
+export type ExcelDataType = {
+  Name: string;
+  Description: string;
+  Price: string;
+  Availability: string;
+};
+
 export const generateXLSX = (
-  columns: string[],
-  sampleRow: any[],
-  fileName?: string = "sample.xlsx"
+  columns: ExcelDataType[],
+
+  fileName: string = "sample.xlsx"
 ) => {
-  const data = [columns, sampleRow];
-
-  const worksheet = XLSX.utils.aoa_to_sheet(data);
+  const headers = Object.keys(columns[0]);
+  const worksheetData = [
+    headers,
+    ...columns.map((item) =>
+      headers.map((header) => item[header as keyof ExcelDataType])
+    ),
+  ];
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
   const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
-
-  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+  const excelBuffer = XLSX.write(workbook, {
+    bookType: "xlsx",
+    type: "array",
+  });
+  const blob = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
 
   saveAs(blob, fileName);
 };

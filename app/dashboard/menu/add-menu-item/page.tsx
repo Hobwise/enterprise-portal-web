@@ -1,53 +1,53 @@
-'use client';
+"use client";
 import {
   createMenuItem,
   deleteFile,
   getMenu,
   payloadMenuItem,
   uploadFile,
-} from '@/app/api/controllers/dashboard/menu';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { CustomTextArea } from '@/components/customTextArea';
-import SelectInput from '@/components/selectInput';
-import useMenu from '@/hooks/cachedEndpoints/useMenu';
+} from "@/app/api/controllers/dashboard/menu";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { CustomTextArea } from "@/components/customTextArea";
+import SelectInput from "@/components/selectInput";
+import useMenu from "@/hooks/cachedEndpoints/useMenu";
 import {
   SmallLoader,
   THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
-} from '@/lib/utils';
+} from "@/lib/utils";
 import {
   Modal,
   ModalBody,
   ModalContent,
   Spacer,
   useDisclosure,
-} from '@nextui-org/react';
-import imageCompression from 'browser-image-compression';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+} from "@nextui-org/react";
+import imageCompression from "browser-image-compression";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import {
   MdOutlineAddPhotoAlternate,
   MdOutlineFileDownload,
-} from 'react-icons/md';
-import Success from '../../../../public/assets/images/success.png';
-import AddMultipleMenu from './add-mulitple-menuItem/addMultipleMenu';
-import SelectMenu from './add-mulitple-menuItem/selectMenu';
+} from "react-icons/md";
+import Success from "../../../../public/assets/images/success.png";
+import AddMultipleMenu from "./add-mulitple-menuItem/addMultipleMenu";
+import SelectMenu from "./add-mulitple-menuItem/selectMenu";
 
 const AddItemToMenu = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { refetch } = useMenu();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMenu, setSelectedMenu] = useState('');
+  const [selectedMenu, setSelectedMenu] = useState("");
   const [isLoadingImage, setIsLoadingImage] = useState(false);
-  const [imageError, setImageError] = useState('');
+  const [imageError, setImageError] = useState("");
   const [response, setResponse] = useState(null);
-  const [selectedImage, setSelectedImage] = useState('');
+  const [selectedImage, setSelectedImage] = useState("");
   const [activeScreen, setActiveScreen] = useState(1);
   const [isOpenMultipleMenu, setIsOpenMultipleMenu] = useState(false);
 
@@ -57,15 +57,15 @@ const AddItemToMenu = () => {
 
   const [menu, setMenu] = useState([]);
   const [menuItem, setMenuItem] = useState<payloadMenuItem>({
-    itemDescription: '',
-    itemName: '',
+    itemDescription: "",
+    itemName: "",
     price: 0,
-    menuID: '',
+    menuID: "",
     isAvailable: true,
-    imageReference: '',
+    imageReference: "",
   });
 
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const getMenuName = async () => {
     const data = await getMenu(businessInformation[0]?.businessId);
 
@@ -90,16 +90,16 @@ const AddItemToMenu = () => {
     setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
     setIsLoadingImage(false);
-    setImageError('');
+    setImageError("");
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
       setMenuItem({ ...menuItem, imageReference: data.data.data });
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -110,14 +110,14 @@ const AddItemToMenu = () => {
     );
 
     if (data?.data?.isSuccessful) {
-      setSelectedImage('');
-      toast.success('Image removed');
+      setSelectedImage("");
+      toast.success("Image removed");
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -126,12 +126,12 @@ const AddItemToMenu = () => {
     if (event.target.files) {
       const file = event.target.files[0];
       if (file.size > THREEMB) {
-        return setImageError('File too large');
+        return setImageError("File too large");
       }
 
       const compressedFile = await imageCompression(file, imageCompressOptions);
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append("file", compressedFile);
       menuFileUpload(formData, file);
     }
   };
@@ -172,19 +172,19 @@ const AddItemToMenu = () => {
       onOpen();
       setMenuItem({
         ...menuItem,
-        itemDescription: '',
-        itemName: '',
+        itemDescription: "",
+        itemName: "",
         price: 0,
-        imageReference: '',
+        imageReference: "",
       });
 
       // setSelectedFile();
-      setSelectedImage('');
+      setSelectedImage("");
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -194,77 +194,78 @@ const AddItemToMenu = () => {
   }, []);
   return (
     <>
-      <div className='flex md:flex-row flex-col justify-between md:items-center items-start'>
+      <div className="flex md:flex-row flex-col justify-between md:items-center items-start">
         <div>
-          <h1 className='text-[24px] leading-8 font-semibold'>Add menu item</h1>
-          <p className='text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4'>
+          <h1 className="text-[24px] leading-8 font-semibold">Add menu item</h1>
+          <p className="text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4">
             Add an item to your menu.
           </p>
         </div>
         <CustomButton
           onClick={toggleMultipleMenu}
-          className='py-2 px-4 md:mb-0 text-black border border-[#D0D5DD] mb-4 '
-          backgroundColor='bg-white'
+          className="py-2 px-4 md:mb-0 text-black border border-[#D0D5DD] mb-4 "
+          backgroundColor="bg-white"
         >
-          <div className='flex gap-2 items-center justify-center'>
-            <MdOutlineFileDownload className='text-[22px]' />
+          <div className="flex gap-2 items-center justify-center">
+            <MdOutlineFileDownload className="text-[22px]" />
             <p> Add multiple items</p>
           </div>
         </CustomButton>
       </div>
-      <div className='flex lg:flex-row flex-col'>
-        <div className='flex-grow lg:w-1/2 w-full lg:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg'>
+      <div className="flex lg:flex-row flex-col">
+        <div className="flex-grow lg:w-1/2 w-full lg:p-6 p-0 xl:border border-[#F5F5F5] rounded-tl-lg rounded-bl-lg">
           <CustomInput
-            type='text'
+            type="text"
             value={menuItem.itemName}
             errorMessage={response?.errors?.itemName?.[0]}
             onChange={handleInputChange}
-            name='itemName'
-            label='Name of item'
-            placeholder='E.g Drinks'
+            name="itemName"
+            label="Name of item"
+            placeholder="E.g Drinks"
           />
           <Spacer y={6} />
           <CustomTextArea
+            maxLength={300}
             value={menuItem.itemDescription}
-            name='itemDescription'
+            name="itemDescription"
             onChange={handleInputChange}
-            label='Add a description'
-            placeholder=''
+            label="Add a description"
+            placeholder=""
           />
           <Spacer y={6} />
           <CustomInput
-            type='text'
-            name='price'
+            type="text"
+            name="price"
             startContent={<div>₦</div>}
             errorMessage={response?.errors?.price?.[0]}
             onChange={handleInputChange}
             value={`${menuItem.price}`}
-            label='Add a price'
-            placeholder='Add a price'
+            label="Add a price"
+            placeholder="Add a price"
           />
           <Spacer y={6} />
           <SelectInput
             errorMessage={response?.errors?.menuID?.[0]}
-            label={'Select a menu'}
-            name='menuID'
+            label={"Select a menu"}
+            name="menuID"
             onChange={handleInputChange}
             value={menuItem.menuID}
-            placeholder={'Select...'}
+            placeholder={"Select..."}
             contents={menu}
           />
         </div>
         <div
           className={`flex-grow xl:h-auto lg:w-1/2 full  p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
         >
-          <label className='flex xl:m-4 m-0 justify-between  bg-white'>
-            <p className='font-[500] text-[14px]'>Image</p>
-            <p className='text-[#475467] text-[14px] font-[400]'>
+          <label className="flex xl:m-4 m-0 justify-between  bg-white">
+            <p className="font-[500] text-[14px]">Image</p>
+            <p className="text-[#475467] text-[14px] font-[400]">
               Maximum of 3MB
             </p>
           </label>
           <div
             className={`lg:h-[calc(100%-4.5rem)] bg-[#F9F8FF] h-[200px] border  xl:m-4 mt-2 rounded-md ${
-              imageError ? 'border-danger-600' : 'border-[#F5F5F5]'
+              imageError ? "border-danger-600" : "border-[#F5F5F5]"
             }   text-sm font-[400] text-center relative`}
           >
             {selectedImage ? (
@@ -273,62 +274,62 @@ const AddItemToMenu = () => {
                   src={selectedImage}
                   width={200}
                   height={200}
-                  className='object-cover h-full rounded-md w-full'
-                  aria-label='uploaded image'
-                  alt='uploaded image(s)'
+                  className="object-cover h-full rounded-md w-full"
+                  aria-label="uploaded image"
+                  alt="uploaded image(s)"
                 />
                 <span
                   onClick={removeUploadedFile}
-                  className='text-danger-500 float-left cursor-pointer'
+                  className="text-danger-500 float-left cursor-pointer"
                 >
                   Remove
                 </span>
               </>
             ) : (
               <>
-                <div className='flex flex-col h-full justify-center items-center'>
-                  <div className='flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center'>
+                <div className="flex flex-col h-full justify-center items-center">
+                  <div className="flex flex-col mt-0  text-center xl:w-[240px]  w-full gap-2 justify-center items-center">
                     {isLoadingImage ? (
                       <SmallLoader />
                     ) : (
                       <>
-                        <MdOutlineAddPhotoAlternate className='text-[42px] text-primaryColor' />
-                        <span className='text-black'>
-                          Drag and drop files to upload or{' '}
-                          <span className='text-primaryColor'>click here</span>{' '}
+                        <MdOutlineAddPhotoAlternate className="text-[42px] text-primaryColor" />
+                        <span className="text-black">
+                          Drag and drop files to upload or{" "}
+                          <span className="text-primaryColor">click here</span>{" "}
                           to browse
                         </span>
                       </>
                     )}
                   </div>
                   <input
-                    title='upload an image'
-                    alt='upload a menu'
-                    type='file'
-                    id='menu-upload'
-                    accept='image/*'
+                    title="upload an image"
+                    alt="upload a menu"
+                    type="file"
+                    id="menu-upload"
+                    accept="image/*"
                     onChange={(event) => handleImageChange(event)}
-                    className='h-full w-full opacity-0 cursor-pointer absolute bottom-0'
+                    className="h-full w-full opacity-0 cursor-pointer absolute bottom-0"
                   />
                 </div>
               </>
             )}
 
-            <span className='text-sm float-left text-danger-600'>
+            <span className="text-sm float-left text-danger-600">
               {imageError}
             </span>
           </div>
         </div>
       </div>
       <Spacer y={1} />
-      <div className='flex justify-end'>
+      <div className="flex justify-end">
         <CustomButton
-          className='w-32  text-white'
+          className="w-32  text-white"
           loading={isLoading}
           onClick={postMenuItem}
-          type='submit'
+          type="submit"
         >
-          {isLoading ? 'Loading' : 'Add to menu'}
+          {isLoading ? "Loading" : "Add to menu"}
         </CustomButton>
       </div>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -336,33 +337,33 @@ const AddItemToMenu = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <div className='grid place-content-center mt-8'>
-                  <Image src={Success} alt='success' />
+                <div className="grid place-content-center mt-8">
+                  <Image src={Success} alt="success" />
                 </div>
 
-                <h2 className='text-[16px] text-center leading-3 mt-3 text-black font-semibold'>
+                <h2 className="text-[16px] text-center leading-3 mt-3 text-black font-semibold">
                   Fantastic!
                 </h2>
-                <h3 className='text-sm text-center text-grey600     mb-4'>
+                <h3 className="text-sm text-center text-grey600     mb-4">
                   Your item has been added to the menu
                 </h3>
 
-                <div className='flex gap-3'>
+                <div className="flex gap-3">
                   <CustomButton
                     onClick={async () => {
                       await refetch();
-                      router.push('/dashboard/menu');
+                      router.push("/dashboard/menu");
                     }}
-                    className='h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 '
-                    backgroundColor='bg-white'
-                    type='submit'
+                    className="h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 "
+                    backgroundColor="bg-white"
+                    type="submit"
                   >
                     View menu
                   </CustomButton>
                   <CustomButton
-                    className='text-white h-[49px]  flex-grow w-full'
+                    className="text-white h-[49px]  flex-grow w-full"
                     onClick={onClose}
-                    type='submit'
+                    type="submit"
                   >
                     Add another item
                   </CustomButton>
@@ -375,11 +376,11 @@ const AddItemToMenu = () => {
         </ModalContent>
       </Modal>
       <Modal
-        size='xl'
+        size="xl"
         isOpen={isOpenMultipleMenu}
         onOpenChange={() => {
-        setActiveScreen(1);
-          setSelectedMenu('');
+          setActiveScreen(1);
+          setSelectedMenu("");
           toggleMultipleMenu();
         }}
       >

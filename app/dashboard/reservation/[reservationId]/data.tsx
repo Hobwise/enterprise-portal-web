@@ -1,5 +1,6 @@
 export const columns = [
   { name: "Name", uid: "firstName" },
+  { name: "Reservation", uid: "reservationName" },
   { name: "Booking ID", uid: "reference" },
   { name: "Quantity", uid: "quantity" },
   { name: "Description", uid: "description" },
