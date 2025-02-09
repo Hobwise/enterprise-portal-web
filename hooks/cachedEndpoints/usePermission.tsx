@@ -19,7 +19,7 @@ interface Permission {
 }
 
 const extractPermissions = (permissions: any, roleType: string) => {
-  const rolePermissions = permissions.data.data[roleType] || {};
+  const rolePermissions = permissions?.data?.data[roleType] || {};
 
   return {
     canCreateMenu: rolePermissions.canCreateMenu,
