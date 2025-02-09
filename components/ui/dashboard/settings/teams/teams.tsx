@@ -10,7 +10,7 @@ import { CiLock } from "react-icons/ci";
 const Teams = ({ setActiveScreen }: any) => {
   const { data: subscription } = useSubscription();
   const { data, isLoading, isError, refetch } = useUserByBusiness();
-  console.log(subscription, "subscription");
+
   if (subscription?.onTrialVersion) {
     return (
       <>

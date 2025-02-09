@@ -19,8 +19,6 @@ interface Permission {
 }
 
 const extractPermissions = (permissions: any, roleType: string) => {
-  if (!permissions?.data?.data?.data?.data) return {};
-
   const rolePermissions = permissions.data.data[roleType] || {};
 
   return {
