@@ -74,11 +74,11 @@ export default function PricingComponent() {
 
   if (error) return null;
 
-  const starterArray = pricings ? Object.entries(pricings?.Starter).map(([key, value]) => ({ key, value })) : [];
+  const starterArray = pricings ? Object.entries(pricings?.Basic).map(([key, value]) => ({ key, value })) : [];
   const professionalArray = pricings ? Object.entries(pricings?.Professional).map(([key, value]) => ({ key, value })) : [];
   const premiumArray = pricings ? Object.entries(pricings?.Premium).map(([key, value]) => ({ key, value })) : [];
 
-  const starterFee = plan === 'monthly' ? pricings?.Starter?.monthlyFee : pricings?.Starter?.yearlyFee;
+  const starterFee = plan === 'monthly' ? pricings?.Basic?.monthlyFee : pricings?.Basic?.yearlyFee;
   const professionalFee = plan === 'monthly' ? pricings?.Professional?.monthlyFee : pricings?.Professional?.yearlyFee;
   const premiumFee = plan === 'monthly' ? pricings?.Premium?.monthlyFee : pricings?.Premium?.yearlyFee;
 
@@ -274,12 +274,12 @@ export function PricingExtended({ plan, setPlan }: { plan: string; setPlan: (arg
 
   if (error) return null;
 
-  const starterArray = pricings ? Object.entries(pricings?.Starter).map(([key, value]) => ({ key, value })) : [];
+  const starterArray = pricings ? Object.entries(pricings?.Basic).map(([key, value]) => ({ key, value })) : [];
   const professionalArray = pricings ? Object.entries(pricings?.Professional).map(([key, value]) => ({ key, value })) : [];
   const premiumArray = pricings ? Object.entries(pricings?.Premium).map(([key, value]) => ({ key, value })) : [];
   const initialArray = pricings ? Object.entries(pricings?.Professional).map(([key, value]) => ({ key, value })) : [];
 
-  const starterFee = plan === 'monthly' ? pricings?.Starter?.monthlyFee : pricings?.Starter?.yearlyFee;
+  const starterFee = plan === 'monthly' ? pricings?.Basic?.monthlyFee : pricings?.Basic?.yearlyFee;
   const professionalFee = plan === 'monthly' ? pricings?.Professional?.monthlyFee : pricings?.Professional?.yearlyFee;
   const premiumFee = plan === 'monthly' ? pricings?.Premium?.monthlyFee : pricings?.Premium?.yearlyFee;
 
@@ -327,7 +327,7 @@ export function PricingExtended({ plan, setPlan }: { plan: string; setPlan: (arg
             </div>
             <div className="">
               {starterArray.splice(3).map((each, index) => (
-                <div key={each.key + 'starter'} className="h-12 flex items-center">
+                <div key={each.key + 'basic'} className="h-12 flex items-center">
                   {each.value ? <RoundedCheckIcon className="shadow-custom_shadow_3" /> : <div className="border w-4 border-[#CDD0D5]" />}
                 </div>
               ))}
@@ -353,7 +353,7 @@ export function PricingExtended({ plan, setPlan }: { plan: string; setPlan: (arg
           <div className="grid grid-cols-3 text-[#252525] lg:grid-cols-4 px-4 gap-24">
             <div className="space-y-6">
               {starterArray.splice(3).map((each, index) => (
-                <div key={each.key + 'starter'} className="h-16 items-center space-y-6">
+                <div key={each.key + 'basic'} className="h-16 items-center space-y-6">
                   <p className={cn('text-sm h-8 pb-12', index === 0 ? 'mt-4' : 'mt-20')}>{formatKey(each.key)}</p>
                   {each.value ? <RoundedCheckIcon className="shadow-custom_shadow_3 mt-1" /> : <div className="border w-4 border-[#CDD0D5]" />}
                 </div>
