@@ -225,7 +225,7 @@ const AddItemToMenu = () => {
           />
           <Spacer y={6} />
           <CustomTextArea
-            maxLength={300}
+            maxLength={200}
             value={menuItem.itemDescription}
             name="itemDescription"
             onChange={handleInputChange}
