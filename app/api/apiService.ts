@@ -3,6 +3,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
   removeCookie,
+  resetLoginInfo,
   saveJsonItemToLocalStorage,
 } from "@/lib/utils";
 import axios, { AxiosError } from "axios";
@@ -93,7 +94,7 @@ api.interceptors.response.use(
           console.log("error", error);
           return Promise.reject(error.response.data);
         }
-        window.location.href = "/auth/login";
+        resetLoginInfo();
         return Promise.reject(_error);
       }
     } else {

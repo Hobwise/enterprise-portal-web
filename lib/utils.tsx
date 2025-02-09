@@ -581,7 +581,6 @@ export function resetLoginInfo() {
   sessionStorage.clear();
   localStorage.clear();
   queryClient.clear();
-  queryClient.clear();
   removeCookie("token");
   window.location.href = "/auth/login";
 }
