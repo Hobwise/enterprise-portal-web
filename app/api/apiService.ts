@@ -93,7 +93,7 @@ api.interceptors.response.use(
           console.log("error", error);
           return Promise.reject(error.response.data);
         }
-
+        window.location.href = "/auth/login";
         return Promise.reject(_error);
       }
     } else {
