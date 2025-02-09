@@ -164,8 +164,6 @@ const SideNav = () => {
     return true;
   });
 
-  console.log(filteredItems, "filteredItems");
-
   const [isOpenBusinessModal, setIsOpenBusinessModal] = useState(false);
   const toggleBusinessModal = () => {
     setIsOpenBusinessModal(!isOpenBusinessModal);

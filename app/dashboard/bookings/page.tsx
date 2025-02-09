@@ -125,7 +125,7 @@ const Bookings: React.FC = () => {
     } else {
       notify({
         title: "Error!",
-        text: data.response?.data?.error?.responseDescription,
+        text: data?.response?.data?.error?.responseDescription,
         type: "error",
       });
     }
@@ -147,7 +147,7 @@ const Bookings: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data[0]?.totalCount}
+                  {data?.[0]?.totalCount}
                 </Chip>
               </div>
             ) : (
@@ -203,7 +203,7 @@ const Bookings: React.FC = () => {
           )}
         </div>
       </div>
-      {data[0]?.bookings.length > 0 ? (
+      {data?.[0]?.bookings.length > 0 ? (
         <BookingsList
           bookings={filteredItems}
           refetch={refetch}

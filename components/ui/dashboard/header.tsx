@@ -9,6 +9,7 @@ import {
   Avatar,
   Badge,
   Button,
+  Chip,
   Dropdown,
   DropdownItem,
   DropdownMenu,
@@ -51,6 +52,7 @@ const Header = () => {
   } = useNotification(page, pageSize);
 
   const { data } = useUser();
+
   const pathname = usePathname();
   const scrolled = useScroll(5);
   const selectedLayout = useSelectedLayoutSegment();
@@ -137,16 +139,10 @@ const Header = () => {
         </div>
 
         <div className="hidden md:flex items-center space-x-8">
-          {/* <CustomInput
-            classnames={'w-[450px]'}
-            label=''
-            size='md'
-            isRequired={false}
-            startContent={<IoSearchOutline />}
-            type='text'
-            placeholder='Search here...'
-            /> */}
           <div className="flex items-center space-x-4">
+            <Chip color="success" size="md" variant="flat">
+              {data?.role === 0 ? "Manager" : "Staff"}
+            </Chip>
             <Popover placement="bottom">
               <PopoverTrigger>
                 <Badge
