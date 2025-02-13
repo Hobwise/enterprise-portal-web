@@ -90,11 +90,11 @@ api.interceptors.response.use(
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         return api(originalConfig);
       } catch (_error) {
+        resetLoginInfo();
         if (error.response && error.response.data) {
-          console.log("error", error);
+          resetLoginInfo();
           return Promise.reject(error.response.data);
         }
-        resetLoginInfo();
         return Promise.reject(_error);
       }
     } else {

@@ -140,9 +140,6 @@ const Header = () => {
 
         <div className="hidden md:flex items-center space-x-8">
           <div className="flex items-center space-x-4">
-            <Chip color="success" size="md" variant="flat">
-              {data?.role === 0 ? "Manager" : "Staff"}
-            </Chip>
             <Popover placement="bottom">
               <PopoverTrigger>
                 <Badge
@@ -176,7 +173,15 @@ const Header = () => {
 
             <Dropdown placement="bottom-end">
               <DropdownTrigger>
-                <div className="flex items-center gap-1 cursor-pointer">
+                <div className="flex items-center py-1 px-4 rounded-full border border-gray-300 gap-1 cursor-pointer">
+                  <div className="flex flex-col leading-4">
+                    <span className="text-xs font-bold">
+                      {data?.firstName} {data?.lastName}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {data?.role === 0 ? "Manager" : "Staff"}
+                    </span>
+                  </div>
                   <Avatar
                     size="sm"
                     src={data?.image && `data:image/jpeg;base64,${data?.image}`}

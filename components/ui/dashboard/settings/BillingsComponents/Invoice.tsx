@@ -1,10 +1,10 @@
-import React, { useEffect, useRef } from 'react';
-import { SubscriptionHistory } from './Interfaces';
-import { addCommasToNumber, getJsonItemFromLocalStorage } from '@/lib/utils';
-import moment from 'moment';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import Image from 'next/image';
+import React, { useEffect, useRef } from "react";
+import { SubscriptionHistory } from "./Interfaces";
+import { addCommasToNumber, getJsonItemFromLocalStorage } from "@/lib/utils";
+import moment from "moment";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import Image from "next/image";
 
 interface InvoiceDetails {
   data: SubscriptionHistory | null;
@@ -17,25 +17,26 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
   download,
   setDownloadClickedInvoice,
 }) => {
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const business = userInformation?.businesses[0];
   const invoiceRef = useRef<HTMLDivElement>(null);
 
   const mapPlan = (plan: number) => {
     return (
-      ['Unknown', 'Basic', 'Professional Plan', 'Premium'][plan] || 'Unknown'
+      ["Unknown", "Basic", "Professional Plan", "Premium"][plan] || "Unknown"
     );
   };
+
   const mapAmount = (amount: number) => `₦${addCommasToNumber(amount)}`;
 
   const mapPeriod = (paymentPeriod: number) => {
     switch (paymentPeriod) {
       case 0:
-        return 'Monthly';
+        return "Monthly";
       case 1:
-        return 'Yearly';
+        return "Yearly";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   };
 
@@ -59,17 +60,17 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
       if (invoiceRef.current) {
         // console.log('REF TINGZ', invoiceRef.current);
         const canvas = await html2canvas(invoiceRef.current, { scale: 2 });
-        const imgData = canvas.toDataURL('image/png');
+        const imgData = canvas.toDataURL("image/png");
 
-        const pdf = new jsPDF('p', 'mm', 'a4', true);
+        const pdf = new jsPDF("p", "mm", "a4", true);
         const pdfWidth = pdf.internal.pageSize.getWidth();
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
-        pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-        pdf.save('HobinkInvoice.pdf');
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+        pdf.save("HobinkInvoice.pdf");
       }
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error("Error generating PDF:", error);
     } finally {
       isGenerating = false;
       setDownloadClickedInvoice(false); // Reset state
@@ -90,7 +91,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                         src="/assets/images/hobwise.png"
                         height={150}
                         width={150}
-                        style={{ objectFit: 'cover' }}
+                        style={{ objectFit: "cover" }}
                         alt="company logo"
                       />
                       <div className="text-black">
@@ -122,7 +123,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                       </p>
                       <p className="font-medium text-sm text-black">
                         {moment(data?.subscriptionStartDate).format(
-                          'DD/MM/YYYY'
+                          "DD/MM/YYYY"
                         )}
                       </p>
                     </div>
