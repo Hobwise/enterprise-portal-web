@@ -21,8 +21,6 @@ const SingleReservationComponent = () => {
   }
   const getSingleReservation = reservationId ? data : singleReservation;
 
-  console.log(getSingleReservation, 'singleReservation');
-
   return (
     <div className="bg-white h-screen overflow-y-auto pb-8">
       <BookReservationPage reservation={getSingleReservation} />
