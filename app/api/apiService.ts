@@ -74,7 +74,7 @@ api.interceptors.response.use(
           resetLoginInfo();
           throw new Error("Failed to generate new token");
         }
-
+        console.log(rs, "!rs");
         const {
           token: newToken,
           refreshToken: newRefreshToken,

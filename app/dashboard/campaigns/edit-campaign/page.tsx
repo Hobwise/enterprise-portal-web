@@ -220,6 +220,7 @@ const EditCampaign = () => {
           />
           <Spacer y={6} />
           <CustomTextArea
+            maxLength={200}
             value={campaignPayload.campaignDescription}
             name="campaignDescription"
             errorMessage={response?.errors?.campaignDescription?.[0]}
