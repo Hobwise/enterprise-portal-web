@@ -17,6 +17,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Spinner,
   useDisclosure,
 } from "@nextui-org/react";
 import Image from "next/image";
@@ -35,6 +36,7 @@ import { useCheckExpiry, NavigationBanner } from "./subscription-notification";
 import { getJsonCookie, setJsonCookie } from "@/lib/cookies";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 import { MdOutlinePerson } from "react-icons/md";
+import { Skeleton } from "../landingPage/skeleton-loading";
 
 const Header = () => {
   const page = 1;
@@ -173,21 +175,35 @@ const Header = () => {
 
             <Dropdown placement="bottom-end">
               <DropdownTrigger>
-                <div className="flex items-center py-1 px-4 rounded-full border border-gray-300 gap-1 cursor-pointer">
-                  <div className="flex flex-col leading-4">
-                    <span className="text-xs font-bold">
-                      {data?.firstName} {data?.lastName}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {data?.role === 0 ? "Manager" : "Staff"}
-                    </span>
+                {data ? (
+                  <div className="flex items-center py-2 px-4 rounded-full border border-gray-300 gap-2 cursor-pointer">
+                    <div className="flex flex-col leading-4 ">
+                      <span className="text-xs font-bold">
+                        {data?.firstName} {data?.lastName}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {data?.role === 0 ? "Manager" : "Staff"}
+                      </span>
+                    </div>
+                    <Avatar
+                      size="sm"
+                      src={
+                        data?.image && `data:image/jpeg;base64,${data?.image}`
+                      }
+                    />
+                    <IoIosArrowDown />
                   </div>
-                  <Avatar
-                    size="sm"
-                    src={data?.image && `data:image/jpeg;base64,${data?.image}`}
-                  />
-                  <IoIosArrowDown />
-                </div>
+                ) : (
+                  <div className=" flex items-center gap-2 border border-gray-200 rounded-full py-1 px-2">
+                    <div className="w-full flex flex-col gap-1">
+                      <Skeleton className="h-2 w-16 rounded-lg" />
+                      <Skeleton className="h-2 w-16 rounded-lg" />
+                    </div>
+                    <div>
+                      <Skeleton className="flex rounded-full w-8 h-8" />
+                    </div>
+                  </div>
+                )}
               </DropdownTrigger>
               <DropdownMenu aria-label="settings Actions" variant="flat">
                 <DropdownItem key="Profile Management">
