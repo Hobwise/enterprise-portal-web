@@ -1,38 +1,30 @@
 'use client';
-import BackButton from '@/components/backButton';
-import { CustomButton } from '@/components/customButton';
 import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
-import { companyInfo } from '@/lib/companyInfo';
-import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Spinner } from '@nextui-org/react';
-import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
-import noImage from '../../../../public/assets/images/no-image.svg';
+import { useSearchParams } from 'next/navigation';
+import BookReservationPage from '@/app/reservations/[slug]/book-reservation';
 
 const SingleReservationComponent = () => {
   const singleReservation = getJsonItemFromLocalStorage('singleReservation');
-  const router = useRouter();
   const searchParams = useSearchParams();
-  let businessName = searchParams.get('businessName');
-  let businessId = searchParams.get('businessId');
-  let cooperateID = searchParams.get('cooperateID');
   let reservationId = searchParams.get('reservationId');
 
   const { data, isLoading } = useSingleReservation(reservationId);
 
   if (isLoading) {
     return (
-      <div className='loadingContainer flex flex-col justify-center items-center'>
+      <div className="loadingContainer flex flex-col justify-center items-center">
         <Spinner />
       </div>
     );
   }
-  console.log(singleReservation, 'singleReservation');
   const getSingleReservation = reservationId ? data : singleReservation;
 
   return (
-    <>
-      <div className='flex justify-between items-center'>
+    <div className="bg-white h-screen overflow-y-auto pb-8">
+      <BookReservationPage reservation={getSingleReservation} />
+      {/* <div className='flex justify-between items-center'>
         <h1 className='text-2xl  text-black'>{businessName}</h1>
         {reservationId ? null : (
           <BackButton
@@ -97,8 +89,8 @@ const SingleReservationComponent = () => {
         }}
       >
         Select this reservation
-      </CustomButton>
-    </>
+      </CustomButton> */}
+    </div>
   );
 };
 
