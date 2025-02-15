@@ -705,3 +705,35 @@ export const generateXLSX = (
 
   saveAs(blob, fileName);
 };
+
+export const reservationDuration = [
+  {
+    label: "1hr",
+    value: 1,
+  },
+  {
+    label: "2hrs",
+    value: 2,
+  },
+  { label: "3hrs", value: 3 },
+  {
+    label: "4hrs",
+    value: 4,
+  },
+  {
+    label: "5hrs",
+    value: 5,
+  },
+  {
+    label: "6hrs",
+    value: 6,
+  },
+  {
+    label: "7hrs",
+    value: 7,
+  },
+  {
+    label: "8hrs",
+    value: 8,
+  },
+];
