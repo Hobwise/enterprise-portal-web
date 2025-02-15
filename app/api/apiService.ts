@@ -71,6 +71,7 @@ api.interceptors.response.use(
         });
 
         if (!rs) {
+          resetLoginInfo();
           throw new Error("Failed to generate new token");
         }
 
@@ -93,14 +94,14 @@ api.interceptors.response.use(
         resetLoginInfo();
         if (error.response && error.response.data) {
           resetLoginInfo();
-          // return Promise.reject(error.response.data);
+          return Promise.reject(error.response.data);
         }
-        // return Promise.reject(_error);
+        return Promise.reject(_error);
       }
     } else {
       handleError(error, false);
     }
-    // return Promise.reject(error);
+    return Promise.reject(error);
   }
 );
 
