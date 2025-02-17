@@ -59,7 +59,7 @@ export default function Contact() {
       setIsLoading(true);
       const updateContactInfo = {
         ...contactInfo,
-        preferredDateTime: new Date(contactInfo.preferredDateTime).toISOString(),
+        preferredDateTime: new Date(contactInfo.preferredDateTime).toLocaleString(),
       };
       const data: any = await BookDemo(updateContactInfo);
 
@@ -157,6 +157,7 @@ export default function Contact() {
                   defaultValue=""
                   classnames="font-light mt-4"
                   value={contactInfo.preferredDateTime}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={({ target }: any) => {
                     setError((prev) => ({ ...prev, preferredDateTime: '' }));
                     setContactInfo((prev) => ({

@@ -21,7 +21,7 @@ export default function BookReservation() {
   }, []);
 
   return (
-    <div>
+    <div className="mt-28 px-6 lg:px-24 space-y-4">
       <div className="flex items-center space-x-2.5 text-sm">
         <div className="bg-[#EDE7FD] border border-[#5F35D24D] rounded-md w-8 h-8 flex items-center justify-center" role="button" onClick={() => back()}>
           <ArrowLeftIcon width={20} height={20} />
@@ -29,7 +29,7 @@ export default function BookReservation() {
 
         <div className="flex items-center space-x-2.5">
           <p onClick={() => back()} role="button" className="text-[#848E9F]">
-            Customer
+            Reservations
           </p>
           <ArrowRightIcon width={20} height={20} />
         </div>
@@ -43,7 +43,7 @@ export default function BookReservation() {
           </React.Fragment>
         )}
       </div>
-      <BookReservationPage reservation={reservation} />;
+      <BookReservationPage reservation={reservation} className="px-0 lg:px-0" />
     </div>
   );
 }

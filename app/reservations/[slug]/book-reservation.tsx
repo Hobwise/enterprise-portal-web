@@ -29,8 +29,8 @@ interface IBookReservationPage {
     id: string;
     cooperateID: string;
     businessID: string;
-    endDate: any;
-    startDate: any;
+    endTime: any;
+    startTime: any;
     image: string;
     businessName: string;
     businessAddress: string;
@@ -41,9 +41,10 @@ interface IBookReservationPage {
     minimumSpend: number;
     reservationFee: number;
   };
+  className?: string;
 }
 
-export default function BookReservationPage({ reservation }: IBookReservationPage) {
+export default function BookReservationPage({ reservation, className }: IBookReservationPage) {
   const [quantity, setQuantity] = useState<number>(1);
   const [selectedTime, setSelectedTime] = useState<Selection>(new Set([]));
   const [details, setDetails] = useState<IDetails>(defaultValues);
@@ -81,6 +82,7 @@ export default function BookReservationPage({ reservation }: IBookReservationPag
         reservationId: reservation?.id,
         cooperateId: reservation?.cooperateID,
         businessId: reservation?.businessID,
+        quantity,
       };
 
       const data: any = await BookReservationApi(updateDetails);
@@ -110,7 +112,7 @@ export default function BookReservationPage({ reservation }: IBookReservationPag
   }, [selectedTime]);
 
   return (
-    <div className="font-satoshi px-6 lg:px-24 space-y-4 mt-12">
+    <div className={cn('font-satoshi px-6 lg:px-24 space-y-4 mt-12', className)}>
       <section className="space-y-10">
         <div className="space-y-2 text-[#161618]">
           <div className="flex items-center space-x-2">
@@ -167,18 +169,18 @@ export default function BookReservationPage({ reservation }: IBookReservationPag
 
               <div className="space-y-4 mt-6">
                 <p className="text-[#161618] text-xs font-medium">
-                  Restaurant opens from{' '}
+                  Opens from{' '}
                   <span className="font-bold">
-                    {formatTo12Hour(reservation?.startDate) || '10:00AM'} to {formatTo12Hour(reservation?.endDate) || '10:00PM'}
+                    {reservation?.startTime || '10:00AM'} to {reservation?.endTime || '11:59PM'}
                   </span>
                 </p>
 
                 <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
-                  {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 2).map((each) => (
+                  {generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((each) => (
                     <div
                       className={cn(
-                        'bg-primaryColor text-white rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor',
-                        currentSelection === each && 'bg-white text-primaryColor'
+                        'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
+                        currentSelection === each && 'bg-primaryColor text-white'
                       )}
                       key={each}
                       onClick={() => setSelectedTime(new Set([each || '']))}
@@ -200,6 +202,7 @@ export default function BookReservationPage({ reservation }: IBookReservationPag
                   classnames="mt-6"
                   defaultValue={details.bookingDateTime}
                   value={details.bookingDateTime}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={({ target }: any) => {
                     setError((prev) => ({ ...prev, bookingDateTime: '' }));
                     setDetails((prev) => ({ ...prev, bookingDateTime: target.value }));
@@ -221,7 +224,7 @@ export default function BookReservationPage({ reservation }: IBookReservationPag
                     errorMessage={error.time ? 'You must select a reservation time' : ''}
                     isInvalid={error.time ? true : false}
                   >
-                    {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 1).map((each) => (
+                    {generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:00:00', 1).map((each) => (
                       <SelectItem key={each || ''} className="text-[#000]">
                         {each}
                       </SelectItem>
@@ -253,32 +256,6 @@ export default function BookReservationPage({ reservation }: IBookReservationPag
                   advance.
                 </p>
               </div>
-
-              {/* <div className="space-y-4">
-                <p className="text-[#161618] text-xs font-medium">
-                  Restaurant opens from{' '}
-                  <span className="font-bold">
-                    {formatTo12Hour(reservation?.startDate) || '10:00AM'} to {formatTo12Hour(reservation?.endDate) || '10:00PM'}
-                  </span>
-                </p>
-
-                <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
-                  {generateTimeSlots(reservation?.startDate || '10:00:00', reservation?.endDate || '22:00:00', 2).map((each) => (
-                    <div
-                      className={cn(
-                        'bg-primaryColor text-white rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor',
-                        currentSelection === each && 'bg-white text-primaryColor'
-                      )}
-                      key={each}
-                      onClick={() => setSelectedTime(new Set([each || '']))}
-                      role="button"
-                    >
-                      <MdTimer />
-                      <p className="">{each}</p>
-                    </div>
-                  ))}
-                </div>
-              </div> */}
             </div>
           </div>
 
@@ -362,7 +339,7 @@ export default function BookReservationPage({ reservation }: IBookReservationPag
 
                 <div className="bg-[#F0F2F4] p-4 text-[#5A5A63] flex items-baseline space-x-2 rounded-lg">
                   <InfoCircle className="mt-1" />
-                  <p>The minimum spend is the amount you’re required to spend when visiting this restaurant.</p>
+                  <p>The minimum spend is the amount you’re required to spend when visiting this enterprise.</p>
                 </div>
 
                 <div>
