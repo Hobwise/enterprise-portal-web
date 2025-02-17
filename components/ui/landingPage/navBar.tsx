@@ -7,7 +7,7 @@ import { CONTACT_URL, HOME_URL, LOGIN_URL, PRICING_URL, RESERVATIONS_URL, SIGN_U
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { socialMedia } from './footer';
 import { Transition } from './transition';
 
@@ -25,8 +25,19 @@ interface INavbar {
 }
 
 export default function Navbar({ type = 'non-colored', className }: INavbar) {
+  const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
   const [openNav, setOpenNav] = useState(false);
   const pathname = usePathname();
+  const userInformation = typeof window !== 'undefined' && localStorage.getItem('userInformation');
+
+  useEffect(() => {
+    if (userInformation) {
+      const userToken = JSON.parse(userInformation).token;
+      if (userToken) {
+        setIsSignedIn(true);
+      }
+    }
+  }, [userInformation]);
 
   const btnClassName = `before:ease relative h-[40px] overflow-hidden ${
     type === 'default' || (type === 'colored' && 'border border-[#FFFFFF26]')
@@ -55,18 +66,26 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
             );
           })}
         </nav>
-        <div className="flex space-x-4 items-center">
-          <Link href={LOGIN_URL} className="hidden lg:flex" target="_blank">
-            <CustomButton className={cn('bg-white text-primaryColor h-[38px] lg:px-8', type === 'default' && 'border border-primaryColor')}>Login</CustomButton>
-          </Link>
-          <Link href={SIGN_UP_URL} target="_blank">
-            <CustomButton className={btnClassName}>Get Started</CustomButton>
-          </Link>
+        {!isSignedIn ? (
+          <div className="flex space-x-4 items-center">
+            <Link href={LOGIN_URL} className="hidden lg:flex" target="_blank">
+              <CustomButton className={cn('bg-white text-primaryColor h-[38px] lg:px-8', type === 'default' && 'border border-primaryColor')}>
+                Login
+              </CustomButton>
+            </Link>
+            <Link href={SIGN_UP_URL} target="_blank">
+              <CustomButton className={btnClassName}>Get Started</CustomButton>
+            </Link>
 
-          <div className="flex lg:hidden z-50" onClick={() => setOpenNav((prev) => !prev)}>
-            {openNav ? <CloseIcon /> : <HamburgerIcon className={cn(type === 'default' ? 'text-[#1A198C]' : 'text-white')} />}
+            <div className="flex lg:hidden z-50" onClick={() => setOpenNav((prev) => !prev)}>
+              {openNav ? <CloseIcon /> : <HamburgerIcon className={cn(type === 'default' ? 'text-[#1A198C]' : 'text-white')} />}
+            </div>
           </div>
-        </div>
+        ) : (
+          <Link href={'/dashboard'} target="_blank">
+            <CustomButton className={btnClassName}>Go to Dashboard</CustomButton>
+          </Link>
+        )}
       </div>
 
       {openNav && (
