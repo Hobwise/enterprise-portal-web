@@ -1,9 +1,9 @@
-import { Card, CardBody, Divider } from '@nextui-org/react';
-import moment from 'moment';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { Card, CardBody, Divider } from "@nextui-org/react";
+import moment from "moment";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 // import { Chart } from 'react-google-charts';
-import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
+import { formatPrice, saveJsonItemToLocalStorage } from "@/lib/utils";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -12,14 +12,14 @@ import {
   LinearScale,
   PointElement,
   Tooltip,
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-import { BsArrowUpShort } from 'react-icons/bs';
-import { IoIosArrowForward } from 'react-icons/io';
-import Decline from '../../../../public/assets/icons/canceled.png';
-import Like from '../../../../public/assets/icons/like.png';
-import Star from '../../../../public/assets/icons/star.png';
-import paymentIllustration from '../../../../public/assets/images/paymentIllustration.png';
+} from "chart.js";
+import { Line } from "react-chartjs-2";
+import { BsArrowUpShort } from "react-icons/bs";
+import { IoIosArrowForward } from "react-icons/io";
+import Decline from "../../../../public/assets/icons/canceled.png";
+import Like from "../../../../public/assets/icons/like.png";
+import Star from "../../../../public/assets/icons/star.png";
+import paymentIllustration from "../../../../public/assets/images/paymentIllustration.png";
 
 ChartJS.register(
   CategoryScale,
@@ -37,8 +37,8 @@ const ReportDetails = ({ report }: any) => {
       {
         fill: true,
         data: report?.paymentPartitions.map((item) => item.count),
-        borderColor: 'rgb(136, 132, 216)',
-        backgroundColor: 'rgba(136, 132, 216, 0.5)',
+        borderColor: "rgb(136, 132, 216)",
+        backgroundColor: "rgba(136, 132, 216, 0.5)",
         tension: 0.4,
       },
     ],
@@ -53,7 +53,7 @@ const ReportDetails = ({ report }: any) => {
           display: false,
         },
         ticks: {
-          color: '#888',
+          color: "#888",
           font: {
             size: 12,
           },
@@ -69,13 +69,13 @@ const ReportDetails = ({ report }: any) => {
           Math.max(...report?.paymentPartitions.map((item) => item.count)) + 1,
         ticks: {
           stepSize: 1,
-          color: '#888',
+          color: "#888",
           font: {
             size: 12,
           },
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
+          color: "rgba(0, 0, 0, 0.05)",
         },
         border: {
           display: false,
@@ -98,14 +98,14 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: <Image src={Decline} alt='decline' />,
-      title: 'PENDING PAYMENT',
-      desc: formatPrice(report?.pendingAmount),
+      icon: <Image src={Decline} alt="decline" />,
+      title: "PENDING PAYMENT",
+      desc: formatPrice(report?.pendingAmount || 0),
     },
     {
-      icon: <Image src={Like} alt='like' />,
-      title: 'TOTAL PAYMENT',
-      desc: formatPrice(report?.totalAmount),
+      icon: <Image src={Like} alt="like" />,
+      title: "TOTAL PAYMENT",
+      desc: formatPrice(report?.totalAmount || 0),
     },
   ];
 
@@ -117,35 +117,36 @@ const ReportDetails = ({ report }: any) => {
     route: string
   ) => {
     router.push(`/dashboard/reports/${route}`);
-    saveJsonItemToLocalStorage('reportFilter', {
+    saveJsonItemToLocalStorage("reportFilter", {
       reportType: reportType,
       reportName: reportName,
       route: route,
     });
   };
+
   return (
-    <div className=' flex lg:flex-row flex-col gap-4 mb-4'>
-      <div className='lg:w-[77%] w-full'>
-        <div className='flex w-full gap-4 mb-4'>
+    <div className=" flex lg:flex-row flex-col gap-4 mb-4">
+      <div className="lg:w-[77%] w-full">
+        <div className="flex w-full gap-4 mb-4">
           {reportData.map((item, index) => (
-            <Card className='bg-[#EBE8F9] flex-grow'>
-              <CardBody key={index} className='space-y-2 p-4'>
+            <Card className="bg-[#EBE8F9] flex-grow">
+              <CardBody key={index} className="space-y-2 p-4">
                 {item.icon}
-                <p className='text-xs text-gray-500'>{item.title}</p>
-                <p className=' font-bold'>{item.desc}</p>
+                <p className="text-xs text-gray-500">{item.title}</p>
+                <p className=" font-bold">{item.desc}</p>
               </CardBody>
             </Card>
           ))}
         </div>
 
-        <Card className='mb-4 h-64 bg-[#F5F5F5]'>
+        <Card className="mb-4 h-64 bg-[#F5F5F5]">
           <CardBody>
             <Line data={data} options={options} />
           </CardBody>
         </Card>
 
         <div>
-          <h3 className=' font-semibold mb-2'>Available reports</h3>
+          <h3 className=" font-semibold mb-2">Available reports</h3>
           <Divider />
 
           <div>
@@ -155,52 +156,52 @@ const ReportDetails = ({ report }: any) => {
                   handleActivityReport(
                     item.reportType,
                     item.reportName,
-                    'payment'
+                    "payment"
                   )
                 }
                 key={item}
-                className='cursor-pointer hover:bg-primaryGrey transition-all duration-300 '
+                className="cursor-pointer hover:bg-primaryGrey transition-all duration-300 "
               >
-                <div className='flex justify-between items-center p-3'>
-                  <p className='hover:text-gray-100 text-sm'>
+                <div className="flex justify-between items-center p-3">
+                  <p className="hover:text-gray-100 text-sm">
                     {item.reportName}
                   </p>
-                  <IoIosArrowForward className='text-grey600' />
+                  <IoIosArrowForward className="text-grey600" />
                 </div>
-                <Divider className='bg-primaryGrey' />
+                <Divider className="bg-primaryGrey" />
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className='h-full flex-grow'>
-        <Card className='border  bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl mb-4 h-[247px]'>
-          <div className='absolute bottom-0  right-3'>
+      <div className="h-full flex-grow">
+        <Card className="border  bg-gradient-to-r text-white from-[#9747FF] to-[#421CAC] border-primaryGrey rounded-xl mb-4 h-[247px]">
+          <div className="absolute bottom-0  right-3">
             <Image
-              className={'bg-cover rounded-lg '}
+              className={"bg-cover rounded-lg "}
               width={100}
               height={100}
               src={paymentIllustration}
-              alt='menu'
+              alt="menu"
             />
           </div>
           <div>
-            <div className='p-4'>
-              <h2 className='font-medium text-sm'>CONFIRMED PAYMENT </h2>
-              <h1 className='text-xl font-[500] my-[5px]'>
+            <div className="p-4">
+              <h2 className="font-medium text-sm">CONFIRMED PAYMENT </h2>
+              <h1 className="text-xl font-[500] my-[5px]">
                 {formatPrice(report?.confirmedAmount)}
               </h1>
               <div
                 className={`text-xs ${
                   Number(report?.percentageChange) >= 50
-                    ? 'text-success-300'
-                    : 'text-danger-500'
+                    ? "text-success-300"
+                    : "text-danger-500"
                 }  font-[500] flex items-center`}
               >
                 <BsArrowUpShort
                   className={` text-[20px] ${
-                    report?.percentageChange < 50 && 'rotate-180'
+                    report?.percentageChange < 50 && "rotate-180"
                   }`}
                 />
                 <p>{report?.percentageChange}%</p>
@@ -208,21 +209,21 @@ const ReportDetails = ({ report }: any) => {
             </div>
           </div>
         </Card>
-        <Card className='bg-[#FDF5E1] lg:h-[348px] h-full'>
-          <CardBody className=' p-4'>
-            <div className='mb-4'>
-              <Image src={Star} alt='star' />
+        <Card className="bg-[#FDF5E1] lg:h-[348px] h-full">
+          <CardBody className=" p-4">
+            <div className="mb-4">
+              <Image src={Star} alt="star" />
             </div>
 
-            <p className='font-[500] text-sm'>Day with highest payment</p>
-            <p className='text-[22px] font-semibold'>
-              {formatPrice(report?.dayWithHighestPayment?.amount)}
+            <p className="font-[500] text-sm">Day with highest payment</p>
+            <p className="text-[22px] font-semibold">
+              {formatPrice(report?.dayWithHighestPayment?.amount || 0)}
             </p>
-            <p className='text-sm'>
-              {' '}
+            <p className="text-sm">
+              {" "}
               {report?.dayWithHighestPayment?.dateTime
-                ? moment(report?.dayWithHighestPayment?.dateTime).format('ll')
-                : ''}
+                ? moment(report?.dayWithHighestPayment?.dateTime).format("ll")
+                : ""}
             </p>
           </CardBody>
         </Card>
