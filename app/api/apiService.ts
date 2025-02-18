@@ -320,9 +320,7 @@ export const handleError = (error: any, showError: boolean = true) => {
     if (!error.response?.data?.title) {
       notify({
         title: "Error!",
-        text:
-          error.response?.data?.error?.responseDescription ||
-          "An error occurred",
+        text: error.response?.data?.error?.responseDescription || error.message,
         type: "error",
       });
     } else if (error.code === "ECONNABORTED") {
@@ -340,7 +338,7 @@ export const handleError = (error: any, showError: boolean = true) => {
     } else {
       notify({
         title: "Error!",
-        text: "An error occurred, please try again",
+        text: error.message || "An error occurred, please try again",
         type: "error",
       });
     }

@@ -171,12 +171,10 @@ const ReportDetails = ({ report }: any) => {
                   )
                 }
                 key={item}
-                className="cursor-pointer hover:bg-primaryGrey transition-all duration-300 "
+                className="cursor-pointer hover:text-gray-700 hover:bg-primaryGrey transition-all duration-300 "
               >
                 <div className="flex justify-between items-center p-3">
-                  <p className="hover:text-gray-700 text-sm">
-                    {item.reportName}
-                  </p>
+                  <p className=" text-sm">{item.reportName}</p>
                   <IoIosArrowForward className="text-grey600" />
                 </div>
                 <Divider className="bg-primaryGrey" />
