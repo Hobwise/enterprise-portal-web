@@ -57,7 +57,7 @@ api.interceptors.response.use(
       error.response.status === 401 &&
       !originalConfig._retry
     ) {
-      originalConfig._retry = true;
+      originalConfig._retry = false;
       try {
         const userData = getJsonItemFromLocalStorage("userInformation");
         const businesses = getJsonItemFromLocalStorage("business");
