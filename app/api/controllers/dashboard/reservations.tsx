@@ -11,6 +11,7 @@ export type payloadReservationItem = {
   allowSystemAdvert?: boolean;
   reservationRequirement?: number;
   quantity: number;
+  numberOfSeat: number;
   imageReference: string;
   startTime: string;
   endTime: string;
@@ -36,7 +37,7 @@ const reservationSchema = z
   })
   .refine((data) => data.startTime < data.endTime, {
     message: "End time must be later than start time",
-    path: ["endTime"], // This will associate the error message with the `endTime` field
+    path: ["endTime"], 
   });
 
 export async function getReservations(

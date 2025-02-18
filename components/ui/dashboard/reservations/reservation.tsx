@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect } from "react";
 
-import { useGlobalContext } from '@/hooks/globalProvider';
-import usePagination from '@/hooks/usePagination';
-import { formatPrice } from '@/lib/utils';
+import { useGlobalContext } from "@/hooks/globalProvider";
+import usePagination from "@/hooks/usePagination";
+import { formatPrice } from "@/lib/utils";
 import {
   Chip,
   Dropdown,
@@ -17,23 +17,23 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { GrFormView } from 'react-icons/gr';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
-import noImage from '../../../../public/assets/images/no-image.svg';
-import { columns } from './data';
+} from "@nextui-org/react";
+import Image from "next/image";
+import Link from "next/link";
+import { GrFormView } from "react-icons/gr";
+import { HiOutlineDotsVertical } from "react-icons/hi";
+import noImage from "../../../../public/assets/images/no-image.svg";
+import { columns } from "./data";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  'reservationName',
-  'reservationDescription',
-  'quantityLeft',
-  'reservationFee',
-  'reservationDuration',
-  'quantity',
-  'minimumSpend',
-  'actions',
+  "reservationName",
+  "reservationDescription",
+  "quantityLeft",
+  "reservationFee",
+  "reservationDuration",
+  "quantity",
+  "minimumSpend",
+  "actions",
 ];
 
 const ReservationList = ({ reservation, searchQuery, data }: any) => {
@@ -80,16 +80,16 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
     const showReservationFee = reservation.reservationFee > 0;
 
     switch (columnKey) {
-      case 'reservationName':
+      case "reservationName":
         return (
           //   <div className='flex text-textGrey text-sm'>{reservation.name}</div>
-          <div className='flex '>
+          <div className="flex ">
             <Image
-              className='h-[60px] w-[60px] bg-cover rounded-lg'
+              className="h-[60px] w-[60px] bg-cover rounded-lg"
               width={60}
               height={60}
-              alt='menu'
-              aria-label='menu'
+              alt="menu"
+              aria-label="menu"
               src={
                 reservation.image
                   ? `data:image/jpeg;base64,${reservation.image}`
@@ -97,22 +97,22 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
               }
             />
 
-            <div className='ml-5 gap-1 grid place-content-center'>
-              <p className='font-medium text-black text-sm mb-[0.5px]'>
+            <div className="ml-5 gap-1 grid place-content-center">
+              <p className="font-medium text-black text-sm mb-[0.5px]">
                 {reservation.reservationName}
               </p>
 
               {showReservationFee ? (
                 <div>
-                  <p className='text-sm'>Reservation Fee</p>
-                  <p className='font-medium text-black text-[13px]'>
+                  <p className="text-sm">Reservation Fee</p>
+                  <p className="font-medium text-black text-[13px]">
                     {formatPrice(reservation.reservationFee)}
                   </p>
                 </div>
               ) : showMinimumSpend ? (
                 <div>
-                  <p className='text-sm'>Minimum Spend</p>
-                  <p className='font-medium text-black text-[13px]'>
+                  <p className="text-sm">Minimum Spend</p>
+                  <p className="font-medium text-black text-[13px]">
                     {formatPrice(reservation.minimumSpend)}
                   </p>
                 </div>
@@ -121,42 +121,31 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
           </div>
         );
 
-      case 'quantity':
+      case "quantity":
         return (
-          <div className='text-textGrey text-sm'>{reservation.quantity}</div>
+          <div className="text-textGrey text-sm">{reservation.quantity}</div>
         );
-      case 'reservationDescription':
+      case "reservationDescription":
         return (
-          <div className='text-textGrey text-sm max-w-[330px]'>
+          <div className="text-textGrey text-sm max-w-[330px]">
             {reservation.reservationDescription}
           </div>
         );
-      case 'quantityLeft':
-        return (
-          <Chip
-            classNames={{
-              base: ` text-xs h-6 capitalize font-[700] w-5 bg-[#EAE5FF] text-primaryColor`,
-            }}
-            size='sm'
-          >
-            {reservation?.quantityLeft} remaining
-          </Chip>
-        );
 
-      case 'actions':
+      case "actions":
         return (
-          <div className='relative flexjustify-center items-center gap-2'>
-            <Dropdown aria-label='drop down' className=''>
-              <DropdownTrigger aria-label='actions'>
-                <div className='cursor-pointer flex justify-center items-center text-black'>
-                  <HiOutlineDotsVertical className='text-[22px] ' />
+          <div className="relative flexjustify-center items-center gap-2">
+            <Dropdown aria-label="drop down" className="">
+              <DropdownTrigger aria-label="actions">
+                <div className="cursor-pointer flex justify-center items-center text-black">
+                  <HiOutlineDotsVertical className="text-[22px] " />
                 </div>
               </DropdownTrigger>
-              <DropdownMenu className='text-black'>
-                <DropdownItem aria-label='view'>
+              <DropdownMenu className="text-black">
+                <DropdownItem aria-label="view">
                   <Link
                     prefetch={true}
-                    className='flex w-full'
+                    className="flex w-full"
                     href={{
                       pathname: `/dashboard/reservation/${reservation.reservationName}`,
                       query: {
@@ -165,7 +154,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
                     }}
                   >
                     <div className={` flex gap-2  items-center text-grey500`}>
-                      <GrFormView className='text-[20px]' />
+                      <GrFormView className="text-[20px]" />
                       <p>View more</p>
                     </div>
                   </Link>
@@ -180,20 +169,20 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
   }, []);
 
   return (
-    <section className='border border-primaryGrey rounded-lg'>
+    <section className="border border-primaryGrey rounded-lg">
       <Table
-        radius='lg'
+        radius="lg"
         isCompact
         removeWrapper
         allowsSorting
-        aria-label='list of reservations'
+        aria-label="list of reservations"
         bottomContent={bottomContent}
-        bottomContentPlacement='outside'
+        bottomContentPlacement="outside"
         classNames={classNames}
         selectedKeys={selectedKeys}
         // selectionMode='multiple'
         sortDescriptor={sortDescriptor}
-        topContentPlacement='outside'
+        topContentPlacement="outside"
         onSelectionChange={setSelectedKeys}
         onSortChange={setSortDescriptor}
       >
@@ -201,7 +190,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
           {(column) => (
             <TableColumn
               key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
+              align={column.uid === "actions" ? "center" : "start"}
               allowsSorting={column.sortable}
             >
               {column.name}
@@ -209,7 +198,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={'No reservation found'}
+          emptyContent={"No reservation found"}
           items={filteredReservation}
         >
           {(item) => (

@@ -66,6 +66,7 @@ const AddNewReservation = () => {
       reservationRequirement:
         getReservationSavedToDraft?.reservationRequirement || "",
       quantity: getReservationSavedToDraft?.quantity || 1,
+      numberOfSeat: getReservationSavedToDraft?.numberOfSeat || 1,
       imageReference: getReservationSavedToDraft?.imageReference || "",
       allowSystemAdvert: getReservationSavedToDraft?.allowSystemAdvert || true,
       reservationDuration:
@@ -154,10 +155,6 @@ const AddNewReservation = () => {
     }
   };
   const postReservation = async () => {
-    // if (!selectedImage) {
-    //   return setImageError('Upload an image');
-    // }
-
     setIsLoading(true);
 
     const data = await createReservations(businessInformation[0]?.businessId, {
@@ -166,6 +163,7 @@ const AddNewReservation = () => {
       minimumSpend: Number(reservationPayload.minimumSpend),
       reservationRequirement: reservationRequirement(),
       quantity: Number(reservationPayload.quantity),
+      numberOfSeat: Number(reservationPayload.numberOfSeat),
     });
 
     setResponse(data);
@@ -184,6 +182,7 @@ const AddNewReservation = () => {
         allowSystemAdvert: true,
         reservationDuration: null,
         quantity: 1,
+        numberOfSeat: 1,
         imageReference: "",
       });
       // setSelectedFile();
@@ -211,6 +210,15 @@ const AddNewReservation = () => {
           : Math.max(1, Number(prevState.quantity || 0) - 1),
     }));
   };
+  const handleNumberOfSeatChange = (type: "increment" | "decrement") => {
+    setReservationPayload((prevState) => ({
+      ...prevState,
+      numberOfSeat:
+        type === "increment"
+          ? Number(prevState.numberOfSeat || 0) + 1
+          : Math.max(1, Number(prevState.numberOfSeat || 0) - 1),
+    }));
+  };
 
   useEffect(() => {
     setReservationPayload({
@@ -222,6 +230,7 @@ const AddNewReservation = () => {
       reservationRequirement:
         getReservationSavedToDraft?.reservationRequirement || "",
       quantity: getReservationSavedToDraft?.quantity || 1,
+      numberOfSeat: getReservationSavedToDraft?.numberOfSeat || 1,
       imageReference: getReservationSavedToDraft?.imageReference || "",
       allowSystemAdvert: getReservationSavedToDraft?.allowSystemAdvert || true,
       reservationDuration:
@@ -231,8 +240,6 @@ const AddNewReservation = () => {
     });
     setSelectedImage(selectedImageSavedToDraft || "");
   }, []);
-
-
 
   const handleDurationSelect = (value: number) => {
     setReservationPayload((prev) => ({
@@ -370,6 +377,33 @@ const AddNewReservation = () => {
               </button>
             </div>
           </div>
+          <Spacer y={3} />
+          <div className="text-sm flex justify-between">
+            <div className="text-[#404245] flex space-x-2 items-center">
+              <p>Number of seat(s)</p>
+              <InfoCircle />
+            </div>
+            <div className="flex space-x-4 text-[#000] items-center">
+              <button
+                className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                disabled={Number(reservationPayload.numberOfSeat) <= 1}
+                role="button"
+                onClick={() => handleNumberOfSeatChange("decrement")}
+              >
+                -
+              </button>
+              <p className="font-medium w-4 flex justify-center items-center">
+                {reservationPayload.numberOfSeat || 1}
+              </p>
+              <button
+                className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                role="button"
+                onClick={() => handleNumberOfSeatChange("increment")}
+              >
+                +
+              </button>
+            </div>
+          </div>
           <Spacer y={6} />
           <div className="bg-[#F0F2F4] p-4 text-[#5A5A63]  items-baseline space-x-2 space-y-2 rounded-lg">
             <p className="text-sm">
@@ -396,16 +430,6 @@ const AddNewReservation = () => {
                   </Chip>
                 ))}
               </div>
-
-              {/* <MdCancel
-                onClick={() =>
-                  setReservationPayload({
-                    ...reservationPayload,
-                    reservationDuration: null,
-                  })
-                }
-                className='text-danger-500 cursor-pointer text-xl'
-              /> */}
             </div>
             <Spacer y={3} />
             <hr className="my-4 text-secondaryGrey" />

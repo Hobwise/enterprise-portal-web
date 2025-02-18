@@ -15,6 +15,7 @@ import {
   notify,
   reservationDuration,
 } from "@/lib/utils";
+import { InfoCircle } from "@/public/assets/svg";
 import {
   Chip,
   Modal,
@@ -56,6 +57,7 @@ const EditReservation = ({
       endTime: reservationItem?.endTime || "",
       reservationDuration: reservationItem?.reservationDuration || "",
       allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+      numberOfSeat: reservationItem?.numberOfSeat || 1,
     });
   useEffect(() => {
     setReservationState({
@@ -69,6 +71,7 @@ const EditReservation = ({
       endTime: reservationItem?.endTime || "",
       reservationDuration: reservationItem?.reservationDuration || "",
       allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+      numberOfSeat: reservationItem?.numberOfSeat || 1,
     });
   }, [reservationItem]);
 
@@ -149,6 +152,7 @@ const EditReservation = ({
       allowSystemAdvert: reservationState.allowSystemAdvert,
       startTime: convertTimeFormat(reservationState?.startTime),
       endTime: convertTimeFormat(reservationState?.endTime),
+      numberOfSeat: Number(reservationState.numberOfSeat),
     };
 
     const data = await editReservations(
@@ -191,6 +195,16 @@ const EditReservation = ({
     });
   };
 
+  const handleNumberOfSeatChange = (type: "increment" | "decrement") => {
+    setReservationState((prevState) => ({
+      ...prevState,
+      numberOfSeat:
+        type === "increment"
+          ? Number(prevState.numberOfSeat || 0) + 1
+          : Math.max(1, Number(prevState.numberOfSeat || 0) - 1),
+    }));
+  };
+
   return (
     <Modal
       classNames={{
@@ -210,6 +224,7 @@ const EditReservation = ({
           endTime: reservationItem?.endTime || "",
           reservationDuration: reservationItem?.reservationDuration || "",
           allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+          numberOfSeat: reservationItem?.numberOfSeat || 1,
         });
         setSelectedImage("");
         toggleModalEdit();
@@ -372,6 +387,33 @@ const EditReservation = ({
                     label={"Quantity"}
                     placeholder={"Quantity"}
                   />
+                  <Spacer y={6} />
+                  <div className="text-sm flex justify-between">
+                    <div className="text-[#404245] flex space-x-2 items-center">
+                      <p>Number of seat(s)</p>
+                      <InfoCircle />
+                    </div>
+                    <div className="flex space-x-4 text-[#000] items-center">
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        disabled={Number(reservationState.numberOfSeat) <= 1}
+                        role="button"
+                        onClick={() => handleNumberOfSeatChange("decrement")}
+                      >
+                        -
+                      </button>
+                      <p className="font-medium w-4 flex justify-center items-center">
+                        {reservationState.numberOfSeat || 1}
+                      </p>
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        role="button"
+                        onClick={() => handleNumberOfSeatChange("increment")}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>{" "}
                   <Spacer y={6} />
                   <div className="bg-[#F0F2F4] p-4 text-[#5A5A63]  items-baseline space-x-2 space-y-2 rounded-lg">
                     <p className="text-sm">
