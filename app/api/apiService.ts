@@ -146,9 +146,10 @@ import {
   saveJsonItemToLocalStorage,
 } from "@/lib/utils";
 import axios from "axios";
-import { generateRefreshToken, logout } from "./controllers/auth";
+import { generateRefreshToken } from "./controllers/auth";
 import toast from "react-hot-toast";
 
+let refreshPromise: Promise<any> | null = null;
 let refreshTimeout: NodeJS.Timeout | null = null;
 
 const scheduleTokenRefresh = (expirationTime: string) => {
@@ -159,44 +160,48 @@ const scheduleTokenRefresh = (expirationTime: string) => {
   const expirationDate = new Date(expirationTime).getTime();
   const currentTime = new Date().getTime();
 
-  const timeUntilRefresh = expirationDate - currentTime - 120000; // 60000ms = 1 minute
+  // Refresh 2 minutes before expiration
+  const timeUntilRefresh = expirationDate - currentTime - 120000;
 
-  if (timeUntilRefresh <= 0) {
-    refreshTokenIfNeeded();
-  } else {
+  if (timeUntilRefresh > 0) {
     refreshTimeout = setTimeout(refreshTokenIfNeeded, timeUntilRefresh);
+  } else {
+    resetLoginInfo();
+    toast.error("Session expired, please login again");
   }
 };
 
 const refreshTokenIfNeeded = async () => {
   try {
+    if (refreshPromise) {
+      return refreshPromise;
+    }
+
     const userData = getJsonItemFromLocalStorage("userInformation");
     const businesses = getJsonItemFromLocalStorage("business");
 
     if (!userData || !businesses) {
       resetLoginInfo();
-      return;
+      return null;
     }
 
-    const { refreshToken, email } = userData;
-    const businessId = businesses[0].businessId;
-
-    const rs = await generateRefreshToken({
-      refreshToken,
-      businessId,
-      email,
+    refreshPromise = generateRefreshToken({
+      refreshToken: userData.refreshToken,
+      businessId: businesses[0].businessId,
+      email: userData.email,
     });
 
-    if (!rs) {
-      resetLoginInfo();
-      throw new Error("Failed to generate new token");
+    const response = await refreshPromise;
+
+    if (!response?.data?.data) {
+      throw new Error("Invalid refresh token response");
     }
 
     const {
       token: newToken,
       refreshToken: newRefreshToken,
       tokenExpiration: newExpiration,
-    } = rs.data.data;
+    } = response.data.data;
 
     saveJsonItemToLocalStorage("userInformation", {
       ...userData,
@@ -206,11 +211,15 @@ const refreshTokenIfNeeded = async () => {
     });
 
     api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
-
     scheduleTokenRefresh(newExpiration);
+
+    return response;
   } catch (error) {
     resetLoginInfo();
+    toast.error("Session expired, please login again");
     throw error;
+  } finally {
+    refreshPromise = null;
   }
 };
 
@@ -222,28 +231,29 @@ const api = axios.create({
   timeout: 20000,
 });
 
+// Initialize token refresh schedule on API creation
+const userData = getJsonItemFromLocalStorage("userInformation");
+if (userData?.tokenExpiration) {
+  scheduleTokenRefresh(userData.tokenExpiration);
+}
+
 api.interceptors.request.use(async (config) => {
   const userData = getJsonItemFromLocalStorage("userInformation");
   const business = getJsonItemFromLocalStorage("business");
-  const token = userData?.token;
-  const cooperateID = userData?.cooperateID;
-  const businessId = business?.businessId;
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (userData?.token) {
+    config.headers.Authorization = `Bearer ${userData.token}`;
   }
 
-  if (cooperateID) {
-    config.headers["cooperateId"] = cooperateID;
+  if (userData?.cooperateID) {
+    config.headers["cooperateId"] = userData.cooperateID;
   }
 
-  if (businessId) {
-    config.headers["businessId"] = businessId;
+  if (business?.businessId) {
+    config.headers["businessId"] = business.businessId;
   }
 
-  const isMultipartFormData =
-    config.headers["Content-Type"] === "multipart/form-data";
-  if (isMultipartFormData) {
+  if (config.headers["Content-Type"] === "multipart/form-data") {
     delete config.headers["Content-Type"];
   }
 
@@ -253,33 +263,8 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    let originalConfig = error.config;
-    const userData = getJsonItemFromLocalStorage("userInformation");
-    if (
-      // error.response &&
-      // error.response.status === 401 &&
-      // !originalConfig._retry
-      userData?.tokenExpiration &&
-      !refreshTimeout
-    ) {
-      originalConfig._retry = false;
-      try {
-        scheduleTokenRefresh(userData?.tokenExpiration);
-
-        // toast.error("Session timeout, please login again");
-        // await refreshTokenIfNeeded();
-        return api(originalConfig);
-      } catch (_error) {
-        resetLoginInfo();
-        toast.error("Session timeout, please login again");
-        if (error.response && error.response.data) {
-          return Promise.reject(error.response.data);
-        }
-        return Promise.reject(_error);
-      }
-    } else {
-      handleError(error, false);
-    }
+    // No automatic refresh on 401, just handle the error
+    handleError(error, false);
     return Promise.reject(error);
   }
 );
