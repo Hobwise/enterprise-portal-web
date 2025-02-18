@@ -68,8 +68,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   useEffect(() => {
     setProfessionalPlan(plans?.Professional || null);
     setPremiumPlan(plans?.Premium || null);
-    setStarterPlan(plans?.Starter || null);
-    console.log(plans?.Starter, "plans?.Starte");
+    setStarterPlan(plans?.Basic || null);
   }, [plans]);
 
   const tabs: TabContentProps[] = [

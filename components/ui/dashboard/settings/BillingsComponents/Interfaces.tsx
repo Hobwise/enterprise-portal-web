@@ -23,7 +23,7 @@ export interface PlanDetails {
 }
 
 export interface Plans {
-  Starter: PlanDetails;
+  Basic: PlanDetails;
   Professional: PlanDetails;
   Premium: PlanDetails;
 }
@@ -31,7 +31,7 @@ export interface Plans {
 export const TYPE_OF_PLAN = {
   1: "Premium",
   2: "Professional",
-  3: "Starter",
+  3: "Basic",
 };
 
 export interface PlansFromParent {
@@ -53,7 +53,7 @@ export interface PaymentDetails {
 export const PAYMENT_PLAN = {
   PREMIUM: 0,
   PROFESSIONAL: 1,
-  STARTER: 2,
+  BASIC: 2,
 };
 
 export interface SubscriptionData {

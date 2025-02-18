@@ -34,7 +34,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
 
   const mapPlan = (plan: number) => {
     return (
-      ["Unknown", "Premium Plan", "Professional Plan", "Starter Plan"][plan] ||
+      ["Unknown", "Premium Plan", "Professional Plan", "Basic Plan"][plan] ||
       "Unknown"
     );
   };
