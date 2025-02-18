@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { CustomButton } from '@/components/customButton';
 import { Transition } from '@/components/ui/landingPage/transition';
 import Link from 'next/link';
@@ -19,6 +19,18 @@ import MainSideImage from '@/public/assets/images/main-side-image.png';
 import Demo from '@/components/ui/landingPage/demo';
 
 export default function HomeComponent() {
+  const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
+  const userInformation = typeof window !== 'undefined' && localStorage.getItem('userInformation');
+
+  useEffect(() => {
+    if (userInformation) {
+      const userToken = JSON.parse(userInformation).token;
+      if (userToken) {
+        setIsSignedIn(true);
+      }
+    }
+  }, [userInformation]);
+
   return (
     <div className="overflow-y-scroll scroll-smooth h-screen bg-white">
       <main className="gap-3 text-center relative bg-white overflow-x-hidden font-satoshi h-full">
@@ -53,9 +65,15 @@ export default function HomeComponent() {
                       Request a Demo
                     </CustomButton>
                   </Link>
-                  <Link href={SIGN_UP_URL} target="_blank">
-                    <CustomButton className="bg-white border border-primaryColor  text-primaryColor h-[38px] px-8">Get Started</CustomButton>
-                  </Link>
+                  {isSignedIn ? (
+                    <Link href={'/dashboard'} target="_blank">
+                      <CustomButton className="bg-white border border-primaryColor  text-primaryColor h-[38px] px-8">Go to Dashboard</CustomButton>
+                    </Link>
+                  ) : (
+                    <Link href={SIGN_UP_URL} target="_blank">
+                      <CustomButton className="bg-white border border-primaryColor  text-primaryColor h-[38px] px-8">Get Started</CustomButton>
+                    </Link>
+                  )}
                 </div>
               </div>
               <div>

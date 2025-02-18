@@ -1,16 +1,20 @@
 'use client';
-import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Spinner } from '@nextui-org/react';
 import { useSearchParams } from 'next/navigation';
 import BookReservationPage from '@/app/reservations/[slug]/book-reservation';
+import { useQuery } from 'react-query';
+import { getSingleReservationDetails } from '@/app/api/controllers/dashboard/reservations';
 
 const SingleReservationComponent = () => {
   const singleReservation = getJsonItemFromLocalStorage('singleReservation');
   const searchParams = useSearchParams();
-  let reservationId = searchParams.get('reservationId');
+  const reservationId: string = searchParams.get('reservationId') || '';
 
-  const { data, isLoading } = useSingleReservation(reservationId);
+  const { data, isLoading, isError, error } = useQuery({
+    queryFn: () => getSingleReservationDetails(reservationId),
+    enabled: !!reservationId,
+  });
 
   if (isLoading) {
     return (
@@ -19,7 +23,11 @@ const SingleReservationComponent = () => {
       </div>
     );
   }
-  const getSingleReservation = reservationId ? data : singleReservation;
+
+  if (isError) {
+    throw new Error('Error occured while trying to access the server');
+  }
+  const getSingleReservation = reservationId ? data?.data?.data : singleReservation;
 
   return (
     <div className="bg-white h-screen overflow-y-auto pb-8">

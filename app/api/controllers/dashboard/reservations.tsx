@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { DASHBOARD } from "../../api-url";
 import api, { handleError } from "../../apiService";
+import axios from "axios";
 
 export type payloadReservationItem = {
   reservationName: string;
@@ -37,7 +38,7 @@ const reservationSchema = z
   })
   .refine((data) => data.startTime < data.endTime, {
     message: "End time must be later than start time",
-    path: ["endTime"], 
+    path: ["endTime"],
   });
 
 export async function getReservations(
@@ -129,6 +130,11 @@ export async function getReservation(
     handleError(error, false);
   }
 }
+
+export const getSingleReservationDetails = async (
+  reservationId: string
+): Promise<any> =>
+  await api.get(DASHBOARD.singleBookings, { params: { reservationId } });
 
 export async function deleteReservation(reservationId: string) {
   const headers = reservationId ? { reservationId } : {};
