@@ -163,7 +163,7 @@ const ReportDetails = ({ report }: any) => {
                 className="cursor-pointer hover:bg-primaryGrey transition-all duration-300 "
               >
                 <div className="flex justify-between items-center p-3">
-                  <p className="hover:text-gray-100 text-sm">
+                  <p className="hover:text-gray-700 text-sm">
                     {item.reportName}
                   </p>
                   <IoIosArrowForward className="text-grey600" />
