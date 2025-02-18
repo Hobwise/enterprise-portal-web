@@ -143,6 +143,7 @@
 import {
   getJsonItemFromLocalStorage,
   notify,
+  resetLoginInfo,
   saveJsonItemToLocalStorage,
 } from "@/lib/utils";
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
@@ -176,7 +177,7 @@ const refreshToken = async (): Promise<string | null> => {
   try {
     const response = await generateRefreshToken({ token, email });
     const newToken = response.data.jwtToken;
-    console.log(response, "refresh token response");
+    console.log(newToken, "refresh token response");
 
     const newExpiry = Date.now() + TOKEN_EXPIRY_TIME;
     saveJsonItemToLocalStorage("userInformation", {
@@ -234,10 +235,12 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       const newToken = await refreshToken();
+
       if (newToken) {
         originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return api(originalRequest);
       } else {
+        resetLoginInfo();
         notify({
           title: "Session expired",
           text: "Please log in again",
