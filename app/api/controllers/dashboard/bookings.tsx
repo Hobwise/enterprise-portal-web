@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { DASHBOARD } from '../../api-url';
-import api, { handleError } from '../../apiService';
-import { emailValidation, inputNameValidation } from '../validations';
+import { z } from "zod";
+import { DASHBOARD } from "../../api-url";
+import api, { handleError } from "../../apiService";
+import { emailValidation, inputNameValidation } from "../validations";
 
 interface Bookings {
   reservationId: string;
@@ -13,16 +13,16 @@ interface Bookings {
 }
 
 export const bookingsSchema = z.object({
-  firstName: inputNameValidation('First name'),
-  lastName: inputNameValidation('Last name'),
-  reservationId: z.string().trim().min(1, 'Select a reservation'),
+  firstName: inputNameValidation("First name"),
+  lastName: inputNameValidation("Last name"),
+  reservationId: z.string().trim().min(1, "Select a reservation"),
   emailAddress: emailValidation(),
   phoneNumber: z
     .string()
-    .length(11, 'Phone number must be 11 digits long')
-    .startsWith('0', 'Phone number must start with 0')
+    .length(11, "Phone number must be 11 digits long")
+    .startsWith("0", "Phone number must start with 0")
     .refine((value) => /^\d+$/.test(value), {
-      message: 'Phone number must only contain digits',
+      message: "Phone number must only contain digits",
     }),
 });
 export async function createBooking(
@@ -108,11 +108,11 @@ export async function getBookingsByBusiness(
   const payload = {
     startDate: startDate,
     endDate: endDate,
-    filterType: filterType,
+    // filterType: filterType,
     businessId: businessId,
     statusPaginationInfoList: [
       {
-        status: tableStatus || 'All',
+        status: tableStatus || "All",
         page: page || 1,
         pageSize: rowsPerPage || 10,
       },
