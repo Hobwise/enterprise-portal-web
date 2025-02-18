@@ -140,84 +140,103 @@
 // export default api;
 
 "use client";
+
 import {
   getJsonItemFromLocalStorage,
   notify,
+  removeCookie,
   resetLoginInfo,
   saveJsonItemToLocalStorage,
 } from "@/lib/utils";
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, { AxiosError } from "axios";
+import toast from "react-hot-toast";
 import { generateRefreshToken } from "./controllers/auth";
-interface UserInformation {
-  token: string;
-  refreshToken: string;
-  email: string;
-  tokenExpiration?: string;
-  cooperateID?: string;
-}
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
+let refreshTimer: NodeJS.Timeout | null = null;
 
-const REFRESH_WINDOW = 60 * 1000;
-const TOKEN_EXPIRY_TIME = 30 * 60 * 1000;
-
-const api = axios.create({
-  baseURL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-const refreshToken = async (): Promise<string | null> => {
+export const refreshToken = async () => {
   const userData = getJsonItemFromLocalStorage("userInformation");
   if (!userData) return null;
 
   const { token, email } = userData;
 
   try {
-    const response = await generateRefreshToken({ token, email });
-    const newToken = response.data.jwtToken;
-    console.log(newToken, "refresh token response");
+    const response = await generateRefreshToken({
+      token,
+      email,
+    });
 
-    const newExpiry = Date.now() + TOKEN_EXPIRY_TIME;
+    const { jwtToken: newToken, tokenExpiration: newExpiration } =
+      response?.data?.data;
+
     saveJsonItemToLocalStorage("userInformation", {
       ...userData,
       token: newToken,
-      tokenExpiration: newExpiry,
+      tokenExpiration: newExpiration,
     });
 
+    scheduleTokenRefresh();
     return newToken;
   } catch (error) {
-    console.error("Error refreshing token:", error);
+    toast.error("Session Expired, please log in again.");
+    resetLoginInfo();
     return null;
   }
 };
 
-api.interceptors.request.use(async (config: AxiosRequestConfig) => {
-  const userData =
-    getJsonItemFromLocalStorage<UserInformation>("userInformation");
-  if (userData) {
-    const { token, tokenExpiration, cooperateID } = userData;
-
-    const now = Date.now();
-
-    if (tokenExpiration && now >= tokenExpiration - REFRESH_WINDOW) {
-      const newToken = await refreshToken();
-      if (newToken) {
-        config.headers.Authorization = `Bearer ${newToken}`;
-      }
-    } else {
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-
-    if (cooperateID) {
-      config.headers.cooperateId = cooperateID;
-    }
+export const scheduleTokenRefresh = () => {
+  if (refreshTimer) {
+    clearTimeout(refreshTimer);
   }
 
-  if (config.headers["Content-Type"] === "multipart/form-data") {
+  const userData = getJsonItemFromLocalStorage("userInformation");
+  if (!userData || !userData.tokenExpiration) return;
+
+  const expirationTime = new Date(userData.tokenExpiration).getTime();
+  const currentTime = Date.now();
+
+  const timeUntilRefresh = expirationTime - currentTime - 60 * 1000;
+
+  if (timeUntilRefresh <= 0) {
+    refreshToken();
+    return;
+  }
+
+  refreshTimer = setTimeout(() => {
+    refreshToken();
+  }, timeUntilRefresh);
+};
+
+const api = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  timeout: 20000,
+});
+
+api.interceptors.request.use(async (config) => {
+  const userData = getJsonItemFromLocalStorage("userInformation");
+  const business = getJsonItemFromLocalStorage("business");
+  const token = userData?.token;
+  const cooperateID = userData?.cooperateID;
+  const businessId = business?.businessId;
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (cooperateID) {
+    config.headers["cooperateId"] = cooperateID;
+  }
+
+  if (businessId) {
+    config.headers["businessId"] = businessId;
+  }
+
+  const isMultipartFormData =
+    config.headers["Content-Type"] === "multipart/form-data";
+  if (isMultipartFormData) {
     delete config.headers["Content-Type"];
   }
 
@@ -225,34 +244,50 @@ api.interceptors.request.use(async (config: AxiosRequestConfig) => {
 });
 
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  async (error) => {
-    const originalRequest = error.config as AxiosRequestConfig & {
-      _retry?: boolean;
-    };
-
-    if (error.response.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      const newToken = await refreshToken();
-
-      if (newToken) {
-        originalRequest.headers.Authorization = `Bearer ${newToken}`;
-        return api(originalRequest);
-      } else {
-        resetLoginInfo();
-        notify({
-          title: "Session expired",
-          text: "Please log in again",
-          type: "error",
-        });
-
-        return Promise.reject(error);
-      }
+  (response) => response,
+  async (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      toast.error("Session Expired, please log in again.");
+      resetLoginInfo();
+    } else {
+      handleError(error, false);
     }
-
     return Promise.reject(error);
   }
 );
+
+export const handleError = (error: any, showError: boolean = true) => {
+  if (showError) {
+    if (!error.response?.data?.title) {
+      notify({
+        title: "Error!",
+        text:
+          error.response?.data?.error?.responseDescription ||
+          "An error occurred",
+        type: "error",
+      });
+    } else if (error.code === "ECONNABORTED") {
+      notify({
+        title: "Network Timeout",
+        text: "The request took too long. Please try again later.",
+        type: "error",
+      });
+    } else if (error.code === "ERR_NETWORK") {
+      notify({
+        title: "Network Error!",
+        text: "Check your network and try again",
+        type: "error",
+      });
+    } else {
+      notify({
+        title: "Error!",
+        text: "An error occurred, please try again",
+        type: "error",
+      });
+    }
+  }
+};
+
+scheduleTokenRefresh();
 
 export default api;
