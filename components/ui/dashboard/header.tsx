@@ -169,9 +169,9 @@ const Header = () => {
               )}
             </Popover>
 
-            <span>
+            {/* <span>
               <IoChatbubblesOutline className="text-[#494E58]  h-5 w-5 cursor-pointer" />
-            </span>
+            </span> */}
 
             <Dropdown placement="bottom-end">
               <DropdownTrigger>
