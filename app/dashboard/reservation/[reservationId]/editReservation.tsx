@@ -420,8 +420,8 @@ const EditReservation = ({
                       Duration: Select a duration if this reservation is
                       time-sensitive. (Optional)
                     </p>
-                    <div className="flex justify-between items-center">
-                      <div className="flex gap-2 flex-wrap">
+                    <div className="flex justify-between  items-center">
+                      <div className="flex flex-wrap gap-2">
                         {reservationDuration.map((item) => (
                           <Chip
                             key={item.value}

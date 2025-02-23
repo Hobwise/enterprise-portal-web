@@ -12,10 +12,12 @@ import {
 import { Spacer } from "@nextui-org/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaRegEnvelope } from "react-icons/fa6";
+import { useQueryClient } from "react-query";
 const LoginForm = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { setLoginDetails } = useGlobalContext();
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
@@ -40,7 +42,8 @@ const LoginForm = () => {
 
   const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-
+    queryClient.clear();
+    localStorage.clear();
     setLoading(true);
     const data = await loginUser(loginFormData);
 

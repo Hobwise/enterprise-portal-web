@@ -581,8 +581,6 @@ export function resetLoginInfo() {
   localStorage.clear();
   removeCookie("token");
   window.location.href = "/auth/login";
-  const queryClient = useQueryClient();
-  queryClient.clear();
 }
 
 export function generateTimeSlots(
@@ -735,5 +733,21 @@ export const reservationDuration = [
   {
     label: "8hrs",
     value: 8,
+  },
+  {
+    label: "9hrs",
+    value: 9,
+  },
+  {
+    label: "10hrs",
+    value: 10,
+  },
+  {
+    label: "11hrs",
+    value: 11,
+  },
+  {
+    label: "12hrs",
+    value: 12,
   },
 ];
