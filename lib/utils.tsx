@@ -20,6 +20,7 @@ import { saveAs } from 'file-saver';
 import LoadingAvatar from '../public/assets/images/loadingAvatar.svg';
 import { companyInfo } from './companyInfo';
 import { useQueryClient } from 'react-query';
+import moment from 'moment';
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -586,3 +587,16 @@ export const generateXLSX = (
 
   saveAs(blob, fileName);
 };
+
+export const formatDateOnly = (dateString: string) => {
+  const [datePart, timePart] = dateString.split(', ');
+  const [day, month, year] = datePart.split('/').map(Number);
+  const [hours, minutes, seconds] = timePart.split(':').map(Number);
+
+  // Create a new Date object in UTC
+  const date = new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds));
+
+  return date.toISOString();
+};
+
+export const phoneNumberPattern = /^(?:\+?234|0)\d{9,11}$/;

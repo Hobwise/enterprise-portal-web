@@ -339,7 +339,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
 
                 <div className="bg-[#F0F2F4] p-4 text-[#5A5A63] flex items-baseline space-x-2 rounded-lg">
                   <InfoCircle className="mt-1" />
-                  <p>The minimum spend is the amount you’re required to spend when visiting this enterprise.</p>
+                  <p>The minimum spend is the amount you’re required to spend when visiting this location.</p>
                 </div>
 
                 <div>
