@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { DASHBOARD } from '../../api-url';
-import api, { handleError } from '../../apiService';
-import axios from 'axios';
+import { z } from "zod";
+import { DASHBOARD } from "../../api-url";
+import api, { handleError } from "../../apiService";
+import axios from "axios";
 
 export type payloadReservationItem = {
   reservationName: string;
@@ -12,6 +12,7 @@ export type payloadReservationItem = {
   allowSystemAdvert?: boolean;
   reservationRequirement?: number;
   quantity: number;
+  numberOfSeat: number;
   imageReference: string;
   startTime: string;
   endTime: string;
@@ -19,21 +20,33 @@ export type payloadReservationItem = {
 
 const reservationSchema = z
   .object({
-    reservationName: z.string().trim().min(1, 'Reservation name is required'),
-    reservationDescription: z.string().trim().min(1, 'Reservation description is required'),
+    reservationName: z.string().trim().min(1, "Reservation name is required"),
+    reservationDescription: z
+      .string()
+      .trim()
+      .min(1, "Reservation description is required"),
     // reservationFee: z.number().min(1, 'Reservation fee is required'),
     // minimumSpend: z.number().min(1, 'Minimum spend is required'),
-    quantity: z.number().min(1, 'Quantity is required'),
+    quantity: z.number().min(1, "Quantity is required"),
     // reservationRequirement: z.string().trim().min(1, 'Requirement is required'),
-    startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'), // HH:MM
-    endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format'),
+    startTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format"), // HH:MM
+    endTime: z
+      .string()
+      .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, "Invalid time format"),
   })
   .refine((data) => data.startTime < data.endTime, {
-    message: 'End time must be later than start time',
-    path: ['endTime'], // This will associate the error message with the `endTime` field
+    message: "End time must be later than start time",
+    path: ["endTime"],
   });
 
-export async function getReservations(businessId: string, page: any, pageSize: any, cooperateId?: any) {
+export async function getReservations(
+  businessId: string,
+  page: any,
+  pageSize: any,
+  cooperateId?: any
+) {
   const headers = businessId ? { cooperateId, businessId, page, pageSize } : {};
 
   try {
@@ -46,7 +59,10 @@ export async function getReservations(businessId: string, page: any, pageSize: a
     handleError(error, false);
   }
 }
-export async function getReservationsUser(businessId: string, cooperateId?: any) {
+export async function getReservationsUser(
+  businessId: string,
+  cooperateId?: any
+) {
   const headers = businessId ? { cooperateId, businessId } : {};
 
   try {
@@ -59,7 +75,10 @@ export async function getReservationsUser(businessId: string, cooperateId?: any)
     handleError(error, false);
   }
 }
-export async function createReservations(businessId: string, payload: payloadReservationItem) {
+export async function createReservations(
+  businessId: string,
+  payload: payloadReservationItem
+) {
   const validatedFields = reservationSchema.safeParse({
     reservationName: payload?.reservationName,
     reservationDescription: payload?.reservationDescription,
@@ -87,10 +106,15 @@ export async function createReservations(businessId: string, payload: payloadRes
   }
 }
 
-export async function getReservation(reservationId: string, page: any, rowsPerPage: any, tableStatus: any) {
+export async function getReservation(
+  reservationId: string,
+  page: any,
+  rowsPerPage: any,
+  tableStatus: any
+) {
   const payload = [
     {
-      status: tableStatus || 'All',
+      status: tableStatus || "All",
       page: page || 1,
       pageSize: rowsPerPage || 10,
     },
@@ -107,7 +131,9 @@ export async function getReservation(reservationId: string, page: any, rowsPerPa
   }
 }
 
-export const getSingleReservationDetails = async (reservationId: string): Promise<any> =>
+export const getSingleReservationDetails = async (
+  reservationId: string
+): Promise<any> =>
   await api.get(DASHBOARD.singleBookings, { params: { reservationId } });
 
 export async function deleteReservation(reservationId: string) {
@@ -122,7 +148,11 @@ export async function deleteReservation(reservationId: string) {
     handleError(error);
   }
 }
-export async function editReservations(businessId: string, payload: payloadReservationItem, reservationId: string) {
+export async function editReservations(
+  businessId: string,
+  payload: payloadReservationItem,
+  reservationId: string
+) {
   const validatedFields = reservationSchema.safeParse({
     reservationName: payload?.reservationName,
     reservationDescription: payload?.reservationDescription,

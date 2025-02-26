@@ -13,13 +13,17 @@ import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
+  reservationDuration,
 } from "@/lib/utils";
+import { InfoCircle } from "@/public/assets/svg";
 import {
+  Chip,
   Modal,
   ModalBody,
   ModalContent,
   ModalFooter,
   Spacer,
+  Switch,
 } from "@nextui-org/react";
 import imageCompression from "browser-image-compression";
 import Image from "next/image";
@@ -51,6 +55,9 @@ const EditReservation = ({
       imageReference: reservationItem?.imageReference || "",
       startTime: reservationItem?.startTime || "",
       endTime: reservationItem?.endTime || "",
+      reservationDuration: reservationItem?.reservationDuration || "",
+      allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+      numberOfSeat: reservationItem?.numberOfSeat || 1,
     });
   useEffect(() => {
     setReservationState({
@@ -62,6 +69,9 @@ const EditReservation = ({
       imageReference: reservationItem?.imageReference || "",
       startTime: reservationItem?.startTime || "",
       endTime: reservationItem?.endTime || "",
+      reservationDuration: reservationItem?.reservationDuration || "",
+      allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+      numberOfSeat: reservationItem?.numberOfSeat || 1,
     });
   }, [reservationItem]);
 
@@ -138,8 +148,11 @@ const EditReservation = ({
       quantity: Number(reservationState?.quantity),
       reservationRequirement: reservationRequirement(),
       imageReference: reservationState?.imageReference,
+      reservationDuration: reservationState.reservationDuration,
+      allowSystemAdvert: reservationState.allowSystemAdvert,
       startTime: convertTimeFormat(reservationState?.startTime),
       endTime: convertTimeFormat(reservationState?.endTime),
+      numberOfSeat: Number(reservationState.numberOfSeat),
     };
 
     const data = await editReservations(
@@ -167,6 +180,31 @@ const EditReservation = ({
     }
   };
 
+  const handleDurationSelect = (value: number) => {
+    setReservationState((prev) => ({
+      ...prev,
+      reservationDuration:
+        prev.reservationDuration === value ? undefined : value,
+    }));
+  };
+
+  const handleToggle = async (isSelected: boolean) => {
+    setReservationState({
+      ...reservationState,
+      allowSystemAdvert: isSelected,
+    });
+  };
+
+  const handleNumberOfSeatChange = (type: "increment" | "decrement") => {
+    setReservationState((prevState) => ({
+      ...prevState,
+      numberOfSeat:
+        type === "increment"
+          ? Number(prevState.numberOfSeat || 0) + 1
+          : Math.max(1, Number(prevState.numberOfSeat || 0) - 1),
+    }));
+  };
+
   return (
     <Modal
       classNames={{
@@ -184,6 +222,9 @@ const EditReservation = ({
           imageReference: reservationItem?.imageReference || "",
           startTime: reservationItem?.startTime || "",
           endTime: reservationItem?.endTime || "",
+          reservationDuration: reservationItem?.reservationDuration || "",
+          allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+          numberOfSeat: reservationItem?.numberOfSeat || 1,
         });
         setSelectedImage("");
         toggleModalEdit();
@@ -347,6 +388,105 @@ const EditReservation = ({
                     placeholder={"Quantity"}
                   />
                   <Spacer y={6} />
+                  <div className="text-sm flex justify-between">
+                    <div className="text-[#404245] flex space-x-2 items-center">
+                      <p>Number of seat(s)</p>
+                      <InfoCircle />
+                    </div>
+                    <div className="flex space-x-4 text-[#000] items-center">
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        disabled={Number(reservationState.numberOfSeat) <= 1}
+                        role="button"
+                        onClick={() => handleNumberOfSeatChange("decrement")}
+                      >
+                        -
+                      </button>
+                      <p className="font-medium w-4 flex justify-center items-center">
+                        {reservationState.numberOfSeat || 1}
+                      </p>
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        role="button"
+                        onClick={() => handleNumberOfSeatChange("increment")}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>{" "}
+                  <Spacer y={6} />
+                  <div className="bg-[#F0F2F4] p-4 text-[#5A5A63]  items-baseline space-x-2 space-y-2 rounded-lg">
+                    <p className="text-sm">
+                      Duration: Select a duration if this reservation is
+                      time-sensitive. (Optional)
+                    </p>
+                    <div className="flex justify-between  items-center">
+                      <div className="flex flex-wrap gap-2">
+                        {reservationDuration.map((item) => (
+                          <Chip
+                            key={item.value}
+                            onClick={() => handleDurationSelect(item.value)}
+                            className={`cursor-pointer transition-colors ${
+                              reservationState.reservationDuration ===
+                              item.value
+                                ? "bg-primaryColor text-white"
+                                : "bg-white text-[#5A5A63]"
+                            }`}
+                            classNames={{
+                              base: "text-xs h-7",
+                              content: "px-3",
+                            }}
+                          >
+                            {item.label}
+                          </Chip>
+                        ))}
+                      </div>
+                    </div>
+                    <Spacer y={3} />
+                    <hr className="my-4 text-secondaryGrey" />
+                    <Spacer y={3} />
+                    <p className="text-sm">
+                      Allow System Advertisement: Disable this option if you do
+                      not wish for the system to promote this reservation.
+                    </p>
+                    <div className="bg-primaryGrey inline-flex px-4 py-2 rounded-lg  gap-3 items-center">
+                      <span
+                        className={
+                          !reservationState.allowSystemAdvert
+                            ? "text-primaryColor text-bold text-sm"
+                            : "text-grey400 text-sm"
+                        }
+                      >
+                        Disable
+                      </span>
+
+                      <Switch
+                        size="sm"
+                        classNames={{
+                          wrapper: `m-0 ${
+                            reservationState.allowSystemAdvert
+                              ? "!bg-primaryColor"
+                              : "bg-[#E4E7EC]"
+                          } `,
+                        }}
+                        name="allowSystemAdvert"
+                        defaultChecked={reservationState.allowSystemAdvert}
+                        onChange={(e) => handleToggle(e.target.checked)}
+                        isSelected={reservationState.allowSystemAdvert}
+                        aria-label="allow system advert"
+                      />
+
+                      <span
+                        className={
+                          reservationState.allowSystemAdvert
+                            ? "text-primaryColor text-bold text-sm"
+                            : "text-grey400 text-sm"
+                        }
+                      >
+                        Enable
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </ModalBody>

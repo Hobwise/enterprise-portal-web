@@ -146,17 +146,19 @@ export const SubscriptionNoticePopup = () => {
               </div>
 
               <div className="flex flex-col gap-2">
-                <CustomButton
-                  className="h-[50px]  text-white"
-                  onClick={() => {
-                    onOpenChange();
+                {userData.isOwner && (
+                  <CustomButton
+                    className="h-[50px]  text-white"
+                    onClick={() => {
+                      onOpenChange();
 
-                    router.push("/dashboard/settings/subscriptions");
-                  }}
-                  type="submit"
-                >
-                  Go to subscription
-                </CustomButton>
+                      router.push("/dashboard/settings/subscriptions");
+                    }}
+                    type="submit"
+                  >
+                    Go to subscription
+                  </CustomButton>
+                )}
                 <CustomButton
                   className="h-[50px]  text-black bg-transparent border rounded-lg border-primaryGrey"
                   onClick={onOpenChange}

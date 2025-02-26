@@ -8,7 +8,7 @@ const SubscriptionPendingCard: React.FC<PaidCardsData> = ({
   const TYPE_OF_PLAN = {
     1: "Premium",
     2: "Professional",
-    3: "Starter",
+    3: "Basic",
   };
   let plan;
 
@@ -21,7 +21,6 @@ const SubscriptionPendingCard: React.FC<PaidCardsData> = ({
       ? TYPE_OF_PLAN[2]
       : TYPE_OF_PLAN[3];
 
- 
   return (
     <div className="border border-secondaryGrey w-1/2 rounded-lg my-6">
       <div className="p-4 px-6 border-b border-secondaryGrey">

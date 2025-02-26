@@ -152,7 +152,7 @@ const ViewModal = ({
                   )}
                 </div>
               </div>
-              <div>
+              <div className="mb-4">
                 {selectedMenu?.varieties ? (
                   <>
                     {selectedMenu?.varieties?.map((item) => {

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
-import { useGlobalContext } from '@/hooks/globalProvider';
-import usePagination from '@/hooks/usePagination';
+import { useGlobalContext } from "@/hooks/globalProvider";
+import usePagination from "@/hooks/usePagination";
 import {
   Chip,
   Table,
@@ -12,22 +12,22 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-} from '@nextui-org/react';
-import moment from 'moment';
-import { columns, statusColorMap, statusDataMap } from './data';
-import Filters from './filters';
+} from "@nextui-org/react";
+import moment from "moment";
+import { columns, statusColorMap, statusDataMap } from "./data";
+import Filters from "./filters";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  'reservationName',
-  'firstName',
-  'lastName',
-  'id',
-  'emailAddress',
-  'phoneNumber',
-  'reference',
-  'bookingDateTime',
-  'bookingStatus',
-  'actions',
+  "reservationName",
+  "firstName",
+  "lastName",
+  "id",
+  "emailAddress",
+  "phoneNumber",
+  "reference",
+  "bookingDateTime",
+  "bookingStatus",
+  "actions",
 ];
 
 const BookingGrid = ({ data }: any) => {
@@ -56,7 +56,7 @@ const BookingGrid = ({ data }: any) => {
     hasSearchFilter,
   } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState("");
   const [filteredBookings, setFilteredBookings] = React.useState(
     data[0]?.bookings
   );
@@ -94,31 +94,31 @@ const BookingGrid = ({ data }: any) => {
     const cellValue = data[columnKey];
 
     switch (columnKey) {
-      case 'firstName':
+      case "firstName":
         return (
-          <div className='  text-sm'>
-            <p className='font-medium text-black'>
+          <div className="  text-sm">
+            <p className="font-medium text-black">
               {data?.firstName} {data?.lastName}
             </p>
-            <p className='text-[13px]'>{data?.phoneNumber}</p>
+            <p className="text-[13px]">{data?.phoneNumber}</p>
           </div>
         );
 
-      case 'bookingDateTime':
+      case "bookingDateTime":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(data?.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(data?.bookingDateTime).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
-      case 'reference':
-        return <p className='text-sm text-textGrey'>{data?.reference}</p>;
-      case 'bookingStatus':
+      case "reference":
+        return <p className="text-sm text-textGrey">{data?.reference}</p>;
+      case "bookingStatus":
         return (
           <Chip
-            className='capitalize'
+            className="capitalize"
             color={statusColorMap[data?.bookingStatus]}
-            size='sm'
-            variant='bordered'
+            size="sm"
+            variant="bordered"
           >
             {statusDataMap[data?.bookingStatus]}
           </Chip>
@@ -130,21 +130,21 @@ const BookingGrid = ({ data }: any) => {
   }, []);
 
   return (
-    <section className='border w-full border-primaryGrey rounded-lg'>
+    <section className="border w-full border-primaryGrey rounded-lg">
       <Table
-        radius='lg'
+        radius="lg"
         isCompact
         removeWrapper
         allowsSorting
-        aria-label='list of bookings'
+        aria-label="list of bookings"
         bottomContent={bottomContent}
-        bottomContentPlacement='outside'
+        bottomContentPlacement="outside"
         classNames={classNames}
         selectedKeys={selectedKeys}
         topContent={topContent}
         // selectionMode='multiple'
         sortDescriptor={sortDescriptor}
-        topContentPlacement='outside'
+        topContentPlacement="outside"
         onSelectionChange={setSelectedKeys}
         onSortChange={setSortDescriptor}
       >
@@ -152,7 +152,7 @@ const BookingGrid = ({ data }: any) => {
           {(column) => (
             <TableColumn
               key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
+              align={column.uid === "actions" ? "center" : "start"}
               allowsSorting={column.sortable}
             >
               {column.name}
@@ -160,7 +160,7 @@ const BookingGrid = ({ data }: any) => {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={'No bookings found'}
+          emptyContent={"No bookings found"}
           items={matchingObjectArray}
         >
           {(item) => (

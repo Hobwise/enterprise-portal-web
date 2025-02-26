@@ -233,19 +233,25 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                         </div>
                       </DropdownItem>
                     )}
-                  {/* {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 0 && ( */}
-                  <DropdownItem
-                    aria-label="edit booking"
-                    onClick={() => toggleEditBookingModal(booking)}
-                  >
-                    <div className={` flex gap-2  items-center text-grey500`}>
-                      <MdOutlineModeEditOutline className="text-[20px]" />
+                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    booking?.bookingStatus !== 6 && (
+                      <DropdownItem
+                        aria-label="edit booking"
+                        onClick={() => toggleEditBookingModal(booking)}
+                      >
+                        {console.log(
+                          booking?.bookingStatus,
+                          " booking?.bookingStatus"
+                        )}
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <MdOutlineModeEditOutline className="text-[20px]" />
 
-                      <p>Edit booking</p>
-                    </div>
-                  </DropdownItem>
-                  {/* )} */}
+                          <p>Edit booking</p>
+                        </div>
+                      </DropdownItem>
+                    )}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     (booking?.bookingStatus === 0 ||
                       booking?.bookingStatus === 1) && (

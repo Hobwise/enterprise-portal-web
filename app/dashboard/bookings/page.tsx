@@ -32,6 +32,7 @@ const Bookings: React.FC = () => {
     dropdownComponent,
     datePickerModal,
   } = useDateFilter(useBookings);
+
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { userRolePermissions, role } = usePermission();
   const [searchQuery, setSearchQuery] = useState("");
@@ -159,7 +160,7 @@ const Bookings: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {dropdownComponent}
+          {/* {dropdownComponent} */}
           {data?.[0]?.bookings.length > 0 && (
             <>
               <div>
@@ -212,7 +213,7 @@ const Bookings: React.FC = () => {
       ) : (
         <CreateReservation showCreateBookingModal={showCreateBookingModal} />
       )}
-      {datePickerModal}
+      {/* {datePickerModal} */}
       <CreateBooking
         openCreateBookingModal={openCreateBookingModal}
         closeCreateBookingModal={closeCreateBookingModal}

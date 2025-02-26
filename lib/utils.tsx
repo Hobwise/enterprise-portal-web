@@ -468,10 +468,8 @@ export function formatDate(dateString: string) {
 }
 
 export function resetLoginInfo() {
-  const queryClient = useQueryClient();
   sessionStorage.clear();
   localStorage.clear();
-  queryClient.clear();
   removeCookie('token');
   window.location.href = '/auth/login';
 }
@@ -616,3 +614,50 @@ export const formatTime = (time: string) => {
   const formattedHours = hours % 12 || 12; // Convert 0 or 12-23 to 12-hour format
   return `${formattedHours}:${minutes.toString().padStart(2, '0')}${period}`;
 };
+export const reservationDuration = [
+  {
+    label: '1hr',
+    value: 1,
+  },
+  {
+    label: '2hrs',
+    value: 2,
+  },
+  { label: '3hrs', value: 3 },
+  {
+    label: '4hrs',
+    value: 4,
+  },
+  {
+    label: '5hrs',
+    value: 5,
+  },
+  {
+    label: '6hrs',
+    value: 6,
+  },
+  {
+    label: '7hrs',
+    value: 7,
+  },
+  {
+    label: '8hrs',
+    value: 8,
+  },
+  {
+    label: '9hrs',
+    value: 9,
+  },
+  {
+    label: '10hrs',
+    value: 10,
+  },
+  {
+    label: '11hrs',
+    value: 11,
+  },
+  {
+    label: '12hrs',
+    value: 12,
+  },
+];

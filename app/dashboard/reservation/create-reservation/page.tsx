@@ -1,13 +1,13 @@
-'use client';
-import { deleteFile, uploadFile } from '@/app/api/controllers/dashboard/menu';
+"use client";
+import { deleteFile, uploadFile } from "@/app/api/controllers/dashboard/menu";
 import {
   createReservations,
   payloadReservationItem,
-} from '@/app/api/controllers/dashboard/reservations';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { CustomTextArea } from '@/components/customTextArea';
-import useReservation from '@/hooks/cachedEndpoints/useReservation';
+} from "@/app/api/controllers/dashboard/reservations";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { CustomTextArea } from "@/components/customTextArea";
+import useReservation from "@/hooks/cachedEndpoints/useReservation";
 import {
   SmallLoader,
   THREEMB,
@@ -16,10 +16,11 @@ import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
+  reservationDuration,
   saveJsonItemToLocalStorage,
   saveToLocalStorage,
-} from '@/lib/utils';
-import { InfoCircle } from '@/public/assets/svg';
+} from "@/lib/utils";
+import { InfoCircle } from "@/public/assets/svg";
 import {
   Button,
   Chip,
@@ -29,57 +30,58 @@ import {
   Spacer,
   Switch,
   useDisclosure,
-} from '@nextui-org/react';
-import imageCompression from 'browser-image-compression';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
-import { IoIosArrowRoundBack } from 'react-icons/io';
-import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
-import Success from '../../../../public/assets/images/success.png';
+} from "@nextui-org/react";
+import imageCompression from "browser-image-compression";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { MdOutlineAddPhotoAlternate } from "react-icons/md";
+import Success from "../../../../public/assets/images/success.png";
 
 const AddNewReservation = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const router = useRouter();
   const getReservationSavedToDraft = getJsonItemFromLocalStorage(
-    'saveReservationToDraft'
+    "saveReservationToDraft"
   );
-  const selectedImageSavedToDraft = getFromLocalStorage('selectedImage');
+  const selectedImageSavedToDraft = getFromLocalStorage("selectedImage");
   const { refetch } = useReservation();
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [imageError, setImageError] = useState('');
+  const [imageError, setImageError] = useState("");
   const [response, setResponse] = useState(null);
   const [selectedImage, setSelectedImage] = useState(
-    selectedImageSavedToDraft || ''
+    selectedImageSavedToDraft || ""
   );
 
   const [reservationPayload, setReservationPayload] =
     useState<payloadReservationItem>({
-      reservationName: getReservationSavedToDraft?.reservationName || '',
+      reservationName: getReservationSavedToDraft?.reservationName || "",
       reservationDescription:
-        getReservationSavedToDraft?.reservationDescription || '',
+        getReservationSavedToDraft?.reservationDescription || "",
       reservationFee: getReservationSavedToDraft?.reservationFee || 0,
       minimumSpend: getReservationSavedToDraft?.minimumSpend || 0,
       reservationRequirement:
-        getReservationSavedToDraft?.reservationRequirement || '',
+        getReservationSavedToDraft?.reservationRequirement || "",
       quantity: getReservationSavedToDraft?.quantity || 1,
-      imageReference: getReservationSavedToDraft?.imageReference || '',
+      numberOfSeat: getReservationSavedToDraft?.numberOfSeat || 1,
+      imageReference: getReservationSavedToDraft?.imageReference || "",
       allowSystemAdvert: getReservationSavedToDraft?.allowSystemAdvert || true,
       reservationDuration:
         getReservationSavedToDraft?.reservationDuration || null,
-      startTime: getReservationSavedToDraft?.startTime || '',
-      endTime: getReservationSavedToDraft?.endTime || '',
+      startTime: getReservationSavedToDraft?.startTime || "",
+      endTime: getReservationSavedToDraft?.endTime || "",
     });
 
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const menuFileUpload = async (formData: FormData, file: any) => {
     setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
     setIsLoadingImage(false);
-    setImageError('');
+    setImageError("");
     if (data?.data?.isSuccessful) {
       setSelectedImage(URL.createObjectURL(file));
       setReservationPayload({
@@ -89,9 +91,9 @@ const AddNewReservation = () => {
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -102,15 +104,15 @@ const AddNewReservation = () => {
     );
 
     if (data?.data?.isSuccessful) {
-      setSelectedImage('');
-      clearItemLocalStorage('selectedImage');
-      toast.success('Image removed');
+      setSelectedImage("");
+      clearItemLocalStorage("selectedImage");
+      toast.success("Image removed");
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -119,12 +121,12 @@ const AddNewReservation = () => {
     if (event.target.files) {
       const file = event.target.files[0];
       if (file.size > THREEMB) {
-        return setImageError('File too large');
+        return setImageError("File too large");
       }
 
       const compressedFile = await imageCompression(file, imageCompressOptions);
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append("file", compressedFile);
       menuFileUpload(formData, file);
     }
   };
@@ -153,10 +155,6 @@ const AddNewReservation = () => {
     }
   };
   const postReservation = async () => {
-    // if (!selectedImage) {
-    //   return setImageError('Upload an image');
-    // }
-
     setIsLoading(true);
 
     const data = await createReservations(businessInformation[0]?.businessId, {
@@ -165,6 +163,7 @@ const AddNewReservation = () => {
       minimumSpend: Number(reservationPayload.minimumSpend),
       reservationRequirement: reservationRequirement(),
       quantity: Number(reservationPayload.quantity),
+      numberOfSeat: Number(reservationPayload.numberOfSeat),
     });
 
     setResponse(data);
@@ -172,84 +171,75 @@ const AddNewReservation = () => {
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
       onOpen();
-      clearItemLocalStorage('saveReservationToDraft');
-      clearItemLocalStorage('selectedImage');
+      clearItemLocalStorage("saveReservationToDraft");
+      clearItemLocalStorage("selectedImage");
       setReservationPayload({
-        reservationName: '',
-        reservationDescription: '',
+        reservationName: "",
+        reservationDescription: "",
         reservationFee: 0,
         minimumSpend: 0,
-        reservationRequirement: '',
+        reservationRequirement: "",
         allowSystemAdvert: true,
         reservationDuration: null,
         quantity: 1,
-        imageReference: '',
+        numberOfSeat: 1,
+        imageReference: "",
       });
       // setSelectedFile();
-      setSelectedImage('');
+      setSelectedImage("");
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
 
   const saveToDraft = () => {
-    saveJsonItemToLocalStorage('saveReservationToDraft', reservationPayload);
-    saveToLocalStorage('selectedImage', selectedImage);
-    toast.success('Saved to draft!');
+    saveJsonItemToLocalStorage("saveReservationToDraft", reservationPayload);
+    saveToLocalStorage("selectedImage", selectedImage);
+    toast.success("Saved to draft!");
   };
-  const handleQuantityChange = (type: 'increment' | 'decrement') => {
+  const handleQuantityChange = (type: "increment" | "decrement") => {
     setReservationPayload((prevState) => ({
       ...prevState,
       quantity:
-        type === 'increment'
+        type === "increment"
           ? Number(prevState.quantity || 0) + 1
           : Math.max(1, Number(prevState.quantity || 0) - 1),
+    }));
+  };
+  const handleNumberOfSeatChange = (type: "increment" | "decrement") => {
+    setReservationPayload((prevState) => ({
+      ...prevState,
+      numberOfSeat:
+        type === "increment"
+          ? Number(prevState.numberOfSeat || 0) + 1
+          : Math.max(1, Number(prevState.numberOfSeat || 0) - 1),
     }));
   };
 
   useEffect(() => {
     setReservationPayload({
-      reservationName: getReservationSavedToDraft?.reservationName || '',
+      reservationName: getReservationSavedToDraft?.reservationName || "",
       reservationDescription:
-        getReservationSavedToDraft?.reservationDescription || '',
+        getReservationSavedToDraft?.reservationDescription || "",
       reservationFee: getReservationSavedToDraft?.reservationFee || 0,
       minimumSpend: getReservationSavedToDraft?.minimumSpend || 0,
       reservationRequirement:
-        getReservationSavedToDraft?.reservationRequirement || '',
+        getReservationSavedToDraft?.reservationRequirement || "",
       quantity: getReservationSavedToDraft?.quantity || 1,
-      imageReference: getReservationSavedToDraft?.imageReference || '',
+      numberOfSeat: getReservationSavedToDraft?.numberOfSeat || 1,
+      imageReference: getReservationSavedToDraft?.imageReference || "",
       allowSystemAdvert: getReservationSavedToDraft?.allowSystemAdvert || true,
       reservationDuration:
-        getReservationSavedToDraft?.reservationDuration || '',
-      startTime: getReservationSavedToDraft?.startTime || '',
-      endTime: getReservationSavedToDraft?.endTime || '',
+        getReservationSavedToDraft?.reservationDuration || "",
+      startTime: getReservationSavedToDraft?.startTime || "",
+      endTime: getReservationSavedToDraft?.endTime || "",
     });
-    setSelectedImage(selectedImageSavedToDraft || '');
+    setSelectedImage(selectedImageSavedToDraft || "");
   }, []);
-
-  const duration = [
-    {
-      label: '1hr',
-      value: 1,
-    },
-    {
-      label: '1hr 30m',
-      value: 1.5,
-    },
-    { label: '2hrs', value: 2 },
-    {
-      label: '2hrs 30m',
-      value: 2.5,
-    },
-    {
-      label: '3hrs',
-      value: 3,
-    },
-  ];
 
   const handleDurationSelect = (value: number) => {
     setReservationPayload((prev) => ({
@@ -271,7 +261,7 @@ const AddNewReservation = () => {
       <div className="flex  justify-between ">
         <div>
           <h1 className="text-[24px] leading-8 font-semibold">
-            {' '}
+            {" "}
             Create a new reservation
           </h1>
           <p className="text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4">
@@ -371,7 +361,7 @@ const AddNewReservation = () => {
                 className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
                 disabled={Number(reservationPayload.quantity) <= 1}
                 role="button"
-                onClick={() => handleQuantityChange('decrement')}
+                onClick={() => handleQuantityChange("decrement")}
               >
                 -
               </button>
@@ -381,7 +371,34 @@ const AddNewReservation = () => {
               <button
                 className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
                 role="button"
-                onClick={() => handleQuantityChange('increment')}
+                onClick={() => handleQuantityChange("increment")}
+              >
+                +
+              </button>
+            </div>
+          </div>
+          <Spacer y={3} />
+          <div className="text-sm flex justify-between">
+            <div className="text-[#404245] flex space-x-2 items-center">
+              <p>Number of seat(s)</p>
+              <InfoCircle />
+            </div>
+            <div className="flex space-x-4 text-[#000] items-center">
+              <button
+                className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                disabled={Number(reservationPayload.numberOfSeat) <= 1}
+                role="button"
+                onClick={() => handleNumberOfSeatChange("decrement")}
+              >
+                -
+              </button>
+              <p className="font-medium w-4 flex justify-center items-center">
+                {reservationPayload.numberOfSeat || 1}
+              </p>
+              <button
+                className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                role="button"
+                onClick={() => handleNumberOfSeatChange("increment")}
               >
                 +
               </button>
@@ -394,35 +411,25 @@ const AddNewReservation = () => {
               (Optional)
             </p>
             <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                {duration.map((item) => (
+              <div className="flex flex-wrap gap-2">
+                {reservationDuration.map((item) => (
                   <Chip
                     key={item.value}
                     onClick={() => handleDurationSelect(item.value)}
                     className={`cursor-pointer transition-colors ${
                       reservationPayload.reservationDuration === item.value
-                        ? 'bg-primaryColor text-white'
-                        : 'bg-white text-[#5A5A63]'
+                        ? "bg-primaryColor text-white"
+                        : "bg-white text-[#5A5A63]"
                     }`}
                     classNames={{
-                      base: 'text-xs h-7',
-                      content: 'px-3',
+                      base: "text-xs h-7",
+                      content: "px-3",
                     }}
                   >
                     {item.label}
                   </Chip>
                 ))}
               </div>
-
-              {/* <MdCancel
-                onClick={() =>
-                  setReservationPayload({
-                    ...reservationPayload,
-                    reservationDuration: null,
-                  })
-                }
-                className='text-danger-500 cursor-pointer text-xl'
-              /> */}
             </div>
             <Spacer y={3} />
             <hr className="my-4 text-secondaryGrey" />
@@ -435,8 +442,8 @@ const AddNewReservation = () => {
               <span
                 className={
                   !reservationPayload.allowSystemAdvert
-                    ? 'text-primaryColor text-bold text-sm'
-                    : 'text-grey400 text-sm'
+                    ? "text-primaryColor text-bold text-sm"
+                    : "text-grey400 text-sm"
                 }
               >
                 Disable
@@ -447,8 +454,8 @@ const AddNewReservation = () => {
                 classNames={{
                   wrapper: `m-0 ${
                     reservationPayload.allowSystemAdvert
-                      ? '!bg-primaryColor'
-                      : 'bg-[#E4E7EC]'
+                      ? "!bg-primaryColor"
+                      : "bg-[#E4E7EC]"
                   } `,
                 }}
                 name="allowSystemAdvert"
@@ -461,8 +468,8 @@ const AddNewReservation = () => {
               <span
                 className={
                   reservationPayload.allowSystemAdvert
-                    ? 'text-primaryColor text-bold text-sm'
-                    : 'text-grey400 text-sm'
+                    ? "text-primaryColor text-bold text-sm"
+                    : "text-grey400 text-sm"
                 }
               >
                 Enable
@@ -486,7 +493,7 @@ const AddNewReservation = () => {
           </label>
           <div
             className={`lg:h-[calc(100%-5rem)] bg-[#F9F8FF] h-[200px] border  xl:m-4 mt-2 rounded-md ${
-              imageError ? 'border-danger-600' : 'border-[#F5F5F5]'
+              imageError ? "border-danger-600" : "border-[#F5F5F5]"
             }   text-sm font-[400] text-center relative`}
           >
             {selectedImage ? (
@@ -516,8 +523,8 @@ const AddNewReservation = () => {
                       <>
                         <MdOutlineAddPhotoAlternate className="text-[42px] text-primaryColor" />
                         <span className="text-black">
-                          Drag and drop files to upload or{' '}
-                          <span className="text-primaryColor">click here</span>{' '}
+                          Drag and drop files to upload or{" "}
+                          <span className="text-primaryColor">click here</span>{" "}
                           to browse
                         </span>
                       </>
@@ -549,7 +556,7 @@ const AddNewReservation = () => {
           onClick={saveToDraft}
           type="submit"
         >
-          {'Save to draft'}
+          {"Save to draft"}
         </CustomButton>
         <CustomButton
           className="w-36  text-white"
@@ -557,7 +564,7 @@ const AddNewReservation = () => {
           onClick={postReservation}
           type="submit"
         >
-          {isLoading ? 'Loading' : 'Add Reservation'}
+          {isLoading ? "Loading" : "Add Reservation"}
         </CustomButton>
       </div>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -580,7 +587,7 @@ const AddNewReservation = () => {
                   <CustomButton
                     onClick={async () => {
                       await refetch();
-                      router.push('/dashboard/reservation');
+                      router.push("/dashboard/reservation");
                     }}
                     className="h-[49px] md:mb-0 w-full flex-grow text-black border border-[#D0D5DD] mb-4 "
                     backgroundColor="bg-white"

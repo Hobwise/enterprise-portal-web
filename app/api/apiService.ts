@@ -1,4 +1,3 @@
-import { refreshToken } from "./apiService";
 import {
   getJsonItemFromLocalStorage,
   notify,
@@ -56,7 +55,7 @@ api.interceptors.response.use(
       error.response.status === 401 &&
       !originalConfig._retry
     ) {
-      originalConfig._retry = true;
+      // originalConfig._retry = true;
       try {
         const userData = getJsonItemFromLocalStorage("userInformation");
         const businesses = getJsonItemFromLocalStorage("business");
@@ -71,6 +70,7 @@ api.interceptors.response.use(
         });
 
         if (!rs) {
+          resetLoginInfo();
           throw new Error("Failed to generate new token");
         }
 
@@ -135,7 +135,5 @@ export const handleError = (error: any, showError: boolean = true) => {
     }
   }
 };
-
-// scheduleTokenRefresh();
 
 export default api;

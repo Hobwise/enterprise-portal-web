@@ -1,19 +1,19 @@
-'use client';
-import { createBooking } from '@/app/api/controllers/dashboard/bookings';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { CustomTextArea } from '@/components/customTextArea';
-import { selectClassNames } from '@/components/selectInput';
-import useReservation from '@/hooks/cachedEndpoints/useReservation';
+"use client";
+import { createBooking } from "@/app/api/controllers/dashboard/bookings";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { CustomTextArea } from "@/components/customTextArea";
+import { selectClassNames } from "@/components/selectInput";
+import useReservation from "@/hooks/cachedEndpoints/useReservation";
 import {
   formatDateTime,
   formatPrice,
   getJsonItemFromLocalStorage,
   notify,
-} from '@/lib/utils';
-import { InfoCircle } from '@/public/assets/svg';
-import { getLocalTimeZone, now, today } from '@internationalized/date';
-import { DatePicker } from '@nextui-org/date-picker';
+} from "@/lib/utils";
+import { InfoCircle } from "@/public/assets/svg";
+import { getLocalTimeZone, now, today } from "@internationalized/date";
+import { DatePicker } from "@nextui-org/date-picker";
 import {
   Modal,
   ModalBody,
@@ -22,11 +22,11 @@ import {
   Select,
   SelectItem,
   Spacer,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import React, { useState } from 'react';
-import { MdOutlineMailOutline, MdOutlinePhone } from 'react-icons/md';
-import noImage from '../../../../public/assets/images/no-image.svg';
+} from "@nextui-org/react";
+import Image from "next/image";
+import React, { useState } from "react";
+import { MdOutlineMailOutline, MdOutlinePhone } from "react-icons/md";
+import noImage from "../../../../public/assets/images/no-image.svg";
 
 const CreateBooking = ({
   openCreateBookingModal,
@@ -35,8 +35,8 @@ const CreateBooking = ({
   closeCreateBookingModal,
   setCompletedBooking,
 }: any) => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const { data } = useReservation();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -44,14 +44,14 @@ const CreateBooking = ({
   const [quantity, setQuantity] = useState<number>(1);
   const [timeNdate, setTimeNdate] = useState(now(getLocalTimeZone()));
   const [bookings, setBookings] = useState<any>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phoneNumber: '',
-    description: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    description: "",
   });
 
-  const [id, setId] = useState('');
+  const [id, setId] = useState("");
 
   const formSubmit = () => {
     return (
@@ -105,32 +105,32 @@ const CreateBooking = ({
       showSuccessModal();
       setCompletedBooking(data?.data?.data);
       setBookings({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-        description: '',
-        id: '',
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        description: "",
+        id: "",
       });
       setQuantity(1);
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
 
   const Reservations = ({ reservation }: any) => {
     return (
-      <div className='flex'>
+      <div className="flex">
         <Image
-          className='h-[60px] w-[60px] bg-cover rounded-lg'
+          className="h-[60px] w-[60px] bg-cover rounded-lg"
           width={60}
           height={60}
-          alt='reservation'
-          aria-label='reservation'
+          alt="reservation"
+          aria-label="reservation"
           src={
             reservation.image
               ? `data:image/jpeg;base64,${reservation.image}`
@@ -138,14 +138,14 @@ const CreateBooking = ({
           }
         />
 
-        <div className='ml-5 gap-1 grid place-content-center'>
-          <p className='font-bold text-sm mb-1'>
+        <div className="ml-5 gap-1 grid place-content-center">
+          <p className="font-bold text-sm mb-1">
             {reservation.reservationName}
           </p>
 
           <div>
-            <p className=' text-sm'>Reservation Fee</p>
-            <p className='font-bold text-sm'>
+            <p className=" text-sm">Reservation Fee</p>
+            <p className="font-bold text-sm">
               {formatPrice(reservation.reservationFee)}
             </p>
           </div>
@@ -156,7 +156,7 @@ const CreateBooking = ({
 
   return (
     <Modal
-      size='2xl'
+      size="2xl"
       isDismissable={false}
       isOpen={openCreateBookingModal}
       onOpenChange={() => closeCreateBookingModal()}
@@ -165,89 +165,89 @@ const CreateBooking = ({
         {(onClose) => (
           <>
             <ModalBody>
-              <h2 className='text-[24px] leading-3 py-8 text-black font-semibold'>
+              <h2 className="text-[24px] leading-3 py-8 text-black font-semibold">
                 Complete booking
               </h2>
-              <ScrollShadow size={5} className='w-full h-[500px]'>
+              <ScrollShadow size={5} className="w-full h-[500px]">
                 <form onSubmit={placeBooking}>
-                  <div className='flex gap-4'>
+                  <div className="flex gap-4">
                     <CustomInput
-                      type='text'
+                      type="text"
                       value={bookings.firstName}
                       errorMessage={response?.errors?.firstName?.[0]}
                       onChange={handleInputChange}
-                      name='firstName'
-                      label='First name'
-                      placeholder='First name'
+                      name="firstName"
+                      label="First name"
+                      placeholder="First name"
                     />
                     <CustomInput
-                      type='text'
+                      type="text"
                       value={bookings.lastName}
                       errorMessage={response?.errors?.lastName?.[0]}
                       onChange={handleInputChange}
-                      name='lastName'
-                      label='Last name'
-                      placeholder='Last name'
+                      name="lastName"
+                      label="Last name"
+                      placeholder="Last name"
                     />
                   </div>
                   <Spacer y={5} />
-                  <div className='flex gap-4'>
+                  <div className="flex gap-4">
                     <CustomInput
-                      type='text'
+                      type="text"
                       value={bookings.email}
                       errorMessage={response?.errors?.email?.[0]}
                       onChange={handleInputChange}
-                      name='email'
+                      name="email"
                       endContent={
-                        <MdOutlineMailOutline className='text-grey500' />
+                        <MdOutlineMailOutline className="text-grey500" />
                       }
-                      label='Email address'
-                      placeholder='Enter email'
+                      label="Email address"
+                      placeholder="Enter email"
                     />
                     <CustomInput
-                      type='text'
+                      type="text"
                       value={bookings.phoneNumber}
                       errorMessage={response?.errors?.phoneNumber?.[0]}
                       onChange={handleInputChange}
-                      name='phoneNumber'
-                      endContent={<MdOutlinePhone className='text-grey500' />}
-                      label='Phone number'
-                      placeholder='Enter phone number'
+                      name="phoneNumber"
+                      endContent={<MdOutlinePhone className="text-grey500" />}
+                      label="Phone number"
+                      placeholder="Enter phone number"
                     />
                   </div>
                   <Spacer y={5} />
                   <CustomTextArea
                     value={bookings.description}
-                    name='description'
+                    name="description"
                     errorMessage={response?.errors?.description?.[0]}
                     onChange={handleInputChange}
-                    label='Add a description to this booking'
-                    placeholder='Add a description'
+                    label="Add a description to this booking"
+                    placeholder="Add a description"
                   />
                   <Spacer y={5} />
 
                   <Select
-                    labelPlacement='outside'
-                    key='outside'
-                    variant={'bordered'}
+                    labelPlacement="outside"
+                    key="outside"
+                    variant={"bordered"}
                     errorMessage={response?.errors?.reservationId?.[0]}
                     items={data?.reservations}
                     value={id}
                     onChange={(e) => setId(e.target.value)}
-                    size='lg'
-                    className='text-black'
-                    label='Choose reservation'
-                    placeholder='Select reservation to book'
+                    size="lg"
+                    className="text-black"
+                    label="Choose reservation"
+                    placeholder="Select reservation to book"
                     classNames={selectClassNames}
                     renderValue={(items) => {
                       return items.map((item) => (
-                        <span className='text-black'>{item.textValue}</span>
+                        <span className="text-black">{item.textValue}</span>
                       ));
                     }}
                   >
                     {(reservation) => (
                       <SelectItem
-                        className='text-black'
+                        className="text-black"
                         key={reservation.id}
                         textValue={reservation.reservationName}
                       >
@@ -259,16 +259,16 @@ const CreateBooking = ({
                   <Spacer y={5} />
 
                   <div>
-                    <label className='font-[500] text-black text-[14px] pb-1'>
+                    <label className="font-[500] text-black text-[14px] pb-1">
                       Time and date
                     </label>
 
                     <DatePicker
                       calendarWidth={270}
-                      variant='bordered'
+                      variant="bordered"
                       hideTimeZone
-                      size='lg'
-                      radius='sm'
+                      size="lg"
+                      radius="sm"
                       errorMessage={response?.errors?.timeNdate?.[0]}
                       value={timeNdate}
                       onChange={setTimeNdate}
@@ -279,42 +279,41 @@ const CreateBooking = ({
                   </div>
                   <Spacer y={5} />
 
-                  <div className='text-sm flex justify-between'>
-                    <div className='text-[#404245] flex space-x-2 items-center'>
+                  <div className="text-sm flex justify-between">
+                    <div className="text-[#404245] flex space-x-2 items-center">
                       <p>Quantity</p>
                       <InfoCircle />
                     </div>
-                    <div className='flex space-x-4 text-[#000] items-center'>
-                      <button
-                        className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
-                        disabled={quantity <= 1}
-                        role='button'
+                    <div className="flex space-x-4 text-[#000] items-center">
+                      <span
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        role="button"
                         onClick={() => {
                           quantity > 1 ? setQuantity((prev) => prev - 1) : null;
                         }}
                       >
                         -
-                      </button>
-                      <p className='font-medium w-4 flex justify-center items-center'>
+                      </span>
+                      <p className="font-medium w-4 flex justify-center items-center">
                         {quantity}
                       </p>
-                      <div
-                        className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
-                        role='button'
+                      <span
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        role="button"
                         onClick={() => setQuantity((prev) => prev + 1)}
                       >
                         +
-                      </div>
+                      </span>
                     </div>
                   </div>
                   <Spacer y={6} />
                   <CustomButton
                     loading={isLoading}
                     disabled={isLoading || !formSubmit()}
-                    type='submit'
+                    type="submit"
                   >
-                    {' '}
-                    {isLoading ? 'Loading' : 'Proceed to checkout'}
+                    {" "}
+                    {isLoading ? "Loading" : "Proceed to checkout"}
                   </CustomButton>
                 </form>
               </ScrollShadow>

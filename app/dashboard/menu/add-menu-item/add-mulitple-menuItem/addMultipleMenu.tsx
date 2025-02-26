@@ -27,7 +27,7 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState("");
 
-  const menuFileUpload = async (formData: FormData, file) => {
+  const menuFileUpload = async (formData: FormData, file: any) => {
     setIsLoading(true);
     setImageError("");
     const data = await uploadFilemultipleMenuItem(
@@ -92,6 +92,7 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
     },
   ];
 
+  const cells = Array.from({ length: 4 }, (_, cellIndex) => cellIndex + 1);
   return (
     <section>
       <div className="mt-8">
@@ -107,50 +108,31 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
       <Table aria-label="Example static collection table">
         <TableHeader>
           <TableColumn>NAME</TableColumn>
-          <TableColumn>ROLE</TableColumn>
-          <TableColumn>STATUS</TableColumn>
+          <TableColumn>DESCRIPTION</TableColumn>
+          <TableColumn>PRICE</TableColumn>
+          <TableColumn>AVAILABILITY</TableColumn>
         </TableHeader>
         <TableBody>
-          <TableRow key="1">
-            <TableCell>
-              {" "}
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
-            <TableCell>
-              {" "}
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
-            <TableCell>
-              {" "}
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
+          <TableRow key={1}>
+            {cells.map((cell) => (
+              <TableCell key={`${1}-${cell}`}>
+                <div className="h-2 w-12 bg-gray-100 rounded-lg" />
+              </TableCell>
+            ))}
           </TableRow>
-          <TableRow key="2">
-            <TableCell>
-              {" "}
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
-            <TableCell>
-              {" "}
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
-            <TableCell>
-              {" "}
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
+          <TableRow key={2}>
+            {cells.map((cell) => (
+              <TableCell key={`${2}-${cell}`}>
+                <div className="h-2 w-12 bg-gray-100 rounded-lg" />
+              </TableCell>
+            ))}
           </TableRow>
-          <TableRow key="3">
-            <TableCell>
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
-            <TableCell>
-              {" "}
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
-            <TableCell>
-              {" "}
-              <div className="h-[6px] w-[48px] bg-[#F1F1F1] rounded-lg" />
-            </TableCell>
+          <TableRow key={3}>
+            {cells.map((cell) => (
+              <TableCell key={`${3}-${cell}`}>
+                <div className="h-2 w-12 bg-gray-100 rounded-lg" />
+              </TableCell>
+            ))}
           </TableRow>
         </TableBody>
       </Table>

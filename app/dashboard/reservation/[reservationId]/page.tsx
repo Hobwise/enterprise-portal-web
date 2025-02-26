@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import Error from '@/components/error';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import useSingleReservation from '@/hooks/cachedEndpoints/useSingleReservation';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import useTextCopy from '@/hooks/useTextCopy';
-import { companyInfo } from '@/lib/companyInfo';
+import Error from "@/components/error";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import useSingleReservation from "@/hooks/cachedEndpoints/useSingleReservation";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import useTextCopy from "@/hooks/useTextCopy";
+import { companyInfo } from "@/lib/companyInfo";
 import {
   CustomLoading,
   formatPrice,
   getJsonItemFromLocalStorage,
-} from '@/lib/utils';
+} from "@/lib/utils";
 import {
   Button,
   ButtonGroup,
@@ -19,30 +19,30 @@ import {
   PopoverContent,
   PopoverTrigger,
   Spacer,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { FaEdit } from 'react-icons/fa';
-import { IoIosArrowRoundBack } from 'react-icons/io';
-import { RiDeleteBin6Line } from 'react-icons/ri';
-import { VscCopy } from 'react-icons/vsc';
-import noImage from '../../../../public/assets/images/no-image.svg';
-import Booking from './booking';
-import DeleteReservation from './deleteReservation';
-import EditReservation from './editReservation';
+} from "@nextui-org/react";
+import Image from "next/image";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { FaEdit } from "react-icons/fa";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import { VscCopy } from "react-icons/vsc";
+import noImage from "../../../../public/assets/images/no-image.svg";
+import Booking from "./booking";
+import DeleteReservation from "./deleteReservation";
+import EditReservation from "./editReservation";
 
 const ReservationDetails = () => {
   const searchParams = useSearchParams();
-  const business = getJsonItemFromLocalStorage('business');
+  const business = getJsonItemFromLocalStorage("business");
 
   const { userRolePermissions, role } = usePermission();
 
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
-  const reservationId = searchParams.get('reservationId') || null;
+  const reservationId = searchParams.get("reservationId") || null;
 
   const { data, isLoading, isError, refetch } =
     useSingleReservation(reservationId);
@@ -50,7 +50,7 @@ const ReservationDetails = () => {
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All');
+    setTableStatus("All");
     setPage(1);
   }, []);
 
@@ -66,29 +66,29 @@ const ReservationDetails = () => {
   }
 
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}&reservationId=${reservationId}`
+    `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?reservationId=${reservationId}`
   );
 
   return (
     <>
-      <div className='lg:flex block justify-between'>
+      <div className="lg:flex block justify-between">
         <Link
           prefetch={true}
-          href={'/dashboard/reservation'}
+          href={"/dashboard/reservation"}
           className={`cursor-pointer text-primaryColor flex gap-2 lg:mb-0 mb-2 text-sm items-center`}
         >
-          <IoIosArrowRoundBack className='text-[22px]' />
-          <span className='text-sm'>Back to reservations</span>
+          <IoIosArrowRoundBack className="text-[22px]" />
+          <span className="text-sm">Back to reservations</span>
         </Link>
-        <div className='gap-6 lg:flex block'>
-          <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+        <div className="gap-6 lg:flex block">
+          <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
             {(role === 0 ||
               userRolePermissions?.canEditReservation === true) && (
               <Button
                 onClick={toggleModalEdit}
-                className='flex text-grey600 bg-white'
+                className="flex text-grey600 bg-white"
               >
-                <FaEdit className='text-[18px]' />
+                <FaEdit className="text-[18px]" />
                 <p>Edit</p>
               </Button>
             )}
@@ -101,14 +101,14 @@ const ReservationDetails = () => {
               <PopoverTrigger>
                 <Button
                   onClick={handleCopyClick}
-                  className='flex text-grey600 bg-white'
+                  className="flex text-grey600 bg-white"
                 >
                   <VscCopy />
                   <p>Copy link</p>
                 </Button>
               </PopoverTrigger>
               <PopoverContent>
-                <div className='text-small text-black'>
+                <div className="text-small text-black">
                   Reservation url copied!
                 </div>
               </PopoverContent>
@@ -117,9 +117,9 @@ const ReservationDetails = () => {
               userRolePermissions?.canDeleteReservation === true) && (
               <Button
                 onClick={toggleModalDelete}
-                className='flex text-grey600 bg-white'
+                className="flex text-grey600 bg-white"
               >
-                <RiDeleteBin6Line className='text-[18px]' />
+                <RiDeleteBin6Line className="text-[18px]" />
                 <p>Delete</p>
               </Button>
             )}
@@ -130,19 +130,19 @@ const ReservationDetails = () => {
       {isLoading ? (
         <CustomLoading />
       ) : (
-        <section className='flex flex-col flex-grow'>
-          <div className='flex lg:flex-row flex-col gap-3 justify-between '>
-            <div className='space-y-2 lg:w-[500px] w-full'>
-              <h2 className='text-black font-[600]  text-[28px]'>
+        <section className="flex flex-col flex-grow">
+          <div className="flex lg:flex-row flex-col gap-3 justify-between ">
+            <div className="space-y-2 lg:w-[500px] w-full">
+              <h2 className="text-black font-[600]  text-[28px]">
                 {data?.reservationName}
               </h2>
-              <div className='text-[#3D424A] text-[14px] font-[400] gap-2 flex'>
-                <p>{data?.reservationDescription} </p>{' '}
+              <div className="text-[#3D424A] text-[14px] font-[400] gap-2 flex">
+                <p>{data?.reservationDescription} </p>{" "}
                 <Chip
                   classNames={{
                     base: ` text-xs h-6 capitalize font-[700] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
-                  size='sm'
+                  size="sm"
                 >
                   {data?.quantityLeft} remaining
                 </Chip>
@@ -153,24 +153,24 @@ const ReservationDetails = () => {
                     classNames={{
                       base: ` text-xs text-black bg-success-200`,
                     }}
-                    size='sm'
+                    size="sm"
                   >
                     Advertisement enabled
                   </Chip>
                 )}
               </div>
-              <div className='flex lg:gap-3 gap-0 lg:flex-row flex-col'>
-                <div className='flex gap-2  text-[14px] font-[400]'>
-                  <p className='text-[#3D424A]'>RESERVATION FEE</p>
-                  <p className='text-[#3D424A] font-bold'>
+              <div className="flex lg:gap-3 gap-0 lg:flex-row flex-col">
+                <div className="flex gap-2  text-[14px] font-[400]">
+                  <p className="text-[#3D424A]">RESERVATION FEE</p>
+                  <p className="text-[#3D424A] font-bold">
                     {data?.reservationFee
                       ? formatPrice(data?.reservationFee)
                       : formatPrice(0)}
                   </p>
                 </div>
-                <div className='flex gap-2  text-[14px] font-[400]'>
-                  <p className='text-[#3D424A]'>MINIMUM SPEND</p>
-                  <p className='text-[#3D424A] font-bold'>
+                <div className="flex gap-2  text-[14px] font-[400]">
+                  <p className="text-[#3D424A]">MINIMUM SPEND</p>
+                  <p className="text-[#3D424A] font-bold">
                     {data?.minimumSpend
                       ? formatPrice(data?.minimumSpend)
                       : formatPrice(0)}
@@ -188,11 +188,11 @@ const ReservationDetails = () => {
                 width={60}
                 height={60}
                 style={{
-                  objectFit: data?.image ? 'cover' : 'contain',
+                  objectFit: data?.image ? "cover" : "contain",
                 }}
-                className={'bg-cover border  h-[100px] rounded-lg w-[159px]'}
-                aria-label='reservation image'
-                alt='reservation image'
+                className={"bg-cover border  h-[100px] rounded-lg w-[159px]"}
+                aria-label="reservation image"
+                alt="reservation image"
               />
             </div>
           </div>
