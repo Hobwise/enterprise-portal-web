@@ -600,3 +600,19 @@ export const formatDateOnly = (dateString: string) => {
 };
 
 export const phoneNumberPattern = /^(?:\+?234|0)\d{9,11}$/;
+
+export const formatTimeSlot = (dateInput: string) => {
+  const date = new Date(dateInput);
+  const hours = String(date.getHours()).padStart(2, '0'); // Ensure 2 digits
+  const minutes = String(date.getMinutes()).padStart(2, '0'); // Ensure 2 digits
+  const seconds = String(date.getSeconds()).padStart(2, '0'); // Ensure 2 digits
+
+  return `${hours}:${minutes}:${seconds}`;
+};
+
+export const formatTime = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const formattedHours = hours % 12 || 12; // Convert 0 or 12-23 to 12-hour format
+  return `${formattedHours}:${minutes.toString().padStart(2, '0')}${period}`;
+};

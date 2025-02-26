@@ -25,6 +25,7 @@ export const LANDINGPAGE = {
   getCampaigns: 'api/v1/LandingPage/campaigns',
   getReservations: 'api/v1/LandingPage/reservations',
   bookReservation: 'api/v1/Booking',
+  reservationAvailility: 'api/v1/Reservation/availability',
 };
 export const DASHBOARD = {
   // settings
