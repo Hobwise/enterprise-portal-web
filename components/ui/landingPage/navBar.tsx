@@ -10,6 +10,9 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { socialMedia } from './footer';
 import { Transition } from './transition';
+import LogoutModal from '../logoutModal';
+import { useDisclosure } from '@nextui-org/react';
+import { FiLogOut } from 'react-icons/fi';
 
 export const navItem = [
   { title: 'Home', href: HOME_URL },
@@ -29,6 +32,7 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
   const [openNav, setOpenNav] = useState(false);
   const pathname = usePathname();
   const userInformation = typeof window !== 'undefined' && localStorage.getItem('userInformation');
+  const { isOpen, onOpenChange } = useDisclosure();
 
   useEffect(() => {
     if (userInformation) {
@@ -82,9 +86,10 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
             </div>
           </div>
         ) : (
-          <Link href={'/dashboard'} target="_blank">
-            <CustomButton className={btnClassName}>Go to Dashboard</CustomButton>
-          </Link>
+          <div onClick={onOpenChange} className="flex cursor-pointer text-danger-500 transition-all hover:rounded-md px-2 py-2 items-center gap-2">
+            <FiLogOut className="text-[20px]" />
+            <span className="  text-sm font-md"> Log out</span>
+          </div>
         )}
       </div>
 
@@ -136,6 +141,8 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
           </Transition>
         </div>
       )}
+
+      <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
     </div>
   );
 }
