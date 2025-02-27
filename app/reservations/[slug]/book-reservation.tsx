@@ -49,6 +49,7 @@ interface IBookReservationPage {
 
 export default function BookReservationPage({ reservation, className }: IBookReservationPage) {
   const [quantity, setQuantity] = useState<number>(1);
+  const [noOfGuests, setNoOfGuests] = useState<number>(1);
   const [selectedTime, setSelectedTime] = useState<Selection>(new Set([]));
   const [selectedPeriod, setSelectedPeriod] = useState<{ timeSlot: string; quantity: number }>({ quantity: 0, timeSlot: '' });
   const [details, setDetails] = useState<IDetails>(defaultValues);
@@ -97,6 +98,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
         reservationId: reservation?.id,
         cooperateId: reservation?.cooperateID,
         businessId: reservation?.businessID,
+        numberOfGuest: noOfGuests,
         quantity,
       };
 
@@ -227,14 +229,33 @@ export default function BookReservationPage({ reservation, className }: IBookRes
               {details?.bookingDateTime && (
                 <React.Fragment>
                   {isLoadingTimes ? (
-                    <div className="mt-4 flex items-center">
+                    <div className="mt-4 flex items-center text-dark">
                       <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
                       <p className="text-sm font-light italic">Please wait..., loading available time</p>
                     </div>
                   ) : (
                     <React.Fragment>
                       {isError ? (
-                        <p className="text-[#c03333] mt-4">An error occured while fetching available time</p>
+                        <div>
+                          {generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((each: any) => (
+                            <Tooltip content={each.availability ? `${each.quantity} quantity Available` : 'Not available'} color="default">
+                              <div
+                                className={cn(
+                                  'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
+                                  currentSelection === each.timeSlot && 'bg-primaryColor text-white',
+                                  each.availability ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'
+                                )}
+                                key={each.timeSlot}
+                                onClick={() => {
+                                  each.availability ? handleSelectTime(each) : null;
+                                }}
+                              >
+                                <MdTimer />
+                                <p className="">{each.timeSlot}</p>
+                              </div>
+                            </Tooltip>
+                          ))}
+                        </div>
                       ) : (
                         <React.Fragment>
                           <div className="space-y-4 mt-6">
@@ -246,7 +267,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                             </p>
                             <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
                               {updatedAvailableTime.map((each: any) => (
-                                <Tooltip content={each.availability ? `${each.quantity} quantity Available` : 'Not available'}>
+                                <Tooltip content={<p className="text-[#000]">{each.availability ? `${each.quantity} quantity Available` : 'Not available'}</p>}>
                                   <div
                                     className={cn(
                                       'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
@@ -394,6 +415,34 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                         onClick={() => {
                           quantity >= selectedPeriod?.quantity ? null : setQuantity((prev) => prev + 1);
                         }}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="text-sm flex justify-between">
+                    <div className="text-[#404245] flex space-x-2 items-center">
+                      <p>Number of Guests</p>
+                      <InfoCircle />
+                    </div>
+                    <div className="flex space-x-4 text-[#000] items-center">
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-7 text-[#000000] flex items-center justify-center h-7"
+                        disabled={noOfGuests <= 1}
+                        role="button"
+                        onClick={() => {
+                          noOfGuests > 1 ? setNoOfGuests((prev) => prev - 1) : null;
+                        }}
+                      >
+                        -
+                      </button>
+                      <p className="font-medium w-4 flex justify-center items-center">{noOfGuests}</p>
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-7 text-[#000000] flex items-center justify-center h-7"
+                        // disabled={noOfGuests >= selectedPeriod.noOfGuests}
+                        role="button"
+                        onClick={() => setNoOfGuests((prev) => prev + 1)}
                       >
                         +
                       </button>

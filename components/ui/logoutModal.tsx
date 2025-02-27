@@ -2,7 +2,14 @@
 import useLogout from '@/hooks/cachedEndpoints/useLogout';
 import { Button, Modal, ModalBody, ModalContent, ModalFooter } from '@nextui-org/react';
 import { PiSealWarningDuotone } from 'react-icons/pi';
-const LogoutModal = ({ isOpen, onOpenChange }: any) => {
+
+interface ILogoutModal {
+  isOpen: boolean;
+  onOpenChange: (arg: any) => void;
+  externalLogout?: () => void;
+}
+
+const LogoutModal = ({ isOpen, onOpenChange, externalLogout }: ILogoutModal) => {
   const { isLoading, logoutFn } = useLogout();
   const handleLogout = async () => {
     await logoutFn();
@@ -27,7 +34,9 @@ const LogoutModal = ({ isOpen, onOpenChange }: any) => {
                 </Button>
                 <Button
                   className="flex-grow"
-                  onClick={() => handleLogout()}
+                  onClick={() => {
+                    externalLogout ? externalLogout() : handleLogout();
+                  }}
                   color="danger"
                   spinner={
                     <svg className="animate-spin h-5 w-5 text-current" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">

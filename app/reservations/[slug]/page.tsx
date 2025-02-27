@@ -10,6 +10,7 @@ export default function BookReservation() {
   const pathname = usePathname();
   const pathnameLength = pathname.split('/').length;
   const [reservation, setReservation] = useState<any>(null);
+  const [Loading, setLoading] = useState(true);
 
   useEffect(() => {
     const reservation = typeof window !== 'undefined' && localStorage.getItem('reservation');
@@ -18,7 +19,10 @@ export default function BookReservation() {
     } else {
       redirect(RESERVATIONS_URL);
     }
+    setLoading(false);
   }, []);
+
+  console.log(reservation, '-> reservation');
 
   return (
     <div className="mt-28 px-6 lg:px-24 space-y-4">
@@ -43,7 +47,7 @@ export default function BookReservation() {
           </React.Fragment>
         )}
       </div>
-      <BookReservationPage reservation={reservation} className="px-0 lg:px-0" />
+      {!Loading && <BookReservationPage reservation={reservation} className="px-0 lg:px-0" />}
     </div>
   );
 }
