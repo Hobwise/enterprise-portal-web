@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { generateRefreshToken } from "@/app/api/controllers/auth";
 import CompanyLogo from "@/components/logo";
@@ -20,6 +20,7 @@ import {
   DropdownMenu,
   DropdownTrigger,
   Skeleton,
+  Spinner,
   useDisclosure,
 } from "@nextui-org/react";
 import Image from "next/image";
@@ -41,7 +42,11 @@ const SideNav = () => {
   const { data: businessDetails, isLoading } = useGetBusiness();
   const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
 
-  const { userRolePermissions, role } = usePermission();
+  const {
+    userRolePermissions,
+    role,
+    isLoading: isPermissionsLoading,
+  } = usePermission();
 
   const business = getJsonItemFromLocalStorage("business") || [];
   const userInformation = getJsonItemFromLocalStorage("userInformation");
@@ -106,64 +111,6 @@ const SideNav = () => {
     }
   };
 
-  const filteredItems = SIDENAV_ITEMS.filter((item) => {
-    if (
-      item.title === "Menu" &&
-      role === 1 &&
-      userRolePermissions?.canViewMenu === false
-    )
-      return false;
-    if (
-      item.title === "Campaigns" &&
-      role === 1 &&
-      userRolePermissions?.canViewCampaign === false
-    )
-      return false;
-    if (
-      item.title === "Reservation" &&
-      role === 1 &&
-      userRolePermissions?.canViewReservation === false
-    )
-      return false;
-    if (
-      item.title === "Payments" &&
-      userRolePermissions?.canViewPayment === false &&
-      role === 1
-    )
-      return false;
-    if (
-      item.title === "Orders" &&
-      userRolePermissions?.canViewOrder === false &&
-      role === 1
-    )
-      return false;
-    if (
-      item.title === "Reports" &&
-      userRolePermissions?.canViewReport === false &&
-      role === 1
-    )
-      return false;
-    if (
-      item.title === "Bookings" &&
-      userRolePermissions?.canViewBooking === false &&
-      role === 1
-    )
-      return false;
-    if (
-      item.title === "Dashboard" &&
-      userRolePermissions?.canViewDashboard === false &&
-      role === 1
-    )
-      return false;
-    if (
-      item.title === "Quick Response" &&
-      userRolePermissions?.canViewQR === false &&
-      role === 1
-    )
-      return false;
-    return true;
-  });
-
   const [isOpenBusinessModal, setIsOpenBusinessModal] = useState(false);
   const toggleBusinessModal = () => {
     setIsOpenBusinessModal(!isOpenBusinessModal);
@@ -172,6 +119,66 @@ const SideNav = () => {
   const { data: subscription } = useSubscription();
   const canAccessMultipleLocations =
     subscription?.planCapabilities?.canAccessMultipleLocations;
+
+  const filteredItems = isPermissionsLoading
+    ? []
+    : SIDENAV_ITEMS.filter((item) => {
+        if (
+          item.title === "Menu" &&
+          role === 1 &&
+          userRolePermissions?.canViewMenu === false
+        )
+          return false;
+        if (
+          item.title === "Campaigns" &&
+          role === 1 &&
+          userRolePermissions?.canViewCampaign === false
+        )
+          return false;
+        if (
+          item.title === "Reservation" &&
+          role === 1 &&
+          userRolePermissions?.canViewReservation === false
+        )
+          return false;
+        if (
+          item.title === "Payments" &&
+          userRolePermissions?.canViewPayment === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Orders" &&
+          userRolePermissions?.canViewOrder === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Reports" &&
+          userRolePermissions?.canViewReport === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Bookings" &&
+          userRolePermissions?.canViewBooking === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Dashboard" &&
+          userRolePermissions?.canViewDashboard === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Quick Response" &&
+          userRolePermissions?.canViewQR === false &&
+          role === 1
+        )
+          return false;
+        return true;
+      });
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex">
@@ -189,9 +196,18 @@ const SideNav = () => {
           </Link>
 
           <div className="flex flex-col space-y-2  md:px-2 ">
-            {filteredItems.map((item, idx) => {
-              return <MenuItem key={idx} item={item} />;
-            })}
+            {isPermissionsLoading ? (
+              <div className="grid place-content-center mt-6">
+                <div className="space-y-2 flex justify-center flex-col">
+                  <Spinner size="sm" />
+                  <p className="italic text-gray-400">Fetching side menu...</p>
+                </div>
+              </div>
+            ) : (
+              filteredItems.map((item, idx) => {
+                return <MenuItem key={idx} item={item} />;
+              })
+            )}
           </div>
         </div>
 
