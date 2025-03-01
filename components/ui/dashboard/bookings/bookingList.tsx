@@ -234,7 +234,8 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                       </DropdownItem>
                     )}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus !== 6 && (
+                    booking?.bookingStatus !== 6 &&
+                    booking?.bookingStatus !== 4 && (
                       <DropdownItem
                         aria-label="edit booking"
                         onClick={() => toggleEditBookingModal(booking)}
