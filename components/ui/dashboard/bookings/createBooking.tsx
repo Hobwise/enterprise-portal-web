@@ -75,6 +75,7 @@ const CreateBooking = ({
   };
 
   const placeBooking = async (e) => {
+    console.log(timeNdate, "timeNdate");
     e.preventDefault();
     const payload = {
       reservationId: id,

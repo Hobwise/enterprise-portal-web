@@ -326,27 +326,27 @@
 
 // export default EditBooking;
 
-'use client';
-import { updateBooking } from '@/app/api/controllers/dashboard/bookings';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import { CustomTextArea } from '@/components/customTextArea';
-import { selectClassNames } from '@/components/selectInput';
-import useReservation from '@/hooks/cachedEndpoints/useReservation';
+"use client";
+import { updateBooking } from "@/app/api/controllers/dashboard/bookings";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import { CustomTextArea } from "@/components/customTextArea";
+import { selectClassNames } from "@/components/selectInput";
+import useReservation from "@/hooks/cachedEndpoints/useReservation";
 import {
   formatDateTimeForPayload,
   formatPrice,
   getJsonItemFromLocalStorage,
   notify,
-} from '@/lib/utils';
-import { InfoCircle } from '@/public/assets/svg';
+} from "@/lib/utils";
+import { InfoCircle } from "@/public/assets/svg";
 import {
   CalendarDateTime,
   getLocalTimeZone,
   now,
   today,
-} from '@internationalized/date';
-import { DatePicker } from '@nextui-org/date-picker';
+} from "@internationalized/date";
+import { DatePicker } from "@nextui-org/date-picker";
 import {
   Modal,
   ModalBody,
@@ -355,11 +355,11 @@ import {
   Select,
   SelectItem,
   Spacer,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import React, { useEffect, useState } from 'react';
-import { MdOutlineMailOutline, MdOutlinePhone } from 'react-icons/md';
-import noImage from '../../../../public/assets/images/no-image.svg';
+} from "@nextui-org/react";
+import Image from "next/image";
+import React, { useEffect, useState } from "react";
+import { MdOutlineMailOutline, MdOutlinePhone } from "react-icons/md";
+import noImage from "../../../../public/assets/images/no-image.svg";
 
 const EditBooking = ({
   isEditBookingModal,
@@ -367,8 +367,8 @@ const EditBooking = ({
   eachBooking,
   refetch,
 }: any) => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const { data } = useReservation();
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
@@ -378,12 +378,7 @@ const EditBooking = ({
     if (!dateString) return now(getLocalTimeZone());
 
     try {
-      const formattedDate = dateString.includes('Z')
-        ? dateString
-        : dateString + 'Z';
-
-      const date = new Date(formattedDate);
-
+      const date = new Date(dateString);
       return new CalendarDateTime(
         date.getFullYear(),
         date.getMonth() + 1,
@@ -409,32 +404,32 @@ const EditBooking = ({
   );
 
   const [bookings, setBookings] = useState<any>({
-    firstName: eachBooking?.firstName || '',
-    lastName: eachBooking?.lastName || '',
-    email: eachBooking?.emailAddress || '',
-    phoneNumber: eachBooking?.phoneNumber || '',
-    description: eachBooking?.description || '',
+    firstName: eachBooking?.firstName || "",
+    lastName: eachBooking?.lastName || "",
+    email: eachBooking?.emailAddress || "",
+    phoneNumber: eachBooking?.phoneNumber || "",
+    description: eachBooking?.description || "",
   });
   const [selectedReservation, setSelectedReservation] = useState(
     findReservationById(eachBooking?.reservationId)
   );
 
-  const [id, setId] = useState(eachBooking?.id || '');
+  const [id, setId] = useState(eachBooking?.id || "");
 
   useEffect(() => {
     if (eachBooking && data?.reservations) {
       setBookings({
-        reservationId: eachBooking.reservationId || '',
-        firstName: eachBooking.firstName || '',
-        lastName: eachBooking.lastName || '',
-        email: eachBooking.emailAddress || '',
-        phoneNumber: eachBooking.phoneNumber || '',
-        description: eachBooking.description || '',
+        reservationId: eachBooking.reservationId || "",
+        firstName: eachBooking.firstName || "",
+        lastName: eachBooking.lastName || "",
+        email: eachBooking.emailAddress || "",
+        phoneNumber: eachBooking.phoneNumber || "",
+        description: eachBooking.description || "",
       });
       const reservation = findReservationById(eachBooking.reservationId);
       setSelectedReservation(reservation);
       setQuantity(eachBooking.quantity || 1);
-      setId(eachBooking.id || '');
+      setId(eachBooking.id || "");
       if (eachBooking.bookingDateTime) {
         setTimeNdate(convertAPIDateToLocalDate(eachBooking.bookingDateTime));
       }
@@ -485,24 +480,24 @@ const EditBooking = ({
 
       if (response?.data?.isSuccessful) {
         notify({
-          title: 'Success!',
-          text: 'Booking updated successfully',
-          type: 'success',
+          title: "Success!",
+          text: "Booking updated successfully",
+          type: "success",
         });
         refetch();
         toggleEditBookingModal();
       } else if (response?.data?.error) {
         notify({
-          title: 'Error!',
+          title: "Error!",
           text: response?.data?.error,
-          type: 'error',
+          type: "error",
         });
       }
     } catch (error) {
       notify({
-        title: 'Error!',
-        text: 'Failed to update booking',
-        type: 'error',
+        title: "Error!",
+        text: "Failed to update booking",
+        type: "error",
       });
     } finally {
       setIsLoading(false);
@@ -624,7 +619,7 @@ const EditBooking = ({
                   <Select
                     labelPlacement="outside"
                     key="outside"
-                    variant={'bordered'}
+                    variant={"bordered"}
                     errorMessage={response?.errors?.reservationId?.[0]}
                     items={data?.reservations || []}
                     value={selectedReservation?.id}
@@ -712,7 +707,7 @@ const EditBooking = ({
                     disabled={isLoading || !formSubmit()}
                     type="submit"
                   >
-                    {isLoading ? 'Updating...' : 'Update Booking'}
+                    {isLoading ? "Updating..." : "Update Booking"}
                   </CustomButton>
                 </form>
               </ScrollShadow>

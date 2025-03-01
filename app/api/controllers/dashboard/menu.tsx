@@ -143,6 +143,27 @@ export async function createMenu(businessId: string, payload: payloadMenu) {
     handleError(error);
   }
 }
+export async function updateMenu(
+  businessId: string,
+  menuId: string,
+  payload: payloadMenu
+) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.put(
+      DASHBOARD.getMenu + `?menuId=${menuId}`,
+      payload,
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function createMenuConfiguration(
   businessId: string,
   payload: any

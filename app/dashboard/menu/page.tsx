@@ -1,21 +1,26 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
-import MenuList from '@/components/ui/dashboard/menu/menu';
+import CreateMenu from "@/components/ui/dashboard/menu/createMenu";
+import MenuList from "@/components/ui/dashboard/menu/menu";
 
-import { createMenu, deleteMenu } from '@/app/api/controllers/dashboard/menu';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import Error from '@/components/error';
-import useMenu from '@/hooks/cachedEndpoints/useMenu';
-import { downloadCSV } from '@/lib/downloadToExcel';
+import {
+  createMenu,
+  deleteMenu,
+  updateMenu,
+} from "@/app/api/controllers/dashboard/menu";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
+import useMenu from "@/hooks/cachedEndpoints/useMenu";
+import { downloadCSV } from "@/lib/downloadToExcel";
 import {
   CustomLoading,
+  formatPrice,
   getJsonItemFromLocalStorage,
   notify,
-} from '@/lib/utils';
+} from "@/lib/utils";
 import {
   Button,
   ButtonGroup,
@@ -27,23 +32,23 @@ import {
   Spacer,
   Tooltip,
   useDisclosure,
-} from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
+} from "@nextui-org/react";
+import { useRouter } from "next/navigation";
 import {
   IoAddCircleOutline,
   IoPhonePortraitOutline,
   IoSearchOutline,
-} from 'react-icons/io5';
+} from "react-icons/io5";
 
-import useAllMenus from '@/hooks/cachedEndpoints/useAllMenus';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import toast from 'react-hot-toast';
-import { MdOutlineFileDownload } from 'react-icons/md';
-import { RiDeleteBin6Line } from 'react-icons/ri';
+import useAllMenus from "@/hooks/cachedEndpoints/useAllMenus";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import toast from "react-hot-toast";
+import { MdOutlineFileDownload } from "react-icons/md";
+import { RiDeleteBin6Line, RiEdit2Line } from "react-icons/ri";
 
 const Menu: React.FC = () => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const { userRolePermissions, role } = usePermission();
   const router = useRouter();
@@ -51,10 +56,20 @@ const Menu: React.FC = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [name, setName] = useState('');
+  const [isOpenEditMenu, setIsOpenEditMenu] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [name, setName] = useState("");
   const [packingCost, setPackingCost] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
+
+  const [editingMenu, setEditingMenu] = useState<{
+    id: string;
+    name: string;
+    packingCost?: number;
+  } | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPackingCost, setEditPackingCost] = useState<number | undefined>();
 
   const {
     data: allMenus,
@@ -65,13 +80,8 @@ const Menu: React.FC = () => {
   const { data, isLoading, isError, refetch } = useMenu();
 
   useEffect(() => {
-    // setMenuIdTable(data[0].id);
     setPage(1);
   }, []);
-
-  const onOpenChangeViewMenu = () => {
-    setIsOpenViewMenu(!isOpenViewMenu);
-  };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -86,18 +96,55 @@ const Menu: React.FC = () => {
     setLoading(false);
     if (data?.data?.isSuccessful) {
       notify({
-        title: 'Success!',
-        text: 'Menu successfully created',
-        type: 'success',
+        title: "Success!",
+        text: "Menu successfully created",
+        type: "success",
       });
-      router.push('/dashboard/menu/add-menu-item');
+      router.push("/dashboard/menu/add-menu-item");
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
+  };
+
+  const handleEditMenu = (menu: any) => {
+    setEditingMenu(menu);
+    setEditName(menu.name);
+    setEditPackingCost(menu.packingCost);
+    setIsOpenViewMenu(false);
+    setIsOpenEditMenu(true);
+  };
+
+  const handleUpdateMenu = async () => {
+    if (!editingMenu) return;
+
+    setLoading(true);
+    const data = await updateMenu(
+      businessInformation[0]?.businessId,
+      editingMenu.id,
+      {
+        name: editName,
+        packingCost: editPackingCost,
+      }
+    );
+    setLoading(false);
+
+    if (data?.data?.isSuccessful) {
+      getMenu();
+      toast.success("Menu updated successfully");
+
+      closeEditModal();
+    } else if (data?.data?.error) {
+      toast.error(data?.data?.error);
+    }
+  };
+
+  const closeEditModal = () => {
+    setIsOpenEditMenu(false);
+    setIsOpenViewMenu(true);
   };
 
   const filteredItems = useMemo(() => {
@@ -138,7 +185,7 @@ const Menu: React.FC = () => {
     setLoading(false);
     if (data?.data?.isSuccessful) {
       getMenu();
-      toast.success('Menu deleted successfully');
+      toast.success("Menu deleted successfully");
     } else if (data?.data?.error) {
       toast.error(data?.data?.error);
     }
@@ -188,7 +235,7 @@ const Menu: React.FC = () => {
               </div>
               <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
-                  onClick={() => router.push('/dashboard/menu/preview-menu')}
+                  onClick={() => router.push("/dashboard/menu/preview-menu")}
                   className="flex text-grey600 bg-white"
                 >
                   <IoPhonePortraitOutline />
@@ -209,19 +256,16 @@ const Menu: React.FC = () => {
           {data &&
             data.length > 0 &&
             (role === 0 || userRolePermissions?.canCreateMenu === true) && (
-              // <div>
-
               <CustomButton
-                onClick={() => router.push('/dashboard/menu/add-menu-item')}
+                onClick={() => router.push("/dashboard/menu/add-menu-item")}
                 className="py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white"
                 backgroundColor="bg-primaryColor"
               >
                 <div className="flex gap-2 items-center justify-center">
                   <IoAddCircleOutline className="text-[22px]" />
-                  <p>{'Add menu items'} </p>
+                  <p>{"Add menu items"} </p>
                 </div>
               </CustomButton>
-              // </div>
             )}
         </div>
       </div>
@@ -229,7 +273,7 @@ const Menu: React.FC = () => {
         <MenuList
           menus={filteredItems}
           onOpen={onOpen}
-          onOpenViewMenu={onOpenChangeViewMenu}
+          onOpenViewMenu={() => setIsOpenViewMenu(true)}
           refetch={refetch}
           searchQuery={searchQuery}
         />
@@ -274,7 +318,7 @@ const Menu: React.FC = () => {
                   disabled={!name || loading}
                   type="submit"
                 >
-                  {loading ? 'Loading' : 'Proceed'}
+                  {loading ? "Loading" : "Proceed"}
                 </CustomButton>
 
                 <Spacer y={4} />
@@ -283,7 +327,79 @@ const Menu: React.FC = () => {
           )}
         </ModalContent>
       </Modal>
-      <Modal isOpen={isOpenViewMenu} onOpenChange={onOpenChangeViewMenu}>
+
+      <Modal
+        isOpen={isOpenEditMenu}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeEditModal();
+          }
+          setIsOpenEditMenu(open);
+        }}
+      >
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalBody>
+                <h2 className="text-[24px] leading-3 mt-8 text-black font-semibold">
+                  Edit Menu
+                </h2>
+                <p className="text-sm text-grey600 xl:w-[231px] w-full mb-4">
+                  Update menu details
+                </p>
+                <CustomInput
+                  type="text"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEditName(e.target.value)
+                  }
+                  value={editName}
+                  label="Name of menu"
+                  placeholder="E.g Drinks"
+                />
+                <CustomInput
+                  type="number"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEditPackingCost(Number(e.target.value))
+                  }
+                  value={
+                    editPackingCost !== undefined ? String(editPackingCost) : ""
+                  }
+                  label="Packing cost (Optional)"
+                  placeholder="This is a cost required to pack any item in this menus"
+                />
+                <Spacer y={2} />
+
+                <div className="flex gap-2">
+                  <CustomButton
+                    onClick={() => closeEditModal()}
+                    className="flex-1 text-gray-700"
+                    backgroundColor="bg-gray-200"
+                  >
+                    Cancel
+                  </CustomButton>
+
+                  <CustomButton
+                    loading={loading}
+                    onClick={handleUpdateMenu}
+                    disabled={!editName || loading}
+                    type="submit"
+                    className="flex-1 text-white"
+                  >
+                    {loading ? "Loading" : "Update Menu"}
+                  </CustomButton>
+                </div>
+
+                <Spacer y={4} />
+              </ModalBody>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+
+      <Modal
+        isOpen={isOpenViewMenu}
+        onOpenChange={(open) => setIsOpenViewMenu(open)}
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -296,20 +412,37 @@ const Menu: React.FC = () => {
                   {allMenus?.map((item: any) => {
                     return (
                       <div
-                        className=" text-black flex justify-between text-sm border-b border-primaryGrey py-3"
+                        className="text-black flex justify-between text-sm border-b border-primaryGrey py-3"
                         key={item.id}
                       >
-                        <p>{item.name}</p>
-                        <Tooltip color="danger" content={'Delete'}>
-                          <span>
-                            <RiDeleteBin6Line
-                              onClick={() => {
-                                removeMenu(item.id);
-                              }}
-                              className="text-[18px] text-[#dc2626] mr-4 cursor-pointer"
-                            />
-                          </span>
-                        </Tooltip>
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          {item.packingCost > 0 && (
+                            <p className="text-xs text-grey600">
+                              Packing cost: {formatPrice(item.packingCost)}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center">
+                          <Tooltip color="secondary" content={"Edit"}>
+                            <span className="mr-3">
+                              <RiEdit2Line
+                                onClick={() => handleEditMenu(item)}
+                                className="text-[18px] text-primaryColor cursor-pointer"
+                              />
+                            </span>
+                          </Tooltip>
+                          <Tooltip color="danger" content={"Delete"}>
+                            <span>
+                              <RiDeleteBin6Line
+                                onClick={() => {
+                                  removeMenu(item.id);
+                                }}
+                                className="text-[18px] text-[#dc2626] cursor-pointer"
+                              />
+                            </span>
+                          </Tooltip>
+                        </div>
                       </div>
                     );
                   })}
