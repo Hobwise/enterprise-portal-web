@@ -9,10 +9,13 @@ import { Modal, ModalBody, ModalContent, Select, SelectItem, Selection } from '@
 import CheckImage from '@/public/assets/images/success-image.png';
 import { useRouter } from 'next/navigation';
 import { RESERVATIONS_URL } from '@/utilities/routes';
-import { cn, convertToISO, formatNumber, formatTo12Hour, generateTimeSlots, getInitials2, notify, validateEmail } from '@/lib/utils';
-import { BookReservationApi } from '@/app/api/controllers/landingPage';
+import { Tooltip } from '@heroui/tooltip';
+import { cn, convertToISO, formatNumber, formatTime, formatTimeSlot, generateTimeSlots, getInitials2, notify, validateEmail } from '@/lib/utils';
+import { BookReservationApi, fetchAvailability } from '@/app/api/controllers/landingPage';
 import { IoCall } from 'react-icons/io5';
 import { MdEmail, MdTimer } from 'react-icons/md';
+import { useQuery } from 'react-query';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
 interface IDetails {
   firstName: string;
@@ -46,7 +49,9 @@ interface IBookReservationPage {
 
 export default function BookReservationPage({ reservation, className }: IBookReservationPage) {
   const [quantity, setQuantity] = useState<number>(1);
+  const [noOfGuests, setNoOfGuests] = useState<number>(1);
   const [selectedTime, setSelectedTime] = useState<Selection>(new Set([]));
+  const [selectedPeriod, setSelectedPeriod] = useState<{ timeSlot: string; quantity: number }>({ quantity: 0, timeSlot: '' });
   const [details, setDetails] = useState<IDetails>(defaultValues);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<IDetails>(defaultValues);
@@ -54,6 +59,17 @@ export default function BookReservationPage({ reservation, className }: IBookRes
   const [open, setOpen] = useState<boolean>(false);
   const btnClassName =
     'before:ease relative h-[40px] w-full overflow-hidden border border-[#FFFFFF26] px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40';
+
+  const {
+    data: availableTimes,
+    isLoading: isLoadingTimes,
+    isError,
+    error: fetchError,
+  } = useQuery({
+    queryFn: () => fetchAvailability({ ReservationId: reservation?.id, RequestDate: details?.bookingDateTime }),
+    queryKey: ['availability', reservation?.id, details?.bookingDateTime],
+    enabled: !!reservation?.id && !!details?.bookingDateTime,
+  });
 
   const handleBookReservation = async (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
@@ -82,6 +98,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
         reservationId: reservation?.id,
         cooperateId: reservation?.cooperateID,
         businessId: reservation?.businessID,
+        numberOfGuest: noOfGuests,
         quantity,
       };
 
@@ -103,6 +120,32 @@ export default function BookReservationPage({ reservation, className }: IBookRes
   };
 
   const currentSelection: string = Array.from(selectedTime).join(', ');
+
+  const formattedTimeSlots =
+    availableTimes &&
+    availableTimes?.data?.data?.map((slot: { timeSlot: string }) => ({
+      ...slot,
+      timeSlot: formatTime(formatTimeSlot(slot.timeSlot)),
+    }));
+
+  const timeSlotMap =
+    availableTimes &&
+    new Map(
+      formattedTimeSlots.map((item: { quantity: number; timeSlot: string }) => [
+        item.timeSlot,
+        { ...item, availability: item.quantity > 0 }, // Set availability based on quantity
+      ])
+    );
+
+  // Check all times in array2 and update or add them
+  const updatedAvailableTime = generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((time) =>
+    timeSlotMap?.has(time) ? timeSlotMap?.get(time) : { timeSlot: time, quantity: 0, availability: false }
+  );
+
+  const handleSelectTime = (each: { timeSlot: string; quantity: number }) => {
+    setSelectedTime(new Set([each.timeSlot || '']));
+    setSelectedPeriod(each);
+  };
 
   useEffect(() => {
     if (selectedTime) {
@@ -167,71 +210,115 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                 errorMessage={error.emailAddress}
               />
 
-              <div className="space-y-4 mt-6">
-                <p className="text-[#161618] text-xs font-medium">
-                  Opens from{' '}
-                  <span className="font-bold">
-                    {reservation?.startTime || '10:00AM'} to {reservation?.endTime || '11:59PM'}
-                  </span>
-                </p>
+              <CustomInput
+                name="date"
+                type="date"
+                label="Reservation date"
+                placeholder="DD/MM/YY, 00 : 00 AM"
+                classnames="mt-6"
+                defaultValue={details.bookingDateTime}
+                value={details.bookingDateTime}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={({ target }: any) => {
+                  setError((prev) => ({ ...prev, bookingDateTime: '' }));
+                  setDetails((prev) => ({ ...prev, bookingDateTime: target.value }));
+                }}
+                errorMessage={error.bookingDateTime}
+              />
 
-                <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
-                  {generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((each) => (
-                    <div
-                      className={cn(
-                        'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
-                        currentSelection === each && 'bg-primaryColor text-white'
-                      )}
-                      key={each}
-                      onClick={() => setSelectedTime(new Set([each || '']))}
-                      role="button"
-                    >
-                      <MdTimer />
-                      <p className="">{each}</p>
+              {details?.bookingDateTime && (
+                <React.Fragment>
+                  {isLoadingTimes ? (
+                    <div className="mt-4 flex items-center text-dark">
+                      <AiOutlineLoading3Quarters className="mr-2 h-4 w-4 animate-spin" />
+                      <p className="text-sm font-light italic">Please wait..., loading available time</p>
                     </div>
-                  ))}
-                </div>
-              </div>
+                  ) : (
+                    <React.Fragment>
+                      {isError ? (
+                        <div>
+                          {generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((each: any) => (
+                            <Tooltip content={each.availability ? `${each.quantity} quantity Available` : 'Not available'} color="default">
+                              <div
+                                className={cn(
+                                  'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
+                                  currentSelection === each.timeSlot && 'bg-primaryColor text-white',
+                                  each.availability ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'
+                                )}
+                                key={each.timeSlot}
+                                onClick={() => {
+                                  each.availability ? handleSelectTime(each) : null;
+                                }}
+                              >
+                                <MdTimer />
+                                <p className="">{each.timeSlot}</p>
+                              </div>
+                            </Tooltip>
+                          ))}
+                        </div>
+                      ) : (
+                        <React.Fragment>
+                          <div className="space-y-4 mt-6">
+                            <p className="text-[#161618] text-xs font-medium">
+                              Opens from{' '}
+                              <span className="font-bold">
+                                {reservation?.startTime || '10:00AM'} to {reservation?.endTime || '11:59PM'}
+                              </span>
+                            </p>
+                            <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
+                              {updatedAvailableTime.map((each: any) => (
+                                <Tooltip content={<p className="text-[#000]">{each.availability ? `${each.quantity} quantity Available` : 'Not available'}</p>}>
+                                  <div
+                                    className={cn(
+                                      'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
+                                      currentSelection === each.timeSlot && 'bg-primaryColor text-white',
+                                      each.availability ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'
+                                    )}
+                                    key={each.timeSlot}
+                                    onClick={() => {
+                                      each.availability ? handleSelectTime(each) : null;
+                                    }}
+                                  >
+                                    <MdTimer />
+                                    <p className="">{each.timeSlot}</p>
+                                  </div>
+                                </Tooltip>
+                              ))}
+                            </div>
+                          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <CustomInput
-                  name="date"
-                  type="date"
-                  label="Reservation date"
-                  placeholder="DD/MM/YY, 00 : 00 AM"
-                  classnames="mt-6"
-                  defaultValue={details.bookingDateTime}
-                  value={details.bookingDateTime}
-                  min={new Date().toISOString().split('T')[0]}
-                  onChange={({ target }: any) => {
-                    setError((prev) => ({ ...prev, bookingDateTime: '' }));
-                    setDetails((prev) => ({ ...prev, bookingDateTime: target.value }));
-                  }}
-                  errorMessage={error.bookingDateTime}
-                />
+                          <div className="grid grid-cols-1 gap-4">
+                            <div className="space-y-2.5 mt-5">
+                              <p className="text-[#000] font-[500] text-[14px]">Reservation time</p>
+                              <Select
+                                label=""
+                                className="w-full"
+                                variant="bordered"
+                                size="lg"
+                                labelPlacement="inside"
+                                selectedKeys={selectedTime}
+                                onSelectionChange={setSelectedTime}
+                                placeholder="Select Time"
+                                errorMessage={error.time ? 'You must select a reservation time' : ''}
+                                isInvalid={error.time ? true : false}
+                              >
+                                {updatedAvailableTime
+                                  ?.filter((time: any) => !!time.availability)
+                                  .map((each: any) => (
+                                    <SelectItem key={each.timeSlot || ''} className="text-[#000]">
+                                      {each.timeSlot}
+                                    </SelectItem>
+                                  ))}
+                              </Select>
+                            </div>
+                          </div>
+                        </React.Fragment>
+                      )}
+                    </React.Fragment>
+                  )}
+                </React.Fragment>
+              )}
 
-                <div className="space-y-2.5 mt-5">
-                  <p className="text-[#000] font-[500] text-[14px]">Reservation time</p>
-                  <Select
-                    label=""
-                    className="w-full"
-                    variant="bordered"
-                    size="lg"
-                    labelPlacement="inside"
-                    selectedKeys={selectedTime}
-                    onSelectionChange={setSelectedTime}
-                    placeholder="Select Time"
-                    errorMessage={error.time ? 'You must select a reservation time' : ''}
-                    isInvalid={error.time ? true : false}
-                  >
-                    {generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:00:00', 1).map((each) => (
-                      <SelectItem key={each || ''} className="text-[#000]">
-                        {each}
-                      </SelectItem>
-                    ))}
-                  </Select>
-                </div>
-              </div>
               <div className="mt-4">
                 <CustomTextArea
                   name="description"
@@ -321,13 +408,44 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                         -
                       </button>
                       <p className="font-medium w-4 flex justify-center items-center">{quantity}</p>
-                      <div
+                      <button
                         className="border border-[#E4E7EC] rounded-md w-7 text-[#000000] flex items-center justify-center h-7"
+                        disabled={quantity >= selectedPeriod.quantity}
                         role="button"
-                        onClick={() => setQuantity((prev) => prev + 1)}
+                        onClick={() => {
+                          quantity >= selectedPeriod?.quantity ? null : setQuantity((prev) => prev + 1);
+                        }}
                       >
                         +
-                      </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="text-sm flex justify-between">
+                    <div className="text-[#404245] flex space-x-2 items-center">
+                      <p>Number of Guests</p>
+                      <InfoCircle />
+                    </div>
+                    <div className="flex space-x-4 text-[#000] items-center">
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-7 text-[#000000] flex items-center justify-center h-7"
+                        disabled={noOfGuests <= 1}
+                        role="button"
+                        onClick={() => {
+                          noOfGuests > 1 ? setNoOfGuests((prev) => prev - 1) : null;
+                        }}
+                      >
+                        -
+                      </button>
+                      <p className="font-medium w-4 flex justify-center items-center">{noOfGuests}</p>
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-7 text-[#000000] flex items-center justify-center h-7"
+                        // disabled={noOfGuests >= selectedPeriod.noOfGuests}
+                        role="button"
+                        onClick={() => setNoOfGuests((prev) => prev + 1)}
+                      >
+                        +
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -339,7 +457,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
 
                 <div className="bg-[#F0F2F4] p-4 text-[#5A5A63] flex items-baseline space-x-2 rounded-lg">
                   <InfoCircle className="mt-1" />
-                  <p>The minimum spend is the amount you’re required to spend when visiting this enterprise.</p>
+                  <p>The minimum spend is the amount you’re required to spend when visiting this location.</p>
                 </div>
 
                 <div>

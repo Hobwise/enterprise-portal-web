@@ -5,7 +5,7 @@ import { CustomTextArea } from '@/components/customTextArea';
 import FAQs from '@/components/ui/landingPage/faq';
 import Footer from '@/components/ui/landingPage/footer';
 import Navbar from '@/components/ui/landingPage/navBar';
-import { notify, validateEmail } from '@/lib/utils';
+import { formatDateOnly, formatSubscriptionEndDate, notify, phoneNumberPattern, validateEmail } from '@/lib/utils';
 import HobinkLogo from '@/public/assets/icons/hobink-iconpng.png';
 import ContactUsBg from '@/public/assets/images/contact-us-bg.png';
 import DashboardImage from '@/public/assets/images/dashboard-image-2.png';
@@ -59,8 +59,9 @@ export default function Contact() {
       setIsLoading(true);
       const updateContactInfo = {
         ...contactInfo,
-        preferredDateTime: new Date(contactInfo.preferredDateTime).toLocaleString(),
+        preferredDateTime: formatDateOnly(new Date(contactInfo.preferredDateTime).toLocaleString()),
       };
+
       const data: any = await BookDemo(updateContactInfo);
 
       setIsLoading(false);
@@ -135,10 +136,21 @@ export default function Contact() {
                 <CustomInput
                   type="tel"
                   onChange={({ target }: any) => {
-                    setError((prev) => ({ ...prev, phoneNumber: '' }));
+                    const { value } = target;
+
+                    // Validate phone number against the pattern
+                    if (!phoneNumberPattern.test(value)) {
+                      setError((prev) => ({
+                        ...prev,
+                        phoneNumber: 'Invalid phone number format',
+                      }));
+                    } else {
+                      setError((prev) => ({ ...prev, phoneNumber: '' }));
+                    }
+
                     setContactInfo((prev) => ({
                       ...prev,
-                      phoneNumber: target.value,
+                      phoneNumber: value,
                     }));
                   }}
                   value={contactInfo.phoneNumber}

@@ -65,11 +65,7 @@ export default function HomeComponent() {
                       Request a Demo
                     </CustomButton>
                   </Link>
-                  {isSignedIn ? (
-                    <Link href={'/dashboard'} target="_blank">
-                      <CustomButton className="bg-white border border-primaryColor  text-primaryColor h-[38px] px-8">Go to Dashboard</CustomButton>
-                    </Link>
-                  ) : (
+                  {isSignedIn ? null : (
                     <Link href={SIGN_UP_URL} target="_blank">
                       <CustomButton className="bg-white border border-primaryColor  text-primaryColor h-[38px] px-8">Get Started</CustomButton>
                     </Link>

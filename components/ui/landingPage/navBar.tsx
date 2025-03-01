@@ -1,15 +1,21 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
-import { cn } from '@/lib/utils';
+import { cn, removeCookie } from '@/lib/utils';
 import Hobwise from '@/public/assets/images/hobwise.png';
 import { CloseIcon, FlashIcon, HamburgerIcon } from '@/public/assets/svg';
 import { CONTACT_URL, HOME_URL, LOGIN_URL, PRICING_URL, RESERVATIONS_URL, SIGN_UP_URL } from '@/utilities/routes';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { socialMedia } from './footer';
 import { Transition } from './transition';
+import LogoutModal from '../logoutModal';
+import { FiLogOut } from 'react-icons/fi';
+import { Avatar, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@nextui-org/react';
+import { IoIosArrowDown } from 'react-icons/io';
+import { Skeleton } from './skeleton-loading';
+import { useQueryClient } from 'react-query';
 
 export const navItem = [
   { title: 'Home', href: HOME_URL },
@@ -25,19 +31,34 @@ interface INavbar {
 }
 
 export default function Navbar({ type = 'non-colored', className }: INavbar) {
-  const [isSignedIn, setIsSignedIn] = useState<boolean>(false);
-  const [openNav, setOpenNav] = useState(false);
+  const queryClient = useQueryClient();
+  const [userInfo, setUserInfo] = useState<{ firstName: string; lastName: string; image: string; role: number } | null>(null);
+  const [openNav, setOpenNav] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const pathname = usePathname();
   const userInformation = typeof window !== 'undefined' && localStorage.getItem('userInformation');
+  const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
     if (userInformation) {
-      const userToken = JSON.parse(userInformation).token;
-      if (userToken) {
-        setIsSignedIn(true);
+      const user = JSON.parse(userInformation);
+      if (user) {
+        setUserInfo(user);
       }
     }
+    setLoading(false);
   }, [userInformation]);
+
+  const externalLogout = () => {
+    queryClient.clear();
+    localStorage.clear();
+    setUserInfo(null);
+    removeCookie('token');
+    removeCookie('planCapabilities');
+    removeCookie('username');
+    removeCookie('jwt');
+    setOpenModal(false);
+  };
 
   const btnClassName = `before:ease relative h-[40px] overflow-hidden ${
     type === 'default' || (type === 'colored' && 'border border-[#FFFFFF26]')
@@ -66,25 +87,66 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
             );
           })}
         </nav>
-        {!isSignedIn ? (
-          <div className="flex space-x-4 items-center">
-            <Link href={LOGIN_URL} className="hidden lg:flex" target="_blank">
-              <CustomButton className={cn('bg-white text-primaryColor h-[38px] lg:px-8', type === 'default' && 'border border-primaryColor')}>
-                Login
-              </CustomButton>
-            </Link>
-            <Link href={SIGN_UP_URL} target="_blank">
-              <CustomButton className={btnClassName}>Get Started</CustomButton>
-            </Link>
 
-            <div className="flex lg:hidden z-50" onClick={() => setOpenNav((prev) => !prev)}>
-              {openNav ? <CloseIcon /> : <HamburgerIcon className={cn(type === 'default' ? 'text-[#1A198C]' : 'text-white')} />}
-            </div>
-          </div>
+        {loading ? (
+          <div></div>
         ) : (
-          <Link href={'/dashboard'} target="_blank">
-            <CustomButton className={btnClassName}>Go to Dashboard</CustomButton>
-          </Link>
+          <React.Fragment>
+            {!userInfo ? (
+              <div className="flex space-x-4 items-center">
+                <Link href={LOGIN_URL} className="hidden lg:flex" target="_blank">
+                  <CustomButton className={cn('bg-white text-primaryColor h-[38px] lg:px-8', type === 'default' && 'border border-primaryColor')}>
+                    Login
+                  </CustomButton>
+                </Link>
+                <Link href={SIGN_UP_URL} target="_blank">
+                  <CustomButton className={btnClassName}>Get Started</CustomButton>
+                </Link>
+
+                <div className="flex lg:hidden z-50" onClick={() => setOpenNav((prev) => !prev)}>
+                  {openNav ? <CloseIcon /> : <HamburgerIcon className={cn(type === 'default' ? 'text-[#1A198C]' : 'text-white')} />}
+                </div>
+              </div>
+            ) : (
+              <Dropdown placement="bottom-end">
+                <DropdownTrigger>
+                  {userInfo ? (
+                    <div className="flex items-center py-2 px-4 rounded-full border border-gray-300 gap-2 cursor-pointer">
+                      <div className="flex flex-col leading-4 text-[#000]">
+                        <span className="text-xs font-bold">
+                          {userInfo?.firstName} {userInfo?.lastName}
+                        </span>
+                        <span className="text-xs text-gray-500">{userInfo?.role === 0 ? 'Manager' : 'Staff'}</span>
+                      </div>
+                      <Avatar size="sm" src={userInfo?.image && `data:image/jpeg;base64,${userInfo?.image}`} />
+                      <IoIosArrowDown className="text-[#000]" />
+                    </div>
+                  ) : (
+                    <div className=" flex items-center gap-2 border border-gray-200 rounded-full py-1 px-2">
+                      <div className="w-full flex flex-col gap-1">
+                        <Skeleton className="h-2 w-16 rounded-lg" />
+                        <Skeleton className="h-2 w-16 rounded-lg" />
+                      </div>
+                      <div>
+                        <Skeleton className="flex rounded-full w-8 h-8" />
+                      </div>
+                    </div>
+                  )}
+                </DropdownTrigger>
+                <DropdownMenu aria-label="settings Actions" variant="flat">
+                  <DropdownItem key="logout">
+                    <div
+                      onClick={() => setOpenModal(true)}
+                      className="flex cursor-pointer text-danger-500 transition-all hover:rounded-md px-2 py-2 items-center gap-2"
+                    >
+                      <FiLogOut className="text-[20px]" />
+                      <span className="  text-sm font-md"> Log out</span>
+                    </div>
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            )}
+          </React.Fragment>
         )}
       </div>
 
@@ -136,6 +198,8 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
           </Transition>
         </div>
       )}
+
+      <LogoutModal onOpenChange={setOpenModal} isOpen={openModal} externalLogout={externalLogout} />
     </div>
   );
 }

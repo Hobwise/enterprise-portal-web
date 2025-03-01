@@ -41,10 +41,12 @@ export default function ReservationCard({ image, businessName, reservationName, 
 
       <div className="px-2 space-y-4">
         <div className="space-y-2">
-          <p className="text-[#282828] font-medium text-[15px] capitalize truncate">{reservationName}</p>
+          <div className="space-y-0.5">
+            <p className="text-[#282828] font-medium text-[15px] capitalize truncate">{reservationName}</p>
+            <p className="text-[#808B9F] text-xs capitalize">{businessName}</p>
+          </div>
 
           <div className="space-y-1">
-            <p className="text-[#808B9F] text-xs capitalize">{businessName}</p>
             <div className="flex items-center space-x-1">
               <LocationIcon />
               <p className="text-xs text-[#44444A] truncate capitalize">{businessAddress}</p>

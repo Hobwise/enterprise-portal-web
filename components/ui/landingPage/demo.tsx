@@ -9,22 +9,24 @@ interface ITab {
   title: string;
   description: string;
   linkId: string;
+  src?: string;
 }
 
 const tabs: ITab[] = [
   {
-    title: 'Sample Headline 1',
-    description: 'Sample description of the first item we want to demo',
+    title: 'Introduction to Hobwise',
+    description: 'How it works',
     linkId: '5OeASZGN0iw',
+    src: '/assets/videos/hob-wizz.mp4',
   },
   {
-    title: 'Sample Headline 2',
-    description: 'Sample description of the first item we want to demo',
+    title: 'Testimonial',
+    description: 'See what people are saying about us',
     linkId: 'GWaQiFeQ87g',
   },
   {
-    title: 'Sample Headline 3',
-    description: 'Sample description of the first item we want to demo',
+    title: 'Our Future',
+    description: 'Our vision 2030',
     linkId: 'SR__amDl1c8',
   },
 ];
@@ -43,7 +45,7 @@ export default function Demo() {
 
       <div className="lg:w-[85%] lg:mx-auto mx-0">
         <h2 className="text-[24px] lg:text-center lg:text-[40px] text-[#161618] lg:leading-[64px] font-bricolage_grotesque">How our Application Works</h2>
-        <p className="px-8 lg:px-56 text-[#44444A]">Sample description to speak about the header above</p>
+        <p className="px-8 lg:px-56 text-[#44444A]">Introduction to Hobwise</p>
       </div>
       <div className="lg:flex lg:space-x-16 mt-6 lg:mt-12 items-center">
         <div className="w-full lg:w-[35%]">
@@ -52,9 +54,14 @@ export default function Demo() {
               {tabs.map((tab, index) => (
                 <div key={tab.title}>
                   <div
-                    className={cn('p-4 rounded-2xl flex space-x-4 items-center', selectedTab.title === tab.title ? 'bg-[#F5F2FC]' : 'bg-[FBFBFC]')}
-                    role="button"
-                    onClick={() => setSelectedTab(tab)}
+                    className={cn(
+                      'p-4 rounded-2xl flex space-x-4 items-center cursor-pointer',
+                      !tab.src ? 'cursor-not-allowed opacity-30' : 'cursor-pointer,',
+                      selectedTab.title === tab.title ? 'bg-[#F5F2FC]' : 'bg-[FBFBFC]'
+                    )}
+                    onClick={() => {
+                      tab.src ? setSelectedTab(tab) : null;
+                    }}
                   >
                     <div
                       className={cn(
@@ -66,7 +73,7 @@ export default function Demo() {
                     </div>
                     <div className="text-left">
                       <p className="font-bricolage_grotesque text-[18px] lg:text-[24px] text-[#101928]">{tab.title}</p>
-                      <p className="text-[#808B9F] text-xs lg:text-sm font-satoshi">{tab.title}</p>
+                      <p className="text-[#808B9F] text-xs lg:text-sm font-satoshi">{tab.description}</p>
                     </div>
                   </div>
                   {index !== 2 && <div className="h-6 lg:h-16 border border-[#DEE1E6] w-[1px] ml-10 my-1.5 lg:my-4" />}
@@ -77,16 +84,28 @@ export default function Demo() {
         </div>
         <div className="w-full lg:w-[65%]">
           <Transition>
-            <iframe
+            <video
               width="100%"
               height={isDesktop ? '500px' : '300px'}
-              src={`https://www.youtube.com/embed/${selectedTab.linkId}?controls=1&showinfo=0&rel=0`}
+              controls
+              poster="/assets/images/video-poster.jpg"
+              className="text-center justify-center rounded-2xl shadow-custom border-[14px] border-white"
+            >
+              <source src={selectedTab.src} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+
+            {/* <iframe
+              width="100%"
+              height={isDesktop ? '500px' : '300px'}
+              src={selectedTab?.src}
+              // src={`https://www.youtube.com/embed/${selectedTab.linkId}?controls=1&showinfo=0&rel=0`}
               title="YouTube video player"
               frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
               className="text-center justify-center rounded-2xl shadow-custom border-[14px] border-white"
-            ></iframe>
+            ></iframe> */}
           </Transition>
         </div>
       </div>

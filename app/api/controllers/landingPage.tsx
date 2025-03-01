@@ -117,3 +117,18 @@ export async function BookReservationApi(payload: IBookReservation) {
     handleError(error);
   }
 }
+
+export async function fetchAvailability(params: { ReservationId: string; RequestDate: string }) {
+  try {
+    const data = await api.get(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.reservationAvailility}`, { params });
+    // const data = await api.get(
+    //   `https://walrus-app-lehim.ondigitalocean.app/v1/Reservation/availability?ReservationId=9fb5ff3e-3c65-4e9f-a33b-8896e7e0f4b2&RequestDate=2025-02-18T10%3A50%3A33.291Z`
+    // );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+// /api/v1/Reservation/availability?ReservationId=9fb5ff3e-3c65-4e9f-a33b-8896e7e0f4b2&RequestDate=2025-02-18T10%3A50%3A33.291Z

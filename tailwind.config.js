@@ -33,7 +33,7 @@ module.exports = {
           'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
       fontFamily: {
-        satoshi: ['Satoshi'], // Define your custom font
+        satoshi: ['Satoshi'],
         bricolage_grotesque: ['Bricolage Grotesque'],
       },
       boxShadow: {
