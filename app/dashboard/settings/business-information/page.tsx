@@ -100,6 +100,7 @@ const BusinessInformation = () => {
         setBusinessFormData((prevState: any) => ({
           ...prevState,
           logoImageReference: "",
+          logoImage: null,
         }));
       }
     },
@@ -173,11 +174,21 @@ const BusinessInformation = () => {
       <div className="border border-secondaryGrey rounded-[10px] p-4 space-y-8">
         <div className="flex items-center justify-between w-full">
           {businessFormData?.logoImage ? (
-            <Avatar
-              size="lg"
-              className="h-[120px] w-[120px]"
-              src={`data:image/jpeg;base64,${businessFormData.logoImage}`}
-            />
+            <div className="relative">
+              <Avatar
+                size="lg"
+                className="h-[120px] w-[120px]"
+                src={`data:image/jpeg;base64,${businessFormData.logoImage}`}
+              />
+              <div
+                className="absolute top-0 right-0 cursor-pointer"
+                onClick={() => removeFileMutation.mutate()}
+              >
+                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
+                  <RxCross2 />
+                </div>
+              </div>
+            </div>
           ) : !previewUrl ? (
             <div className="flex items-center justify-center w-[200px] h-[120px] rounded-[10px] bg-[#5F35D20A]">
               <label

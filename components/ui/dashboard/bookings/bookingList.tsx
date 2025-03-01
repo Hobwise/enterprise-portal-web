@@ -240,10 +240,6 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                         aria-label="edit booking"
                         onClick={() => toggleEditBookingModal(booking)}
                       >
-                        {console.log(
-                          booking?.bookingStatus,
-                          " booking?.bookingStatus"
-                        )}
                         <div
                           className={` flex gap-2  items-center text-grey500`}
                         >
