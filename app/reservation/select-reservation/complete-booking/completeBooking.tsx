@@ -66,18 +66,13 @@ const CompleteBookingComponent = () => {
       bookings.firstName &&
       bookings.lastName &&
       bookings.email &&
-      bookings.phoneNumber &&
       timeNdate &&
       isSelected
     );
   };
   const formSubmitTnC = () => {
     return (
-      bookings.firstName &&
-      bookings.lastName &&
-      bookings.email &&
-      bookings.phoneNumber &&
-      timeNdate
+      bookings.firstName && bookings.lastName && bookings.email && timeNdate
     );
   };
 
@@ -206,7 +201,7 @@ const CompleteBookingComponent = () => {
           name="phoneNumber"
           endContent={<MdOutlinePhone className="text-grey500" />}
           label="Phone number"
-          placeholder="Enter phone number"
+          placeholder="Enter phone number (Optional)"
         />
         <Spacer y={5} />
 

@@ -58,7 +58,6 @@ const CreateBooking = ({
       bookings.firstName &&
       bookings.lastName &&
       bookings.email &&
-      bookings.phoneNumber &&
       timeNdate &&
       id
     );
@@ -75,7 +74,6 @@ const CreateBooking = ({
   };
 
   const placeBooking = async (e) => {
-    console.log(timeNdate, "timeNdate");
     e.preventDefault();
     const payload = {
       reservationId: id,
@@ -213,7 +211,7 @@ const CreateBooking = ({
                       name="phoneNumber"
                       endContent={<MdOutlinePhone className="text-grey500" />}
                       label="Phone number"
-                      placeholder="Enter phone number"
+                      placeholder="Enter phone number (Optional)"
                     />
                   </div>
                   <Spacer y={5} />
