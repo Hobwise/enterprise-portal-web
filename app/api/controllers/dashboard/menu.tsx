@@ -369,3 +369,29 @@ export async function editMenuItem(
     handleError(error);
   }
 }
+export async function exportGrid(
+  businessId: string,
+  gridReportType: number,
+  filterType?: number,
+  startDate?: string,
+  endDate?: string
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    startDate: startDate,
+    endDate: endDate,
+    filterType: filterType || 4,
+    gridReportType: gridReportType,
+  };
+
+  try {
+    const data = await api.post(DASHBOARD.reportGridExport, payload, {
+      headers,
+      responseType: "blob",
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}

@@ -8,6 +8,7 @@ import MenuList from "@/components/ui/dashboard/menu/menu";
 import {
   createMenu,
   deleteMenu,
+  exportGrid,
   updateMenu,
 } from "@/app/api/controllers/dashboard/menu";
 import { CustomInput } from "@/components/CustomInput";
@@ -17,6 +18,7 @@ import useMenu from "@/hooks/cachedEndpoints/useMenu";
 import { downloadCSV } from "@/lib/downloadToExcel";
 import {
   CustomLoading,
+  dynamicExportConfig,
   formatPrice,
   getJsonItemFromLocalStorage,
   notify,
@@ -46,6 +48,7 @@ import { useGlobalContext } from "@/hooks/globalProvider";
 import toast from "react-hot-toast";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { RiDeleteBin6Line, RiEdit2Line } from "react-icons/ri";
+import { VscLoading } from "react-icons/vsc";
 
 const Menu: React.FC = () => {
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -57,6 +60,7 @@ const Menu: React.FC = () => {
 
   const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
   const [isOpenEditMenu, setIsOpenEditMenu] = useState(false);
+  const [loadingExport, setLoadingExport] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [name, setName] = useState("");
@@ -160,25 +164,6 @@ const Menu: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  const newArray = data?.map((item) => {
-    const menuName = item?.items[0]?.menuName;
-    const itemName = item?.items[0]?.itemName;
-    const price = item?.items[0]?.price;
-    const itemDescription = item?.items[0]?.itemDescription;
-    const currency = item?.items[0]?.currency;
-    const isAvailable = item?.items[0]?.isAvailable;
-    const hasVariety = item?.items[0]?.hasVariety;
-    return {
-      menuName,
-      itemName,
-      price,
-      itemDescription,
-      currency,
-      isAvailable,
-      hasVariety,
-    };
-  });
-
   const removeMenu = async (id: string) => {
     setLoading(true);
     const data = await deleteMenu(businessInformation[0]?.businessId, id);
@@ -193,6 +178,22 @@ const Menu: React.FC = () => {
 
   if (isLoading || isMenuLoading) return <CustomLoading />;
   if (isError || isMenuError) return <Error onClick={() => refetch()} />;
+
+  const exportCSV = async () => {
+    setLoadingExport(true);
+    const response = await exportGrid(businessInformation[0]?.businessId, 0);
+    setLoadingExport(false);
+
+    if (response?.status === 200) {
+      dynamicExportConfig(
+        response,
+        `Menus-${businessInformation[0]?.businessName}`
+      );
+      toast.success("Menus downloaded successfully");
+    } else {
+      toast.error("Export failed, please try again");
+    }
+  };
 
   return (
     <>
@@ -243,10 +244,16 @@ const Menu: React.FC = () => {
                 </Button>
 
                 <Button
-                  onClick={() => downloadCSV(newArray)}
+                  disabled={loadingExport}
+                  onClick={exportCSV}
                   className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className="text-[22px]" />
+                  {loadingExport ? (
+                    <VscLoading className="animate-spin" />
+                  ) : (
+                    <MdOutlineFileDownload className="text-[22px]" />
+                  )}
+
                   <p>Export csv</p>
                 </Button>
               </ButtonGroup>

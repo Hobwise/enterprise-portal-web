@@ -1,20 +1,27 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import { CustomLoading } from '@/lib/utils';
+import {
+  CustomLoading,
+  dynamicExportConfig,
+  getJsonItemFromLocalStorage,
+} from "@/lib/utils";
 
-import { CustomInput } from '@/components/CustomInput';
-import Error from '@/components/error';
-import NoPaymentsScreen from '@/components/ui/dashboard/payments/noPayments';
-import PaymentsList from '@/components/ui/dashboard/payments/payment';
-import usePayment from '@/hooks/cachedEndpoints/usePayment';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import useDateFilter from '@/hooks/useDateFilter';
-import { downloadCSV } from '@/lib/downloadToExcel';
-import { Button, ButtonGroup, Chip } from '@nextui-org/react';
-import { IoSearchOutline } from 'react-icons/io5';
-import { MdOutlineFileDownload } from 'react-icons/md';
+import { CustomInput } from "@/components/CustomInput";
+import Error from "@/components/error";
+import NoPaymentsScreen from "@/components/ui/dashboard/payments/noPayments";
+import PaymentsList from "@/components/ui/dashboard/payments/payment";
+import usePayment from "@/hooks/cachedEndpoints/usePayment";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import useDateFilter from "@/hooks/useDateFilter";
+import { downloadCSV } from "@/lib/downloadToExcel";
+import { Button, ButtonGroup, Chip } from "@nextui-org/react";
+import { IoSearchOutline } from "react-icons/io5";
+import { MdOutlineFileDownload } from "react-icons/md";
+import { exportGrid } from "@/app/api/controllers/dashboard/menu";
+import toast from "react-hot-toast";
+import { VscLoading } from "react-icons/vsc";
 
 const Payments: React.FC = () => {
   const {
@@ -24,13 +31,16 @@ const Payments: React.FC = () => {
     refetch,
     dropdownComponent,
     datePickerModal,
+    filterType,
   } = useDateFilter(usePayment);
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loadingExport, setLoadingExport] = useState(false);
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All');
+    setTableStatus("All");
     setPage(1);
   }, []);
 
@@ -54,17 +64,25 @@ const Payments: React.FC = () => {
     }));
   }, [data?.paymentComposites, searchQuery]);
 
-  const newArray = data?.paymentComposites?.flatMap((item) =>
-    item?.payments?.map((payment) => ({
-      reference: payment.reference,
-      totalAmount: payment.totalAmount,
-      treatedBy: payment.treatedBy,
-      dateCreated: payment.dateCreated,
-      paymentReference: payment.paymentReference,
-      qrName: payment.qrName,
-      customer: payment.customer,
-    }))
-  );
+  const exportCSV = async () => {
+    setLoadingExport(true);
+    const response = await exportGrid(
+      businessInformation[0]?.businessId,
+      5,
+      filterType
+    );
+    setLoadingExport(false);
+
+    if (response?.status === 200) {
+      dynamicExportConfig(
+        response,
+        `Payments-${businessInformation[0]?.businessName}`
+      );
+      toast.success("Payments downloaded successfully");
+    } else {
+      toast.error("Export failed, please try again");
+    }
+  };
 
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
@@ -99,7 +117,7 @@ const Payments: React.FC = () => {
             <>
               <div>
                 <CustomInput
-                  classnames={'w-[242px]'}
+                  classnames={"w-[242px]"}
                   label=""
                   size="md"
                   value={searchQuery}
@@ -112,10 +130,16 @@ const Payments: React.FC = () => {
               </div>
               <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
-                  onClick={() => downloadCSV(newArray)}
+                  disabled={loadingExport}
+                  onClick={exportCSV}
                   className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className="text-[22px]" />
+                  {loadingExport ? (
+                    <VscLoading className="animate-spin" />
+                  ) : (
+                    <MdOutlineFileDownload className="text-[22px]" />
+                  )}
+
                   <p>Export csv</p>
                 </Button>
               </ButtonGroup>

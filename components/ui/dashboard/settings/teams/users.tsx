@@ -3,7 +3,11 @@ import CustomDelete from "@/components/deleteComponent";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import usePagination from "@/hooks/usePagination";
 import { downloadCSV } from "@/lib/downloadToExcel";
-import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+import {
+  dynamicExportConfig,
+  getJsonItemFromLocalStorage,
+  notify,
+} from "@/lib/utils";
 import {
   Avatar,
   Button,
@@ -30,6 +34,8 @@ import { RiDeleteBin6Line } from "react-icons/ri";
 import noImage from "../../../../../public/assets/images/no-image.svg";
 import CreateUser from "./createUser";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { exportGrid } from "@/app/api/controllers/dashboard/menu";
+import { VscLoading } from "react-icons/vsc";
 export const columns = [
   { name: "ID", uid: "id" },
   { name: "Name", uid: "firstName" },
@@ -43,6 +49,8 @@ const Users = ({ data, refetch }: any) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { page, rowsPerPage } = useGlobalContext();
   const { userRolePermissions, role } = usePermission();
+  const [loadingExport, setLoadingExport] = useState(false);
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const {
     bottomContent,
     headerColumns,
@@ -171,6 +179,22 @@ const Users = ({ data, refetch }: any) => {
         return cellValue;
     }
   }, []);
+
+  const exportCSV = async () => {
+    setLoadingExport(true);
+    const response = await exportGrid(businessInformation[0]?.businessId, 7);
+    setLoadingExport(false);
+
+    if (response?.status === 200) {
+      dynamicExportConfig(
+        response,
+        `Team-members-${businessInformation[0]?.businessName}`
+      );
+      toast.success("Team members downloaded successfully");
+    } else {
+      toast.error("Export failed, please try again");
+    }
+  };
   return (
     <section>
       <div className="flex justify-between">
@@ -182,10 +206,16 @@ const Users = ({ data, refetch }: any) => {
         </div>
         <div className=" flex gap-3 pt-5">
           <Button
-            onClick={() => downloadCSV(data)}
-            className="flex text-grey600 border border-primaryGrey bg-white"
+            disabled={loadingExport}
+            onClick={exportCSV}
+            className="flex text-grey600 bg-white"
           >
-            <MdOutlineFileDownload className="text-[22px]" />
+            {loadingExport ? (
+              <VscLoading className="animate-spin" />
+            ) : (
+              <MdOutlineFileDownload className="text-[22px]" />
+            )}
+
             <p>Export csv</p>
           </Button>
           {(role === 0 || userRolePermissions?.canCreateUser === true) && (
