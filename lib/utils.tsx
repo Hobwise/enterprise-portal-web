@@ -474,25 +474,60 @@ export function resetLoginInfo() {
   window.location.href = '/auth/login';
 }
 
-export function generateTimeSlots(start: string, end: string, interval: number) {
-  const times = [];
-  const startHour = parseInt(start.split(':')[0]);
-  const endHour = parseInt(end.split(':')[0]);
+// export function generateTimeSlots(start: string, end: string, interval: number) {
+//   const times = [];
+//   const startHour = parseInt(start.split(':')[0]);
+//   const endHour = parseInt(end.split(':')[0]);
 
-  for (let hour = startHour; hour < endHour; hour += interval) {
-    const formattedTime = formatTo12Hour(hour);
-    times.push(formattedTime);
+//   for (let hour = startHour; hour < endHour; hour += interval) {
+//     const formattedTime = formatTo12Hour(hour);
+//     times.push(formattedTime);
+//   }
+//   times.push(formatTo12Hour(endHour));
+//   return times;
+// }
+
+// export function formatTo12Hour(hour: number) {
+//   if (hour) {
+//     const isPM = hour >= 12;
+//     const adjustedHour = hour % 12 === 0 ? 12 : hour % 12;
+//     const period = isPM ? 'PM' : 'AM';
+//     return `${adjustedHour}:00${period}`;
+//   } else {
+//     return null;
+//   }
+// }
+
+export function generateTimeSlots(start: string, end: string) {
+  const times = [];
+  const [startHour, startMinute] = start.split(':').map(Number);
+  const [endHour, endMinute] = end.split(':').map(Number);
+
+  let currentHour = startHour;
+  let currentMinute = startMinute;
+
+  while (currentHour < endHour || (currentHour === endHour && currentMinute < endMinute)) {
+    times.push(formatTo12Hour(currentHour, currentMinute));
+
+    // Increment by 30 minutes
+    currentMinute += 30;
+    if (currentMinute === 60) {
+      currentMinute = 0;
+      currentHour++;
+    }
   }
-  times.push(formatTo12Hour(endHour));
+
+  times.push(formatTo12Hour(endHour, endMinute));
   return times;
 }
 
-export function formatTo12Hour(hour: number) {
+export function formatTo12Hour(hour: number, minute: number) {
   if (hour) {
     const isPM = hour >= 12;
     const adjustedHour = hour % 12 === 0 ? 12 : hour % 12;
     const period = isPM ? 'PM' : 'AM';
-    return `${adjustedHour}:00${period}`;
+    const formattedMinute = minute.toString().padStart(2, '0');
+    return `${adjustedHour}:${formattedMinute}${period}`;
   } else {
     return null;
   }
