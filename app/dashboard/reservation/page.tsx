@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from "react";
 
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
 import {
   Button,
   ButtonGroup,
@@ -11,39 +11,47 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { IoSearchOutline } from 'react-icons/io5';
+} from "@nextui-org/react";
+import { useRouter } from "next/navigation";
+import { IoSearchOutline } from "react-icons/io5";
 
-import Error from '@/components/error';
-import CreateReservation from '@/components/ui/dashboard/reservations/createReservations';
-import ReservationList from '@/components/ui/dashboard/reservations/reservation';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import useReservation from '@/hooks/cachedEndpoints/useReservation';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import useTextCopy from '@/hooks/useTextCopy';
-import { companyInfo } from '@/lib/companyInfo';
-import { CustomLoading, getJsonItemFromLocalStorage } from '@/lib/utils';
-import { IoMdAdd } from 'react-icons/io';
-import { VscCopy } from 'react-icons/vsc';
+import Error from "@/components/error";
+import CreateReservation from "@/components/ui/dashboard/reservations/createReservations";
+import ReservationList from "@/components/ui/dashboard/reservations/reservation";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import useReservation from "@/hooks/cachedEndpoints/useReservation";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import useTextCopy from "@/hooks/useTextCopy";
+import { companyInfo } from "@/lib/companyInfo";
+import {
+  CustomLoading,
+  dynamicExportConfig,
+  getJsonItemFromLocalStorage,
+} from "@/lib/utils";
+import { IoMdAdd } from "react-icons/io";
+import { VscCopy, VscLoading } from "react-icons/vsc";
+import { MdOutlineFileDownload } from "react-icons/md";
+import toast from "react-hot-toast";
+import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 
 const Reservation: React.FC = () => {
   const router = useRouter();
 
   const { userRolePermissions, role } = usePermission();
 
-  const business = getJsonItemFromLocalStorage('business');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const business = getJsonItemFromLocalStorage("business");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const { data, isLoading, isError, refetch } = useReservation();
+  const [loadingExport, setLoadingExport] = useState(false);
 
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    setTableStatus('All');
+    setTableStatus("All");
     setPage(1);
   }, []);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -65,6 +73,22 @@ const Reservation: React.FC = () => {
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
     `${companyInfo.webUrl}/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
   );
+
+  const exportCSV = async () => {
+    setLoadingExport(true);
+    const response = await exportGrid(business[0]?.businessId, 4);
+    setLoadingExport(false);
+
+    if (response?.status === 200) {
+      dynamicExportConfig(
+        response,
+        `Reservations-${business[0]?.businessName}`
+      );
+      toast.success("Reservations downloaded successfully");
+    } else {
+      toast.error("Export failed, please try again");
+    }
+  };
 
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
@@ -97,7 +121,7 @@ const Reservation: React.FC = () => {
             <>
               <div>
                 <CustomInput
-                  classnames={'w-[242px]'}
+                  classnames={"w-[242px]"}
                   label=""
                   size="md"
                   value={searchQuery}
@@ -109,6 +133,19 @@ const Reservation: React.FC = () => {
                 />
               </div>
               <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-xl">
+                <Button
+                  disabled={loadingExport}
+                  onClick={exportCSV}
+                  className="flex text-grey600 bg-white"
+                >
+                  {loadingExport ? (
+                    <VscLoading className="animate-spin" />
+                  ) : (
+                    <MdOutlineFileDownload className="text-[22px]" />
+                  )}
+
+                  <p>Export csv</p>
+                </Button>
                 <Popover
                   showArrow={true}
                   isOpen={isOpen}
@@ -139,7 +176,7 @@ const Reservation: React.FC = () => {
               {data?.reservations?.length > 0 && (
                 <CustomButton
                   onClick={() =>
-                    router.push('/dashboard/reservation/create-reservation')
+                    router.push("/dashboard/reservation/create-reservation")
                   }
                   className="py-2 px-4 md:mb-0 mb-4 text-white"
                   backgroundColor="bg-primaryColor"

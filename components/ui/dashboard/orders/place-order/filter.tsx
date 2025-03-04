@@ -1,22 +1,23 @@
-'use client';
-import { Chip, Tab, Tabs } from '@nextui-org/react';
+"use client";
+import { Chip, Tab, Tabs } from "@nextui-org/react";
 
 const Filters = ({ menus, handleTabChange, handleTabClick }: any) => {
   return (
     <>
       {/* <ScrollShadow className='w-[300px]'> */}
-      <div className='flex  relative top-3  border-b border-divider justify-between '>
+      <div className="flex  relative top-3  border-b border-divider justify-between ">
         <Tabs
           classNames={{
+            base: "w-full",
             tabList:
-              'gap-4  relative rounded-none p-0 w-[100%] text-[#344054] overflow-scroll',
-            cursor: 'w-full bg-primaryColor h-[1px]',
-            tab: 'max-w-fit px-0 py-0 h-10 px-4',
+              "gap-4  relative rounded-none p-0 w-[100%] text-[#344054] overflow-scroll",
+            cursor: "w-full bg-primaryColor h-[1px]",
+            tab: "max-w-fit px-0 py-0 h-10 px-4",
             tabContent:
-              'group-data-[selected=true]:text-primaryColor group-data-[selected=true]:font-semibold',
+              "group-data-[selected=true]:text-primaryColor group-data-[selected=true]:font-semibold",
           }}
-          variant={'underlined'}
-          aria-label='menu filter'
+          variant={"underlined"}
+          aria-label="menu filter"
           onChange={handleTabChange}
         >
           {menus?.map((menu: any) => {
@@ -26,7 +27,7 @@ const Filters = ({ menus, handleTabChange, handleTabClick }: any) => {
                 title={
                   <div
                     onClick={() => handleTabClick(menu.name)}
-                    className='flex items-center h-10 space-x-2 capitalize'
+                    className="flex items-center h-10 space-x-2 capitalize"
                   >
                     <span>{menu.name}</span>
 

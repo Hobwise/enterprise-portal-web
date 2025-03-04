@@ -2,7 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import { CustomLoading, notify } from "@/lib/utils";
+import {
+  CustomLoading,
+  dynamicExportConfig,
+  getJsonItemFromLocalStorage,
+  notify,
+} from "@/lib/utils";
 
 import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import { CustomInput } from "@/components/CustomInput";
@@ -22,6 +27,9 @@ import { downloadCSV } from "@/lib/downloadToExcel";
 import { Button, ButtonGroup, Chip, useDisclosure } from "@nextui-org/react";
 import { IoSearchOutline } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
+import { VscLoading } from "react-icons/vsc";
+import { exportGrid } from "@/app/api/controllers/dashboard/menu";
+import toast from "react-hot-toast";
 
 const Bookings: React.FC = () => {
   const {
@@ -32,10 +40,12 @@ const Bookings: React.FC = () => {
     dropdownComponent,
     datePickerModal,
   } = useDateFilter(useBookings);
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { userRolePermissions, role } = usePermission();
   const [searchQuery, setSearchQuery] = useState("");
+  const [loadingExport, setLoadingExport] = useState(false);
   const [openBookingModal, setOpenBookingModal] = useState(false);
   const [openCreateBookingModal, setOpenCreateBookingModal] = useState(false);
   const [openSuccessModal, setOpenSuccessModal] = useState(false);
@@ -86,22 +96,6 @@ const Bookings: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  const newArray = data?.flatMap((item) =>
-    item?.bookings?.map((payment) => ({
-      reservationName: payment.reservationName,
-      firstName: payment.firstName,
-      lastName: payment.lastName,
-      emailAddress: payment.emailAddress,
-      phoneNumber: payment.phoneNumber,
-      reference: payment.reference,
-      checkInDateTime: payment.checkInDateTime,
-      checkOutDateTime: payment.checkOutDateTime,
-      bookingDateTime: payment.bookingDateTime,
-      bookingStatus: payment.bookingStatus,
-      statusComment: payment.statusComment,
-    }))
-  );
-
   const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
@@ -129,6 +123,22 @@ const Bookings: React.FC = () => {
         text: data?.response?.data?.error?.responseDescription,
         type: "error",
       });
+    }
+  };
+
+  const exportCSV = async () => {
+    setLoadingExport(true);
+    const response = await exportGrid(businessInformation[0]?.businessId, 6);
+    setLoadingExport(false);
+
+    if (response?.status === 200) {
+      dynamicExportConfig(
+        response,
+        `Bookings-${businessInformation[0]?.businessName}`
+      );
+      toast.success("Bookings downloaded successfully");
+    } else {
+      toast.error("Export failed, please try again");
     }
   };
 
@@ -179,10 +189,16 @@ const Bookings: React.FC = () => {
 
               <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
-                  onClick={() => downloadCSV(newArray)}
+                  disabled={loadingExport}
+                  onClick={exportCSV}
                   className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className="text-[22px]" />
+                  {loadingExport ? (
+                    <VscLoading className="animate-spin" />
+                  ) : (
+                    <MdOutlineFileDownload className="text-[22px]" />
+                  )}
+
                   <p>Export csv</p>
                 </Button>
                 {(role === 0 ||

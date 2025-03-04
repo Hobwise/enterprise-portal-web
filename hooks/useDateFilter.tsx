@@ -1,6 +1,6 @@
-'use client';
-import { formatDateTimeForPayload2 } from '@/lib/utils';
-import { getLocalTimeZone, today } from '@internationalized/date';
+"use client";
+import { formatDateTimeForPayload2 } from "@/lib/utils";
+import { getLocalTimeZone, today } from "@internationalized/date";
 import {
   Button,
   DateRangePicker,
@@ -12,12 +12,12 @@ import {
   ModalBody,
   ModalContent,
   useDisclosure,
-} from '@nextui-org/react';
-import React, { useEffect, useMemo, useState } from 'react';
-import { MdKeyboardArrowDown } from 'react-icons/md';
+} from "@nextui-org/react";
+import React, { useEffect, useMemo, useState } from "react";
+import { MdKeyboardArrowDown } from "react-icons/md";
 
 const useDateFilter = (endpoint: any) => {
-  const [selectedKeys, setSelectedKeys] = useState(new Set(['This week']));
+  const [selectedKeys, setSelectedKeys] = useState(new Set(["This week"]));
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
   const [value, setValue] = React.useState({
@@ -25,24 +25,24 @@ const useDateFilter = (endpoint: any) => {
     end: null,
   });
   const selectedValue = useMemo(
-    () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
+    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
     [selectedKeys]
   );
   const [previousSelectedValue, setPreviousSelectedValue] =
-    useState('This week');
+    useState("This week");
 
   const logIndexForSelectedKey = (key: string) => {
     switch (key) {
-      case 'Today':
+      case "Today":
         return 0;
-      case 'This week':
+      case "This week":
         return 1;
-      case 'This year':
+      case "This year":
         return 2;
-      case 'Custom date':
+      case "Custom date":
         return 3;
       default:
-        console.log('Unknown key');
+        console.log("Unknown key");
         return -1;
     }
   };
@@ -52,8 +52,8 @@ const useDateFilter = (endpoint: any) => {
   };
 
   const shouldFetchReport =
-    selectedValue !== 'Custom date' ||
-    (selectedValue === 'Custom date' && checkValue());
+    selectedValue !== "Custom date" ||
+    (selectedValue === "Custom date" && checkValue());
 
   const effectiveSelectedValue = shouldFetchReport
     ? selectedValue
@@ -73,7 +73,7 @@ const useDateFilter = (endpoint: any) => {
   );
 
   useEffect(() => {
-    if (shouldFetchReport && selectedValue !== 'Custom date') {
+    if (shouldFetchReport && selectedValue !== "Custom date") {
       setPreviousSelectedValue(selectedValue);
     }
   }, [shouldFetchReport, selectedValue]);
@@ -91,24 +91,24 @@ const useDateFilter = (endpoint: any) => {
         <Button
           endContent={<MdKeyboardArrowDown />}
           disableRipple
-          className='font-[600] bg-transparent p-0 capitalize text-black'
+          className="font-[600] bg-transparent p-0 capitalize text-black"
         >
           {selectedValue}
         </Button>
       </DropdownTrigger>
       <DropdownMenu
-        aria-label='Single selection example'
-        variant='flat'
+        aria-label="Single selection example"
+        variant="flat"
         disallowEmptySelection
-        selectionMode='single'
-        className='text-black'
+        selectionMode="single"
+        className="text-black"
         selectedKeys={selectedKeys}
         onSelectionChange={setSelectedKeys}
       >
-        <DropdownItem key='Today'>Today</DropdownItem>
-        <DropdownItem key='This week'>This week</DropdownItem>
-        <DropdownItem key='This year'>This year</DropdownItem>
-        <DropdownItem onClick={() => onOpen()} key='Custom date'>
+        <DropdownItem key="Today">Today</DropdownItem>
+        <DropdownItem key="This week">This week</DropdownItem>
+        <DropdownItem key="This year">This year</DropdownItem>
+        <DropdownItem onClick={() => onOpen()} key="Custom date">
           Custom date
         </DropdownItem>
       </DropdownMenu>
@@ -119,27 +119,27 @@ const useDateFilter = (endpoint: any) => {
     <Modal
       isDismissable={false}
       classNames={{
-        base: 'absolute top-12',
+        base: "absolute top-12",
       }}
-      size='sm'
+      size="sm"
       isOpen={isOpen}
       onOpenChange={onOpenChange}
     >
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalBody className='px-4 py-6'>
+            <ModalBody className="px-4 py-6">
               <DateRangePicker
-                radius='sm'
+                radius="sm"
                 maxValue={today(getLocalTimeZone())}
                 value={value}
                 onChange={handleDateChange}
                 visibleMonths={2}
-                variant='faded'
-                pageBehavior='single'
-                label='Select date range'
+                variant="faded"
+                pageBehavior="single"
+                label="Select date range"
                 showMonthAndYearPickers
-                labelPlacement='outside'
+                labelPlacement="outside"
               />
             </ModalBody>
           </>
@@ -147,7 +147,7 @@ const useDateFilter = (endpoint: any) => {
       </ModalContent>
     </Modal>
   );
-
+  const filterType = logIndexForSelectedKey(effectiveSelectedValue);
   return {
     data,
 
@@ -156,6 +156,7 @@ const useDateFilter = (endpoint: any) => {
     isLoading,
     dropdownComponent,
     datePickerModal,
+    filterType,
   };
 };
 

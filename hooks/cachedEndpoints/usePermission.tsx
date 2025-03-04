@@ -73,7 +73,7 @@ const extractPermissions = (permissions: any, roleType: string) => {
 
 const usePermission = () => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
-  const { data: permission } = useGetRoleByBusiness();
+  const { data: permission, isLoading } = useGetRoleByBusiness();
 
   const userRolePermissions = extractPermissions(permission, "userRole");
   const managerRolePermissions = extractPermissions(permission, "managerRole");
@@ -84,6 +84,7 @@ const usePermission = () => {
     userRolePermissions,
     managerRolePermissions,
     role,
+    isLoading,
   };
 };
 

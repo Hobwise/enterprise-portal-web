@@ -224,18 +224,8 @@ export const tableTotalCount = (data: any) => {
   return data?.reduce((sum, category) => sum + category.totalCount, 0);
 };
 
-export const formatDateTime = (dateData) => {
-  const date = new Date(
-    Date.UTC(
-      dateData.year,
-      dateData.month - 1,
-      dateData.day,
-      dateData.hour - Math.floor(dateData.offset / 3600000),
-      dateData.minute - (dateData.offset % 3600000) / 60000,
-      dateData.second,
-      dateData.millisecond
-    )
-  );
+export const formatDateTime = (dateData: any) => {
+  const date = new Date(Date.UTC(dateData.year, dateData.month - 1, dateData.day, dateData.hour, dateData.minute, dateData.second, dateData.millisecond));
 
   return date.toISOString();
 };
@@ -473,30 +463,6 @@ export function resetLoginInfo() {
   removeCookie('token');
   window.location.href = '/auth/login';
 }
-
-// export function generateTimeSlots(start: string, end: string, interval: number) {
-//   const times = [];
-//   const startHour = parseInt(start.split(':')[0]);
-//   const endHour = parseInt(end.split(':')[0]);
-
-//   for (let hour = startHour; hour < endHour; hour += interval) {
-//     const formattedTime = formatTo12Hour(hour);
-//     times.push(formattedTime);
-//   }
-//   times.push(formatTo12Hour(endHour));
-//   return times;
-// }
-
-// export function formatTo12Hour(hour: number) {
-//   if (hour) {
-//     const isPM = hour >= 12;
-//     const adjustedHour = hour % 12 === 0 ? 12 : hour % 12;
-//     const period = isPM ? 'PM' : 'AM';
-//     return `${adjustedHour}:00${period}`;
-//   } else {
-//     return null;
-//   }
-// }
 
 export function generateTimeSlots(start: string, end: string) {
   const times = [];

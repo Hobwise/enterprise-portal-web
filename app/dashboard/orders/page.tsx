@@ -2,7 +2,11 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import { CustomLoading } from "@/lib/utils";
+import {
+  CustomLoading,
+  dynamicExportConfig,
+  getJsonItemFromLocalStorage,
+} from "@/lib/utils";
 
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
@@ -18,6 +22,9 @@ import { Button, ButtonGroup, Chip } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
+import toast from "react-hot-toast";
+import { exportGrid } from "@/app/api/controllers/dashboard/menu";
+import { VscLoading } from "react-icons/vsc";
 
 const Orders: React.FC = () => {
   const router = useRouter();
@@ -29,11 +36,13 @@ const Orders: React.FC = () => {
     refetch,
     dropdownComponent,
     datePickerModal,
+    filterType,
   } = useDateFilter(useOrder);
   const { userRolePermissions, role } = usePermission();
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [loadingExport, setLoadingExport] = useState(false);
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
@@ -60,18 +69,25 @@ const Orders: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  const newArray = useMemo(() => {
-    return data?.flatMap((item: any) =>
-      item.orders.map((order: any) => ({
-        placedByName: order.placedByName,
-        reference: order.reference,
-        totalAmount: order.totalAmount,
-        dateCreated: order.dateCreated,
-        paymentReference: order.paymentReference,
-        placedByPhoneNumber: order.placedByPhoneNumber,
-      }))
+  const exportCSV = async () => {
+    setLoadingExport(true);
+    const response = await exportGrid(
+      businessInformation[0]?.businessId,
+      1,
+      filterType
     );
-  }, [data]);
+    setLoadingExport(false);
+
+    if (response?.status === 200) {
+      dynamicExportConfig(
+        response,
+        `Orders-${businessInformation[0]?.businessName}`
+      );
+      toast.success("Orders downloaded successfully");
+    } else {
+      toast.error("Export failed, please try again");
+    }
+  };
 
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
@@ -119,10 +135,16 @@ const Orders: React.FC = () => {
               </div>
               <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
-                  onClick={() => downloadCSV(newArray)}
+                  disabled={loadingExport}
+                  onClick={exportCSV}
                   className="flex text-grey600 bg-white"
                 >
-                  <MdOutlineFileDownload className="text-[22px]" />
+                  {loadingExport ? (
+                    <VscLoading className="animate-spin" />
+                  ) : (
+                    <MdOutlineFileDownload className="text-[22px]" />
+                  )}
+
                   <p>Export csv</p>
                 </Button>
               </ButtonGroup>

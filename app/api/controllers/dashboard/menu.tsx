@@ -143,6 +143,27 @@ export async function createMenu(businessId: string, payload: payloadMenu) {
     handleError(error);
   }
 }
+export async function updateMenu(
+  businessId: string,
+  menuId: string,
+  payload: payloadMenu
+) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.put(
+      DASHBOARD.getMenu + `?menuId=${menuId}`,
+      payload,
+      {
+        headers,
+      }
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 export async function createMenuConfiguration(
   businessId: string,
   payload: any
@@ -346,5 +367,31 @@ export async function editMenuItem(
     return data;
   } catch (error) {
     handleError(error);
+  }
+}
+export async function exportGrid(
+  businessId: string,
+  gridReportType: number,
+  filterType?: number,
+  startDate?: string,
+  endDate?: string
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    startDate: startDate,
+    endDate: endDate,
+    filterType: filterType || 4,
+    gridReportType: gridReportType,
+  };
+
+  try {
+    const data = await api.post(DASHBOARD.reportGridExport, payload, {
+      headers,
+      responseType: "blob",
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
   }
 }

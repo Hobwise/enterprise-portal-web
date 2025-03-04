@@ -82,6 +82,7 @@ const Profile = () => {
         setUserFormData((prevState: any) => ({
           ...prevState,
           imageReference: "",
+          image: null,
         }));
       }
     },
@@ -121,7 +122,6 @@ const Profile = () => {
       const compressedFile = await imageCompression(file, imageCompressOptions);
 
       if (compressedFile) {
-        // Generate a preview URL
         const reader = new FileReader();
         reader.onload = () => setPreviewUrl(reader.result as string);
         reader.readAsDataURL(compressedFile);
@@ -162,11 +162,21 @@ const Profile = () => {
       <div className="border border-secondaryGrey rounded-[10px] p-4 space-y-8">
         <div className="flex items-center justify-between w-full">
           {userFormData?.image ? (
-            <Avatar
-              size="lg"
-              className="h-[120px] w-[120px]"
-              src={`data:image/jpeg;base64,${userFormData.image}`}
-            />
+            <div className="relative">
+              <Avatar
+                size="lg"
+                className="h-[120px] w-[120px]"
+                src={`data:image/jpeg;base64,${userFormData.image}`}
+              />
+              <div
+                className="absolute top-0 right-0 cursor-pointer"
+                onClick={() => removeFileMutation.mutate()}
+              >
+                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
+                  <RxCross2 />
+                </div>
+              </div>
+            </div>
           ) : !previewUrl ? (
             <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[#5F35D20A]">
               <label
