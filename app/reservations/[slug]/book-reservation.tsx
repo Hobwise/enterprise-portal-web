@@ -124,6 +124,8 @@ export default function BookReservationPage({ reservation, className }: IBookRes
 
       if (data?.data?.isSuccessful) {
         setDetails(defaultValues);
+        setQuantity(1);
+        setNoOfGuests(1);
         setOpen(true);
       } else if (data?.data?.error) {
         notify({
@@ -152,11 +154,6 @@ export default function BookReservationPage({ reservation, className }: IBookRes
         { ...item, availability: item.quantity > 0 }, // Set availability based on quantity
       ])
     );
-
-  // Check all times in array2 and update or add them
-  const updatedAvailableTime = generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((time) =>
-    timeSlotMap?.has(time) ? timeSlotMap?.get(time) : { timeSlot: time, quantity: 0, availability: false }
-  );
 
   function convertToMinutes(time: string): any | null {
     if (time) {
