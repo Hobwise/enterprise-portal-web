@@ -18,6 +18,7 @@
     "@radix-ui/react-tabs": "^1.1.1",
     "@types/js-cookie": "^3.0.6",
     "@types/paystack__inline-js": "^1.0.0",
+    "@vercel/analytics": "^1.5.0",
     "axios": "^1.6.8",
     "browser-image-compression": "^2.0.2",
     "chart.js": "^4.4.4",
