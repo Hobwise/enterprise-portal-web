@@ -58,7 +58,9 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/downloadjs": "^1.4.6",
     "@types/draft-js": "^0.11.18",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "20.11.20",
     "@types/react": "^18.2.59",
     "@types/react-draft-wysiwyg": "^1.13.8",

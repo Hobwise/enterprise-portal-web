@@ -10,7 +10,18 @@ import CheckImage from '@/public/assets/images/success-image.png';
 import { useRouter } from 'next/navigation';
 import { RESERVATIONS_URL } from '@/utilities/routes';
 import { Tooltip } from '@heroui/tooltip';
-import { cn, convertToISO, formatNumber, formatTime, formatTimeSlot, generateTimeSlots, getInitials2, notify, validateEmail } from '@/lib/utils';
+import {
+  cn,
+  convertToISO,
+  formatNumber,
+  formatTime,
+  formatTimeSlot,
+  generateTimeSlots,
+  getInitials2,
+  notify,
+  phoneNumberPattern,
+  validateEmail,
+} from '@/lib/utils';
 import { BookReservationApi, fetchAvailability } from '@/app/api/controllers/landingPage';
 import { IoCall } from 'react-icons/io5';
 import { MdEmail, MdTimer } from 'react-icons/md';
@@ -23,9 +34,10 @@ interface IDetails {
   emailAddress: string;
   bookingDateTime: string;
   description: string;
+  phoneNumber: string;
   time: string;
 }
-const defaultValues = { firstName: '', lastName: '', emailAddress: '', bookingDateTime: '', description: '', time: '' };
+const defaultValues = { firstName: '', lastName: '', emailAddress: '', bookingDateTime: '', description: '', phoneNumber: '', time: '' };
 
 interface IBookReservationPage {
   reservation: {
@@ -42,6 +54,7 @@ interface IBookReservationPage {
     reservationName: string;
     reservationDescription: string;
     minimumSpend: number;
+    numberOfSeat: number;
     reservationFee: number;
   };
   className?: string;
@@ -85,6 +98,9 @@ export default function BookReservationPage({ reservation, className }: IBookRes
     if (!details.bookingDateTime || !Array.from(selectedTime).join(', ')) {
       setError((prev) => ({ ...prev, bookingDateTime: 'Preferred date and time is compulsory' }));
     }
+    if (!details.phoneNumber) {
+      setError((prev) => ({ ...prev, phoneNumber: 'Phone number is compulsory' }));
+    }
     if (!details.time) {
       setError((prev) => ({ ...prev, time: 'Time is compulsory' }));
     }
@@ -108,6 +124,8 @@ export default function BookReservationPage({ reservation, className }: IBookRes
 
       if (data?.data?.isSuccessful) {
         setDetails(defaultValues);
+        setQuantity(1);
+        setNoOfGuests(1);
         setOpen(true);
       } else if (data?.data?.error) {
         notify({
@@ -137,10 +155,34 @@ export default function BookReservationPage({ reservation, className }: IBookRes
       ])
     );
 
-  // Check all times in array2 and update or add them
-  const updatedAvailableTime = generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((time) =>
-    timeSlotMap?.has(time) ? timeSlotMap?.get(time) : { timeSlot: time, quantity: 0, availability: false }
-  );
+  function convertToMinutes(time: string): any | null {
+    if (time) {
+      const match = time.match(/(\d+):(\d+)(AM|PM)/);
+      if (!match) return null;
+
+      let hours = parseInt(match[1], 10);
+      const minutes = parseInt(match[2], 10);
+      const period = match[3];
+
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+
+      return hours * 60 + minutes; // Convert to total minutes since midnight
+    } else {
+      return null;
+    }
+  }
+
+  function checkAvailability() {
+    const result = generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((time: string) => {
+      if (formattedTimeSlots?.find((each: { timeSlot: string }) => (each ? convertToMinutes(each?.timeSlot) >= convertToMinutes(time) : ''))) {
+        return formattedTimeSlots?.find((each: { timeSlot: string }) => (each ? convertToMinutes(each?.timeSlot) >= convertToMinutes(time) : ''));
+      } else {
+        return { timeSlot: time, quantity: 0 };
+      }
+    });
+    return result;
+  }
 
   const handleSelectTime = (each: { timeSlot: string; quantity: number }) => {
     setSelectedTime(new Set([each.timeSlot || '']));
@@ -196,6 +238,32 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                 />
               </div>
               <CustomInput
+                name="phoneNumber"
+                type="tel"
+                label="Phone Number"
+                placeholder="Enter your phoneNumber"
+                classnames="mt-6"
+                onChange={({ target }: any) => {
+                  const { value } = target;
+
+                  // Validate phone number against the pattern
+                  if (!phoneNumberPattern.test(value)) {
+                    setError((prev) => ({
+                      ...prev,
+                      phoneNumber: 'Invalid phone number format',
+                    }));
+                  } else {
+                    setError((prev) => ({ ...prev, phoneNumber: '' }));
+                  }
+
+                  setDetails((prev) => ({ ...prev, phoneNumber: value }));
+                }}
+                defaultValue={details.phoneNumber}
+                value={details.phoneNumber}
+                errorMessage={error.phoneNumber}
+              />
+
+              <CustomInput
                 name="email"
                 type="email"
                 label="Email"
@@ -237,17 +305,20 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                     <React.Fragment>
                       {isError ? (
                         <div>
-                          {generateTimeSlots(reservation?.startTime || '10:00:00', reservation?.endTime || '23:59:00', 1).map((each: any) => (
-                            <Tooltip content={each.availability ? `${each.quantity} quantity Available` : 'Not available'} color="default">
+                          {checkAvailability().map((each: any) => (
+                            <Tooltip
+                              content={<p className="text-[#000]">{each.quantity > 0 ? `${each.quantity} Quantity Available` : 'Not available'}</p>}
+                              color="default"
+                            >
                               <div
                                 className={cn(
                                   'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
                                   currentSelection === each.timeSlot && 'bg-primaryColor text-white',
-                                  each.availability ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'
+                                  each.quantity > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'
                                 )}
                                 key={each.timeSlot}
                                 onClick={() => {
-                                  each.availability ? handleSelectTime(each) : null;
+                                  each.quantity > 0 ? handleSelectTime(each) : null;
                                 }}
                               >
                                 <MdTimer />
@@ -266,17 +337,17 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                               </span>
                             </p>
                             <div className="text-[#161618] grid grid-cols-3 lg:grid-cols-5 gap-4">
-                              {updatedAvailableTime.map((each: any) => (
-                                <Tooltip content={<p className="text-[#000]">{each.availability ? `${each.quantity} quantity Available` : 'Not available'}</p>}>
+                              {checkAvailability().map((each: any) => (
+                                <Tooltip content={<p className="text-[#000]">{each.quantity > 0 ? `${each.quantity} Quantity Available` : 'Not available'}</p>}>
                                   <div
                                     className={cn(
                                       'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
                                       currentSelection === each.timeSlot && 'bg-primaryColor text-white',
-                                      each.availability ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'
+                                      each.quantity > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'
                                     )}
                                     key={each.timeSlot}
                                     onClick={() => {
-                                      each.availability ? handleSelectTime(each) : null;
+                                      each.quantity > 0 ? handleSelectTime(each) : null;
                                     }}
                                   >
                                     <MdTimer />
@@ -302,8 +373,8 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                                 errorMessage={error.time ? 'You must select a reservation time' : ''}
                                 isInvalid={error.time ? true : false}
                               >
-                                {updatedAvailableTime
-                                  ?.filter((time: any) => !!time.availability)
+                                {checkAvailability()
+                                  ?.filter((time: any) => time.quantity > 0)
                                   .map((each: any) => (
                                     <SelectItem key={each.timeSlot || ''} className="text-[#000]">
                                       {each.timeSlot}
@@ -386,7 +457,9 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                   <div className="text-sm flex justify-between">
                     <div className="text-[#404245] flex space-x-2 items-center">
                       <p>Reservation fee</p>
-                      <InfoCircle />
+                      <Tooltip content={<p className="text-[#000]">Reservation cost</p>}>
+                        <InfoCircle />
+                      </Tooltip>
                     </div>
                     <p className="text-[#404245]">₦{formatNumber(reservation?.reservationFee || 0)}.00</p>
                   </div>
@@ -394,7 +467,9 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                   <div className="text-sm flex justify-between">
                     <div className="text-[#404245] flex space-x-2 items-center">
                       <p>Quantity</p>
-                      <InfoCircle />
+                      <Tooltip content={<p className="text-[#000]">Total quantity</p>}>
+                        <InfoCircle />
+                      </Tooltip>
                     </div>
                     <div className="flex space-x-4 text-[#000] items-center">
                       <button
@@ -420,11 +495,12 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                       </button>
                     </div>
                   </div>
-
                   <div className="text-sm flex justify-between">
                     <div className="text-[#404245] flex space-x-2 items-center">
                       <p>Number of Guests</p>
-                      <InfoCircle />
+                      <Tooltip content={<p className="text-[#000]">Total number of guests</p>}>
+                        <InfoCircle />
+                      </Tooltip>
                     </div>
                     <div className="flex space-x-4 text-[#000] items-center">
                       <button
@@ -448,6 +524,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                       </button>
                     </div>
                   </div>
+                  {reservation.numberOfSeat > 0 && <p className="text-xs italic text-dark">Note: Max. Number of Seats is {reservation.numberOfSeat}</p>}
                 </div>
 
                 <div className="font-bold flex justify-between text-[#404245]">
