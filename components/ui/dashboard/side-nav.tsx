@@ -195,7 +195,7 @@ const SideNav = () => {
             />
           </Link>
 
-          <div className="flex flex-col space-y-2  md:px-2 ">
+          <div className="flex flex-col space-y-1  md:px-2 ">
             {isPermissionsLoading ? (
               <div className="grid place-content-center mt-6">
                 <div className="space-y-2 flex justify-center flex-col">

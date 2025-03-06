@@ -6,8 +6,24 @@ import {
   saveJsonItemToLocalStorage,
 } from "@/lib/utils";
 import axios, { AxiosError } from "axios";
-
 import { generateRefreshToken, logout } from "./controllers/auth";
+
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+const subscribeTokenRefresh = (callback) => {
+  refreshSubscribers.push(callback);
+};
+
+const onTokenRefreshed = (token) => {
+  refreshSubscribers.forEach((callback) => callback(token));
+  refreshSubscribers = [];
+};
+
+const onRefreshFailed = (error) => {
+  refreshSubscribers.forEach((callback) => callback(null, error));
+  refreshSubscribers = [];
+};
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
@@ -17,7 +33,85 @@ const api = axios.create({
   timeout: 20000,
 });
 
+const isTokenExpiringSoon = () => {
+  const userData = getJsonItemFromLocalStorage("userInformation");
+  if (!userData?.tokenExpiration) return false;
+
+  const expirationTime = new Date(userData.tokenExpiration).getTime();
+  const currentTime = new Date().getTime();
+  const twoMinutesInMs = 2 * 60 * 1000;
+
+  return (
+    expirationTime - currentTime <= twoMinutesInMs &&
+    expirationTime > currentTime
+  );
+};
+
+const refreshToken = async () => {
+  try {
+    const userData = getJsonItemFromLocalStorage("userInformation");
+    const businesses = getJsonItemFromLocalStorage("business");
+
+    if (
+      !userData?.refreshToken ||
+      !userData?.email ||
+      !businesses?.[0]?.businessId
+    ) {
+      throw new Error("Missing required refresh data");
+    }
+
+    const { refreshToken, email } = userData;
+    const businessId = businesses[0].businessId;
+
+    const rs = await generateRefreshToken({
+      refreshToken,
+      businessId,
+      email,
+    });
+
+    if (!rs || !rs.data?.data) {
+      throw new Error("Failed to generate new token");
+    }
+
+    const {
+      token: newToken,
+      refreshToken: newRefreshToken,
+      tokenExpiration: newExpiration,
+    } = rs.data.data;
+
+    saveJsonItemToLocalStorage("userInformation", {
+      ...userData,
+      token: newToken,
+      refreshToken: newRefreshToken,
+      tokenExpiration: newExpiration,
+    });
+
+    api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+    onTokenRefreshed(newToken);
+    return newToken;
+  } catch (error) {
+    onRefreshFailed(error);
+    resetLoginInfo();
+    throw error;
+  } finally {
+    isRefreshing = false;
+  }
+};
+
+const refreshTokenIfNeeded = async () => {
+  if (!isTokenExpiringSoon() || isRefreshing) return null;
+
+  isRefreshing = true;
+  try {
+    return await refreshToken();
+  } catch (error) {
+    return null;
+  }
+};
+
 api.interceptors.request.use(async (config) => {
+  await refreshTokenIfNeeded();
+
   const userData = getJsonItemFromLocalStorage("userInformation");
   const business = getJsonItemFromLocalStorage("business");
   const token = userData?.token;
@@ -27,11 +121,9 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-
   if (cooperateID) {
     config.headers["cooperateId"] = cooperateID;
   }
-
   if (businessId) {
     config.headers["businessId"] = businessId;
   }
@@ -48,58 +140,53 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    let originalConfig = error.config;
+    const originalConfig = error.config;
 
     if (
       error.response &&
       error.response.status === 401 &&
       !originalConfig._retry
     ) {
-      // originalConfig._retry = true;
-      try {
-        const userData = getJsonItemFromLocalStorage("userInformation");
-        const businesses = getJsonItemFromLocalStorage("business");
+      originalConfig._retry = true;
 
-        const { refreshToken, email } = userData;
-        const businessId = businesses[0].businessId;
+      if (isRefreshing) {
+        try {
+          const newToken = await new Promise((resolve, reject) => {
+            subscribeTokenRefresh((token, err) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(token);
+              }
+            });
+          });
 
-        const rs = await generateRefreshToken({
-          refreshToken,
-          businessId,
-          email,
-        });
-
-        if (!rs) {
-          resetLoginInfo();
-          throw new Error("Failed to generate new token");
+          if (newToken) {
+            originalConfig.headers.Authorization = `Bearer ${newToken}`;
+            return api(originalConfig);
+          } else {
+            throw new Error("Token refresh failed");
+          }
+        } catch (refreshError) {
+          return Promise.reject(refreshError);
         }
-
-        const {
-          token: newToken,
-          refreshToken: newRefreshToken,
-          tokenExpiration: newExpiration,
-        } = rs.data.data;
-
-        saveJsonItemToLocalStorage("userInformation", {
-          ...userData,
-          token: newToken,
-          refreshToken: newRefreshToken,
-          tokenExpiration: newExpiration,
-        });
-
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-        return api(originalConfig);
-      } catch (_error) {
-        resetLoginInfo();
-        if (error.response && error.response.data) {
-          resetLoginInfo();
-          return Promise.reject(error.response.data);
+      } else {
+        isRefreshing = true;
+        try {
+          const newToken = await refreshToken();
+          originalConfig.headers.Authorization = `Bearer ${newToken}`;
+          return api(originalConfig);
+        } catch (refreshError) {
+          if (refreshError.response && refreshError.response.status === 400) {
+            resetLoginInfo();
+          }
+          return Promise.reject(refreshError);
         }
-        return Promise.reject(_error);
       }
     } else {
       handleError(error, false);
     }
+
     return Promise.reject(error);
   }
 );
