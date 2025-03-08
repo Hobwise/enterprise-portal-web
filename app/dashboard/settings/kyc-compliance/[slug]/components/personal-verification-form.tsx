@@ -163,6 +163,11 @@ const PersonalVerificationForm = () => {
     mutationFn: (payload) => updateUser(payload, userInformation?.id),
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
+        notify({
+          title: "Success!",
+          text: "Personal information updated successfully",
+          type: "success",
+        });
         router.replace(`${SETTINGS_URL}/kyc-compliance`);
       }
     },
@@ -257,7 +262,7 @@ const PersonalVerificationForm = () => {
               National Identification Number ( NIN )
             </label>
             <input
-              type="text"
+              type="number"
               className="p-4 rounded-xl bg-[#F3F3F3] focus:border focus:border-primaryColor focus:outline-none text-sm"
               placeholder="Enter NIN here"
               value={nin}

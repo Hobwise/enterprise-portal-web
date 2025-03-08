@@ -139,8 +139,10 @@ export const SubscriptionNoticePopup = () => {
                 <div className="flex justify-center items-center">
                   <p className="text-sm text-grey500 text-center md:w-[90%] w-[100%]">
                     Your subscription will expire{" "}
-                    <span className="font-bold">{message}</span>. Renew now to
-                    avoid service interruption
+                    <span className="font-bold">{message}</span>.{" "}
+                    {userData.role === 1
+                      ? "Contact your management"
+                      : "Renew now to avoid service interruption"}
                   </p>
                 </div>
               </div>

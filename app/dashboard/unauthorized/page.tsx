@@ -19,8 +19,10 @@ export default function Unauthorized() {
             Subscribe To Continue
           </h2>
           <p className="text-gray-600">
-            It looks like you've reached the limit of your current plan. Upgrade
-            now to unlock unlimited access to all our premium features.
+            {userInfo.role === 1
+              ? "Contact your management to upgrade so as to unlock unlimited access to all premium features."
+              : "It looks like you've reached the limit of your current plan. Upgrade " +
+                "now to unlock unlimited access to all our premium features."}
           </p>
         </div>
 

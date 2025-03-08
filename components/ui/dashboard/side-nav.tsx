@@ -9,6 +9,7 @@ import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByC
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import {
   getJsonItemFromLocalStorage,
+  resetLoginInfo,
   saveJsonItemToLocalStorage,
   setTokenCookie,
 } from "@/lib/utils";
@@ -35,6 +36,7 @@ import { SIDENAV_ITEMS } from "./constants";
 import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useQueryClient } from "react-query";
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
@@ -82,6 +84,7 @@ const SideNav = () => {
       setTokenCookie("token", newToken);
       return newToken;
     } catch (error) {
+      resetLoginInfo();
       console.log(error);
     }
   };
@@ -105,8 +108,8 @@ const SideNav = () => {
 
     if (!exists) {
       saveJsonItemToLocalStorage("business", transformedArray);
-      await refreshToken();
 
+      await refreshToken();
       window.location.reload();
     }
   };
