@@ -16,6 +16,7 @@ import { Avatar, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@
 import { IoIosArrowDown } from 'react-icons/io';
 import { Skeleton } from './skeleton-loading';
 import { useQueryClient } from 'react-query';
+import { MdOutlinePerson } from 'react-icons/md';
 
 export const navItem = [
   { title: 'Home', href: HOME_URL },
@@ -134,6 +135,16 @@ export default function Navbar({ type = 'non-colored', className }: INavbar) {
                   )}
                 </DropdownTrigger>
                 <DropdownMenu aria-label="settings Actions" variant="flat">
+                  <DropdownItem key="Profile Management">
+                    <Link
+                      prefetch={true}
+                      href={'/dashboard/settings/personal-information'}
+                      className="flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2"
+                    >
+                      <MdOutlinePerson className="text-[22px]" />
+                      <span className="  text-sm font-md">Profile Management</span>
+                    </Link>
+                  </DropdownItem>
                   <DropdownItem key="logout">
                     <div
                       onClick={() => setOpenModal(true)}

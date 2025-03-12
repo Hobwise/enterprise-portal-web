@@ -116,7 +116,7 @@ export default function PricingComponent() {
             <Transition>
               <div className="flex items-start space-x-2">
                 <TickIcon className="w-[10%]" />
-                <p className="text-left text-[#000000] text-sm w-[90%]">Up to {pricings?.Starter?.maxUsers} users</p>
+                <p className="text-left text-[#000000] text-sm w-[90%]">Up to {pricings?.Basic?.maxUsers} users</p>
               </div>
             </Transition>
             {starterArray?.splice(3)?.map((each) => (
