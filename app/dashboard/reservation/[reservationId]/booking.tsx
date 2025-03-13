@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
+import React from "react";
 
-import Error from '@/components/error';
-import { CustomLoading } from '@/lib/utils';
-import BookingGrid from './bookingGrid';
-import EmptyBooking from './emptyBooking';
+import Error from "@/components/error";
+import { CustomLoading } from "@/lib/utils";
+import BookingGrid from "./bookingGrid";
+import EmptyBooking from "./emptyBooking";
 
 const Booking: React.FC = ({
   isLoading,
@@ -24,8 +24,12 @@ const Booking: React.FC = ({
   };
 
   return (
-    <div className='flex-grow flex'>
-      {isLoading ? <CustomLoading /> : <>{getScreens()} </>}
+    <div className="flex-grow flex">
+      {isLoading ? (
+        <CustomLoading />
+      ) : (
+        <BookingGrid data={reservationItem?.bookings} />
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap");
 
 html {
   scroll-behavior: smooth;
@@ -23,7 +23,12 @@ html {
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom, transparent, rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
 }
 
 table {
@@ -35,14 +40,14 @@ table {
 }
 
 .main-section {
-  background-image: url('/assets/images/landing-page-bg.png');
+  background-image: url("/assets/images/landing-page-bg.png");
   background-position: center;
   background-size: cover; /* Scales the image to cover the div */
   width: 100%;
 }
 
 .price-plan-section {
-  background-image: url('/public/assets/images/price-bg.png');
+  background-image: url("/public/assets/images/price-bg.png");
   background-size: cover;
 }
 
@@ -207,7 +212,7 @@ input:-webkit-autofill:focus {
   margin-left: 5px !important;
 }
 
-.custom-pagination-item[data-active='true'] {
+.custom-pagination-item[data-active="true"] {
   background-color: #5f35d2;
 }
 .loading-text {
@@ -319,10 +324,59 @@ input:-webkit-autofill:focus {
 }
 
 .nav-bar-bg {
-  background-image: url('/assets/images/small-screen-bg.png');
+  background-image: url("/assets/images/small-screen-bg.png");
   height: 100%;
   background-position: right;
   background-repeat: no-repeat;
   background-size: cover;
   padding-top: 30px;
+}
+/* Custom styles for FullCalendar */
+.fc .fc-timegrid-slot {
+  height: 60px; /* Adjust the height of time slots */
+}
+
+.fc .fc-timegrid-axis {
+  width: 50px; /* Adjust the width of the time axis */
+}
+
+.fc .fc-timegrid-col {
+  width: 200px; /* Adjust the width of the columns */
+}
+
+.fc .fc-event {
+  border-radius: 4px; /* Rounded corners for events */
+  padding: 8px; /* Padding inside events */
+}
+
+.fc .fc-event .fc-event-main {
+  font-size: 14px; /* Font size for event content */
+}
+
+.fc .fc-timegrid-event-harness {
+  margin-bottom: 4px; /* Space between events */
+}
+
+.fc .fc-timegrid-axis-cushion {
+  font-size: 12px; /* Font size for time axis */
+}
+
+.fc .fc-timegrid-slot-label {
+  font-size: 12px; /* Font size for slot labels */
+}
+
+.fc .fc-timegrid-event {
+  border-left: 4px solid; /* Border color for events */
+}
+
+.fc .fc-timegrid-event .fc-event-time {
+  font-weight: bold; /* Bold time in events */
+}
+
+.fc .fc-timegrid-event .fc-event-title {
+  margin-top: 4px; /* Space between time and title */
+}
+
+.fc .fc-timegrid-event .fc-event-status {
+  font-size: 12px; /* Font size for status */
 }

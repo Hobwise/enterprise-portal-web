@@ -203,7 +203,7 @@ const SideNav = () => {
               <div className="grid place-content-center mt-6">
                 <div className="space-y-2 flex justify-center flex-col">
                   <Spinner size="sm" />
-                  <p className="italic text-gray-400">Fetching side menu...</p>
+                  <p className="italic text-gray-400">Loading...</p>
                 </div>
               </div>
             ) : (
