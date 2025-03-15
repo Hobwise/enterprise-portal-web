@@ -5,8 +5,8 @@ import { CustomTextArea } from '@/components/customTextArea';
 import FAQs from '@/components/ui/landingPage/faq';
 import Footer from '@/components/ui/landingPage/footer';
 import Navbar from '@/components/ui/landingPage/navBar';
-import { formatDateOnly, formatSubscriptionEndDate, notify, phoneNumberPattern, validateEmail } from '@/lib/utils';
-import HobinkLogo from '@/public/assets/icons/hobink-iconpng.png';
+import { notify, phoneNumberPattern, validateEmail } from '@/lib/utils';
+import HobwiseIcon from '@/public/assets/icons/hobwise-icon.png';
 import ContactUsBg from '@/public/assets/images/contact-us-bg.png';
 import DashboardImage from '@/public/assets/images/dashboard-image-2.png';
 import { ContactIcon } from '@/public/assets/svg';
@@ -16,6 +16,7 @@ import { BookDemo } from '../api/controllers/landingPage';
 import { toast } from 'sonner';
 import { PRIVACY_POLICY } from '@/utilities/routes';
 import Link from 'next/link';
+import moment from 'moment';
 
 export default function Contact() {
   const defaultValue = {
@@ -59,7 +60,7 @@ export default function Contact() {
       setIsLoading(true);
       const updateContactInfo = {
         ...contactInfo,
-        preferredDateTime: formatDateOnly(new Date(contactInfo.preferredDateTime).toLocaleString()),
+        preferredDateTime: moment(contactInfo.preferredDateTime).utc().format('YYYY-MM-DDTHH:mm:ss.SSS[Z]'),
       };
 
       const data: any = await BookDemo(updateContactInfo);
@@ -202,8 +203,8 @@ export default function Contact() {
                 </div>
               </form>
 
-              <div className="font-satoshi space-y-8 w-[55%]">
-                <Image src={HobinkLogo} alt="hobwise logo" width={50} height={50} />
+              <div className="font-satoshi space-y-4 w-[55%]">
+                <Image src={HobwiseIcon} alt="hobwise logo" width={50} height={50} />
                 <div className="space-y-1.5">
                   <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">Prefer email?</h4>
                   <a href="mailto: hello@hobwise.com" target="_blank" className="text-primaryColor underline font-medium">
