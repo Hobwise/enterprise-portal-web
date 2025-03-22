@@ -83,6 +83,16 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
       case "reservationName":
         return (
           //   <div className='flex text-textGrey text-sm'>{reservation.name}</div>
+          <Link
+          prefetch={true}
+          className="flex cursor-pointer w-full"
+          href={{
+            pathname: `/dashboard/reservation/${reservation.reservationName}`,
+            query: {
+              reservationId: reservation.id,
+            },
+          }}
+        >
           <div className="flex ">
             <Image
               className="h-[60px] w-[60px] bg-cover rounded-lg"
@@ -119,6 +129,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
               ) : null}
             </div>
           </div>
+          </Link>
         );
 
       case "quantity":
@@ -135,7 +146,22 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
       case "actions":
         return (
           <div className="relative flexjustify-center items-center gap-2">
-            <Dropdown aria-label="drop down" className="">
+            <Link
+              prefetch={true}
+              className="flex w-full"
+              href={{
+                pathname: `/dashboard/reservation/${reservation.reservationName}`,
+                query: {
+                  reservationId: reservation.id,
+                },
+              }}
+            >
+              <div className={` flex gap-2  items-center text-grey500`}>
+                <GrFormView className="text-[20px]" />
+                <p>View more</p>
+              </div>
+            </Link>
+            {/* <Dropdown aria-label="drop down" className="">
               <DropdownTrigger aria-label="actions">
                 <div className="cursor-pointer flex justify-center items-center text-black">
                   <HiOutlineDotsVertical className="text-[22px] " />
@@ -160,7 +186,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
                   </Link>
                 </DropdownItem>
               </DropdownMenu>
-            </Dropdown>
+            </Dropdown> */}
           </div>
         );
       default:

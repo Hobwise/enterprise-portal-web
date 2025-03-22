@@ -28,7 +28,7 @@ const Booking: React.FC = ({
       {isLoading ? (
         <CustomLoading />
       ) : (
-        <BookingGrid data={reservationItem?.bookings} />
+      <BookingGrid data={reservationItem?.bookings} />
       )}
     </div>
   );

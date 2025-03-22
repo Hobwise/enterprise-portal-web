@@ -150,6 +150,9 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
     }
   };
 
+  console.log(eachBooking);
+  
+
   const renderCell = React.useCallback((booking, columnKey) => {
     const cellValue = booking[columnKey];
 

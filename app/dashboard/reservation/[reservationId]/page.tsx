@@ -47,6 +47,7 @@ const ReservationDetails = () => {
   const { data, isLoading, isError, refetch } =
     useSingleReservation(reservationId);
 
+
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
@@ -69,13 +70,14 @@ const ReservationDetails = () => {
     `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?reservationId=${reservationId}`
   );
 
+  
   return (
     <>
       <div className="lg:flex block justify-between">
         <Link
           prefetch={true}
           href={"/dashboard/reservation"}
-          className={`cursor-pointer text-primaryColor flex gap-2 lg:mb-0 mb-2 text-sm items-center`}
+          className={`cursor-pointer text-primaryColor flex gap-2  lg:mb-0 mb-2 text-sm items-center`}
         >
           <IoIosArrowRoundBack className="text-[22px]" />
           <span className="text-sm">Back to reservations</span>
@@ -131,12 +133,29 @@ const ReservationDetails = () => {
         <CustomLoading />
       ) : (
         <section className="flex flex-col flex-grow">
-          <div className="flex lg:flex-row flex-col gap-3 justify-between ">
-            <div className="space-y-2 lg:w-[500px] w-full">
+          <div className="flex lg:flex-row flex-col gap-3 ">
+          <div>
+              <Image
+                src={
+                  data?.image
+                    ? `data:image/jpeg;base64,${data?.image}`
+                    : noImage
+                }
+                width={60}
+                height={60}
+                style={{
+                  objectFit: data?.image ? "cover" : "contain",
+                }}
+                className={"bg-cover border  h-[150px] rounded-lg w-[159px]"}
+                aria-label="reservation image"
+                alt="reservation image"
+              />
+            </div>
+            <div className="space-y-2 lg:w-[900px] w-full">
               <h2 className="text-black font-[600]  text-[28px]">
                 {data?.reservationName}
               </h2>
-              <div className="text-[#3D424A] text-[14px] font-[400] gap-2 flex">
+              {/* <div className="text-[#3D424A] text-[14px] font-[400] gap-2 flex">
                 <p>{data?.reservationDescription} </p>{" "}
                 <Chip
                   classNames={{
@@ -146,7 +165,7 @@ const ReservationDetails = () => {
                 >
                   {data?.quantityLeft} remaining
                 </Chip>
-              </div>
+              </div> */}
               <div>
                 {data?.allowSystemAdvert && (
                   <Chip
@@ -159,42 +178,46 @@ const ReservationDetails = () => {
                   </Chip>
                 )}
               </div>
-              <div className="flex lg:gap-3 gap-0 lg:flex-row flex-col">
-                <div className="flex gap-2  text-[14px] font-[400]">
-                  <p className="text-[#3D424A]">RESERVATION FEE</p>
+              <div className="flex w-full lg:gap-3 gap-0 lg:flex-row flex-col">
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#616162]">Reservation Fee:</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.reservationFee
                       ? formatPrice(data?.reservationFee)
                       : formatPrice(0)}
                   </p>
                 </div>
-                <div className="flex gap-2  text-[14px] font-[400]">
-                  <p className="text-[#3D424A]">MINIMUM SPEND</p>
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#616162]">Minimum Spend:</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.minimumSpend
                       ? formatPrice(data?.minimumSpend)
                       : formatPrice(0)}
                   </p>
                 </div>
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#616162]">Available Booking Time:</p>
+                  <p className="text-[#3D424A] font-bold">
+                    {data?.minimumSpend
+                      ? formatPrice(data?.minimumSpend)
+                      : formatPrice(0)}
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#616162]">Number of seats/reservation</p>
+                  <p className="text-[#3D424A] font-bold">
+                    {data?.numberOfSeat}
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#616162]">Quantity</p>
+                  <p className="text-[#3D424A] font-bold">
+                    {data?.quantity}
+                  </p>
+                </div>
               </div>
             </div>
-            <div>
-              <Image
-                src={
-                  data?.image
-                    ? `data:image/jpeg;base64,${data?.image}`
-                    : noImage
-                }
-                width={60}
-                height={60}
-                style={{
-                  objectFit: data?.image ? "cover" : "contain",
-                }}
-                className={"bg-cover border  h-[100px] rounded-lg w-[159px]"}
-                aria-label="reservation image"
-                alt="reservation image"
-              />
-            </div>
+
           </div>
           <Spacer y={5} />
           <Booking
