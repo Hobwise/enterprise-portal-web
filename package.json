@@ -14,7 +14,6 @@
     "@fullcalendar/interaction": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
-    "@heroui/tooltip": "^2.2.11",
     "@iconify/react": "^4.1.1",
     "@internationalized/date": "^3.5.4",
     "@nextui-org/react": "^2.4.8",
