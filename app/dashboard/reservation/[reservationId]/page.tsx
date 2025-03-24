@@ -49,7 +49,6 @@ const ReservationDetails = () => {
 
   const { setPage, setTableStatus } = useGlobalContext();
 
-
   useEffect(() => {
     setTableStatus("All");
     setPage(1);
@@ -70,15 +69,15 @@ const ReservationDetails = () => {
     `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?reservationId=${reservationId}`
   );
 
+  const formatTimeWithAMPM = (time: string | null | undefined): string => {
+    // Return a placeholder if time is null or undefined
+    if (!time) return "N/A";
 
-  const formatTimeWithAMPM = (time: string): string => {
     const [hours, minutes] = time.split(":").map(Number);
     const period = hours >= 12 ? "PM" : "AM";
     const formattedHours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
     return `${formattedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
   };
-
-  console.log(data);
 
   return (
     <>
@@ -177,9 +176,7 @@ const ReservationDetails = () => {
               </div> */}
 
               <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                <p className="text-[#828282]">
-                  {data?.reservationDescription}
-                </p>
+                <p className="text-[#828282]">{data?.reservationDescription}</p>
               </div>
               <div>
                 {data?.allowSystemAdvert && (
@@ -213,17 +210,21 @@ const ReservationDetails = () => {
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
                   <p className="text-[#828282]">Available Booking Time:</p>
                   <p className="text-[#3D424A] font-bold">
-                  {formatTimeWithAMPM(data?.startTime)} - {formatTimeWithAMPM(data?.endTime)}
+                    {data?.startTime && data?.endTime
+                      ? `${formatTimeWithAMPM(
+                          data?.startTime
+                        )} - ${formatTimeWithAMPM(data?.endTime)}`
+                      : "Time not available"}{" "}
                   </p>
                 </div>
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#828282]">Number of seats/reservation</p>
+                  <p className="text-[#828282]">Number of seats/reservation:</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.numberOfSeat}
                   </p>
                 </div>
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#828282]">Quantity</p>
+                  <p className="text-[#828282]">Quantity:</p>
                   <p className="text-[#3D424A] font-bold">{data?.quantity}</p>
                 </div>
               </div>

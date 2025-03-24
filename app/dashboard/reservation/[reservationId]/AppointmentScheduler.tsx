@@ -159,7 +159,6 @@ const AppointmentScheduler: React.FC<{
 
   
   const timeSlots = [
-    "00 AM",
     "01 AM",
     "02 AM",
     "03 AM",
@@ -239,7 +238,7 @@ const AppointmentScheduler: React.FC<{
       case "Expired":
         return "bg-[#FFB74A]" as BarColor;
       case "Pending":
-        return "bg-blue-200";
+        return "bg-[#D9CAF9]"  as BarColor;
       case "Confirmed":
         return "bg-[#FFB74A]" as BarColor;
       case "Admitted":
@@ -284,7 +283,13 @@ const AppointmentScheduler: React.FC<{
       year: "numeric",
     });
   };
-  // Calculate position and width for appointment bars based on 24-hour grid
+  
+  // Helper function to convert time string to minutes
+  const timeToMinutes = (timeStr: string): number => {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+  };
+
   // Calculate position and width for appointment bars based on 24-hour grid
   const calculateBarStyle = (
     startTime: string,
@@ -322,9 +327,60 @@ const AppointmentScheduler: React.FC<{
     const clampedWidth = Math.min(width, 100 - leftPosition);
 
     return {
-      left: `${leftPosition}%`,
-      width: `${clampedWidth}%`,
+      left: `${leftPosition - 4}%`,
+      width: `${clampedWidth + 2}%`,
     };
+  };
+
+  // Check if two appointments overlap in time
+  const doAppointmentsOverlap = (a: Appointment, b: Appointment): boolean => {
+    const aStart = timeToMinutes(a.startTime);
+    const aEnd = timeToMinutes(a.endTime);
+    const bStart = timeToMinutes(b.startTime);
+    const bEnd = timeToMinutes(b.endTime);
+    
+    // Add a small buffer (15 min) to ensure visual separation
+    const buffer = 15;
+    
+    return !(aEnd + buffer <= bStart || bEnd + buffer <= aStart);
+  };
+
+  // Group appointments into rows where no appointments in the same row overlap
+  const groupAppointmentsIntoRows = (appointments: Appointment[]): Appointment[][] => {
+    if (appointments.length === 0) return [];
+    
+    // Sort appointments by start time
+    const sortedAppointments = [...appointments].sort((a, b) => 
+      timeToMinutes(a.startTime) - timeToMinutes(b.startTime)
+    );
+    
+    const rows: Appointment[][] = [];
+    
+    // For each appointment, find the first row where it doesn't overlap with any existing appointment
+    sortedAppointments.forEach(appointment => {
+      let placed = false;
+      
+      for (let row of rows) {
+        // Check if this appointment overlaps with any in the current row
+        const hasOverlap = row.some(existingAppointment => 
+          doAppointmentsOverlap(appointment, existingAppointment)
+        );
+        
+        if (!hasOverlap) {
+          // If no overlap, add to this row
+          row.push(appointment);
+          placed = true;
+          break;
+        }
+      }
+      
+      // If we couldn't place it in any existing row, create a new row
+      if (!placed) {
+        rows.push([appointment]);
+      }
+    });
+    
+    return rows;
   };
 
   // Calculate current time marker position
@@ -344,6 +400,9 @@ const AppointmentScheduler: React.FC<{
 
   const currentTimePosition = calculateCurrentTimePosition();
 
+  // Group appointments into rows
+  const appointmentRows = groupAppointmentsIntoRows(bookings);
+
   // Render action buttons based on current status
   const renderActionButtons = (appointment: any) => {
     const status = appointment.status;
@@ -352,7 +411,7 @@ const AppointmentScheduler: React.FC<{
       return (
         <>
           <button
-            className="px-4 py-2 border rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
+            className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
@@ -360,37 +419,43 @@ const AppointmentScheduler: React.FC<{
             disabled={loadingStates.edit}
           >
             {loadingStates.edit ? (
-              <span className="inline-block w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span className="inline-block text-sm  w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Edit
           </button>
           <button
-            className="px-4 py-2 border rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
+            className="px-4 py-2 border rounded-md text-sm  hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
             onClick={() => updateBookingStatus(3, appointment.id, "cancel")}
             disabled={loadingStates.cancel}
           >
             {loadingStates.cancel ? (
-              <span className="inline-block w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span className="inline-block text-sm  w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Decline
           </button>
           <button
-            className="px-4 py-2 bg-[#5F35D2] text-white rounded-md flex items-center justify-center min-w-[140px]"
+            className="px-4 py-2 bg-[#5F35D2] text-sm  text-white rounded-md flex items-center justify-center min-w-[140px]"
             onClick={() => updateBookingStatus(1, appointment.id, "confirm")}
             disabled={loadingStates.confirm}
           >
             {loadingStates.confirm ? (
-              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span className="inline-block text-sm  w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Confirm Booking
           </button>
+          <button
+          className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50"
+          onClick={handleCloseBookingDetails}
+        >
+          Close
+        </button>
         </>
       );
     } else if (status === "Confirmed") {
       return (
         <>
           <button
-            className="px-4 py-2 border rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
+            className="px-4 py-2 border rounded-md text-sm  hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
@@ -398,17 +463,17 @@ const AppointmentScheduler: React.FC<{
             disabled={loadingStates.edit}
           >
             {loadingStates.edit ? (
-              <span className="inline-block w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span className="inline-block w-4 h-4 text-sm  border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Edit
           </button>
           <button
-            className="px-4 py-2 border rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
+            className="px-4 py-2 border rounded-md text-sm  hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
             onClick={() => updateBookingStatus(3, appointment.id, "cancel")}
             disabled={loadingStates.cancel}
           >
             {loadingStates.cancel ? (
-              <span className="inline-block w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span className="inline-block text-sm  w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Decline
           </button>
@@ -418,17 +483,23 @@ const AppointmentScheduler: React.FC<{
             disabled={loadingStates.admit}
           >
             {loadingStates.admit ? (
-              <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span className="inline-block w-4 text-sm  h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Admit
           </button>
+          <button
+          className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50"
+          onClick={handleCloseBookingDetails}
+        >
+          Close
+        </button>
         </>
       );
     } else if (status === "Admitted") {
       return (
         <>
           <button
-            className="px-4 py-2 border rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
+            className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
@@ -436,12 +507,12 @@ const AppointmentScheduler: React.FC<{
             disabled={loadingStates.edit}
           >
             {loadingStates.edit ? (
-              <span className="inline-block w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span className="inline-block text-sm  w-4 h-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Edit
           </button>
           <button
-          className="px-4 py-2 border rounded-md hover:bg-gray-50"
+          className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50"
           onClick={handleCloseBookingDetails}
         >
           Close
@@ -452,7 +523,7 @@ const AppointmentScheduler: React.FC<{
             disabled={loadingStates.cancel}
           >
             {loadingStates.cancel ? (
-              <span className="inline-block w-4 h-4 border-2  border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+              <span className="inline-block text-sm  w-4 h-4 border-2  border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Complete
           </button>
@@ -462,7 +533,7 @@ const AppointmentScheduler: React.FC<{
       // For other statuses, just show a close button
       return (
         <button
-          className="px-4 py-2 border rounded-md hover:bg-gray-50"
+          className="px-4 py-2 border text-sm rounded-md hover:bg-gray-50"
           onClick={handleCloseBookingDetails}
         >
           Close
@@ -474,18 +545,18 @@ const AppointmentScheduler: React.FC<{
   return (
     <div className="bg-white rounded-lg shadow-lg max-w-6xl mx-auto">
       {/* Main scrollable container */}
-      <div ref={scrollContainerRef} className="overflow-x-auto">
+      <div ref={scrollContainerRef} className="overflow-x-auto ">
         <div
           ref={timelineRef}
-          className="relative"
+          className="relative z-10 "
           style={{ minWidth: "4000px" }}
         >
           {/* Time slots header */}
-          <div className="flex border-b  border-t shadow">
+          <div className="flex border-b border-t mb-2 shadow">
             {timeSlots.map((time, index) => (
               <div
                 key={index}
-                className="flex-1 text-center text-gray-600 font-medium py-3"
+                className="flex-1 text-center text-[#727b8b] font-medium py-3"
               >
                 {time}
               </div>
@@ -509,78 +580,79 @@ const AppointmentScheduler: React.FC<{
               ))}
             </div>
 
-            {/* Appointments */}
-            {bookings.map((appointment) => {
-              const barStyle = calculateBarStyle(
-                appointment.startTime,
-                appointment.endTime
-              );
+            {/* Appointments grouped by rows */}
+            {appointmentRows.map((row, rowIndex) => (
+              <div key={rowIndex} className="relative h-28 mb-2">
+                {row.map((appointment) => {
+                  const barStyle = calculateBarStyle(
+                    appointment.startTime,
+                    appointment.endTime
+                  );
 
-              return (
-                <div key={appointment.id} className="relative mb-6 h-40">
-                  <div
-                    className={`absolute rounded-lg p-5 mt-2 shadow-sm bg-[#F7F9FB]  transition-all duration-200 hover:shadow-md`}
-                    style={barStyle}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-lg text-gray-800">
-                          {appointment.name}
-                        </h3>
-                        <div className="text-sm text-gray-600 mt-2">
-                          <span className="mr-4">
-                            Quantity: {appointment.quantity}
-                          </span>
-                          <span>No of guests: {appointment.guests}</span>
+                  return (
+                    <div key={appointment.id} className="absolute h-full" style={{width: '100%'}}>
+                      <div
+                        className={`absolute rounded-lg p-3 shadow-sm bg-[#F7F9FB] transition-all duration-200 hover:shadow-md h-24`}
+                        style={barStyle}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-800 truncate max-w-xs">
+                              {appointment.name}
+                            </h3>
+                            <div className="text-xs text-gray-600 mt-1">
+                              <span className="mr-4">
+                                Qty: {appointment.quantity}
+                              </span>
+                              <span>Guests: {appointment.guests}</span>
+                            </div>
+                            <div className="text-xs text-gray-600 mt-1 font-medium">
+                              {appointment.startTime} - {appointment.endTime}
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) =>
+                              handleOpenBookingDetails(appointment, e)
+                            }
+                            className="text-gray-400 text-lg hover:text-gray-600"
+                          >
+                            •••
+                          </button>
                         </div>
-                        <div className="text-sm text-gray-600 mt-2 font-medium">
-                          {appointment.startTime} - {appointment.endTime}
+
+                        <div
+                          className={`absolute bottom-0 left-0 right-0 ${getAppointmentBarColor(
+                            appointment.status
+                          )} h-2 rounded-b-lg`}
+                        ></div>
+
+                        <div className="absolute bottom-2 right-3 mb-1 flex items-center">
+                          <span
+                            className={`inline-block w-2 h-2 rounded-full mr-1 ${getStatusDotColor(
+                              appointment.status
+                            )}`}
+                          ></span>
+                          <span
+                            className={`text-xs font-medium ${getStatusColor(
+                              appointment.status
+                            )}`}
+                          >
+                            {appointment.status}
+                          </span>
                         </div>
                       </div>
-                      <button
-                        onClick={(e) =>
-                          handleOpenBookingDetails(appointment, e)
-                        }
-                        className="text-gray-400 text-xl hover:text-gray-600"
-                      >
-                        •••
-                      </button>
                     </div>
-
-                    <div
-                      className={`absolute bottom-0 left-0 right-0 ${getAppointmentBarColor(
-                        appointment.status
-                      )} h-2 rounded-b-lg`}
-                    ></div>
-
-                    <div className="absolute bottom-4 right-5 justify-between items-center">
-                      <span
-                        className={`inline-block w-2 h-2 rounded-full mr-2 ${getStatusDotColor(
-                          appointment.status
-                        )}`}
-                      ></span>
-                      <span
-                        className={`text-xs font-medium ${getStatusColor(
-                          appointment.status
-                        )}`}
-                      >
-                        {appointment.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <div className="grid grid-cols-7 h-full gap-0 relative"></div>
-                  </div>
-                </div>
-              );
-            })}
+                  );
+                })}
+              </div>
+            ))}
 
             {/* Booking details modal */}
             {selectedAppointment && (
               <div
-                className="absolute bg-white border shadow-lg rounded-lg z-20 p-4 w-96"
+                className="absolute bg-white border shadow-lg rounded-lg z-50 p-4 w-[28rem]"
                 style={{
-                  left: `${modalPosition.x}px`,
+                  left: `${modalPosition.x + 15}px`,
                   top: `${modalPosition.y}px`,
                 }}
               >
@@ -625,19 +697,13 @@ const AppointmentScheduler: React.FC<{
                 <div className="flex flex-wrap gap-2 mt-3">
                   {renderActionButtons(selectedAppointment)}
                 </div>
-                {/* <button
-                  className=" text-gray-500 hover:text-gray-700"
-                  onClick={handleCloseBookingDetails}
-                >
-                  ✕
-                </button> */}
               </div>
             )}
             <EditBooking
               eachBooking={eachBooking}
               isEditBookingModal={isEditBookingModal}
               toggleEditBookingModal={toggleEditBookingModal}
-              refetch={() => {}} // Add proper refetch function here
+              refetch={refetch} 
             />
           </div>
         </div>

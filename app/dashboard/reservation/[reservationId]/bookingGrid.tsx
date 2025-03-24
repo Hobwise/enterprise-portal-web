@@ -236,7 +236,7 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
               These are the times available for customers to make a booking
             </p>
           
-            <div className="max-h-60 overflow-y-auto pr-2"> 
+            <div className="max-h-28 overflow-y-auto pr-2 scrollbar"> 
               {availableTimeSlots.length > 0 ? (
                 availableTimeSlots.map((slot, index) => (
                   <div key={index} className="flex items-center gap-6 mb-3">
