@@ -548,7 +548,7 @@ const AppointmentScheduler: React.FC<{
       <div ref={scrollContainerRef} className="overflow-x-auto ">
         <div
           ref={timelineRef}
-          className="relative z-10 "
+          className="relative "
           style={{ minWidth: "4000px" }}
         >
           {/* Time slots header */}

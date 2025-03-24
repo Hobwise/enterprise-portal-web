@@ -394,3 +394,23 @@ input:-webkit-autofill:focus {
 .scrollbar::-webkit-scrollbar-track {
   background: #edf2f7;
 }
+.react-datepicker__day--selected, .react-datepicker__day--in-selecting-range, .react-datepicker__day--in-range, .react-datepicker__month-text--selected, .react-datepicker__month-text--in-selecting-range, .react-datepicker__month-text--in-range, .react-datepicker__quarter-text--selected, .react-datepicker__quarter-text--in-selecting-range, .react-datepicker__quarter-text--in-range, .react-datepicker__year-text--selected, .react-datepicker__year-text--in-selecting-range, .react-datepicker__year-text--in-range {
+  background-color: #5F35D2 !important;
+}
+
+.react-datepicker__navigation--previous {
+  right: 51px !important;
+}
+
+.react-datepicker__navigation--previous {
+  right: 51px !important;
+
+}
+
+
+
+.react-datepicker__header {
+  text-align: center;
+  background-color: #ffff !important;
+
+}
