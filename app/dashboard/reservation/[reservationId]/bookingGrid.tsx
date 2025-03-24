@@ -191,13 +191,13 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
     <section className="border w-full border-primaryGrey rounded-lg">
       <div>
         <div className="flex p-4 justify-between items-center">
-          <div className="relative">
+          <div className="relative z-[9999]">
             <div className="flex items-center">
               <DatePicker
                 selected={selectedDate}
                 onChange={handleDateChange}
                 dateFormat="MMMM d, yyyy"
-                className="border-none font-medium text-gray-800 cursor-pointer focus:outline-none"
+                className="border-none font-medium text-gray-800 relative z-[9999] cursor-pointer focus:outline-none"
                 customInput={
                   <button className="flex items-center">
                     <span>{formatDate(selectedDate)}</span>
@@ -222,7 +222,7 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
             <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg rounded-lg z-[60] p-6 w-96 h-80">
             <h3 className="font-medium text-xl mb-4">
               {selectedDate.toLocaleDateString("en-US", {
-                year: "numeric",
+                year: "numeric",  
                 month: "long",
                 day: "numeric",
               })}
@@ -235,7 +235,7 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
               {availableTimeSlots.length > 0 ? (
                 availableTimeSlots.map((slot, index) => (
                   <div key={index} className="flex items-center gap-6 mb-3">
-                    <div className="flex items-center text-gray-700">
+                    <div className="flex items-center text-sm text-gray-700">
                       <BiCalendar size={14} className="mr-2" />
                       <span>
                         {formatTime(slot.startDateTime)} - {formatTime(slot.endDateTime)}

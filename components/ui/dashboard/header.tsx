@@ -86,7 +86,7 @@ const Header = () => {
   return (
     <div
       className={cn(
-        `sticky inset-x-0 top-0 z-20 w-full transition-all border-b  border-primaryGrey`,
+        `sticky inset-x-0 top-0 z-[999] w-full transition-all border-b  border-primaryGrey`,
         {
           "border-b  border-primaryGrey bg-white/75 backdrop-blur-lg": scrolled,
           "border-b  border-primaryGrey bg-white": selectedLayout,

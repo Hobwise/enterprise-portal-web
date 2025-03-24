@@ -4,6 +4,7 @@ import { notify } from "@/lib/utils";
 import { User } from "@nextui-org/react";
 import React, { useState, useEffect, useRef } from "react";
 import { BiCalendar, BiUser } from "react-icons/bi";
+import {  MdOutlineMailOutline } from "react-icons/md";
 
 // TypeScript interfaces
 interface Appointment {
@@ -171,17 +172,17 @@ const AppointmentScheduler: React.FC<{
     "10 AM",
     "11 AM",
     "12 PM",
-    "13 PM",
-    "14 PM",
-    "15 PM",
-    "16 PM",
-    "17 PM",
-    "18 PM",
-    "19 PM",
-    "20 PM",
-    "21 PM",
-    "22 PM",
-    "23 PM",
+    "01 PM",
+    "02 PM",
+    "03 PM",
+    "04 PM",
+    "05 PM",
+    "06 PM",
+    "07 PM",
+    "08 PM",
+    "09 PM",
+    "10 PM",
+    "11 PM",
   ];
 
   // Handle opening booking details
@@ -345,7 +346,7 @@ const AppointmentScheduler: React.FC<{
     }
     return {
       left: `${leftPosition - 2}%`,
-      width: `${clampedWidth}%`,
+      width: `${clampedWidth + 1}%`,
     };
   };
 
@@ -574,7 +575,7 @@ const AppointmentScheduler: React.FC<{
           style={{ minWidth: "4000px" }}
         >
           {/* Time slots header */}
-          <div className="flex border-b border-t mb-2 shadow">
+          <div className="flex border-b text-sm border-t mb-2 shadow">
             {timeSlots.map((time, index) => (
               <div
                 key={index}
@@ -700,6 +701,10 @@ const AppointmentScheduler: React.FC<{
                   <div className="text-gray-600 mb-2">
                     Reservation: Table for ({selectedAppointment.quantity})
                   </div>
+                    <div className="flex items-center gap-2 text-gray-700 mb-1">
+                  <MdOutlineMailOutline size={14} />
+                  <span>{selectedAppointment.emailAddress} </span>
+                </div>
                 <div className="flex items-center gap-2 text-gray-700 mb-1">
                   <BiCalendar size={14} />
                   <span> {formatDate(selectedAppointment.dateCreated)}</span>
@@ -715,6 +720,7 @@ const AppointmentScheduler: React.FC<{
                   <BiUser size={14} />
                   <span>{selectedAppointment.numberOfGuest} guests</span>
                 </div>
+              
 
                 <div className="flex flex-wrap gap-2 mt-3">
                   {renderActionButtons(selectedAppointment)}

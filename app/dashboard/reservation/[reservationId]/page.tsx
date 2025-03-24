@@ -23,7 +23,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { FaEdit } from "react-icons/fa";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -42,6 +42,7 @@ const ReservationDetails = () => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
+  const [loading, setLoading] = useState(true);
   const reservationId = searchParams.get("reservationId") || null;
 
   const { data, isLoading, isError, refetch } =
@@ -52,6 +53,30 @@ const ReservationDetails = () => {
   useEffect(() => {
     setTableStatus("All");
     setPage(1);
+  }, []);
+  useLayoutEffect(() => {
+    const timeout = setTimeout(() => {
+      if (data && !isLoading) {
+        setLoading(false);
+      }
+    }, 2000);
+  
+    return () => clearTimeout(timeout);
+  }, [data, isLoading, reservationId]); 
+  
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevent going back by pushing the same state
+      history.pushState(null, "", location.href);
+    };
+
+    history.pushState(null, "", location.href);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, []);
 
   const toggleModalDelete = () => {
@@ -137,7 +162,7 @@ const ReservationDetails = () => {
         </div>
       </div>
       <Spacer y={5} />
-      {isLoading ? (
+      {loading ? (
         <CustomLoading />
       ) : (
         <section className="flex flex-col flex-grow">
@@ -224,7 +249,7 @@ const ReservationDetails = () => {
                   </p>
                 </div>
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#828282]">Quantity:</p>
+                  <p className="text-[#828282]">Quantity</p>
                   <p className="text-[#3D424A] font-bold">{data?.quantity}</p>
                 </div>
               </div>
