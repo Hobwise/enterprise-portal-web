@@ -47,8 +47,8 @@ const ReservationDetails = () => {
   const { data, isLoading, isError, refetch } =
     useSingleReservation(reservationId);
 
-
   const { setPage, setTableStatus } = useGlobalContext();
+
 
   useEffect(() => {
     setTableStatus("All");
@@ -70,7 +70,16 @@ const ReservationDetails = () => {
     `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?reservationId=${reservationId}`
   );
 
-  
+
+  const formatTimeWithAMPM = (time: string): string => {
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const formattedHours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
+    return `${formattedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
+
+  console.log(data);
+
   return (
     <>
       <div className="lg:flex block justify-between">
@@ -134,7 +143,7 @@ const ReservationDetails = () => {
       ) : (
         <section className="flex flex-col flex-grow">
           <div className="flex lg:flex-row flex-col gap-3 ">
-          <div>
+            <div>
               <Image
                 src={
                   data?.image
@@ -166,6 +175,12 @@ const ReservationDetails = () => {
                   {data?.quantityLeft} remaining
                 </Chip>
               </div> */}
+
+              <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                <p className="text-[#828282]">
+                  {data?.reservationDescription}
+                </p>
+              </div>
               <div>
                 {data?.allowSystemAdvert && (
                   <Chip
@@ -180,7 +195,7 @@ const ReservationDetails = () => {
               </div>
               <div className="flex w-full lg:gap-3 gap-0 lg:flex-row flex-col">
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#616162]">Reservation Fee:</p>
+                  <p className="text-[#828282]">Reservation Fee:</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.reservationFee
                       ? formatPrice(data?.reservationFee)
@@ -188,7 +203,7 @@ const ReservationDetails = () => {
                   </p>
                 </div>
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#616162]">Minimum Spend:</p>
+                  <p className="text-[#828282]">Minimum Spend:</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.minimumSpend
                       ? formatPrice(data?.minimumSpend)
@@ -196,28 +211,23 @@ const ReservationDetails = () => {
                   </p>
                 </div>
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#616162]">Available Booking Time:</p>
+                  <p className="text-[#828282]">Available Booking Time:</p>
                   <p className="text-[#3D424A] font-bold">
-                    {data?.minimumSpend
-                      ? formatPrice(data?.minimumSpend)
-                      : formatPrice(0)}
+                  {formatTimeWithAMPM(data?.startTime)} - {formatTimeWithAMPM(data?.endTime)}
                   </p>
                 </div>
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#616162]">Number of seats/reservation</p>
+                  <p className="text-[#828282]">Number of seats/reservation</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.numberOfSeat}
                   </p>
                 </div>
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#616162]">Quantity</p>
-                  <p className="text-[#3D424A] font-bold">
-                    {data?.quantity}
-                  </p>
+                  <p className="text-[#828282]">Quantity</p>
+                  <p className="text-[#3D424A] font-bold">{data?.quantity}</p>
                 </div>
               </div>
             </div>
-
           </div>
           <Spacer y={5} />
           <Booking

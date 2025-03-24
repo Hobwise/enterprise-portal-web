@@ -224,42 +224,44 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
             </div>
 
             {showTimeModal && (
-              <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg rounded-lg z-20 p-6 w-80">
-                <h3 className="font-medium text-xl mb-4"> {selectedDate.toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}</h3>
-                <p className="text-gray-600 mb-4">
-                  These are the times available for customers to make a booking
-                </p>
-
-                {availableTimeSlots.length > 0 ? (
-                  availableTimeSlots.map((slot, index) => (
-                    <div key={index} className="flex items-center gap-3 mb-3">
-                      <div className="flex items-center text-gray-700">
-                        <BiCalendar size={14} className="mr-2" />
-                        <span>
-                          {formatTime(slot.startDateTime)} -{" "}
-                          {formatTime(slot.endDateTime)}
-                        </span>
-                      </div>
-                      <div className="text-gray-700">
-                        Quantity: {slot.quantity}
-                      </div>
+            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg rounded-lg z-20 p-6 w-96 h-80">
+            <h3 className="font-medium text-xl mb-4">
+              {selectedDate.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
+            </h3>
+            <p className="text-gray-600 mb-4">
+              These are the times available for customers to make a booking
+            </p>
+          
+            <div className="max-h-60 overflow-y-auto pr-2"> 
+              {availableTimeSlots.length > 0 ? (
+                availableTimeSlots.map((slot, index) => (
+                  <div key={index} className="flex items-center gap-6 mb-3">
+                    <div className="flex items-center text-gray-700">
+                      <BiCalendar size={14} className="mr-2" />
+                      <span>
+                        {formatTime(slot.startDateTime)} - {formatTime(slot.endDateTime)}
+                      </span>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-gray-600">No available time slots for this date.</div>
-                )}
-
-                <button
-                  className="w-full mt-4 py-2 bg-primaryColor text-white rounded-md"
-                  onClick={() => setShowTimeModal(false)}
-                >
-                  Close
-                </button>
-              </div>
+                    <div className="text-gray-700">Quantity: {slot.quantity}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-gray-600">No available time slots for this date.</div>
+              )}
+            </div>
+          
+            <button
+              className="w-full mt-4 py-2 bg-primaryColor text-white rounded-md"
+              onClick={() => setShowTimeModal(false)}
+            >
+              Close
+            </button>
+          </div>
+          
             )}
           </div>
 

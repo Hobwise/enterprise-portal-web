@@ -29,7 +29,7 @@ type StatusColor =
   | "text-green-500"
   | "text-yellow-500"
   | "text-blue-400"
-  | "text-green-400"
+  | "text-[#FFB74A]"
   | "text-purple-500"
   | "text-gray-500";
 type BarColor =
@@ -37,23 +37,17 @@ type BarColor =
   | "bg-green-200"
   | "bg-yellow-200"
   | "bg-blue-200"
-  | "bg-purple-200"
+  | "bg-[#F65428]"
   | "bg-gray-200";
 type DotColor =
   | "bg-red-500"
   | "bg-green-500"
   | "bg-yellow-500"
   | "bg-blue-400"
-  | "bg-green-400"
+  | "bg-[#FFB74A]"
   | "bg-purple-500"
   | "bg-gray-500";
-type PatternColor =
-  | "bg-yellow-100"
-  | "bg-green-100"
-  | "bg-orange-100"
-  | "bg-red-100"
-  | "bg-purple-100"
-  | "bg-gray-100";
+
 
 const AppointmentScheduler: React.FC<{
   bookings: Appointment[];
@@ -227,7 +221,7 @@ const AppointmentScheduler: React.FC<{
       case "Pending":
         return "text-blue-400";
       case "Confirmed":
-        return "text-green-400";
+        return "text-[#FFB74A]";
       case "Admitted":
         return "text-purple-500";
       default:
@@ -241,15 +235,15 @@ const AppointmentScheduler: React.FC<{
       case "Rejected":
         return "bg-red-200";
       case "Completed":
-        return "bg-green-200";
+        return "bg-[#FFB74A]"  as BarColor;
       case "Expired":
-        return "bg-yellow-200";
+        return "bg-[#FFB74A]" as BarColor;
       case "Pending":
         return "bg-blue-200";
       case "Confirmed":
-        return "bg-green-200";
+        return "bg-[#FFB74A]" as BarColor;
       case "Admitted":
-        return "bg-purple-200";
+        return "bg-[#F65428]" as BarColor;
       default:
         return "bg-gray-200";
     }
@@ -267,7 +261,7 @@ const AppointmentScheduler: React.FC<{
       case "Pending":
         return "bg-blue-400";
       case "Confirmed":
-        return "bg-green-400";
+        return "bg-[#FFB74A]";
       case "Admitted":
         return "bg-purple-500";
       default:
@@ -275,6 +269,21 @@ const AppointmentScheduler: React.FC<{
     }
   };
 
+  const formatDate = (date: any): string => {
+    if (!(date instanceof Date)) {
+      date = new Date(date); // Convert if it's a string or timestamp
+    }
+  
+    if (isNaN(date.getTime())) {
+      return "Invalid Date"; // Handle cases where conversion fails
+    }
+  
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
   // Calculate position and width for appointment bars based on 24-hour grid
   // Calculate position and width for appointment bars based on 24-hour grid
   const calculateBarStyle = (
@@ -437,6 +446,16 @@ const AppointmentScheduler: React.FC<{
         >
           Close
         </button>
+        <button
+            className="px-4 py-2 bg-[#5F35D2] text-white rounded-md  flex items-center justify-center min-w-[80px]"
+            onClick={() => updateBookingStatus(3, appointment.id, "close")}
+            disabled={loadingStates.cancel}
+          >
+            {loadingStates.cancel ? (
+              <span className="inline-block w-4 h-4 border-2  border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
+            ) : null}
+            Complete
+          </button>
         </>
       );
     } else {
@@ -559,7 +578,7 @@ const AppointmentScheduler: React.FC<{
             {/* Booking details modal */}
             {selectedAppointment && (
               <div
-                className="absolute bg-white shadow-lg rounded-lg z-20 p-4 w-96"
+                className="absolute bg-white border shadow-lg rounded-lg z-20 p-4 w-96"
                 style={{
                   left: `${modalPosition.x}px`,
                   top: `${modalPosition.y}px`,
@@ -569,14 +588,14 @@ const AppointmentScheduler: React.FC<{
                 <div className="font-medium text-lg">
                   {selectedAppointment.name}
                 </div>
-                  <div className="flex items-center gap-2 text-gray-700 mb-3">
+                  <div className="flex items-center border py-[2px] text-sm gap-2 bg-[#E2E8F0] px-2 rounded-md mt-2 text-[#64748B] mb-3">
                     <span
                       className={`inline-block w-2 h-2 rounded-full ${getStatusDotColor(
                         selectedAppointment.status
                       )}`}
                     ></span>
                     <span
-                      className={`${getStatusColor(
+                      className={` ${getStatusColor(
                         selectedAppointment.status
                       )}`}
                     >
@@ -585,11 +604,11 @@ const AppointmentScheduler: React.FC<{
                 </div>
                     </div>
                   <div className="text-gray-600 mb-2">
-                    Reservation: Table for {selectedAppointment.quantity}
+                    Reservation: Table for ({selectedAppointment.quantity})
                   </div>
                 <div className="flex items-center gap-2 text-gray-700 mb-1">
                   <BiCalendar size={14} />
-                  <span> {selectedAppointment.dateCreated}</span>
+                  <span> {formatDate(selectedAppointment.dateCreated)}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 mb-1">
                   <BiCalendar size={14} />
@@ -603,15 +622,15 @@ const AppointmentScheduler: React.FC<{
                   <span>{selectedAppointment.guests} guests</span>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-3">
                   {renderActionButtons(selectedAppointment)}
                 </div>
-                <button
-                  className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                {/* <button
+                  className=" text-gray-500 hover:text-gray-700"
                   onClick={handleCloseBookingDetails}
                 >
                   ✕
-                </button>
+                </button> */}
               </div>
             )}
             <EditBooking

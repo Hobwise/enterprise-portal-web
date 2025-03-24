@@ -31,7 +31,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "quantityLeft",
   "reservationFee",
   "reservationDuration",
-  "quantity",
+  // "quantity",
   "minimumSpend",
   "actions",
 ];
