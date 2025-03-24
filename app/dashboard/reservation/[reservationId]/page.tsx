@@ -218,7 +218,7 @@ const ReservationDetails = () => {
                   </p>
                 </div>
                 <div className="flex gap-2 flex-col  text-[14px] font-[400]">
-                  <p className="text-[#828282]">Number of seats/reservation:</p>
+                  <p className="text-[#828282]">Number of seats:</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.numberOfSeat}
                   </p>

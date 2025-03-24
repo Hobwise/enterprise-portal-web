@@ -106,29 +106,24 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
     return date.toLocaleDateString("en-US", options);
   };
 
-  const formatTime = (isoTime: string | null): string => {
-    if (!isoTime) return "Invalid Time";
+    const formatTime = (isoTime: string | null): string => {
+      if (!isoTime) return "Invalid Time";
     
-    try {
-      const timePart = isoTime.split("T")[1]; // Extract time part
-      if (!timePart) return "Invalid Time";
-
-      let [hours, minutes] = timePart.split(":").map(Number);
-
-      if (isNaN(hours) || isNaN(minutes)) return "Invalid Time";
-
-      const period = hours >= 12 ? "PM" : "AM";
-      const displayHours = hours % 12 || 12; // Convert to 12-hour format
-
-      return `${String(displayHours).padStart(2, "0")}:${String(minutes).padStart(
-        2,
-        "0"
-      )} ${period}`;
-    } catch (error) {
-      console.error("Error formatting time:", error);
-      return "Invalid Time";
-    }
-  };
+      try {
+        const timePart = isoTime.split("T")[1]?.split(".")[0]; // Extract time part, remove milliseconds if present
+        if (!timePart) return "Invalid Time";
+    
+        let [hours, minutes] = timePart.split(":").map(Number);
+    
+        if (isNaN(hours) || isNaN(minutes)) return "Invalid Time";
+    
+        return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`;
+      } catch (error) {
+        console.error("Error formatting time:", error);
+        return "Invalid Time";
+      }
+    };
+    
 
   // Handler for date change
   const handleDateChange = (date: Date | null) => {
@@ -224,7 +219,7 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
             </div>
 
             {showTimeModal && (
-            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg rounded-lg z-20 p-6 w-96 h-80">
+            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg rounded-lg z-[60] p-6 w-96 h-80">
             <h3 className="font-medium text-xl mb-4">
               {selectedDate.toLocaleDateString("en-US", {
                 year: "numeric",

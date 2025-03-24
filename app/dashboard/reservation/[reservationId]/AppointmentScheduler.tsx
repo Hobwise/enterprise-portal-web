@@ -283,6 +283,16 @@ const AppointmentScheduler: React.FC<{
       year: "numeric",
     });
   };
+
+  const formatTimeWithAMPM = (time: string | null | undefined): string => {
+    // Return a placeholder if time is null or undefined
+    if (!time) return "N/A";
+
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const formattedHours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
+    return `${formattedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
   
   // Helper function to convert time string to minutes
   const timeToMinutes = (timeStr: string): number => {
@@ -323,12 +333,19 @@ const AppointmentScheduler: React.FC<{
     const durationInMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
     const width = (durationInMinutes / totalMinutesInDay) * 100;
 
+    
     // Ensure width doesn't exceed 100%
     const clampedWidth = Math.min(width, 100 - leftPosition);
 
+    if(durationInMinutes < 60){
+      return {
+        left: `${leftPosition - 2}%`,
+        width: `${clampedWidth + 5}%`,
+      };
+    }
     return {
-      left: `${leftPosition - 4}%`,
-      width: `${clampedWidth + 2}%`,
+      left: `${leftPosition - 2}%`,
+      width: `${clampedWidth}%`,
     };
   };
 
@@ -403,6 +420,8 @@ const AppointmentScheduler: React.FC<{
   // Group appointments into rows
   const appointmentRows = groupAppointmentsIntoRows(bookings);
 
+  
+
   // Render action buttons based on current status
   const renderActionButtons = (appointment: any) => {
     const status = appointment.status;
@@ -410,6 +429,12 @@ const AppointmentScheduler: React.FC<{
     if (status === "Pending") {
       return (
         <>
+         <button
+          className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50"
+          onClick={handleCloseBookingDetails}
+        >
+          Close
+        </button>
           <button
             className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
             onClick={() => {
@@ -443,17 +468,18 @@ const AppointmentScheduler: React.FC<{
             ) : null}
             Confirm Booking
           </button>
+         
+        </>
+      );
+    } else if (status === "Confirmed") {
+      return (
+        <>
           <button
           className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50"
           onClick={handleCloseBookingDetails}
         >
           Close
         </button>
-        </>
-      );
-    } else if (status === "Confirmed") {
-      return (
-        <>
           <button
             className="px-4 py-2 border rounded-md text-sm  hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
             onClick={() => {
@@ -487,17 +513,18 @@ const AppointmentScheduler: React.FC<{
             ) : null}
             Admit
           </button>
-          <button
-          className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50"
-          onClick={handleCloseBookingDetails}
-        >
-          Close
-        </button>
+        
         </>
       );
     } else if (status === "Admitted") {
       return (
         <>
+         <button
+          className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50"
+          onClick={handleCloseBookingDetails}
+        >
+          Close
+        </button>
           <button
             className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50 flex items-center justify-center min-w-[80px]"
             onClick={() => {
@@ -511,12 +538,7 @@ const AppointmentScheduler: React.FC<{
             ) : null}
             Edit
           </button>
-          <button
-          className="px-4 py-2 border text-sm  rounded-md hover:bg-gray-50"
-          onClick={handleCloseBookingDetails}
-        >
-          Close
-        </button>
+         
         <button
             className="px-4 py-2 bg-[#5F35D2] text-white rounded-md  flex items-center justify-center min-w-[80px]"
             onClick={() => updateBookingStatus(3, appointment.id, "close")}
@@ -582,7 +604,7 @@ const AppointmentScheduler: React.FC<{
 
             {/* Appointments grouped by rows */}
             {appointmentRows.map((row, rowIndex) => (
-              <div key={rowIndex} className="relative h-28 mb-2">
+              <div key={rowIndex} className="relative z-50 h-28 mb-2">
                 {row.map((appointment) => {
                   const barStyle = calculateBarStyle(
                     appointment.startTime,
@@ -595,7 +617,7 @@ const AppointmentScheduler: React.FC<{
                         className={`absolute rounded-lg p-3 shadow-sm bg-[#F7F9FB] transition-all duration-200 hover:shadow-md h-24`}
                         style={barStyle}
                       >
-                        <div className="flex justify-between items-start">
+                        <div className="flex justify-between relative items-start">
                           <div>
                             <h3 className="font-medium text-sm text-gray-800 truncate max-w-xs">
                               {appointment.name}
@@ -604,17 +626,17 @@ const AppointmentScheduler: React.FC<{
                               <span className="mr-4">
                                 Qty: {appointment.quantity}
                               </span>
-                              <span>Guests: {appointment.guests}</span>
+                              <span>Guests: {appointment.numberOfGuest}</span>
                             </div>
                             <div className="text-xs text-gray-600 mt-1 font-medium">
-                              {appointment.startTime} - {appointment.endTime}
+                              {formatTimeWithAMPM(appointment.startTime)} - {formatTimeWithAMPM(appointment.endTime)}
                             </div>
                           </div>
                           <button
                             onClick={(e) =>
                               handleOpenBookingDetails(appointment, e)
                             }
-                            className="text-gray-400 text-lg hover:text-gray-600"
+                            className="text-gray-400 relative z-50 text-lg hover:text-gray-600"
                           >
                             •••
                           </button>
@@ -685,13 +707,13 @@ const AppointmentScheduler: React.FC<{
                 <div className="flex items-center gap-2 text-gray-700 mb-1">
                   <BiCalendar size={14} />
                   <span>
-                    {selectedAppointment.startTime} -{" "}
-                    {selectedAppointment.endTime}
+                    {formatTimeWithAMPM(selectedAppointment.startTime)} -{" "}
+                    {formatTimeWithAMPM(selectedAppointment.endTime)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-700 mb-3">
                   <BiUser size={14} />
-                  <span>{selectedAppointment.guests} guests</span>
+                  <span>{selectedAppointment.numberOfGuest} guests</span>
                 </div>
 
                 <div className="flex flex-wrap gap-2 mt-3">
