@@ -149,6 +149,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       // console.log("BODY", body);
 
       init(body);
+      setLoading[selectedPlan]?.(false);
     }
   };
 
@@ -159,28 +160,37 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       payload,
       token
     );
-    // console.log("INITIALIZED TRANSACTION", initializedTransaction);
-    const access_code = initializedTransaction.access_code;
+    console.log(initializedTransaction, "initializedTransaction");
+    if (initializedTransaction.access_code) {
+      // console.log("INITIALIZED TRANSACTION", initializedTransaction);
+      const access_code = initializedTransaction.access_code;
 
-    const handleSuccess = async () => {
-      const userDetailss = await getUser(userId).then((response) =>
-        window.location.reload()
-      );
+      const handleSuccess = async () => {
+        const userDetailss = await getUser(userId).then((response) =>
+          window.location.reload()
+        );
 
-      // console.log("USER", userDetailss);
-      // window.location.reload()
-    };
+        // console.log("USER", userDetailss);
+        // window.location.reload()
+      };
 
-    popup.resumeTransaction({
-      accessCode: access_code,
-      onSuccess: () => handleSuccess(),
-    });
+      popup.resumeTransaction({
+        accessCode: access_code,
+        onSuccess: () => handleSuccess(),
+      });
 
-    // popup.resumeTransaction(access_code);
+      // popup.resumeTransaction(access_code);
 
-    setPremiumLoading(false);
-    setStarterLoading(false);
-    setProfessionalLoading(false);
+      setPremiumLoading(false);
+      setStarterLoading(false);
+      setProfessionalLoading(false);
+    } else {
+      notify({
+        title: "Error",
+        text: "Somethin went wrong",
+        type: "error",
+      });
+    }
   };
 
   const activePlan = () => {

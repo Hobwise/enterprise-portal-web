@@ -1,14 +1,14 @@
-'use client';
-import * as React from 'react';
-import { Chip, Divider, Tab, Tabs } from '@nextui-org/react';
-import Image from 'next/image';
+"use client";
+import * as React from "react";
+import { Chip, Divider, Tab, Tabs } from "@nextui-org/react";
+import Image from "next/image";
 
-import { useGlobalContext } from '@/hooks/globalProvider';
-import Champagne from '../../../../../public/assets/images/champage.webp';
-import { menus, togglePreview } from './data';
-import useAllMenus from '@/hooks/cachedEndpoints/useAllMenus';
-import useMenu from '@/hooks/cachedEndpoints/useMenu';
-import { formatPrice } from '@/lib/utils';
+import { useGlobalContext } from "@/hooks/globalProvider";
+import NoMenu from "../../../../../public/assets/images/no-menu.png";
+import { menus, togglePreview } from "./data";
+import useAllMenus from "@/hooks/cachedEndpoints/useAllMenus";
+import useMenu from "@/hooks/cachedEndpoints/useMenu";
+import { formatPrice } from "@/lib/utils";
 
 const Preview = () => {
   const {
@@ -22,14 +22,14 @@ const Preview = () => {
 
   const { data } = useMenu();
 
-  const baseString = 'data:image/jpeg;base64,';
+  const baseString = "data:image/jpeg;base64,";
 
   const items = data?.flatMap((obj) => obj.items);
 
   return (
     <article
       style={{
-        backgroundColor: backgroundColor || 'white',
+        backgroundColor: backgroundColor || "white",
       }}
       className="xl:block relative  hidden w-[320px] border-[8px] overflow-scroll  border-black rounded-[40px] h-[684px] shadow-lg"
     >
@@ -82,17 +82,22 @@ const Preview = () => {
 
       <div className={`${togglePreview(activeTile)?.main} relative  px-4`}>
         {items?.map((item) => {
+          console.log(item, "item");
           return (
             <React.Fragment key={item.menuID}>
               <div
                 className={`${togglePreview(activeTile)?.container} ${
-                  activeTile === 'List Right' &&
+                  activeTile === "List Right" &&
                   isSelectedPreview &&
-                  'flex-row-reverse'
+                  "flex-row-reverse"
                 } flex  my-4 `}
               >
                 {isSelectedPreview && (
-                  <div className={togglePreview(activeTile)?.imageContainer}>
+                  <div
+                    className={`${
+                      togglePreview(activeTile)?.imageContainer
+                    } w-[60px]`}
+                  >
                     {/* {backgroundColor ? (
                       <div
                         style={{
@@ -114,12 +119,16 @@ const Preview = () => {
                       />
                     )} */}
                     <Image
-                      className={`bg-cover rounded-lg ${
+                      className={`bg-cover rounded-lg w-[60px] ${
                         togglePreview(activeTile)?.imageClass
                       }`}
                       width={60}
                       height={60}
-                      src={Champagne}
+                      src={
+                        item?.image
+                          ? `data:image/jpeg;base64,${item?.image}`
+                          : NoMenu
+                      }
                       alt="menu"
                     />
                   </div>
@@ -135,7 +144,7 @@ const Preview = () => {
                   <p>{item.menuName}</p>
                   <p className="font-[700]">{item.itemName}</p>
                   <p className="text-[13px]">{formatPrice(item.price)}</p>
-                  {activeTile && activeTile !== 'Single column 1' && (
+                  {activeTile && activeTile !== "Single column 1" && (
                     <p className="text-[13px]">
                       {/* {togglePreview(activeTile)?.text3} */}
                       {item.itemDescription}

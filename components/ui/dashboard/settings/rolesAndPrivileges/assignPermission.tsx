@@ -68,7 +68,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
       canViewBooking: true,
       canViewBusiness: false,
       canViewCampaign: false,
-      canViewDashboard: false,
+      canViewDashboard: true,
       canViewMenu: true,
       canViewMessages: false,
       canViewOrder: true,
@@ -180,9 +180,16 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
         case "staff":
           return (
             <div className="grid place-content-center gap-2">
-              <span className="cursor-pointer ">
+              <span className="cursor-pointer">
                 <Switch
-                  defaultSelected={isChecked}
+                  isDisabled={
+                    role === "userRole" && cellValue === "canViewDashboard"
+                  }
+                  isSelected={
+                    role === "userRole" && cellValue === "canViewDashboard"
+                      ? true
+                      : isChecked
+                  }
                   onChange={(e) =>
                     handleCheckboxChange(role, cellValue, e.target.checked)
                   }
