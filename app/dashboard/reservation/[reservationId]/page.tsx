@@ -23,7 +23,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { FaEdit } from "react-icons/fa";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -54,7 +54,7 @@ const ReservationDetails = () => {
     setTableStatus("All");
     setPage(1);
   }, []);
-  useLayoutEffect(() => {
+  useEffect(() => {
     const timeout = setTimeout(() => {
       if (data && !isLoading) {
         setLoading(false);
@@ -62,8 +62,8 @@ const ReservationDetails = () => {
     }, 2000);
   
     return () => clearTimeout(timeout);
-  }, [data, isLoading, reservationId]); 
-  
+  }, [data, isLoading, reservationId, isOpenEdit]); 
+
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {

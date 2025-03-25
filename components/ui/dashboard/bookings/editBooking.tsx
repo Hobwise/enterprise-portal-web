@@ -224,6 +224,9 @@ const EditBooking = ({
       isDismissable={false}
       isOpen={isEditBookingModal}
       onOpenChange={toggleEditBookingModal}
+      classNames={{
+        wrapper: " z-[9999]",
+      }}
     >
       <ModalContent>
         {(onClose) => (

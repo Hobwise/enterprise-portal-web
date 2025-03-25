@@ -191,13 +191,13 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
     <section className="border w-full border-primaryGrey rounded-lg">
       <div>
         <div className="flex p-4 justify-between items-center">
-          <div className="relative z-[9999]">
+          <div className="relative z-[99]">
             <div className="flex items-center">
               <DatePicker
                 selected={selectedDate}
                 onChange={handleDateChange}
                 dateFormat="MMMM d, yyyy"
-                className="border-none font-medium text-gray-800 relative z-[9999] cursor-pointer focus:outline-none"
+                className="border-none font-medium text-gray-800 relative cursor-pointer focus:outline-none"
                 customInput={
                   <button className="flex items-center">
                     <span>{formatDate(selectedDate)}</span>

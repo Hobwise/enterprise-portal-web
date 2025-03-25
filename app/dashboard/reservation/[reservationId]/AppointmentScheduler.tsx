@@ -441,6 +441,8 @@ const AppointmentScheduler: React.FC<{
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
+              handleCloseBookingDetails()
+
             }}
             disabled={loadingStates.edit}
           >
@@ -486,6 +488,8 @@ const AppointmentScheduler: React.FC<{
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
+              handleCloseBookingDetails()
+
             }}
             disabled={loadingStates.edit}
           >
@@ -506,7 +510,7 @@ const AppointmentScheduler: React.FC<{
           </button>
           <button
             className="px-4 py-2 bg-[#5F35D2] text-white rounded-md flex items-center justify-center min-w-[80px]"
-            onClick={() => updateBookingStatus(2, appointment.id, "admit")}
+            onClick={() => updateBookingStatus(0, appointment.id, "admit")}
             disabled={loadingStates.admit}
           >
             {loadingStates.admit ? (
@@ -531,6 +535,7 @@ const AppointmentScheduler: React.FC<{
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
+              handleCloseBookingDetails()
             }}
             disabled={loadingStates.edit}
           >
@@ -542,7 +547,7 @@ const AppointmentScheduler: React.FC<{
          
         <button
             className="px-4 py-2 bg-[#5F35D2] text-white rounded-md  flex items-center justify-center min-w-[80px]"
-            onClick={() => updateBookingStatus(3, appointment.id, "close")}
+            onClick={() => updateBookingStatus(2, appointment.id, "close")}
             disabled={loadingStates.cancel}
           >
             {loadingStates.cancel ? (

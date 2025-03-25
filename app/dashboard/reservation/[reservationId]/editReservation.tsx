@@ -208,7 +208,7 @@ const EditReservation = ({
   return (
     <Modal
       classNames={{
-        wrapper: "overflow-hidden",
+        wrapper: "overflow-hidden z-[9999]",
       }}
       size="5xl"
       isOpen={isOpenEdit}
@@ -230,7 +230,9 @@ const EditReservation = ({
         toggleModalEdit();
       }}
     >
-      <ModalContent>
+      <ModalContent   classNames={{
+        wrapper: " z-[9999]",
+      }}>
         {(onClose) => (
           <>
             <ModalBody>
