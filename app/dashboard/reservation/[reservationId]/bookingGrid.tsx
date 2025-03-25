@@ -191,7 +191,7 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
     <section className="border w-full border-primaryGrey rounded-lg">
       <div>
         <div className="flex p-4 justify-between items-center">
-          <div className="relative z-[9999]">
+          <div className="relative z-[99]">
             <div className="flex items-center">
               <DatePicker
                 selected={selectedDate}

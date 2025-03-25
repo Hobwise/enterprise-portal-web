@@ -415,11 +415,3 @@ input:-webkit-autofill:focus {
 
 }
 
- .backdrop-opacity-disabled.w-screen.h-screen.fixed.inset-0 {
-  z-index: 9999 !important;
-}
-
-.flex.w-screen.fixed.inset-0.z-50.overflow-x-auto{
-  z-index: 99999 !important;
-
-}
