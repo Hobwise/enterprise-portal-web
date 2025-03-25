@@ -441,6 +441,8 @@ const AppointmentScheduler: React.FC<{
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
+              handleCloseBookingDetails()
+
             }}
             disabled={loadingStates.edit}
           >
@@ -486,6 +488,8 @@ const AppointmentScheduler: React.FC<{
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
+              handleCloseBookingDetails()
+
             }}
             disabled={loadingStates.edit}
           >
@@ -531,6 +535,7 @@ const AppointmentScheduler: React.FC<{
             onClick={() => {
               setLoadingStates((prev) => ({ ...prev, edit: true }));
               toggleEditBookingModal(appointment);
+              handleCloseBookingDetails()
             }}
             disabled={loadingStates.edit}
           >

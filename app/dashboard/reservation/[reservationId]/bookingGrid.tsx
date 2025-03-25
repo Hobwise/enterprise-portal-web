@@ -197,7 +197,7 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
                 selected={selectedDate}
                 onChange={handleDateChange}
                 dateFormat="MMMM d, yyyy"
-                className="border-none font-medium text-gray-800 relative z-[9999] cursor-pointer focus:outline-none"
+                className="border-none font-medium text-gray-800 relative cursor-pointer focus:outline-none"
                 customInput={
                   <button className="flex items-center">
                     <span>{formatDate(selectedDate)}</span>
