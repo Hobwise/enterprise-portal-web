@@ -414,3 +414,12 @@ input:-webkit-autofill:focus {
   background-color: #ffff !important;
 
 }
+
+ .backdrop-opacity-disabled {
+  z-index: 9999 !important;
+}
+
+.inset-0.z-50{
+  z-index: 99999 !important;
+
+}

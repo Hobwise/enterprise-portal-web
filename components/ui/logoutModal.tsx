@@ -16,8 +16,8 @@ const LogoutModal = ({ isOpen, onOpenChange, externalLogout }: ILogoutModal) => 
   };
 
   return (
-    <Modal isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange}>
-      <ModalContent>
+    <Modal  isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange}>
+      <ModalContent >
         {(onClose) => (
           <>
             <ModalBody>
@@ -30,7 +30,7 @@ const LogoutModal = ({ isOpen, onOpenChange, externalLogout }: ILogoutModal) => 
             <ModalFooter className="flex justify-center items-center ">
               <div className="flex gap-4 mb-4">
                 <Button className="flex-grow" color="default" variant="bordered" onPress={onOpenChange}>
-                  Cancel
+                  Cancel 
                 </Button>
                 <Button
                   className="flex-grow"
