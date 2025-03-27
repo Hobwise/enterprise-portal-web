@@ -3,6 +3,7 @@ import { AUTH, DASHBOARD } from "../../api-url";
 import api, { handleError } from "../../apiService";
 import { businessAddressValidation, emailValidation } from "../validations";
 import axios from "axios";
+import { notify } from "@/lib/utils";
 type termsNcondition = {
   content: string;
   isPublished: boolean;
@@ -298,11 +299,22 @@ export async function initializeTransactionv2(
 
   return axios(config)
     .then((response) => {
-      console.log(response);
       return response?.data?.data?.data;
     })
     .catch((error) => {
-      console.log("ERROR", error);
+      if (error.status === 400) {
+        notify({
+          title: "Error",
+          text: error.response.data.error.responseDescription,
+          type: "error",
+        });
+      } else {
+        notify({
+          title: "Error",
+          text: "An error occurred during transaction initialization",
+          type: "error",
+        });
+      }
     });
 }
 

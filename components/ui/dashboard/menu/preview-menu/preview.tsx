@@ -25,46 +25,54 @@ const Preview = () => {
   const baseString = "data:image/jpeg;base64,";
 
   const items = data?.flatMap((obj) => obj.items);
+  const styles = togglePreview(activeTile);
 
   return (
     <article
       style={{
         backgroundColor: backgroundColor || "white",
       }}
-      className="xl:block relative  hidden w-[320px] border-[8px] overflow-scroll  border-black rounded-[40px] h-[684px] shadow-lg"
+      className="xl:block relative hidden w-[320px] border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px] shadow-lg"
     >
       {selectedImage.length > baseString.length && (
         <Image
           fill
-          className="absolute backdrop-brightness-125 bg-cover opacity-25"
+          className="absolute object-cover backdrop-brightness-125 opacity-25 -z-10"
           src={selectedImage}
           alt="background"
+          priority
         />
       )}
 
-      <h1 className="text-[28px] font-[700] relative p-4 pt-6">Menu</h1>
-      {/* <div className="overflow-scroll w-full px-4">
-        <Tabs
-          classNames={{
-            tabList:
-              'gap-3 w-full relative rounded-none p-0 border-b border-divider',
-            cursor: 'w-full bg-primaryColor',
-            tab: 'max-w-fit px-0 h-10',
-            tabContent: 'group-data-[selected=true]:text-primaryColor',
-          }}
-          variant={'underlined'}
-          aria-label="menu filter"
-          // isDisabled
-          disabledKeys={['Drinks', 'Dessert', 'Breakfast']}
+      {/* Menu header */}
+      <header className="sticky top-0 z-10 bg-inherit pt-4 px-4">
+        <h1
+          style={{ color: selectedTextColor }}
+          className="text-[28px] font-bold"
         >
-          {menus.map((menu) => {
-            return (
+          Menu
+        </h1>
+
+        {/* Optional tabs - currently commented out */}
+        {/* <div className="overflow-x-auto w-full">
+          <Tabs
+            classNames={{
+              tabList:
+                "gap-3 w-full relative rounded-none p-0 border-b border-divider",
+              cursor: "w-full bg-primaryColor",
+              tab: "max-w-fit px-0 h-10",
+              tabContent: "group-data-[selected=true]:text-primaryColor",
+            }}
+            variant={"underlined"}
+            aria-label="menu filter"
+            disabledKeys={["Drinks", "Dessert", "Breakfast"]}
+          >
+            {menus.map((menu) => (
               <Tab
                 key={menu.name}
                 title={
                   <div className="flex items-center space-x-2">
                     <span>{menu.name}</span>
-
                     <Chip
                       classNames={{
                         base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
@@ -75,90 +83,73 @@ const Preview = () => {
                   </div>
                 }
               />
-            );
-          })}
-        </Tabs>
-      </div> */}
+            ))}
+          </Tabs>
+        </div> */}
+      </header>
 
-      <div className={`${togglePreview(activeTile)?.main} relative  px-4`}>
-        {items?.map((item) => {
-          console.log(item, "item");
-          return (
-            <React.Fragment key={item.menuID}>
+      <main className={`${styles.main} relative px-4 pb-4`}>
+        {items?.length ? (
+          items.map((item) => (
+            <React.Fragment key={`${item.menuID}-${item.itemName}`}>
               <div
-                className={`${togglePreview(activeTile)?.container} ${
+                className={`${styles.container} ${
                   activeTile === "List Right" &&
                   isSelectedPreview &&
                   "flex-row-reverse"
-                } flex  my-4 `}
+                } flex my-4 gap-3`}
               >
                 {isSelectedPreview && (
-                  <div
-                    className={`${
-                      togglePreview(activeTile)?.imageContainer
-                    } w-[60px]`}
-                  >
-                    {/* {backgroundColor ? (
-                      <div
-                        style={{
-                          backgroundColor: backgroundColor,
-                        }}
-                        className={`${
-                          togglePreview(activeTile)?.imageClass
-                        } rounded-lg`}
-                      />
-                    ) : (
-                      <Image
-                        className={`bg-cover rounded-lg ${
-                          togglePreview(activeTile)?.imageClass
-                        }`}
-                        width={60}
-                        height={60}
-                        src={selectedImage || noImage}
-                        alt='menu'
-                      />
-                    )} */}
+                  <div className={`${styles.imageContainer} shrink-0`}>
                     <Image
-                      className={`bg-cover rounded-lg w-[60px] ${
-                        togglePreview(activeTile)?.imageClass
-                      }`}
-                      width={60}
-                      height={60}
+                      className={`bg-cover rounded-lg ${styles.imageClass} object-cover`}
+                      width={activeTile.includes("Single column") ? 300 : 60}
+                      height={activeTile.includes("Single column") ? 200 : 60}
                       src={
                         item?.image
                           ? `data:image/jpeg;base64,${item?.image}`
                           : NoMenu
                       }
-                      alt="menu"
+                      alt={item.itemName || "Menu item"}
                     />
                   </div>
                 )}
                 <div
-                  style={{
-                    color: selectedTextColor,
-                  }}
-                  className={`text-[14px]  ${
-                    togglePreview(activeTile)?.textContainer
-                  } flex flex-col justify-center`}
+                  style={{ color: selectedTextColor }}
+                  className={`text-[14px] ${styles.textContainer} flex flex-col justify-center`}
                 >
-                  <p>{item.menuName}</p>
-                  <p className="font-[700]">{item.itemName}</p>
-                  <p className="text-[13px]">{formatPrice(item.price)}</p>
-                  {activeTile && activeTile !== "Single column 1" && (
-                    <p className="text-[13px]">
-                      {/* {togglePreview(activeTile)?.text3} */}
-                      {item.itemDescription}
-                    </p>
+                  {item.menuName && (
+                    <span className="text-xs opacity-80">{item.menuName}</span>
                   )}
+                  <h3 className="font-bold">{item.itemName}</h3>
+                  <p className="text-[13px] font-semibold">
+                    {formatPrice(item.price)}
+                  </p>
+                  {activeTile &&
+                    activeTile !== "Single column 1" &&
+                    item.itemDescription && (
+                      <p className="text-[13px] mt-1 opacity-90">
+                        {item.itemDescription}
+                      </p>
+                    )}
                 </div>
               </div>
-              {togglePreview(activeTile)?.divider && (
-                <Divider className="text-[#E4E7EC] h-[1px]" />
-              )}
+              {styles.divider && <Divider className=" h-[1px]" />}
             </React.Fragment>
-          );
-        })}
-      </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center h-[500px] text-center">
+            <Image
+              src={NoMenu}
+              alt="No menu items"
+              width={120}
+              height={120}
+              className="opacity-50 mb-4"
+            />
+            <p style={{ color: selectedTextColor }}>No menu items to display</p>
+          </div>
+        )}
+      </main>
     </article>
   );
 };

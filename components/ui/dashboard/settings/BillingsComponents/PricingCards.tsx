@@ -64,7 +64,6 @@ export const PricingCards: React.FC<PlansFromParent> = ({
     }
   }, [disableButtons]);
 
-  //* SET THE PLANS FROM THE PARENT COMPONENT *//
   useEffect(() => {
     setProfessionalPlan(plans?.Professional || null);
     setPremiumPlan(plans?.Premium || null);
@@ -94,13 +93,10 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       ? TYPE_OF_PLAN[2]
       : TYPE_OF_PLAN[3];
 
-  // Destructure data from the hook, but only call the hook when there's a payload
-
   const initializeTrnx = (selectedPlan: number, e: any) => {
     console.log("initializeTrnx", selectedPlan);
     e.preventDefault();
 
-    // Align plans array with selectedPlan (1-based indexing)
     const plans = [null, starterPlan, professionalPlan, premiumPlan];
     const setLoading = [
       null,
@@ -109,7 +105,6 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       setPremiumLoading,
     ];
 
-    // Boundary check for selectedPlan
     if (selectedPlan < 1 || selectedPlan >= plans.length) {
       return notify({
         title: "Payment Plan Error",
@@ -118,7 +113,6 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       });
     }
 
-    // Activate the loader for the selected plan
     setLoading[selectedPlan]?.(true);
 
     const amount =
@@ -126,7 +120,6 @@ export const PricingCards: React.FC<PlansFromParent> = ({
         ? plans[selectedPlan]?.monthlyFee || 0
         : plans[selectedPlan]?.yearlyFee || 0;
 
-    // Error handling for undefined or null plans
     if (!plans[selectedPlan]) {
       const notificationBody = {
         title: "Payment Plan Error",
@@ -146,50 +139,50 @@ export const PricingCards: React.FC<PlansFromParent> = ({
         plan: selectedPlan,
         paymentPeriod: activeTab === "Monthly" ? 0 : 1,
       };
-      // console.log("BODY", body);
 
-      init(body);
-      setLoading[selectedPlan]?.(false);
+      init(body, selectedPlan);
     }
   };
 
-  const init = async (payload: any) => {
+  const init = async (payload: any, selectedPlan: number) => {
     const token = getJsonItemFromLocalStorage("userInformation").token;
-    const initializedTransaction = await initializeTransactionv2(
-      businessID,
-      payload,
-      token
-    );
-    console.log(initializedTransaction, "initializedTransaction");
-    if (initializedTransaction.access_code) {
-      // console.log("INITIALIZED TRANSACTION", initializedTransaction);
-      const access_code = initializedTransaction.access_code;
+    try {
+      const initializedTransaction = await initializeTransactionv2(
+        businessID,
+        payload,
+        token
+      );
 
-      const handleSuccess = async () => {
-        const userDetailss = await getUser(userId).then((response) =>
-          window.location.reload()
-        );
+      if (initializedTransaction.access_code) {
+        const access_code = initializedTransaction.access_code;
 
-        // console.log("USER", userDetailss);
-        // window.location.reload()
-      };
+        const handleSuccess = async () => {
+          const userDetailss = await getUser(userId).then((response) =>
+            window.location.reload()
+          );
+        };
 
-      popup.resumeTransaction({
-        accessCode: access_code,
-        onSuccess: () => handleSuccess(),
-      });
-
-      // popup.resumeTransaction(access_code);
-
-      setPremiumLoading(false);
-      setStarterLoading(false);
-      setProfessionalLoading(false);
-    } else {
-      notify({
-        title: "Error",
-        text: "Somethin went wrong",
-        type: "error",
-      });
+        popup.resumeTransaction({
+          accessCode: access_code,
+          onSuccess: () => handleSuccess(),
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      switch (selectedPlan) {
+        case 1:
+          setStarterLoading(false);
+          break;
+        case 2:
+          setProfessionalLoading(false);
+          break;
+        case 3:
+          setPremiumLoading(false);
+          break;
+        default:
+          break;
+      }
     }
   };
 
@@ -210,7 +203,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           <div className="sm:w-auto">
             <Tabs
               aria-label="Dynamic tabs"
-              onSelectionChange={(e) => handleTabChange(e.toString())} // Trigger handler on tab change
+              onSelectionChange={(e) => handleTabChange(e.toString())}
             >
               {tabs.map((item) => (
                 <Tab key={item.id} title={item.label} value={item.id} />
@@ -318,7 +311,11 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                   }
                   className="mt-6 w-full mx-auto border border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
                 >
-                  {planLoading[index] ? <Spinner size="sm" /> : "Select Plan"}
+                  {planLoading[index] ? (
+                    <Spinner color="default" size="sm" />
+                  ) : (
+                    "Select Plan"
+                  )}
                 </button>
               )}
             </div>
