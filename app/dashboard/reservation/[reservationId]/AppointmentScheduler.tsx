@@ -211,7 +211,6 @@ const AppointmentScheduler: React.FC<{
     "09 PM",
     "10 PM",
     "11 PM",
-    "12 AM",
   ];
 
   // Handle opening booking details
@@ -365,15 +364,15 @@ const AppointmentScheduler: React.FC<{
     const width = (durationInMinutes / totalMinutesInDay) * 100;
     const clampedWidth = Math.min(width, 100 - leftPosition); 
 
-    if(durationInMinutes < 59){
+    if(durationInMinutes < 50){
       return {
-        left: `${leftPosition}%`,
-        width: `${clampedWidth + 5}%`,
+        left: `${leftPosition -1.95}%`,
+        width: `${clampedWidth + 4}%`,
       };
     }
     return {
-      left: `${leftPosition - 2.3 }%`,
-      width: `${clampedWidth}%`,
+      left: `${leftPosition - 1.45 }%`,
+      width: `${clampedWidth -.21}%`,
     };
   };
 
@@ -606,7 +605,7 @@ const AppointmentScheduler: React.FC<{
         <div
           ref={timelineRef}
           className="relative "
-          style={{ minWidth: "3900px" }}
+          style={{ minWidth: "3950px" }}
         >
           {/* Time slots header */}
           <div className="flex border-b text-sm border-t mb-2 shadow">
@@ -622,7 +621,7 @@ const AppointmentScheduler: React.FC<{
 
           {/* Current time marker */}
           <div
-            className="absolute h-full w-1 bg-purple-500 z-10"
+            className="absolute h-full w-1 bg-purple-500 top-[3rem] z-10"
             style={currentTimePosition}
           >
             <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-purple-500 rotate-180 -ml-2 -mt-0"></div>
