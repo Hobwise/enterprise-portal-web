@@ -8,6 +8,7 @@ import {  MdOutlineMailOutline } from "react-icons/md";
 
 // TypeScript interfaces
 interface Appointment {
+  numberOfGuest: ReactNode;
   id: number;
   name: string;
   quantity: number;
@@ -68,6 +69,7 @@ const AppointmentScheduler: React.FC<{
     confirm: false,
     admit: false,
     cancel: false,
+    complete: false,
     close: false,
   });
 
@@ -89,14 +91,14 @@ const AppointmentScheduler: React.FC<{
   const updateBookingStatus = async (
     status: number,
     id: string,
-    actionType: "confirm" | "admit" | "cancel" | "close"
+    actionType: "confirm" | "admit" | "cancel" | "close" | "complete"
   ) => {
     try {
       // Set loading state
       setLoadingStates((prev) => ({ ...prev, [actionType]: true }));
-
+  
       const data = await postBookingStatus(id, status);
-
+  
       if (data?.data?.isSuccessful) {
         notify({
           title: "Success!",
@@ -106,12 +108,38 @@ const AppointmentScheduler: React.FC<{
         setSelectedAppointment(null);
         refetch();
       }
+      else {
+        // More comprehensive error handling
+        const errorMessage = 
+          data?.response?.data?.error?.responseDescription || 
+          data?.response?.data?.message || 
+          "An unknown error occurred";
+  
+        notify({
+          title: "Error!",
+          text: errorMessage,
+          type: "error",
+        });
+        
+        console.error('Booking status update error:', {
+          response: data?.response?.data,
+          fullError: data
+        });
+      }
     } catch (error) {
+      // Handle network errors or unexpected exceptions
+      const errorMessage = 
+        (error as any)?.response?.data?.error?.responseDescription ||
+        (error as any)?.message ||
+        "Operation failed";
+  
       notify({
         title: "Error",
-        text: "Operation failed",
+        text: errorMessage,
         type: "error",
       });
+  
+      console.error('Caught error in updateBookingStatus:', error);
     } finally {
       // Reset loading state
       setLoadingStates((prev) => ({ ...prev, [actionType]: false }));
@@ -183,6 +211,7 @@ const AppointmentScheduler: React.FC<{
     "09 PM",
     "10 PM",
     "11 PM",
+    "12 AM",
   ];
 
   // Handle opening booking details
@@ -319,6 +348,7 @@ const AppointmentScheduler: React.FC<{
     // Calculate position as percentage of 24 hours
     const totalMinutesInDay = 24 * 60;
     const startMinutesFromMidnight = startHour * 60 + startMinute;
+    
 
     // Handle case where end time might be on the next day
     let endMinutesFromMidnight = endHour * 60 + endMinute;
@@ -330,23 +360,20 @@ const AppointmentScheduler: React.FC<{
     // Calculate the left position (start position) as a percentage
     const leftPosition = (startMinutesFromMidnight / totalMinutesInDay) * 100;
 
-    // Calculate the width as a percentage
+
     const durationInMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
     const width = (durationInMinutes / totalMinutesInDay) * 100;
+    const clampedWidth = Math.min(width, 100 - leftPosition); 
 
-    
-    // Ensure width doesn't exceed 100%
-    const clampedWidth = Math.min(width, 100 - leftPosition);
-
-    if(durationInMinutes < 60){
-      return {
-        left: `${leftPosition - 2}%`,
-        width: `${clampedWidth + 5}%`,
-      };
-    }
+    // if(durationInMinutes < 60){
+    //   return {
+    //     left: `${leftPosition}%`,
+    //     width: `${clampedWidth + 5}%`,
+    //   };
+    // }
     return {
-      left: `${leftPosition - 2}%`,
-      width: `${clampedWidth + 1}%`,
+      left: `${leftPosition - 2.3 }%`,
+      width: `${clampedWidth}%`,
     };
   };
 
@@ -547,10 +574,12 @@ const AppointmentScheduler: React.FC<{
          
         <button
             className="px-4 py-2 bg-[#5F35D2] text-white rounded-md  flex items-center justify-center min-w-[80px]"
-            onClick={() => updateBookingStatus(2, appointment.id, "close")}
-            disabled={loadingStates.cancel}
+            onClick={() => {
+              setLoadingStates((prev) => ({ ...prev, complete: true }));
+              updateBookingStatus(2, appointment.id, "complete")}}
+            disabled={loadingStates.complete}
           >
-            {loadingStates.cancel ? (
+            {loadingStates.complete ? (
               <span className="inline-block text-sm  w-4 h-4 border-2  border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Complete
@@ -577,7 +606,7 @@ const AppointmentScheduler: React.FC<{
         <div
           ref={timelineRef}
           className="relative "
-          style={{ minWidth: "4000px" }}
+          style={{ minWidth: "3900px" }}
         >
           {/* Time slots header */}
           <div className="flex border-b text-sm border-t mb-2 shadow">
@@ -604,7 +633,7 @@ const AppointmentScheduler: React.FC<{
             {/* Vertical time guides */}
             <div className="absolute inset-0 flex pointer-events-none">
               {timeSlots.map((_, index) => (
-                <div key={index} className="flex-1 border-l h-full"></div>
+                <div key={index} className="flex-1 border-l border-gray-300 h-full"></div>
               ))}
             </div>
 

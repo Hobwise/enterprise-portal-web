@@ -349,7 +349,7 @@ const CreateBooking = ({
                     type="submit"
                   >
                     {" "}
-                    {isLoading ? "Loading" : "Proceed to checkout"}
+                    {isLoading ? "Loading" : "Proceed"}
                   </CustomButton>
                 </form>
               </ScrollShadow>
