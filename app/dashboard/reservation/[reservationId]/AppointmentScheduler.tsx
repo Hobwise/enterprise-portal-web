@@ -365,12 +365,12 @@ const AppointmentScheduler: React.FC<{
     const width = (durationInMinutes / totalMinutesInDay) * 100;
     const clampedWidth = Math.min(width, 100 - leftPosition); 
 
-    // if(durationInMinutes < 60){
-    //   return {
-    //     left: `${leftPosition}%`,
-    //     width: `${clampedWidth + 5}%`,
-    //   };
-    // }
+    if(durationInMinutes < 59){
+      return {
+        left: `${leftPosition}%`,
+        width: `${clampedWidth + 5}%`,
+      };
+    }
     return {
       left: `${leftPosition - 2.3 }%`,
       width: `${clampedWidth}%`,
