@@ -74,6 +74,9 @@ const Reservation: React.FC = () => {
     `${companyInfo.webUrl}/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
   );
 
+
+
+
   const exportCSV = async () => {
     setLoadingExport(true);
     const response = await exportGrid(business[0]?.businessId, 4);

@@ -364,15 +364,15 @@ const AppointmentScheduler: React.FC<{
     const width = (durationInMinutes / totalMinutesInDay) * 100;
     const clampedWidth = Math.min(width, 100 - leftPosition); 
 
-    if(durationInMinutes < 50){
+    if(durationInMinutes < 60){
       return {
         left: `${leftPosition -1.95}%`,
         width: `${clampedWidth + 4}%`,
       };
     }
     return {
-      left: `${leftPosition - 1.45 }%`,
-      width: `${clampedWidth -.21}%`,
+      left: `${leftPosition - 1.55 }%`,
+      width: `${clampedWidth -.25}%`,
     };
   };
 
@@ -438,7 +438,7 @@ const AppointmentScheduler: React.FC<{
     const position = (currentMinutesFromMidnight / totalMinutesInDay) * 100;
 
     return {
-      left: `${position}%`,
+      left: `${position -2}%`,
     };
   };
 
