@@ -8,6 +8,7 @@ import {  MdOutlineMailOutline } from "react-icons/md";
 
 // TypeScript interfaces
 interface Appointment {
+  numberOfGuest: ReactNode;
   id: number;
   name: string;
   quantity: number;
@@ -68,6 +69,7 @@ const AppointmentScheduler: React.FC<{
     confirm: false,
     admit: false,
     cancel: false,
+    complete: false,
     close: false,
   });
 
@@ -89,14 +91,14 @@ const AppointmentScheduler: React.FC<{
   const updateBookingStatus = async (
     status: number,
     id: string,
-    actionType: "confirm" | "admit" | "cancel" | "close"
+    actionType: "confirm" | "admit" | "cancel" | "close" | "complete"
   ) => {
     try {
       // Set loading state
       setLoadingStates((prev) => ({ ...prev, [actionType]: true }));
-
+  
       const data = await postBookingStatus(id, status);
-
+  
       if (data?.data?.isSuccessful) {
         notify({
           title: "Success!",
@@ -106,12 +108,38 @@ const AppointmentScheduler: React.FC<{
         setSelectedAppointment(null);
         refetch();
       }
+      else {
+        // More comprehensive error handling
+        const errorMessage = 
+          data?.response?.data?.error?.responseDescription || 
+          data?.response?.data?.message || 
+          "An unknown error occurred";
+  
+        notify({
+          title: "Error!",
+          text: errorMessage,
+          type: "error",
+        });
+        
+        console.error('Booking status update error:', {
+          response: data?.response?.data,
+          fullError: data
+        });
+      }
     } catch (error) {
+      // Handle network errors or unexpected exceptions
+      const errorMessage = 
+        (error as any)?.response?.data?.error?.responseDescription ||
+        (error as any)?.message ||
+        "Operation failed";
+  
       notify({
         title: "Error",
-        text: "Operation failed",
+        text: errorMessage,
         type: "error",
       });
+  
+      console.error('Caught error in updateBookingStatus:', error);
     } finally {
       // Reset loading state
       setLoadingStates((prev) => ({ ...prev, [actionType]: false }));
@@ -302,54 +330,71 @@ const AppointmentScheduler: React.FC<{
   };
 
   // Calculate position and width for appointment bars based on 24-hour grid
-  const calculateBarStyle = (
-    startTime: string,
-    endTime: string
-  ): React.CSSProperties => {
+  const calculateBarStyle = (startTime: string, endTime: string) => {
     // Parse time strings to extract hours and minutes
     const startParts = startTime.split(":");
     const endParts = endTime.split(":");
-
+  
     const startHour = parseInt(startParts[0], 10);
     const startMinute = parseInt(startParts[1], 10);
-
+  
     const endHour = parseInt(endParts[0], 10);
     const endMinute = parseInt(endParts[1], 10);
-
+  
     // Calculate position as percentage of 24 hours
     const totalMinutesInDay = 24 * 60;
     const startMinutesFromMidnight = startHour * 60 + startMinute;
-
+    
     // Handle case where end time might be on the next day
     let endMinutesFromMidnight = endHour * 60 + endMinute;
     if (endMinutesFromMidnight < startMinutesFromMidnight) {
       // If end time is earlier than start time, assume it's the next day
       endMinutesFromMidnight += totalMinutesInDay;
     }
-
+  
     // Calculate the left position (start position) as a percentage
-    const leftPosition = (startMinutesFromMidnight / totalMinutesInDay) * 100;
-
-    // Calculate the width as a percentage
-    const durationInMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
-    const width = (durationInMinutes / totalMinutesInDay) * 100;
-
+    // The timeline starts at 1 AM, so subtract 60 minutes (1 hour) from calculations
+    const adjustedStartMinutes = startMinutesFromMidnight - 60;
+    const timelineMinutes = 23 * 60; // 23 hours (1 AM to midnight)
     
-    // Ensure width doesn't exceed 100%
-    const clampedWidth = Math.min(width, 100 - leftPosition);
+    const leftPosition = (adjustedStartMinutes / timelineMinutes) * 100;
+    
+    const durationInMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
+    const width = (durationInMinutes / timelineMinutes) * 100;
 
-    if(durationInMinutes < 60){
+    if(durationInMinutes < 30){
       return {
-        left: `${leftPosition - 2}%`,
-        width: `${clampedWidth + 5}%`,
+        left: `${Math.max(0, leftPosition)}%`,
+        width: `${width + 2}%`,
       };
     }
+    else if(durationInMinutes < 59){
+      return {
+        left: `${Math.max(0, leftPosition)}%`,
+        width: `${width + .5}%`,
+      };
+    }
+  
     return {
-      left: `${leftPosition - 2}%`,
-      width: `${clampedWidth + 1}%`,
+      left: `${Math.max(0, leftPosition)}%`,
+      width: `${width}%`,
     };
   };
 
+  const calculateCurrentTimePosition = () => {
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+  
+    // Calculate position as percentage of 23 hours (1 AM to midnight)
+    const timelineMinutes = 23 * 60;
+    // Adjust for timeline starting at 1 AM
+    const adjustedMinutesFromMidnight = (hours * 60 + minutes) - 60;
+    const position = (adjustedMinutesFromMidnight / timelineMinutes) * 100;
+  
+    return {
+      left: `${Math.max(0, position)}%`,
+    };
+  };
   // Check if two appointments overlap in time
   const doAppointmentsOverlap = (a: Appointment, b: Appointment): boolean => {
     const aStart = timeToMinutes(a.startTime);
@@ -401,20 +446,6 @@ const AppointmentScheduler: React.FC<{
     return rows;
   };
 
-  // Calculate current time marker position
-  const calculateCurrentTimePosition = (): React.CSSProperties => {
-    const hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes();
-
-    // Calculate position as percentage of 24 hours
-    const totalMinutesInDay = 24 * 60;
-    const currentMinutesFromMidnight = hours * 60 + minutes;
-    const position = (currentMinutesFromMidnight / totalMinutesInDay) * 100;
-
-    return {
-      left: `${position}%`,
-    };
-  };
 
   const currentTimePosition = calculateCurrentTimePosition();
 
@@ -547,10 +578,12 @@ const AppointmentScheduler: React.FC<{
          
         <button
             className="px-4 py-2 bg-[#5F35D2] text-white rounded-md  flex items-center justify-center min-w-[80px]"
-            onClick={() => updateBookingStatus(2, appointment.id, "close")}
-            disabled={loadingStates.cancel}
+            onClick={() => {
+              setLoadingStates((prev) => ({ ...prev, complete: true }));
+              updateBookingStatus(2, appointment.id, "complete")}}
+            disabled={loadingStates.complete}
           >
-            {loadingStates.cancel ? (
+            {loadingStates.complete ? (
               <span className="inline-block text-sm  w-4 h-4 border-2  border-gray-500 border-t-transparent rounded-full animate-spin mr-2"></span>
             ) : null}
             Complete
@@ -577,7 +610,7 @@ const AppointmentScheduler: React.FC<{
         <div
           ref={timelineRef}
           className="relative "
-          style={{ minWidth: "4000px" }}
+          style={{ minWidth: "3950px" }}
         >
           {/* Time slots header */}
           <div className="flex border-b text-sm border-t mb-2 shadow">
@@ -593,7 +626,7 @@ const AppointmentScheduler: React.FC<{
 
           {/* Current time marker */}
           <div
-            className="absolute h-full w-1 bg-purple-500 z-10"
+            className="absolute h-full w-1 bg-purple-500 top-[3rem] z-10"
             style={currentTimePosition}
           >
             <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[10px] border-b-purple-500 rotate-180 -ml-2 -mt-0"></div>
@@ -604,7 +637,7 @@ const AppointmentScheduler: React.FC<{
             {/* Vertical time guides */}
             <div className="absolute inset-0 flex pointer-events-none">
               {timeSlots.map((_, index) => (
-                <div key={index} className="flex-1 border-l h-full"></div>
+                <div key={index} className="flex-1 border-l border-gray-300 h-full"></div>
               ))}
             </div>
 
