@@ -330,7 +330,7 @@ const AppointmentScheduler: React.FC<{
   };
 
   // Calculate position and width for appointment bars based on 24-hour grid
-  const calculateBarStyle = (startTime, endTime) => {
+  const calculateBarStyle = (startTime: string, endTime: string) => {
     // Parse time strings to extract hours and minutes
     const startParts = startTime.split(":");
     const endParts = endTime.split(":");
@@ -361,6 +361,19 @@ const AppointmentScheduler: React.FC<{
     
     const durationInMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
     const width = (durationInMinutes / timelineMinutes) * 100;
+
+    if(durationInMinutes < 30){
+      return {
+        left: `${Math.max(0, leftPosition)}%`,
+        width: `${width + 2}%`,
+      };
+    }
+    else if(durationInMinutes < 59){
+      return {
+        left: `${Math.max(0, leftPosition)}%`,
+        width: `${width + .5}%`,
+      };
+    }
   
     return {
       left: `${Math.max(0, leftPosition)}%`,
