@@ -8,6 +8,7 @@ import {
   inputNameValidation,
   passwordValidation,
 } from "./validations";
+import { encryptPayload } from "@/lib/encrypt-decrypt";
 
 const userSchema = z
   .object({
@@ -227,15 +228,16 @@ export async function loginUser(formData: any) {
     password: formData.password,
     email: formData.email,
   });
-
+  const encryptData = encryptPayload(formData);
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
   try {
-    const data = await api.post(AUTH.loginUser, formData);
+    console.log(encryptData, "encryptData");
 
+    const data = await api.post(AUTH.loginUser, encryptData);
     return data;
   } catch (error) {
     handleError(error, false);
