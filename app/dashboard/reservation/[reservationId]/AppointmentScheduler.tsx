@@ -330,52 +330,58 @@ const AppointmentScheduler: React.FC<{
   };
 
   // Calculate position and width for appointment bars based on 24-hour grid
-  const calculateBarStyle = (
-    startTime: string,
-    endTime: string
-  ): React.CSSProperties => {
+  const calculateBarStyle = (startTime, endTime) => {
     // Parse time strings to extract hours and minutes
     const startParts = startTime.split(":");
     const endParts = endTime.split(":");
-
+  
     const startHour = parseInt(startParts[0], 10);
     const startMinute = parseInt(startParts[1], 10);
-
+  
     const endHour = parseInt(endParts[0], 10);
     const endMinute = parseInt(endParts[1], 10);
-
+  
     // Calculate position as percentage of 24 hours
     const totalMinutesInDay = 24 * 60;
     const startMinutesFromMidnight = startHour * 60 + startMinute;
     
-
     // Handle case where end time might be on the next day
     let endMinutesFromMidnight = endHour * 60 + endMinute;
     if (endMinutesFromMidnight < startMinutesFromMidnight) {
       // If end time is earlier than start time, assume it's the next day
       endMinutesFromMidnight += totalMinutesInDay;
     }
-
+  
     // Calculate the left position (start position) as a percentage
-    const leftPosition = (startMinutesFromMidnight / totalMinutesInDay) * 100;
-
-
+    // The timeline starts at 1 AM, so subtract 60 minutes (1 hour) from calculations
+    const adjustedStartMinutes = startMinutesFromMidnight - 60;
+    const timelineMinutes = 23 * 60; // 23 hours (1 AM to midnight)
+    
+    const leftPosition = (adjustedStartMinutes / timelineMinutes) * 100;
+    
     const durationInMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
-    const width = (durationInMinutes / totalMinutesInDay) * 100;
-    const clampedWidth = Math.min(width, 100 - leftPosition); 
-
-    if(durationInMinutes < 60){
-      return {
-        left: `${leftPosition -1.95}%`,
-        width: `${clampedWidth + 4}%`,
-      };
-    }
+    const width = (durationInMinutes / timelineMinutes) * 100;
+  
     return {
-      left: `${leftPosition - 1.55 }%`,
-      width: `${clampedWidth -.25}%`,
+      left: `${Math.max(0, leftPosition)}%`,
+      width: `${width}%`,
     };
   };
 
+  const calculateCurrentTimePosition = () => {
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+  
+    // Calculate position as percentage of 23 hours (1 AM to midnight)
+    const timelineMinutes = 23 * 60;
+    // Adjust for timeline starting at 1 AM
+    const adjustedMinutesFromMidnight = (hours * 60 + minutes) - 60;
+    const position = (adjustedMinutesFromMidnight / timelineMinutes) * 100;
+  
+    return {
+      left: `${Math.max(0, position)}%`,
+    };
+  };
   // Check if two appointments overlap in time
   const doAppointmentsOverlap = (a: Appointment, b: Appointment): boolean => {
     const aStart = timeToMinutes(a.startTime);
@@ -427,20 +433,6 @@ const AppointmentScheduler: React.FC<{
     return rows;
   };
 
-  // Calculate current time marker position
-  const calculateCurrentTimePosition = (): React.CSSProperties => {
-    const hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes();
-
-    // Calculate position as percentage of 24 hours
-    const totalMinutesInDay = 24 * 60;
-    const currentMinutesFromMidnight = hours * 60 + minutes;
-    const position = (currentMinutesFromMidnight / totalMinutesInDay) * 100;
-
-    return {
-      left: `${position -2}%`,
-    };
-  };
 
   const currentTimePosition = calculateCurrentTimePosition();
 
