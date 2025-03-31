@@ -8,7 +8,7 @@ import {
   inputNameValidation,
   passwordValidation,
 } from "./validations";
-import { encryptPayload } from "@/lib/encrypt-decrypt";
+import { decryptPayload, encryptPayload } from "@/lib/encrypt-decrypt";
 
 const userSchema = z
   .object({

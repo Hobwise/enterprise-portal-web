@@ -43,12 +43,23 @@ const LoginForm = () => {
     default: "/auth/select-business",
   };
 
+  const encryptedData = encryptPayload({
+    email: "damoye81@gmail.com",
+    password: "12345678",
+  });
+  console.log(encryptedData, "encryptedData");
+  const decryptedData = decryptPayload(encryptedData);
+  console.log(decryptedData, "decryptedData");
+
   const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     queryClient.clear();
     localStorage.clear();
     setLoading(true);
     const data = await loginUser(loginFormData);
+    const decryptedData = decryptPayload(data?.response);
+    console.log(decryptedData, "decryptedData");
+
     setResponse(data);
     const businesses = data?.data?.data?.businesses || [];
 
