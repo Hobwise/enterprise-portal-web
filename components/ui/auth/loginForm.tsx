@@ -15,7 +15,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaRegEnvelope } from "react-icons/fa6";
 import { useQueryClient } from "react-query";
-
 import { encryptPayload, decryptPayload } from "@/lib/encrypt-decrypt";
 
 const LoginForm = () => {
@@ -37,53 +36,67 @@ const LoginForm = () => {
       [name]: value,
     }));
   };
+
   const routePaths: Record<number | "default", string> = {
     0: "/auth/business-information",
     1: "/dashboard",
     default: "/auth/select-business",
   };
 
-  const encryptedData = encryptPayload({
-    email: "damoye81@gmail.com",
-    password: "12345678",
-  });
-  console.log(encryptedData, "encryptedData");
-  const decryptedData = decryptPayload(encryptedData);
-  console.log(decryptedData, "decryptedData");
-
   const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-    queryClient.clear();
-    localStorage.clear();
-    setLoading(true);
-    const data = await loginUser(loginFormData);
-    const decryptedData = decryptPayload(data?.response);
-    console.log(decryptedData, "decryptedData");
 
-    setResponse(data);
-    const businesses = data?.data?.data?.businesses || [];
+    try {
+      queryClient.clear();
+      localStorage.clear();
+      setLoading(true);
+      setResponse(null);
 
-    setLoading(false);
+      const response = await loginUser(loginFormData);
 
-    if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage("userInformation", data?.data?.data);
-      setLoginDetails(loginFormData);
-      saveJsonItemToLocalStorage("business", data?.data?.data.businesses);
-      setTokenCookie("token", data?.data?.data.token);
+      if (response?.data?.response) {
+        const decryptedData = decryptPayload(response.data.response);
 
-      router.push(routePaths[businesses.length] || routePaths.default);
-    } else {
-      if (data?.response?.data?.error?.responseCode === "HB016") {
-        return router.push(
-          `/auth/forget-password?email=${loginFormData.email}&screen=${2}`
-        );
+        if (decryptedData?.data) {
+          const { businesses, token } = decryptedData.data;
+
+          saveJsonItemToLocalStorage("userInformation", decryptedData.data);
+          setLoginDetails(loginFormData);
+          saveJsonItemToLocalStorage("business", businesses);
+          setTokenCookie("token", token);
+
+          const redirectPath =
+            businesses?.length >= 0
+              ? routePaths[businesses.length] || routePaths.default
+              : routePaths.default;
+
+          router.push(redirectPath);
+        }
       } else {
-        notify({
-          title: "Error!",
-          text: data?.response?.data?.error?.responseDescription,
-          type: "error",
-        });
+        const decryptedData = decryptPayload(response?.response?.data.response);
+
+        if (decryptedData?.error) {
+          if (decryptedData.error.responseCode === "HB016") {
+            return router.push(
+              `/auth/forget-password?email=${loginFormData.email}&screen=${2}`
+            );
+          }
+          notify({
+            title: "Error!",
+            text: decryptedData.error.responseDescription,
+            type: "error",
+          });
+          return;
+        }
       }
+    } catch (error: any) {
+      notify({
+        title: "Error!",
+        text: error.message || "An unexpected error occurred during login",
+        type: "error",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -97,7 +110,6 @@ const LoginForm = () => {
         value={loginFormData.email}
         label="Email Address"
         placeholder="Enter email"
-        // isRequired={true}
         endContent={<FaRegEnvelope className="text-foreground-500 text-l" />}
       />
 
@@ -110,15 +122,10 @@ const LoginForm = () => {
         label="Password"
         name="password"
         placeholder="Enter password"
-        // isRequired={true}
       />
 
       <Spacer y={4} />
       <div className="flex items-center justify-end">
-        {/* <Checkbox size='sm' className='rounded-lg' color='default'>
-          Remember me
-         
-        </Checkbox> */}
         <Link
           prefetch={true}
           className="text-primaryColor text-sm"

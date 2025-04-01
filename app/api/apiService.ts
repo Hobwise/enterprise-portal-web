@@ -7,6 +7,7 @@ import {
 } from "@/lib/utils";
 import axios, { AxiosError } from "axios";
 import { generateRefreshToken, logout } from "./controllers/auth";
+import { decryptPayload } from "@/lib/encrypt-decrypt";
 
 let isRefreshing = false;
 let refreshSubscribers = [];
@@ -63,21 +64,23 @@ const refreshToken = async () => {
     const { refreshToken, email } = userData;
     const businessId = businesses[0].businessId;
 
-    const rs = await generateRefreshToken({
+    const response = await generateRefreshToken({
       refreshToken,
       businessId,
       email,
     });
 
-    if (!rs || !rs.data?.data) {
+    if (!response?.data?.response) {
       throw new Error("Failed to generate new token");
     }
+
+    const decryptedData = decryptPayload(response?.data?.response);
 
     const {
       token: newToken,
       refreshToken: newRefreshToken,
       tokenExpiration: newExpiration,
-    } = rs.data.data;
+    } = decryptedData?.data;
 
     saveJsonItemToLocalStorage("userInformation", {
       ...userData,

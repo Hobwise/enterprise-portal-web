@@ -37,6 +37,7 @@ import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 import { useQueryClient } from "react-query";
+import { decryptPayload } from "@/lib/encrypt-decrypt";
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
@@ -69,20 +70,26 @@ const SideNav = () => {
         email,
       });
 
-      const {
-        token: newToken,
-        refreshToken: newRefreshToken,
-        tokenExpiration,
-      } = response?.data?.data;
+      if (response?.data?.response) {
+        const decryptedData = decryptPayload(response?.data?.response);
 
-      saveJsonItemToLocalStorage("userInformation", {
-        ...userData,
-        token: newToken,
-        refreshToken: newRefreshToken,
-        tokenExpiration,
-      });
-      setTokenCookie("token", newToken);
-      return newToken;
+        const {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          tokenExpiration,
+        } = decryptedData?.data;
+
+        saveJsonItemToLocalStorage("userInformation", {
+          ...userData,
+          token: newToken,
+          refreshToken: newRefreshToken,
+          tokenExpiration,
+        });
+        setTokenCookie("token", newToken);
+        return newToken;
+      } else {
+        resetLoginInfo();
+      }
     } catch (error) {
       resetLoginInfo();
       console.log(error);

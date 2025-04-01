@@ -235,9 +235,9 @@ export async function loginUser(formData: any) {
     };
   }
   try {
-    console.log(encryptData, "encryptData");
-
-    const data = await api.post(AUTH.loginUser, encryptData);
+    const data = await api.post(AUTH.loginUser, {
+      encryptedPayload: encryptData,
+    });
     return data;
   } catch (error) {
     handleError(error, false);
@@ -252,7 +252,7 @@ export async function loginUserSelectedBusiness(
     password: formData.password,
     email: formData.email,
   });
-
+  const encryptData = encryptPayload(formData);
   if (!validatedFields.success) {
     return {
       errors: validatedFields.error.flatten().fieldErrors,
@@ -261,9 +261,15 @@ export async function loginUserSelectedBusiness(
 
   const headers = businessId ? { businessId } : {};
   try {
-    const data = await api.post(AUTH.loginUserSelectedBusiness, formData, {
-      headers,
-    });
+    const data = await api.post(
+      AUTH.loginUserSelectedBusiness,
+      {
+        encryptedPayload: encryptData,
+      },
+      {
+        headers,
+      }
+    );
 
     return data;
   } catch (error) {
@@ -280,8 +286,12 @@ export async function loginUserSelectedBusiness(
 //   }
 // }
 export async function generateRefreshToken(formData: any) {
-  return api.post(AUTH.refreshToken, formData);
+  const encryptData = encryptPayload(formData);
+  return api.post(AUTH.refreshToken, {
+    encryptedPayload: encryptData,
+  });
 }
+
 export async function forgetPassword(formData: any) {
   const validatedFields = forgetPasswordSchema.safeParse({
     email: formData.email,
