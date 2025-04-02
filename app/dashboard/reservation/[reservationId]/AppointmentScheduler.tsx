@@ -245,38 +245,38 @@ const AppointmentScheduler: React.FC<{
       case "Completed":
         return "text-green-500";
       case "Expired":
-        return "text-yellow-500";
+        return "text-amber-500" as StatusColor;
       case "Pending":
         return "text-blue-400";
       case "Confirmed":
-        return "text-[#FFB74A]";
+        return "text-orange-500" as StatusColor;
       case "Admitted":
         return "text-purple-500";
       default:
         return "text-gray-500";
     }
   };
-
+  
   // Get appointment bar color
   const getAppointmentBarColor = (status: Appointment["status"]): BarColor => {
     switch (status) {
       case "Rejected":
         return "bg-red-200";
       case "Completed":
-        return "bg-[#FFB74A]"  as BarColor;
+        return "bg-green-200" as BarColor;
       case "Expired":
-        return "bg-[#FFB74A]" as BarColor;
+        return "bg-amber-200" as BarColor;
       case "Pending":
-        return "bg-[#D9CAF9]"  as BarColor;
+        return "bg-blue-200" as BarColor;
       case "Confirmed":
-        return "bg-[#FFB74A]" as BarColor;
+        return "bg-orange-200" as BarColor;
       case "Admitted":
-        return "bg-[#F65428]" as BarColor;
+        return "bg-purple-200" as BarColor;
       default:
         return "bg-gray-200";
     }
   };
-
+  
   // Get status dot color
   const getStatusDotColor = (status: Appointment["status"]): DotColor => {
     switch (status) {
@@ -285,11 +285,11 @@ const AppointmentScheduler: React.FC<{
       case "Completed":
         return "bg-green-500";
       case "Expired":
-        return "bg-yellow-500";
+        return "bg-amber-500" as DotColor;
       case "Pending":
         return "bg-blue-400";
       case "Confirmed":
-        return "bg-[#FFB74A]";
+        return "bg-orange-500" as DotColor;
       case "Admitted":
         return "bg-purple-500";
       default:
@@ -351,6 +351,12 @@ const AppointmentScheduler: React.FC<{
       // If end time is earlier than start time, assume it's the next day
       endMinutesFromMidnight += totalMinutesInDay;
     }
+    
+    // Cap end time at midnight (00:00)
+    const midnightMinutes = 24 * 60; // 24 hours in minutes
+    if (endMinutesFromMidnight > midnightMinutes) {
+      endMinutesFromMidnight = midnightMinutes;
+    }
   
     // Calculate the left position (start position) as a percentage
     // The timeline starts at 1 AM, so subtract 60 minutes (1 hour) from calculations
@@ -362,13 +368,13 @@ const AppointmentScheduler: React.FC<{
     const durationInMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
     const width = (durationInMinutes / timelineMinutes) * 100;
 
-    if(durationInMinutes < 30){
+    if (durationInMinutes < 30) {
       return {
         left: `${Math.max(0, leftPosition)}%`,
         width: `${width + 2}%`,
       };
     }
-    else if(durationInMinutes < 59){
+    else if (durationInMinutes < 59) {
       return {
         left: `${Math.max(0, leftPosition)}%`,
         width: `${width + .5}%`,
