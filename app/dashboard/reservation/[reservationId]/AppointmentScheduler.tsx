@@ -2,7 +2,7 @@ import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import EditBooking from "@/components/ui/dashboard/bookings/editBooking";
 import { notify } from "@/lib/utils";
 import { User } from "@nextui-org/react";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, ReactNode } from "react";
 import { BiCalendar, BiUser } from "react-icons/bi";
 import {  MdOutlineMailOutline } from "react-icons/md";
 
@@ -22,7 +22,9 @@ interface Appointment {
     | "Expired"
     | "Pending"
     | "Confirmed"
-    | "Admitted";
+    | "Admitted"
+    | "Failed"
+    | "Cancelled";
 }
 
 // Define color types for type safety
@@ -237,65 +239,77 @@ const AppointmentScheduler: React.FC<{
     setSelectedAppointment(null);
   };
 
-  // Get status color
-  const getStatusColor = (status: Appointment["status"]): StatusColor => {
-    switch (status) {
-      case "Rejected":
-        return "text-red-500";
-      case "Completed":
-        return "text-green-500";
-      case "Expired":
-        return "text-amber-500" as StatusColor;
-      case "Pending":
-        return "text-blue-400";
-      case "Confirmed":
-        return "text-orange-500" as StatusColor;
-      case "Admitted":
-        return "text-purple-500";
-      default:
-        return "text-gray-500";
-    }
-  };
-  
-  // Get appointment bar color
-  const getAppointmentBarColor = (status: Appointment["status"]): BarColor => {
-    switch (status) {
-      case "Rejected":
-        return "bg-red-200";
-      case "Completed":
-        return "bg-green-200" as BarColor;
-      case "Expired":
-        return "bg-amber-200" as BarColor;
-      case "Pending":
-        return "bg-blue-200" as BarColor;
-      case "Confirmed":
-        return "bg-orange-200" as BarColor;
-      case "Admitted":
-        return "bg-purple-200" as BarColor;
-      default:
-        return "bg-gray-200";
-    }
-  };
-  
-  // Get status dot color
-  const getStatusDotColor = (status: Appointment["status"]): DotColor => {
-    switch (status) {
-      case "Rejected":
-        return "bg-red-500";
-      case "Completed":
-        return "bg-green-500";
-      case "Expired":
-        return "bg-amber-500" as DotColor;
-      case "Pending":
-        return "bg-blue-400";
-      case "Confirmed":
-        return "bg-orange-500" as DotColor;
-      case "Admitted":
-        return "bg-purple-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+// Get status color
+const getStatusColor = (status: Appointment["status"]): StatusColor => {
+  switch (status) {
+    case "Rejected":
+      return "text-[#1ABCFE]" as StatusColor;
+    case "Failed":
+      return "text-red-600" as StatusColor;
+    case "Cancelled":
+      return "text-gray-600" as StatusColor;
+    case "Completed":
+      return "text-emerald-700" as StatusColor;
+    case "Expired":
+      return "text-amber-600" as StatusColor;
+    case "Pending":
+      return "text-[#F65428]" as StatusColor;
+    case "Confirmed":
+      return "text-[#FFB74A]" as StatusColor;
+    case "Admitted":
+      return "text-purple-600" as StatusColor;
+    default:
+      return "text-gray-600" as StatusColor;
+  }
+};
+
+// Get appointment bar color
+const getAppointmentBarColor = (status: Appointment["status"]): BarColor => {
+  switch (status) {
+    case "Rejected":
+      return "bg-[#1ABCFE]/20" as BarColor;
+    case "Failed":
+      return "bg-red-200" as BarColor;
+    case "Cancelled":
+      return "bg-gray-200" as BarColor;
+    case "Completed":
+      return "bg-emerald-300" as BarColor;
+    case "Expired":
+      return "bg-amber-200" as BarColor;
+    case "Pending":
+      return "bg-[#F65428]/60" as BarColor;
+    case "Confirmed":
+      return "bg-[#FFB74A]/50" as BarColor;
+    case "Admitted":
+      return "bg-purple-200" as BarColor;
+    default:
+      return "bg-gray-200" as BarColor;
+  }
+};
+
+// Get status dot color
+const getStatusDotColor = (status: Appointment["status"]): DotColor => {
+  switch (status) {
+    case "Rejected":
+      return "bg-[#1ABCFE]" as DotColor;
+    case "Failed":
+      return "bg-red-600" as DotColor;
+    case "Cancelled":
+      return "bg-gray-400" as DotColor;
+    case "Completed":
+      return "bg-emerald-700" as DotColor;
+    case "Expired":
+      return "bg-amber-600" as DotColor;
+    case "Pending":
+      return "bg-[#F65428]" as DotColor;
+    case "Confirmed":
+      return "bg-[#FFB74A]" as DotColor;
+    case "Admitted":
+      return "bg-purple-600" as DotColor;
+    default:
+      return "bg-gray-600" as DotColor;
+  }
+};
 
   const formatDate = (date: any): string => {
     if (!(date instanceof Date)) {
