@@ -251,9 +251,9 @@ const getStatusColor = (status: Appointment["status"]): StatusColor => {
     case "Completed":
       return "text-emerald-700" as StatusColor;
     case "Expired":
-      return "text-amber-600" as StatusColor;
-    case "Pending":
       return "text-[#F65428]" as StatusColor;
+    case "Pending":
+      return "text-amber-600" as StatusColor;
     case "Confirmed":
       return "text-[#FFB74A]" as StatusColor;
     case "Admitted":
@@ -275,9 +275,9 @@ const getAppointmentBarColor = (status: Appointment["status"]): BarColor => {
     case "Completed":
       return "bg-emerald-300" as BarColor;
     case "Expired":
-      return "bg-amber-200" as BarColor;
-    case "Pending":
       return "bg-[#F65428]/60" as BarColor;
+    case "Pending":
+      return "bg-amber-200" as BarColor;
     case "Confirmed":
       return "bg-[#FFB74A]/50" as BarColor;
     case "Admitted":
@@ -299,9 +299,9 @@ const getStatusDotColor = (status: Appointment["status"]): DotColor => {
     case "Completed":
       return "bg-emerald-700" as DotColor;
     case "Expired":
-      return "bg-amber-600" as DotColor;
-    case "Pending":
       return "bg-[#F65428]" as DotColor;
+    case "Pending":
+      return "bg-amber-60" as DotColor;
     case "Confirmed":
       return "bg-[#FFB74A]" as DotColor;
     case "Admitted":
