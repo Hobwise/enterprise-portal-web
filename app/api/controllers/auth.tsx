@@ -345,7 +345,9 @@ export async function logout() {
   }
 }
 export async function getBusinessDetails(formData: any) {
-  const headers = formData.id ? { businessId: formData.id } : {};
+  const headers = formData.id
+    ? { businessId: formData.id, cooperateId: formData.cooperateID }
+    : {};
 
   try {
     const data = await api.get(AUTH.getBusiness, {
