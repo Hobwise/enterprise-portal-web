@@ -2,7 +2,7 @@ import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import EditBooking from "@/components/ui/dashboard/bookings/editBooking";
 import { notify } from "@/lib/utils";
 import { User } from "@nextui-org/react";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, ReactNode } from "react";
 import { BiCalendar, BiUser } from "react-icons/bi";
 import {  MdOutlineMailOutline } from "react-icons/md";
 
@@ -22,7 +22,9 @@ interface Appointment {
     | "Expired"
     | "Pending"
     | "Confirmed"
-    | "Admitted";
+    | "Admitted"
+    | "Failed"
+    | "Cancelled";
 }
 
 // Define color types for type safety
@@ -237,65 +239,77 @@ const AppointmentScheduler: React.FC<{
     setSelectedAppointment(null);
   };
 
-  // Get status color
-  const getStatusColor = (status: Appointment["status"]): StatusColor => {
-    switch (status) {
-      case "Rejected":
-        return "text-red-500";
-      case "Completed":
-        return "text-green-500";
-      case "Expired":
-        return "text-yellow-500";
-      case "Pending":
-        return "text-blue-400";
-      case "Confirmed":
-        return "text-[#FFB74A]";
-      case "Admitted":
-        return "text-purple-500";
-      default:
-        return "text-gray-500";
-    }
-  };
+// Get status color
+const getStatusColor = (status: Appointment["status"]): StatusColor => {
+  switch (status) {
+    case "Rejected":
+      return "text-[#1ABCFE]" as StatusColor;
+    case "Failed":
+      return "text-red-600" as StatusColor;
+    case "Cancelled":
+      return "text-gray-600" as StatusColor;
+    case "Completed":
+      return "text-emerald-700" as StatusColor;
+    case "Expired":
+      return "text-[#F65428]" as StatusColor;
+    case "Pending":
+      return "text-amber-600" as StatusColor;
+    case "Confirmed":
+      return "text-[#FFB74A]" as StatusColor;
+    case "Admitted":
+      return "text-purple-600" as StatusColor;
+    default:
+      return "text-gray-600" as StatusColor;
+  }
+};
 
-  // Get appointment bar color
-  const getAppointmentBarColor = (status: Appointment["status"]): BarColor => {
-    switch (status) {
-      case "Rejected":
-        return "bg-red-200";
-      case "Completed":
-        return "bg-[#FFB74A]"  as BarColor;
-      case "Expired":
-        return "bg-[#FFB74A]" as BarColor;
-      case "Pending":
-        return "bg-[#D9CAF9]"  as BarColor;
-      case "Confirmed":
-        return "bg-[#FFB74A]" as BarColor;
-      case "Admitted":
-        return "bg-[#F65428]" as BarColor;
-      default:
-        return "bg-gray-200";
-    }
-  };
+// Get appointment bar color
+const getAppointmentBarColor = (status: Appointment["status"]): BarColor => {
+  switch (status) {
+    case "Rejected":
+      return "bg-[#1ABCFE]/20" as BarColor;
+    case "Failed":
+      return "bg-red-200" as BarColor;
+    case "Cancelled":
+      return "bg-gray-200" as BarColor;
+    case "Completed":
+      return "bg-emerald-300" as BarColor;
+    case "Expired":
+      return "bg-[#F65428]/60" as BarColor;
+    case "Pending":
+      return "bg-amber-200" as BarColor;
+    case "Confirmed":
+      return "bg-[#FFB74A]/50" as BarColor;
+    case "Admitted":
+      return "bg-purple-200" as BarColor;
+    default:
+      return "bg-gray-200" as BarColor;
+  }
+};
 
-  // Get status dot color
-  const getStatusDotColor = (status: Appointment["status"]): DotColor => {
-    switch (status) {
-      case "Rejected":
-        return "bg-red-500";
-      case "Completed":
-        return "bg-green-500";
-      case "Expired":
-        return "bg-yellow-500";
-      case "Pending":
-        return "bg-blue-400";
-      case "Confirmed":
-        return "bg-[#FFB74A]";
-      case "Admitted":
-        return "bg-purple-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+// Get status dot color
+const getStatusDotColor = (status: Appointment["status"]): DotColor => {
+  switch (status) {
+    case "Rejected":
+      return "bg-[#1ABCFE]" as DotColor;
+    case "Failed":
+      return "bg-red-600" as DotColor;
+    case "Cancelled":
+      return "bg-gray-400" as DotColor;
+    case "Completed":
+      return "bg-emerald-700" as DotColor;
+    case "Expired":
+      return "bg-[#F65428]" as DotColor;
+    case "Pending":
+      return "bg-amber-60" as DotColor;
+    case "Confirmed":
+      return "bg-[#FFB74A]" as DotColor;
+    case "Admitted":
+      return "bg-purple-600" as DotColor;
+    default:
+      return "bg-gray-600" as DotColor;
+  }
+};
 
   const formatDate = (date: any): string => {
     if (!(date instanceof Date)) {
@@ -351,6 +365,12 @@ const AppointmentScheduler: React.FC<{
       // If end time is earlier than start time, assume it's the next day
       endMinutesFromMidnight += totalMinutesInDay;
     }
+    
+    // Cap end time at midnight (00:00)
+    const midnightMinutes = 24 * 60; // 24 hours in minutes
+    if (endMinutesFromMidnight > midnightMinutes) {
+      endMinutesFromMidnight = midnightMinutes;
+    }
   
     // Calculate the left position (start position) as a percentage
     // The timeline starts at 1 AM, so subtract 60 minutes (1 hour) from calculations
@@ -362,13 +382,13 @@ const AppointmentScheduler: React.FC<{
     const durationInMinutes = endMinutesFromMidnight - startMinutesFromMidnight;
     const width = (durationInMinutes / timelineMinutes) * 100;
 
-    if(durationInMinutes < 30){
+    if (durationInMinutes < 30) {
       return {
         left: `${Math.max(0, leftPosition)}%`,
         width: `${width + 2}%`,
       };
     }
-    else if(durationInMinutes < 59){
+    else if (durationInMinutes < 59) {
       return {
         left: `${Math.max(0, leftPosition)}%`,
         width: `${width + .5}%`,
