@@ -204,7 +204,7 @@ export const CustomLoading = () => {
       </div>
       <div className="leading-tight flex flex-col text-center">
         <span className=" font-[600] text-[24px]   text-black">
-          Hang on a Sec!
+          Hang on a sec!
         </span>
 
         <span className="text-sm font-[400]    text-[#475367] ">
