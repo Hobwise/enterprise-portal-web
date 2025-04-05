@@ -114,7 +114,7 @@ const CheckoutModal = ({
 
   const finalTotalPrice =
     totalPrice + totalPrice * (7.5 / 100) + (additionalCost || 0);
-  console.log(finalTotalPrice, "finalTotalPrice");
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = event.target;
