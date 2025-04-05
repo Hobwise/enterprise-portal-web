@@ -58,8 +58,10 @@ const Reservation: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data?.reservations
-      ?.filter(
+    if (!data?.reservations) return [];
+    
+    return data.reservations
+      .filter(
         (item) =>
           item?.reservationName?.toLowerCase().includes(searchQuery) ||
           String(item?.reservationFee)?.toLowerCase().includes(searchQuery) ||
@@ -73,9 +75,6 @@ const Reservation: React.FC = () => {
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
     `${companyInfo.webUrl}/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
   );
-
-
-
 
   const exportCSV = async () => {
     setLoadingExport(true);
@@ -93,8 +92,14 @@ const Reservation: React.FC = () => {
     }
   };
 
+  // Handle loading state
   if (isLoading) return <CustomLoading />;
-  if (isError) return <Error onClick={() => refetch()} />;
+  
+  // Handle error state or undefined data
+  if (isError || !data) return <Error onClick={() => refetch()} />;
+
+  // Check if reservations array exists and has items
+  const hasReservations = Array.isArray(data.reservations) && data.reservations.length > 0;
 
   return (
     <>
@@ -104,13 +109,13 @@ const Reservation: React.FC = () => {
             <div className="flex items-center">
               <span>Reservation</span>
 
-              {data?.reservations?.length > 0 && (
+              {hasReservations && (
                 <Chip
                   classNames={{
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data?.totalCount}
+                  {data.totalCount}
                 </Chip>
               )}
             </div>
@@ -120,7 +125,7 @@ const Reservation: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {data?.reservations?.length > 0 && (
+          {hasReservations && (
             <>
               <div>
                 <CustomInput
@@ -176,7 +181,7 @@ const Reservation: React.FC = () => {
           {(role === 0 ||
             userRolePermissions?.canCreateReservation === true) && (
             <>
-              {data?.reservations?.length > 0 && (
+              {hasReservations && (
                 <CustomButton
                   onClick={() =>
                     router.push("/dashboard/reservation/create-reservation")
@@ -195,7 +200,7 @@ const Reservation: React.FC = () => {
           )}
         </div>
       </div>
-      {data?.reservations?.length > 0 ? (
+      {hasReservations ? (
         <ReservationList
           data={data}
           reservation={filteredItems}
