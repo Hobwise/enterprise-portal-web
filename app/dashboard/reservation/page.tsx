@@ -34,31 +34,55 @@ import { MdOutlineFileDownload } from "react-icons/md";
 import toast from "react-hot-toast";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 
+// Define TypeScript interfaces for the data structures
+interface ReservationItem {
+  reservationName: string;
+  reservationFee: number;
+  minimumSpend: number;
+  quantity: number;
+  reservationDescription: string;
+  [key: string]: any; // For any other properties
+}
+
+
+
+interface BusinessInfo {
+  businessName: string;
+  businessId: string;
+  [key: string]: any;
+}
+
+interface UserInfo {
+  cooperateID: string;
+  [key: string]: any;
+}
+
 const Reservation: React.FC = () => {
   const router = useRouter();
 
   const { userRolePermissions, role } = usePermission();
 
-  const business = getJsonItemFromLocalStorage("business");
-  const userInformation = getJsonItemFromLocalStorage("userInformation");
-  const { data, isLoading, isError, refetch } = useReservation();
-  const [loadingExport, setLoadingExport] = useState(false);
+  const business = getJsonItemFromLocalStorage("business") as BusinessInfo[];
+  const userInformation = getJsonItemFromLocalStorage("userInformation") as UserInfo;
+  const { data, isLoading, isError, refetch } = useReservation<ReservationData>();
+
+  const [loadingExport, setLoadingExport] = useState<boolean>(false);
 
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
     setTableStatus("All");
     setPage(1);
-  }, []);
+  }, [setTableStatus, setPage]);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
   const filteredItems = useMemo(() => {
-    if (!data?.reservations) return [];
+    if (!data?.reservations) return [] as ReservationItem[];
     
     return data.reservations
       .filter(
@@ -76,7 +100,7 @@ const Reservation: React.FC = () => {
     `${companyInfo.webUrl}/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
   );
 
-  const exportCSV = async () => {
+  const exportCSV = async (): Promise<void> => {
     setLoadingExport(true);
     const response = await exportGrid(business[0]?.businessId, 4);
     setLoadingExport(false);
