@@ -12,6 +12,7 @@ import SelectInput from "@/components/selectInput";
 import {
   cn,
   formatPrice,
+  formatPriceWithDecimal,
   getJsonItemFromLocalStorage,
   notify,
 } from "@/lib/utils";
@@ -114,7 +115,7 @@ const CheckoutModal = ({
 
   const finalTotalPrice =
     totalPrice + totalPrice * (7.5 / 100) + (additionalCost || 0);
-
+  console.log(finalTotalPrice, "finalTotalPrice");
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = event.target;
@@ -150,7 +151,7 @@ const CheckoutModal = ({
       comment: order.comment,
       additionalCost,
       additionalCostName,
-      totalAmount: finalTotalPrice,
+      totalAmount: Math.round(finalTotalPrice * 100) / 100,
       orderDetails: transformedArray,
     };
     const id = businessId ? businessId : businessInformation[0]?.businessId;
@@ -189,7 +190,7 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: order.quickResponseID,
       comment: order.comment,
-      totalAmount: finalTotalPrice,
+      totalAmount: Math.round(finalTotalPrice * 100) / 100,
       additionalCost,
       additionalCostName,
       orderDetails: transformedArray,
@@ -332,7 +333,9 @@ const CheckoutModal = ({
                           backgroundColor="bg-primaryColor"
                         >
                           <div className="flex gap-2 items-center justify-center">
-                            <p>Checkout {formatPrice(finalTotalPrice)} </p>
+                            <p>
+                              Checkout {formatPriceWithDecimal(finalTotalPrice)}{" "}
+                            </p>
                             <HiArrowLongLeft className="text-[22px] rotate-180" />
                           </div>
                         </CustomButton>
@@ -459,7 +462,9 @@ const CheckoutModal = ({
                                 Vat (7.5%):{" "}
                               </p>
                               <p className="text-black">
-                                {formatPrice(totalPrice * (7.5 / 100))}
+                                {formatPriceWithDecimal(
+                                  totalPrice * (7.5 / 100)
+                                )}
                               </p>
                             </div>
                             <div className="flex items-center justify-between gap-2">
@@ -502,7 +507,7 @@ const CheckoutModal = ({
                             <div className="flex justify-between">
                               <p className="text-black font-bold">Total: </p>
                               <p className="text-black">
-                                {formatPrice(finalTotalPrice)}
+                                {formatPriceWithDecimal(finalTotalPrice)}
                               </p>
                             </div>
                             {/* <div className="flex gap-2">
@@ -572,7 +577,7 @@ const CheckoutModal = ({
                         </span>
                       </div>
                       <p className="text-sm  text-primaryColor xl:mb-8 w-full mb-4">
-                        {formatPrice(finalTotalPrice)}
+                        {formatPriceWithDecimal(finalTotalPrice)}
                       </p>
                     </div>
                   </div>
@@ -622,7 +627,7 @@ const CheckoutModal = ({
                         <p className="text-sm text-grey500">TOTAL ORDER</p>
                         <p className="font-bold text-black text-[20px]">
                           {" "}
-                          {formatPrice(finalTotalPrice)}
+                          {formatPriceWithDecimal(finalTotalPrice)}
                         </p>
                       </div>
                       <MdKeyboardArrowRight />

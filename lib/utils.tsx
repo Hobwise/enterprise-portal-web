@@ -220,7 +220,7 @@ export const formatPrice = (price: any) => {
     style: "currency",
     currency: "NGN",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   });
 
   return formatter.format(price);
