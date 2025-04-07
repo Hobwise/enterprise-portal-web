@@ -3,6 +3,7 @@ import { getQR } from '@/app/api/controllers/dashboard/quickResponse';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
 import { useGlobalContext } from '../globalProvider';
+import { fetchQueryConfig } from "@/lib/queryConfig";
 
 interface Qr {
   allOrdersCount?: string;
@@ -15,24 +16,25 @@ interface Qr {
 
 const useQR = () => {
   const { page, rowsPerPage } = useGlobalContext();
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const getAllQRcode = async () => {
-    const responseData = await getQR(
-      businessInformation[0]?.businessId,
-      page,
-      rowsPerPage
-    );
-    return responseData?.data?.data;
+    try {
+      const responseData = await getQR(
+        businessInformation[0]?.businessId,
+        page,
+        rowsPerPage
+      );
+      return responseData?.data?.data ?? [];
+    } catch (error) {
+      return [];
+    }
   };
 
   const { data, isLoading, isError, refetch } = useQuery(
-    ['qr', { page, rowsPerPage }],
+    ["qr", { page, rowsPerPage }],
     getAllQRcode,
-    {
-      keepPreviousData: true,
-      refetchOnWindowFocus: false,
-    }
+    fetchQueryConfig()
   );
 
   return {
