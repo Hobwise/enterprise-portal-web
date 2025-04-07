@@ -22,8 +22,6 @@ export default function BookReservation() {
     setLoading(false);
   }, []);
 
-  console.log(reservation, '-> reservation');
-
   return (
     <div className="mt-28 px-6 lg:px-24 space-y-4">
       <div className="flex items-center space-x-2.5 text-sm">

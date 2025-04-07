@@ -1,25 +1,19 @@
-import {
-  getJsonItemFromLocalStorage,
-  notify,
-  removeCookie,
-  resetLoginInfo,
-  saveJsonItemToLocalStorage,
-} from "@/lib/utils";
-import axios, { AxiosError } from "axios";
+import { getJsonItemFromLocalStorage, notify, removeCookie, resetLoginInfo, saveJsonItemToLocalStorage } from '@/lib/utils';
+import axios, { AxiosError } from 'axios';
 
-import { generateRefreshToken, logout } from "./controllers/auth";
+import { generateRefreshToken, logout } from './controllers/auth';
 
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   timeout: 20000,
 });
 
 api.interceptors.request.use(async (config) => {
-  const userData = getJsonItemFromLocalStorage("userInformation");
-  const business = getJsonItemFromLocalStorage("business");
+  const userData = getJsonItemFromLocalStorage('userInformation');
+  const business = getJsonItemFromLocalStorage('business');
   const token = userData?.token;
   const cooperateID = userData?.cooperateID;
   const businessId = business?.businessId;
@@ -29,17 +23,16 @@ api.interceptors.request.use(async (config) => {
   }
 
   if (cooperateID) {
-    config.headers["cooperateId"] = cooperateID;
+    config.headers['cooperateId'] = cooperateID;
   }
 
   if (businessId) {
-    config.headers["businessId"] = businessId;
+    config.headers['businessId'] = businessId;
   }
 
-  const isMultipartFormData =
-    config.headers["Content-Type"] === "multipart/form-data";
+  const isMultipartFormData = config.headers['Content-Type'] === 'multipart/form-data';
   if (isMultipartFormData) {
-    delete config.headers["Content-Type"];
+    delete config.headers['Content-Type'];
   }
 
   return config;
@@ -50,15 +43,11 @@ api.interceptors.response.use(
   async (error) => {
     let originalConfig = error.config;
 
-    if (
-      error.response &&
-      error.response.status === 401 &&
-      !originalConfig._retry
-    ) {
+    if (error.response && error.response.status === 401 && !originalConfig._retry) {
       // originalConfig._retry = true;
       try {
-        const userData = getJsonItemFromLocalStorage("userInformation");
-        const businesses = getJsonItemFromLocalStorage("business");
+        const userData = getJsonItemFromLocalStorage('userInformation');
+        const businesses = getJsonItemFromLocalStorage('business');
 
         const { refreshToken, email } = userData;
         const businessId = businesses[0].businessId;
@@ -71,23 +60,19 @@ api.interceptors.response.use(
 
         if (!rs) {
           resetLoginInfo();
-          throw new Error("Failed to generate new token");
+          throw new Error('Failed to generate new token');
         }
 
-        const {
-          token: newToken,
-          refreshToken: newRefreshToken,
-          tokenExpiration: newExpiration,
-        } = rs.data.data;
+        const { token: newToken, refreshToken: newRefreshToken, tokenExpiration: newExpiration } = rs.data.data;
 
-        saveJsonItemToLocalStorage("userInformation", {
+        saveJsonItemToLocalStorage('userInformation', {
           ...userData,
           token: newToken,
           refreshToken: newRefreshToken,
           tokenExpiration: newExpiration,
         });
 
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
         return api(originalConfig);
       } catch (_error) {
         resetLoginInfo();
@@ -108,29 +93,27 @@ export const handleError = (error: any, showError: boolean = true) => {
   if (showError) {
     if (!error.response?.data?.title) {
       notify({
-        title: "Error!",
-        text:
-          error.response?.data?.error?.responseDescription ||
-          "An error occurred",
-        type: "error",
+        title: 'Error!',
+        text: error.response?.data?.error?.responseDescription || 'An error occurred',
+        type: 'error',
       });
-    } else if (error.code === "ECONNABORTED") {
+    } else if (error.code === 'ECONNABORTED') {
       notify({
-        title: "Network Timeout",
-        text: "The request took too long. Please try again later.",
-        type: "error",
+        title: 'Network Timeout',
+        text: 'The request took too long. Please try again later.',
+        type: 'error',
       });
-    } else if (error.code === "ERR_NETWORK") {
+    } else if (error.code === 'ERR_NETWORK') {
       notify({
-        title: "Network Error!",
-        text: "Check your network and try again",
-        type: "error",
+        title: 'Network Error!',
+        text: 'Check your network and try again',
+        type: 'error',
       });
     } else {
       notify({
-        title: "Error!",
-        text: "An error occurred, please try again",
-        type: "error",
+        title: 'Error!',
+        text: 'An error occurred, please try again',
+        type: 'error',
       });
     }
   }
