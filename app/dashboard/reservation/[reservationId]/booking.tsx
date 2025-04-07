@@ -14,10 +14,10 @@ const Booking: React.FC = ({
   isError,
 }: any) => {
   const getScreens = () => {
-    if (reservationItem?.bookings?.length > 0) {
-      return <BookingGrid data={reservationItem?.bookings} />;
-    } else if (isError) {
+    if (isError) {
       return <Error onClick={() => getSingleReservation()} />;
+    } else if (reservationItem?.bookings?.length > 0) {
+      return <BookingGrid data={reservationItem?.bookings} />;
     } else {
       return <EmptyBooking />;
     }
@@ -25,11 +25,7 @@ const Booking: React.FC = ({
 
   return (
     <div className="flex-grow flex">
-      {isLoading ? (
-        <CustomLoading />
-      ) : (
-      <BookingGrid data={reservationItem?.bookings} />
-      )}
+      {isLoading ? <CustomLoading /> : getScreens()}
     </div>
   );
 };
