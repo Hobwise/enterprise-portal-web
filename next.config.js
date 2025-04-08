@@ -9,7 +9,14 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' [YOUR_API_DOMAINS]; font-src 'self';",
+              "default-src 'self'; " +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+              "style-src 'self' 'unsafe-inline'; " +
+              "img-src 'self' data: https://walrus-app-lehim.ondigitalocean.app https://hobwise.com https://hobwise-corporate-web.vercel.app https://sandbox.hobwise.com; " +
+              "connect-src 'self' https://walrus-app-lehim.ondigitalocean.app https://hobwise.com https://hobwise-corporate-web.vercel.app https://sandbox.hobwise.com; " +
+              "font-src 'self' https://hobwise.com https://hobwise-corporate-web.vercel.app https://sandbox.hobwise.com; " +
+              "frame-src https://hobwise.com https://hobwise-corporate-web.vercel.app https://sandbox.hobwise.com; " +
+              "media-src https://hobwise.com https://hobwise-corporate-web.vercel.app https://sandbox.hobwise.com;",
           },
           {
             key: "X-Frame-Options",
