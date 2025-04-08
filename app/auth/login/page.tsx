@@ -74,7 +74,7 @@ export default function Login() {
           <div className="flex-1 flex lg:items-center  mt-8 items-start lg:mt-0 justify-center px-8 lg:px-16">
             <div className="w-full max-w-md">
               <h1 className="text-4xl text-center font-semibold mb-2">
-                Welcome Back
+                Welcome Back. Yippe, We're live!
               </h1>
               <p className="text-grey600 text-center">
                 Enter your email and password to access your account
