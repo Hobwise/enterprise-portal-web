@@ -288,7 +288,7 @@ export async function initializeTransactionv2(
 
   var config = {
     method: "POST",
-    url: "https://walrus-app-lehim.ondigitalocean.app/api/v1/Transaction/initialise-subscription",
+    url: `${process.env.NEXT_PUBLIC_API_BASE_URL}api/v1/Transaction/initialise-subscription`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -372,7 +372,7 @@ export async function manageSubscriptionv2(businessId: string, token: string) {
 
   var config = {
     method: "GET",
-    url: "https://walrus-app-lehim.ondigitalocean.app/api/v1/Subscription/manage-link",
+    url: `${process.env.NEXT_PUBLIC_API_BASE_URL}api/v1/Subscription/manage-link`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
