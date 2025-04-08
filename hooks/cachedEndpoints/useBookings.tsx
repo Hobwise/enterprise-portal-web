@@ -3,6 +3,7 @@ import { getBookingsByBusiness } from '@/app/api/controllers/dashboard/bookings'
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
 import { useGlobalContext } from '../globalProvider';
+import { fetchQueryConfig } from "@/lib/queryConfig";
 
 interface Booking {
   reservationName: string;
@@ -36,36 +37,37 @@ const useBookings = (
   options?: { enabled: boolean }
 ) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const getAllBookings = async ({ queryKey }: { queryKey: any }) => {
     const [
       _key,
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ] = queryKey;
-    const responseData = await getBookingsByBusiness(
-      businessInformation[0]?.businessId,
-      page,
-      rowsPerPage,
-      tableStatus,
-      filterType,
-      startDate,
-      endDate
-    );
-    return responseData?.data?.data as BookingGroup[];
+
+    try {
+      const responseData = await getBookingsByBusiness(
+        businessInformation[0]?.businessId,
+        page,
+        rowsPerPage,
+        tableStatus,
+        filterType,
+        startDate,
+        endDate
+      );
+      return (responseData?.data?.data as BookingGroup[]) ?? [];
+    } catch (error) {
+      return [];
+    }
   };
 
   const { data, isLoading, isError, refetch } = useQuery<BookingGroup[]>(
     [
-      'bookings',
+      "bookings",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ],
     getAllBookings,
-    {
-      keepPreviousData: true,
-      refetchOnWindowFocus: false,
-      ...options,
-    }
+    fetchQueryConfig(options)
   );
 
   return {

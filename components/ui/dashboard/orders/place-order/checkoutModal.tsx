@@ -150,7 +150,7 @@ const CheckoutModal = ({
       comment: order.comment,
       additionalCost,
       additionalCostName,
-      totalAmount: finalTotalPrice,
+      totalAmount: Math.round(finalTotalPrice * 100) / 100,
       orderDetails: transformedArray,
     };
     const id = businessId ? businessId : businessInformation[0]?.businessId;
@@ -189,7 +189,7 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: order.quickResponseID,
       comment: order.comment,
-      totalAmount: finalTotalPrice,
+      totalAmount: Math.round(finalTotalPrice * 100) / 100,
       additionalCost,
       additionalCostName,
       orderDetails: transformedArray,

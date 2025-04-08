@@ -3,6 +3,7 @@ import { getPaymentByBusiness } from '@/app/api/controllers/dashboard/payment';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
 import { useGlobalContext } from '../globalProvider';
+import { fetchQueryConfig } from "@/lib/queryConfig";
 
 interface Payment {
   id: string;
@@ -33,38 +34,38 @@ const usePayment = (
   options?: { enabled: boolean }
 ) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const getAllPayments = async ({ queryKey }: { queryKey: any }) => {
     const [
       _key,
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ] = queryKey;
-    const responseData = await getPaymentByBusiness(
-      businessInformation[0]?.businessId,
-      page,
-      rowsPerPage,
-      tableStatus,
-      filterType,
-      startDate,
-      endDate
-    );
 
-    return responseData?.data?.data as OrderSummary[];
+    try {
+      const responseData = await getPaymentByBusiness(
+        businessInformation[0]?.businessId,
+        page,
+        rowsPerPage,
+        tableStatus,
+        filterType,
+        startDate,
+        endDate
+      );
+      return (responseData?.data?.data as OrderSummary[]) ?? [];
+    } catch (error) {
+      return [];
+    }
   };
 
   const { data, isLoading, isError, refetch } = useQuery<OrderSummary[]>(
     [
-      'payments',
+      "payments",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ],
 
     getAllPayments,
-    {
-      keepPreviousData: true,
-      refetchOnWindowFocus: false,
-      ...options,
-    }
+    fetchQueryConfig(options)
   );
 
   return {

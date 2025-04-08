@@ -3,6 +3,7 @@ import { getOrderByBusiness } from '@/app/api/controllers/dashboard/orders';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
 import { useGlobalContext } from '../globalProvider';
+import { fetchQueryConfig } from "@/lib/queryConfig";
 
 type OrderItem = {
   name: string;
@@ -30,35 +31,35 @@ const useOrder = (
 ) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
 
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const getAllOrders = async ({ queryKey }: { queryKey: any }) => {
     const [_key, { page, rowsPerPage, tableStatus }] = queryKey;
-    const responseData = await getOrderByBusiness(
-      businessInformation[0]?.businessId,
-      page,
-      rowsPerPage,
-      tableStatus,
-      filterType,
-      startDate,
-      endDate
-    );
 
-    return responseData?.data as OrderData[];
+    try {
+      const responseData = await getOrderByBusiness(
+        businessInformation[0]?.businessId,
+        page,
+        rowsPerPage,
+        tableStatus,
+        filterType,
+        startDate,
+        endDate
+      );
+      return (responseData?.data as OrderData[]) ?? [];
+    } catch (error) {
+      return [];
+    }
   };
 
   const { data, isLoading, isError, refetch } = useQuery<OrderData[]>(
     [
-      'orders',
+      "orders",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ],
     getAllOrders,
 
-    {
-      keepPreviousData: true,
-      refetchOnWindowFocus: false,
-      ...options,
-    }
+    fetchQueryConfig(options)
   );
 
   return {

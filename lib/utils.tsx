@@ -204,7 +204,7 @@ export const CustomLoading = () => {
       </div>
       <div className="leading-tight flex flex-col text-center">
         <span className=" font-[600] text-[24px]   text-black">
-          Hang on a Sec!
+          Hang on a sec!
         </span>
 
         <span className="text-sm font-[400]    text-[#475367] ">
@@ -220,7 +220,7 @@ export const formatPrice = (price: any) => {
     style: "currency",
     currency: "NGN",
     minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 2,
   });
 
   return formatter.format(price);
@@ -820,3 +820,5 @@ export const reservationDuration = [
     value: 12,
   },
 ];
+
+

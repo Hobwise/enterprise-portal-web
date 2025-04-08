@@ -1,8 +1,9 @@
 'use client';
 import { getMenuByBusiness } from '@/app/api/controllers/dashboard/menu';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
-import { useGlobalContext } from '../globalProvider';
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import { useQuery } from "react-query";
+import { useGlobalContext } from "../globalProvider";
+import { fetchQueryConfig } from "@/lib/queryConfig";
 
 type MenuData = {
   name: string;
@@ -24,32 +25,31 @@ type MenuData = {
 
 const useMenu = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const { page, rowsPerPage, menuIdTable } = useGlobalContext();
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const businessId = businessInformation
     ? businessInformation[0]?.businessId
     : businessIdOutsideApp;
 
   const getAllMenus = async ({ queryKey }) => {
     const [_key, { page, rowsPerPage, menuIdTable }] = queryKey;
-    const responseData = await getMenuByBusiness(
-      businessId,
-      page,
-      rowsPerPage,
-      menuIdTable,
-      cooperateID
-    );
-
-    return responseData?.data?.data as MenuData[];
+    try {
+      const responseData = await getMenuByBusiness(
+        businessId,
+        page,
+        rowsPerPage,
+        menuIdTable,
+        cooperateID
+      );
+      return (responseData?.data?.data as MenuData[]) ?? [];
+    } catch (error) {
+      return [];
+    }
   };
 
   const { data, isLoading, isError, refetch } = useQuery<MenuData[]>(
-    ['menus', { page, rowsPerPage, menuIdTable }],
+    ["menus", { page, rowsPerPage, menuIdTable }],
     getAllMenus,
-    {
-      refetchOnWindowFocus: false,
-
-      keepPreviousData: true,
-    }
+    fetchQueryConfig()
   );
 
   return {
