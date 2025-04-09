@@ -91,21 +91,9 @@ export default function Demo() {
               poster="/assets/images/video-poster.jpg"
               className="text-center justify-center rounded-2xl shadow-custom border-[14px] border-white"
             >
-              <source src={selectedTab.src} type="video/mp4" />
+              <source src="/assets/videos/hob-wizz.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
-
-            {/* <iframe
-              width="100%"
-              height={isDesktop ? '500px' : '300px'}
-              src={selectedTab?.src}
-              // src={`https://www.youtube.com/embed/${selectedTab.linkId}?controls=1&showinfo=0&rel=0`}
-              title="YouTube video player"
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              className="text-center justify-center rounded-2xl shadow-custom border-[14px] border-white"
-            ></iframe> */}
           </Transition>
         </div>
       </div>
