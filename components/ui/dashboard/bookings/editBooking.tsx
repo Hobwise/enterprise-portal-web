@@ -45,6 +45,9 @@ const EditBooking = ({
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [quantity, setQuantity] = useState<number>(eachBooking?.quantity || 1);
+  const [noOfGuests, setNoOfGuests] = useState<number>(
+    eachBooking?.noOfGuests || 1
+  ); // Add state for noOfGuests
 
   const convertAPIDateToLocalDate = (dateString: string) => {
     if (!dateString) return now(getLocalTimeZone());
@@ -101,6 +104,7 @@ const EditBooking = ({
       const reservation = findReservationById(eachBooking.reservationId);
       setSelectedReservation(reservation);
       setQuantity(eachBooking.quantity || 1);
+      setNoOfGuests(eachBooking.numberOfGuest || 1);
       setId(eachBooking.id || "");
       if (eachBooking.bookingDateTime) {
         setTimeNdate(convertAPIDateToLocalDate(eachBooking.bookingDateTime));
@@ -137,6 +141,7 @@ const EditBooking = ({
       bookingDateTime: `${formatDateTimeForPayload(timeNdate)}Z`,
       description: bookings.description,
       quantity: quantity,
+      numberOfGuest: noOfGuests,
     };
 
     setIsLoading(true);
@@ -219,6 +224,9 @@ const EditBooking = ({
       isDismissable={false}
       isOpen={isEditBookingModal}
       onOpenChange={toggleEditBookingModal}
+      classNames={{
+        wrapper: " z-[9999]",
+      }}
     >
       <ModalContent>
         {(onClose) => (
@@ -372,6 +380,40 @@ const EditBooking = ({
                       </button>
                     </div>
                   </div>
+
+                  <Spacer y={5} />
+
+                  <div className="text-sm flex justify-between">
+                    <div className="text-[#404245] flex space-x-2 items-center">
+                      <p>Number of Guest(s)</p>
+                      <InfoCircle />
+                    </div>
+                    <div className="flex space-x-4 text-[#000] items-center">
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        disabled={noOfGuests <= 1}
+                        type="button"
+                        onClick={() => {
+                          noOfGuests > 1
+                            ? setNoOfGuests((prev) => prev - 1)
+                            : null;
+                        }}
+                      >
+                        -
+                      </button>
+                      <p className="font-medium w-4 flex justify-center items-center">
+                        {noOfGuests}
+                      </p>
+                      <button
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        type="button"
+                        onClick={() => setNoOfGuests((prev) => prev + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+
                   <Spacer y={6} />
                   <CustomButton
                     loading={isLoading}

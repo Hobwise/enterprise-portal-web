@@ -150,6 +150,9 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
     }
   };
 
+  console.log(eachBooking);
+  
+
   const renderCell = React.useCallback((booking, columnKey) => {
     const cellValue = booking[columnKey];
 
@@ -235,7 +238,8 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                     )}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     booking?.bookingStatus !== 6 &&
-                    booking?.bookingStatus !== 4 && (
+                    booking?.bookingStatus !== 4 &&
+                    booking?.bookingStatus !== 5 && (
                       <DropdownItem
                         aria-label="edit booking"
                         onClick={() => toggleEditBookingModal(booking)}

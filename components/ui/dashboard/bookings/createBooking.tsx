@@ -42,6 +42,8 @@ const CreateBooking = ({
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [quantity, setQuantity] = useState<number>(1);
+  const [noOfGuests, setNoOfGuests] = useState<number>(1);
+
   const [timeNdate, setTimeNdate] = useState(now(getLocalTimeZone()));
   const [bookings, setBookings] = useState<any>({
     firstName: "",
@@ -68,7 +70,6 @@ const CreateBooking = ({
     const { name, value } = e.target;
     setBookings((prevFormData) => ({
       ...prevFormData,
-
       [name]: value,
     }));
   };
@@ -84,6 +85,7 @@ const CreateBooking = ({
       bookingDateTime: formatDateTime(timeNdate),
       description: bookings.description,
       quantity: quantity,
+      numberOfGuest: noOfGuests,
     };
 
     setIsLoading(true);
@@ -111,7 +113,9 @@ const CreateBooking = ({
         description: "",
         id: "",
       });
+
       setQuantity(1);
+      setNoOfGuests(1);
     } else if (data?.data?.error) {
       notify({
         title: "Error!",
@@ -305,6 +309,39 @@ const CreateBooking = ({
                       </span>
                     </div>
                   </div>
+
+                  <Spacer y={5} />
+
+                  <div className="text-sm flex justify-between">
+                    <div className="text-[#404245] flex space-x-2 items-center">
+                      <p>Number of Guest(s)</p>
+                      <InfoCircle />
+                    </div>
+                    <div className="flex space-x-4 text-[#000] items-center">
+                      <span
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        role="button"
+                        onClick={() => {
+                          noOfGuests > 1
+                            ? setNoOfGuests((prev) => prev - 1)
+                            : null;
+                        }}
+                      >
+                        -
+                      </span>
+                      <p className="font-medium w-4 flex justify-center items-center">
+                        {noOfGuests}
+                      </p>
+                      <span
+                        className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+                        role="button"
+                        onClick={() => setNoOfGuests((prev) => prev + 1)}
+                      >
+                        +
+                      </span>
+                    </div>
+                  </div>
+
                   <Spacer y={6} />
                   <CustomButton
                     loading={isLoading}
@@ -312,7 +349,7 @@ const CreateBooking = ({
                     type="submit"
                   >
                     {" "}
-                    {isLoading ? "Loading" : "Proceed to checkout"}
+                    {isLoading ? "Loading" : "Proceed"}
                   </CustomButton>
                 </form>
               </ScrollShadow>

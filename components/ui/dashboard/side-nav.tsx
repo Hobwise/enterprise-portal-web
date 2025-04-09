@@ -9,6 +9,7 @@ import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByC
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import {
   getJsonItemFromLocalStorage,
+  resetLoginInfo,
   saveJsonItemToLocalStorage,
   setTokenCookie,
 } from "@/lib/utils";
@@ -35,6 +36,8 @@ import { SIDENAV_ITEMS } from "./constants";
 import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useQueryClient } from "react-query";
+import { decryptPayload } from "@/lib/encrypt-decrypt";
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
@@ -67,21 +70,28 @@ const SideNav = () => {
         email,
       });
 
-      const {
-        token: newToken,
-        refreshToken: newRefreshToken,
-        tokenExpiration,
-      } = response?.data?.data;
+      if (response?.data?.response) {
+        const decryptedData = decryptPayload(response?.data?.response);
 
-      saveJsonItemToLocalStorage("userInformation", {
-        ...userData,
-        token: newToken,
-        refreshToken: newRefreshToken,
-        tokenExpiration,
-      });
-      setTokenCookie("token", newToken);
-      return newToken;
+        const {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          tokenExpiration,
+        } = decryptedData?.data;
+
+        saveJsonItemToLocalStorage("userInformation", {
+          ...userData,
+          token: newToken,
+          refreshToken: newRefreshToken,
+          tokenExpiration,
+        });
+        setTokenCookie("token", newToken);
+        return newToken;
+      } else {
+        resetLoginInfo();
+      }
     } catch (error) {
+      resetLoginInfo();
       console.log(error);
     }
   };
@@ -105,8 +115,8 @@ const SideNav = () => {
 
     if (!exists) {
       saveJsonItemToLocalStorage("business", transformedArray);
-      await refreshToken();
 
+      await refreshToken();
       window.location.reload();
     }
   };
@@ -195,12 +205,12 @@ const SideNav = () => {
             />
           </Link>
 
-          <div className="flex flex-col space-y-2  md:px-2 ">
+          <div className="flex flex-col space-y-1  md:px-2 ">
             {isPermissionsLoading ? (
               <div className="grid place-content-center mt-6">
                 <div className="space-y-2 flex justify-center flex-col">
                   <Spinner size="sm" />
-                  <p className="italic text-gray-400">Fetching side menu...</p>
+                  <p className="italic text-gray-400">Loading...</p>
                 </div>
               </div>
             ) : (

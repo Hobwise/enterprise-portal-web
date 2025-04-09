@@ -34,21 +34,23 @@ interface PreviewStyles {
 export const togglePreview = (activeTile: string): PreviewStyles => {
   const previewStyles: { [key: string]: PreviewStyles } = {
     "List left": {
-      container: "",
-      textContainer: "ml-3",
+      container: "flex justify-between w-full",
+      imageContainer: "w-[48%] flex-shrink-0",
+      textContainer: "w-[48%] ml-3",
       imageClass: "h-[60px] w-[60px]",
       divider: true,
       text3: "Founded in 1743, in italy...",
     },
     "List Right": {
-      container: "justify-between",
-      textContainer: "mr-3",
+      container: "flex justify-between w-full",
+      imageContainer: "w-[48%] flex-shrink-0 flex justify-end",
+      textContainer: "w-[48%] mr-3",
       imageClass: "h-[60px] w-[60px]",
       divider: true,
       text3: "Founded in 1743, in italy...",
     },
     "Single column 1": {
-      container: "flex-col ",
+      container: "flex-col",
       textContainer: "m-0",
       imageClass: "w-full h-[200px] mb-3",
       divider: false,
@@ -56,14 +58,14 @@ export const togglePreview = (activeTile: string): PreviewStyles => {
         "Founded in 1743, Moët & Chandon celebrates life's memorable moments with a range of unique champagnes for every occasion.",
     },
     "Single column 2": {
-      container: "flex-col justify-center item-center",
+      container: "flex-col justify-center items-center",
       textContainer: "m-0 text-center",
       imageClass: "w-[150px] h-[150px] mb-3",
       imageContainer: "w-full flex items-center justify-center",
       divider: false,
       text3:
         "Founded in 1743, Moët & Chandon celebrates life's memorable moments with a range of unique champagnes for every occasion.",
-      main: "w-full ",
+      main: "w-full",
     },
     "Double column": {
       container: "flex-col w-[calc(50%-10px)]",

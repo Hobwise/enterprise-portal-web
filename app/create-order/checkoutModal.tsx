@@ -121,7 +121,7 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: qrId,
       comment: order.comment,
-      totalAmount: finalTotal,
+      totalAmount: Math.round(finalTotal * 100) / 100,
       orderDetails: transformedArray,
     };
     const id = businessId ? businessId : businessInformation[0]?.businessId;
@@ -158,7 +158,7 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: qrId,
       comment: order.comment,
-      totalAmount: finalTotal,
+      totalAmount: Math.round(finalTotal * 100) / 100,
       orderDetails: transformedArray,
     };
 
@@ -356,7 +356,7 @@ const CheckoutModal = ({
                               <p className="text-black font-bold">Vat(7.5%):</p>
 
                               <p className="text-black">
-                                ₦{totalPrice * (7.5 / 100)}
+                                ₦{formatPrice(totalPrice * (7.5 / 100))}
                               </p>
                             </div>
                             {costInfo?.additionalCost && (

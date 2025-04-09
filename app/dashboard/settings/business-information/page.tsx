@@ -190,28 +190,35 @@ const BusinessInformation = () => {
               </div>
             </div>
           ) : !previewUrl ? (
-            <div className="flex items-center justify-center w-[200px] h-[120px] rounded-[10px] bg-[#5F35D20A]">
-              <label
-                htmlFor="logo-photo"
-                className="flex flex-col items-center justify-center space-y-4"
-              >
-                <Image
-                  src="/assets/icons/video-audio-icon.svg"
-                  width={24}
-                  height={24}
-                  alt="Video audio icon"
-                />
-                <span className="font-semibold text-[8px] text-primaryColor">
-                  No Cover Photo
-                </span>
-                <input
-                  type="file"
-                  id="logo-photo"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </label>
+            <div>
+              <div className="flex items-center justify-center w-[200px] h-[120px] rounded-[10px] bg-[#5F35D20A]">
+                <label
+                  htmlFor="logo-photo"
+                  className="flex flex-col items-center justify-center space-y-4"
+                >
+                  <Image
+                    src="/assets/icons/video-audio-icon.svg"
+                    width={24}
+                    height={24}
+                    alt="Video audio icon"
+                  />
+
+                  <span className="font-semibold text-[8px] text-primaryColor">
+                    Upload Cover Photo
+                  </span>
+
+                  <input
+                    type="file"
+                    id="logo-photo"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </label>
+              </div>
+              <p className="text-[10px] mt-1 font-semibold text-center text-gray-500">
+                SVG, PNG, JPG or GIF (max. 3mb)
+              </p>
             </div>
           ) : (
             <div className="relative">

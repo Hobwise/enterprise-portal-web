@@ -42,6 +42,7 @@ const ReservationDetails = () => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
+  const [loading, setLoading] = useState(true);
   const reservationId = searchParams.get("reservationId") || null;
 
   const { data, isLoading, isError, refetch } =
@@ -52,6 +53,30 @@ const ReservationDetails = () => {
   useEffect(() => {
     setTableStatus("All");
     setPage(1);
+  }, []);
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (data && !isLoading) {
+        setLoading(false);
+      }
+    }, 2000);
+  
+    return () => clearTimeout(timeout);
+  }, [data, isLoading, reservationId, isOpenEdit]); 
+
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Prevent going back by pushing the same state
+      history.pushState(null, "", location.href);
+    };
+
+    history.pushState(null, "", location.href);
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, []);
 
   const toggleModalDelete = () => {
@@ -69,13 +94,23 @@ const ReservationDetails = () => {
     `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?reservationId=${reservationId}`
   );
 
+  const formatTimeWithAMPM = (time: string | null | undefined): string => {
+    // Return a placeholder if time is null or undefined
+    if (!time) return "N/A";
+
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const formattedHours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
+    return `${formattedHours}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
+
   return (
     <>
       <div className="lg:flex block justify-between">
         <Link
           prefetch={true}
           href={"/dashboard/reservation"}
-          className={`cursor-pointer text-primaryColor flex gap-2 lg:mb-0 mb-2 text-sm items-center`}
+          className={`cursor-pointer text-primaryColor flex gap-2  lg:mb-0 mb-2 text-sm items-center`}
         >
           <IoIosArrowRoundBack className="text-[22px]" />
           <span className="text-sm">Back to reservations</span>
@@ -127,16 +162,33 @@ const ReservationDetails = () => {
         </div>
       </div>
       <Spacer y={5} />
-      {isLoading ? (
+      {loading ? (
         <CustomLoading />
       ) : (
         <section className="flex flex-col flex-grow">
-          <div className="flex lg:flex-row flex-col gap-3 justify-between ">
-            <div className="space-y-2 lg:w-[500px] w-full">
+          <div className="flex lg:flex-row flex-col gap-3 ">
+            <div>
+              <Image
+                src={
+                  data?.image
+                    ? `data:image/jpeg;base64,${data?.image}`
+                    : noImage
+                }
+                width={60}
+                height={60}
+                style={{
+                  objectFit: data?.image ? "cover" : "contain",
+                }}
+                className={"bg-cover border  h-[150px] rounded-lg w-[159px]"}
+                aria-label="reservation image"
+                alt="reservation image"
+              />
+            </div>
+            <div className="space-y-2 lg:w-[900px] w-full">
               <h2 className="text-black font-[600]  text-[28px]">
                 {data?.reservationName}
               </h2>
-              <div className="text-[#3D424A] text-[14px] font-[400] gap-2 flex">
+              {/* <div className="text-[#3D424A] text-[14px] font-[400] gap-2 flex">
                 <p>{data?.reservationDescription} </p>{" "}
                 <Chip
                   classNames={{
@@ -146,6 +198,10 @@ const ReservationDetails = () => {
                 >
                   {data?.quantityLeft} remaining
                 </Chip>
+              </div> */}
+
+              <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                <p className="text-[#828282]">{data?.reservationDescription}</p>
               </div>
               <div>
                 {data?.allowSystemAdvert && (
@@ -159,41 +215,44 @@ const ReservationDetails = () => {
                   </Chip>
                 )}
               </div>
-              <div className="flex lg:gap-3 gap-0 lg:flex-row flex-col">
-                <div className="flex gap-2  text-[14px] font-[400]">
-                  <p className="text-[#3D424A]">RESERVATION FEE</p>
+              <div className="flex w-full lg:gap-3 gap-0 lg:flex-row flex-col">
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#828282]">Reservation Fee:</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.reservationFee
                       ? formatPrice(data?.reservationFee)
                       : formatPrice(0)}
                   </p>
                 </div>
-                <div className="flex gap-2  text-[14px] font-[400]">
-                  <p className="text-[#3D424A]">MINIMUM SPEND</p>
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#828282]">Minimum Spend:</p>
                   <p className="text-[#3D424A] font-bold">
                     {data?.minimumSpend
                       ? formatPrice(data?.minimumSpend)
                       : formatPrice(0)}
                   </p>
                 </div>
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#828282]">Available Booking Time:</p>
+                  <p className="text-[#3D424A] font-bold">
+                    {data?.startTime && data?.endTime
+                      ? `${formatTimeWithAMPM(
+                          data?.startTime
+                        )} - ${formatTimeWithAMPM(data?.endTime)}`
+                      : "Time not available"}{" "}
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#828282]">Number of seats:</p>
+                  <p className="text-[#3D424A] font-bold">
+                    {data?.numberOfSeat}
+                  </p>
+                </div>
+                <div className="flex gap-2 flex-col  text-[14px] font-[400]">
+                  <p className="text-[#828282]">Quantity</p>
+                  <p className="text-[#3D424A] font-bold">{data?.quantity}</p>
+                </div>
               </div>
-            </div>
-            <div>
-              <Image
-                src={
-                  data?.image
-                    ? `data:image/jpeg;base64,${data?.image}`
-                    : noImage
-                }
-                width={60}
-                height={60}
-                style={{
-                  objectFit: data?.image ? "cover" : "contain",
-                }}
-                className={"bg-cover border  h-[100px] rounded-lg w-[159px]"}
-                aria-label="reservation image"
-                alt="reservation image"
-              />
             </div>
           </div>
           <Spacer y={5} />

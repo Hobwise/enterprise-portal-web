@@ -14,7 +14,7 @@ import toast from "react-hot-toast";
 import imageCompression from "browser-image-compression";
 import { CustomButton } from "@/components/customButton";
 import { SETTINGS_URL } from "@/utilities/routes";
-import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
+
 import api from "@/app/api/apiService";
 import { AUTH } from "@/app/api/api-url";
 import { RxCross2 } from "react-icons/rx";
@@ -29,11 +29,13 @@ import {
 } from "@nextui-org/modal";
 import Image from "next/image";
 import FileUploadInput from "./file-upload-input";
+import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
 
 const BusinessVerificationForm = () => {
   const businessInformation = getJsonItemFromLocalStorage("business");
 
-  const businessQuery = useGetBusinessByCooperate();
+  const businessQuery = useGetBusiness();
+
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -50,8 +52,8 @@ const BusinessVerificationForm = () => {
   const [type, setType] = useState("");
 
   useEffect(() => {
-    if (businessQuery.data && businessQuery.data[0]) {
-      const businessData = businessQuery.data[0];
+    if (businessQuery.data && businessQuery.data) {
+      const businessData = businessQuery.data;
       setRegistrationNumber(businessData.registrationNumber || "");
       setPobReference(businessData.registrationCertificateImageReference || "");
       setPobPreviewUrl(
@@ -170,6 +172,11 @@ const BusinessVerificationForm = () => {
       }),
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
+        notify({
+          title: "Success!",
+          text: "Business information updated successfully",
+          type: "success",
+        });
         router.replace(`${SETTINGS_URL}/kyc-compliance`);
       }
     },
@@ -185,7 +192,7 @@ const BusinessVerificationForm = () => {
   const handlSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
-      ...businessQuery.data[0],
+      ...businessQuery.data,
       registrationNumber,
       registrationCertificateImageReference: pobReference ?? "",
       addressProofImageReference: pobaReference ?? "",

@@ -3,6 +3,7 @@ import { AUTH, DASHBOARD } from "../../api-url";
 import api, { handleError } from "../../apiService";
 import { businessAddressValidation, emailValidation } from "../validations";
 import axios from "axios";
+import { notify } from "@/lib/utils";
 type termsNcondition = {
   content: string;
   isPublished: boolean;
@@ -287,7 +288,7 @@ export async function initializeTransactionv2(
 
   var config = {
     method: "POST",
-    url: "https://walrus-app-lehim.ondigitalocean.app/api/v1/Transaction/initialise-subscription",
+    url: `${process.env.NEXT_PUBLIC_API_BASE_URL}api/v1/Transaction/initialise-subscription`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -298,11 +299,22 @@ export async function initializeTransactionv2(
 
   return axios(config)
     .then((response) => {
-      console.log(response);
       return response?.data?.data?.data;
     })
     .catch((error) => {
-      console.log("ERROR", error);
+      if (error.status === 400) {
+        notify({
+          title: "Error",
+          text: error.response.data.error.responseDescription,
+          type: "error",
+        });
+      } else {
+        notify({
+          title: "Error",
+          text: "An error occurred during transaction initialization",
+          type: "error",
+        });
+      }
     });
 }
 
@@ -360,7 +372,7 @@ export async function manageSubscriptionv2(businessId: string, token: string) {
 
   var config = {
     method: "GET",
-    url: "https://walrus-app-lehim.ondigitalocean.app/api/v1/Subscription/manage-link",
+    url: `${process.env.NEXT_PUBLIC_API_BASE_URL}api/v1/Subscription/manage-link`,
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

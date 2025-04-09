@@ -18,6 +18,8 @@ export type payloadReservationItem = {
   endTime: string;
 };
 
+// api/v1/Reservation?ReservationId=9fb5ff3e-3c65-4e9f-a33b-8896e7e0f4b2&RequestDate=2025-02-19T10%3A22%3A59.9797627
+
 const reservationSchema = z
   .object({
     reservationName: z.string().trim().min(1, "Reservation name is required"),
@@ -176,5 +178,27 @@ export async function editReservations(
     return data;
   } catch (error) {
     handleError(error);
+  }
+}
+
+export async function getReservationsByDate(
+  reservationId: string,
+  requestDate: string
+) {
+  // Construct the API URL dynamically
+  const url = `${
+    DASHBOARD.reservation
+  }?ReservationId=${reservationId}&RequestDate=${encodeURIComponent(
+    requestDate
+  )}`;
+
+  // Set headers if businessId is provided
+
+  try {
+    const response = await api.get(url);
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+    return null;
   }
 }

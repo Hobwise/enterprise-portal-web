@@ -56,9 +56,12 @@ const EditReservation = ({
       startTime: reservationItem?.startTime || "",
       endTime: reservationItem?.endTime || "",
       reservationDuration: reservationItem?.reservationDuration || "",
-      allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+      allowSystemAdvert: reservationItem?.allowSystemAdvert || !true,
       numberOfSeat: reservationItem?.numberOfSeat || 1,
     });
+
+    console.log(reservationItem);
+    
   useEffect(() => {
     setReservationState({
       reservationName: reservationItem?.reservationName,
@@ -70,7 +73,7 @@ const EditReservation = ({
       startTime: reservationItem?.startTime || "",
       endTime: reservationItem?.endTime || "",
       reservationDuration: reservationItem?.reservationDuration || "",
-      allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+      allowSystemAdvert: reservationItem?.allowSystemAdvert || !true,
       numberOfSeat: reservationItem?.numberOfSeat || 1,
     });
   }, [reservationItem]);
@@ -208,7 +211,7 @@ const EditReservation = ({
   return (
     <Modal
       classNames={{
-        wrapper: "overflow-hidden",
+        wrapper: "overflow-hidden z-[9999]",
       }}
       size="5xl"
       isOpen={isOpenEdit}
@@ -223,14 +226,16 @@ const EditReservation = ({
           startTime: reservationItem?.startTime || "",
           endTime: reservationItem?.endTime || "",
           reservationDuration: reservationItem?.reservationDuration || "",
-          allowSystemAdvert: reservationItem?.allowSystemAdvert || true,
+          allowSystemAdvert: reservationItem?.allowSystemAdvert || false,
           numberOfSeat: reservationItem?.numberOfSeat || 1,
         });
         setSelectedImage("");
         toggleModalEdit();
       }}
     >
-      <ModalContent>
+      <ModalContent   classNames={{
+        wrapper: " z-[9999]",
+      }}>
         {(onClose) => (
           <>
             <ModalBody>

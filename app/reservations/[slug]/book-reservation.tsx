@@ -4,12 +4,13 @@ import { CustomButton } from '@/components/customButton';
 import { CustomTextArea } from '@/components/customTextArea';
 import { InfoCircle, LocationIcon } from '@/public/assets/svg';
 import Image from 'next/image';
+
 import React, { useEffect, useState } from 'react';
-import { Modal, ModalBody, ModalContent, Select, SelectItem, Selection } from '@nextui-org/react';
+import { Modal, ModalBody, ModalContent, Select, SelectItem, Selection,Tooltip } from '@nextui-org/react';
 import CheckImage from '@/public/assets/images/success-image.png';
 import { useRouter } from 'next/navigation';
 import { RESERVATIONS_URL } from '@/utilities/routes';
-import { Tooltip } from '@heroui/tooltip';
+
 import {
   cn,
   convertToISO,

@@ -6,6 +6,7 @@ import {
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { setJsonCookie } from "@/lib/cookies";
+import { decryptPayload } from "@/lib/encrypt-decrypt";
 import {
   SmallLoader,
   notify,
@@ -25,16 +26,13 @@ const SelectBusinessForm = () => {
 
   const callLogin = async (businessId: string) => {
     const data = await loginUserSelectedBusiness(loginDetails, businessId);
-    if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage("userInformation", data?.data?.data);
-      setTokenCookie("token", data?.data?.data.token);
-      router.push("/dashboard");
-    } else if (data?.data?.error) {
-      notify({
-        title: "Error!",
-        text: data?.data?.error,
-        type: "error",
-      });
+    if (data?.data?.response) {
+      const decryptedData = decryptPayload(data.data.response);
+      if (decryptedData?.data) {
+        saveJsonItemToLocalStorage("userInformation", decryptedData?.data);
+        setTokenCookie("token", decryptedData?.data.token);
+        router.push("/dashboard");
+      }
     }
   };
 
@@ -65,9 +63,12 @@ const SelectBusinessForm = () => {
     <div className={`flex flex-col gap-3 w-full`}>
       {data?.map((item: any) => {
         return (
-          <ScrollShadow size={10} className="w-full max-h-[350px]">
+          <ScrollShadow
+            key={item.id}
+            size={10}
+            className="w-full max-h-[350px]"
+          >
             <article
-              key={item.id}
               className={`bg-[#F1F2F480] rounded-xl p-3 cursor-pointer ${
                 isLoading &&
                 item.name === business?.name &&

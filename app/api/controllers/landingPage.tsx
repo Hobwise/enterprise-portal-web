@@ -3,7 +3,9 @@ import api, { handleError } from '../apiService';
 
 export async function getFAQItems() {
   try {
-    const data = await api.get(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.getFAQs}`);
+    const data = await api.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.getFAQs}`
+    );
 
     return data;
   } catch (error) {
@@ -13,7 +15,9 @@ export async function getFAQItems() {
 
 export async function getNews() {
   try {
-    const data = await api.get(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.getNews}?count=6`);
+    const data = await api.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.getNews}?count=6`
+    );
 
     return data;
   } catch (error) {
@@ -23,18 +27,8 @@ export async function getNews() {
 
 export async function getCampaigns() {
   try {
-    const data = await api.get(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.getCampaigns}?count=5`);
-
-    return data;
-  } catch (error) {
-    handleError(error, false);
-  }
-}
-
-export async function getReservations(page: number, pageSize: string, searchKeyWord: string) {
-  try {
     const data = await api.get(
-      `https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.getReservations}?Page=${page}&PageSize=${pageSize}&searchKeyWord=${searchKeyWord}`
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.getCampaigns}?count=5`
     );
 
     return data;
@@ -43,9 +37,31 @@ export async function getReservations(page: number, pageSize: string, searchKeyW
   }
 }
 
-export async function AddToWaitingList(payload: { email: string; name: string }) {
+export async function getReservations(
+  page: number,
+  pageSize: string,
+  searchKeyWord: string
+) {
   try {
-    const data = await api.post(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.addToWaitList}`, payload);
+    const data = await api.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.getReservations}?Page=${page}&PageSize=${pageSize}&searchKeyWord=${searchKeyWord}`
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function AddToWaitingList(payload: {
+  email: string;
+  name: string;
+}) {
+  try {
+    const data = await api.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.addToWaitList}`,
+      payload
+    );
 
     return data;
   } catch (error) {
@@ -55,7 +71,9 @@ export async function AddToWaitingList(payload: { email: string; name: string })
 
 export async function getPricings() {
   try {
-    const data = await api.get(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.getPricing}`);
+    const data = await api.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.getPricing}`
+    );
 
     return data;
   } catch (error) {
@@ -65,7 +83,9 @@ export async function getPricings() {
 
 export async function getCompanies() {
   try {
-    const data = await api.get(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.getCompanies}?count=10`);
+    const data = await api.get(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.getCompanies}?count=10`
+    );
 
     return data;
   } catch (error) {
@@ -75,7 +95,7 @@ export async function getCompanies() {
 
 export async function ContactUs(payload: { email: string; name: string; message: string }) {
   try {
-    const data = await api.post(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.contactUs}`, payload);
+    const data = await api.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.contactUs}`, payload);
 
     return data;
   } catch (error) {
@@ -85,7 +105,7 @@ export async function ContactUs(payload: { email: string; name: string; message:
 
 export async function BookDemo(payload: { email: string; name: string; notes?: string; preferredDateTime: string; phoneNumber: string }) {
   try {
-    const data = await api.post(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.bookDemo}`, payload);
+    const data = await api.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.bookDemo}`, payload);
 
     return data;
   } catch (error) {
@@ -108,7 +128,7 @@ interface IBookReservation {
 export async function BookReservationApi(payload: IBookReservation) {
   const { cooperateId, businessId, userId, ...others } = payload;
   try {
-    const data = await api.post(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.bookReservation}`, others, {
+    const data = await api.post(`${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.bookReservation}`, others, {
       headers: { cooperateId, businessId, userId },
     });
 
@@ -120,9 +140,9 @@ export async function BookReservationApi(payload: IBookReservation) {
 
 export async function fetchAvailability(params: { ReservationId: string; RequestDate: string }) {
   try {
-    const data = await api.get(`https://walrus-app-lehim.ondigitalocean.app/${LANDINGPAGE.reservationAvailility}`, { params });
+    const data = await api.get(`${process.env.NEXT_PUBLIC_API_BASE_URL}${LANDINGPAGE.reservationAvailility}`, { params });
     // const data = await api.get(
-    //   `https://walrus-app-lehim.ondigitalocean.app/v1/Reservation/availability?ReservationId=9fb5ff3e-3c65-4e9f-a33b-8896e7e0f4b2&RequestDate=2025-02-18T10%3A50%3A33.291Z`
+    //   `${process.env.NEXT_PUBLIC_API_BASE_URL}v1/Reservation/availability?ReservationId=9fb5ff3e-3c65-4e9f-a33b-8896e7e0f4b2&RequestDate=2025-02-18T10%3A50%3A33.291Z`
     // );
 
     return data;

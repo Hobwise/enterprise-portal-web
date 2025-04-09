@@ -150,7 +150,7 @@ const CheckoutModal = ({
       comment: order.comment,
       additionalCost,
       additionalCostName,
-      totalAmount: finalTotalPrice,
+      totalAmount: Math.round(finalTotalPrice * 100) / 100,
       orderDetails: transformedArray,
     };
     const id = businessId ? businessId : businessInformation[0]?.businessId;
@@ -189,7 +189,7 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: order.quickResponseID,
       comment: order.comment,
-      totalAmount: finalTotalPrice,
+      totalAmount: Math.round(finalTotalPrice * 100) / 100,
       additionalCost,
       additionalCostName,
       orderDetails: transformedArray,
@@ -572,7 +572,7 @@ const CheckoutModal = ({
                         </span>
                       </div>
                       <p className="text-sm  text-primaryColor xl:mb-8 w-full mb-4">
-                        {formatPrice(totalPrice)}
+                        {formatPrice(finalTotalPrice)}
                       </p>
                     </div>
                   </div>
@@ -622,7 +622,7 @@ const CheckoutModal = ({
                         <p className="text-sm text-grey500">TOTAL ORDER</p>
                         <p className="font-bold text-black text-[20px]">
                           {" "}
-                          {formatPrice(totalPrice)}
+                          {formatPrice(finalTotalPrice)}
                         </p>
                       </div>
                       <MdKeyboardArrowRight />

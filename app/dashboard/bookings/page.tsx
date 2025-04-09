@@ -96,6 +96,8 @@ const Bookings: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
+  
+
   const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
   const [bookingDetails, setBookingDetails] = useState<any>(null);
