@@ -1,13 +1,7 @@
-import {
-  getJsonItemFromLocalStorage,
-  notify,
-  removeCookie,
-  resetLoginInfo,
-  saveJsonItemToLocalStorage,
-} from "@/lib/utils";
-import axios, { AxiosError } from "axios";
-import { generateRefreshToken, logout } from "./controllers/auth";
-import { decryptPayload } from "@/lib/encrypt-decrypt";
+import { getJsonItemFromLocalStorage, notify, removeCookie, resetLoginInfo, saveJsonItemToLocalStorage } from '@/lib/utils';
+import axios, { AxiosError } from 'axios';
+import { generateRefreshToken, logout } from './controllers/auth';
+import { decryptPayload } from '@/lib/encrypt-decrypt';
 
 let isRefreshing = false;
 let refreshSubscribers = [];
@@ -29,36 +23,29 @@ const onRefreshFailed = (error) => {
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_BASE_URL,
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
   timeout: 20000,
 });
 
 const isTokenExpiringSoon = () => {
-  const userData = getJsonItemFromLocalStorage("userInformation");
+  const userData = getJsonItemFromLocalStorage('userInformation');
   if (!userData?.tokenExpiration) return false;
 
   const expirationTime = new Date(userData.tokenExpiration).getTime();
   const currentTime = new Date().getTime();
   const twoMinutesInMs = 2 * 60 * 1000;
 
-  return (
-    expirationTime - currentTime <= twoMinutesInMs &&
-    expirationTime > currentTime
-  );
+  return expirationTime - currentTime <= twoMinutesInMs && expirationTime > currentTime;
 };
 
 const refreshToken = async () => {
   try {
-    const userData = getJsonItemFromLocalStorage("userInformation");
-    const businesses = getJsonItemFromLocalStorage("business");
+    const userData = getJsonItemFromLocalStorage('userInformation');
+    const businesses = getJsonItemFromLocalStorage('business');
 
-    if (
-      !userData?.refreshToken ||
-      !userData?.email ||
-      !businesses?.[0]?.businessId
-    ) {
-      throw new Error("Missing required refresh data");
+    if (!userData?.refreshToken || !userData?.email || !businesses?.[0]?.businessId) {
+      throw new Error('Missing required refresh data');
     }
 
     const { refreshToken, email } = userData;
@@ -71,25 +58,21 @@ const refreshToken = async () => {
     });
 
     if (!response?.data?.response) {
-      throw new Error("Failed to generate new token");
+      throw new Error('Failed to generate new token');
     }
 
     const decryptedData = decryptPayload(response?.data?.response);
 
-    const {
-      token: newToken,
-      refreshToken: newRefreshToken,
-      tokenExpiration: newExpiration,
-    } = decryptedData?.data;
+    const { token: newToken, refreshToken: newRefreshToken, tokenExpiration: newExpiration } = decryptedData?.data;
 
-    saveJsonItemToLocalStorage("userInformation", {
+    saveJsonItemToLocalStorage('userInformation', {
       ...userData,
       token: newToken,
       refreshToken: newRefreshToken,
       tokenExpiration: newExpiration,
     });
 
-    api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+    api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     onTokenRefreshed(newToken);
     return newToken;
   } catch (error) {
@@ -115,8 +98,8 @@ const refreshTokenIfNeeded = async () => {
 api.interceptors.request.use(async (config) => {
   await refreshTokenIfNeeded();
 
-  const userData = getJsonItemFromLocalStorage("userInformation");
-  const business = getJsonItemFromLocalStorage("business");
+  const userData = getJsonItemFromLocalStorage('userInformation');
+  const business = getJsonItemFromLocalStorage('business');
   const token = userData?.token;
   const cooperateID = userData?.cooperateID;
   const businessId = business?.businessId;
@@ -125,16 +108,15 @@ api.interceptors.request.use(async (config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
   if (cooperateID) {
-    config.headers["cooperateId"] = cooperateID;
+    config.headers['cooperateId'] = cooperateID;
   }
   if (businessId) {
-    config.headers["businessId"] = businessId;
+    config.headers['businessId'] = businessId;
   }
 
-  const isMultipartFormData =
-    config.headers["Content-Type"] === "multipart/form-data";
+  const isMultipartFormData = config.headers['Content-Type'] === 'multipart/form-data';
   if (isMultipartFormData) {
-    delete config.headers["Content-Type"];
+    delete config.headers['Content-Type'];
   }
 
   return config;
@@ -145,11 +127,7 @@ api.interceptors.response.use(
   async (error) => {
     const originalConfig = error.config;
 
-    if (
-      error.response &&
-      error.response.status === 401 &&
-      !originalConfig._retry
-    ) {
+    if (error.response && error.response.status === 401 && !originalConfig._retry) {
       originalConfig._retry = true;
 
       if (isRefreshing) {
@@ -168,7 +146,7 @@ api.interceptors.response.use(
             originalConfig.headers.Authorization = `Bearer ${newToken}`;
             return api(originalConfig);
           } else {
-            throw new Error("Token refresh failed");
+            throw new Error('Token refresh failed');
           }
         } catch (refreshError) {
           return Promise.reject(refreshError);
@@ -198,29 +176,27 @@ export const handleError = (error: any, showError: boolean = true) => {
   if (showError) {
     if (!error.response?.data?.title) {
       notify({
-        title: "Error!",
-        text:
-          error.response?.data?.error?.responseDescription ||
-          "An error occurred",
-        type: "error",
+        title: 'Error!',
+        text: error.response?.data?.error?.responseDescription || 'An error occurred',
+        type: 'error',
       });
-    } else if (error.code === "ECONNABORTED") {
+    } else if (error.code === 'ECONNABORTED') {
       notify({
-        title: "Network Timeout",
-        text: "The request took too long. Please try again later.",
-        type: "error",
+        title: 'Network Timeout',
+        text: 'The request took too long. Please try again later.',
+        type: 'error',
       });
-    } else if (error.code === "ERR_NETWORK") {
+    } else if (error.code === 'ERR_NETWORK') {
       notify({
-        title: "Network Error!",
-        text: "Check your network and try again",
-        type: "error",
+        title: 'Network Error!',
+        text: 'Check your network and try again',
+        type: 'error',
       });
     } else {
       notify({
-        title: "Error!",
-        text: "An error occurred, please try again",
-        type: "error",
+        title: 'Error!',
+        text: 'An error occurred, please try again',
+        type: 'error',
       });
     }
   }
