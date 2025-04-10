@@ -18,11 +18,11 @@ const nextConfig = {
               "default-src 'self'; " +
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
               "style-src 'self' 'unsafe-inline'; " +
-              "img-src 'self' data: https://walrus-app-lehim.ondigitalocean.app https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com; " +
-              "connect-src 'self' https://walrus-app-lehim.ondigitalocean.app https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com; " +
-              "font-src 'self' https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com; " +
-              "frame-src https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com; " +
-              "media-src https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com;",
+              "img-src 'self' data: https://walrus-app-lehim.ondigitalocean.app https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com https://res.cloudinary.com; " +
+              "connect-src 'self' https://walrus-app-lehim.ondigitalocean.app https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com https://res.cloudinary.com; " +
+              "font-src 'self' https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com https://res.cloudinary.com; " +
+              "frame-src https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com https://res.cloudinary.com; " +
+              "media-src https://hobwise.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://sandbox-api.hobwise.com https://sandbox.hobwise.com https://res.cloudinary.com; ",
           },
           {
             key: "X-Frame-Options",
