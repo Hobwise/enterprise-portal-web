@@ -484,7 +484,7 @@ const CheckoutModal = ({
                             </div>
                             <div className="flex items-center justify-between  gap-2">
                               <p className="text-black font-bold">
-                                Additional cost Name:{" "}
+                                Additional cost name:{" "}
                               </p>
                               <div className="w-40">
                                 <CustomInput

@@ -88,7 +88,7 @@ const Orders: React.FC = () => {
       toast.error("Export failed, please try again");
     }
   };
-
+console.log(filteredItems, "filteredItems");
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
