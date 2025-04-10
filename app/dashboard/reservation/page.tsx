@@ -41,7 +41,7 @@ interface ReservationItem {
   minimumSpend: number;
   quantity: number;
   reservationDescription: string;
-  [key: string]: any; // For any other properties
+  [key: string]: any;
 }
 
 
