@@ -36,6 +36,7 @@ export default function Demo() {
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const sectionHeaderClass: string =
     'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1 rounded-full text-xs lg:mx-auto shadow_custom-inset';
+
   return (
     <section className="bg-white py-8 lg:py-16 font-satoshi space-y-4 lg:space-y-8 px-6 lg:px-12">
       <div className={sectionHeaderClass}>
@@ -90,8 +91,9 @@ export default function Demo() {
               controls
               poster="/assets/images/video-poster.jpg"
               className="text-center justify-center rounded-2xl shadow-custom border-[14px] border-white"
+              src="https://res.cloudinary.com/dboqyj4bp/video/upload/v1744286255/hob-wizz_pvswyr.mp4"
             >
-              <source src="/assets/videos/hob-wizz.mp4" type="video/mp4" />
+              <source src="https://res.cloudinary.com/dboqyj4bp/video/upload/v1744286255/hob-wizz_pvswyr.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </Transition>
