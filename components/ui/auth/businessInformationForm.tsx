@@ -14,9 +14,11 @@ import { Spacer } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import States from "../../../lib/cities.json";
+import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 
 const BusinessInformationForm = () => {
   const router = useRouter();
+  const { refetch } = useSubscription();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
 
   const [loading, setLoading] = useState(false);
@@ -62,6 +64,7 @@ const BusinessInformationForm = () => {
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage("business", [data?.data?.data]);
       // router.push('/dashboard');
+      refetch();
       router.push("/dashboard/settings/subscriptions");
       notify({
         title: "Success!",

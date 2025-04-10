@@ -10,9 +10,9 @@ import SideNav from './ui/dashboard/side-nav';
 function Container({ children }: any) {
   useActivityTracking();
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden">
       <SideNav />
-      <main className="flex-1 w-full">
+      <main className="flex-1 w-full overflow-y-auto">
         <MarginWidthWrapper>
           <Header />
           <HeaderMobile />

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import { generateRefreshToken } from "@/app/api/controllers/auth";
 import CompanyLogo from "@/components/logo";
 import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { decryptPayload } from "@/lib/encrypt-decrypt";
 import {
   getJsonItemFromLocalStorage,
   resetLoginInfo,
@@ -35,9 +37,6 @@ import LogoutModal from "../logoutModal";
 import { SIDENAV_ITEMS } from "./constants";
 import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
-import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
-import { useQueryClient } from "react-query";
-import { decryptPayload } from "@/lib/encrypt-decrypt";
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
@@ -191,21 +190,29 @@ const SideNav = () => {
       });
 
   return (
-    <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex">
-      <div className="flex flex-col  w-full">
-        <div className=" scrollbarstyles mb-3 overflow-y-scroll">
+    <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
+      <div className="flex flex-col w-full h-full relative">
+        <div className="flex-shrink-0">
           <Link
             prefetch={true}
             href="/dashboard"
-            className="flex flex-row  items-center justify-center md:justify-start md:px-8 md:py-10   w-full"
+            className="flex flex-row items-center justify-center md:justify-start md:px-8 md:py-10 w-full"
           >
             <CompanyLogo
               textColor="text-white font-lexend text-[28px] font-[600]"
-              containerClass="flex gap-2 items-center "
+              containerClass="flex gap-2 items-center"
             />
           </Link>
+        </div>
 
-          <div className="flex flex-col space-y-1  md:px-2 ">
+        <div
+          className="overflow-y-auto flex-grow"
+          style={{
+            height: "calc(100vh - 200px)",
+            maxHeight: "calc(100vh - 200px)",
+          }}
+        >
+          <div className="flex flex-col space-y-1 md:px-2 pb-10">
             {isPermissionsLoading ? (
               <div className="grid place-content-center mt-6">
                 <div className="space-y-2 flex justify-center flex-col">
@@ -221,7 +228,7 @@ const SideNav = () => {
           </div>
         </div>
 
-        <div className="absolute bottom-0 bg-black w-full ">
+        <div className="absolute bottom-0 left-0 right-0 bg-black">
           <Divider className="bg-[#27272A] mx-auto h-[1px] w-[90%]" />
           <Dropdown
             style={{
@@ -243,7 +250,7 @@ const SideNav = () => {
                   </div>
                 </div>
               ) : (
-                <div className="flex cursor-pointer justify-center items-center px-5 py-8 gap-4 w-full ">
+                <div className="flex cursor-pointer justify-center items-center px-2 py-8 gap-4 w-full ">
                   <div>
                     <Avatar
                       isBordered
@@ -270,6 +277,7 @@ const SideNav = () => {
             <DropdownMenu
               variant="light"
               aria-label="Dropdown menu to switch businesses"
+              className="max-h-[300px] overflow-y-auto"
             >
               {userInformation?.isOwner &&
                 canAccessMultipleLocations &&

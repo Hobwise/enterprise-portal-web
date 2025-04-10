@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap');
 
 html {
   scroll-behavior: smooth;
@@ -40,14 +40,14 @@ table {
 }
 
 .main-section {
-  background-image: url("/assets/images/landing-page-bg.png");
+  background-image: url('/assets/images/landing-page-bg.png');
   background-position: center;
   background-size: cover; /* Scales the image to cover the div */
   width: 100%;
 }
 
 .price-plan-section {
-  background-image: url("/public/assets/images/price-bg.png");
+  background-image: url('/public/assets/images/price-bg.png');
   background-size: cover;
 }
 
@@ -212,7 +212,7 @@ input:-webkit-autofill:focus {
   margin-left: 5px !important;
 }
 
-.custom-pagination-item[data-active="true"] {
+.custom-pagination-item[data-active='true'] {
   background-color: #5f35d2;
 }
 .loading-text {
@@ -324,7 +324,7 @@ input:-webkit-autofill:focus {
 }
 
 .nav-bar-bg {
-  background-image: url("/assets/images/small-screen-bg.png");
+  background-image: url('/assets/images/small-screen-bg.png');
   height: 100%;
   background-position: right;
   background-repeat: no-repeat;
@@ -394,8 +394,19 @@ input:-webkit-autofill:focus {
 .scrollbar::-webkit-scrollbar-track {
   background: #edf2f7;
 }
-.react-datepicker__day--selected, .react-datepicker__day--in-selecting-range, .react-datepicker__day--in-range, .react-datepicker__month-text--selected, .react-datepicker__month-text--in-selecting-range, .react-datepicker__month-text--in-range, .react-datepicker__quarter-text--selected, .react-datepicker__quarter-text--in-selecting-range, .react-datepicker__quarter-text--in-range, .react-datepicker__year-text--selected, .react-datepicker__year-text--in-selecting-range, .react-datepicker__year-text--in-range {
-  background-color: #5F35D2 !important;
+.react-datepicker__day--selected,
+.react-datepicker__day--in-selecting-range,
+.react-datepicker__day--in-range,
+.react-datepicker__month-text--selected,
+.react-datepicker__month-text--in-selecting-range,
+.react-datepicker__month-text--in-range,
+.react-datepicker__quarter-text--selected,
+.react-datepicker__quarter-text--in-selecting-range,
+.react-datepicker__quarter-text--in-range,
+.react-datepicker__year-text--selected,
+.react-datepicker__year-text--in-selecting-range,
+.react-datepicker__year-text--in-range {
+  background-color: #5f35d2 !important;
 }
 
 .react-datepicker__navigation--previous {
@@ -404,14 +415,9 @@ input:-webkit-autofill:focus {
 
 .react-datepicker__navigation--previous {
   right: 51px !important;
-
 }
-
-
 
 .react-datepicker__header {
   text-align: center;
   background-color: #ffff !important;
-
 }
-
