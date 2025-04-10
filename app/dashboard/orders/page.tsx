@@ -46,6 +46,7 @@ const Orders: React.FC = () => {
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
+    refetch();
     setTableStatus("All");
     setPage(1);
   }, []);
