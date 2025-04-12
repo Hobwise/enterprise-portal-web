@@ -190,8 +190,8 @@ const Reports: React.FC = () => {
         {isLoading ? (
           <CustomLoading />
         ) : (
-          <div className="w-full relative -top-14">
-            <div className="mb-4  flex justify-end ">
+          <div className="w-full relative md:-top-14 -top-2">
+            <div className="mb-4  flex  md:justify-end justify-start">
               <Tabs
                 size="sm"
                 variant="bordered"
