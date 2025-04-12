@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import States from "../../../lib/cities.json";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { setJsonCookie } from "@/lib/cookies";
+import { getUserSubscription } from "@/app/api/controllers/dashboard/settings";
 
 const BusinessInformationForm = () => {
   const router = useRouter();
@@ -64,14 +66,27 @@ const BusinessInformationForm = () => {
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage("business", [data?.data?.data]);
       // router.push('/dashboard');
-      const subscriptionData = await refetch();
-      refetch();
-      if (subscriptionData?.data) {
+      const responseData = await getUserSubscription(
+        data?.data?.data?.businessId
+      );
+
+      setJsonCookie(
+        "planCapabilities",
+        responseData?.data?.data?.planCapabilities
+      );
+
+      if (responseData?.data?.data) {
         router.push("/dashboard/settings/subscriptions");
         notify({
           title: "Success!",
           text: "Registration completed",
           type: "success",
+        });
+      } else {
+        notify({
+          title: "Error!",
+          text: responseData?.data?.error,
+          type: "error",
         });
       }
     } else if (data?.data?.error) {

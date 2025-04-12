@@ -70,7 +70,7 @@ const businessSchema = z.object({
   address: businessAddressValidation(),
   businessCategory: z
     .number()
-    .min(0, { message: "Please select your business category" }),
+    .min(1, { message: "Please select your business category" }),
   state: z.string().trim().min(1, { message: "Select a state" }),
   city: z.string().trim().min(1, { message: "Select a city" }),
   contactEmailAddress: emailValidation(),
