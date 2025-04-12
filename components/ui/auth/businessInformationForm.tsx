@@ -18,7 +18,7 @@ import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 
 const BusinessInformationForm = () => {
   const router = useRouter();
-  const { refetch, data: subscription } = useSubscription();
+  const { refetch } = useSubscription();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
 
   const [loading, setLoading] = useState(false);
@@ -64,8 +64,9 @@ const BusinessInformationForm = () => {
     if (data?.data?.isSuccessful) {
       saveJsonItemToLocalStorage("business", [data?.data?.data]);
       // router.push('/dashboard');
+      const subscriptionData = await refetch();
       refetch();
-      if (subscription) {
+      if (subscriptionData?.data) {
         router.push("/dashboard/settings/subscriptions");
         notify({
           title: "Success!",

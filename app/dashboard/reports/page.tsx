@@ -38,26 +38,26 @@ const Reports: React.FC = () => {
     start: null,
     end: null,
   });
-  const [selectedKeys, setSelectedKeys] = useState(new Set(['This week']));
+  const [selectedKeys, setSelectedKeys] = useState(new Set(["This week"]));
   const selectedValue = useMemo(
-    () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
+    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
     [selectedKeys]
   );
   const [previousSelectedValue, setPreviousSelectedValue] =
-    useState('This week');
+    useState("This week");
 
   const logIndexForSelectedKey = (key: string) => {
     switch (key) {
-      case 'Today':
+      case "Today":
         return 0;
-      case 'This week':
+      case "This week":
         return 1;
-      case 'This year':
+      case "This year":
         return 2;
-      case 'Custom date':
+      case "Custom date":
         return 3;
       default:
-        console.log('Unknown key');
+        console.log("Unknown key");
         return -1;
     }
   };
@@ -67,8 +67,8 @@ const Reports: React.FC = () => {
   };
 
   const shouldFetchReport =
-    selectedValue !== 'Custom date' ||
-    (selectedValue === 'Custom date' && checkValue());
+    selectedValue !== "Custom date" ||
+    (selectedValue === "Custom date" && checkValue());
 
   const effectiveSelectedValue = shouldFetchReport
     ? selectedValue
@@ -88,7 +88,7 @@ const Reports: React.FC = () => {
   );
 
   useEffect(() => {
-    if (shouldFetchReport && selectedValue !== 'Custom date') {
+    if (shouldFetchReport && selectedValue !== "Custom date") {
       setPreviousSelectedValue(selectedValue);
     }
   }, [shouldFetchReport, selectedValue]);
@@ -109,131 +109,133 @@ const Reports: React.FC = () => {
     label: string;
     content: React.ReactNode;
   }
-  const [selectedTab, setSelectedTab] = useState<string>('orders');
+  const [selectedTab, setSelectedTab] = useState<string>("orders");
   let tabs: TabItem[] = [
     {
-      id: 'orders',
-      label: 'Orders',
+      id: "orders",
+      label: "Orders",
       content: <OrderReportDetails report={data?.orderDetails} />,
     },
     {
-      id: 'payments',
-      label: 'Payments',
+      id: "payments",
+      label: "Payments",
       content: <PaymentReportDetails report={data?.paymentDetails} />,
     },
     {
-      id: 'bookings',
-      label: 'Bookings',
+      id: "bookings",
+      label: "Bookings",
       content: <BookingReportDetails report={data?.bookingDetails} />,
     },
     {
-      id: 'audits',
-      label: 'Audits',
+      id: "audits",
+      label: "Audits",
       content: <AuditReportDetails report={data?.auditDetails} />,
     },
   ];
 
   return (
     <Suspense fallback={<CustomLoading />}>
-      <div className='flex flex-row flex-wrap  justify-between'>
-        <div>
-          <div className='text-[24px] leading-8 font-semibold'>
-            {data?.quickResponses?.length > 0 ? (
-              <div className='flex items-center'>
+      <div className="flex flex-col w-full">
+        <div className="flex flex-row flex-wrap justify-between mb-4">
+          <div>
+            <div className="text-[24px] leading-8 font-semibold">
+              {data?.quickResponses?.length > 0 ? (
+                <div className="flex items-center">
+                  <span>Reports</span>
+                  <Chip
+                    classNames={{
+                      base: `ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
+                    }}
+                  >
+                    {data?.totalCount}
+                  </Chip>
+                </div>
+              ) : (
                 <span>Reports</span>
-                <Chip
-                  classNames={{
-                    base: `ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
+              )}
+            </div>
+            <div className="flex gap-2 items-center">
+              <p className="text-sm text-grey600">A summary of activities</p>
+              <Dropdown isDisabled={isLoading}>
+                <DropdownTrigger>
+                  <Button
+                    variant="light"
+                    endContent={<MdKeyboardArrowDown />}
+                    className="font-[600] capitalize text-black"
+                  >
+                    {selectedValue}
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Single selection example"
+                  variant="flat"
+                  disallowEmptySelection
+                  selectionMode="single"
+                  className="text-black"
+                  selectedKeys={selectedKeys}
+                  onSelectionChange={setSelectedKeys}
                 >
-                  {data?.totalCount}
-                </Chip>
-              </div>
-            ) : (
-              <span>Reports</span>
-            )}
-          </div>
-          <div className='flex gap-2 items-center mb-4'>
-            <p className='text-sm  text-grey600  '>A summary of activities</p>
-            <Dropdown isDisabled={isLoading}>
-              <DropdownTrigger>
-                <Button
-                  variant='light'
-                  endContent={<MdKeyboardArrowDown />}
-                  className='font-[600] capitalize text-black'
-                >
-                  {selectedValue}
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu
-                aria-label='Single selection example'
-                variant='flat'
-                disallowEmptySelection
-                selectionMode='single'
-                className='text-black'
-                selectedKeys={selectedKeys}
-                onSelectionChange={setSelectedKeys}
-              >
-                <DropdownItem key='Today'>Today</DropdownItem>
-                <DropdownItem key='This week'>This week</DropdownItem>
-                <DropdownItem key='This year'>This year</DropdownItem>
-
-                <DropdownItem onClick={() => onOpen()} key='Custom date'>
-                  Custom date
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
+                  <DropdownItem key="Today">Today</DropdownItem>
+                  <DropdownItem key="This week">This week</DropdownItem>
+                  <DropdownItem key="This year">This year</DropdownItem>
+                  <DropdownItem onClick={() => onOpen()} key="Custom date">
+                    Custom date
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
           </div>
         </div>
 
         {isLoading ? (
           <CustomLoading />
         ) : (
-          <div>
-            <Tabs
-              size={'sm'}
-              variant='bordered'
-              color='secondary'
-              aria-label='report tabs'
-              items={tabs}
-              selectedKey={selectedTab}
-              onSelectionChange={(key) => setSelectedTab(key as string)}
-            >
-              {(item) => (
-                <Tab key={item.id} title={item.label}>
-                  <div className='absolute top-[14rem] lg:top-[10.5rem] md:w-[calc(100%-272px)] w-full right-0 lg:px-6 px-4'>
-                    {item.content}
-                  </div>
-                </Tab>
-              )}
-            </Tabs>
+          <div className="w-full relative -top-14">
+            <div className="mb-4  flex justify-end ">
+              <Tabs
+                size="sm"
+                variant="bordered"
+                color="secondary"
+                aria-label="report tabs"
+                items={tabs}
+                selectedKey={selectedTab}
+                onSelectionChange={(key) => setSelectedTab(key as string)}
+              >
+                {(item) => <Tab key={item.id} title={item.label} />}
+              </Tabs>
+            </div>
+
+            <div className="w-full">
+              {tabs.find((tab) => tab.id === selectedTab)?.content}
+            </div>
           </div>
         )}
       </div>
+
       <Modal
         isDismissable={false}
         classNames={{
-          base: 'absolute top-12',
+          base: "absolute top-12",
         }}
-        size='sm'
+        size="sm"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalBody className='px-4 py-6'>
+              <ModalBody className="px-4 py-6">
                 <DateRangePicker
-                  radius='sm'
+                  radius="sm"
                   maxValue={today(getLocalTimeZone())}
                   value={value}
                   onChange={handleDateChange}
                   visibleMonths={2}
-                  variant='faded'
-                  pageBehavior='single'
-                  label='Select date range'
+                  variant="faded"
+                  pageBehavior="single"
+                  label="Select date range"
                   showMonthAndYearPickers
-                  labelPlacement='outside'
+                  labelPlacement="outside"
                 />
               </ModalBody>
             </>
