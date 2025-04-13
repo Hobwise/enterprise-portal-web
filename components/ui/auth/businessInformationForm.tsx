@@ -54,47 +54,58 @@ const BusinessInformationForm = () => {
 
   const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
-
+    
     setLoading(true);
-    const data = await createBusiness({
-      ...businessFormData,
-      businessCategory: +businessFormData.businessCategory,
-    });
 
-    setLoading(false);
-    setResponse(data);
-    if (data?.data?.isSuccessful) {
-      saveJsonItemToLocalStorage("business", [data?.data?.data]);
-      // router.push('/dashboard');
-      const responseData = await getUserSubscription(
-        data?.data?.data?.businessId
-      );
+    try {
+      const data = await createBusiness({
+        ...businessFormData,
+        businessCategory: +businessFormData.businessCategory,
+      });
 
-      setJsonCookie(
-        "planCapabilities",
-        responseData?.data?.data?.planCapabilities
-      );
+      setResponse(data);
 
-      if (responseData?.data?.data) {
-        router.push("/dashboard/settings/subscriptions");
-        notify({
-          title: "Success!",
-          text: "Registration completed",
-          type: "success",
-        });
-      } else {
+      if (data?.data?.isSuccessful) {
+        saveJsonItemToLocalStorage("business", [data?.data?.data]);
+
+        const responseData = await getUserSubscription(
+          data?.data?.data?.businessId
+        );
+
+        setJsonCookie(
+          "planCapabilities",
+          responseData?.data?.data?.planCapabilities
+        );
+
+        if (responseData?.data?.data) {
+          router.push("/dashboard/settings/subscriptions");
+          notify({
+            title: "Success!",
+            text: "Registration completed",
+            type: "success",
+          });
+        } else {
+          notify({
+            title: "Error!",
+            text: responseData?.data?.error,
+            type: "error",
+          });
+        }
+      } else if (data?.data?.error) {
         notify({
           title: "Error!",
-          text: responseData?.data?.error,
+          text: data?.data?.error,
           type: "error",
         });
       }
-    } else if (data?.data?.error) {
+    } catch (error) {
       notify({
         title: "Error!",
-        text: data?.data?.error,
+        text: "An unexpected error occurred",
         type: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
