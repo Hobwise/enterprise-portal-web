@@ -355,7 +355,7 @@ const OrdersOverview = ({
             response?.paymentDetails.paymentPartitions.length === 0 ? (
               ""
             ) : (
-              <div className=" h-[100px] w-full absolute bottom-0 right-0">
+              <div className="h-[200px] w-full absolute bottom-0 right-0">
                 <Line data={curveData} options={curveOptions} />
               </div>
             )}
