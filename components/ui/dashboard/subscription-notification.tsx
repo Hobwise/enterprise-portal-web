@@ -40,9 +40,8 @@ export const NavigationBanner = ({
       {userInfo.isOwner && (
         <Button
           onClick={() => router.push("/dashboard/settings/subscriptions")}
-          className="px-4 py-1.5 rounded-xl border border-amber-500 text-sm font-medium bg-amber-100 hover:bg-amber-200 text-amber-700  relative group"
+          className="px-6 py-1.5  rounded-md text-sm font-medium bg-[#D7A913]  text-white  relative group"
         >
-          <span className="absolute -inset-1 bg-amber-200 rounded-md opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
           Upgrade
         </Button>
       )}
