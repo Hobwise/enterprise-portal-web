@@ -72,6 +72,7 @@ const Bookings: React.FC = () => {
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
+    refetch();
     setTableStatus("All Bookings");
     setPage(1);
   }, []);
