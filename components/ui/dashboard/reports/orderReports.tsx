@@ -2,7 +2,6 @@ import { Card, CardBody, Divider } from "@nextui-org/react";
 import moment from "moment";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-// import { Chart } from 'react-google-charts';
 import { saveJsonItemToLocalStorage } from "@/lib/utils";
 import {
   CategoryScale,

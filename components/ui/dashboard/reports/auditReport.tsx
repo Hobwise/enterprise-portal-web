@@ -1,7 +1,6 @@
 import { Card, CardBody, Divider } from "@nextui-org/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-// import { Chart } from 'react-google-charts';
 import { saveJsonItemToLocalStorage } from "@/lib/utils";
 import { IoIosArrowForward } from "react-icons/io";
 import Accepted from "../../../../public/assets/icons/accepted.png";
