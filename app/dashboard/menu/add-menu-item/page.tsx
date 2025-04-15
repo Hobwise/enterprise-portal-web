@@ -92,7 +92,6 @@ const AddItemToMenu = () => {
     setIsLoadingImage(false);
     setImageError("");
     if (data?.data?.isSuccessful) {
-      console.log(file, "file");
       setSelectedImage(URL.createObjectURL(file));
       setMenuItem({ ...menuItem, imageReference: data.data.data });
     } else if (data?.data?.error) {
