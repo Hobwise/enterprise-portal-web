@@ -663,7 +663,7 @@ const getStatusDotColor = (status: Appointment["status"]): DotColor => {
 
             {/* Appointments grouped by rows */}
             {appointmentRows.map((row, rowIndex) => (
-              <div key={rowIndex} className="relative z-50 h-28 mb-2">
+              <div key={rowIndex} className="relative z-40 h-28 mb-2">
                 {row.map((appointment) => {
                   const barStyle = calculateBarStyle(
                     appointment.startTime,

@@ -224,7 +224,7 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
             </div>
 
             {showTimeModal && (
-              <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg rounded-lg z-[60] p-6 w-96 h-80">
+              <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white shadow-lg rounded-lg z-50 p-6 w-96 h-80">
                 <h3 className="font-medium text-xl mb-4">
                   {selectedDate.toLocaleDateString("en-US", {
                     year: "numeric",
