@@ -17,22 +17,22 @@ interface ManageSubscriptionIframe {
   trigger: boolean;
   setTriggerIframe: React.Dispatch<React.SetStateAction<boolean>>;
 }
-
 const IframeModule: React.FC<{ url: string }> = ({ url }) => {
+  console.log(url, "url");
   return (
     <iframe
       src={url}
-      tabIndex={0} // Makes the iframe focusable
-      title="Embedded Website" // Improves accessibility
+      tabIndex={0}
+      title="Embedded Website"
       style={{
         width: "100%",
-        height: "600px", // Adjust the height as necessary
+        height: "600px",
         border: "none",
       }}
       onLoad={(e) => {
-        const iframe = e.target as HTMLIFrameElement; // Cast e.target to HTMLIFrameElement
+        const iframe = e.target as HTMLIFrameElement;
         try {
-          iframe.contentWindow?.focus(); // Safe access to contentWindow
+          iframe.contentWindow?.focus();
         } catch (error) {
           console.warn("Unable to focus iframe:", error);
         }
