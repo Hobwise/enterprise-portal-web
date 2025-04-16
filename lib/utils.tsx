@@ -541,7 +541,7 @@ export const getInitials2 = (
   businessName: string | undefined | null
 ): string => {
   if (!businessName) return "";
-  const names = businessName.split(" ");
+  const names = businessName?.split(" ");
   const firstName = names[0] ?? "";
   const secondName = names[1] ?? "";
   return `${

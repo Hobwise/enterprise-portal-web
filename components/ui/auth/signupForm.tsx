@@ -8,18 +8,21 @@ import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
+import { useQueryClient } from "react-query";
+
 const SignupForm = () => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { setUserData, setExpireTime } = useGlobalContext();
 
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [signupFormData, setSignupFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
     role: 0,
     isActive: false,
   });
@@ -35,7 +38,8 @@ const SignupForm = () => {
 
   const submitFormData = async (e) => {
     e.preventDefault();
-
+    queryClient.clear();
+    localStorage.clear();
     setUserData(signupFormData);
     setLoading(true);
     const data = await createUser(signupFormData);
@@ -44,79 +48,79 @@ const SignupForm = () => {
 
     if (data?.data?.isSuccessful) {
       setExpireTime(new Date(data.data.data));
-      router.push('/auth/confirm-email');
+      router.push("/auth/confirm-email");
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
 
   return (
-    <form onSubmit={submitFormData} autoComplete='off'>
-      <div className='flex md:flex-row flex-col gap-5'>
+    <form onSubmit={submitFormData} autoComplete="off">
+      <div className="flex md:flex-row flex-col gap-5">
         <CustomInput
-          type='text'
-          name='firstName'
-          label='First Name'
+          type="text"
+          name="firstName"
+          label="First Name"
           errorMessage={response?.errors?.firstName?.[0]}
           onChange={handleInputChange}
           value={signupFormData.firstName}
-          placeholder='First name'
+          placeholder="First name"
         />
 
         <CustomInput
-          type='text'
-          name='lastName'
+          type="text"
+          name="lastName"
           errorMessage={response?.errors?.lastName?.[0]}
           onChange={handleInputChange}
           value={signupFormData.lastName}
-          label='Last Name'
-          placeholder='Last name'
+          label="Last Name"
+          placeholder="Last name"
         />
       </div>
       <Spacer y={6} />
       <CustomInput
-        type='text'
-        name='email'
+        type="text"
+        name="email"
         errorMessage={response?.errors?.email?.[0]}
         onChange={handleInputChange}
         value={signupFormData.email}
-        label='Email Address'
-        placeholder='Enter email'
-        endContent={<FaRegEnvelope className='text-foreground-500 text-l' />}
+        label="Email Address"
+        placeholder="Enter email"
+        endContent={<FaRegEnvelope className="text-foreground-500 text-l" />}
       />
 
       <Spacer y={6} />
       <Tooltip
         showArrow
-        placement='left'
+        placement="left"
         classNames={{
           base: [
             // arrow color
-            'before:bg-neutral-400 dark:before:bg-white',
+            "before:bg-neutral-400 dark:before:bg-white",
           ],
           content: [
-            'py-2 px-4 shadow-xl bg-[#F2F8FF] rounded-md',
-            'text-black bg-gradient-to-br from-white to-neutral-400',
+            "py-2 px-4 shadow-xl bg-[#F2F8FF] rounded-md",
+            "text-black bg-gradient-to-br from-white to-neutral-400",
           ],
         }}
         content={
-          <div className='px-1 py-2 space-y-2'>
-            <div className='text-small font-bold'>
+          <div className="px-1 py-2 space-y-2">
+            <div className="text-small font-bold">
               Your password should include
             </div>
-            <div className='text-tiny'>
+            <div className="text-tiny">
               One uppercase character e.g A,B,C,etc
             </div>
-            <div className='text-tiny'>
+            <div className="text-tiny">
               One lowercase character e.g a,b,c,etc
             </div>
-            <div className='text-tiny'>One special character e.g !,@,#,etc</div>
-            <div className='text-tiny'>One number e.g 1,2,3,4 etc</div>
-            <div className='text-tiny'>At least 8 characters </div>
+            <div className="text-tiny">One special character e.g !,@,#,etc</div>
+            <div className="text-tiny">One number e.g 1,2,3,4 etc</div>
+            <div className="text-tiny">At least 8 characters </div>
           </div>
         }
       >
@@ -125,10 +129,10 @@ const SignupForm = () => {
             errorMessage={response?.errors?.password?.[0]}
             value={signupFormData.password}
             onChange={handleInputChange}
-            type='password'
-            name='password'
-            label='Password'
-            placeholder='Enter password'
+            type="password"
+            name="password"
+            label="Password"
+            placeholder="Enter password"
           />
         </div>
       </Tooltip>
@@ -138,15 +142,15 @@ const SignupForm = () => {
         errorMessage={response?.errors?.confirmPassword?.[0]}
         value={signupFormData.confirmPassword}
         onChange={handleInputChange}
-        type='password'
-        name='confirmPassword'
-        label='Confirm Password'
-        placeholder='Enter password'
+        type="password"
+        name="confirmPassword"
+        label="Confirm Password"
+        placeholder="Enter password"
       />
 
       <Spacer y={6} />
 
-      <CustomButton loading={loading} disabled={loading} type='submit'>
+      <CustomButton loading={loading} disabled={loading} type="submit">
         Create Account
       </CustomButton>
     </form>
