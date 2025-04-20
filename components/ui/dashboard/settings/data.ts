@@ -1,174 +1,93 @@
-export const columns = [
-  { name: 'Actions', uid: 'actions' },
-  { name: 'Manager', uid: 'manager' },
-  { name: 'Staff', uid: 'staff' },
-];
-
-export const menuOption = [
+export const sections = [
   {
-    id: 1,
-    actions: 'canViewMenu',
+    title: "MENU",
+    permissions: [
+      { key: "canViewMenu", label: "Can view menu" },
+      { key: "canCreateMenu", label: "Can create menu" },
+      { key: "canEditMenu", label: "Can edit menu" },
+      { key: "canDeleteMenu", label: "Can delete menu" },
+    ],
   },
   {
-    id: 2,
-    actions: 'canCreateMenu',
+    title: "CAMPAIGNS",
+    permissions: [
+      { key: "canViewCampaign", label: "Can view campaigns" },
+      { key: "canCreateCampaign", label: "Can create campaigns" },
+      { key: "canEditCampaign", label: "Can edit campaigns" },
+      { key: "canDeleteCampaign", label: "Can delete campaigns" },
+    ],
   },
   {
-    id: 3,
-    actions: 'canEditMenu',
+    title: "RESERVATIONS",
+    permissions: [
+      { key: "canViewReservation", label: "Can view reservations" },
+      { key: "canCreateReservation", label: "Can create reservations" },
+      { key: "canEditReservation", label: "Can edit reservations" },
+      { key: "canDeleteReservation", label: "Can delete reservations" },
+    ],
   },
   {
-    id: 4,
-    actions: 'canDeleteMenu',
-  },
-];
-export const campaignOption = [
-  {
-    id: 1,
-    actions: 'canViewCampaign',
-  },
-  {
-    id: 2,
-    actions: 'canCreateCampaign',
+    title: "BUSINESS SETTINGS",
+    permissions: [
+      { key: "canViewBusiness", label: "Can view business" },
+      { key: "canCreateBusiness", label: "Can create business" },
+      { key: "canEditBusiness", label: "Can edit business" },
+      { key: "canDeleteBusiness", label: "Can delete business" },
+    ],
   },
   {
-    id: 3,
-    actions: 'canEditCampaign',
+    title: "ORDERS",
+    permissions: [
+      { key: "canViewOrder", label: "Can view order" },
+      { key: "canCreateOrder", label: "Can create order" },
+      { key: "canEditOrder", label: "Can edit order" },
+      { key: "canDeleteOrder", label: "Can delete order" },
+    ],
   },
   {
-    id: 4,
-    actions: 'canDeleteCampaign',
-  },
-];
-export const reservationsOption = [
-  {
-    id: 1,
-    actions: 'canViewReservation',
-  },
-  {
-    id: 2,
-    actions: 'canCreateReservation',
+    title: "USER",
+    permissions: [
+      { key: "canViewUser", label: "Can view user" },
+      { key: "canCreateUser", label: "Can create user" },
+      { key: "canEditUser", label: "Can edit user" },
+      { key: "canDeleteUser", label: "Can delete user" },
+    ],
   },
   {
-    id: 3,
-    actions: 'canEditReservation',
+    title: "BOOKINGS",
+    permissions: [
+      { key: "canViewBooking", label: "Can view booking" },
+      { key: "canCreateBooking", label: "Can create booking" },
+      { key: "canEditBooking", label: "Can edit booking" },
+    ],
   },
   {
-    id: 4,
-    actions: 'canDeleteReservation',
-  },
-];
-export const businessOption = [
-  {
-    id: 1,
-    actions: 'canViewBusiness',
+    title: "PAYMENTS",
+    permissions: [
+      { key: "canViewPayment", label: "Can view payment" },
+      { key: "canEditPayment", label: "Can edit payment" },
+    ],
   },
   {
-    id: 2,
-    actions: 'canCreateBusiness',
+    title: "QUICK RESPONSE",
+    permissions: [
+      { key: "canViewQR", label: "Can view QR" },
+      { key: "canCreateQR", label: "Can create QR" },
+      { key: "canEditQR", label: "Can edit QR" },
+      { key: "canDeleteQR", label: "Can delete QR" },
+    ],
   },
   {
-    id: 3,
-    actions: 'canEditBusiness',
+    title: "REPORTS",
+    permissions: [
+      { key: "canViewReport", label: "Can view report" },
+      { key: "canCreateReport", label: "Can create report" },
+      { key: "canEditReport", label: "Can edit report" },
+      { key: "canDeleteReport", label: "Can delete report" },
+    ],
   },
   {
-    id: 4,
-    actions: 'canDeleteBusiness',
-  },
-];
-export const orderOption = [
-  {
-    id: 1,
-    actions: 'canViewOrder',
-  },
-  {
-    id: 2,
-    actions: 'canCreateOrder',
-  },
-  {
-    id: 3,
-    actions: 'canEditOrder',
-  },
-  {
-    id: 4,
-    actions: 'canDeleteOrder',
-  },
-];
-export const qrOption = [
-  {
-    id: 1,
-    actions: 'canViewQR',
-  },
-  {
-    id: 2,
-    actions: 'canCreateQR',
-  },
-  {
-    id: 3,
-    actions: 'canEditQR',
-  },
-  {
-    id: 4,
-    actions: 'canDeleteQR',
-  },
-];
-export const userOption = [
-  {
-    id: 1,
-    actions: 'canViewUser',
-  },
-  {
-    id: 2,
-    actions: 'canCreateUser',
-  },
-  {
-    id: 3,
-    actions: 'canEditUser',
-  },
-  {
-    id: 4,
-    actions: 'canDeleteUser',
-  },
-];
-export const bookingOption = [
-  {
-    id: 1,
-    actions: 'canViewBooking',
-  },
-  {
-    id: 2,
-    actions: 'canCreateBooking',
-  },
-  {
-    id: 3,
-    actions: 'canEditBooking',
-  },
-];
-export const paymentOption = [
-  {
-    id: 1,
-    actions: 'canViewPayment',
-  },
-
-  {
-    id: 2,
-    actions: 'canEditPayment',
-  },
-];
-export const reportOption = [
-  {
-    id: 1,
-    actions: 'canViewReport',
-  },
-
-  {
-    id: 2,
-    actions: 'canEditReport',
-  },
-];
-export const dashboardOption = [
-  {
-    id: 1,
-    actions: 'canViewDashboard',
+    title: "DASHBOARD",
+    permissions: [{ key: "canViewDashboard", label: "Can view dashboard" }],
   },
 ];
