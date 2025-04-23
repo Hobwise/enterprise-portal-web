@@ -1,7 +1,13 @@
 import LandingPageHeader from '@/components/ui/landingPage/header';
 import Navbar from '@/components/ui/landingPage/navBar';
 import { Skeleton } from '@/components/ui/landingPage/skeleton-loading';
+import { companyInfo } from '@/lib/companyInfo';
 import { ReactNode, Suspense } from 'react';
+
+export const metadata = {
+  title: companyInfo.name + ' | Privacy Policy',
+  description: 'Streamline your business processes',
+};
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
