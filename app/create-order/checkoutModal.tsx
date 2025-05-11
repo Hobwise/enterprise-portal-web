@@ -1,14 +1,13 @@
-"use client";
+'use client';
 import {
   createUserOrder,
   editUserOrder,
-  getOrder,
   getOrderByRef,
-} from "@/app/api/controllers/dashboard/orders";
-import { CustomInput } from "@/components/CustomInput";
-import { CustomButton } from "@/components/customButton";
-import { CustomTextArea } from "@/components/customTextArea";
-import { formatPrice, getJsonItemFromLocalStorage } from "@/lib/utils";
+} from '@/app/api/controllers/dashboard/orders';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
+import { CustomTextArea } from '@/components/customTextArea';
+import { formatPrice, getJsonItemFromLocalStorage } from '@/lib/utils';
 import {
   Button,
   Checkbox,
@@ -19,13 +18,13 @@ import {
   ModalContent,
   ModalHeader,
   Spacer,
-} from "@nextui-org/react";
-import Image from "next/image";
-import React, { useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { FaMinus, FaPlus } from "react-icons/fa6";
-import { HiArrowLongLeft } from "react-icons/hi2";
-import noImage from "../../public/assets/images/no-image.svg";
+} from '@nextui-org/react';
+import Image from 'next/image';
+import React, { useState } from 'react';
+import toast from 'react-hot-toast';
+import { FaMinus, FaPlus } from 'react-icons/fa6';
+import { HiArrowLongLeft } from 'react-icons/hi2';
+import noImage from '../../public/assets/images/no-image.svg';
 
 interface Order {
   placedByName: string;
@@ -55,27 +54,27 @@ const CheckoutModal = ({
   qrId,
   handlePackingCost,
 }: any) => {
-  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessInformation = getJsonItemFromLocalStorage('business');
   const [costInfo, setCostInfo] = useState<any>({});
   // const additionalCost = 0;
 
   const [response, setResponse] = useState(null);
-  const [orderId, setOrderId] = useState<string>("");
-  const [orderReference, setOrderReference] = useState<string>("");
+  const [orderId, setOrderId] = useState<string>('');
+  const [orderReference, setOrderReference] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const [order, setOrder] = useState<Order>({
-    placedByName: "",
-    placedByPhoneNumber: "",
+    placedByName: '',
+    placedByPhoneNumber: '',
 
-    comment: "",
+    comment: '',
   });
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = event.target;
-    if (name === "placedByPhoneNumber") {
+    if (name === 'placedByPhoneNumber') {
       if (/^\d{0,11}$/.test(value)) {
         setOrder((prevOrder) => ({
           ...prevOrder,
@@ -133,12 +132,12 @@ const CheckoutModal = ({
       setCostInfo(data.data.data);
       setOrderReference(data.data.data.reference);
       getOrderDetails();
-      toast.success("Order placed");
+      toast.success('Order placed');
       closeModal === true && setChangeTitle(true);
 
       setOrder({
         ...order,
-        comment: "",
+        comment: '',
       });
     }
   };
@@ -171,27 +170,27 @@ const CheckoutModal = ({
       setOrderReference(data.data.data.reference);
       getOrderDetails();
       setCostInfo(data.data.data);
-      toast.success("Order updated");
+      toast.success('Order updated');
     } else if (data?.data?.error) {
       toast.error(data?.data?.error);
     }
   };
 
   return (
-    <div className="">
+    <div className=''>
       <Modal
         hideCloseButton={true}
         isKeyboardDismissDisabled={true}
         classNames={{
-          base: `${changeTitle ? "h-full" : "max-h-full"} overflow-scroll`,
+          base: `${changeTitle ? 'h-full' : 'max-h-full'} overflow-scroll`,
           // base: `md:overflow-none overflow-scroll ${
           //   changeTitle ? 'h-full' : 'h-screen'
           // }`,
-          body: "px-1 md:px-6",
-          header: "px-3 md:px-6",
+          body: 'px-1 md:px-6',
+          header: 'px-3 md:px-6',
         }}
         isDismissable={false}
-        size={"4xl"}
+        size={'4xl'}
         isOpen={isOpen}
         onOpenChange={() => {
           onOpenChange();
@@ -203,17 +202,17 @@ const CheckoutModal = ({
           {(onClose) => (
             <>
               <>
-                <ModalHeader className="flex flex-col mt-3 gap-1">
-                  <div className="flex flex-row flex-wrap  justify-between">
+                <ModalHeader className='flex flex-col mt-3 gap-1'>
+                  <div className='flex flex-row flex-wrap  justify-between'>
                     {changeTitle ? (
-                      <div className="flex justify-between w-full items-center">
+                      <div className='flex justify-between w-full items-center'>
                         <div>
-                          <div className="text-[24px] leading-8 font-semibold">
-                            <span className="text-black">
+                          <div className='text-[24px] leading-8 font-semibold'>
+                            <span className='text-black'>
                               Hello, {order.placedByName}
                             </span>
                           </div>
-                          <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
+                          <p className='text-sm  text-grey600 xl:mb-8 w-full mb-4'>
                             Your orders
                           </p>
                         </div>
@@ -222,7 +221,7 @@ const CheckoutModal = ({
                             loading={loadingCostInfo}
                             disabled={loadingCostInfo}
                             onClick={getOrderDetails}
-                            className="py-2 px-4 h-[50px] mb-0 bg-gray-100 border border-primaryGrey"
+                            className='py-2 px-4 h-[50px] mb-0 bg-gray-100 border border-primaryGrey'
                           >
                             Refresh Cost
                           </CustomButton>
@@ -230,28 +229,28 @@ const CheckoutModal = ({
                       </div>
                     ) : (
                       <div>
-                        <div className="text-[24px] leading-8 font-semibold">
-                          <span className="text-black">Confirm order</span>
+                        <div className='text-[24px] leading-8 font-semibold'>
+                          <span className='text-black'>Confirm order</span>
                         </div>
-                        <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
+                        <p className='text-sm  text-grey600 xl:mb-8 w-full mb-4'>
                           Confirm order before checkout
                         </p>
                       </div>
                     )}
                   </div>
-                  <Divider className="bg-primaryGrey" />
+                  <Divider className='bg-primaryGrey' />
                 </ModalHeader>
                 <ModalBody>
-                  <div className="">
-                    <div className="flex lg:flex-row flex-col gap-3 mb-4">
+                  <div className=''>
+                    <div className='flex lg:flex-row flex-col gap-3 mb-4'>
                       <div
                         className={`flex flex-col lg:w-[60%]   w-full  px-2`}
                       >
                         {selectedItems?.map((item, index) => {
                           return (
                             <React.Fragment key={item.id}>
-                              <div className="flex justify-between gap-2">
-                                <div className="py-3 w-[250px] rounded-lg  text-black  flex">
+                              <div className='flex justify-between gap-2'>
+                                <div className='py-3 w-[250px] rounded-lg  text-black  flex'>
                                   <Image
                                     src={
                                       item?.image
@@ -260,77 +259,77 @@ const CheckoutModal = ({
                                     }
                                     width={20}
                                     height={20}
-                                    className="object-cover rounded-lg w-20 h-20"
-                                    aria-label="uploaded image"
-                                    alt="uploaded image(s)"
+                                    className='object-cover rounded-lg w-20 h-20'
+                                    aria-label='uploaded image'
+                                    alt='uploaded image(s)'
                                   />
 
-                                  <div className="pl-2 flex  flex-col text-sm justify-center">
-                                    <p className="font-[600]">
-                                      {item.itemName}{" "}
-                                      <span className="text-black">
+                                  <div className='pl-2 flex  flex-col text-sm justify-center'>
+                                    <p className='font-[600]'>
+                                      {item.itemName}{' '}
+                                      <span className='text-black'>
                                         {item.unit && `(${item.unit})`}
                                       </span>
                                     </p>
 
                                     <Spacer y={1} />
-                                    <p className="text-grey600">
+                                    <p className='text-grey600'>
                                       {item.menuName}
                                     </p>
                                     <Checkbox
-                                      size="sm"
+                                      size='sm'
                                       defaultSelected={item.isPacked}
                                       isSelected={item.isPacked}
                                       onValueChange={(isSelected) =>
                                         handlePackingCost(item.id, isSelected)
                                       }
                                     >
-                                      <span className="text-grey600 text-sm">
+                                      <span className='text-grey600 text-sm'>
                                         Pack In
                                       </span>
                                     </Checkbox>
                                     <Spacer y={1} />
-                                    <div className="text-black md:w-[150px] md:hidden w-auto grid">
-                                      <h3 className="font-[600]">
+                                    <div className='text-black md:w-[150px] md:hidden w-auto grid'>
+                                      <h3 className='font-[600]'>
                                         {formatPrice(item?.price)}
                                       </h3>
                                     </div>
                                   </div>
                                 </div>
-                                <div className="flex  items-center">
+                                <div className='flex  items-center'>
                                   <Button
                                     onClick={() => handleDecrement(item.id)}
                                     isIconOnly
-                                    radius="sm"
-                                    variant="faded"
-                                    className="border h-[35px] w-[30px] border-primaryGrey bg-white"
-                                    aria-label="minus"
+                                    radius='sm'
+                                    variant='faded'
+                                    className='border h-[35px] w-[30px] border-primaryGrey bg-white'
+                                    aria-label='minus'
                                   >
                                     <FaMinus />
                                   </Button>
-                                  <span className="font-bold  text-black py-2 px-4">
+                                  <span className='font-bold  text-black py-2 px-4'>
                                     {item.count}
                                   </span>
                                   <Button
                                     onClick={() => handleIncrement(item.id)}
                                     isIconOnly
-                                    radius="sm"
-                                    variant="faded"
-                                    className="border border-primaryGrey h-[35px] w-[30px] bg-white "
-                                    aria-label="plus"
+                                    radius='sm'
+                                    variant='faded'
+                                    className='border border-primaryGrey h-[35px] w-[30px] bg-white '
+                                    aria-label='plus'
                                   >
                                     <FaPlus />
                                   </Button>
                                 </div>
-                                <div className=" md:w-[150px] hidden w-auto md:grid place-content-center">
-                                  <div className="flex flex-col">
-                                    <h3 className="font-semibold text-black">
+                                <div className=' md:w-[150px] hidden w-auto md:grid place-content-center'>
+                                  <div className='flex flex-col'>
+                                    <h3 className='font-semibold text-black'>
                                       {formatPrice(item?.price)}
                                     </h3>
                                     <span
                                       className={cn(
-                                        "text-xs text-gray-200",
-                                        item.isPacked && "font-bold text-black"
+                                        'text-xs text-gray-200',
+                                        item.isPacked && 'font-bold text-black'
                                       )}
                                     >
                                       {formatPrice(item.packingCost)}
@@ -339,41 +338,41 @@ const CheckoutModal = ({
                                 </div>
                               </div>
                               {index !== selectedItems?.length - 1 && (
-                                <Divider className="bg-[#E4E7EC80]" />
+                                <Divider className='bg-[#E4E7EC80]' />
                               )}
                             </React.Fragment>
                           );
                         })}
-                        <div className="flex justify-end mt-auto">
-                          <div className="flex flex-col gap-2">
-                            <div className="flex gap-2 justify-between">
-                              <p className="text-black font-bold">Subtotal: </p>
-                              <p className="text-black">
+                        <div className='flex justify-end mt-auto'>
+                          <div className='flex flex-col gap-2'>
+                            <div className='flex gap-2 justify-between'>
+                              <p className='text-black font-bold'>Subtotal: </p>
+                              <p className='text-black'>
                                 {formatPrice(totalPrice)}
                               </p>
                             </div>
-                            <div className="flex justify-between gap-2">
-                              <p className="text-black font-bold">Vat(7.5%):</p>
+                            <div className='flex justify-between gap-2'>
+                              <p className='text-black font-bold'>Vat(7.5%):</p>
 
-                              <p className="text-black">
-                                ₦{formatPrice(totalPrice * (7.5 / 100))}
+                              <p className='text-black'>
+                                {formatPrice(totalPrice * (7.5 / 100))}
                               </p>
                             </div>
                             {costInfo?.additionalCost && (
                               <>
-                                <div className="flex gap-2 justify-between">
-                                  <p className="text-black font-bold">
-                                    {costInfo?.additionalCostName}:{" "}
+                                <div className='flex gap-2 justify-between'>
+                                  <p className='text-black font-bold'>
+                                    {costInfo?.additionalCostName}:{' '}
                                   </p>
-                                  <p className="text-black">
+                                  <p className='text-black'>
                                     {formatPrice(costInfo?.additionalCost || 0)}
                                   </p>
                                 </div>
-                                <div className="flex gap-2 justify-between">
-                                  <p className="text-black font-bold">
+                                <div className='flex gap-2 justify-between'>
+                                  <p className='text-black font-bold'>
                                     Total Amount:
                                   </p>
-                                  <p className="text-black">
+                                  <p className='text-black'>
                                     {formatPrice(finalTotal)}
                                   </p>
                                 </div>
@@ -382,29 +381,29 @@ const CheckoutModal = ({
                           </div>
                         </div>
                       </div>
-                      <div className="flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4">
+                      <div className='flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4'>
                         {changeTitle === false && (
                           <>
                             <CustomInput
-                              type="text"
+                              type='text'
                               onChange={handleInputChange}
                               errorMessage={response?.errors?.placedByName?.[0]}
                               value={order.placedByName}
-                              name="placedByName"
-                              label="Name"
-                              placeholder="Enter name"
+                              name='placedByName'
+                              label='Name'
+                              placeholder='Enter name'
                             />
                             <Spacer y={2} />
                             <CustomInput
-                              type="text"
+                              type='text'
                               errorMessage={
                                 response?.errors?.placedByPhoneNumber?.[0]
                               }
                               onChange={handleInputChange}
                               value={order.placedByPhoneNumber}
-                              name="placedByPhoneNumber"
-                              label="Phone number"
-                              placeholder="Enter phone number"
+                              name='placedByPhoneNumber'
+                              label='Phone number'
+                              placeholder='Enter phone number'
                             />
                             <Spacer y={2} />
                           </>
@@ -413,21 +412,21 @@ const CheckoutModal = ({
                         <CustomTextArea
                           // defaultValue={menuItem?.itemDescription}
                           value={order.comment}
-                          name="comment"
+                          name='comment'
                           onChange={handleInputChange}
-                          label="Add comment"
-                          placeholder="Add a comment to this order. (optional)"
+                          label='Add comment'
+                          placeholder='Add a comment to this order. (optional)'
                         />
                       </div>
                     </div>
-                    <div className="gap-3 flex px-3 flex-col">
+                    <div className='gap-3 flex px-3 flex-col'>
                       {changeTitle ? (
-                        <div className="flex flex-col gap-3">
+                        <div className='flex flex-col gap-3'>
                           <CustomButton
                             loading={loading}
                             disabled={loading}
                             onClick={updateOrder}
-                            className="py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey"
+                            className='py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey'
                           >
                             Update order
                           </CustomButton>
@@ -435,7 +434,7 @@ const CheckoutModal = ({
                             onClick={() => {
                               window.location.reload();
                             }}
-                            className="py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey"
+                            className='py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey'
                           >
                             Close
                           </CustomButton>
@@ -446,23 +445,23 @@ const CheckoutModal = ({
                             loading={loading}
                             disabled={loading}
                             onClick={placeOrder}
-                            className="py-2 h-[50px] px-4 mb-0 text-white"
-                            backgroundColor="bg-primaryColor"
+                            className='py-2 h-[50px] px-4 mb-0 text-white'
+                            backgroundColor='bg-primaryColor'
                           >
-                            <div className="flex gap-2  w-full items-center justify-between">
+                            <div className='flex gap-2  w-full items-center justify-between'>
                               <p>Place order</p>
-                              <div className="flex gap-2 items-center">
-                                <span className="font-bold">
-                                  {" "}
-                                  {formatPrice(finalTotal)}{" "}
+                              <div className='flex gap-2 items-center'>
+                                <span className='font-bold'>
+                                  {' '}
+                                  {formatPrice(finalTotal)}{' '}
                                 </span>
-                                <HiArrowLongLeft className="text-[22px] rotate-180" />
+                                <HiArrowLongLeft className='text-[22px] rotate-180' />
                               </div>
                             </div>
                           </CustomButton>
                           <CustomButton
                             onClick={onOpenChange}
-                            className="py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey"
+                            className='py-2 px-4 h-[50px] mb-0 bg-primaryGrey border border-primaryGrey'
                           >
                             Close
                           </CustomButton>
@@ -475,7 +474,7 @@ const CheckoutModal = ({
             </>
           )}
         </ModalContent>
-      </Modal>{" "}
+      </Modal>{' '}
     </div>
   );
 };

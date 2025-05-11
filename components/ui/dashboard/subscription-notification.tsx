@@ -1,19 +1,20 @@
-"use client";
-import { Button } from "@nextui-org/react";
-import React, { useEffect, useState } from "react";
-import { LuShieldAlert } from "react-icons/lu";
-import moment from "moment";
-import { getJsonItemFromLocalStorage } from "@/lib/utils";
+'use client';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import {
+  Button,
   Modal,
   ModalBody,
   ModalContent,
   useDisclosure,
-} from "@nextui-org/react";
-import { useRouter } from "next/navigation";
+} from '@nextui-org/react';
+import moment from 'moment';
+import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { IoClose } from 'react-icons/io5';
+import { LuShieldAlert } from 'react-icons/lu';
 
-import { CiWarning } from "react-icons/ci";
-import { CustomButton } from "@/components/customButton";
+import { CustomButton } from '@/components/customButton';
+import { CiWarning } from 'react-icons/ci';
 
 export const NavigationBanner = ({
   title,
@@ -23,28 +24,39 @@ export const NavigationBanner = ({
   desc: string | React.ReactNode;
 }) => {
   const router = useRouter();
+  const [isVisible, setIsVisible] = useState(true);
+  const userInfo = getJsonItemFromLocalStorage('userInformation');
 
-  const userInfo = getJsonItemFromLocalStorage("userInformation");
+  if (!isVisible) return null;
 
   return (
-    <div className="bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3 justify-between mx-auto">
-      <div className="flex items-center space-x-3">
-        <div className="w-10 h-10  rounded-full shadow-lg flex items-center justify-center text-amber-900 text-2xl font-medium">
+    <div className='bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3 justify-between mx-auto relative'>
+      <div className='flex items-center space-x-3'>
+        <div className='w-10 h-10  rounded-full shadow-lg flex items-center justify-center text-amber-900 text-2xl font-medium'>
           <LuShieldAlert />
         </div>
-        <div className="flex flex-col">
-          <span className="text-amber-800 font-medium">{title}</span>
-          <div className="text-amber-600">{desc}</div>
+        <div className='flex flex-col'>
+          <span className='text-amber-800 font-medium'>{title}</span>
+          <div className='text-amber-600'>{desc}</div>
         </div>
       </div>
-      {userInfo.isOwner && (
-        <Button
-          onClick={() => router.push("/dashboard/settings/subscriptions")}
-          className="px-6 py-1.5  rounded-md text-sm font-medium bg-[#D7A913]  text-white  relative group"
+      <div className='flex items-center gap-3'>
+        {userInfo.isOwner && (
+          <Button
+            onClick={() => router.push('/dashboard/settings/subscriptions')}
+            className='px-6 py-1.5 rounded-md text-sm font-medium bg-[#D7A913] text-white relative group'
+          >
+            Upgrade
+          </Button>
+        )}
+        <button
+          onClick={() => setIsVisible(false)}
+          className='text-amber-600  transition-colors'
+          aria-label='Close banner'
         >
-          Upgrade
-        </Button>
-      )}
+          <IoClose size={24} />
+        </button>
+      </div>
     </div>
   );
 };
@@ -58,14 +70,14 @@ export const useCheckExpiry = (
   nextPaymentDate: string,
   daysThreshold: number
 ): CheckExpiryResult => {
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState<string>('');
   const [showBanner, setShowBanner] = useState<boolean>(false);
 
   useEffect(() => {
     const updateMessage = () => {
       const now = moment();
       const dueMoment = moment(nextPaymentDate);
-      const daysUntilDue = dueMoment.diff(now, "days");
+      const daysUntilDue = dueMoment.diff(now, 'days');
 
       if (daysUntilDue <= daysThreshold && dueMoment.isAfter(now)) {
         setShowBanner(true);
@@ -73,13 +85,13 @@ export const useCheckExpiry = (
         if (daysUntilDue > 1) {
           setMessage(`in ${daysUntilDue} days`);
         } else if (daysUntilDue === 1) {
-          setMessage("tomorrow");
+          setMessage('tomorrow');
         } else {
-          const hoursUntilDue = dueMoment.diff(now, "hours");
+          const hoursUntilDue = dueMoment.diff(now, 'hours');
           if (hoursUntilDue > 0) {
             setMessage(`today (in ${hoursUntilDue} hours)`);
           } else {
-            setMessage("today");
+            setMessage('today');
           }
         }
       } else {
@@ -96,7 +108,7 @@ export const useCheckExpiry = (
 };
 
 export const SubscriptionNoticePopup = () => {
-  const userData = getJsonItemFromLocalStorage("userInformation");
+  const userData = getJsonItemFromLocalStorage('userInformation');
 
   const { message, showBanner } = useCheckExpiry(
     userData?.subscription?.nextPaymentDate,
@@ -125,45 +137,45 @@ export const SubscriptionNoticePopup = () => {
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalBody className="text-black md:p-10 p-8 space-y-4">
-              <div className="w-full grid place-content-center">
-                <div className="bg-[#ffebca] h-[60px] grid place-content-center rounded-full  w-[60px]">
-                  <CiWarning className="text-[#F4B23E] font-3xl text-[35px]" />
+            <ModalBody className='text-black md:p-10 p-8 space-y-4'>
+              <div className='w-full grid place-content-center'>
+                <div className='bg-[#ffebca] h-[60px] grid place-content-center rounded-full  w-[60px]'>
+                  <CiWarning className='text-[#F4B23E] font-3xl text-[35px]' />
                 </div>
               </div>
               <div>
-                <p className="font-bold text text-[20px] mb-2 text-center">
+                <p className='font-bold text text-[20px] mb-2 text-center'>
                   Subscription Expiry Notice!
                 </p>
-                <div className="flex justify-center items-center">
-                  <p className="text-sm text-grey500 text-center md:w-[90%] w-[100%]">
-                    Your subscription will expire{" "}
-                    <span className="font-bold">{message}</span>.{" "}
+                <div className='flex justify-center items-center'>
+                  <p className='text-sm text-grey500 text-center md:w-[90%] w-[100%]'>
+                    Your subscription will expire{' '}
+                    <span className='font-bold'>{message}</span>.{' '}
                     {userData.role === 1
-                      ? "Contact your management"
-                      : "Renew now to avoid service interruption"}
+                      ? 'Contact your management'
+                      : 'Renew now to avoid service interruption'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className='flex flex-col gap-2'>
                 {userData.isOwner && (
                   <CustomButton
-                    className="h-[50px]  text-white"
+                    className='h-[50px]  text-white'
                     onClick={() => {
                       onOpenChange();
 
-                      router.push("/dashboard/settings/subscriptions");
+                      router.push('/dashboard/settings/subscriptions');
                     }}
-                    type="submit"
+                    type='submit'
                   >
                     Go to subscription
                   </CustomButton>
                 )}
                 <CustomButton
-                  className="h-[50px]  text-black bg-transparent border rounded-lg border-primaryGrey"
+                  className='h-[50px]  text-black bg-transparent border rounded-lg border-primaryGrey'
                   onClick={onOpenChange}
-                  type="submit"
+                  type='submit'
                 >
                   Skip Now
                 </CustomButton>
