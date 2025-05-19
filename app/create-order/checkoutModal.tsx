@@ -20,10 +20,10 @@ import {
   Spacer,
 } from '@nextui-org/react';
 import Image from 'next/image';
-import React, { useState } from 'react';
-import toast from 'react-hot-toast';
+import React, { useEffect, useState } from 'react';
 import { FaMinus, FaPlus } from 'react-icons/fa6';
 import { HiArrowLongLeft } from 'react-icons/hi2';
+import { toast } from 'sonner';
 import noImage from '../../public/assets/images/no-image.svg';
 
 interface Order {
@@ -38,6 +38,99 @@ interface OrderDetail {
   quantity: number;
   unitPrice: number;
 }
+
+const CountdownTimer = ({
+  targetTime,
+  placedByName,
+}: {
+  targetTime: string;
+  placedByName: string;
+}) => {
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [hasPlayedSound, setHasPlayedSound] = useState(false);
+  const [hasRequestedPermission, setHasRequestedPermission] = useState(false);
+
+  useEffect(() => {
+    if (!hasRequestedPermission) {
+      if ('Notification' in window) {
+        Notification.requestPermission().then((permission) => {
+          if (permission === 'granted') {
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker
+                .register('../../lib/sw.js')
+                .then((registration) => {
+                  console.log('Service Worker registered');
+                })
+                .catch((error) => {
+                  console.log('Service Worker registration failed:', error);
+                });
+            }
+          }
+        });
+        setHasRequestedPermission(true);
+      }
+    }
+  }, [hasRequestedPermission]);
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const target = new Date(targetTime).getTime();
+      const now = new Date().getTime();
+      const difference = target - now;
+
+      if (difference <= 0) {
+        if (!hasPlayedSound) {
+          const audio = new Audio('/assets/sounds/notification-sound.wav');
+          audio.play().catch((error) => {
+            console.log('Error playing sound:', error);
+          });
+
+          if (
+            'Notification' in window &&
+            Notification.permission === 'granted'
+          ) {
+            const notification = new Notification(`Order Ready!`, {
+              body: `${placedByName}, your order should be ready. Please check with our staff`,
+              requireInteraction: true,
+            });
+
+            notification.onclick = function () {
+              window.focus();
+              this.close();
+            };
+          }
+
+          setHasPlayedSound(true);
+        }
+        setTimeLeft('Your order should be ready. Please check with our staff');
+        return;
+      }
+
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+      const timeDisplay =
+        minutes > 0
+          ? `${minutes} mins ${seconds} secs remaining`
+          : `${seconds} secs remaining`;
+
+      setTimeLeft(
+        `${timeDisplay}\nYour order is being prepared. We'll notify you when it's ready!`
+      );
+    };
+
+    calculateTimeLeft();
+    const timer = setInterval(calculateTimeLeft, 1000);
+
+    return () => clearInterval(timer);
+  }, [targetTime, hasPlayedSound]);
+
+  return (
+    <div className='text-sm font-medium text-warning-500 whitespace-pre-line'>
+      {timeLeft}
+    </div>
+  );
+};
 
 const CheckoutModal = ({
   isOpen,
@@ -67,9 +160,32 @@ const CheckoutModal = ({
   const [order, setOrder] = useState<Order>({
     placedByName: '',
     placedByPhoneNumber: '',
-
     comment: '',
   });
+
+  const [originalOrderDetails, setOriginalOrderDetails] = useState<any[]>([]);
+
+  const [estimatedCompletionTime, setEstimatedCompletionTime] =
+    useState<string>('');
+
+  const hasOrderChanged = () => {
+    if (originalOrderDetails.length === 0) return false;
+
+    if (selectedItems.length !== originalOrderDetails.length) return true;
+
+    return selectedItems.some((item: any) => {
+      const originalItem = originalOrderDetails.find(
+        (orig: any) => orig.id === item.id
+      );
+      if (!originalItem) return true;
+
+      return (
+        item.count !== originalItem.count ||
+        item.isPacked !== originalItem.isPacked ||
+        item.price !== originalItem.price
+      );
+    });
+  };
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -98,6 +214,7 @@ const CheckoutModal = ({
 
     if (data?.data?.isSuccessful) {
       setCostInfo(data?.data?.data);
+      setEstimatedCompletionTime(data?.data?.data?.estimatedCompletionTime);
     }
   };
 
@@ -131,9 +248,11 @@ const CheckoutModal = ({
       setOrderId(data.data.data.id);
       setCostInfo(data.data.data);
       setOrderReference(data.data.data.reference);
+      setEstimatedCompletionTime(data.data.data.estimatedCompletionTime);
       getOrderDetails();
       toast.success('Order placed');
       closeModal === true && setChangeTitle(true);
+      setOriginalOrderDetails([...selectedItems]);
 
       setOrder({
         ...order,
@@ -168,6 +287,7 @@ const CheckoutModal = ({
     if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
       setOrderReference(data.data.data.reference);
+      setEstimatedCompletionTime(data.data.data.estimatedCompletionTime);
       getOrderDetails();
       setCostInfo(data.data.data);
       toast.success('Order updated');
@@ -216,7 +336,7 @@ const CheckoutModal = ({
                             Your orders
                           </p>
                         </div>
-                        <div>
+                        <div className='flex flex-col items-end gap-2'>
                           <CustomButton
                             loading={loadingCostInfo}
                             disabled={loadingCostInfo}
@@ -381,6 +501,16 @@ const CheckoutModal = ({
                           </div>
                         </div>
                       </div>
+                      {changeTitle && (
+                        <div className='px-4'>
+                          {estimatedCompletionTime && (
+                            <CountdownTimer
+                              targetTime={estimatedCompletionTime}
+                              placedByName={order.placedByName}
+                            />
+                          )}
+                        </div>
+                      )}
                       <div className='flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4'>
                         {changeTitle === false && (
                           <>
@@ -424,9 +554,13 @@ const CheckoutModal = ({
                         <div className='flex flex-col gap-3'>
                           <CustomButton
                             loading={loading}
-                            disabled={loading}
+                            disabled={loading || !hasOrderChanged()}
                             onClick={updateOrder}
-                            className='py-2 px-4 h-[50px] mb-0 bg-white border border-primaryGrey'
+                            className={`py-2 px-4 h-[50px] ${
+                              !hasOrderChanged()
+                                ? 'text-gray-300'
+                                : 'text-white'
+                            } mb-0 bg-primaryColor`}
                           >
                             Update order
                           </CustomButton>
