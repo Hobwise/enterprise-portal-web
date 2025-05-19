@@ -5,6 +5,7 @@ import {
   ModalBody,
   ModalContent,
   ModalFooter,
+  Spinner,
 } from '@nextui-org/react';
 
 const DeleteModal = ({
@@ -35,7 +36,7 @@ const DeleteModal = ({
                   color='danger'
                   variant='flat'
                 >
-                  Yes
+                  {isLoading ? <Spinner color='current' size='sm' /> : 'Yes'}
                 </Button>
                 <Button
                   color='default'

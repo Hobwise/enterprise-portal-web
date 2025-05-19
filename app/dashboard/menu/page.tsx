@@ -1,28 +1,28 @@
-"use client";
+'use client';
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from 'react';
 
-import CreateMenu from "@/components/ui/dashboard/menu/createMenu";
-import MenuList from "@/components/ui/dashboard/menu/menu";
+import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
+import MenuList from '@/components/ui/dashboard/menu/menu';
+import DeleteModal from '@/components/ui/deleteModal';
 
 import {
   createMenu,
   deleteMenu,
   exportGrid,
   updateMenu,
-} from "@/app/api/controllers/dashboard/menu";
-import { CustomInput } from "@/components/CustomInput";
-import { CustomButton } from "@/components/customButton";
-import Error from "@/components/error";
-import useMenu from "@/hooks/cachedEndpoints/useMenu";
-import { downloadCSV } from "@/lib/downloadToExcel";
+} from '@/app/api/controllers/dashboard/menu';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
+import Error from '@/components/error';
+import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import {
   CustomLoading,
   dynamicExportConfig,
   formatPrice,
   getJsonItemFromLocalStorage,
   notify,
-} from "@/lib/utils";
+} from '@/lib/utils';
 import {
   Button,
   ButtonGroup,
@@ -34,24 +34,24 @@ import {
   Spacer,
   Tooltip,
   useDisclosure,
-} from "@nextui-org/react";
-import { useRouter } from "next/navigation";
+} from '@nextui-org/react';
+import { useRouter } from 'next/navigation';
 import {
   IoAddCircleOutline,
   IoPhonePortraitOutline,
   IoSearchOutline,
-} from "react-icons/io5";
+} from 'react-icons/io5';
 
-import useAllMenus from "@/hooks/cachedEndpoints/useAllMenus";
-import usePermission from "@/hooks/cachedEndpoints/usePermission";
-import { useGlobalContext } from "@/hooks/globalProvider";
-import toast from "react-hot-toast";
-import { MdOutlineFileDownload } from "react-icons/md";
-import { RiDeleteBin6Line, RiEdit2Line } from "react-icons/ri";
-import { VscLoading } from "react-icons/vsc";
+import useAllMenus from '@/hooks/cachedEndpoints/useAllMenus';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
+import { useGlobalContext } from '@/hooks/globalProvider';
+import toast from 'react-hot-toast';
+import { MdOutlineFileDownload } from 'react-icons/md';
+import { RiDeleteBin6Line, RiEdit2Line } from 'react-icons/ri';
+import { VscLoading } from 'react-icons/vsc';
 
 const Menu: React.FC = () => {
-  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessInformation = getJsonItemFromLocalStorage('business');
 
   const { userRolePermissions, role } = usePermission();
   const router = useRouter();
@@ -60,20 +60,27 @@ const Menu: React.FC = () => {
 
   const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
   const [isOpenEditMenu, setIsOpenEditMenu] = useState(false);
+  const [isOpenDeleteMenu, setIsOpenDeleteMenu] = useState(false);
+  const [selectedMenu, setSelectedMenu] = useState<any>(null);
   const [loadingExport, setLoadingExport] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [name, setName] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [name, setName] = useState('');
   const [packingCost, setPackingCost] = useState<number | undefined>();
+  const [estimatedTime, setEstimatedTime] = useState<number | undefined>();
   const [loading, setLoading] = useState(false);
 
   const [editingMenu, setEditingMenu] = useState<{
     id: string;
     name: string;
     packingCost?: number;
+    estimatedTime?: number;
   } | null>(null);
-  const [editName, setEditName] = useState("");
+  const [editName, setEditName] = useState('');
   const [editPackingCost, setEditPackingCost] = useState<number | undefined>();
+  const [editEstimatedTime, setEditEstimatedTime] = useState<
+    number | undefined
+  >();
 
   const {
     data: allMenus,
@@ -96,20 +103,21 @@ const Menu: React.FC = () => {
     const data = await createMenu(businessInformation[0]?.businessId, {
       name,
       packingCost,
+      waitingTimeMinutes: estimatedTime,
     });
     setLoading(false);
     if (data?.data?.isSuccessful) {
       notify({
-        title: "Success!",
-        text: "Menu successfully created",
-        type: "success",
+        title: 'Success!',
+        text: 'Menu successfully created',
+        type: 'success',
       });
-      router.push("/dashboard/menu/add-menu-item");
+      router.push('/dashboard/menu/add-menu-item');
     } else if (data?.data?.error) {
       notify({
-        title: "Error!",
+        title: 'Error!',
         text: data?.data?.error,
-        type: "error",
+        type: 'error',
       });
     }
   };
@@ -118,6 +126,7 @@ const Menu: React.FC = () => {
     setEditingMenu(menu);
     setEditName(menu.name);
     setEditPackingCost(menu.packingCost);
+    setEditEstimatedTime(menu.waitingTimeMinutes);
     setIsOpenViewMenu(false);
     setIsOpenEditMenu(true);
   };
@@ -132,13 +141,14 @@ const Menu: React.FC = () => {
       {
         name: editName,
         packingCost: editPackingCost,
+        waitingTimeMinutes: editEstimatedTime,
       }
     );
     setLoading(false);
 
     if (data?.data?.isSuccessful) {
       getMenu();
-      toast.success("Menu updated successfully");
+      toast.success('Menu updated successfully');
 
       closeEditModal();
     } else if (data?.data?.error) {
@@ -164,13 +174,19 @@ const Menu: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  const removeMenu = async (id: string) => {
+  const removeMenu = async () => {
+    if (!selectedMenu) return;
     setLoading(true);
-    const data = await deleteMenu(businessInformation[0]?.businessId, id);
+    const data = await deleteMenu(
+      businessInformation[0]?.businessId,
+      selectedMenu.id
+    );
     setLoading(false);
     if (data?.data?.isSuccessful) {
       getMenu();
-      toast.success("Menu deleted successfully");
+      toast.success('Menu deleted successfully');
+      setIsOpenDeleteMenu(false);
+      setIsOpenViewMenu(true);
     } else if (data?.data?.error) {
       toast.error(data?.data?.error);
     }
@@ -189,19 +205,19 @@ const Menu: React.FC = () => {
         response,
         `Menus-${businessInformation[0]?.businessName}`
       );
-      toast.success("Menus downloaded successfully");
+      toast.success('Menus downloaded successfully');
     } else {
-      toast.error("Export failed, please try again");
+      toast.error('Export failed, please try again');
     }
   };
 
   return (
     <>
-      <div className="flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between">
+      <div className='flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between'>
         <div>
-          <div className="text-[24px] leading-8 font-semibold">
+          <div className='text-[24px] leading-8 font-semibold'>
             {data && data?.length > 0 ? (
-              <div className="flex items-center">
+              <div className='flex items-center'>
                 <span>All menu</span>
                 <Chip
                   classNames={{
@@ -215,29 +231,29 @@ const Menu: React.FC = () => {
               <span>Menu</span>
             )}
           </div>
-          <p className="text-sm  text-grey600  xl:w-[231px] w-full">
+          <p className='text-sm  text-grey600  xl:w-[231px] w-full'>
             Show all menu items
           </p>
         </div>
-        <div className="flex items-center flex-wrap gap-3">
+        <div className='flex items-center flex-wrap gap-3'>
           {data && data.length > 0 && (
             <>
-              <div className="md:w-[242px] w-full">
+              <div className='md:w-[242px] w-full'>
                 <CustomInput
-                  label=""
-                  size="md"
+                  label=''
+                  size='md'
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type="text"
-                  placeholder="Search here..."
+                  type='text'
+                  placeholder='Search here...'
                 />
               </div>
-              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
+              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
                 <Button
-                  onClick={() => router.push("/dashboard/menu/preview-menu")}
-                  className="flex text-grey600 bg-white"
+                  onClick={() => router.push('/dashboard/menu/preview-menu')}
+                  className='flex text-grey600 bg-white'
                 >
                   <IoPhonePortraitOutline />
                   <p>Preview menu</p>
@@ -246,12 +262,12 @@ const Menu: React.FC = () => {
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}
-                  className="flex text-grey600 bg-white"
+                  className='flex text-grey600 bg-white'
                 >
                   {loadingExport ? (
-                    <VscLoading className="animate-spin" />
+                    <VscLoading className='animate-spin' />
                   ) : (
-                    <MdOutlineFileDownload className="text-[22px]" />
+                    <MdOutlineFileDownload className='text-[22px]' />
                   )}
 
                   <p>Export csv</p>
@@ -264,13 +280,13 @@ const Menu: React.FC = () => {
             data.length > 0 &&
             (role === 0 || userRolePermissions?.canCreateMenu === true) && (
               <CustomButton
-                onClick={() => router.push("/dashboard/menu/add-menu-item")}
-                className="py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white"
-                backgroundColor="bg-primaryColor"
+                onClick={() => router.push('/dashboard/menu/add-menu-item')}
+                className='py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white'
+                backgroundColor='bg-primaryColor'
               >
-                <div className="flex gap-2 items-center justify-center">
-                  <IoAddCircleOutline className="text-[22px]" />
-                  <p>{"Add menu items"} </p>
+                <div className='flex gap-2 items-center justify-center'>
+                  <IoAddCircleOutline className='text-[22px]' />
+                  <p>{'Add menu items'} </p>
                 </div>
               </CustomButton>
             )}
@@ -293,29 +309,38 @@ const Menu: React.FC = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className="text-[24px] leading-3 mt-8 text-black font-semibold">
+                <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
                   Create Menu
                 </h2>
-                <p className="text-sm  text-grey600  xl:w-[231px]  w-full mb-4">
+                <p className='text-sm  text-grey600  xl:w-[231px]  w-full mb-4'>
                   Create a menu to add item
                 </p>
                 <CustomInput
-                  type="text"
+                  type='text'
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setName(e.target.value)
                   }
                   value={name}
-                  label="Name of menu"
-                  placeholder="E.g Drinks"
+                  label='Name of menu'
+                  placeholder='E.g Drinks'
                 />
                 <CustomInput
-                  type="number"
+                  type='number'
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setPackingCost(Number(e.target.value))
                   }
                   value={String(packingCost)}
-                  label="Packing cost (Optional)"
-                  placeholder="This is a cost required to pack any item in this menus"
+                  label='Packing cost (Optional)'
+                  placeholder='This is a cost required to pack any item in this menus'
+                />
+                <CustomInput
+                  type='number'
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEstimatedTime(Number(e.target.value))
+                  }
+                  value={String(estimatedTime)}
+                  label='Estimated time in minutes (Optional)'
+                  placeholder='This is the estimated time required to prepare any item in this menus'
                 />
                 <Spacer y={2} />
 
@@ -323,9 +348,9 @@ const Menu: React.FC = () => {
                   loading={loading}
                   onClick={handleCreateMenu}
                   disabled={!name || loading}
-                  type="submit"
+                  type='submit'
                 >
-                  {loading ? "Loading" : "Proceed"}
+                  {loading ? 'Loading' : 'Proceed'}
                 </CustomButton>
 
                 <Spacer y={4} />
@@ -348,39 +373,52 @@ const Menu: React.FC = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className="text-[24px] leading-3 mt-8 text-black font-semibold">
+                <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
                   Edit Menu
                 </h2>
-                <p className="text-sm text-grey600 xl:w-[231px] w-full mb-4">
+                <p className='text-sm text-grey600 xl:w-[231px] w-full mb-4'>
                   Update menu details
                 </p>
                 <CustomInput
-                  type="text"
+                  type='text'
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditName(e.target.value)
                   }
                   value={editName}
-                  label="Name of menu"
-                  placeholder="E.g Drinks"
+                  label='Name of menu'
+                  placeholder='E.g Drinks'
                 />
                 <CustomInput
-                  type="number"
+                  type='number'
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditPackingCost(Number(e.target.value))
                   }
                   value={
-                    editPackingCost !== undefined ? String(editPackingCost) : ""
+                    editPackingCost !== undefined ? String(editPackingCost) : ''
                   }
-                  label="Packing cost (Optional)"
-                  placeholder="This is a cost required to pack any item in this menus"
+                  label='Packing cost (Optional)'
+                  placeholder='This is a cost required to pack any item in this menus'
+                />
+                <CustomInput
+                  type='number'
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    setEditEstimatedTime(Number(e.target.value))
+                  }
+                  value={
+                    editEstimatedTime !== undefined
+                      ? String(editEstimatedTime)
+                      : ''
+                  }
+                  label='Estimated time in minutes (Optional)'
+                  placeholder='This is the estimated time required to prepare any item in this menus'
                 />
                 <Spacer y={2} />
 
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <CustomButton
                     onClick={() => closeEditModal()}
-                    className="flex-1 text-gray-700"
-                    backgroundColor="bg-gray-200"
+                    className='flex-1 text-gray-700'
+                    backgroundColor='bg-gray-200'
                   >
                     Cancel
                   </CustomButton>
@@ -389,10 +427,10 @@ const Menu: React.FC = () => {
                     loading={loading}
                     onClick={handleUpdateMenu}
                     disabled={!editName || loading}
-                    type="submit"
-                    className="flex-1 text-white"
+                    type='submit'
+                    className='flex-1 text-white'
                   >
-                    {loading ? "Loading" : "Update Menu"}
+                    {loading ? 'Loading' : 'Update Menu'}
                   </CustomButton>
                 </div>
 
@@ -411,41 +449,48 @@ const Menu: React.FC = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className="text-[24px] leading-3 mt-8 mb-2 text-black font-semibold">
+                <h2 className='text-[24px] leading-3 mt-8 mb-2 text-black font-semibold'>
                   All menus
                 </h2>
 
-                <ScrollShadow size={5} className="w-full max-h-[350px]">
+                <ScrollShadow size={5} className='w-full max-h-[350px]'>
                   {allMenus?.map((item: any) => {
                     return (
                       <div
-                        className="text-black flex justify-between text-sm border-b border-primaryGrey py-3"
+                        className='text-black flex justify-between text-sm border-b border-primaryGrey py-3'
                         key={item.id}
                       >
                         <div>
-                          <p className="font-medium">{item.name}</p>
+                          <p className='font-medium'>{item.name}</p>
                           {item.packingCost > 0 && (
-                            <p className="text-xs text-grey600">
+                            <p className='text-xs text-grey600'>
                               Packing cost: {formatPrice(item.packingCost)}
                             </p>
                           )}
+                          {item.waitingTimeMinutes > 0 && (
+                            <p className='text-xs text-grey600'>
+                              Estimated time: {item.waitingTimeMinutes}mins
+                            </p>
+                          )}
                         </div>
-                        <div className="flex items-center">
-                          <Tooltip color="secondary" content={"Edit"}>
-                            <span className="mr-3">
+                        <div className='flex items-center'>
+                          <Tooltip color='secondary' content={'Edit'}>
+                            <span className='mr-3'>
                               <RiEdit2Line
                                 onClick={() => handleEditMenu(item)}
-                                className="text-[18px] text-primaryColor cursor-pointer"
+                                className='text-[18px] text-primaryColor cursor-pointer'
                               />
                             </span>
                           </Tooltip>
-                          <Tooltip color="danger" content={"Delete"}>
+                          <Tooltip color='danger' content={'Delete'}>
                             <span>
                               <RiDeleteBin6Line
                                 onClick={() => {
-                                  removeMenu(item.id);
+                                  setSelectedMenu(item);
+                                  setIsOpenViewMenu(false);
+                                  setIsOpenDeleteMenu(true);
                                 }}
-                                className="text-[18px] text-[#dc2626] cursor-pointer"
+                                className='text-[18px] text-[#dc2626] cursor-pointer'
                               />
                             </span>
                           </Tooltip>
@@ -461,6 +506,17 @@ const Menu: React.FC = () => {
           )}
         </ModalContent>
       </Modal>
+
+      <DeleteModal
+        isOpen={isOpenDeleteMenu}
+        toggleModal={() => {
+          setIsOpenDeleteMenu(false);
+          setIsOpenViewMenu(true);
+        }}
+        handleDelete={removeMenu}
+        isLoading={loading}
+        text='Are you sure you want to delete this menu?'
+      />
     </>
   );
 };
