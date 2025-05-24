@@ -213,11 +213,11 @@ const Menu: React.FC = () => {
 
   return (
     <>
-      <div className='flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between'>
+      <div className="flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
+          <div className="text-[24px] leading-8 font-semibold">
             {data && data?.length > 0 ? (
-              <div className='flex items-center'>
+              <div className="flex items-center">
                 <span>All menu</span>
                 <Chip
                   classNames={{
@@ -231,29 +231,29 @@ const Menu: React.FC = () => {
               <span>Menu</span>
             )}
           </div>
-          <p className='text-sm  text-grey600  xl:w-[231px] w-full'>
+          <p className="text-sm  text-grey600  xl:w-[231px] w-full">
             Show all menu items
           </p>
         </div>
-        <div className='flex items-center flex-wrap gap-3'>
+        <div className="flex items-center flex-wrap gap-3">
           {data && data.length > 0 && (
             <>
-              <div className='md:w-[242px] w-full'>
+              <div className="md:w-[242px] w-full">
                 <CustomInput
-                  label=''
-                  size='md'
+                  label=""
+                  size="md"
                   value={searchQuery}
                   onChange={handleSearchChange}
                   isRequired={false}
                   startContent={<IoSearchOutline />}
-                  type='text'
-                  placeholder='Search here...'
+                  type="text"
+                  placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className='border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg'>
+              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
-                  onClick={() => router.push('/dashboard/menu/preview-menu')}
-                  className='flex text-grey600 bg-white'
+                  onClick={() => router.push("/dashboard/menu/preview-menu")}
+                  className="flex text-grey600 bg-white"
                 >
                   <IoPhonePortraitOutline />
                   <p>Preview menu</p>
@@ -262,12 +262,12 @@ const Menu: React.FC = () => {
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}
-                  className='flex text-grey600 bg-white'
+                  className="flex text-grey600 bg-white"
                 >
                   {loadingExport ? (
-                    <VscLoading className='animate-spin' />
+                    <VscLoading className="animate-spin" />
                   ) : (
-                    <MdOutlineFileDownload className='text-[22px]' />
+                    <MdOutlineFileDownload className="text-[22px]" />
                   )}
 
                   <p>Export csv</p>
@@ -280,13 +280,13 @@ const Menu: React.FC = () => {
             data.length > 0 &&
             (role === 0 || userRolePermissions?.canCreateMenu === true) && (
               <CustomButton
-                onClick={() => router.push('/dashboard/menu/add-menu-item')}
-                className='py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white'
-                backgroundColor='bg-primaryColor'
+                onClick={() => router.push("/dashboard/menu/add-menu-item")}
+                className="py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white"
+                backgroundColor="bg-primaryColor"
               >
-                <div className='flex gap-2 items-center justify-center'>
-                  <IoAddCircleOutline className='text-[22px]' />
-                  <p>{'Add menu items'} </p>
+                <div className="flex gap-2 items-center justify-center">
+                  <IoAddCircleOutline className="text-[22px]" />
+                  <p>{"Add menu items"} </p>
                 </div>
               </CustomButton>
             )}
@@ -309,38 +309,38 @@ const Menu: React.FC = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
+                <h2 className="text-[24px] leading-3 mt-8 text-black font-semibold">
                   Create Menu
                 </h2>
-                <p className='text-sm  text-grey600  xl:w-[231px]  w-full mb-4'>
+                <p className="text-sm  text-grey600  xl:w-[231px]  w-full mb-4">
                   Create a menu to add item
                 </p>
                 <CustomInput
-                  type='text'
+                  type="text"
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setName(e.target.value)
                   }
                   value={name}
-                  label='Name of menu'
-                  placeholder='E.g Drinks'
+                  label="Name of menu"
+                  placeholder="E.g Drinks"
                 />
                 <CustomInput
-                  type='number'
+                  type="number"
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setPackingCost(Number(e.target.value))
                   }
                   value={String(packingCost)}
-                  label='Packing cost (Optional)'
-                  placeholder='This is a cost required to pack any item in this menus'
+                  label="Packing cost (Optional)"
+                  placeholder="This is a cost required to pack any item in this menus"
                 />
                 <CustomInput
-                  type='number'
+                  type="number"
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEstimatedTime(Number(e.target.value))
                   }
                   value={String(estimatedTime)}
-                  label='Estimated time in minutes (Optional)'
-                  placeholder='This is the estimated time required to prepare any item in this menus'
+                  label="Preparation time in minutes (Optional)"
+                  placeholder="This is the estimated time required to prepare any item in this menus"
                 />
                 <Spacer y={2} />
 
@@ -348,9 +348,9 @@ const Menu: React.FC = () => {
                   loading={loading}
                   onClick={handleCreateMenu}
                   disabled={!name || loading}
-                  type='submit'
+                  type="submit"
                 >
-                  {loading ? 'Loading' : 'Proceed'}
+                  {loading ? "Loading" : "Proceed"}
                 </CustomButton>
 
                 <Spacer y={4} />
@@ -373,52 +373,52 @@ const Menu: React.FC = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
+                <h2 className="text-[24px] leading-3 mt-8 text-black font-semibold">
                   Edit Menu
                 </h2>
-                <p className='text-sm text-grey600 xl:w-[231px] w-full mb-4'>
+                <p className="text-sm text-grey600 xl:w-[231px] w-full mb-4">
                   Update menu details
                 </p>
                 <CustomInput
-                  type='text'
+                  type="text"
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditName(e.target.value)
                   }
                   value={editName}
-                  label='Name of menu'
-                  placeholder='E.g Drinks'
+                  label="Name of menu"
+                  placeholder="E.g Drinks"
                 />
                 <CustomInput
-                  type='number'
+                  type="number"
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditPackingCost(Number(e.target.value))
                   }
                   value={
-                    editPackingCost !== undefined ? String(editPackingCost) : ''
+                    editPackingCost !== undefined ? String(editPackingCost) : ""
                   }
-                  label='Packing cost (Optional)'
-                  placeholder='This is a cost required to pack any item in this menus'
+                  label="Packing cost (Optional)"
+                  placeholder="This is a cost required to pack any item in this menus"
                 />
                 <CustomInput
-                  type='number'
+                  type="number"
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     setEditEstimatedTime(Number(e.target.value))
                   }
                   value={
                     editEstimatedTime !== undefined
                       ? String(editEstimatedTime)
-                      : ''
+                      : ""
                   }
-                  label='Estimated time in minutes (Optional)'
-                  placeholder='This is the estimated time required to prepare any item in this menus'
+                  label="Preparation time in minutes (Optional)"
+                  placeholder="This is the estimated time required to prepare any item in this menus"
                 />
                 <Spacer y={2} />
 
-                <div className='flex gap-2'>
+                <div className="flex gap-2">
                   <CustomButton
                     onClick={() => closeEditModal()}
-                    className='flex-1 text-gray-700'
-                    backgroundColor='bg-gray-200'
+                    className="flex-1 text-gray-700"
+                    backgroundColor="bg-gray-200"
                   >
                     Cancel
                   </CustomButton>
@@ -427,10 +427,10 @@ const Menu: React.FC = () => {
                     loading={loading}
                     onClick={handleUpdateMenu}
                     disabled={!editName || loading}
-                    type='submit'
-                    className='flex-1 text-white'
+                    type="submit"
+                    className="flex-1 text-white"
                   >
-                    {loading ? 'Loading' : 'Update Menu'}
+                    {loading ? "Loading" : "Update Menu"}
                   </CustomButton>
                 </div>
 
@@ -449,40 +449,40 @@ const Menu: React.FC = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className='text-[24px] leading-3 mt-8 mb-2 text-black font-semibold'>
+                <h2 className="text-[24px] leading-3 mt-8 mb-2 text-black font-semibold">
                   All menus
                 </h2>
 
-                <ScrollShadow size={5} className='w-full max-h-[350px]'>
+                <ScrollShadow size={5} className="w-full max-h-[350px]">
                   {allMenus?.map((item: any) => {
                     return (
                       <div
-                        className='text-black flex justify-between text-sm border-b border-primaryGrey py-3'
+                        className="text-black flex justify-between text-sm border-b border-primaryGrey py-3"
                         key={item.id}
                       >
                         <div>
-                          <p className='font-medium'>{item.name}</p>
+                          <p className="font-medium">{item.name}</p>
                           {item.packingCost > 0 && (
-                            <p className='text-xs text-grey600'>
+                            <p className="text-xs text-grey600">
                               Packing cost: {formatPrice(item.packingCost)}
                             </p>
                           )}
                           {item.waitingTimeMinutes > 0 && (
-                            <p className='text-xs text-grey600'>
-                              Estimated time: {item.waitingTimeMinutes}mins
+                            <p className="text-xs text-grey600">
+                              Preparation time: {item.waitingTimeMinutes}mins
                             </p>
                           )}
                         </div>
-                        <div className='flex items-center'>
-                          <Tooltip color='secondary' content={'Edit'}>
-                            <span className='mr-3'>
+                        <div className="flex items-center">
+                          <Tooltip color="secondary" content={"Edit"}>
+                            <span className="mr-3">
                               <RiEdit2Line
                                 onClick={() => handleEditMenu(item)}
-                                className='text-[18px] text-primaryColor cursor-pointer'
+                                className="text-[18px] text-primaryColor cursor-pointer"
                               />
                             </span>
                           </Tooltip>
-                          <Tooltip color='danger' content={'Delete'}>
+                          <Tooltip color="danger" content={"Delete"}>
                             <span>
                               <RiDeleteBin6Line
                                 onClick={() => {
@@ -490,7 +490,7 @@ const Menu: React.FC = () => {
                                   setIsOpenViewMenu(false);
                                   setIsOpenDeleteMenu(true);
                                 }}
-                                className='text-[18px] text-[#dc2626] cursor-pointer'
+                                className="text-[18px] text-[#dc2626] cursor-pointer"
                               />
                             </span>
                           </Tooltip>
@@ -515,7 +515,7 @@ const Menu: React.FC = () => {
         }}
         handleDelete={removeMenu}
         isLoading={loading}
-        text='Are you sure you want to delete this menu?'
+        text="Are you sure you want to delete this menu?"
       />
     </>
   );

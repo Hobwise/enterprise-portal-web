@@ -67,7 +67,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
         pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save("HobinkInvoice.pdf");
+        pdf.save("Hobwise-invoice.pdf");
       }
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -95,7 +95,7 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
                         containerClass="flex gap-2 items-center "
                       />
                       <p className="font-bold text-lg">Invoice</p>
-                      <p>Hobink</p>
+                      <p>Hobwise</p>
                     </div>
                     <div>
                       <p className="font-medium text-sm text-black">

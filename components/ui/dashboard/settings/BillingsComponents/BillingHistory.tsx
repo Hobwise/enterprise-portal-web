@@ -169,12 +169,9 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
   const downloadInvoice = (details: any) => {
     setInvoiceDetails(details);
     setDownloadClickedInvoice(true);
-    setDownloadingInvoiceId(details?.id); // Set the specific invoice ID being downloaded
-
-    // Simulate an async operation (e.g., API call to download the invoice)
+    setDownloadingInvoiceId(details?.id);
     setTimeout(() => {
-      console.log("Invoice downloaded:", details?.id);
-      setDownloadingInvoiceId(null); // Reset after the download completes
+      setDownloadingInvoiceId(null);
     }, 2000);
   };
 

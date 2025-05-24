@@ -33,6 +33,8 @@ import {
 } from "./data";
 import Filters from "./filter";
 import ViewModal from "./view";
+import { useRouter } from "next/navigation";
+import { IoIosArrowRoundBack } from "react-icons/io";
 
 type Item = {
   id: string;
@@ -59,6 +61,7 @@ type MenuItem = {
 type MenuData = Array<MenuItem>;
 
 const MenuList = () => {
+  const router = useRouter();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { page, setPage, rowsPerPage, menuIdTable, setMenuIdTable } =
     useGlobalContext();
@@ -273,6 +276,15 @@ const MenuList = () => {
     <>
       <div className="flex flex-row flex-wrap  justify-between">
         <div>
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={() => router.back()}
+              className="text-grey600 p-0 m-0 border-none outline-none flex items-center gap-2 text-sm"
+            >
+              <IoIosArrowRoundBack className="text-[22px]" />
+              <p>Go back</p>
+            </button>
+          </div>
           <div className="text-[24px] leading-8 font-semibold">
             <span>Place an order</span>
           </div>
