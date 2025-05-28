@@ -63,6 +63,7 @@ const CheckoutModal = ({
   cooperateID,
   handlePackingCost,
 }: any) => {
+  
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const router = useRouter();

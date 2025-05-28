@@ -33,6 +33,8 @@ import {
 } from "./data";
 import Filters from "./filter";
 import ViewModal from "./view";
+import { useRouter } from "next/navigation";
+import { IoIosArrowRoundBack } from "react-icons/io";
 
 type Item = {
   id: string;
@@ -59,6 +61,7 @@ type MenuItem = {
 type MenuData = Array<MenuItem>;
 
 const MenuList = () => {
+  const router = useRouter();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { page, setPage, rowsPerPage, menuIdTable, setMenuIdTable } =
     useGlobalContext();
@@ -100,23 +103,6 @@ const MenuList = () => {
 
     setLoading(false);
     if (response?.data?.isSuccessful) {
-      const secondArrayIds = data.flatMap((section) =>
-        section.items.map((item) => item.id)
-      );
-
-      // const idsInCommon = response?.data?.data?.orderDetails.filter((item) =>
-      //   secondArrayIds.includes(item.itemID)
-      // );
-
-      // const updatedArray = idsInCommon.map((item) => {
-      //   const { unitPrice, quantity, itemID, ...rest } = item;
-      //   return {
-      //     ...rest,
-      //     id: itemID,
-      //     price: unitPrice,
-      //     count: quantity,
-      //   };
-      // });
       const updatedArray = response?.data?.data.orderDetails.map((item) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
         return {
@@ -126,7 +112,6 @@ const MenuList = () => {
           count: quantity,
         };
       });
-
       setOrderDetails(response?.data?.data);
       setSelectedItems(updatedArray);
 
@@ -172,19 +157,6 @@ const MenuList = () => {
     }
   }, [filterValue, filteredItems]);
 
-  // const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
-  //   const existingItem = selectedItems.find((item) => item.id === menuItem.id);
-
-  //   if (existingItem) {
-  //     setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
-  //   } else {
-  //     setSelectedItems((prevItems: any) => [
-  //       ...prevItems,
-  //       { ...menuItem, count: 1, isPacked: isItemPacked },
-  //     ]);
-  //   }
-  // };
-
   const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
     if (existingItem) {
@@ -224,13 +196,6 @@ const MenuList = () => {
       )
     );
   };
-  // const calculateTotalPrice = () => {
-  //   return selectedItems.reduce((acc, item) => {
-  //     const itemTotal = item.price * item.count;
-  //     const packingTotal = item.isPacked ? item.packingCost * item.count : 0;
-  //     return acc + itemTotal + packingTotal;
-  //   }, 0);
-  // };
 
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
@@ -269,10 +234,35 @@ const MenuList = () => {
     );
   };
 
+  const handleOpenCheckoutModal = () => {
+    setSelectedItems((prevItems) =>
+      prevItems.map((item) => {
+        const menuItem = matchingObjectArray.find(
+          (menu) => menu.id === item.id
+        );
+
+        return {
+          ...item,
+          packingCost: menuItem ? menuItem.packingCost : 0,
+        };
+      })
+    );
+    onOpen();
+  };
+
   return (
     <>
       <div className="flex flex-row flex-wrap  justify-between">
         <div>
+          <div className="flex items-center gap-2 mb-2">
+            <button
+              onClick={() => router.back()}
+              className="text-grey600 p-0 m-0 border-none outline-none flex items-center gap-2 text-sm"
+            >
+              <IoIosArrowRoundBack className="text-[22px]" />
+              <p>Go back</p>
+            </button>
+          </div>
           <div className="text-[24px] leading-8 font-semibold">
             <span>Place an order</span>
           </div>
@@ -303,7 +293,7 @@ const MenuList = () => {
             />
           </div>
           <CustomButton
-            onClick={selectedItems.length > 0 ? onOpen : {}}
+            onClick={selectedItems.length > 0 ? handleOpenCheckoutModal : {}}
             className="py-2 px-4 mb-0 text-white"
             backgroundColor="bg-primaryColor"
           >

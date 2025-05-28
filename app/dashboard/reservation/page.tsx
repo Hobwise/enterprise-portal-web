@@ -98,7 +98,13 @@ const Reservation: React.FC = () => {
   }, [data, searchQuery]);
 
   const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `${companyInfo.webUrl}/reservation/select-reservation?businessName=${business[0]?.businessName}&businessId=${business[0]?.businessId}&cooperateID=${userInformation.cooperateID}`
+    `${
+      companyInfo.webUrl
+    }/reservation/select-reservation?businessName=${encodeURIComponent(
+      business[0]?.businessName
+    )}&businessId=${business[0]?.businessId}&cooperateID=${
+      userInformation.cooperateID
+    }`
   );
 
   const exportCSV = async (): Promise<void> => {

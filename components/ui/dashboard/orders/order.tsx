@@ -42,12 +42,13 @@ import ConfirmOrderModal from './confirmOrder';
 import InvoiceModal from './invoice';
 
 const INITIAL_VISIBLE_COLUMNS = [
-  'name',
-  'amount',
-  'orderID',
-  'status',
-  'dateCreated',
-  'actions',
+  "name",
+  "amount",
+  "qrReference",
+  "orderID",
+  "status",
+  "dateCreated",
+  "actions",
 ];
 const OrdersList = ({ orders, searchQuery, refetch }: any) => {
   const router = useRouter();

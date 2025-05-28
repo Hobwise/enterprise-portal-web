@@ -392,18 +392,23 @@ export const formatDateTimeForPayload2 = (dateTime) => {
 
 export const saveAsPDF = async (
   invoiceRef: any,
-  filename: string = "invoice.pdf"
+  filename: string = "invoice.pdf",
+  optionsOverride: any = {}
 ) => {
   const html2pdf = (await import("html2pdf.js/dist/html2pdf.min.js")).default;
   const element = invoiceRef.current;
-  const options = {
+  const defaultOptions = {
     margin: 0.5,
     filename: filename,
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: { scale: 2 },
-    jsPDF: { unit: "in", format: "a4", orientation: "landscape" },
+    jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
   };
-
+  const options = {
+    ...defaultOptions,
+    ...optionsOverride,
+    jsPDF: { ...defaultOptions.jsPDF, ...(optionsOverride.jsPDF || {}) },
+  };
   html2pdf().from(element).set(options).save();
 };
 
@@ -427,7 +432,7 @@ export const printPDF = async (
     jsPDF: {
       unit: "in",
       format: "a4",
-      orientation: "landscape",
+      orientation: "portrait",
       compress: true,
     },
   };

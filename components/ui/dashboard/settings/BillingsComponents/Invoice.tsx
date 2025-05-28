@@ -1,10 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import { SubscriptionHistory } from "./Interfaces";
-import { addCommasToNumber, getJsonItemFromLocalStorage } from "@/lib/utils";
+import {
+  addCommasToNumber,
+  getJsonItemFromLocalStorage,
+  saveAsPDF,
+} from "@/lib/utils";
 import moment from "moment";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
-import Image from "next/image";
+
+import HobwiseLogo from "../../../../../public/assets/images/hobwise.png";
+import { Image } from "@nextui-org/react";
 
 interface InvoiceDetails {
   data: SubscriptionHistory | null;
@@ -44,36 +48,18 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
     // console.log("BUSINESS", business)
 
     if (download) {
-      generatePDF();
+      handleSaveAsPDF();
     }
   }, [download]);
 
-  let isGenerating = false;
-
-  const generatePDF = async () => {
-    // console.log("FUNCTION called");
-
-    if (isGenerating) return; // Prevent duplicate calls
-    isGenerating = true;
-
-    try {
-      if (invoiceRef.current) {
-        // console.log('REF TINGZ', invoiceRef.current);
-        const canvas = await html2canvas(invoiceRef.current, { scale: 2 });
-        const imgData = canvas.toDataURL("image/png");
-
-        const pdf = new jsPDF("p", "mm", "a4", true);
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-        pdf.save("HobinkInvoice.pdf");
-      }
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-    } finally {
-      isGenerating = false;
-      setDownloadClickedInvoice(false); // Reset state
+  const handleSaveAsPDF = async () => {
+    if (invoiceRef.current) {
+      await saveAsPDF(invoiceRef, "Hobwise-invoice.pdf", {
+        margin: 0.2,
+        jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
+        html2canvas: { scale: 2 },
+      });
+      setDownloadClickedInvoice(false);
     }
   };
 
@@ -83,18 +69,18 @@ const InvoiceSection: React.FC<InvoiceDetails> = ({
         <article className="shadow-none ">
           <div className="md:rounded-b-md bg-white">
             <div className="p-3 border-b border-gray-200">
-              <div className="space-y-6">
+              <div className="space-y-6 mt-16">
                 <div className="flex justify-between items-top">
                   <div className="space-y-4">
                     <div className="flex flex-col gap-2 mb-6">
                       <Image
-                        src="/assets/images/hobwise.png"
-                        height={150}
+                        height={40}
                         width={150}
-                        style={{ objectFit: "cover" }}
+                        src="/assets/images/hobwise.png"
+                        className="h-[20px] w-[150px] bg-contain"
                         alt="company logo"
                       />
-                      <div className="text-black">
+                      <div className="text-black mt-4">
                         <p className="font-bold text-lg">Invoice</p>
                         <p className="">{business?.businessName}</p>
                       </div>

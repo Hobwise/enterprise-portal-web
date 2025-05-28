@@ -2,6 +2,7 @@ const columns = [
   { name: "ID", uid: "menuID" },
   { name: "Name", uid: "name" },
   { name: "Amount", uid: "amount" },
+  { name: "Table Name", uid: "qrReference" },
   { name: "Order ID", uid: "orderID" },
   { name: "Phone number", uid: "placedByPhoneNumber" },
   { name: "Payment", uid: "payment" },

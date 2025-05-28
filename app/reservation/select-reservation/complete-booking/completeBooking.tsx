@@ -110,19 +110,27 @@ const CompleteBookingComponent = () => {
       setTimeNdate(now(getLocalTimeZone()));
       reservationId
         ? router.push(
-            `${companyInfo.webUrl}/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
+            `${
+              companyInfo.webUrl
+            }/reservation/select-reservation/complete-booking/success?businessName=${encodeURIComponent(
+              businessName || ""
+            )}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
           )
         : router.push(
-            `${companyInfo.webUrl}/reservation/select-reservation/complete-booking/success?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+            `${
+              companyInfo.webUrl
+            }/reservation/select-reservation/complete-booking/success?businessName=${encodeURIComponent(
+              businessName || ""
+            )}&businessId=${businessId}&cooperateID=${cooperateID}`
           );
-      saveJsonItemToLocalStorage('bookingDetails', data?.data?.data);
+      saveJsonItemToLocalStorage("bookingDetails", data?.data?.data);
       setBookings({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-        description: '',
-        id: '',
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        description: "",
+        id: "",
       });
       setQuantity(1);
     } else if (data?.data?.error) {
@@ -139,82 +147,86 @@ const CompleteBookingComponent = () => {
 
   return (
     <>
-      <div className='flex justify-between items-center'>
-        <h1 className='text-2xl  text-black'>{businessName}</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl  text-black">{businessName}</h1>
         {reservationId ? null : (
           <BackButton
-            color='text-black'
-            url={`${companyInfo.webUrl}/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
+            color="text-black"
+            url={`${
+              companyInfo.webUrl
+            }/reservation/select-reservation/single-reservation?businessName=${encodeURIComponent(
+              businessName || ""
+            )}&businessId=${businessId}&cooperateID=${cooperateID}`}
           />
         )}
       </div>
-      <div className='mt-7 mb-12'>
-        <h2 className='text-xl text-black font-bold'>Complete Booking</h2>
-        <p className='text-grey600'>Select a reservation to make a booking</p>
+      <div className="mt-7 mb-12">
+        <h2 className="text-xl text-black font-bold">Complete Booking</h2>
+        <p className="text-grey600">Select a reservation to make a booking</p>
       </div>
       <form onSubmit={placeBooking}>
         <CustomInput
-          type='text'
+          type="text"
           value={bookings.firstName}
           errorMessage={response?.errors?.firstName?.[0]}
           onChange={handleInputChange}
-          name='firstName'
-          label='First name'
-          placeholder='First name'
+          name="firstName"
+          label="First name"
+          placeholder="First name"
         />
         <Spacer y={5} />
         <CustomInput
-          type='text'
+          type="text"
           value={bookings.lastName}
           errorMessage={response?.errors?.lastName?.[0]}
           onChange={handleInputChange}
-          name='lastName'
-          label='Last name'
-          placeholder='Last name'
+          name="lastName"
+          label="Last name"
+          placeholder="Last name"
         />
         <Spacer y={5} />
         <CustomInput
-          type='text'
+          type="text"
           value={bookings.email}
           errorMessage={response?.errors?.emailAddress?.[0]}
           onChange={handleInputChange}
-          name='email'
-          endContent={<MdOutlineMailOutline className='text-grey500' />}
-          label='Email address'
-          placeholder='Enter email'
+          name="email"
+          endContent={<MdOutlineMailOutline className="text-grey500" />}
+          label="Email address"
+          placeholder="Enter email"
         />
         <Spacer y={5} />
         <CustomTextArea
           value={bookings.description}
-          name='description'
+          name="description"
           errorMessage={response?.errors?.description?.[0]}
           onChange={handleInputChange}
-          label='Add a description to this booking'
-          placeholder='Add a description'
+          label="Add a description to this booking"
+          placeholder="Add a description"
         />
         <Spacer y={5} />
         <CustomInput
-          type='text'
+          type="text"
           value={bookings.phoneNumber}
           errorMessage={response?.errors?.phoneNumber?.[0]}
           onChange={handleInputChange}
-          name='phoneNumber'
-          endContent={<MdOutlinePhone className='text-grey500' />}
-          label='Phone number'
-          placeholder='Enter phone number (Optional)'
+          name="phoneNumber"
+          endContent={<MdOutlinePhone className="text-grey500" />}
+          label="Phone number"
+          placeholder="Enter phone number (Optional)"
         />
         <Spacer y={5} />
 
         <div>
-          <label className='font-[500] text-black text-[14px] pb-1'>
+          <label className="font-[500] text-black text-[14px] pb-1">
             Time and date
           </label>
           <DatePicker
-            variant='bordered'
+            variant="bordered"
             hideTimeZone
             calendarWidth={270}
-            size='lg'
-            radius='sm'
+            size="lg"
+            radius="sm"
             errorMessage={response?.errors?.timeNdate?.[0]}
             value={timeNdate}
             onChange={setTimeNdate}
@@ -224,28 +236,28 @@ const CompleteBookingComponent = () => {
           />
         </div>
         <Spacer y={5} />
-        <div className='text-sm flex justify-between'>
-          <div className='text-[#404245] flex space-x-2 items-center'>
+        <div className="text-sm flex justify-between">
+          <div className="text-[#404245] flex space-x-2 items-center">
             <p>Quantity</p>
             <InfoCircle />
           </div>
-          <div className='flex space-x-4 text-[#000] items-center'>
+          <div className="flex space-x-4 text-[#000] items-center">
             <button
-              className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
+              className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
               disabled={quantity <= 1}
-              role='button'
+              role="button"
               onClick={() => {
                 quantity > 1 ? setQuantity((prev) => prev - 1) : null;
               }}
             >
               -
             </button>
-            <p className='font-medium w-4 flex justify-center items-center'>
+            <p className="font-medium w-4 flex justify-center items-center">
               {quantity}
             </p>
             <div
-              className='border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8'
-              role='button'
+              className="border border-[#E4E7EC] rounded-md w-8 text-[#000000] flex items-center justify-center h-8"
+              role="button"
               onClick={() => setQuantity((prev) => prev + 1)}
             >
               +
@@ -255,17 +267,17 @@ const CompleteBookingComponent = () => {
         {data?.content && (
           <>
             <Spacer y={6} />
-            <div className='flex '>
+            <div className="flex ">
               <Checkbox
                 isSelected={isSelected}
                 onValueChange={setIsSelected}
-                size='sm'
+                size="sm"
               />
-              <div className='text-black text-[14px]'>
-                I accept the{' '}
+              <div className="text-black text-[14px]">
+                I accept the{" "}
                 <span
                   onClick={onOpen}
-                  className={'text-primaryColor cursor-pointer'}
+                  className={"text-primaryColor cursor-pointer"}
                 >
                   terms and condition
                 </span>
@@ -280,10 +292,10 @@ const CompleteBookingComponent = () => {
           disabled={
             isLoading || data?.content ? !formSubmit() : !formSubmitTnC()
           }
-          type='submit'
+          type="submit"
         >
-          {' '}
-          {isLoading ? 'Loading' : 'Proceed to checkout'}
+          {" "}
+          {isLoading ? "Loading" : "Proceed to checkout"}
         </CustomButton>
       </form>
 
@@ -292,11 +304,11 @@ const CompleteBookingComponent = () => {
           {(onClose) => (
             <>
               <ModalBody>
-                <h2 className='text-[20px]  font-[600] mt-3 text-black '>
+                <h2 className="text-[20px]  font-[600] mt-3 text-black ">
                   Terms and Conditions
                 </h2>
 
-                <div className='text-black text-sm'>
+                <div className="text-black text-sm">
                   <Editor editorState={editorState} toolbarHidden readOnly />
                 </div>
                 <Spacer y={4} />

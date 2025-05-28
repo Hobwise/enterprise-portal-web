@@ -44,7 +44,11 @@ const SelectReservationComponents = () => {
                   saveJsonItemToLocalStorage('singleReservation', reservation);
                   saveToLocalStorage('businessName', businessName);
                   router.push(
-                    `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+                    `${
+                      companyInfo.webUrl
+                    }/reservation/select-reservation/single-reservation?businessName=${encodeURIComponent(
+                      businessName
+                    )}&businessId=${businessId}&cooperateID=${cooperateID}`
                   );
                 }}
                 key={reservation.reservationName}

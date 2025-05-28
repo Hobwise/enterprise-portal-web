@@ -29,25 +29,30 @@ interface PreviewStyles {
   divider?: boolean;
   text3?: string;
   main?: string;
+  chipPosition?: string;
 }
 
 export const togglePreview = (activeTile: string): PreviewStyles => {
-  const previewStyles: { [key: string]: PreviewStyles } = {
+  const previewStyles: {
+    [key: string]: PreviewStyles;
+  } = {
     "List left": {
       container: "flex justify-between w-full",
-      imageContainer: "w-[48%] flex-shrink-0",
-      textContainer: "w-[48%] ml-3",
+      imageContainer: "w-[25%] flex-shrink-0",
+      textContainer: "w-[73%] ml-3",
       imageClass: "h-[60px] w-[60px]",
       divider: true,
       text3: "Founded in 1743, in italy...",
+      chipPosition: "bottom-0 right-2",
     },
     "List Right": {
       container: "flex justify-between w-full",
-      imageContainer: "w-[48%] flex-shrink-0 flex justify-end",
-      textContainer: "w-[48%] mr-3",
+      imageContainer: "w-[27%] flex-shrink-0 flex justify-end",
+      textContainer: "w-[73%] mr-3",
       imageClass: "h-[60px] w-[60px]",
       divider: true,
       text3: "Founded in 1743, in italy...",
+      chipPosition: "top-2 right-2",
     },
     "Single column 1": {
       container: "flex-col",
@@ -56,6 +61,7 @@ export const togglePreview = (activeTile: string): PreviewStyles => {
       divider: false,
       text3:
         "Founded in 1743, Moët & Chandon celebrates life's memorable moments with a range of unique champagnes for every occasion.",
+      chipPosition: "top-2 left-2",
     },
     "Single column 2": {
       container: "flex-col justify-center items-center",
@@ -66,6 +72,7 @@ export const togglePreview = (activeTile: string): PreviewStyles => {
       text3:
         "Founded in 1743, Moët & Chandon celebrates life's memorable moments with a range of unique champagnes for every occasion.",
       main: "w-full",
+      chipPosition: "top-2 left-2",
     },
     "Double column": {
       container: "flex-col w-[calc(50%-10px)]",
@@ -74,6 +81,7 @@ export const togglePreview = (activeTile: string): PreviewStyles => {
       imageClass: "w-full h-[150px] mb-3",
       divider: false,
       text3: "",
+      chipPosition: "top-2 right-2",
     },
   };
 

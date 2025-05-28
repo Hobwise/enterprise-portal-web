@@ -211,7 +211,7 @@ const ViewModal = ({
                                 </span>
                               </span>
 
-                              <span className='font-[600] text-primaryColor'>
+                              <span className='font-[600] text-black'>
                                 {formatPrice(item?.price)}
                               </span>
 

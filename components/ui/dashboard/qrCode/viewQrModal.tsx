@@ -33,7 +33,7 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
   return (
     <Modal
       classNames={{
-        body: 'px-1 md:px-6',
+        body: "px-1 md:px-6",
       }}
       isDismissable={false}
       isOpen={isOpenView}
@@ -44,31 +44,37 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalBody className='p-6'>
+            <ModalBody className="p-6">
               <Spacer y={3} />
 
-              <div ref={qrRef} className='flex justify-center p-4 bg-white'>
+              <div ref={qrRef} className="flex justify-center p-4 bg-white">
                 <QRCode
                   size={256}
                   style={{
                     height: 256,
                     width: 256,
-                    maxWidth: '100%',
-                    maxHeight: '100%',
+                    maxWidth: "100%",
+                    maxHeight: "100%",
                   }}
-                  value={`${companyInfo.webUrl}/create-order?businessID=${business[0]?.businessId}&cooperateID=${userInformation?.cooperateID}&id=${qrObject?.id}&businessName=${business[0]?.businessName}`}
+                  value={`${companyInfo.webUrl}/create-order?businessID=${
+                    business[0]?.businessId
+                  }&cooperateID=${userInformation?.cooperateID}&id=${
+                    qrObject?.id
+                  }&businessName=${encodeURIComponent(
+                    business[0]?.businessName
+                  )}`}
                   viewBox={`0 0 256 256`}
                 />
               </div>
 
               <Spacer y={4} />
-              <div className='flex flex-col gap-2'>
+              <div className="flex flex-col gap-2">
                 <CustomButton
                   onClick={() => downloadQRImage(qrObject, qrRef)}
-                  type='submit'
+                  type="submit"
                 >
-                  <div className='flex gap-2 items-center justify-center'>
-                    <MdOutlineFileDownload className='text-[22px]' />
+                  <div className="flex gap-2 items-center justify-center">
+                    <MdOutlineFileDownload className="text-[22px]" />
                     <p>Download QR</p>
                   </div>
                 </CustomButton>
