@@ -103,23 +103,6 @@ const MenuList = () => {
 
     setLoading(false);
     if (response?.data?.isSuccessful) {
-      const secondArrayIds = data.flatMap((section) =>
-        section.items.map((item) => item.id)
-      );
-
-      // const idsInCommon = response?.data?.data?.orderDetails.filter((item) =>
-      //   secondArrayIds.includes(item.itemID)
-      // );
-
-      // const updatedArray = idsInCommon.map((item) => {
-      //   const { unitPrice, quantity, itemID, ...rest } = item;
-      //   return {
-      //     ...rest,
-      //     id: itemID,
-      //     price: unitPrice,
-      //     count: quantity,
-      //   };
-      // });
       const updatedArray = response?.data?.data.orderDetails.map((item) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
         return {
@@ -129,7 +112,6 @@ const MenuList = () => {
           count: quantity,
         };
       });
-
       setOrderDetails(response?.data?.data);
       setSelectedItems(updatedArray);
 
@@ -175,19 +157,6 @@ const MenuList = () => {
     }
   }, [filterValue, filteredItems]);
 
-  // const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
-  //   const existingItem = selectedItems.find((item) => item.id === menuItem.id);
-
-  //   if (existingItem) {
-  //     setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
-  //   } else {
-  //     setSelectedItems((prevItems: any) => [
-  //       ...prevItems,
-  //       { ...menuItem, count: 1, isPacked: isItemPacked },
-  //     ]);
-  //   }
-  // };
-
   const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
     if (existingItem) {
@@ -227,13 +196,6 @@ const MenuList = () => {
       )
     );
   };
-  // const calculateTotalPrice = () => {
-  //   return selectedItems.reduce((acc, item) => {
-  //     const itemTotal = item.price * item.count;
-  //     const packingTotal = item.isPacked ? item.packingCost * item.count : 0;
-  //     return acc + itemTotal + packingTotal;
-  //   }, 0);
-  // };
 
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
@@ -270,6 +232,22 @@ const MenuList = () => {
         item.id === itemId ? { ...item, isPacked } : item
       )
     );
+  };
+
+  const handleOpenCheckoutModal = () => {
+    setSelectedItems((prevItems) =>
+      prevItems.map((item) => {
+        const menuItem = matchingObjectArray.find(
+          (menu) => menu.id === item.id
+        );
+
+        return {
+          ...item,
+          packingCost: menuItem ? menuItem.packingCost : 0,
+        };
+      })
+    );
+    onOpen();
   };
 
   return (
@@ -315,7 +293,7 @@ const MenuList = () => {
             />
           </div>
           <CustomButton
-            onClick={selectedItems.length > 0 ? onOpen : {}}
+            onClick={selectedItems.length > 0 ? handleOpenCheckoutModal : {}}
             className="py-2 px-4 mb-0 text-white"
             backgroundColor="bg-primaryColor"
           >

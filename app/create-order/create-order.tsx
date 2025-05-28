@@ -269,19 +269,22 @@ const CreateOrder = () => {
                     togglePreview(convertActiveTile(menuConfig?.layout))
                       ?.container
                   } ${
-                    convertActiveTile(menuConfig?.layout) === 'List Right' &&
+                    convertActiveTile(menuConfig?.layout) === "List Right" &&
                     menuConfig?.useBackground &&
-                    'flex-row-reverse'
+                    "flex-row-reverse"
                   } flex  my-4 text-black cursor-pointer relative`}
                 >
                   {item?.isAvailable === false && (
                     <Chip
-                      className='capitalize absolute top-1 right-1'
-                      color={'danger'}
-                      size='sm'
-                      variant='bordered'
+                      className={`capitalize absolute ${
+                        togglePreview(convertActiveTile(menuConfig?.layout))
+                          ?.chipPosition
+                      }`}
+                      color={"danger"}
+                      size="sm"
+                      variant="bordered"
                     >
-                      {'Out of stock'}
+                      {"Out of stock"}
                     </Chip>
                   )}
                   {menuConfig?.useBackground && (
@@ -299,7 +302,7 @@ const CreateOrder = () => {
                         width={60}
                         height={60}
                         src={item.image ? `${baseString}${item.image}` : noMenu}
-                        alt='menu'
+                        alt="menu"
                       />
                     </div>
                   )}
@@ -312,15 +315,15 @@ const CreateOrder = () => {
                         ?.textContainer
                     } flex flex-col justify-center `}
                   >
-                    <p className='font-[700]'>{item.itemName}</p>
-                    <p className='text-[13px]'>{item.menuName}</p>
-                    <p className='text-[13px]'>{formatPrice(item.price)}</p>
+                    <p className="font-[700]">{item.itemName}</p>
+                    <p className="text-[13px]">{item.menuName}</p>
+                    <p className="text-[13px]">{formatPrice(item.price)}</p>
                     {isSelected && (
                       <Chip
                         startContent={<CheckIcon size={18} />}
-                        variant='flat'
+                        variant="flat"
                         classNames={{
-                          base: 'bg-primaryColor text-white text-[10px] mt-1',
+                          base: "bg-primaryColor text-white text-[10px] mt-1",
                         }}
                       >
                         Selected
@@ -329,7 +332,7 @@ const CreateOrder = () => {
                   </div>
                 </div>
                 {togglePreview(convertActiveTile(menuConfig?.layout))
-                  ?.divider && <Divider className='text-[#E4E7EC] h-[1px]' />}
+                  ?.divider && <Divider className="text-[#E4E7EC] h-[1px]" />}
               </>
             );
           })}

@@ -11,6 +11,7 @@ interface DesignOptions {
   imageRef: string;
   image: string;
   textColour: string;
+  chipPosition: string;
 }
 const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const businessInformation = getJsonItemFromLocalStorage("business");

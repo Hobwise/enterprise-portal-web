@@ -44,7 +44,9 @@ const SuccessComponent = () => {
             //     )
             //   :
             router.push(
-              `/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+              `/reservation/select-reservation?businessName=${encodeURIComponent(
+                businessName || ""
+              )}&businessId=${businessId}&cooperateID=${cooperateID}`
             );
 
             clearItemLocalStorage('bookingDetails');
