@@ -1,12 +1,9 @@
 import LoginForm from "@/components/ui/auth/loginForm";
 import { companyInfo } from "@/lib/companyInfo";
 import { HOME_URL } from "@/utilities/routes";
-import { motion } from "framer-motion";
 import { Spacer } from "@nextui-org/react";
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
-import ReaceptionImage from "@/public/assets/images/reception-vector.png";
 import { LampContainer } from "@/components/ui/lampEffect";
 import { FlipWords } from "@/components/ui/flipword";
 
@@ -15,13 +12,14 @@ export const metadata = {
   description: "Streamline your business processes",
 };
 
-export default function Login() {
-  const words = ["bookings", "orders", "campaigns", "payments"];
+const words = ["bookings", "orders", "campaigns", "payments"];
+
+const LoginPage = () => {
   return (
     <main className="flex min-h-screen bg-white text-black">
       <div className="hidden lg:block lg:fixed inset-y-0 left-0 w-1/2 m-3">
         <LampContainer>
-          <h1 className=" mx-auto">
+          <h1 className="mx-auto">
             Manage
             <FlipWords className="text-white" words={words} /> <br />
             <span className="text-2xl">
@@ -29,30 +27,6 @@ export default function Login() {
             </span>
           </h1>
         </LampContainer>
-
-        {/* <div className="relative h-full">
-          <Suspense
-            fallback={
-              <div className="absolute inset-0 w-full h-full object-cover bg-primaryGrey rounded-[32px]" />
-            }
-          >
-            <Image
-              src={ReaceptionImage}
-              alt="reception"
-              className="w-full h-full"
-            />
-          </Suspense>
-
-          <div className="absolute bottom-10  left-10 text-white max-w-md">
-            <h1 className="text-5xl font-display mb-4">
-              Streamline your business processes
-            </h1>
-            <p className="text-primaryGrey">
-              Increase efficiency and improve user experience, from reservation
-              to checkout. Manage orders and inventory like a pro.
-            </p>
-          </div>
-        </div> */}
       </div>
 
       <div className="w-full lg:w-1/2 lg:ml-[50%]">
@@ -71,7 +45,7 @@ export default function Login() {
             </div>
           </div>
 
-          <div className="flex-1 flex lg:items-center  mt-8 items-start lg:mt-0 justify-center px-8 lg:px-16">
+          <div className="flex-1 flex lg:items-center mt-8 items-start lg:mt-0 justify-center px-8 lg:px-16">
             <div className="w-full max-w-md">
               <h1 className="text-4xl text-center font-semibold mb-2">
                 Welcome Back
@@ -97,4 +71,6 @@ export default function Login() {
       </div>
     </main>
   );
-}
+};
+
+export default LoginPage;

@@ -17,25 +17,26 @@ import { FaRegEnvelope } from "react-icons/fa6";
 import { useQueryClient } from "react-query";
 import { encryptPayload, decryptPayload } from "@/lib/encrypt-decrypt";
 
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
+interface FormErrors {
+  email?: string[];
+  password?: string[];
+}
+
 const LoginForm = () => {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { setLoginDetails } = useGlobalContext();
   const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState(null);
-  const [loginFormData, setLoginFormData] = useState({
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [loginFormData, setLoginFormData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
-
-  const handleInputChange = (e: { target: { name: any; value: any } }) => {
-    setResponse(null);
-    const { name, value } = e.target;
-    setLoginFormData((prevFormData) => ({
-      ...prevFormData,
-      [name]: value,
-    }));
-  };
 
   const routePaths: Record<number | "default", string> = {
     0: "/auth/business-information",
@@ -43,50 +44,90 @@ const LoginForm = () => {
     default: "/auth/select-business",
   };
 
-  const submitFormData = async (e: { preventDefault: () => void }) => {
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
+    
+    if (!loginFormData.email) {
+      newErrors.email = ["Email is required"];
+    } else if (!/\S+@\S+\.\S+/.test(loginFormData.email)) {
+      newErrors.email = ["Please enter a valid email address"];
+    }
+    
+    if (!loginFormData.password) {
+      newErrors.password = ["Password is required"];
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setLoginFormData((prevFormData) => ({
+      ...prevFormData,
+      [name]: value,
+    }));
+    // Clear error when user starts typing
+    if (errors[name as keyof FormErrors]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: undefined,
+      }));
+    }
+  };
+
+  const handleLoginSuccess = (decryptedData: any) => {
+    const { businesses, token } = decryptedData.data;
+    
+    saveJsonItemToLocalStorage("userInformation", decryptedData.data);
+    setLoginDetails(loginFormData);
+    saveJsonItemToLocalStorage("business", businesses);
+    setTokenCookie("token", token);
+
+    const redirectPath = businesses?.length >= 0
+      ? routePaths[businesses.length] || routePaths.default
+      : routePaths.default;
+
+    router.push(redirectPath);
+  };
+
+  const handleLoginError = (error: any) => {
+    if (error.error.responseCode === "HB016") {
+      router.push(`/auth/forget-password?email=${loginFormData.email}&screen=${2}`);
+      return;
+    }
+    
+    notify({
+      title: "Error!",
+      text: error.error.responseDescription || "An unexpected error occurred during login",
+      type: "error",
+    });
+  };
+
+  const submitFormData = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
 
     try {
       queryClient.clear();
       localStorage.clear();
       setLoading(true);
-      setResponse(null);
+      setErrors({});
 
       const response = await loginUser(loginFormData);
 
       if (response?.data?.response) {
         const decryptedData = decryptPayload(response.data.response);
-
         if (decryptedData?.data) {
-          const { businesses, token } = decryptedData.data;
-
-          saveJsonItemToLocalStorage("userInformation", decryptedData.data);
-          setLoginDetails(loginFormData);
-          saveJsonItemToLocalStorage("business", businesses);
-          setTokenCookie("token", token);
-
-          const redirectPath =
-            businesses?.length >= 0
-              ? routePaths[businesses.length] || routePaths.default
-              : routePaths.default;
-
-          router.push(redirectPath);
+          handleLoginSuccess(decryptedData);
         }
-      } else {
-        const decryptedData = decryptPayload(response?.response?.data.response);
-
+      } else if (response?.response?.data.response) {
+        const decryptedData = decryptPayload(response.response.data.response);
         if (decryptedData?.error) {
-          if (decryptedData.error.responseCode === "HB016") {
-            return router.push(
-              `/auth/forget-password?email=${loginFormData.email}&screen=${2}`
-            );
-          }
-          notify({
-            title: "Error!",
-            text: decryptedData.error.responseDescription,
-            type: "error",
-          });
-          return;
+          handleLoginError(decryptedData);
         }
       }
     } catch (error: any) {
@@ -103,9 +144,9 @@ const LoginForm = () => {
   return (
     <form onSubmit={submitFormData} autoComplete="off">
       <CustomInput
-        type="text"
+        type="email"
         name="email"
-        errorMessage={response?.errors?.email?.[0]}
+        errorMessage={errors.email?.[0]}
         onChange={handleInputChange}
         value={loginFormData.email}
         label="Email Address"
@@ -115,7 +156,7 @@ const LoginForm = () => {
 
       <Spacer y={6} />
       <CustomInput
-        errorMessage={response?.errors?.password?.[0]}
+        errorMessage={errors.password?.[0]}
         value={loginFormData.password}
         onChange={handleInputChange}
         type="password"
