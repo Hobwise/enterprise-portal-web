@@ -25,9 +25,16 @@ export const NavigationBanner = ({
 }) => {
   const router = useRouter();
   const [isVisible, setIsVisible] = useState(true);
-  const userInfo = getJsonItemFromLocalStorage('userInformation');
+  const [mounted, setMounted] = useState(false);
+  const [userInfo, setUserInfo] = useState<any>(null);
 
-  if (!isVisible) return null;
+  useEffect(() => {
+    setMounted(true);
+    const info = getJsonItemFromLocalStorage('userInformation');
+    setUserInfo(info);
+  }, []);
+
+  if (!mounted || !isVisible) return null;
 
   return (
     <div className='bg-amber-50 border border-amber-100 px-4 py-3 flex items-center gap-3 justify-between mx-auto relative'>
@@ -41,7 +48,7 @@ export const NavigationBanner = ({
         </div>
       </div>
       <div className='flex items-center gap-3'>
-        {userInfo.isOwner && (
+        {userInfo?.isOwner && (
           <Button
             onClick={() => router.push('/dashboard/settings/subscriptions')}
             className='px-6 py-1.5 rounded-md text-sm font-medium bg-[#D7A913] text-white relative group'
@@ -72,8 +79,15 @@ export const useCheckExpiry = (
 ): CheckExpiryResult => {
   const [message, setMessage] = useState<string>('');
   const [showBanner, setShowBanner] = useState<boolean>(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const updateMessage = () => {
       const now = moment();
       const dueMoment = moment(nextPaymentDate);
@@ -102,13 +116,20 @@ export const useCheckExpiry = (
     updateMessage();
     const interval = setInterval(updateMessage, 86400000);
     return () => clearInterval(interval);
-  }, [nextPaymentDate, daysThreshold]);
+  }, [nextPaymentDate, daysThreshold, mounted]);
 
   return { message, showBanner };
 };
 
 export const SubscriptionNoticePopup = () => {
-  const userData = getJsonItemFromLocalStorage('userInformation');
+  const [mounted, setMounted] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
+
+  useEffect(() => {
+    setMounted(true);
+    const data = getJsonItemFromLocalStorage('userInformation');
+    setUserData(data);
+  }, []);
 
   const { message, showBanner } = useCheckExpiry(
     userData?.subscription?.nextPaymentDate,
@@ -117,15 +138,19 @@ export const SubscriptionNoticePopup = () => {
 
   const router = useRouter();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+
   useEffect(() => {
     if (
+      mounted &&
       userData?.subscription?.onTrialVersion === false &&
       userData?.subscription?.isActive === true &&
       showBanner
     ) {
       onOpen();
     }
-  }, [showBanner]);
+  }, [showBanner, userData, mounted]);
+
+  if (!mounted) return null;
 
   return (
     <Modal
@@ -151,7 +176,7 @@ export const SubscriptionNoticePopup = () => {
                   <p className='text-sm text-grey500 text-center md:w-[90%] w-[100%]'>
                     Your subscription will expire{' '}
                     <span className='font-bold'>{message}</span>.{' '}
-                    {userData.role === 1
+                    {userData?.role === 1
                       ? 'Contact your management'
                       : 'Renew now to avoid service interruption'}
                   </p>
@@ -159,12 +184,11 @@ export const SubscriptionNoticePopup = () => {
               </div>
 
               <div className='flex flex-col gap-2'>
-                {userData.isOwner && (
+                {userData?.isOwner && (
                   <CustomButton
                     className='h-[50px]  text-white'
                     onClick={() => {
                       onOpenChange();
-
                       router.push('/dashboard/settings/subscriptions');
                     }}
                     type='submit'

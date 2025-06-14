@@ -3,7 +3,30 @@ import { getMenuConfiguration } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import React, { useContext, useState } from 'react';
 
-const AppContext = React.createContext();
+interface GlobalContextType {
+  setPage: (page: number) => void;
+  page: number;
+  rowsPerPage: number;
+  setRowsPerPage: (rows: number) => void;
+  tableStatus: string;
+  setTableStatus: (status: string) => void;
+  menuIdTable: string;
+  setMenuIdTable: (id: string) => void;
+  isOpenDelete: boolean;
+  setIsOpenDelete: (value: boolean) => void;
+  isOpenEdit: boolean;
+  setIsOpenEdit: (value: boolean) => void;
+  isOpenDeleteVariety: boolean;
+  setIsOpenDeleteVariety: (value: boolean) => void;
+  isOpenEditVariety: boolean;
+  setIsOpenEditVariety: (value: boolean) => void;
+  toggleModalDelete: () => void;
+  toggleModalEdit: () => void;
+  toggleModalDeleteVariety: () => void;
+  toggleModalEditVariety: () => void;
+}
+
+const AppContext = React.createContext<GlobalContextType | undefined>(undefined);
 
 const AppProvider = ({ children }: any) => {
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -126,7 +149,11 @@ const AppProvider = ({ children }: any) => {
 };
 // make sure use
 export const useGlobalContext = () => {
-  return useContext(AppContext);
+  const context = useContext(AppContext);
+  if (context === undefined) {
+    throw new Error('useGlobalContext must be used within an AppProvider');
+  }
+  return context;
 };
 
 export { AppContext, AppProvider };

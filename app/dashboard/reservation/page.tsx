@@ -24,7 +24,6 @@ import { useGlobalContext } from "@/hooks/globalProvider";
 import useTextCopy from "@/hooks/useTextCopy";
 import { companyInfo } from "@/lib/companyInfo";
 import {
-  CustomLoading,
   dynamicExportConfig,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
@@ -124,7 +123,6 @@ const Reservation: React.FC = () => {
   };
 
   // Handle loading state
-  if (isLoading) return <CustomLoading />;
   
   // Handle error state or undefined data
   if (isError || !data) return <Error onClick={() => refetch()} />;

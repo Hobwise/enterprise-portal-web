@@ -6,7 +6,6 @@ import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { downloadCSV } from "@/lib/downloadToExcel";
 import {
-  CustomLoading,
   dynamicExportConfig,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
@@ -72,7 +71,6 @@ const QRCode: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (

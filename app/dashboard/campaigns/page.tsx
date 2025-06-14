@@ -14,7 +14,6 @@ import CreateCampaign from "@/components/ui/dashboard/campaign/createCampaign";
 import useCampaign from "@/hooks/cachedEndpoints/useCampaign";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
-import { CustomLoading } from "@/lib/utils";
 import { IoMdAdd } from "react-icons/io";
 
 const Compaigns: React.FC = () => {
@@ -49,7 +48,6 @@ const Compaigns: React.FC = () => {
     }));
   }, [data, searchQuery]);
 
-  if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (

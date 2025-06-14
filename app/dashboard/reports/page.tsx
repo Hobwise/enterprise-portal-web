@@ -9,7 +9,7 @@ import OrderReportDetails from '@/components/ui/dashboard/reports/orderReports';
 import PaymentReportDetails from '@/components/ui/dashboard/reports/paymentReports';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useReport from '@/hooks/cachedEndpoints/useReport';
-import { CustomLoading, formatDateTimeForPayload2 } from '@/lib/utils';
+import {  formatDateTimeForPayload2 } from '@/lib/utils';
 import { getLocalTimeZone, today } from '@internationalized/date';
 import {
   Button,
@@ -134,7 +134,7 @@ const Reports: React.FC = () => {
   ];
 
   return (
-    <Suspense fallback={<CustomLoading />}>
+    <Suspense>
       <div className="flex flex-col w-full">
         <div className="flex flex-row flex-wrap justify-between mb-4">
           <div>

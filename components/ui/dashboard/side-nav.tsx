@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import { generateRefreshToken } from "@/app/api/controllers/auth";
 import CompanyLogo from "@/components/logo";
 import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
@@ -23,12 +22,11 @@ import {
   DropdownMenu,
   DropdownTrigger,
   Skeleton,
-  Spinner,
   useDisclosure,
 } from "@nextui-org/react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { FiLogOut } from "react-icons/fi";
 import { GoPlus } from "react-icons/go";
 import { IoIosArrowDown } from "react-icons/io";
@@ -37,21 +35,73 @@ import LogoutModal from "../logoutModal";
 import { SIDENAV_ITEMS } from "./constants";
 import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
+import { useQueryClient } from "react-query";
+
+// Loading skeleton component
+const SideNavSkeleton = () => (
+  <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
+    <div className="flex flex-col w-full h-full relative">
+      <div className="flex-shrink-0">
+        <div className="flex flex-row items-center justify-center md:justify-start md:px-8 md:py-10 w-full">
+          <CompanyLogo
+            textColor="text-white font-lexend text-[28px] font-[600]"
+            containerClass="flex gap-2 items-center"
+          />
+        </div>
+      </div>
+      <div className="space-y-4 px-4">
+        {[1, 2, 3, 4, 5].map((item) => (
+          <div key={item} className="flex items-center gap-4">
+            <Skeleton className="w-6 h-6 rounded-md" />
+            <Skeleton className="h-4 w-32 rounded-lg" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
+  const [hasRefreshed, setHasRefreshed] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [business, setBusiness] = useState<any[]>([]);
+  const [userInformation, setUserInformation] = useState<any>(null);
+  const queryClient = useQueryClient();
 
-  const { data: businessDetails, isLoading } = useGetBusiness();
+  // Initialize client-side state
+  useEffect(() => {
+    setIsClient(true);
+    const storedBusiness = getJsonItemFromLocalStorage("business") || [];
+    const storedUserInfo = getJsonItemFromLocalStorage("userInformation");
+    setBusiness(storedBusiness);
+    setUserInformation(storedUserInfo);
+  }, []);
+
+  const { data: businessDetails, isLoading: isBusinessLoading } = useGetBusiness();
   const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
-
   const {
     userRolePermissions,
     role,
     isLoading: isPermissionsLoading,
   } = usePermission();
 
-  const business = getJsonItemFromLocalStorage("business") || [];
-  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  // Optimize token refresh to only happen when needed
+  useEffect(() => {
+    if (!isClient || !userInformation?.token || hasRefreshed) return;
+
+    try {
+      const tokenExpiration = new Date(userInformation.tokenExpiration + 'Z');
+      const now = new Date();
+      
+      if (tokenExpiration.getTime() - now.getTime() < 5 * 60 * 1000) {
+        refetch();
+        setHasRefreshed(true);
+      }
+    } catch (error) {
+      console.error('Error checking token expiration:', error);
+    }
+  }, [isClient, userInformation?.token, refetch, hasRefreshed]);
 
   const refreshToken = async () => {
     const userData = getJsonItemFromLocalStorage("userInformation");
@@ -78,20 +128,25 @@ const SideNav = () => {
           tokenExpiration,
         } = decryptedData?.data;
 
+        const formattedExpiration = new Date(tokenExpiration + 'Z').toISOString();
+
         saveJsonItemToLocalStorage("userInformation", {
           ...userData,
           token: newToken,
           refreshToken: newRefreshToken,
-          tokenExpiration,
+          tokenExpiration: formattedExpiration,
         });
         setTokenCookie("token", newToken);
+        
+        queryClient.invalidateQueries();
+        
         return newToken;
       } else {
         resetLoginInfo();
       }
     } catch (error) {
       resetLoginInfo();
-      console.log(error);
+      console.error("Token refresh failed:", error);
     }
   };
 
@@ -129,65 +184,10 @@ const SideNav = () => {
   const canAccessMultipleLocations =
     subscription?.planCapabilities?.canAccessMultipleLocations;
 
-  const filteredItems = isPermissionsLoading
-    ? []
-    : SIDENAV_ITEMS.filter((item) => {
-        if (
-          item.title === "Menu" &&
-          role === 1 &&
-          userRolePermissions?.canViewMenu === false
-        )
-          return false;
-        if (
-          item.title === "Campaigns" &&
-          role === 1 &&
-          userRolePermissions?.canViewCampaign === false
-        )
-          return false;
-        if (
-          item.title === "Reservation" &&
-          role === 1 &&
-          userRolePermissions?.canViewReservation === false
-        )
-          return false;
-        if (
-          item.title === "Payments" &&
-          userRolePermissions?.canViewPayment === false &&
-          role === 1
-        )
-          return false;
-        if (
-          item.title === "Orders" &&
-          userRolePermissions?.canViewOrder === false &&
-          role === 1
-        )
-          return false;
-        if (
-          item.title === "Reports" &&
-          userRolePermissions?.canViewReport === false &&
-          role === 1
-        )
-          return false;
-        if (
-          item.title === "Bookings" &&
-          userRolePermissions?.canViewBooking === false &&
-          role === 1
-        )
-          return false;
-        if (
-          item.title === "Dashboard" &&
-          userRolePermissions?.canViewDashboard === false &&
-          role === 1
-        )
-          return false;
-        if (
-          item.title === "Quick Response" &&
-          userRolePermissions?.canViewQR === false &&
-          role === 1
-        )
-          return false;
-        return true;
-      });
+  // Show loading state during hydration
+  if (!isClient) {
+    return <SideNavSkeleton />;
+  }
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
@@ -214,14 +214,72 @@ const SideNav = () => {
         >
           <div className="flex flex-col space-y-1 md:px-2 pb-10">
             {isPermissionsLoading ? (
-              <div className="grid place-content-center mt-6">
-                <div className="space-y-2 flex justify-center flex-col">
-                  <Spinner size="sm" />
-                  <p className="italic text-gray-400">Loading...</p>
-                </div>
+              <div className="space-y-4 px-4">
+                {[1, 2, 3, 4, 5].map((item) => (
+                  <div key={item} className="flex items-center gap-4">
+                    <Skeleton className="w-6 h-6 rounded-md" />
+                    <Skeleton className="h-4 w-32 rounded-lg" />
+                  </div>
+                ))}
               </div>
             ) : (
-              filteredItems.map((item, idx) => {
+              SIDENAV_ITEMS.filter((item) => {
+                if (
+                  item.title === "Menu" &&
+                  role === 1 &&
+                  userRolePermissions?.canViewMenu === false
+                )
+                  return false;
+                if (
+                  item.title === "Campaigns" &&
+                  role === 1 &&
+                  userRolePermissions?.canViewCampaign === false
+                )
+                  return false;
+                if (
+                  item.title === "Reservation" &&
+                  role === 1 &&
+                  userRolePermissions?.canViewReservation === false
+                )
+                  return false;
+                if (
+                  item.title === "Payments" &&
+                  userRolePermissions?.canViewPayment === false &&
+                  role === 1
+                )
+                  return false;
+                if (
+                  item.title === "Orders" &&
+                  userRolePermissions?.canViewOrder === false &&
+                  role === 1
+                )
+                  return false;
+                if (
+                  item.title === "Reports" &&
+                  userRolePermissions?.canViewReport === false &&
+                  role === 1
+                )
+                  return false;
+                if (
+                  item.title === "Bookings" &&
+                  userRolePermissions?.canViewBooking === false &&
+                  role === 1
+                )
+                  return false;
+                if (
+                  item.title === "Dashboard" &&
+                  userRolePermissions?.canViewDashboard === false &&
+                  role === 1
+                )
+                  return false;
+                if (
+                  item.title === "Quick Response" &&
+                  userRolePermissions?.canViewQR === false &&
+                  role === 1
+                )
+                  return false;
+                return true;
+              }).map((item, idx) => {
                 return <MenuItem key={idx} item={item} />;
               })
             )}
@@ -239,18 +297,18 @@ const SideNav = () => {
             }}
           >
             <DropdownTrigger>
-              {isLoading ? (
-                <div className="w-full flex items-center gap-3   px-5 py-8">
+              {isBusinessLoading ? (
+                <div className="w-full flex items-center gap-3 px-5 py-8">
                   <div>
                     <Skeleton className="animate-pulse flex rounded-full w-12 h-12" />
                   </div>
-                  <div className="w-full flex flex-col gap-2 ">
+                  <div className="w-full flex flex-col gap-2">
                     <Skeleton className="animate-pulse h-2 w-3/5 rounded-lg" />
                     <Skeleton className="animate-pulse h-2 w-4/5 rounded-lg" />
                   </div>
                 </div>
               ) : (
-                <div className="flex cursor-pointer justify-center items-center px-2 py-8 gap-4 w-full ">
+                <div className="flex cursor-pointer justify-center items-center px-2 py-8 gap-4 w-full">
                   <div>
                     <Avatar
                       isBordered
@@ -263,7 +321,7 @@ const SideNav = () => {
                     <span className="text-[14px] font-[600]">
                       {business[0]?.businessName}
                     </span>
-                    <div className="text-[12px]  font-[400] pr-5">
+                    <div className="text-[12px] font-[400] pr-5">
                       {business[0]?.city}
                       {business[0]?.city && ","} {business[0]?.state}
                     </div>
@@ -279,7 +337,7 @@ const SideNav = () => {
               aria-label="Dropdown menu to switch businesses"
               className="max-h-[300px] overflow-y-auto"
             >
-              {userInformation?.isOwner &&
+              {isClient && userInformation?.isOwner &&
                 canAccessMultipleLocations &&
                 businessDetailsList?.map((item: any) => {
                   return (
@@ -300,7 +358,6 @@ const SideNav = () => {
                           <span className="font-[500] text-[14px]">
                             {item?.name}
                           </span>
-
                           <span className="text-xs text-secondaryGrey">
                             {item?.city}
                           </span>
@@ -310,12 +367,12 @@ const SideNav = () => {
                   );
                 })}
 
-              {userInformation?.isOwner && canAccessMultipleLocations && (
+              {isClient && userInformation?.isOwner && canAccessMultipleLocations && (
                 <DropdownItem
                   key="add another business"
                   onClick={toggleBusinessModal}
                 >
-                  <div className="flex items-center gap-3 ">
+                  <div className="flex items-center gap-3">
                     <div className="p-2 rounded-md bg-[#7182A3]">
                       <GoPlus className="text-[20px] font-[700]" />
                     </div>
@@ -331,7 +388,7 @@ const SideNav = () => {
                 color="danger"
                 onClick={onOpenChange}
               >
-                <div className="flex items-center gap-3 ">
+                <div className="flex items-center gap-3">
                   <div className="p-2 rounded-md">
                     <FiLogOut className="text-[20px]" />
                   </div>
@@ -357,8 +414,20 @@ export default SideNav;
 const MenuItem = ({ item }: { item: SideNavItem }) => {
   const pathname = usePathname();
   const [subMenuOpen, setSubMenuOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
+  const router = useRouter();
+
   const toggleSubMenu = () => {
     setSubMenuOpen(!subMenuOpen);
+  };
+
+  const handleNavigation = async (path: string) => {
+    setIsNavigating(true);
+    try {
+      await router.push(path);
+    } finally {
+      setIsNavigating(false);
+    }
   };
 
   return (
@@ -385,28 +454,28 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
             <div className="my-2 ml-12 flex flex-col space-y-4">
               {item.subMenuItems?.map((subItem, idx) => {
                 return (
-                  <Link
-                    prefetch={true}
+                  <button
                     key={idx}
-                    href={subItem.path}
-                    className={`text-white ${
+                    onClick={() => handleNavigation(subItem.path)}
+                    disabled={isNavigating}
+                    className={`text-white text-left ${
                       subItem.path === pathname ? "font-bold" : ""
-                    }`}
+                    } ${isNavigating ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
                     <span>{subItem.title}</span>
-                  </Link>
+                  </button>
                 );
               })}
             </div>
           )}
         </>
       ) : (
-        <Link
-          prefetch={true}
-          href={item.path}
-          className={`text-white flex flex-row space-x-4 items-center py-[13px] px-6 rounded-[4px] transition hover:bg-[#2B3342] ${
+        <button
+          onClick={() => handleNavigation(item.path)}
+          disabled={isNavigating}
+          className={`text-white flex flex-row space-x-4 items-center py-[13px] px-6 rounded-[4px] transition hover:bg-[#2B3342] w-full ${
             item.path === pathname ? "bg-[#2B3342]" : ""
-          }`}
+          } ${isNavigating ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           {item.title === "Menu" ? (
             <PiBookOpenTextLight className="font-bold text-xl" />
@@ -415,7 +484,7 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
           )}
 
           <span className="font-[400] text-[14px] flex">{item.title}</span>
-        </Link>
+        </button>
       )}
     </div>
   );
