@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import {
-  CustomLoading,
   dynamicExportConfig,
   getJsonItemFromLocalStorage,
   notify,
@@ -145,7 +144,6 @@ const Bookings: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (

@@ -17,7 +17,6 @@ import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
 import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import {
-  CustomLoading,
   dynamicExportConfig,
   formatPrice,
   getJsonItemFromLocalStorage,
@@ -192,7 +191,7 @@ const Menu: React.FC = () => {
     }
   };
 
-  if (isLoading || isMenuLoading) return <CustomLoading />;
+  // if (isLoading || isMenuLoading) return <CustomLoading />;
   if (isError || isMenuError) return <Error onClick={() => refetch()} />;
 
   const exportCSV = async () => {

@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import {
-  CustomLoading,
   dynamicExportConfig,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
@@ -89,8 +88,6 @@ const Orders: React.FC = () => {
       toast.error("Export failed, please try again");
     }
   };
-
-  if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (
