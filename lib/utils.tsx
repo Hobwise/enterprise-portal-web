@@ -189,31 +189,31 @@ export const imageCompressOptions = {
   useWebWorker: true,
 };
 
-// export const CustomLoading = () => {
-//   return (
-//     <div
-//       className={`absolute top-0 left-0 w-full h-full  flex flex-col justify-center items-center`}
-//     >
-//       <div className="animate-bounce">
-//         <Image
-//           src={LoadingAvatar}
-//           style={{ objectFit: "cover" }}
-//           alt={`${companyInfo.name} logo`}
-//           className="w-[60px] h-[60px]"
-//         />
-//       </div>
-//       <div className="leading-tight flex flex-col text-center">
-//         <span className=" font-[600] text-[24px]   text-black">
-//           Hang on a sec!
-//         </span>
+export const CustomLoading = () => {
+  return (
+    <div
+      className={`absolute top-0 left-0 w-full h-full  flex flex-col justify-center items-center`}
+    >
+      <div className="animate-bounce">
+        <Image
+          src={LoadingAvatar}
+          style={{ objectFit: "cover" }}
+          alt={`${companyInfo.name} logo`}
+          className="w-[60px] h-[60px]"
+        />
+      </div>
+      <div className="leading-tight flex flex-col text-center">
+        <span className=" font-[600] text-[24px]   text-black">
+          Hang on a sec!
+        </span>
 
-//         <span className="text-sm font-[400]    text-[#475367] ">
-//           Just a moment...
-//         </span>
-//       </div>
-//     </div>
-//   );
-// };
+        <span className="text-sm font-[400]    text-[#475367] ">
+          Just a moment...
+        </span>
+      </div>
+    </div>
+  );
+};
 
 export const formatPrice = (price: any) => {
   const formatter = new Intl.NumberFormat("en-NG", {

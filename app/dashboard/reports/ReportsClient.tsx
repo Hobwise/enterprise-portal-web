@@ -1,7 +1,6 @@
 'use client';
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react';
-
 import Error from '@/components/error';
 import AuditReportDetails from '@/components/ui/dashboard/reports/auditReport';
 import BookingReportDetails from '@/components/ui/dashboard/reports/bookingReport';
@@ -9,8 +8,8 @@ import OrderReportDetails from '@/components/ui/dashboard/reports/orderReports';
 import PaymentReportDetails from '@/components/ui/dashboard/reports/paymentReports';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useReport from '@/hooks/cachedEndpoints/useReport';
-import {  formatDateTimeForPayload2 } from '@/lib/utils';
-import { getLocalTimeZone, today, DateValue } from '@internationalized/date';
+import { formatDateTimeForPayload2 } from '@/lib/utils';
+import { getLocalTimeZone, today } from '@internationalized/date';
 import {
   Button,
   Chip,
@@ -25,25 +24,23 @@ import {
   Tab,
   Tabs,
   useDisclosure,
-  Skeleton,
-  Selection,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { MdKeyboardArrowDown } from 'react-icons/md';
+import CustomLoading from '@/components/ui/loading';
 
-const Reports: React.FC = () => {
+const ReportsClient: React.FC = () => {
   const router = useRouter();
 
   const { userRolePermissions, role } = usePermission();
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
-  const initialDate = today(getLocalTimeZone());
-  const [value, setValue] = React.useState<{ start: DateValue; end: DateValue }>({
-    start: initialDate,
-    end: initialDate,
+  const [value, setValue] = React.useState({
+    start: null,
+    end: null,
   });
-  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set(["This week"]));
+  const [selectedKeys, setSelectedKeys] = useState(new Set(["This week"]));
   const selectedValue = useMemo(
-    () => Array.from(selectedKeys as Set<string>).join(", ").replaceAll("_", " "),
+    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
     [selectedKeys]
   );
   const [previousSelectedValue, setPreviousSelectedValue] =
@@ -66,7 +63,7 @@ const Reports: React.FC = () => {
   };
 
   const checkValue = () => {
-    return value.start && value.end;
+    return value.start !== null && value.end !== null;
   };
 
   const shouldFetchReport =
@@ -96,7 +93,7 @@ const Reports: React.FC = () => {
     }
   }, [shouldFetchReport, selectedValue]);
 
-  const handleDateChange = (newValue: { start: DateValue; end: DateValue }) => {
+  const handleDateChange = (newValue: any) => {
     setValue(newValue);
     if (newValue.start && newValue.end) {
       onClose();
@@ -137,7 +134,7 @@ const Reports: React.FC = () => {
   ];
 
   return (
-    <Suspense fallback={null}>
+    <Suspense>
       <div className="flex flex-col w-full">
         <div className="flex flex-row flex-wrap justify-between mb-4">
           <div>
@@ -176,7 +173,7 @@ const Reports: React.FC = () => {
                   selectionMode="single"
                   className="text-black"
                   selectedKeys={selectedKeys}
-                  onSelectionChange={(keys) => setSelectedKeys(keys)}
+                  onSelectionChange={setSelectedKeys}
                 >
                   <DropdownItem key="Today">Today</DropdownItem>
                   <DropdownItem key="This week">This week</DropdownItem>
@@ -191,11 +188,7 @@ const Reports: React.FC = () => {
         </div>
 
         {isLoading ? (
-          <div className="w-full space-y-4">
-            <Skeleton className="w-full h-12 rounded-lg" />
-            <Skeleton className="w-full h-32 rounded-lg" />
-            <Skeleton className="w-full h-64 rounded-lg" />
-          </div>
+          <CustomLoading />
         ) : (
           <div className="w-full relative md:-top-14 -top-2">
             <div className="mb-4  flex  md:justify-end justify-start">
@@ -253,4 +246,4 @@ const Reports: React.FC = () => {
   );
 };
 
-export default Reports;
+export default ReportsClient; 
