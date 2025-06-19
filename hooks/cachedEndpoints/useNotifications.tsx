@@ -46,27 +46,3 @@ const useNotification = (page: number, pageSize: number) => {
 };
 
 export default useNotification;
-
-
-
-// const connection = new signalR.HubConnectionBuilder()
-// .withUrl("https://sandbox-api.hobwise.com/notificationHub", {
-//   accessTokenFactory: () => jwtToken
-// })
-// .configureLogging(signalR.LogLevel.Information)
-// .build();
-
-// connection.on("ReceiveNotification", data => {
-//   console.log("data", data);
-// document.getElementById("output").innerHTML += `<p><strong>New Notification:</strong> ${data.notification.message}</p>`;
-// });
-
-// connection.start()
-// .then(() => {
-//   console.log("SignalR connected.");
-//   document.getElementById("output").innerHTML += `<p>Connected to SignalR</p>`;
-// })
-// .catch(err => {
-//   console.error(err);
-//   document.getElementById("output").innerHTML += `<p style="color:red;">Connection failed: ${err}</p>`;
-// });

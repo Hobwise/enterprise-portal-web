@@ -1,6 +1,5 @@
 'use client';
 
-import useNotificationCount from '@/hooks/cachedEndpoints/useNotificationCount';
 import useNotification from '@/hooks/cachedEndpoints/useNotifications';
 import useSubscription from '@/hooks/cachedEndpoints/useSubscription';
 import useUser from '@/hooks/cachedEndpoints/useUser';
@@ -21,7 +20,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { FiLogOut } from 'react-icons/fi';
 import { IoIosArrowDown } from 'react-icons/io';
 import { MdOutlinePerson } from 'react-icons/md';
@@ -33,21 +32,26 @@ import { SIDENAV_ITEMS, headerRouteMapping } from './constants';
 import Notifications from './notifications/notifications';
 import { NavigationBanner, useCheckExpiry } from './subscription-notification';
 
+// NotificationFetcher: fetches notifications only when mounted (popover open)
+const NotificationFetcher = ({ page, pageSize, ...props }: any) => {
+  const { data: notifData, isLoading, isError, refetch } = useNotification(page, pageSize);
+  return (
+    <Notifications
+      notifData={notifData}
+      refetch={refetch}
+      loadMore={props.loadMore}
+      isLoading={isLoading}
+      isError={isError}
+    />
+  );
+};
+
 const Header = () => {
   const page = 1;
-
   const [pageSize, setPageSize] = useState(10);
+  const [notifPopoverOpen, setNotifPopoverOpen] = useState(false);
 
   const { isOpen, onOpenChange } = useDisclosure();
-  const { data: notificationCount, refetch: refetchCount } =
-    useNotificationCount();
-  const {
-    data: notifData,
-    isLoading,
-    isError,
-    refetch,
-  } = useNotification(page, pageSize);
-
   const { data } = useUser();
 
   const pathname = usePathname();
@@ -63,11 +67,9 @@ const Header = () => {
     }
   };
 
-  const loadMore = () => {
-    if (notifData?.hasNext) {
-      setPageSize((prevSize) => prevSize + 10);
-    }
-  };
+  const loadMore = useCallback(() => {
+    setPageSize((prevSize) => prevSize + 10);
+  }, []);
 
   const { data: subscription } = useSubscription();
 
@@ -138,31 +140,23 @@ const Header = () => {
 
           <div className='hidden md:flex items-center space-x-8'>
             <div className='flex items-center space-x-4'>
-              <Popover placement='bottom'>
+              <Popover placement='bottom' onOpenChange={setNotifPopoverOpen} isOpen={notifPopoverOpen}>
                 <PopoverTrigger>
-                  <Badge
-                    className='cursor-pointer'
-                    content={notificationCount === 0 ? '' : notificationCount}
-                    size='sm'
-                    color='danger'
-                  >
+                  <Badge className='cursor-pointer' size='sm' color='danger'>
                     <PopoverTrigger>
                       <SlBell className='text-[#494E58] h-5 w-5 cursor-pointer' />
                     </PopoverTrigger>
                   </Badge>
                 </PopoverTrigger>
-                {notifData?.notifications?.length > 0 && (
-                  <PopoverContent className=''>
-                    <Notifications
-                      notifData={notifData}
-                      refetch={refetch}
+                <PopoverContent className=''>
+                  {notifPopoverOpen && (
+                    <NotificationFetcher
+                      page={page}
+                      pageSize={pageSize}
                       loadMore={loadMore}
-                      isLoading={isLoading}
-                      isError={isError}
-                      refetchCount={refetchCount}
                     />
-                  </PopoverContent>
-                )}
+                  )}
+                </PopoverContent>
               </Popover>
 
               {/* <span>

@@ -75,7 +75,7 @@ export async function uploadFilemultipleMenuItem(
 
     return data;
   } catch (error) {
-    return error.response;
+    return (error as any).response;
   }
 }
 export async function getMenuByBusiness(
