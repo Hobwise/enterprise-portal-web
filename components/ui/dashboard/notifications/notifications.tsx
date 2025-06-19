@@ -17,7 +17,6 @@ const Notifications = ({
   isError,
   notifData,
   refetch,
-  refetchCount,
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
   const router = useRouter();
@@ -27,13 +26,11 @@ const Notifications = ({
   const markAsRead = async (id: string) => {
     await postMarkAsRead(id);
     refetch();
-    refetchCount();
   };
 
   const markAsAllRead = async () => {
     await postMarkAllAsRead(business[0].businessId);
     refetch();
-    refetchCount();
     setExpandedMessages([]);
   };
 

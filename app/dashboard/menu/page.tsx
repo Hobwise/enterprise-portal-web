@@ -33,6 +33,7 @@ import {
   Spacer,
   Tooltip,
   useDisclosure,
+  Skeleton,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import {
@@ -48,6 +49,52 @@ import toast from 'react-hot-toast';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { RiDeleteBin6Line, RiEdit2Line } from 'react-icons/ri';
 import { VscLoading } from 'react-icons/vsc';
+
+const MenuSkeleton: React.FC = () => {
+  // Simulate 5 menu items
+  const items = Array.from({ length: 5 });
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex flex-row flex-wrap items-center mb-4 xl:mb-8 justify-between">
+        <div>
+          <div className="flex items-center">
+            <Skeleton className="h-7 w-32 rounded" />
+            <Skeleton className="h-7 w-8 rounded ml-2" />
+          </div>
+          <Skeleton className="h-4 w-40 mt-2 rounded" />
+        </div>
+        <div className="flex items-center flex-wrap gap-3">
+          <Skeleton className="h-10 w-60 rounded" />
+          <Skeleton className="h-10 w-32 rounded" />
+          <Skeleton className="h-10 w-32 rounded" />
+          <Skeleton className="h-10 w-40 rounded" />
+        </div>
+      </div>
+
+      {/* Menu List */}
+      <div className="space-y-4">
+        {items.map((_, idx) => (
+          <div
+            key={idx}
+            className="flex justify-between items-center border-b border-primaryGrey py-3"
+          >
+            <div>
+              <Skeleton className="h-5 w-32 rounded mb-2" />
+              <Skeleton className="h-4 w-24 rounded mb-1" />
+              <Skeleton className="h-4 w-28 rounded" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-6 w-6 rounded-full" />
+              <Skeleton className="h-6 w-6 rounded-full" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const Menu: React.FC = () => {
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -191,7 +238,7 @@ const Menu: React.FC = () => {
     }
   };
 
-  // if (isLoading || isMenuLoading) return <CustomLoading />;
+  if (isLoading || isMenuLoading) return <MenuSkeleton />;
   if (isError || isMenuError) return <Error onClick={() => refetch()} />;
 
   const exportCSV = async () => {
@@ -293,10 +340,9 @@ const Menu: React.FC = () => {
       </div>
       {data && data.length > 0 ? (
         <MenuList
-          menus={filteredItems}
+          menus={filteredItems || []}
           onOpen={onOpen}
           onOpenViewMenu={() => setIsOpenViewMenu(true)}
-          refetch={refetch}
           searchQuery={searchQuery}
         />
       ) : (

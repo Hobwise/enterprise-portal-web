@@ -75,7 +75,7 @@ export async function uploadFilemultipleMenuItem(
 
     return data;
   } catch (error) {
-    return error.response;
+    return (error as any).response;
   }
 }
 export async function getMenuByBusiness(
@@ -390,6 +390,30 @@ export async function exportGrid(
       headers,
       responseType: 'blob',
     });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getMenuCategories(businessId: string, cooperateId: string) {
+  const headers = businessId ? { businessId, cooperateId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.menuCategories, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getMenuItems(menuId: string, page: number, pageSize: number) {
+  try {
+    const data = await api.get(`${DASHBOARD.menuItems}?MenuId=${menuId}&Page=${page}&PageSize=${pageSize}`);
 
     return data;
   } catch (error) {

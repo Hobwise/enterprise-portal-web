@@ -4,7 +4,7 @@ import React, { useCallback, useMemo } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useGlobalContext } from './globalProvider';
 
-const usePagination = (arrayToMap: any, columns = [], visibleColumn = []) => {
+function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColumn: string[] = []) {
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
 
   // Convert these to useMemo to prevent unnecessary recalculations
@@ -97,7 +97,7 @@ const usePagination = (arrayToMap: any, columns = [], visibleColumn = []) => {
   const headerColumns = useMemo(() => {
     if (currentVisibleColumns === 'all') return columns;
 
-    return columns?.filter((column) =>
+    return columns?.filter((column: any) =>
       Array.from(currentVisibleColumns).includes(column.uid)
     );
   }, [currentVisibleColumns, columns]);
@@ -237,6 +237,6 @@ const usePagination = (arrayToMap: any, columns = [], visibleColumn = []) => {
     classNames,
     onClear,
   };
-};
+}
 
 export default usePagination;

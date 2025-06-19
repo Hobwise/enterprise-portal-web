@@ -1,19 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { generateRefreshToken } from "@/app/api/controllers/auth";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import CompanyLogo from "@/components/logo";
-import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
-import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
-import usePermission from "@/hooks/cachedEndpoints/usePermission";
-import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
-import { decryptPayload } from "@/lib/encrypt-decrypt";
-import {
-  getJsonItemFromLocalStorage,
-  resetLoginInfo,
-  saveJsonItemToLocalStorage,
-  setTokenCookie,
-} from "@/lib/utils";
 import {
   Avatar,
   Divider,
@@ -35,9 +23,37 @@ import LogoutModal from "../logoutModal";
 import { SIDENAV_ITEMS } from "./constants";
 import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
-import { useQueryClient } from "react-query";
+import React from "react";
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
 
-// Loading skeleton component
+interface Business {
+  businessId: string;
+  businessName: string;
+  city: string;
+  state: string;
+  businessAddress: string;
+  primaryColor: string;
+  secondaryColor: string;
+  businessContactEmail: string;
+  businessContactNumber: string;
+  logoImage?: string;
+}
+
+interface UserInformation {
+  token: string;
+  refreshToken: string;
+  tokenExpiration: string;
+  email: string;
+  isOwner: boolean;
+}
+
+interface LocalState {
+  business: Business[];
+  userInformation: UserInformation | null;
+  isOpenBusinessModal: boolean;
+}
+
+// Memoize the skeleton component
 const SideNavSkeleton = () => (
   <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
     <div className="flex flex-col w-full h-full relative">
@@ -61,374 +77,25 @@ const SideNavSkeleton = () => (
   </div>
 );
 
-const SideNav = () => {
-  const { isOpen, onOpenChange } = useDisclosure();
-  const [hasRefreshed, setHasRefreshed] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-  const [business, setBusiness] = useState<any[]>([]);
-  const [userInformation, setUserInformation] = useState<any>(null);
-  const queryClient = useQueryClient();
-
-  // Initialize client-side state
-  useEffect(() => {
-    setIsClient(true);
-    const storedBusiness = getJsonItemFromLocalStorage("business") || [];
-    const storedUserInfo = getJsonItemFromLocalStorage("userInformation");
-    setBusiness(storedBusiness);
-    setUserInformation(storedUserInfo);
-  }, []);
-
-  const { data: businessDetails, isLoading: isBusinessLoading } = useGetBusiness();
-  const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
-  const {
-    userRolePermissions,
-    role,
-    isLoading: isPermissionsLoading,
-  } = usePermission();
-
-  // Optimize token refresh to only happen when needed
-  useEffect(() => {
-    if (!isClient || !userInformation?.token || hasRefreshed) return;
-
-    try {
-      const tokenExpiration = new Date(userInformation.tokenExpiration + 'Z');
-      const now = new Date();
-      
-      if (tokenExpiration.getTime() - now.getTime() < 5 * 60 * 1000) {
-        refetch();
-        setHasRefreshed(true);
-      }
-    } catch (error) {
-      console.error('Error checking token expiration:', error);
-    }
-  }, [isClient, userInformation?.token, refetch, hasRefreshed]);
-
-  const refreshToken = async () => {
-    const userData = getJsonItemFromLocalStorage("userInformation");
-    const businesses = getJsonItemFromLocalStorage("business");
-
-    if (!userData) return null;
-
-    const { refreshToken, email } = userData;
-    const businessId = businesses[0].businessId;
-
-    try {
-      const response = await generateRefreshToken({
-        refreshToken,
-        businessId,
-        email,
-      });
-
-      if (response?.data?.response) {
-        const decryptedData = decryptPayload(response?.data?.response);
-
-        const {
-          token: newToken,
-          refreshToken: newRefreshToken,
-          tokenExpiration,
-        } = decryptedData?.data;
-
-        const formattedExpiration = new Date(tokenExpiration + 'Z').toISOString();
-
-        saveJsonItemToLocalStorage("userInformation", {
-          ...userData,
-          token: newToken,
-          refreshToken: newRefreshToken,
-          tokenExpiration: formattedExpiration,
-        });
-        setTokenCookie("token", newToken);
-        
-        queryClient.invalidateQueries();
-        
-        return newToken;
-      } else {
-        resetLoginInfo();
-      }
-    } catch (error) {
-      resetLoginInfo();
-      console.error("Token refresh failed:", error);
-    }
-  };
-
-  const toggleBtwBusiness = async (businessInfo: any) => {
-    const exists = business?.some(
-      (comparisonItem: any) => comparisonItem.businessId === businessInfo.id
-    );
-
-    const transformedArray = [businessInfo].map((item) => ({
-      businessId: item.id,
-      businessAddress: item.address,
-      state: item.state,
-      city: item.city,
-      businessName: item.name,
-      primaryColor: item.primaryBrandColour,
-      secondaryColor: item.secondaryBrandColour,
-      businessContactEmail: item.contactEmailAddress,
-      businessContactNumber: item.contactPhoneNumber,
-    }));
-
-    if (!exists) {
-      saveJsonItemToLocalStorage("business", transformedArray);
-
-      await refreshToken();
-      window.location.reload();
-    }
-  };
-
-  const [isOpenBusinessModal, setIsOpenBusinessModal] = useState(false);
-  const toggleBusinessModal = () => {
-    setIsOpenBusinessModal(!isOpenBusinessModal);
-  };
-
-  const { data: subscription } = useSubscription();
-  const canAccessMultipleLocations =
-    subscription?.planCapabilities?.canAccessMultipleLocations;
-
-  // Show loading state during hydration
-  if (!isClient) {
-    return <SideNavSkeleton />;
-  }
-
-  return (
-    <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
-      <div className="flex flex-col w-full h-full relative">
-        <div className="flex-shrink-0">
-          <Link
-            prefetch={true}
-            href="/dashboard"
-            className="flex flex-row items-center justify-center md:justify-start md:px-8 md:py-10 w-full"
-          >
-            <CompanyLogo
-              textColor="text-white font-lexend text-[28px] font-[600]"
-              containerClass="flex gap-2 items-center"
-            />
-          </Link>
-        </div>
-
-        <div
-          className="overflow-y-auto flex-grow"
-          style={{
-            height: "calc(100vh - 200px)",
-            maxHeight: "calc(100vh - 200px)",
-          }}
-        >
-          <div className="flex flex-col space-y-1 md:px-2 pb-10">
-            {isPermissionsLoading ? (
-              <div className="space-y-4 px-4">
-                {[1, 2, 3, 4, 5].map((item) => (
-                  <div key={item} className="flex items-center gap-4">
-                    <Skeleton className="w-6 h-6 rounded-md" />
-                    <Skeleton className="h-4 w-32 rounded-lg" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              SIDENAV_ITEMS.filter((item) => {
-                if (
-                  item.title === "Menu" &&
-                  role === 1 &&
-                  userRolePermissions?.canViewMenu === false
-                )
-                  return false;
-                if (
-                  item.title === "Campaigns" &&
-                  role === 1 &&
-                  userRolePermissions?.canViewCampaign === false
-                )
-                  return false;
-                if (
-                  item.title === "Reservation" &&
-                  role === 1 &&
-                  userRolePermissions?.canViewReservation === false
-                )
-                  return false;
-                if (
-                  item.title === "Payments" &&
-                  userRolePermissions?.canViewPayment === false &&
-                  role === 1
-                )
-                  return false;
-                if (
-                  item.title === "Orders" &&
-                  userRolePermissions?.canViewOrder === false &&
-                  role === 1
-                )
-                  return false;
-                if (
-                  item.title === "Reports" &&
-                  userRolePermissions?.canViewReport === false &&
-                  role === 1
-                )
-                  return false;
-                if (
-                  item.title === "Bookings" &&
-                  userRolePermissions?.canViewBooking === false &&
-                  role === 1
-                )
-                  return false;
-                if (
-                  item.title === "Dashboard" &&
-                  userRolePermissions?.canViewDashboard === false &&
-                  role === 1
-                )
-                  return false;
-                if (
-                  item.title === "Quick Response" &&
-                  userRolePermissions?.canViewQR === false &&
-                  role === 1
-                )
-                  return false;
-                return true;
-              }).map((item, idx) => {
-                return <MenuItem key={idx} item={item} />;
-              })
-            )}
-          </div>
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 bg-black">
-          <Divider className="bg-[#27272A] mx-auto h-[1px] w-[90%]" />
-          <Dropdown
-            style={{
-              width: "245px",
-            }}
-            classNames={{
-              content: "bg-[#2B3342] mb-3",
-            }}
-          >
-            <DropdownTrigger>
-              {isBusinessLoading ? (
-                <div className="w-full flex items-center gap-3 px-5 py-8">
-                  <div>
-                    <Skeleton className="animate-pulse flex rounded-full w-12 h-12" />
-                  </div>
-                  <div className="w-full flex flex-col gap-2">
-                    <Skeleton className="animate-pulse h-2 w-3/5 rounded-lg" />
-                    <Skeleton className="animate-pulse h-2 w-4/5 rounded-lg" />
-                  </div>
-                </div>
-              ) : (
-                <div className="flex cursor-pointer justify-center items-center px-2 py-8 gap-4 w-full">
-                  <div>
-                    <Avatar
-                      isBordered
-                      src={`data:image/jpeg;base64,${businessDetails?.logoImage}`}
-                      showFallback={true}
-                      name={business[0]?.businessName}
-                    />
-                  </div>
-                  <div className="flex flex-col w-[45%]">
-                    <span className="text-[14px] font-[600]">
-                      {business[0]?.businessName}
-                    </span>
-                    <div className="text-[12px] font-[400] pr-5">
-                      {business[0]?.city}
-                      {business[0]?.city && ","} {business[0]?.state}
-                    </div>
-                  </div>
-                  <div className="cursor-pointer">
-                    <IoIosArrowDown className="text-[20px]" />
-                  </div>
-                </div>
-              )}
-            </DropdownTrigger>
-            <DropdownMenu
-              variant="light"
-              aria-label="Dropdown menu to switch businesses"
-              className="max-h-[300px] overflow-y-auto"
-            >
-              {isClient && userInformation?.isOwner &&
-                canAccessMultipleLocations &&
-                businessDetailsList?.map((item: any) => {
-                  return (
-                    <DropdownItem
-                      classNames={{
-                        base: "hover:bg-none max-h-[100px] overflow-scroll",
-                      }}
-                      key={item?.id}
-                      onClick={() => toggleBtwBusiness(item)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar
-                          showFallback={true}
-                          src={`data:image/jpeg;base64,${item?.logoImage}`}
-                          name={item?.name}
-                        />
-                        <div className="flex flex-col">
-                          <span className="font-[500] text-[14px]">
-                            {item?.name}
-                          </span>
-                          <span className="text-xs text-secondaryGrey">
-                            {item?.city}
-                          </span>
-                        </div>
-                      </div>
-                    </DropdownItem>
-                  );
-                })}
-
-              {isClient && userInformation?.isOwner && canAccessMultipleLocations && (
-                <DropdownItem
-                  key="add another business"
-                  onClick={toggleBusinessModal}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-md bg-[#7182A3]">
-                      <GoPlus className="text-[20px] font-[700]" />
-                    </div>
-                    <span className="font-[500] text-[14px]">
-                      Add another business
-                    </span>
-                  </div>
-                </DropdownItem>
-              )}
-              <DropdownItem
-                key="logout"
-                className="text-danger"
-                color="danger"
-                onClick={onOpenChange}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-md">
-                    <FiLogOut className="text-[20px]" />
-                  </div>
-                  <span className="font-[500] text-[14px]">Logout</span>
-                </div>
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-        </div>
-      </div>
-      <AddBusiness
-        refetch={refetch}
-        toggleBusinessModal={toggleBusinessModal}
-        isOpenBusinessModal={isOpenBusinessModal}
-      />
-      <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
-    </div>
-  );
-};
-
-export default SideNav;
-
-const MenuItem = ({ item }: { item: SideNavItem }) => {
+// Memoize the MenuItem component
+const MenuItem = React.memo(({ item }: { item: SideNavItem }) => {
   const pathname = usePathname();
   const [subMenuOpen, setSubMenuOpen] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const router = useRouter();
 
-  const toggleSubMenu = () => {
-    setSubMenuOpen(!subMenuOpen);
-  };
+  const toggleSubMenu = useCallback(() => {
+    setSubMenuOpen(prev => !prev);
+  }, []);
 
-  const handleNavigation = async (path: string) => {
+  const handleNavigation = useCallback(async (path: string) => {
     setIsNavigating(true);
     try {
       await router.push(path);
     } finally {
       setIsNavigating(false);
     }
-  };
+  }, [router]);
 
   return (
     <div>
@@ -488,4 +155,247 @@ const MenuItem = ({ item }: { item: SideNavItem }) => {
       )}
     </div>
   );
+});
+
+const SideNav = () => {
+  const { isOpen, onOpenChange } = useDisclosure();
+  const [isClient, setIsClient] = useState(false);
+
+  // Initialize state from localStorage
+  const [localState, setLocalState] = useState<LocalState>(() => {
+    if (typeof window !== 'undefined') {
+      return {
+        business: getJsonItemFromLocalStorage("business") || [],
+        userInformation: getJsonItemFromLocalStorage("userInformation"),
+        isOpenBusinessModal: false
+      };
+    }
+    return {
+      business: [],
+      userInformation: null,
+      isOpenBusinessModal: false
+    };
+  });
+
+  // Initialize client-side state
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Get permissions from localStorage
+  const userRolePermissions = useMemo(() => {
+    return getJsonItemFromLocalStorage("userRolePermissions") || {};
+  }, []);
+
+  const role = useMemo(() => {
+    return getJsonItemFromLocalStorage("userRole") || 1;
+  }, []);
+
+  // Memoize filtered navigation items
+  const filteredNavItems = useMemo(() => {
+    if (!isClient) return [];
+    
+    return SIDENAV_ITEMS.filter((item) => {
+      if (role !== 1) return true;
+      
+      const permissionMap: Record<string, boolean | undefined> = {
+        Menu: userRolePermissions?.canViewMenu,
+        Campaigns: userRolePermissions?.canViewCampaign,
+        Reservation: userRolePermissions?.canViewReservation,
+        Payments: userRolePermissions?.canViewPayment,
+        Orders: userRolePermissions?.canViewOrder,
+        Reports: userRolePermissions?.canViewReport,
+        Bookings: userRolePermissions?.canViewBooking,
+        Dashboard: userRolePermissions?.canViewDashboard,
+        "Quick Response": userRolePermissions?.canViewQR
+      };
+
+      return permissionMap[item.title] !== false;
+    });
+  }, [role, userRolePermissions, isClient]);
+
+  const toggleBusinessModal = useCallback(() => {
+    setLocalState(prev => ({
+      ...prev,
+      isOpenBusinessModal: !prev.isOpenBusinessModal
+    }));
+  }, []);
+
+  // Get subscription info from localStorage
+  const subscription = useMemo(() => {
+    return getJsonItemFromLocalStorage("subscription") || {};
+  }, []);
+
+  const canAccessMultipleLocations = useMemo(() => 
+    subscription?.planCapabilities?.canAccessMultipleLocations,
+    [subscription?.planCapabilities?.canAccessMultipleLocations]
+  );
+
+  // Show loading state during hydration
+  if (!isClient) {
+    return <SideNavSkeleton />;
+  }
+
+  return (
+    <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
+      <div className="flex flex-col w-full h-full relative">
+        <div className="flex-shrink-0">
+          <Link
+            prefetch={true}
+            href="/dashboard"
+            className="flex flex-row items-center justify-center md:justify-start md:px-8 md:py-10 w-full"
+          >
+            <CompanyLogo
+              textColor="text-white font-lexend text-[28px] font-[600]"
+              containerClass="flex gap-2 items-center"
+            />
+          </Link>
+        </div>
+
+        <div
+          className="overflow-y-auto flex-grow"
+          style={{
+            height: "calc(100vh - 200px)",
+            maxHeight: "calc(100vh - 200px)",
+          }}
+        >
+          <div className="flex flex-col space-y-1 md:px-2 pb-10">
+            {!isClient ? (
+              <div className="space-y-4 px-4">
+                {[1, 2, 3, 4, 5].map((item) => (
+                  <div key={item} className="flex items-center gap-4">
+                    <Skeleton className="w-6 h-6 rounded-md" />
+                    <Skeleton className="h-4 w-32 rounded-lg" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              filteredNavItems.map((item, idx) => {
+                return <MenuItem key={idx} item={item} />;
+              })
+            )}
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 bg-black">
+          <Divider className="bg-[#27272A] mx-auto h-[1px] w-[90%]" />
+          <Dropdown
+            style={{
+              width: "245px",
+            }}
+            classNames={{
+              content: "bg-[#2B3342] mb-3",
+            }}
+          >
+            <DropdownTrigger>
+              {!isClient ? (
+                <div className="w-full flex items-center gap-3 px-5 py-8">
+                  <div>
+                    <Skeleton className="animate-pulse flex rounded-full w-12 h-12" />
+                  </div>
+                  <div className="w-full flex flex-col gap-2">
+                    <Skeleton className="animate-pulse h-2 w-3/5 rounded-lg" />
+                    <Skeleton className="animate-pulse h-2 w-4/5 rounded-lg" />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex cursor-pointer justify-center items-center px-2 py-8 gap-4 w-full">
+                  <div>
+                    <Avatar
+                      isBordered
+                      src={localState.business[0]?.logoImage ? `data:image/jpeg;base64,${localState.business[0].logoImage}` : undefined}
+                      showFallback={true}
+                      name={localState.business[0]?.businessName}
+                    />
+                  </div>
+                  <div className="flex flex-col w-[45%]">
+                    <span className="text-[14px] font-[600]">
+                      {localState.business[0]?.businessName}
+                    </span>
+                    <div className="text-[12px] font-[400] pr-5">
+                      {localState.business[0]?.city}
+                      {localState.business[0]?.city && ","} {localState.business[0]?.state}
+                    </div>
+                  </div>
+                  <div className="cursor-pointer">
+                    <IoIosArrowDown className="text-[20px]" />
+                  </div>
+                </div>
+              )}
+            </DropdownTrigger>
+            <DropdownMenu
+              variant="light"
+              aria-label="Dropdown menu to switch businesses"
+              className="max-h-[300px] overflow-y-auto"
+            >
+              {isClient && localState.userInformation?.isOwner &&
+                canAccessMultipleLocations &&
+                localState.business?.map((item) => {
+                  return (
+                    <DropdownItem
+                      classNames={{
+                        base: "hover:bg-none max-h-[100px] overflow-scroll",
+                      }}
+                      key={item.businessId}
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar
+                          showFallback={true}
+                          src={item.logoImage ? `data:image/jpeg;base64,${item.logoImage}` : undefined}
+                          name={item.businessName}
+                        />
+                        <div className="flex flex-col">
+                          <span className="font-[500] text-[14px]">
+                            {item.businessName}
+                          </span>
+                          <span className="text-xs text-secondaryGrey">
+                            {item.city}
+                          </span>
+                        </div>
+                      </div>
+                    </DropdownItem>
+                  );
+                })}
+
+              {isClient && localState.userInformation?.isOwner && canAccessMultipleLocations && (
+                <DropdownItem
+                  key="add another business"
+                  onClick={toggleBusinessModal}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-md bg-[#7182A3]">
+                      <GoPlus className="text-[20px] font-[700]" />
+                    </div>
+                    <span className="font-[500] text-[14px]">
+                      Add another business
+                    </span>
+                  </div>
+                </DropdownItem>
+              )}
+              <DropdownItem
+                key="logout"
+                className="text-danger"
+                color="danger"
+                onClick={onOpenChange}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-md">
+                    <FiLogOut className="text-[20px]" />
+                  </div>
+                  <span className="font-[500] text-[14px]">Logout</span>
+                </div>
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
+        </div>
+      </div>
+      <AddBusiness
+        isOpenBusinessModal={localState.isOpenBusinessModal}
+        toggleBusinessModal={toggleBusinessModal}
+      />
+      <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
+    </div>
+  );
 };
+
+export default React.memo(SideNav);

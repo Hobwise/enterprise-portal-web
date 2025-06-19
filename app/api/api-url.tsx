@@ -50,6 +50,8 @@ export const DASHBOARD = {
   removeFile: "api/v1/File/remove",
   uploadBulkMenuItem: "api/v1/Menu/item-upload",
   menuVariety: "api/v1/Menu/item-variety",
+   menuCategories: "api/v1/Menu/categories",
+  menuItems: "api/v1/Menu/items",
   // orders
   orderByBusiness: "api/v1/Order/by-business",
   orderByPaged: "api/v1/Order/paged",
