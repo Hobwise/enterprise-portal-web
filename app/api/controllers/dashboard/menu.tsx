@@ -396,3 +396,27 @@ export async function exportGrid(
     handleError(error, false);
   }
 }
+
+export async function getMenuCategories(businessId: string, cooperateId: string) {
+  const headers = businessId ? { businessId, cooperateId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.menuCategories, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getMenuItems(menuId: string, page: number, pageSize: number) {
+  try {
+    const data = await api.get(`${DASHBOARD.menuItems}?MenuId=${menuId}&Page=${page}&PageSize=${pageSize}`);
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
