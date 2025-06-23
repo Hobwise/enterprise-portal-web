@@ -15,7 +15,7 @@ const Notifications = ({
   loadMore,
   isLoading,
   isError,
-  notifData,
+  notifData = { notifications: [], hasNext: false },
   refetch,
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
@@ -41,9 +41,8 @@ const Notifications = ({
       // First expand the message
       setExpandedMessages((prev) => [...prev, id]);
       // Then mark as read without causing a rerender
-      if (
-        !notifData.notifications.find((notif: any) => notif.id === id).isRead
-      ) {
+      const notif = notifData?.notifications?.find((notif: any) => notif.id === id);
+      if (notif && !notif.isRead) {
         markAsRead(id);
       }
     }
@@ -87,6 +86,8 @@ const Notifications = ({
     return message.length > 50 ? `${message.slice(0, 50)}...` : message;
   };
 
+  if (!notifData?.notifications) return null;
+
   return (
     <article className='md:w-[400px] w-full flex flex-col justify-start text-black p-3'>
       <div className='flex justify-between items-center'>
@@ -100,7 +101,7 @@ const Notifications = ({
         </div>
       </div>
       <div className='max-h-[450px] overflow-scroll'>
-        {notifData.notifications?.map((notif: any) => {
+        {notifData?.notifications?.map((notif: any) => {
           const backgroundColorClass = !notif.isRead
             ? 'bg-[#EAE5FF]'
             : 'bg-white';
@@ -159,7 +160,7 @@ const Notifications = ({
             </div>
           );
         })}
-        {notifData.hasNext && (
+        {notifData?.hasNext && (
           <div className='flex justify-center text-sm'>
             <p
               onClick={loadMore}

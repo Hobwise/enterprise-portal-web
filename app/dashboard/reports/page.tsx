@@ -9,7 +9,7 @@ import OrderReportDetails from '@/components/ui/dashboard/reports/orderReports';
 import PaymentReportDetails from '@/components/ui/dashboard/reports/paymentReports';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useReport from '@/hooks/cachedEndpoints/useReport';
-import {  formatDateTimeForPayload2 } from '@/lib/utils';
+import { formatDateTimeForPayload2 } from '@/lib/utils';
 import { getLocalTimeZone, today, DateValue } from '@internationalized/date';
 import {
   Button,
@@ -30,6 +30,7 @@ import {
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { MdKeyboardArrowDown } from 'react-icons/md';
+import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 
 const Reports: React.FC = () => {
   const router = useRouter();
@@ -103,6 +104,7 @@ const Reports: React.FC = () => {
     }
   };
 
+  if (isLoading) return <CustomLoading />;
   if (isError) {
     return <Error onClick={() => refetch()} />;
   }
