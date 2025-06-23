@@ -1,6 +1,7 @@
 'use client';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { Chip, Tab, Tabs } from '@nextui-org/react';
+import { useRouter } from 'next/navigation';
 
 import { GoPlus } from 'react-icons/go';
 import { LuEye } from 'react-icons/lu';
@@ -13,6 +14,7 @@ const Filters = ({
   handleTabClick,
 }: any) => {
   const { userRolePermissions, role } = usePermission();
+  const router = useRouter();
 
   return (
     <>
@@ -64,11 +66,12 @@ const Filters = ({
           </span>
           {(role === 0 || userRolePermissions?.canCreateMenu === true) && (
             <span
-              onClick={onOpen}
+             
+              onClick={() => router.push("/dashboard/menu/add-menu-item")}
               className='bg-white font-semibold text-primaryColor items-center text-sm cursor-pointer flex gap-1'
             >
               <GoPlus className='text-[20px]' />
-              <span>Create new menu</span>
+              <span>Add menu items</span>
             </span>
           )}
         </div>

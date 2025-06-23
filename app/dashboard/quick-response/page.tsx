@@ -23,6 +23,7 @@ import { MdOutlineFileDownload } from "react-icons/md";
 import toast from "react-hot-toast";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import { VscLoading } from "react-icons/vsc";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const QRCode: React.FC = () => {
   const router = useRouter();
@@ -71,6 +72,7 @@ const QRCode: React.FC = () => {
     }
   };
 
+  if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (

@@ -24,6 +24,7 @@ import { MdOutlineFileDownload } from "react-icons/md";
 import toast from "react-hot-toast";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import { VscLoading } from "react-icons/vsc";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Orders: React.FC = () => {
   const router = useRouter();
@@ -88,6 +89,8 @@ const Orders: React.FC = () => {
       toast.error("Export failed, please try again");
     }
   };
+
+  if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (

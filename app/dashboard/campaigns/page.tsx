@@ -15,6 +15,7 @@ import useCampaign from "@/hooks/cachedEndpoints/useCampaign";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { IoMdAdd } from "react-icons/io";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Compaigns: React.FC = () => {
   const router = useRouter();
@@ -47,6 +48,8 @@ const Compaigns: React.FC = () => {
       ),
     }));
   }, [data, searchQuery]);
+ 
+  if (isLoading) return <CustomLoading />;
 
   if (isError) return <Error onClick={() => refetch()} />;
 

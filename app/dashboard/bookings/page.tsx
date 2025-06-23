@@ -29,6 +29,7 @@ import { MdOutlineFileDownload } from "react-icons/md";
 import { VscLoading } from "react-icons/vsc";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import toast from "react-hot-toast";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Bookings: React.FC = () => {
   const {
@@ -143,6 +144,8 @@ const Bookings: React.FC = () => {
       toast.error("Export failed, please try again");
     }
   };
+
+  if (isLoading) return <CustomLoading />;
 
   if (isError) return <Error onClick={() => refetch()} />;
 

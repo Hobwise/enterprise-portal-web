@@ -32,6 +32,7 @@ import { VscCopy, VscLoading } from "react-icons/vsc";
 import { MdOutlineFileDownload } from "react-icons/md";
 import toast from "react-hot-toast";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 // Define TypeScript interfaces for the data structures
 interface ReservationItem {
@@ -123,7 +124,7 @@ const Reservation: React.FC = () => {
   };
 
   // Handle loading state
-  
+  if (isLoading) return <CustomLoading />;
   // Handle error state or undefined data
   if (isError || !data) return <Error onClick={() => refetch()} />;
 

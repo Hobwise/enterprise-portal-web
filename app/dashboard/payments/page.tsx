@@ -21,6 +21,7 @@ import { MdOutlineFileDownload } from "react-icons/md";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import toast from "react-hot-toast";
 import { VscLoading } from "react-icons/vsc";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Payments: React.FC = () => {
   const {
@@ -84,6 +85,7 @@ const Payments: React.FC = () => {
     }
   };
 
+  if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (

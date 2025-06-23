@@ -49,52 +49,8 @@ import toast from 'react-hot-toast';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import { RiDeleteBin6Line, RiEdit2Line } from 'react-icons/ri';
 import { VscLoading } from 'react-icons/vsc';
+import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 
-const MenuSkeleton: React.FC = () => {
-  // Simulate 5 menu items
-  const items = Array.from({ length: 5 });
-
-  return (
-    <div>
-      {/* Header */}
-      <div className="flex flex-row flex-wrap items-center mb-4 xl:mb-8 justify-between">
-        <div>
-          <div className="flex items-center">
-            <Skeleton className="h-7 w-32 rounded" />
-            <Skeleton className="h-7 w-8 rounded ml-2" />
-          </div>
-          <Skeleton className="h-4 w-40 mt-2 rounded" />
-        </div>
-        <div className="flex items-center flex-wrap gap-3">
-          <Skeleton className="h-10 w-60 rounded" />
-          <Skeleton className="h-10 w-32 rounded" />
-          <Skeleton className="h-10 w-32 rounded" />
-          <Skeleton className="h-10 w-40 rounded" />
-        </div>
-      </div>
-
-      {/* Menu List */}
-      <div className="space-y-4">
-        {items.map((_, idx) => (
-          <div
-            key={idx}
-            className="flex justify-between items-center border-b border-primaryGrey py-3"
-          >
-            <div>
-              <Skeleton className="h-5 w-32 rounded mb-2" />
-              <Skeleton className="h-4 w-24 rounded mb-1" />
-              <Skeleton className="h-4 w-28 rounded" />
-            </div>
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-6 w-6 rounded-full" />
-              <Skeleton className="h-6 w-6 rounded-full" />
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 const Menu: React.FC = () => {
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -238,7 +194,7 @@ const Menu: React.FC = () => {
     }
   };
 
-  if (isLoading || isMenuLoading) return <MenuSkeleton />;
+  if (isLoading || isMenuLoading) return <CustomLoading />;
   if (isError || isMenuError) return <Error onClick={() => refetch()} />;
 
   const exportCSV = async () => {
@@ -270,7 +226,7 @@ const Menu: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data[0]?.totalCount}
+                  {data.length}
                 </Chip>
               </div>
             ) : (
@@ -326,13 +282,13 @@ const Menu: React.FC = () => {
             data.length > 0 &&
             (role === 0 || userRolePermissions?.canCreateMenu === true) && (
               <CustomButton
-                onClick={() => router.push("/dashboard/menu/add-menu-item")}
+              onClick={onOpen}
                 className="py-2 md:w-auto w-full  px-4 md:mb-0 mb-4 text-white"
                 backgroundColor="bg-primaryColor"
               >
                 <div className="flex gap-2 items-center justify-center">
                   <IoAddCircleOutline className="text-[22px]" />
-                  <p>{"Add menu items"} </p>
+                  <p>{"Create new menu "} </p>
                 </div>
               </CustomButton>
             )}
