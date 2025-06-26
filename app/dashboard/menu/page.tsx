@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from 'react-query';
 
 import CreateMenu from '@/components/ui/dashboard/menu/createMenu';
 import MenuList from '@/components/ui/dashboard/menu/menu';
@@ -92,6 +93,8 @@ const Menu: React.FC = () => {
   } = useAllMenus();
   const { data, isLoading, isError, refetch } = useMenu();
 
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     setPage(1);
   }, []);
@@ -114,6 +117,8 @@ const Menu: React.FC = () => {
         text: 'Menu successfully created',
         type: 'success',
       });
+      await queryClient.invalidateQueries('allMenus');
+      await queryClient.invalidateQueries('menu');
       router.push('/dashboard/menu/add-menu-item');
     } else if (data?.data?.error) {
       notify({
@@ -194,7 +199,7 @@ const Menu: React.FC = () => {
     }
   };
 
-  if (isLoading || isMenuLoading) return <CustomLoading />;
+  if (isLoading || isMenuLoading) return <CustomLoading ismenuPage />;
   if (isError || isMenuError) return <Error onClick={() => refetch()} />;
 
   const exportCSV = async () => {

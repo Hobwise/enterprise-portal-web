@@ -4,7 +4,7 @@ import OrdersOverview from '@/components/ui/dashboard/home/OrdersOverview';
 import ModulesOverview from '@/components/ui/dashboard/home/modulesOverview';
 import useDashboardReport from '@/hooks/cachedEndpoints/useDashboard';
 import { formatDateTimeForPayload2 } from '@/lib/utils';
-import { getLocalTimeZone, today } from '@internationalized/date';
+import { getLocalTimeZone, today, DateValue } from '@internationalized/date';
 import {
   DateRangePicker,
   Modal,
@@ -18,9 +18,10 @@ const Dashboard: React.FC = () => {
   const [selectedKeys, setSelectedKeys] = useState(new Set(['This week']));
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
-  const [value, setValue] = React.useState({
-    start: null,
-    end: null,
+  const initialDate = today(getLocalTimeZone());
+  const [value, setValue] = React.useState<{ start: DateValue; end: DateValue }>({
+    start: initialDate,
+    end: initialDate,
   });
   const selectedValue = useMemo(
     () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
@@ -74,17 +75,21 @@ const Dashboard: React.FC = () => {
     { enabled: true }
   );
 
+  
+
   useEffect(() => {
     if (shouldFetchReport && selectedValue !== 'Custom date') {
       setPreviousSelectedValue(selectedValue);
     }
   }, [shouldFetchReport, selectedValue]);
 
+
+
   if (isError) {
     return <Error onClick={() => refetch()} />;
   }
 
-  const handleDateChange = (newValue) => {
+  const handleDateChange = (newValue: { start: DateValue; end: DateValue }) => {
     setValue(newValue);
     if (newValue.start && newValue.end) {
       onClose();
