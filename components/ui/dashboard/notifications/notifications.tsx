@@ -28,6 +28,7 @@ const Notifications = ({
     refetch();
   };
 
+   
   const markAsAllRead = async () => {
     await postMarkAllAsRead(business[0].businessId);
     refetch();

@@ -20,7 +20,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { FiLogOut } from 'react-icons/fi';
 import { IoIosArrowDown } from 'react-icons/io';
 import { MdOutlinePerson } from 'react-icons/md';
@@ -31,10 +31,13 @@ import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS, headerRouteMapping } from './constants';
 import Notifications from './notifications/notifications';
 import { NavigationBanner, useCheckExpiry } from './subscription-notification';
+import useNotificationCount from '@/hooks/cachedEndpoints/useNotificationCount';
+import * as signalR from '@microsoft/signalr';
 
 // NotificationFetcher: fetches notifications only when mounted (popover open)
 const NotificationFetcher = ({ page, pageSize, ...props }: any) => {
   const { data: notifData, isLoading, isError, refetch } = useNotification(page, pageSize);
+
   return (
     <Notifications
       notifData={notifData}
@@ -51,6 +54,7 @@ const Header = () => {
   const [pageSize, setPageSize] = useState(10);
   const [notifPopoverOpen, setNotifPopoverOpen] = useState(false);
 
+  const { data: unreadCount = 0, refetch: refetchUnreadCount } = useNotificationCount();
   const { isOpen, onOpenChange } = useDisclosure();
   const { data } = useUser();
 
@@ -79,6 +83,46 @@ const Header = () => {
   );
   const isActive = subscription?.isActive;
   const onTrialVersion = subscription?.onTrialVersion;
+
+  // SignalR connection for real-time notifications
+  useEffect(() => {
+    const userInfoString = localStorage.getItem('userInformation');
+    if (!userInfoString) return;
+
+    const userInfo = JSON.parse(userInfoString);
+    
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl("https://sandbox-api.hobwise.com/notificationHub", {
+        accessTokenFactory: () => userInfo.token
+      })
+      .configureLogging(signalR.LogLevel.Information)
+      .build();
+
+    connection.on("ReceiveNotification", (data: any) => {
+      console.log('Received notification:', data);
+   
+    });
+
+    connection.start()
+      .then(() => {
+        console.log("SignalR connected.");
+      })
+      .catch((err: any) => {
+        console.error('SignalR connection error:', err);
+      });
+
+    // Cleanup on unmount
+    return () => {
+      connection.stop();
+    };
+  }, []); // Only run once on mount
+
+  // When popover opens, refetch unread count
+  useEffect(() => {
+    if (notifPopoverOpen) {
+      refetchUnreadCount();
+    }
+  }, [notifPopoverOpen, refetchUnreadCount]);
 
   return (
     <div
@@ -142,7 +186,7 @@ const Header = () => {
             <div className='flex items-center space-x-4'>
               <Popover placement='bottom' onOpenChange={setNotifPopoverOpen} isOpen={notifPopoverOpen}>
                 <PopoverTrigger>
-                  <Badge className='cursor-pointer' size='sm' color='danger'>
+                  <Badge className='cursor-pointer p-2' size='sm' color='danger' content={unreadCount > 0 ? unreadCount : undefined}>
                     <PopoverTrigger>
                       <SlBell className='text-[#494E58] h-5 w-5 cursor-pointer' />
                     </PopoverTrigger>

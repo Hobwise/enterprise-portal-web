@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from 'react-query';
+import { useRouter } from 'next/navigation';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
 import usePagination from '@/hooks/usePagination';
@@ -259,6 +260,7 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
   const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
   const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   // Initialize with first menu
   useEffect(() => {
@@ -518,6 +520,18 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
   // Determine if we should show loading spinner
   const shouldShowLoading = (isLoading && !loadedCategories.has(currentCategoryId)) || isFirstTimeLoading;
 
+  // Helper to check if click is inside actions column
+  const isClickInsideActions = (event: React.MouseEvent) => {
+    let node = event.target as HTMLElement | null;
+    while (node) {
+      if (node.getAttribute && node.getAttribute('aria-label') === 'actions') {
+        return true;
+      }
+      node = node.parentElement;
+    }
+    return false;
+  };
+
   return (
     <section>
       <div className="w-full">
@@ -574,7 +588,15 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
                 </tr>
               ) : (
                 currentMenuItems.map((item, index) => (
-                  <tr key={`${item?.id}-${index}` || index} className="hover:bg-gray-50 transition-colors">
+                  <tr
+                    key={`${item?.id}-${index}` || index}
+                    className="hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={e => {
+                      if (!isClickInsideActions(e)) {
+                        router.push(`/dashboard/menu/${encodeURIComponent(item.itemName)}?itemId=${item.id}`);
+                      }
+                    }}
+                  >
                     {headerColumns.map((column) => (
                       <td 
                         key={column?.uid} 

@@ -93,7 +93,7 @@ const Payments: React.FC = () => {
       <div className="flex flex-row flex-wrap  xl:mb-8 mb-4 items-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data?.paymentComposites?.[0]?.payments.length > 0 ? (
+            {data?.paymentComposites?.[0]?.payments?.length > 0 ? (
               <div className="flex items-center">
                 <span>All Payment</span>
                 <Chip
@@ -114,7 +114,7 @@ const Payments: React.FC = () => {
         </div>
         <div className="flex  gap-3">
           {dropdownComponent}
-          {data?.paymentComposites?.[0]?.payments.length > 0 && (
+          {data?.paymentComposites?.[0]?.payments?.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -149,7 +149,7 @@ const Payments: React.FC = () => {
         </div>
       </div>
 
-      {data?.paymentComposites[0]?.payments.length > 0 ? (
+      {data?.paymentComposites?.[0]?.payments?.length > 0 ? (
         <PaymentsList
           data={data}
           isLoading={isLoading}

@@ -32,6 +32,12 @@ import { useRouter } from 'next/navigation';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 
+interface TabItem {
+  id: string;
+  label: string;
+  content: React.ReactNode;
+}
+
 const Reports: React.FC = () => {
   const router = useRouter();
 
@@ -104,17 +110,13 @@ const Reports: React.FC = () => {
     }
   };
 
+  const [selectedTab, setSelectedTab] = useState<string>("orders");
+
   if (isLoading) return <CustomLoading />;
   if (isError) {
     return <Error onClick={() => refetch()} />;
   }
 
-  interface TabItem {
-    id: string;
-    label: string;
-    content: React.ReactNode;
-  }
-  const [selectedTab, setSelectedTab] = useState<string>("orders");
   let tabs: TabItem[] = [
     {
       id: "orders",
