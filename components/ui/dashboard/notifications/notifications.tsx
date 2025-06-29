@@ -3,6 +3,7 @@ import {
   postMarkAllAsRead,
   postMarkAsRead,
 } from '@/app/api/controllers/dashboard/settings';
+import useNotifyCount from '@/hooks/cachedEndpoints/useNotificationCount';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Avatar, Divider } from '@nextui-org/react';
 import moment from 'moment';
@@ -20,6 +21,7 @@ const Notifications = ({
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
   const router = useRouter();
+  const {refetch: refetchUnreadCount } = useNotifyCount();
 
   const [expandedMessages, setExpandedMessages] = useState<string[]>([]);
 
@@ -45,6 +47,7 @@ const Notifications = ({
       const notif = notifData?.notifications?.find((notif: any) => notif.id === id);
       if (notif && !notif.isRead) {
         markAsRead(id);
+        refetchUnreadCount();
       }
     }
   };
