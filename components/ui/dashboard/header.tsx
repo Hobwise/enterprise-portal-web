@@ -33,6 +33,7 @@ import Notifications from './notifications/notifications';
 import { NavigationBanner, useCheckExpiry } from './subscription-notification';
 import useNotificationCount from '@/hooks/cachedEndpoints/useNotificationCount';
 import * as signalR from '@microsoft/signalr';
+import useNotifyCount from '@/hooks/cachedEndpoints/useNotificationCount';
 
 // NotificationFetcher: fetches notifications only when mounted (popover open)
 const NotificationFetcher = ({ page, pageSize, ...props }: any) => {
@@ -52,9 +53,10 @@ const NotificationFetcher = ({ page, pageSize, ...props }: any) => {
 const Header = () => {
   const page = 1;
   const [pageSize, setPageSize] = useState(10);
+  const [unreadNotCount, setUnreadNotCount] = useState(0);
   const [notifPopoverOpen, setNotifPopoverOpen] = useState(false);
 
-  const { data: unreadCount = 0, refetch: refetchUnreadCount } = useNotificationCount();
+  const { data: unreadCount = 0 } = useNotifyCount();
   const { isOpen, onOpenChange } = useDisclosure();
   const { data } = useUser();
 
@@ -87,10 +89,17 @@ const Header = () => {
   // SignalR connection for real-time notifications
   useEffect(() => {
     const userInfoString = localStorage.getItem('userInformation');
-    if (!userInfoString) return;
+    if (!userInfoString) {
+      console.warn('No user information found in localStorage');
+      return;
+    }
 
     const userInfo = JSON.parse(userInfoString);
-    
+    if (!userInfo.token) {
+      console.warn('No token found in user information');
+      return;
+    }
+
     const connection = new signalR.HubConnectionBuilder()
       .withUrl("https://sandbox-api.hobwise.com/notificationHub", {
         accessTokenFactory: () => userInfo.token
@@ -98,32 +107,29 @@ const Header = () => {
       .configureLogging(signalR.LogLevel.Information)
       .build();
 
-    connection.on("ReceiveNotification", (data: any) => {
-      console.log('Received notification:', data);
-   
+    connection.on("ReceiveNotification", data => {
+      if (data && typeof data.unreadCount !== 'undefined') {
+        setUnreadNotCount(data.unreadCount);
+        console.log('jhg', data.unreadCount);
+      }
     });
 
     connection.start()
       .then(() => {
         console.log("SignalR connected.");
       })
-      .catch((err: any) => {
-        console.error('SignalR connection error:', err);
+      .catch(err => {
+        console.error(err);
       });
 
-    // Cleanup on unmount
     return () => {
       connection.stop();
     };
-  }, []); // Only run once on mount
+  }, []);
 
   // When popover opens, refetch unread count
-  useEffect(() => {
-    if (notifPopoverOpen) {
-      refetchUnreadCount();
-    }
-  }, [notifPopoverOpen, refetchUnreadCount]);
 
+  
   return (
     <div
       className={cn(
@@ -186,7 +192,7 @@ const Header = () => {
             <div className='flex items-center space-x-4'>
               <Popover placement='bottom' onOpenChange={setNotifPopoverOpen} isOpen={notifPopoverOpen}>
                 <PopoverTrigger>
-                  <Badge className='cursor-pointer p-2' size='sm' color='danger' content={unreadCount > 0 ? unreadCount : undefined}>
+                  <Badge className='cursor-pointer p-1' size='sm' color='danger' content={unreadNotCount !== 0 ? unreadNotCount : (unreadCount > 0 ? unreadCount : undefined)}>
                     <PopoverTrigger>
                       <SlBell className='text-[#494E58] h-5 w-5 cursor-pointer' />
                     </PopoverTrigger>

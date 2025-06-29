@@ -134,7 +134,7 @@ const ModulesOverview = ({ response, isLoading }: any) => {
                       </span>
                       <span className="text-[24px] font-[600]">
                         {response?.bookingDetails.total}
-                      </span>
+                      </span>z
                       <span
                         className={`${
                           parseInt(

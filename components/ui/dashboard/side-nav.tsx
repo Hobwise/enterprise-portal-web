@@ -67,7 +67,7 @@ const SideNavSkeleton = () => (
       </div>
       <div className="space-y-4 px-4">
         {[1, 2, 3, 4, 5].map((item) => (
-          <div key={item} className="flex items-center gap-4">
+          <div key={item} className="flex items-center gap-4 mb-6">
             <Skeleton className="w-6 h-6 rounded-md" />
             <Skeleton className="h-4 w-32 rounded-lg" />
           </div>
