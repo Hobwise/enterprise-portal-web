@@ -12,6 +12,12 @@ export type payloadCampaignItem = {
   imageReference: string;
 };
 
+export type payloadCampaignCategories = {
+  campaignCount: any;
+  name: string;
+  totalCount?: any;
+};
+
 const camapaignSchema = z.object({
   campaignName: z.string().trim().min(1, 'Reservation name is required'),
   campaignDescription: z
@@ -105,6 +111,20 @@ export async function getCampaign(campaignId: string, businessId: string) {
   }
 }
 
+export async function getCampaignCategories( businessId: string) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.campaignsByCategories, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
 export async function updateCampaign(
   businessId: string,
   payload: payloadCampaignItem,
@@ -143,5 +163,24 @@ export async function repeatCampaign(campaignId: string) {
     return data;
   } catch (error) {
     handleError(error);
+  }
+}
+
+export type CampaignByCategoryPayload = {
+  category: string;
+  businessId: string;
+  page: number;
+  pageSize: number;
+};
+
+export async function getCampaignsByCategory(payload: CampaignByCategoryPayload) {
+  const headers = payload.businessId ? { businessId: payload.businessId } : {};
+  try {
+    const data = await api.post(DASHBOARD.campaignByCategory, payload, {
+      headers,
+    });
+    return data;
+  } catch (error) {
+    handleError(error, false);
   }
 }

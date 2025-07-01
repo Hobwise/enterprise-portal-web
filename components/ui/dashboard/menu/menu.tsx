@@ -16,6 +16,7 @@ import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
 import { getMenuItems } from '@/app/api/controllers/dashboard/menu';
 import { fetchQueryConfig } from '@/lib/queryConfig';
+import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 
 interface Column {
   name: string;
@@ -65,21 +66,6 @@ interface ChipProps {
   variant?: 'bordered' | 'flat';
   className?: string;
 }
-
-// Spinner Loader Component
-const SpinnerLoader: React.FC<{ size?: 'sm' | 'md' | 'lg' }> = ({ size = 'md' }) => {
-  const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12'
-  };
-
-  return (
-    <div className="flex justify-center items-center py-8">
-      <div className={`${sizeClasses[size]} border-4 border-gray-200 border-t-[#5f35d2] rounded-full animate-spin`}></div>
-    </div>
-  );
-};
 
 const Chip: React.FC<ChipProps> = ({ children, color, size, variant, className }) => {
   const baseClasses = 'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium';
@@ -548,7 +534,7 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
               {shouldShowLoading ? (
                 <tr>
                   <td colSpan={headerColumns.length} className="px-4 py-12">
-                    <SpinnerLoader size="lg" />
+                    <SpinnerLoader size="md" />
                   </td>
                 </tr>
               ) : isError ? (

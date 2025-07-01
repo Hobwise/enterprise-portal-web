@@ -62,7 +62,7 @@ export const DASHBOARD = {
   completeOrder: "api/v1/Order/complete",
 
   // Payments
-  paymentByBusiness: "api/v1/Payment/by-business",
+  paymentByBusiness: "api/v1/Payment/categories",
   confirmPayment: "api/v1/Payment/confirm",
   // Quick response
   qrByBusiness: "api/v1/QuickResponse/detail-by-business",
@@ -81,6 +81,8 @@ export const DASHBOARD = {
   updateStatus: "api/v1/Booking/update-status",
   //Campaigns
   campaignsByBusiness: "api/v1/Campaign/by-business",
+  campaignsByCategories:"api/v1/Campaign/categories",
+  campaignByCategory:"api/v1/Campaign/details",
   campaigns: "api/v1/Campaign",
   repeatCampaigns: "api/v1/Campaign/restart",
   //Dashboard
