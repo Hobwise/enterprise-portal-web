@@ -42,7 +42,6 @@ const INITIAL_VISIBLE_COLUMNS = [
   "campaignName",
   "campaignDescription",
   "startDateTime",
-  "image",
   "actions",
 ];
 
@@ -69,10 +68,9 @@ interface CampaignGroup {
   hasPrevious: boolean;
 }
 
-const CampaignList = ({ campaigns }: any) => {
+const CampaignList = ({ campaigns, searchQuery }: any) => {
   const { userRolePermissions, role } = usePermission();
-  const { setTableStatus, tableStatus, page, pageSize, setPage } =
-    useGlobalContext();
+  const { setTableStatus, tableStatus, page, setPage } = useGlobalContext();
 
   const [isOpenDelete, setIsOpenDelete] = React.useState(false);
   const [isOpenRepeat, setIsOpenRepeat] = React.useState(false);
@@ -92,14 +90,13 @@ const CampaignList = ({ campaigns }: any) => {
   } = useCampaignCategory({
     category: selectedCategory,
     page: page || 1,
-    pageSize: pageSize || 10,
+    pageSize: 10,
   });
 
   // Use category-specific data for pagination
   const currentCategoryData = categoryCampaigns || {
     campaigns: [],
     totalCount: 0,
-    pageSize: pageSize || 10,
     currentPage: page || 1,
     totalPages: 0,
     hasNext: false,
@@ -169,27 +166,9 @@ const CampaignList = ({ campaigns }: any) => {
   };
 
   const renderCell = React.useCallback(
-    (campaign, columnKey) => {
-      const cellValue = campaign[columnKey];
-
+    (campaign: Campaign, columnKey: string) => {
+      const cellValue = campaign[columnKey as keyof Campaign];
       switch (columnKey) {
-        case "image":
-          return (
-            <div className="flex ">
-              <Image
-                className="h-[60px] w-[120px] bg-cover rounded-lg"
-                width={120}
-                height={60}
-                alt="campaign"
-                aria-label="campaign"
-                src={
-                  campaign?.image
-                    ? `data:image/jpeg;base64,${campaign?.image}`
-                    : noImage
-                }
-              />
-            </div>
-          );
         case "campaignDescription":
           return (
             <div className="md:w-[250px] text-textGrey w-[150px]">
@@ -210,7 +189,6 @@ const CampaignList = ({ campaigns }: any) => {
               )}
             </div>
           );
-
         case "actions":
           return (
             <div className="relative flexjustify-center items-center gap-2">
@@ -241,7 +219,7 @@ const CampaignList = ({ campaigns }: any) => {
                         </div>
                       </Link>
                     </DropdownItem>
-                    {isItemInCompletedArray(campaign, campaigns) && (
+                    {isItemInCompletedArray(campaign, campaigns) ? (
                       <DropdownItem
                         aria-label="repeat campaign"
                         onClick={() => toggleRepeatModal(campaign)}
@@ -253,9 +231,9 @@ const CampaignList = ({ campaigns }: any) => {
                           <p>Repeat campaign</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    ) : <></>}
                     {(role === 0 ||
-                      userRolePermissions?.canEditCampaign === true) && (
+                      userRolePermissions?.canEditCampaign === true) ? (
                       <DropdownItem
                         aria-label="edit campaign"
                         onClick={() => {
@@ -270,9 +248,9 @@ const CampaignList = ({ campaigns }: any) => {
                           <p>Edit campaign</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    ) : <></>}
                     {(role === 0 ||
-                      userRolePermissions?.canDeleteCampaign === true) && (
+                      userRolePermissions?.canDeleteCampaign === true) ? (
                       <DropdownItem
                         aria-label="delete campaign"
                         onClick={() => {
@@ -287,7 +265,7 @@ const CampaignList = ({ campaigns }: any) => {
                           <p>Delete campaign</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    ) : <></>}
                   </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
@@ -312,7 +290,17 @@ const CampaignList = ({ campaigns }: any) => {
   }, [campaigns, selectedCategory]);
 
   // Get the campaigns array from the category data
-  const campaignsToDisplay = currentCategoryData?.campaigns || [];
+  let campaignsToDisplay = currentCategoryData?.campaigns || [];
+
+  // Filter campaigns based on searchQuery
+  if (searchQuery && searchQuery.trim()) {
+    const lowerSearch = searchQuery.toLowerCase();
+    campaignsToDisplay = campaignsToDisplay.filter(
+      (item: any) =>
+        item?.campaignName?.toLowerCase().includes(lowerSearch) ||
+        item?.campaignDescription?.toLowerCase().includes(lowerSearch)
+    );
+  }
 
   return (
     <section className="border border-primaryGrey rounded-lg">
@@ -320,25 +308,20 @@ const CampaignList = ({ campaigns }: any) => {
         radius="lg"
         isCompact
         removeWrapper
-        allowsSorting
         aria-label="list of campaign"
         bottomContent={bottomContent}
         bottomContentPlacement="outside"
         classNames={classNames}
-        selectedKeys={selectedKeys}
-        selectionMode="multiple"
         topContent={topContent}
-        sortDescriptor={sortDescriptor}
+        sortDescriptor={sortDescriptor as any}
         topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
+        onSortChange={setSortDescriptor as any}
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
             <TableColumn
               key={column.uid}
               align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
             >
               {column.name}
             </TableColumn>
@@ -351,7 +334,7 @@ const CampaignList = ({ campaigns }: any) => {
             ) : isCategoryError ? (
               "Error loading campaigns"
             ) : (
-              "No campaign found"
+              searchQuery ? "No campaigns match your search" : "No campaign found"
             )
           }
           items={campaignsToDisplay}
@@ -359,7 +342,7 @@ const CampaignList = ({ campaigns }: any) => {
           {(item: Campaign) => (
             <TableRow key={item.id || JSON.stringify(item)}>
               {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
+                <TableCell>{renderCell(item, columnKey as string)}</TableCell>
               )}
             </TableRow>
           )}
