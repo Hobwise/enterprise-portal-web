@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-
+import useCampaignCategories from "@/hooks/cachedEndpoints/useCampaignCategories";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { Chip } from "@nextui-org/react";
@@ -11,7 +11,6 @@ import { IoSearchOutline } from "react-icons/io5";
 import Error from "@/components/error";
 import CampaignList from "@/components/ui/dashboard/campaign/campaignList";
 import CreateCampaign from "@/components/ui/dashboard/campaign/createCampaign";
-import useCampaign from "@/hooks/cachedEndpoints/useCampaign";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { IoMdAdd } from "react-icons/io";
@@ -22,7 +21,7 @@ const Compaigns: React.FC = () => {
 
   const { userRolePermissions, role } = usePermission();
 
-  const { data, isLoading, isError, refetch } = useCampaign();
+  const { data, isLoading, isError, refetch } = useCampaignCategories();  
 
   const { setPage, setTableStatus } = useGlobalContext();
 
@@ -31,23 +30,15 @@ const Compaigns: React.FC = () => {
     setPage(1);
   }, []);
 
+
+
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  const filteredItems = useMemo(() => {
-    return data?.map((item) => ({
-      ...item,
-      campaigns: item?.campaigns?.filter(
-        (item) =>
-          item?.campaignName?.toLowerCase().includes(searchQuery) ||
-          item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
-          item?.dressCode?.toLowerCase().includes(searchQuery)
-      ),
-    }));
-  }, [data, searchQuery]);
+
  
   if (isLoading) return <CustomLoading />;
 
@@ -61,13 +52,13 @@ const Compaigns: React.FC = () => {
             <div className="flex items-center">
               <span>Campaigns</span>
 
-              {data?.[0]?.campaigns?.length > 0 && (
+              {data?.campaignCategories?.length > 0 && (
                 <Chip
                   classNames={{
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data?.[0]?.totalCount}
+                  {data?.campaignCount}
                 </Chip>
               )}
             </div>
@@ -77,7 +68,7 @@ const Compaigns: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {data?.[0]?.campaigns?.length > 0 && (
+          {data?.campaignCategories?.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -97,7 +88,7 @@ const Compaigns: React.FC = () => {
 
           {(role === 0 || userRolePermissions?.canCreateCampaign === true) && (
             <>
-              {data?.[0]?.campaigns?.length > 0 && (
+              {data?.campaignCategories?.length > 0 && (
                 <CustomButton
                   onClick={() =>
                     router.push("/dashboard/campaigns/create-campaign")
@@ -116,15 +107,14 @@ const Compaigns: React.FC = () => {
           )}
         </div>
       </div>
-      {data?.[0]?.campaigns?.length > 0 ? (
+      {data?.campaignCategories?.length > 0 ? (
         <CampaignList
-          campaigns={filteredItems}
+          campaigns={data}
           searchQuery={searchQuery}
-          refetch={refetch}
         />
-      ) : (
-        <CreateCampaign />
-      )}
+       ) : (
+       <CreateCampaign />
+    )}
     </>
   );
 };
