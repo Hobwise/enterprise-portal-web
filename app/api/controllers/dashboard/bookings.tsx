@@ -130,6 +130,38 @@ export async function getBookingsByBusiness(
   }
 }
 
+
+// export async function getBookings(
+//   businessId: string,
+//   page: any,
+//   rowsPerPage: any,
+//   tableStatus: any,
+// ) {
+//   const headers = businessId ? { businessId } : {};
+
+//   const payload = {
+//     // filterType: filterType,
+//     businessId: businessId,
+//     statusPaginationInfoList: [
+//       {
+//         status: tableStatus || "All",
+//         page: page || 1ame,
+//         pageSize: rowsPerPage || 10,
+//       },
+//     ],
+//   };
+
+//   try {
+//     const data = await api.get(DASHBOARD.bookingsByBusiness, payload, {
+//       headers,
+//     });
+
+//     return data;
+//   } catch (error) {
+//     handleError(error, false);
+//   }
+// }
+
 export async function getBookingByRef(
   businessId: string,
   bookingReferenceId: string

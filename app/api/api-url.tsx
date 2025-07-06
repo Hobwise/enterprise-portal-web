@@ -54,6 +54,8 @@ export const DASHBOARD = {
   menuItems: "api/v1/Menu/items",
   // orders
   orderByBusiness: "api/v1/Order/by-business",
+  orderByCategories:"/api/v1/Order/categories",
+  orderItems: "api/v1/Order/details",
   orderByPaged: "api/v1/Order/paged",
   orderByReference: "api/v1/Order/by-reference",
   order: "api/v1/Order",
@@ -76,11 +78,11 @@ export const DASHBOARD = {
   singleBookings: "api/v1/Reservation/by-id",
   // Bookings
   bookings: "api/v1/Booking",
-  bookingsByBusiness: "api/v1/Booking/by-business",
+  bookingsByBusiness: "api/v1/Booking/business",
   bookingsByRef: "api/v1/Booking/by-ref",
   updateStatus: "api/v1/Booking/update-status",
   //Campaigns
-  campaignsByBusiness: "api/v1/Campaign/by-business",
+  // campaignsByBusiness: "api/v1/Campaign/by-business",
   campaignsByCategories:"api/v1/Campaign/categories",
   campaignByCategory:"api/v1/Campaign/details",
   campaigns: "api/v1/Campaign",

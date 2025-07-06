@@ -20,7 +20,7 @@ const useDateFilter = (endpoint: any) => {
   const [selectedKeys, setSelectedKeys] = useState(new Set(["This week"]));
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
-  const [value, setValue] = React.useState({
+  const [value, setValue] = React.useState<any>({
     start: null,
     end: null,
   });
@@ -65,7 +65,7 @@ const useDateFilter = (endpoint: any) => {
   const endDate = value.end
     ? `${formatDateTimeForPayload2(value.end)}Z`
     : undefined;
-  const { data, isError, refetch, isLoading } = endpoint(
+  const {  categories, details, isError, refetch, isLoading } = endpoint(
     logIndexForSelectedKey(effectiveSelectedValue),
     startDate,
     endDate,
@@ -103,7 +103,7 @@ const useDateFilter = (endpoint: any) => {
         selectionMode="single"
         className="text-black"
         selectedKeys={selectedKeys}
-        onSelectionChange={setSelectedKeys}
+        onSelectionChange={(keys) => setSelectedKeys(new Set(Array.from(keys) as string[]))}
       >
         <DropdownItem key="Today">Today</DropdownItem>
         <DropdownItem key="This week">This week</DropdownItem>
@@ -149,14 +149,16 @@ const useDateFilter = (endpoint: any) => {
   );
   const filterType = logIndexForSelectedKey(effectiveSelectedValue);
   return {
-    data,
-
+    categories, details,
     isError,
     refetch,
     isLoading,
+  
     dropdownComponent,
     datePickerModal,
     filterType,
+    startDate,
+    endDate,
   };
 };
 

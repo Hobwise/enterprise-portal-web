@@ -119,6 +119,12 @@ const Menu: React.FC = () => {
       });
       await queryClient.invalidateQueries('allMenus');
       await queryClient.invalidateQueries('menu');
+      await refetch();
+      await getMenu();
+      onOpenChange();
+      setName('');
+      setPackingCost(undefined);
+      setEstimatedTime(undefined);
       router.push('/dashboard/menu/add-menu-item');
     } else if (data?.data?.error) {
       notify({
@@ -128,7 +134,13 @@ const Menu: React.FC = () => {
       });
     }
   };
-
+ 
+  useEffect(() => {
+    refetch()
+  
+  
+  }, [])
+  
   const handleEditMenu = (menu: any) => {
     setEditingMenu(menu);
     setEditName(menu.name);
@@ -154,7 +166,10 @@ const Menu: React.FC = () => {
     setLoading(false);
 
     if (data?.data?.isSuccessful) {
-      getMenu();
+      await queryClient.invalidateQueries('allMenus');
+      await queryClient.invalidateQueries('menu');
+      await refetch();
+      await getMenu();
       toast.success('Menu updated successfully');
 
       closeEditModal();
@@ -190,7 +205,10 @@ const Menu: React.FC = () => {
     );
     setLoading(false);
     if (data?.data?.isSuccessful) {
-      getMenu();
+      await queryClient.invalidateQueries('allMenus');
+      await queryClient.invalidateQueries('menu');
+      await refetch();
+      await getMenu();
       toast.success('Menu deleted successfully');
       setIsOpenDeleteMenu(false);
       setIsOpenViewMenu(true);
@@ -341,12 +359,16 @@ const Menu: React.FC = () => {
                 />
                 <CustomInput
                   type="number"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setEstimatedTime(Number(e.target.value))
-                  }
-                  value={String(estimatedTime)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const value = Number(e.target.value);
+                    if (value >= 0 || e.target.value === '') {
+                      setEstimatedTime(value || undefined);
+                    }
+                  }}
+                  value={estimatedTime !== undefined ? String(estimatedTime) : ''}
                   label="Preparation time in minutes (Optional)"
                   placeholder="This is the estimated time required to prepare any item in this menus"
+                  min="0"
                 />
                 <Spacer y={2} />
 
@@ -396,20 +418,31 @@ const Menu: React.FC = () => {
                 />
                 <CustomInput
                   type="number"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setEditPackingCost(Number(e.target.value))
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>{
+                    const value = Number(e.target.value);
+                    if (value >= 0 || e.target.value === '') {
+                      setEditPackingCost(value || undefined);
+                    }
                   }
+                  }
+               
+                  
                   value={
-                    editPackingCost !== undefined ? String(editPackingCost) : ""
+                    editPackingCost !== undefined
+                      ? String(editPackingCost)
+                      : ""
                   }
                   label="Packing cost (Optional)"
                   placeholder="This is a cost required to pack any item in this menus"
                 />
                 <CustomInput
                   type="number"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setEditEstimatedTime(Number(e.target.value))
-                  }
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const value = Number(e.target.value);
+                    if (value >= 0 || e.target.value === '') {
+                      setEditEstimatedTime(value || undefined);
+                    }
+                  }}
                   value={
                     editEstimatedTime !== undefined
                       ? String(editEstimatedTime)
@@ -417,6 +450,7 @@ const Menu: React.FC = () => {
                   }
                   label="Preparation time in minutes (Optional)"
                   placeholder="This is the estimated time required to prepare any item in this menus"
+                  min="0"
                 />
                 <Spacer y={2} />
 

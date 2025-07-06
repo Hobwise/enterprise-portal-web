@@ -38,6 +38,68 @@ export const orderSchemaUser = z.object({
     }),
 });
 
+// New function to get order categories
+export async function getOrderCategories(
+  businessId: string,
+  filterType: number,
+  startDate?: string,
+  endDate?: string
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    startDate: startDate,
+    endDate: endDate,
+    filterType: filterType,
+    businessId: businessId,
+  };
+
+  try {
+    const response = await api.post(DASHBOARD.orderByCategories, payload, {
+      headers,
+    });
+
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+// New function to get order details
+export async function getOrderDetails(
+  businessId: string,
+  category: string,
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  page?: number,
+  pageSize?: number
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    startDate: startDate,
+    endDate: endDate,
+    filterType: filterType,
+    category: category,
+    businessId: businessId,
+    page: page || 0,
+    pageSize: pageSize || 10,
+  };
+
+
+  try {
+    const response = await api.post(DASHBOARD.orderItems, payload, {
+      headers,
+    });
+
+
+
+    return response.data;
+  } catch (error) {
+    
+    handleError(error, false);
+  }
+}
+
 export async function getOrderByBusiness(
   businessId: string,
   page: any,
@@ -64,7 +126,7 @@ export async function getOrderByBusiness(
   };
 
   try {
-    const response = await api.post(DASHBOARD.orderByBusiness, payload, {
+    const response = await api.post(DASHBOARD.orderByCategories, payload, {
       headers,
     });
 

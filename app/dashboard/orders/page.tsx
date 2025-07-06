@@ -2,11 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 
-import {
-  dynamicExportConfig,
-  getJsonItemFromLocalStorage,
-} from "@/lib/utils";
-
+import { dynamicExportConfig, getJsonItemFromLocalStorage } from "@/lib/utils";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
@@ -26,17 +22,36 @@ import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import { VscLoading } from "react-icons/vsc";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
+// Type definitions
+interface OrderItem {
+  id: string;
+  placedByName: string;
+  placedByPhoneNumber: string;
+  reference: string;
+  treatedBy: string;
+  totalAmount: number;
+  qrReference: string;
+  paymentMethod: number;
+  paymentReference: string;
+  status: 0 | 1 | 2 | 3;
+  dateCreated: string;
+  comment?: string;
+}
+
 const Orders: React.FC = () => {
   const router = useRouter();
 
   const {
-    data,
+    categories,
+    details,
     isLoading,
     isError,
     refetch,
     dropdownComponent,
     datePickerModal,
     filterType,
+    startDate,
+    endDate,
   } = useDateFilter(useOrder);
   const { userRolePermissions, role } = usePermission();
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -49,26 +64,13 @@ const Orders: React.FC = () => {
     refetch();
     setTableStatus("All");
     setPage(1);
-  }, []);
+  }, [filterType, startDate, endDate, refetch]); // Add date dependencies to reset when date changes
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
+  const data = { categories, details };
 
-  const filteredItems = useMemo(() => {
-    return data?.map((order) => ({
-      ...order,
-      orders: order?.orders?.filter(
-        (item) =>
-          item?.placedByName?.toLowerCase().includes(searchQuery) ||
-          String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
-          item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-          item?.reference?.toLowerCase().includes(searchQuery) ||
-          item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
-          item?.paymentReference?.toLowerCase().includes(searchQuery)
-      ),
-    }));
-  }, [data, searchQuery]);
 
   const exportCSV = async () => {
     setLoadingExport(true);
@@ -98,7 +100,7 @@ const Orders: React.FC = () => {
       <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data?.[0].orders?.length > 0 ? (
+            {data?.categories.length > 0 ? (
               <div className="flex items-center">
                 <span>All orders</span>
                 <Chip
@@ -106,7 +108,7 @@ const Orders: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data?.[0]?.totalCount}
+                  {data?.categories.length}
                 </Chip>
               </div>
             ) : (
@@ -119,7 +121,7 @@ const Orders: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           {dropdownComponent}
-          {data?.[0].orders.length > 0 && (
+          {data?.categories.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -165,9 +167,10 @@ const Orders: React.FC = () => {
           )}
         </div>
       </div>
-      {data?.length > 0 ? (
+      {data.categories && data.categories.length > 0 ? (
         <OrdersList
-          orders={filteredItems}
+          orders={details?.data || []}
+          categories={data.categories}
           refetch={refetch}
           searchQuery={searchQuery}
         />

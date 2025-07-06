@@ -34,7 +34,7 @@ const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
                         base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                       }}
                     >
-                      {order?.totalCount}
+                      {order?.count || 0}
                     </Chip>
                   </div>
                 }
