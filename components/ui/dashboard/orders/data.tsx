@@ -20,7 +20,9 @@ export const statusColorMap: Record<
   3: "secondary",
 };
 
-export const availableOptions = {
+type AvailableOption = "Update Order" | "Checkout" | "Cancel Order" | "Generate Invoice";
+
+export const availableOptions: Record<string, AvailableOption[]> = {
   open: ["Update Order", "Checkout", "Cancel Order"],
   closed: ["Generate Invoice"],
   cancelled: [],

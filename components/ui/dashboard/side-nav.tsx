@@ -1,7 +1,20 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState } from "react";
+
+import { generateRefreshToken } from "@/app/api/controllers/auth";
 import CompanyLogo from "@/components/logo";
+import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
+import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { decryptPayload } from "@/lib/encrypt-decrypt";
+import {
+  getJsonItemFromLocalStorage,
+  resetLoginInfo,
+  saveJsonItemToLocalStorage,
+  setTokenCookie,
+} from "@/lib/utils";
 import {
   Avatar,
   Divider,
@@ -10,11 +23,12 @@ import {
   DropdownMenu,
   DropdownTrigger,
   Skeleton,
+  Spinner,
   useDisclosure,
 } from "@nextui-org/react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { FiLogOut } from "react-icons/fi";
 import { GoPlus } from "react-icons/go";
 import { IoIosArrowDown } from "react-icons/io";
@@ -23,218 +37,157 @@ import LogoutModal from "../logoutModal";
 import { SIDENAV_ITEMS } from "./constants";
 import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
-import React from "react";
-import { getJsonItemFromLocalStorage } from "@/lib/utils";
-
-interface Business {
-  businessId: string;
-  businessName: string;
-  city: string;
-  state: string;
-  businessAddress: string;
-  primaryColor: string;
-  secondaryColor: string;
-  businessContactEmail: string;
-  businessContactNumber: string;
-  logoImage?: string;
-}
-
-interface UserInformation {
-  token: string;
-  refreshToken: string;
-  tokenExpiration: string;
-  email: string;
-  isOwner: boolean;
-}
-
-interface LocalState {
-  business: Business[];
-  userInformation: UserInformation | null;
-  isOpenBusinessModal: boolean;
-}
-
-// Memoize the skeleton component
-const SideNavSkeleton = () => (
-  <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
-    <div className="flex flex-col w-full h-full relative">
-      <div className="flex-shrink-0">
-        <div className="flex flex-row items-center justify-center md:justify-start md:px-8 md:py-10 w-full">
-          <CompanyLogo
-            textColor="text-white font-lexend text-[28px] font-[600]"
-            containerClass="flex gap-2 items-center"
-          />
-        </div>
-      </div>
-      <div className="space-y-4 px-4">
-        {[1, 2, 3, 4, 5].map((item) => (
-          <div key={item} className="flex items-center gap-4 mb-6">
-            <Skeleton className="w-6 h-6 rounded-md" />
-            <Skeleton className="h-4 w-32 rounded-lg" />
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-// Memoize the MenuItem component
-const MenuItem = React.memo(({ item }: { item: SideNavItem }) => {
-  const pathname = usePathname();
-  const [subMenuOpen, setSubMenuOpen] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const router = useRouter();
-
-  const toggleSubMenu = useCallback(() => {
-    setSubMenuOpen(prev => !prev);
-  }, []);
-
-  const handleNavigation = useCallback(async (path: string) => {
-    setIsNavigating(true);
-    try {
-      await router.push(path);
-    } finally {
-      setIsNavigating(false);
-    }
-  }, [router]);
-
-  return (
-    <div>
-      {item.submenu ? (
-        <>
-          <button
-            onClick={toggleSubMenu}
-            className={`flex flex-row items-center p-2 rounded-lg  w-full justify-between  ${
-              pathname.includes(item.path) ? "bg-zinc-100" : ""
-            }`}
-          >
-            <div className="flex flex-row space-x-4 items-center">
-              {item.icon}
-              <span className="font-semibold text-xl  flex">{item.title}</span>
-            </div>
-
-            <div className={`${subMenuOpen ? "rotate-180" : ""} flex`}>
-              {/* <Icon icon='lucide:chevron-down' width='24' height='24' /> */}
-            </div>
-          </button>
-
-          {subMenuOpen && (
-            <div className="my-2 ml-12 flex flex-col space-y-4">
-              {item.subMenuItems?.map((subItem, idx) => {
-                return (
-                  <button
-                    key={idx}
-                    onClick={() => handleNavigation(subItem.path)}
-                    disabled={isNavigating}
-                    className={`text-white text-left ${
-                      subItem.path === pathname ? "font-bold" : ""
-                    } ${isNavigating ? "opacity-50 cursor-not-allowed" : ""}`}
-                  >
-                    <span>{subItem.title}</span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </>
-      ) : (
-        <button
-          onClick={() => handleNavigation(item.path)}
-          disabled={isNavigating}
-          className={`text-white flex flex-row space-x-4 items-center py-[13px] px-6 rounded-[4px] transition hover:bg-[#2B3342] w-full ${
-            item.path === pathname ? "bg-[#2B3342]" : ""
-          } ${isNavigating ? "opacity-50 cursor-not-allowed" : ""}`}
-        >
-          {item.title === "Menu" ? (
-            <PiBookOpenTextLight className="font-bold text-xl" />
-          ) : (
-            <Image src={item.icon} alt={item.title} />
-          )}
-
-          <span className="font-[400] text-[14px] flex">{item.title}</span>
-        </button>
-      )}
-    </div>
-  );
-});
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
-  const [isClient, setIsClient] = useState(false);
 
-  // Initialize state from localStorage
-  const [localState, setLocalState] = useState<LocalState>(() => {
-    if (typeof window !== 'undefined') {
-      return {
-        business: getJsonItemFromLocalStorage("business") || [],
-        userInformation: getJsonItemFromLocalStorage("userInformation"),
-        isOpenBusinessModal: false
-      };
+  const { data: businessDetails, isLoading } = useGetBusiness();
+  const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
+
+  const {
+    userRolePermissions,
+    role,
+    isLoading: isPermissionsLoading,
+  } = usePermission();
+
+  const business = getJsonItemFromLocalStorage("business") || [];
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+
+  const refreshToken = async () => {
+    const userData = getJsonItemFromLocalStorage("userInformation");
+    const businesses = getJsonItemFromLocalStorage("business");
+
+    if (!userData) return null;
+
+    const { refreshToken, email } = userData;
+    const businessId = businesses[0].businessId;
+
+    try {
+      const response = await generateRefreshToken({
+        refreshToken,
+        businessId,
+        email,
+      });
+
+      if (response?.data?.response) {
+        const decryptedData = decryptPayload(response?.data?.response);
+
+        const {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          tokenExpiration,
+        } = decryptedData?.data;
+
+        saveJsonItemToLocalStorage("userInformation", {
+          ...userData,
+          token: newToken,
+          refreshToken: newRefreshToken,
+          tokenExpiration,
+        });
+        setTokenCookie("token", newToken);
+        return newToken;
+      } else {
+        resetLoginInfo();
+      }
+    } catch (error) {
+      resetLoginInfo();
+      console.log(error);
     }
-    return {
-      business: [],
-      userInformation: null,
-      isOpenBusinessModal: false
-    };
-  });
+  };
 
-  // Initialize client-side state
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const toggleBtwBusiness = async (businessInfo: any) => {
+    const exists = business?.some(
+      (comparisonItem: any) => comparisonItem.businessId === businessInfo.id
+    );
 
-  // Get permissions from localStorage
-  const userRolePermissions = useMemo(() => {
-    return getJsonItemFromLocalStorage("userRolePermissions") || {};
-  }, []);
-
-  const role = useMemo(() => {
-    return getJsonItemFromLocalStorage("userRole") || 1;
-  }, []);
-
-  // Memoize filtered navigation items
-  const filteredNavItems = useMemo(() => {
-    if (!isClient) return [];
-    
-    return SIDENAV_ITEMS.filter((item) => {
-      if (role !== 1) return true;
-      
-      const permissionMap: Record<string, boolean | undefined> = {
-        Menu: userRolePermissions?.canViewMenu,
-        Campaigns: userRolePermissions?.canViewCampaign,
-        Reservation: userRolePermissions?.canViewReservation,
-        Payments: userRolePermissions?.canViewPayment,
-        Orders: userRolePermissions?.canViewOrder,
-        Reports: userRolePermissions?.canViewReport,
-        Bookings: userRolePermissions?.canViewBooking,
-        Dashboard: userRolePermissions?.canViewDashboard,
-        "Quick Response": userRolePermissions?.canViewQR
-      };
-
-      return permissionMap[item.title] !== false;
-    });
-  }, [role, userRolePermissions, isClient]);
-
-  const toggleBusinessModal = useCallback(() => {
-    setLocalState(prev => ({
-      ...prev,
-      isOpenBusinessModal: !prev.isOpenBusinessModal
+    const transformedArray = [businessInfo].map((item) => ({
+      businessId: item.id,
+      businessAddress: item.address,
+      state: item.state,
+      city: item.city,
+      businessName: item.name,
+      primaryColor: item.primaryBrandColour,
+      secondaryColor: item.secondaryBrandColour,
+      businessContactEmail: item.contactEmailAddress,
+      businessContactNumber: item.contactPhoneNumber,
     }));
-  }, []);
 
-  // Get subscription info from localStorage
-  const subscription = useMemo(() => {
-    return getJsonItemFromLocalStorage("subscription") || {};
-  }, []);
+    if (!exists) {
+      saveJsonItemToLocalStorage("business", transformedArray);
 
-  const canAccessMultipleLocations = useMemo(() => 
-    subscription?.planCapabilities?.canAccessMultipleLocations,
-    [subscription?.planCapabilities?.canAccessMultipleLocations]
-  );
+      await refreshToken();
+      window.location.reload();
+    }
+  };
 
-  // Show loading state during hydration
-  if (!isClient) {
-    return <SideNavSkeleton />;
-  }
+  const [isOpenBusinessModal, setIsOpenBusinessModal] = useState(false);
+  const toggleBusinessModal = () => {
+    setIsOpenBusinessModal(!isOpenBusinessModal);
+  };
+
+  const { data: subscription } = useSubscription();
+  const canAccessMultipleLocations =
+    subscription?.planCapabilities?.canAccessMultipleLocations;
+
+  const filteredItems = isPermissionsLoading
+    ? []
+    : SIDENAV_ITEMS.filter((item) => {
+        if (
+          item.title === "Menu" &&
+          role === 1 &&
+          userRolePermissions?.canViewMenu === false
+        )
+          return false;
+        if (
+          item.title === "Campaigns" &&
+          role === 1 &&
+          userRolePermissions?.canViewCampaign === false
+        )
+          return false;
+        if (
+          item.title === "Reservation" &&
+          role === 1 &&
+          userRolePermissions?.canViewReservation === false
+        )
+          return false;
+        if (
+          item.title === "Payments" &&
+          userRolePermissions?.canViewPayment === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Orders" &&
+          userRolePermissions?.canViewOrder === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Reports" &&
+          userRolePermissions?.canViewReport === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Bookings" &&
+          userRolePermissions?.canViewBooking === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Dashboard" &&
+          userRolePermissions?.canViewDashboard === false &&
+          role === 1
+        )
+          return false;
+        if (
+          item.title === "Quick Response" &&
+          userRolePermissions?.canViewQR === false &&
+          role === 1
+        )
+          return false;
+        return true;
+      });
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
@@ -260,17 +213,22 @@ const SideNav = () => {
           }}
         >
           <div className="flex flex-col space-y-1 md:px-2 pb-10">
-            {!isClient ? (
-              <div className="space-y-4 px-4">
-                {[1, 2, 3, 4, 5].map((item) => (
-                  <div key={item} className="flex items-center gap-4">
-                    <Skeleton className="w-6 h-6 rounded-md" />
-                    <Skeleton className="h-4 w-32 rounded-lg" />
-                  </div>
-                ))}
+            {isPermissionsLoading ? (
+              <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
+              <div className="flex flex-col gap-4 w-full h-full relative">
+             
+                <div className="space-y-4 px-4 mt-4">
+                  {[1, 2, 3, 4, 5, 6,7,8,9].map((item) => (
+                    <div key={item} className="flex items-center gap-6">
+                      <Skeleton className="w-6 h-6 rounded-md" />
+                      <Skeleton className="h-4 w-32 rounded-lg" />
+                    </div>
+                  ))}
+                </div>
               </div>
+            </div>
             ) : (
-              filteredNavItems.map((item, idx) => {
+              filteredItems.map((item, idx) => {
                 return <MenuItem key={idx} item={item} />;
               })
             )}
@@ -288,33 +246,33 @@ const SideNav = () => {
             }}
           >
             <DropdownTrigger>
-              {!isClient ? (
-                <div className="w-full flex items-center gap-3 px-5 py-8">
+              {isLoading ? (
+                <div className="w-full flex items-center gap-3   px-5 py-8">
                   <div>
                     <Skeleton className="animate-pulse flex rounded-full w-12 h-12" />
                   </div>
-                  <div className="w-full flex flex-col gap-2">
+                  <div className="w-full flex flex-col gap-2 ">
                     <Skeleton className="animate-pulse h-2 w-3/5 rounded-lg" />
                     <Skeleton className="animate-pulse h-2 w-4/5 rounded-lg" />
                   </div>
                 </div>
               ) : (
-                <div className="flex cursor-pointer justify-center items-center px-2 py-8 gap-4 w-full">
+                <div className="flex cursor-pointer justify-center items-center px-2 py-8 gap-4 w-full ">
                   <div>
                     <Avatar
                       isBordered
-                      src={localState.business[0]?.logoImage ? `data:image/jpeg;base64,${localState.business[0].logoImage}` : undefined}
+                      src={`data:image/jpeg;base64,${businessDetails?.logoImage}`}
                       showFallback={true}
-                      name={localState.business[0]?.businessName}
+                      name={business[0]?.businessName}
                     />
                   </div>
                   <div className="flex flex-col w-[45%]">
                     <span className="text-[14px] font-[600]">
-                      {localState.business[0]?.businessName}
+                      {business[0]?.businessName}
                     </span>
-                    <div className="text-[12px] font-[400] pr-5">
-                      {localState.business[0]?.city}
-                      {localState.business[0]?.city && ","} {localState.business[0]?.state}
+                    <div className="text-[12px]  font-[400] pr-5">
+                      {business[0]?.city}
+                      {business[0]?.city && ","} {business[0]?.state}
                     </div>
                   </div>
                   <div className="cursor-pointer">
@@ -328,28 +286,30 @@ const SideNav = () => {
               aria-label="Dropdown menu to switch businesses"
               className="max-h-[300px] overflow-y-auto"
             >
-              {isClient && localState.userInformation?.isOwner &&
+              {userInformation?.isOwner &&
                 canAccessMultipleLocations &&
-                localState.business?.map((item) => {
+                businessDetailsList?.map((item: any) => {
                   return (
                     <DropdownItem
                       classNames={{
                         base: "hover:bg-none max-h-[100px] overflow-scroll",
                       }}
-                      key={item.businessId}
+                      key={item?.id}
+                      onClick={() => toggleBtwBusiness(item)}
                     >
                       <div className="flex items-center gap-3">
                         <Avatar
                           showFallback={true}
-                          src={item.logoImage ? `data:image/jpeg;base64,${item.logoImage}` : undefined}
-                          name={item.businessName}
+                          src={`data:image/jpeg;base64,${item?.logoImage}`}
+                          name={item?.name}
                         />
                         <div className="flex flex-col">
                           <span className="font-[500] text-[14px]">
-                            {item.businessName}
+                            {item?.name}
                           </span>
+
                           <span className="text-xs text-secondaryGrey">
-                            {item.city}
+                            {item?.city}
                           </span>
                         </div>
                       </div>
@@ -357,12 +317,12 @@ const SideNav = () => {
                   );
                 })}
 
-              {isClient && localState.userInformation?.isOwner && canAccessMultipleLocations && (
+              {userInformation?.isOwner && canAccessMultipleLocations && (
                 <DropdownItem
                   key="add another business"
                   onClick={toggleBusinessModal}
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 ">
                     <div className="p-2 rounded-md bg-[#7182A3]">
                       <GoPlus className="text-[20px] font-[700]" />
                     </div>
@@ -378,7 +338,7 @@ const SideNav = () => {
                 color="danger"
                 onClick={onOpenChange}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 ">
                   <div className="p-2 rounded-md">
                     <FiLogOut className="text-[20px]" />
                   </div>
@@ -390,12 +350,80 @@ const SideNav = () => {
         </div>
       </div>
       <AddBusiness
-        isOpenBusinessModal={localState.isOpenBusinessModal}
+        refetch={refetch}
         toggleBusinessModal={toggleBusinessModal}
+        isOpenBusinessModal={isOpenBusinessModal}
       />
       <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
     </div>
   );
 };
 
-export default React.memo(SideNav);
+export default SideNav;
+
+const MenuItem = ({ item }: { item: SideNavItem }) => {
+  const pathname = usePathname();
+  const [subMenuOpen, setSubMenuOpen] = useState(false);
+  const toggleSubMenu = () => {
+    setSubMenuOpen(!subMenuOpen);
+  };
+
+  return (
+    <div>
+      {item.submenu ? (
+        <>
+          <button
+            onClick={toggleSubMenu}
+            className={`flex flex-row items-center p-2 rounded-lg  w-full justify-between  ${
+              pathname.includes(item.path) ? "bg-zinc-100" : ""
+            }`}
+          >
+            <div className="flex flex-row space-x-4 items-center">
+              {item.icon}
+              <span className="font-semibold text-xl  flex">{item.title}</span>
+            </div>
+
+            <div className={`${subMenuOpen ? "rotate-180" : ""} flex`}>
+              {/* <Icon icon='lucide:chevron-down' width='24' height='24' /> */}
+            </div>
+          </button>
+
+          {subMenuOpen && (
+            <div className="my-2 ml-12 flex flex-col space-y-4">
+              {item.subMenuItems?.map((subItem, idx) => {
+                return (
+                  <Link
+                    prefetch={true}
+                    key={idx}
+                    href={subItem.path}
+                    className={`text-white ${
+                      subItem.path === pathname ? "font-bold" : ""
+                    }`}
+                  >
+                    <span>{subItem.title}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </>
+      ) : (
+        <Link
+          prefetch={true}
+          href={item.path}
+          className={`text-white flex flex-row space-x-4 items-center py-[13px] px-6 rounded-[4px] transition hover:bg-[#2B3342] ${
+            item.path === pathname ? "bg-[#2B3342]" : ""
+          }`}
+        >
+          {item.title === "Menu" ? (
+            <PiBookOpenTextLight className="font-bold text-xl" />
+          ) : (
+            <Image src={item.icon} alt={item.title} />
+          )}
+
+          <span className="font-[400] text-[14px] flex">{item.title}</span>
+        </Link>
+      )}
+    </div>
+  );
+};
