@@ -8,7 +8,6 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
-  Spacer,
   Spinner,
   Table,
   TableBody,
@@ -16,7 +15,10 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Selection,
+  SortDescriptor,
 } from '@nextui-org/react';
+import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 
 import { GrFormView } from 'react-icons/gr';
@@ -29,7 +31,6 @@ import usePagination from '@/hooks/usePagination';
 import { formatPrice } from '@/lib/utils';
 import ApprovePayment from './approvePayment';
 import Filters from './filters';
-import PaymentCard from './paymentCard';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'totalAmount',
@@ -41,56 +42,56 @@ const INITIAL_VISIBLE_COLUMNS = [
   'status',
   'actions',
 ];
-const PaymentsList = ({
-  refetch,
-  data,
+interface PaymentItem {
+  id: string;
+  qrName: string;
+  reference: string;
+  treatedBy: string;
+  totalAmount: number;
+  dateCreated: string;
+  customer: string;
+  status: number;
+  paymentReference: string;
+}
+
+interface PaymentCategory {
+  name: string;
+  totalCount: number;
+  payments: PaymentItem[];
+}
+
+interface PaymentsListProps {
+  payments: PaymentItem[];
+  categories: PaymentCategory[];
+  searchQuery: string;
+  refetch: () => void;
+  isLoading?: boolean;
+}
+
+const PaymentsList: React.FC<PaymentsListProps> = ({
   payments,
+  categories,
   searchQuery,
-
-  isLoading,
-}: any) => {
-  const [singlePayment, setSinglePayment] = React.useState('');
+  refetch,
+  isLoading = false,
+}) => {
+  const [singlePayment, setSinglePayment] = React.useState<PaymentItem | null>(null);
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
-
-  const [filteredPayment, setFilteredPayment] = React.useState(
-    payments[0]?.payments
-  );
-
-  useEffect(() => {
-    if (payments && searchQuery) {
-      const filteredData = payments.map((payment) => ({
-        ...payment,
-        payments: payment?.payments?.filter(
-          (item) =>
-            item?.qrName?.toLowerCase().includes(searchQuery) ||
-            String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
-            item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-            item?.reference?.toLowerCase().includes(searchQuery) ||
-            item?.treatedBy?.toLowerCase().includes(searchQuery) ||
-            item?.paymentReference?.toLowerCase().includes(searchQuery) ||
-            item?.customer?.toLowerCase().includes(searchQuery)
-        ),
-      }));
-
-      setFilteredPayment(filteredData.length > 0 ? filteredData[0].orders : []);
-    } else {
-      setFilteredPayment(payments?.[0]?.payments);
-    }
-  }, [searchQuery, payments]);
+  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
+  const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
 
   const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
     useGlobalContext();
 
-  const matchingObject = payments?.find(
-    (category) => category?.name === tableStatus
-  );
-  const matchingObjectArray = matchingObject ? matchingObject?.orders : [];
+  const paymentDetails = payments.payments;
+
+  const matchingObjectArray = paymentDetails;
+  
 
   const {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -101,28 +102,48 @@ const PaymentsList = ({
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(
+    matchingObjectArray, 
+    columns, 
+    INITIAL_VISIBLE_COLUMNS
+  );
 
-  const toggleApproveModal = (payment: any) => {
+
+  const toggleApproveModal = (payment: PaymentItem) => {
     setSinglePayment(payment);
     setIsOpen(!isOpen);
   };
 
   const [value, setValue] = useState('');
 
-  const handleTabChange = (index) => {
+  const handleTabChange = (index: string) => {
     setValue(index);
   };
 
-  const handleTabClick = (index) => {
+  const handleTabClick = (categoryName: string) => {
+    // Immediately show loading state for any tab switch
+    setIsFirstTimeLoading(true);
+    
+    setTableStatus(categoryName);
     setPage(1);
-    const filteredPayment = payments.filter((item) => item.name === index);
-    setTableStatus(filteredPayment[0]?.name);
-    setFilteredPayment(filteredPayment[0]?.payments);
+    
+    // Check if this category has been loaded before
+    const isFirstTime = !loadedCategories.has(categoryName);
+    
+    // Mark category as loaded and stop loading when data refetch completes
+    // The loading state will be managed by the data fetching process
+    if (isFirstTime) {
+      setLoadedCategories(prev => new Set([...prev, categoryName]));
+    }
+    
+    // Stop loading state after a minimal delay to allow data fetching to start
+    setTimeout(() => {
+      setIsFirstTimeLoading(false);
+    }, 100);
   };
 
-  const renderCell = React.useCallback((payment, columnKey) => {
-    const cellValue = payment[columnKey];
+  const renderCell = React.useCallback((payment: PaymentItem, columnKey: string) => {
+    const cellValue = payment[columnKey as keyof PaymentItem];
 
     switch (columnKey) {
       case 'totalAmount':
@@ -155,7 +176,7 @@ const PaymentsList = ({
             size='sm'
             variant='bordered'
           >
-            {statusDataMap[cellValue]}
+            {statusDataMap[payment.status]}
           </Chip>
         );
 
@@ -192,65 +213,67 @@ const PaymentsList = ({
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        payments={payments}
+        payments={categories}
         handleTabChange={handleTabChange}
         value={value}
         handleTabClick={handleTabClick}
       />
     );
   }, [
+    categories,
     filterValue,
     statusFilter,
     visibleColumns,
     onSearchChange,
     onRowsPerPageChange,
-    filteredPayment.length,
     hasSearchFilter,
+    handleTabChange,
+    value,
+    handleTabClick,
   ]);
 
+  // Determine if we should show loading spinner
+  const shouldShowLoading = isFirstTimeLoading || (isLoading && !loadedCategories.has(tableStatus));
+
   return (
-    <>
-      <PaymentCard data={data} />
-      <Spacer y={5} />
-      <section className='border border-primaryGrey rounded-lg'>
+    <section className='border border-primaryGrey rounded-lg'>
         <Table
           radius='lg'
           isCompact
           removeWrapper
-          allowsSorting
           aria-label='list of payments'
           bottomContent={bottomContent}
           bottomContentPlacement='outside'
           classNames={classNames}
           selectedKeys={selectedKeys}
           // selectionMode='multiple'
-          sortDescriptor={sortDescriptor}
+          sortDescriptor={sortDescriptor as SortDescriptor}
           topContent={topContent}
           topContentPlacement='outside'
-          onSelectionChange={setSelectedKeys}
-          onSortChange={setSortDescriptor}
+          onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+          onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
         >
           <TableHeader columns={headerColumns}>
             {(column) => (
               <TableColumn
                 key={column.uid}
                 align={column.uid === 'actions' ? 'center' : 'start'}
-                allowsSorting={column.sortable}
+                allowsSorting={true}
               >
                 {column.name}
               </TableColumn>
             )}
           </TableHeader>
-          <TableBody
-            isLoading={isLoading}
-            loadingContent={<Spinner label='fetching payment...' />}
+          <TableBody 
+            isLoading={shouldShowLoading}
+            loadingContent={<SpinnerLoader size="md" />}
             emptyContent={'No payment(s) found'}
-            items={matchingObjectArray}
+            items={shouldShowLoading ? [] : (Array.isArray(paymentDetails) ? paymentDetails : [])}
           >
-            {(item) => (
-              <TableRow key={item?.name}>
+            {(payment: PaymentItem) => (
+              <TableRow key={String(payment?.id)}>
                 {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
+                  <TableCell>{renderCell(payment, String(columnKey))}</TableCell>
                 )}
               </TableRow>
             )}
@@ -262,8 +285,7 @@ const PaymentsList = ({
           isOpen={isOpen}
           toggleApproveModal={toggleApproveModal}
         />
-      </section>
-    </>
+    </section>
   );
 };
 

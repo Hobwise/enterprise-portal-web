@@ -4,18 +4,18 @@ import { generateRefreshToken, logout } from './controllers/auth';
 import { decryptPayload } from '@/lib/encrypt-decrypt';
 
 let isRefreshing = false;
-let refreshSubscribers = [];
+let refreshSubscribers: Array<(token?: string | null, error?: any) => void> = [];
 
-const subscribeTokenRefresh = (callback) => {
+const subscribeTokenRefresh = (callback: (token?: string | null, error?: any) => void) => {
   refreshSubscribers.push(callback);
 };
 
-const onTokenRefreshed = (token) => {
+const onTokenRefreshed = (token: string) => {
   refreshSubscribers.forEach((callback) => callback(token));
   refreshSubscribers = [];
 };
 
-const onRefreshFailed = (error) => {
+const onRefreshFailed = (error: any) => {
   refreshSubscribers.forEach((callback) => callback(null, error));
   refreshSubscribers = [];
 };
@@ -78,6 +78,7 @@ const refreshToken = async () => {
   } catch (error) {
     onRefreshFailed(error);
     resetLoginInfo();
+    window.location.href = '/auth/login';
     throw error;
   } finally {
     isRefreshing = false;
@@ -132,12 +133,12 @@ api.interceptors.response.use(
 
       if (isRefreshing) {
         try {
-          const newToken = await new Promise((resolve, reject) => {
-            subscribeTokenRefresh((token, err) => {
+          const newToken = await new Promise<string | null>((resolve, reject) => {
+            subscribeTokenRefresh((token?: string | null, err?: any) => {
               if (err) {
                 reject(err);
               } else {
-                resolve(token);
+                resolve(token || null);
               }
             });
           });
@@ -157,9 +158,10 @@ api.interceptors.response.use(
           const newToken = await refreshToken();
           originalConfig.headers.Authorization = `Bearer ${newToken}`;
           return api(originalConfig);
-        } catch (refreshError) {
+        } catch (refreshError: any) {
           if (refreshError.response && refreshError.response.status === 400) {
             resetLoginInfo();
+            window.location.href = '/auth/login';
           }
           return Promise.reject(refreshError);
         }

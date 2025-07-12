@@ -16,6 +16,7 @@ import {
   DropdownMenu,
   DropdownSection,
   DropdownTrigger,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -23,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@nextui-org/react";
+import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 import moment from "moment";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 
@@ -52,16 +54,43 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
-const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
+interface BookingItem {
+  reservationName: string;
+  firstName: string;
+  lastName: string;
+  emailAddress: string;
+  phoneNumber: string;
+  reference: string;
+  checkInDateTime: string;
+  checkOutDateTime: string;
+  bookingDateTime: string;
+  bookingStatus: number;
+  statusComment: string;
+}
+
+interface BookingCategory {
+  name: string;
+  totalCount: number;
+  bookings: BookingItem[];
+}
+
+interface BookingsListProps {
+  bookings: BookingItem[];
+  categories: BookingCategory[];
+  searchQuery: string;
+  refetch: () => void;
+  isLoading?: boolean;
+}
+
+const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searchQuery, refetch, isLoading = false }) => {
   const { userRolePermissions, role } = usePermission();
-  const [filteredBooking, setFilteredBooking] = React.useState(
-    bookings[0]?.bookings
-  );
   const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
   const [isEditBookingModal, setIsEditBookingModal] =
     React.useState<Boolean>(false);
   const [id, setId] = React.useState<Number>();
   const [eachBooking, setEachBooking] = React.useState<any>(null);
+  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
+  const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
 
   const toggleDeleteModal = (id?: number) => {
     setId(id);
@@ -75,39 +104,41 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
   const { page, rowsPerPage, tableStatus, setTableStatus, setPage } =
     useGlobalContext();
 
-  const handleTabClick = (index) => {
+  const handleTabClick = (categoryName: string) => {
+    // Immediately show loading state for any tab switch
+    setIsFirstTimeLoading(true);
+    
+    setTableStatus(categoryName);
     setPage(1);
-    const filteredBooking = bookings.filter((item) => item.name === index);
-    setTableStatus(filteredBooking[0]?.name);
-
-    setFilteredBooking(filteredBooking[0]?.bookings);
+    
+    // Check if this category has been loaded before
+    const isFirstTime = !loadedCategories.has(categoryName);
+    
+    // Mark category as loaded and stop loading when data refetch completes
+    // The loading state will be managed by the data fetching process
+    if (isFirstTime) {
+      setLoadedCategories(prev => new Set([...prev, categoryName]));
+    }
+    
+    // Stop loading state after a minimal delay to allow data fetching to start
+    setTimeout(() => {
+      setIsFirstTimeLoading(false);
+    }, 100);
   };
 
-  useEffect(() => {
-    if (bookings && searchQuery) {
-      const filteredData = bookings
-        ?.filter(
-          (item) =>
-            item?.reservationName?.toLowerCase().includes(searchQuery) ||
-            item?.firstName?.toLowerCase().includes(searchQuery) ||
-            item?.lastName?.toLowerCase().includes(searchQuery) ||
-            item?.reference?.toLowerCase().includes(searchQuery) ||
-            item?.emailAddress?.toLowerCase().includes(searchQuery) ||
-            item?.phoneNumber?.toLowerCase().includes(searchQuery) ||
-            item?.bookingDateTime?.toLowerCase().includes(searchQuery)
-        )
-        .filter((item) => Object.keys(item).length > 0);
-      setFilteredBooking(filteredData.length > 0 ? filteredData : []);
-    } else {
-      setFilteredBooking(bookings);
-    }
-  }, [searchQuery, bookings]);
+  const bookingDetails = bookings.bookings || bookings;
 
-  const matchingObject = bookings?.find(
-    (category) => category?.name === tableStatus
+  const filteredBookings = bookingDetails.filter(booking =>
+    booking.reservationName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.emailAddress?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    booking.bookingDateTime?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const matchingObjectArray = matchingObject ? matchingObject?.bookings : [];
+  const matchingObject = bookings;
 
   const {
     bottomContent,
@@ -198,7 +229,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
               <DropdownMenu className="text-black">
                 <DropdownSection>
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 1 && (
+                    booking?.bookingStatus === 1 ? (
                       <DropdownItem
                         aria-label="admit"
                         onClick={() =>
@@ -215,9 +246,9 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                           <p>Admit</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    ) : null}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 0 && (
+                    booking?.bookingStatus === 0 ? (
                       <DropdownItem
                         aria-label="confirm booking"
                         onClick={() =>
@@ -235,11 +266,11 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                           <p>Confirm booking</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    ) : null}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     booking?.bookingStatus !== 6 &&
                     booking?.bookingStatus !== 4 &&
-                    booking?.bookingStatus !== 5 && (
+                    booking?.bookingStatus !== 5 ? (
                       <DropdownItem
                         aria-label="edit booking"
                         onClick={() => toggleEditBookingModal(booking)}
@@ -252,10 +283,10 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                           <p>Edit booking</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    ) : null}
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
                     (booking?.bookingStatus === 0 ||
-                      booking?.bookingStatus === 1) && (
+                      booking?.bookingStatus === 1) ? (
                       <DropdownItem
                         aria-label="cancel"
                         onClick={() => {
@@ -271,10 +302,10 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                           <p>Cancel booking</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    ) : null}
 
                   {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 2 && (
+                    booking?.bookingStatus === 2 ? (
                       <DropdownItem
                         aria-label="close booking"
                         onClick={() =>
@@ -292,7 +323,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
                           <p>Close booking</p>
                         </div>
                       </DropdownItem>
-                    )}
+                    ) : null}
                 </DropdownSection>
               </DropdownMenu>
             </Dropdown>
@@ -306,21 +337,27 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        bookings={bookings}
+        bookings={categories.bookingCategories}
         handleTabChange={handleTabChange}
         value={value}
         handleTabClick={handleTabClick}
       />
     );
   }, [
+    categories,
     filterValue,
     statusFilter,
     visibleColumns,
     onSearchChange,
     onRowsPerPageChange,
-    filteredBooking?.length,
     hasSearchFilter,
+    handleTabChange,
+    value,
+    handleTabClick,
   ]);
+
+  // Determine if we should show loading spinner
+  const shouldShowLoading = isFirstTimeLoading || (isLoading && !loadedCategories.has(tableStatus));
 
   return (
     <section className="border border-primaryGrey rounded-lg">
@@ -354,12 +391,14 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
         </TableHeader>
         <TableBody
           emptyContent={"No booking(s) found"}
-          items={matchingObjectArray}
+          items={shouldShowLoading ? [] : (Array.isArray(bookingDetails) ? bookingDetails : [])}
+          isLoading={shouldShowLoading}
+          loadingContent={<SpinnerLoader size="md" />}
         >
-          {(item) => (
-            <TableRow key={item?.id}>
+          {(booking: BookingItem) => (
+            <TableRow key={String(booking?.reference)}>
               {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
+                <TableCell>{renderCell(booking, String(columnKey))}</TableCell>
               )}
             </TableRow>
           )}

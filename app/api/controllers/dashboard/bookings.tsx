@@ -94,37 +94,51 @@ export async function updateBooking(
   }
 }
 
-export async function getBookingsByBusiness(
+export async function getBookingCategories(
   businessId: string,
-  page: any,
-  rowsPerPage: any,
-  tableStatus: any,
-  filterType: any,
-  startDate?: any,
-  endDate?: any
+  // filterType: number,
+  // startDate?: string,
+  // endDate?: string
 ) {
   const headers = businessId ? { businessId } : {};
-
   const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    // filterType: filterType,
     businessId: businessId,
-    statusPaginationInfoList: [
-      {
-        status: tableStatus || "All",
-        page: page || 1,
-        pageSize: rowsPerPage || 10,
-      },
-    ],
+
   };
 
   try {
-    const data = await api.post(DASHBOARD.bookingsByBusiness, payload, {
+    const data = await api.get(DASHBOARD.bookingsByBusiness, {
+      params: payload,
       headers,
     });
 
     return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getBookingDetails(
+  businessId: string,
+  category: string,
+  page?: number,
+  pageSize?: number
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    category: category,
+    businessId: businessId,
+    page: page || 0,
+    pageSize: pageSize || 10,
+  };
+
+  try {
+    const response = await api.post(DASHBOARD.bookingsByDetails, payload, {
+      headers,
+    });
+    return response.data;
+
+
   } catch (error) {
     handleError(error, false);
   }

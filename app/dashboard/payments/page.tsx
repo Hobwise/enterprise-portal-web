@@ -1,38 +1,40 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import {
-  dynamicExportConfig,
-  getJsonItemFromLocalStorage,
-} from "@/lib/utils";
+import { dynamicExportConfig, getJsonItemFromLocalStorage } from "@/lib/utils";
 
 import { CustomInput } from "@/components/CustomInput";
 import Error from "@/components/error";
 import NoPaymentsScreen from "@/components/ui/dashboard/payments/noPayments";
 import PaymentsList from "@/components/ui/dashboard/payments/payment";
 import usePayment from "@/hooks/cachedEndpoints/usePayment";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useDateFilter from "@/hooks/useDateFilter";
-import { downloadCSV } from "@/lib/downloadToExcel";
 import { Button, ButtonGroup, Chip } from "@nextui-org/react";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import toast from "react-hot-toast";
 import { VscLoading } from "react-icons/vsc";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
+import { CustomButton } from "@/components/customButton";
 
 const Payments: React.FC = () => {
   const {
-    data,
+    categories,
+    details,
     isLoading,
     isError,
     refetch,
     dropdownComponent,
     datePickerModal,
     filterType,
+    startDate,
+    endDate,
   } = useDateFilter(usePayment);
+  const { userRolePermissions, role } = usePermission();
   const businessInformation = getJsonItemFromLocalStorage("business");
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -40,36 +42,22 @@ const Payments: React.FC = () => {
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
-    refetch()
+    refetch();
     setTableStatus("All");
     setPage(1);
-  }, []);
+  }, [filterType, startDate, endDate, refetch]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  const filteredItems = useMemo(() => {
-    return data?.paymentComposites?.map((item) => ({
-      ...item,
-      orders: item?.payments?.filter(
-        (item) =>
-          item?.qrName?.toLowerCase().includes(searchQuery) ||
-          String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
-          item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-          item?.reference?.toLowerCase().includes(searchQuery) ||
-          item?.treatedBy?.toLowerCase().includes(searchQuery) ||
-          item?.paymentReference?.toLowerCase().includes(searchQuery) ||
-          item?.customer?.toLowerCase().includes(searchQuery)
-      ),
-    }));
-  }, [data?.paymentComposites, searchQuery]);
+  const data = { categories, details };
 
   const exportCSV = async () => {
     setLoadingExport(true);
     const response = await exportGrid(
       businessInformation[0]?.businessId,
-      5,
+      5, // 5 for payments
       filterType
     );
     setLoadingExport(false);
@@ -88,20 +76,26 @@ const Payments: React.FC = () => {
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
+  // Payment summary values (adjust keys if needed)
+
+
   return (
     <>
-      <div className="flex flex-row flex-wrap  xl:mb-8 mb-4 items-center justify-between">
+      {/* Payment Summary Card */}
+
+      {/* Existing filters/search UI */}
+      <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data?.paymentComposites?.[0]?.payments?.length > 0 ? (
+            {data?.categories.data.categoryCount > 0 ? (
               <div className="flex items-center">
-                <span>All Payment</span>
+                <span> Payments</span>
                 <Chip
                   classNames={{
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data?.paymentComposites[0]?.totalCount}
+                  {data?.categories.data.categoryCount}
                 </Chip>
               </div>
             ) : (
@@ -112,9 +106,9 @@ const Payments: React.FC = () => {
             Showing all payments
           </p>
         </div>
-        <div className="flex  gap-3">
+        <div className="flex items-center gap-3">
           {dropdownComponent}
-          {data?.paymentComposites?.[0]?.payments?.length > 0 && (
+          {data?.categories.data.paymentCategories.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -146,16 +140,44 @@ const Payments: React.FC = () => {
               </ButtonGroup>
             </>
           )}
+          {(role === 0 || userRolePermissions?.canCreatePayment) && (
+            <CustomButton
+              onClick={() => {}}
+              className="py-2 px-4 mb-0 text-white"
+              backgroundColor="bg-primaryColor"
+            >
+              <div className="flex gap-2 items-center justify-center">
+                <IoAddCircleOutline className="text-[22px]" />
+                <p>{"Create payment"} </p>
+              </div>
+            </CustomButton>
+          )}
+
         </div>
       </div>
+          <div className=" rounded-md bg-[#F7F6FA] p-6 mb-6 flex flex-row gap-12 items-center">
+            {
+              data?.categories.data.paymentCategories.map((item:any, idx:any) => (
+            <div className="flex-1" key={idx}>
+              <div className="text-grey600 text-lg mb-1">{item.name}</div>
+              <div className="text-3xl font-bold text-black">
+                ₦{item.totalAmount.toLocaleString()}
+              </div>
+            </div>
 
-      {data?.paymentComposites?.[0]?.payments?.length > 0 ? (
+              ))
+            }
+        
+          </div>
+
+      {data?.categories.data.paymentCategories &&
+      data?.categories.data.paymentCategories.length > 0 ? (
         <PaymentsList
-          data={data}
-          isLoading={isLoading}
-          payments={filteredItems}
+          payments={data.details.data || []}
+          categories={data?.categories.data.paymentCategories}
           refetch={refetch}
           searchQuery={searchQuery}
+          isLoading={isLoading}
         />
       ) : (
         <NoPaymentsScreen />

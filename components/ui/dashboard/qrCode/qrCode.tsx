@@ -105,6 +105,25 @@ const QrList = ({ qr, searchQuery, data }: any) => {
     setIsOpenConfirmOrder(!isOpenConfirmOrder);
   };
 
+  // Helper to check if click is inside actions column
+  const isClickInsideActions = (event: React.MouseEvent) => {
+    let node = event.target as HTMLElement | null;
+    while (node) {
+      if (node.getAttribute && node.getAttribute('aria-label') === 'actions') {
+        return true;
+      }
+      node = node.parentElement;
+    }
+    return false;
+  };
+
+  const handleRowClick = (qr: any, event: React.MouseEvent) => {
+    if (!isClickInsideActions(event)) {
+      saveJsonItemToLocalStorage('qr', qr);
+      toggleQRmodalView();
+    }
+  };
+
   const renderCell = React.useCallback((qr, columnKey) => {
     const cellValue = qr[columnKey];
 
@@ -217,8 +236,12 @@ const QrList = ({ qr, searchQuery, data }: any) => {
           )}
         </TableHeader>
         <TableBody emptyContent={'No qr found'} items={filteredQr}>
-          {(item) => (
-            <TableRow key={item?.name}>
+          {(item, index) => (
+            <TableRow 
+              key={item?.id || item?.name || `qr-row-${index}`}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={(e) => handleRowClick(item, e)}
+            >
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

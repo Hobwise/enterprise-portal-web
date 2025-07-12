@@ -50,3 +50,33 @@ export async function confirmPayment(businessId: string, payload: any) {
     handleError(error);
   }
 }
+
+export async function getPaymentDetails(
+  businessId: string,
+  category: string,
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  page?: number,
+  pageSize?: number
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    startDate: startDate,
+    endDate: endDate,
+    filterType: filterType,
+    category: category,
+    businessId: businessId,
+    page: page || 0,
+    pageSize: pageSize || 10,
+  };
+
+  try {
+    const response = await api.post(DASHBOARD.paymentByDetail, payload, {
+      headers,
+    });
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}

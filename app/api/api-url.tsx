@@ -65,6 +65,7 @@ export const DASHBOARD = {
 
   // Payments
   paymentByBusiness: "api/v1/Payment/categories",
+  paymentByDetail: "api/v1/Payment/details",
   confirmPayment: "api/v1/Payment/confirm",
   // Quick response
   qrByBusiness: "api/v1/QuickResponse/detail-by-business",
@@ -78,7 +79,8 @@ export const DASHBOARD = {
   singleBookings: "api/v1/Reservation/by-id",
   // Bookings
   bookings: "api/v1/Booking",
-  bookingsByBusiness: "api/v1/Booking/business",
+  bookingsByBusiness: "api/v1/Booking/categories",
+  bookingsByDetails: "api/v1/Booking/details",
   bookingsByRef: "api/v1/Booking/by-ref",
   updateStatus: "api/v1/Booking/update-status",
   //Campaigns
