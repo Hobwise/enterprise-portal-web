@@ -134,6 +134,7 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
     setSelectedCategory(categoryName);
     setPage(1); // Reset to first page when changing category
     // The useCampaignCategory hook will automatically refetch with new category
+    // and handle loading states properly
   };
 
   const handleTabChange = (_: any) => {
@@ -337,7 +338,7 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
               searchQuery ? "No campaigns match your search" : "No campaign found"
             )
           }
-          items={campaignsToDisplay}
+          items={isCategoryLoading ? [] : campaignsToDisplay}
         >
           {(item: Campaign) => (
             <TableRow key={item.id || JSON.stringify(item)}>

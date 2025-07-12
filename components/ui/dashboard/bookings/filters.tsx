@@ -2,6 +2,9 @@
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 
 const Filters = ({ bookings, handleTabChange, handleTabClick }: any) => {
+
+  console.log(bookings);
+  
   return (
     <>
       {/* <div className='flex relative w-full top-4 px-3  border-b border-primaryGrey justify-between'> */}
@@ -19,10 +22,10 @@ const Filters = ({ bookings, handleTabChange, handleTabClick }: any) => {
         aria-label='booking filter'
         onChange={handleTabChange}
       >
-        {bookings?.map((booking: any) => {
+        {bookings?.map((booking: any, index: number) => {
           return (
             <Tab
-              key={booking.name}
+              key={booking.id || booking.name || `booking-filter-${index}`}
               title={
                 <div
                   onClick={() => handleTabClick(booking.name)}

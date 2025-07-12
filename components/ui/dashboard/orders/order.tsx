@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownSection,
   DropdownTrigger,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -19,6 +20,7 @@ import {
   Selection,
   SortDescriptor,
 } from '@nextui-org/react';
+import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import { useRouter } from 'next/navigation';
 import { BsCalendar2Check } from 'react-icons/bs';
 import { FaRegEdit } from 'react-icons/fa';
@@ -57,6 +59,7 @@ interface OrderItem {
   status: 0 | 1 | 2 | 3;
   dateCreated: string;
   comment?: string;
+  paymemts:any;
   orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number }[];
 }
 
@@ -71,6 +74,7 @@ interface OrdersListProps {
   categories: OrderCategory[];
   searchQuery: string;
   refetch: () => void;
+  isLoading?: boolean;
 }
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -83,7 +87,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
-const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery, refetch }) => {
+const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery, refetch, isLoading = false }) => {
 
   const router = useRouter();
   const { userRolePermissions, role } = usePermission();
@@ -94,6 +98,8 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [isOpenComment, setIsOpenComment] = React.useState<Boolean>(false);
+  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
+  const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
 
   const {
     toggleModalDelete,
@@ -109,20 +115,34 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
   } = useGlobalContext();
 
   const handleTabClick = (categoryName: string) => {
+    // Immediately show loading state for any tab switch
+    setIsFirstTimeLoading(true);
+    
     setTableStatus(categoryName);
     setPage(1);
+    
+    // Check if this category has been loaded before
+    const isFirstTime = !loadedCategories.has(categoryName);
+    
+    // Mark category as loaded and stop loading when data refetch completes
+    // The loading state will be managed by the data fetching process
+    if (isFirstTime) {
+      setLoadedCategories(prev => new Set([...prev, categoryName]));
+    }
+    
+    // Stop loading state after a minimal delay to allow data fetching to start
+    setTimeout(() => {
+      setIsFirstTimeLoading(false);
+    }, 100);
   };
 
   const orderDetails = orders.payments;
-
 
   const filteredOrders = orderDetails.filter(order =>
     order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     order.reference.toLowerCase().includes(searchQuery.toLowerCase())
     // add more fields as needed
   );  
-
-  
 
   const matchingObjectArray = orders;
   const {
@@ -321,6 +341,9 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
     handleTabClick,
   ]);
 
+  // Determine if we should show loading spinner
+  const shouldShowLoading = isFirstTimeLoading || (isLoading && !loadedCategories.has(tableStatus));
+
   return (
     <section className='border border-primaryGrey rounded-lg'>
       <Table
@@ -350,7 +373,12 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No orders found'} items={Array.isArray(orderDetails) ? orderDetails : []}>
+        <TableBody 
+          emptyContent={'No orders found'} 
+          items={shouldShowLoading ? [] : (Array.isArray(orderDetails) ? orderDetails : [])}
+          loadingContent={<SpinnerLoader size="md" />}
+          isLoading={shouldShowLoading}
+        >
           {(order: OrderItem) => (
             <TableRow key={String(order?.id)}>
               {(columnKey) => (

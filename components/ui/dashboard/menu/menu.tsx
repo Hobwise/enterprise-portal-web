@@ -445,13 +445,14 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
       case 'actions':
         return (
           <div className='relative flex justify-center items-center gap-2'>
-            <EnhancedDropdown
+            {/* <EnhancedDropdown
               trigger={
                 <div className='cursor-pointer flex justify-center items-center text-black p-2 hover:bg-gray-100 rounded-full transition-colors' aria-label='actions'>
                   <HiOutlineDotsVertical className='text-[22px]' />
                 </div>
               }
             >
+            </EnhancedDropdown> */}
               <div className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer transition-colors" aria-label='view'>
                 <Link
                   className='flex w-full'
@@ -468,7 +469,6 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
                   </div>
                 </Link>
               </div>
-            </EnhancedDropdown>
           </div>
         );
       default:

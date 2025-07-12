@@ -88,6 +88,8 @@ const MenuList = () => {
   }, []);
 
   const [loading, setLoading] = useState<Boolean>(false);
+  const [categoryLoading, setCategoryLoading] = useState<Boolean>(false);
+  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
 
   const [value, setValue] = useState("");
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
@@ -210,10 +212,23 @@ const MenuList = () => {
     setValue(index);
   };
 
-  const handleTabClick = (index) => {
+  const handleTabClick = async (index) => {
     setPage(1);
     const filteredMenu = filteredItems?.filter((item) => item.name === index);
-    setMenuIdTable(filteredMenu?.[0]?.id);
+    const categoryId = filteredMenu?.[0]?.id;
+    
+    // Check if this category has been loaded before
+    const isFirstTime = !loadedCategories.has(categoryId);
+    
+    if (isFirstTime && categoryId) {
+      setCategoryLoading(true);
+      // Simulate loading time for first time category load
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setLoadedCategories(prev => new Set([...prev, categoryId]));
+      setCategoryLoading(false);
+    }
+    
+    setMenuIdTable(categoryId);
     setFilteredMenu(filteredMenu?.[0]?.items);
   };
 
@@ -310,10 +325,11 @@ const MenuList = () => {
           menus={data}
           handleTabChange={handleTabChange}
           handleTabClick={handleTabClick}
+          isLoading={categoryLoading}
         />
         <article className="flex mt-6 gap-3">
           <div className="xl:max-w-[65%] w-full">
-            {isLoading ? (
+            {isLoading || categoryLoading ? (
               <MenuSkeletonLoading />
             ) : isError ? (
               <Error imageWidth="w-16" onClick={() => refetch()} />

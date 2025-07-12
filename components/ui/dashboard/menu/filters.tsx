@@ -7,6 +7,7 @@ import { useRef, useState, useEffect } from 'react';
 import { GoPlus } from 'react-icons/go';
 import { LuEye } from 'react-icons/lu';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
+import { VscLoading } from 'react-icons/vsc';
 
 const Filters = ({
   onOpen,
@@ -21,6 +22,7 @@ const Filters = ({
 
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
+  const [isViewMenuLoading, setIsViewMenuLoading] = useState(false);
 
   const checkScrollButtons = () => {
     const el = tabsRef.current;
@@ -57,6 +59,15 @@ const Filters = ({
     checkScrollButtons();
   };
 
+  const handleViewMenuClick = async () => {
+    setIsViewMenuLoading(true);
+    try {
+      await onOpenViewMenu();
+    } finally {
+      setIsViewMenuLoading(false);
+    }
+  };
+
   return (
     <>
       <div className='flex xl:flex-row flex-col-reverse relative top-3 flex-wrap w-full border-b border-divider justify-between'>
@@ -86,10 +97,10 @@ const Filters = ({
               tabIndex={0}
               onScroll={handleTabsScroll}
             >
-              {menus?.map((menu: any) => {
+              {menus?.map((menu: any, index: number) => {
                 return (
                   <Tab
-                    key={menu.name}
+                    key={menu.id || menu.name || `menu-filter-${index}`}
                     title={
                       <div
                         onClick={() => handleTabClick(menu.name)}
@@ -121,10 +132,14 @@ const Filters = ({
         </div>
         <div className='flex gap-3 mb-2 xl:mb-0'>
           <span
-            onClick={onOpenViewMenu}
+            onClick={handleViewMenuClick}
             className='bg-white text-primaryColor font-semibold justify-center items-center text-sm cursor-pointer flex gap-1'
           >
-            <LuEye />
+            {isViewMenuLoading ? (
+              <VscLoading className="animate-spin" />
+            ) : (
+              <LuEye />
+            )}
             <span>View menus</span>
           </span>
           {(role === 0 || userRolePermissions?.canCreateMenu === true) && (

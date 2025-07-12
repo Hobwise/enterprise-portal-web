@@ -18,10 +18,10 @@ const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
           aria-label='order filter'
           onChange={handleTabChange}
         >
-          {orders?.map((order: any) => {
+          {orders?.map((order: any, index: number) => {
             return (
               <Tab
-                key={order.name}
+                key={order.id || order.name || `order-filter-${index}`}
                 title={
                   <div
                     onClick={() => handleTabClick(order.name)}

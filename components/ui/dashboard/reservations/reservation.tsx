@@ -94,20 +94,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
           }}
         >
           <div className="flex ">
-            <Image
-              className="h-[60px] w-[60px] bg-cover rounded-lg"
-              width={60}
-              height={60}
-              alt="menu"
-              aria-label="menu"
-              src={
-                reservation.image
-                  ? `data:image/jpeg;base64,${reservation.image}`
-                  : noImage
-              }
-            />
-
-            <div className="ml-5 gap-1 grid place-content-center">
+            <div className="gap-1 grid place-content-center">
               <p className="font-medium text-black text-sm mb-[0.5px]">
                 {reservation.reservationName}
               </p>
@@ -227,8 +214,8 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
           emptyContent={"No reservation found"}
           items={filteredReservation}
         >
-          {(item) => (
-            <TableRow key={item?.name}>
+          {(item, index) => (
+            <TableRow key={item?.id || item?.name || `reservation-row-${index}`}>
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

@@ -33,12 +33,16 @@ import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Bookings: React.FC = () => {
   const {
-    data,
+    categories,
+    details,
     isLoading,
     isError,
     refetch,
     dropdownComponent,
     datePickerModal,
+    filterType,
+    startDate,
+    endDate,
   } = useDateFilter(useBookings);
   const businessInformation = getJsonItemFromLocalStorage("business");
 
@@ -75,29 +79,13 @@ const Bookings: React.FC = () => {
     refetch();
     setTableStatus("All Bookings");
     setPage(1);
-  }, []);
+  }, [filterType, startDate, endDate, refetch]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  const filteredItems = useMemo(() => {
-    return data?.map((item) => ({
-      ...item,
-      bookings: item?.bookings?.filter(
-        (item) =>
-          item?.reservationName?.toLowerCase().includes(searchQuery) ||
-          item?.firstName?.toLowerCase().includes(searchQuery) ||
-          item?.lastName?.toLowerCase().includes(searchQuery) ||
-          item?.reference?.toLowerCase().includes(searchQuery) ||
-          item?.emailAddress?.toLowerCase().includes(searchQuery) ||
-          item?.phoneNumber?.toLowerCase().includes(searchQuery) ||
-          item?.bookingDateTime?.toLowerCase().includes(searchQuery)
-      ),
-    }));
-  }, [data, searchQuery]);
-
-  
+  const data = { categories, details };
 
   const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -154,15 +142,15 @@ const Bookings: React.FC = () => {
       <div className="flex flex-row flex-wrap mb-4 xl:mb-8 item-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data?.[0]?.bookings.length > 0 ? (
+            {data?.categories.bookingCategories.length > 0 ? (
               <div className="flex items-center">
-                <span>All Bookings</span>
+                <span> Bookings</span>
                 <Chip
                   classNames={{
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data?.[0]?.totalCount}
+                  {data?.categories.bookingCategories.length}
                 </Chip>
               </div>
             ) : (
@@ -175,7 +163,7 @@ const Bookings: React.FC = () => {
         </div>
         <div className="flex items-center gap-3">
           {/* {dropdownComponent} */}
-          {data?.[0]?.bookings.length > 0 && (
+          {data?.categories.bookingCategories.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -224,16 +212,18 @@ const Bookings: React.FC = () => {
           )}
         </div>
       </div>
-      {data?.[0]?.bookings.length > 0 ? (
+      {data.categories.bookingCategories &&
+      data.categories?.bookingCategories?.length > 0 ? (
         <BookingsList
-          bookings={filteredItems}
+          bookings={details?.data || []}
+          categories={data.categories}
           refetch={refetch}
           searchQuery={searchQuery}
         />
       ) : (
         <CreateReservation showCreateBookingModal={showCreateBookingModal} />
       )}
-      {/* {datePickerModal} */}
+      {datePickerModal}
       <CreateBooking
         openCreateBookingModal={openCreateBookingModal}
         closeCreateBookingModal={closeCreateBookingModal}

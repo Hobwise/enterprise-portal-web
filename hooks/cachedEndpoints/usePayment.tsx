@@ -1,30 +1,26 @@
 'use client';
-import { getPaymentByBusiness } from '@/app/api/controllers/dashboard/payment';
+import { getPaymentByBusiness, getPaymentDetails } from '@/app/api/controllers/dashboard/payment';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from 'react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
-interface Payment {
+interface PaymentItem {
   id: string;
-  customer: string;
+  qrName: string;
   reference: string;
   treatedBy: string;
   totalAmount: number;
-  orderID: string;
-  qrName: string;
-  paymentMethod: number;
-  paymentReference: string;
-  status: number;
   dateCreated: string;
-  cooperateID: string;
-  businessID: string;
+  customer: string;
+  status: number;
+  paymentReference: string;
 }
 
-interface OrderSummary {
+interface PaymentCategory {
   name: string;
-  totalAmount: number;
-  payments: Payment[];
+  totalCount: number;
+  payments: PaymentItem[];
 }
 
 const usePayment = (
@@ -43,7 +39,8 @@ const usePayment = (
     ] = queryKey;
 
     try {
-      const responseData = await getPaymentByBusiness(
+      // Fetch payment categories
+      const categoriesResponse = await getPaymentByBusiness(
         businessInformation[0]?.businessId,
         page,
         rowsPerPage,
@@ -52,24 +49,50 @@ const usePayment = (
         startDate,
         endDate
       );
-      return (responseData?.data?.data as OrderSummary[]) ?? [];
+      const categories = categoriesResponse?.data|| [];
+      const detail = categoriesResponse?.data.data.paymentCategories|| [];
+  
+      
+      if (categories.length === 0) {
+        return { categories: [], details: [] };
+      }
+      // Fetch details for the selected category or first category
+      const targetCategory = tableStatus || detail[0]?.name;
+      const detailsItems = await getPaymentDetails(
+        businessInformation[0]?.businessId,
+        targetCategory,
+        filterType,
+        startDate,
+        endDate,
+        page,
+        rowsPerPage
+      );
+      return {
+        categories,
+        details: detailsItems,
+      };
     } catch (error) {
-      return [];
+      return { categories: [], details: [] };
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<OrderSummary[]>(
+  const { data, isLoading, isError, refetch } = useQuery<{ categories: PaymentCategory[]; details: PaymentItem[] }>(
     [
       "payments",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ],
-
     getAllPayments,
-    fetchQueryConfig(options)
+    {
+      ...fetchQueryConfig(options),
+      refetchOnWindowFocus: false,
+      staleTime: 0,
+      enabled: options?.enabled !== false,
+    }
   );
 
   return {
-    data,
+    categories: data?.categories || [],
+    details: data?.details || [],
     isLoading,
     isError,
     refetch,

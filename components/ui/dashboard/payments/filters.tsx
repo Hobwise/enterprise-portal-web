@@ -18,10 +18,10 @@ const Filters = ({ payments, handleTabChange, handleTabClick }: any) => {
           aria-label='payment filter'
           onChange={handleTabChange}
         >
-          {payments?.map((payment: any) => {
+          {payments?.map((payment: any, index: number) => {
             return (
               <Tab
-                key={payment.name}
+                key={payment.id || payment.name || `payment-filter-${index}`}
                 title={
                   <div
                     onClick={() => handleTabClick(payment.name)}
@@ -34,7 +34,7 @@ const Filters = ({ payments, handleTabChange, handleTabClick }: any) => {
                         base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                       }}
                     >
-                      {payment?.totalCount}
+                      {payment?.count}
                     </Chip>
                   </div>
                 }
