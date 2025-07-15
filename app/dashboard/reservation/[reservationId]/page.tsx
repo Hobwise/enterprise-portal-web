@@ -7,10 +7,10 @@ import { useGlobalContext } from "@/hooks/globalProvider";
 import useTextCopy from "@/hooks/useTextCopy";
 import { companyInfo } from "@/lib/companyInfo";
 import {
-  CustomLoading,
   formatPrice,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import {
   Button,
   ButtonGroup,
@@ -42,7 +42,6 @@ const ReservationDetails = () => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
-  const [loading, setLoading] = useState(true);
   const reservationId = searchParams.get("reservationId") || null;
 
   const { data, isLoading, isError, refetch } =
@@ -53,16 +52,7 @@ const ReservationDetails = () => {
   useEffect(() => {
     setTableStatus("All");
     setPage(1);
-  }, []);
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (data && !isLoading) {
-        setLoading(false);
-      }
-    }, 2000);
-  
-    return () => clearTimeout(timeout);
-  }, [data, isLoading, reservationId, isOpenEdit]); 
+  }, []); 
 
 
   useEffect(() => {
@@ -162,7 +152,7 @@ const ReservationDetails = () => {
         </div>
       </div>
       <Spacer y={5} />
-      {loading ? (
+      {isLoading ? (
         <CustomLoading />
       ) : (
         <section className="flex flex-col flex-grow">

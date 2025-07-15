@@ -296,12 +296,13 @@ export const numberOnlyInput = (value: any) => {
 
 export const submitBookingStatus = (id: number) => {
   if (id === 0) {
-    return 1;
+    return 1; // Pending -> Confirmed
   } else if (id === 1) {
-    return 0;
+    return 2; // Confirmed -> Admitted
   } else if (id === 2) {
-    return 2;
+    return 6; // Admitted -> Closed
   }
+  return id; // Return same status if no transition defined
 };
 
 export const formatDateTime2 = (inputDate: string) => {

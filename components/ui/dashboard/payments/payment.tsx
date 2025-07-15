@@ -135,11 +135,11 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     if (isFirstTime) {
       setLoadedCategories(prev => new Set([...prev, categoryName]));
     }
-    
+  
     // Stop loading state after a minimal delay to allow data fetching to start
     setTimeout(() => {
       setIsFirstTimeLoading(false);
-    }, 100);
+    }, 600);
   };
 
   const renderCell = React.useCallback((payment: PaymentItem, columnKey: string) => {

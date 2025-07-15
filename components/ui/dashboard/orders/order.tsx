@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useEffect, useState, Fragment } from 'react';
@@ -10,7 +11,6 @@ import {
   DropdownMenu,
   DropdownSection,
   DropdownTrigger,
-  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -20,12 +20,12 @@ import {
   Selection,
   SortDescriptor,
 } from '@nextui-org/react';
-import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import { useRouter } from 'next/navigation';
 import { BsCalendar2Check } from 'react-icons/bs';
 import { FaRegEdit } from 'react-icons/fa';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { TbFileInvoice } from 'react-icons/tb';
+import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import {
   availableOptions,
   columns,
@@ -59,7 +59,6 @@ interface OrderItem {
   status: 0 | 1 | 2 | 3;
   dateCreated: string;
   comment?: string;
-  paymemts:any;
   orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number }[];
 }
 
@@ -100,6 +99,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
   const [isOpenComment, setIsOpenComment] = React.useState<Boolean>(false);
   const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
   const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
+  
 
   const {
     toggleModalDelete,
@@ -125,24 +125,25 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
     const isFirstTime = !loadedCategories.has(categoryName);
     
     // Mark category as loaded and stop loading when data refetch completes
-    // The loading state will be managed by the data fetching process
     if (isFirstTime) {
       setLoadedCategories(prev => new Set([...prev, categoryName]));
     }
-    
     // Stop loading state after a minimal delay to allow data fetching to start
     setTimeout(() => {
       setIsFirstTimeLoading(false);
-    }, 100);
+    }, 600);
   };
 
   const orderDetails = orders.payments;
+
 
   const filteredOrders = orderDetails.filter(order =>
     order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     order.reference.toLowerCase().includes(searchQuery.toLowerCase())
     // add more fields as needed
   );  
+
+  
 
   const matchingObjectArray = orders;
   const {
@@ -376,8 +377,8 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
         <TableBody 
           emptyContent={'No orders found'} 
           items={shouldShowLoading ? [] : (Array.isArray(orderDetails) ? orderDetails : [])}
-          loadingContent={<SpinnerLoader size="md" />}
           isLoading={shouldShowLoading}
+          loadingContent={<SpinnerLoader size="md" />}
         >
           {(order: OrderItem) => (
             <TableRow key={String(order?.id)}>

@@ -30,6 +30,7 @@ import { VscLoading } from "react-icons/vsc";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import toast from "react-hot-toast";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
+import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 
 const Bookings: React.FC = () => {
   const {
@@ -162,7 +163,7 @@ const Bookings: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* {dropdownComponent} */}
+          {dropdownComponent}
           {data?.categories.bookingCategories.length > 0 && (
             <>
               <div>
@@ -212,6 +213,13 @@ const Bookings: React.FC = () => {
           )}
         </div>
       </div>
+      
+      <DateRangeDisplay 
+        startDate={startDate}
+        endDate={endDate}
+        filterType={filterType}
+      />
+      
       {data.categories.bookingCategories &&
       data.categories?.bookingCategories?.length > 0 ? (
         <BookingsList

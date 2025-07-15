@@ -20,6 +20,7 @@ import toast from "react-hot-toast";
 import { VscLoading } from "react-icons/vsc";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import { CustomButton } from "@/components/customButton";
+import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 
 const Payments: React.FC = () => {
   const {
@@ -169,6 +170,12 @@ const Payments: React.FC = () => {
             }
         
           </div>
+
+      <DateRangeDisplay 
+        startDate={startDate}
+        endDate={endDate}
+        filterType={filterType}
+      />
 
       {data?.categories.data.paymentCategories &&
       data?.categories.data.paymentCategories.length > 0 ? (
