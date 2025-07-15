@@ -75,8 +75,8 @@ interface BookingCategory {
 }
 
 interface BookingsListProps {
-  bookings: BookingItem[];
-  categories: BookingCategory[];
+  bookings: BookingItem[] | { bookings?: BookingItem[]; data?: BookingItem[] } | any;
+  categories: { bookingCategories: BookingCategory[] } | any;
   searchQuery: string;
   refetch: () => void;
   isLoading?: boolean;
@@ -119,16 +119,30 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
     if (isFirstTime) {
       setLoadedCategories(prev => new Set([...prev, categoryName]));
     }
-    
-    // Stop loading state after a minimal delay to allow data fetching to start
+
+    if (bookings?.data?.bookings) {
+      setIsFirstTimeLoading(false);
+    }
+  
     setTimeout(() => {
       setIsFirstTimeLoading(false);
-    }, 100);
+      console.log(bookings);
+      
+    }, 600);
   };
 
-  const bookingDetails = bookings.bookings || bookings;
+  const getBookingData = () => {
+    if (!bookings) return [];
+    if (bookings.bookings && Array.isArray(bookings.bookings)) {
+      return bookings.bookings;
+    }
+    if (bookings.data && Array.isArray(bookings.data)) {
+      return bookings.data;
+    }
+    return [];
+  };
 
-  const filteredBookings = bookingDetails.filter(booking =>
+  const filteredBookings = getBookingData().filter(booking =>
     booking.reservationName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     booking.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     booking.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -138,7 +152,9 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
     booking.bookingDateTime?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const matchingObject = bookings;
+  const matchingObject = { data: filteredBookings, totalCount: filteredBookings.length };
+
+  
 
   const {
     bottomContent,
@@ -181,7 +197,6 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
     }
   };
 
-  console.log(eachBooking);
   
 
   const renderCell = React.useCallback((booking, columnKey) => {
@@ -337,10 +352,15 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        bookings={categories.bookingCategories}
+        bookings={categories?.bookingCategories || []}
         handleTabChange={handleTabChange}
         value={value}
         handleTabClick={handleTabClick}
+        onViewBookings={() => {
+          // Placeholder for view all bookings functionality
+          // This can be implemented based on your specific requirements
+          console.log('View all bookings clicked');
+        }}
       />
     );
   }, [
@@ -391,7 +411,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
         </TableHeader>
         <TableBody
           emptyContent={"No booking(s) found"}
-          items={shouldShowLoading ? [] : (Array.isArray(bookingDetails) ? bookingDetails : [])}
+          items={shouldShowLoading ? [] : filteredBookings}
           isLoading={shouldShowLoading}
           loadingContent={<SpinnerLoader size="md" />}
         >

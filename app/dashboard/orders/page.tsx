@@ -21,6 +21,7 @@ import toast from "react-hot-toast";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import { VscLoading } from "react-icons/vsc";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
+import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 
 // Type definitions
 interface OrderItem {
@@ -102,7 +103,7 @@ const Orders: React.FC = () => {
           <div className="text-[24px] leading-8 font-semibold">
             {data?.categories.length > 0 ? (
               <div className="flex items-center">
-                <span>Orders</span>
+                <span>All orders</span>
                 <Chip
                   classNames={{
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
@@ -167,12 +168,20 @@ const Orders: React.FC = () => {
           )}
         </div>
       </div>
+      
+      <DateRangeDisplay 
+        startDate={startDate}
+        endDate={endDate}
+        filterType={filterType}
+      />
+      
       {data.categories && data.categories.length > 0 ? (
         <OrdersList
           orders={details?.data || []}
           categories={data.categories}
           refetch={refetch}
           searchQuery={searchQuery}
+          isLoading={isLoading}
         />
       ) : (
         <CreateOrder />

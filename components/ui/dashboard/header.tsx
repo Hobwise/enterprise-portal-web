@@ -192,7 +192,7 @@ const Header = () => {
             <div className='flex items-center space-x-4'>
               <Popover placement='bottom' onOpenChange={setNotifPopoverOpen} isOpen={notifPopoverOpen}>
                 <PopoverTrigger>
-                  <Badge className='cursor-pointer p-1' size='sm' color='danger' content={unreadNotCount !== 0 ? unreadNotCount : (unreadCount > 0 ? unreadCount : undefined)}>
+                  <Badge className='cursor-pointer h-6 w-6 flex justify-center items-center rounded-full' size='sm' color='danger' content={unreadNotCount !== 0 ? unreadNotCount : (unreadCount > 0 ? unreadCount : undefined)}>
                     <PopoverTrigger>
                       <SlBell className='text-[#494E58] h-5 w-5 cursor-pointer' />
                     </PopoverTrigger>
