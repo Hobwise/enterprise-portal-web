@@ -115,23 +115,22 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
   } = useGlobalContext();
 
   const handleTabClick = (categoryName: string) => {
-    // Immediately show loading state for any tab switch
-    setIsFirstTimeLoading(true);
-    
-    setTableStatus(categoryName);
-    setPage(1);
-    
     // Check if this category has been loaded before
     const isFirstTime = !loadedCategories.has(categoryName);
     
-    // Mark category as loaded and stop loading when data refetch completes
+    // Only show loading state for first-time loads
     if (isFirstTime) {
+      setIsFirstTimeLoading(true);
       setLoadedCategories(prev => new Set([...prev, categoryName]));
+      
+      // Stop loading state after 2 seconds for first-time loads only
+      setTimeout(() => {
+        setIsFirstTimeLoading(false);
+      }, 2000);
     }
-    // Stop loading state after a minimal delay to allow data fetching to start
-    setTimeout(() => {
-      setIsFirstTimeLoading(false);
-    }, 600);
+    
+    setTableStatus(categoryName);
+    setPage(1);
   };
 
   const orderDetails = orders.payments;
