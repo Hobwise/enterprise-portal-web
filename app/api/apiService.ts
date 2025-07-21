@@ -166,6 +166,12 @@ api.interceptors.response.use(
           return Promise.reject(refreshError);
         }
       }
+    } else if (error.response && error.response.status === 401) {
+      // If we get here without retry, it means token refresh wasn't attempted or applicable
+      // Immediately logout to prevent unresponsive state
+      resetLoginInfo();
+      window.location.href = '/auth/login';
+      return Promise.reject(error);
     } else {
       handleError(error, false);
     }

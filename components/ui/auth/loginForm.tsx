@@ -76,7 +76,7 @@ const LoginForm = () => {
     }
   };
 
-  const handleLoginSuccess = (decryptedData: any) => {
+  const handleLoginSuccess = async (decryptedData: any) => {
     const { businesses, token } = decryptedData.data;
     
     saveJsonItemToLocalStorage("userInformation", decryptedData.data);
@@ -88,6 +88,8 @@ const LoginForm = () => {
       ? routePaths[businesses.length] || routePaths.default
       : routePaths.default;
 
+    // Small delay to ensure data is persisted
+    await new Promise(resolve => setTimeout(resolve, 100));
     router.push(redirectPath);
   };
 
@@ -122,7 +124,7 @@ const LoginForm = () => {
       if (response?.data?.response) {
         const decryptedData = decryptPayload(response.data.response);
         if (decryptedData?.data) {
-          handleLoginSuccess(decryptedData);
+          await handleLoginSuccess(decryptedData);
         }
       } else if (response?.response?.data.response) {
         const decryptedData = decryptPayload(response.response.data.response);

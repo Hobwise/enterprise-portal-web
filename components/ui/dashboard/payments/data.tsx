@@ -1,16 +1,16 @@
 import React from 'react';
 const columns = [
-  { name: 'Amount', uid: 'totalAmount' },
-  { name: 'Table', uid: 'qrName' },
+  { name: 'Amount', uid: 'totalAmount', sortable: true },
+  { name: 'Table', uid: 'qrName', sortable: true },
   //   { name: 'Order ID', uid: 'orderID' },
-  { name: 'Order ID', uid: 'reference' },
-  { name: 'Staff', uid: 'treatedBy' },
-  { name: 'Date Created', uid: 'dateCreated' },
-  { name: 'Customer', uid: 'customer' },
-  { name: 'Status', uid: 'status' },
-  { name: 'Payment method', uid: 'paymentMethod' },
-  { name: 'Payment reference', uid: 'paymentReference' },
-  { name: '', uid: 'actions' },
+  { name: 'Order ID', uid: 'reference', sortable: true },
+  { name: 'Staff', uid: 'treatedBy', sortable: true },
+  { name: 'Date Created', uid: 'dateCreated', sortable: true },
+  { name: 'Customer', uid: 'customer', sortable: true },
+  { name: 'Status', uid: 'status', sortable: true },
+  { name: 'Payment method', uid: 'paymentMethod', sortable: true },
+  { name: 'Payment reference', uid: 'paymentReference', sortable: true },
+  { name: '', uid: 'actions', sortable: false },
 ];
 export const statusColorMap: Record<
   number,
