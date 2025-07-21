@@ -141,19 +141,6 @@ const Payments: React.FC = () => {
               </ButtonGroup>
             </>
           )}
-          {(role === 0 || userRolePermissions?.canCreatePayment) && (
-            <CustomButton
-              onClick={() => {}}
-              className="py-2 px-4 mb-0 text-white"
-              backgroundColor="bg-primaryColor"
-            >
-              <div className="flex gap-2 items-center justify-center">
-                <IoAddCircleOutline className="text-[22px]" />
-                <p>{"Create payment"} </p>
-              </div>
-            </CustomButton>
-          )}
-
         </div>
       </div>
           <div className=" rounded-md bg-[#F7F6FA] p-6 mb-6 flex flex-row gap-12 items-center">

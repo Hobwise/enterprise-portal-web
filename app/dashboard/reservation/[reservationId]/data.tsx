@@ -1,12 +1,12 @@
 export const columns = [
-  { name: "Name", uid: "firstName" },
-  { name: "Reservation", uid: "reservationName" },
-  { name: "Booking ID", uid: "reference" },
-  { name: "Quantity", uid: "quantity" },
-  { name: "Description", uid: "description" },
-  { name: "Time", uid: "bookingDateTime" },
-  { name: "Status", uid: "bookingStatus" },
-  { name: "", uid: "actions" },
+  { name: "Name", uid: "firstName", sortable: true },
+  { name: "Reservation", uid: "reservationName", sortable: true },
+  { name: "Booking ID", uid: "reference", sortable: true },
+  { name: "Quantity", uid: "quantity", sortable: true },
+  { name: "Description", uid: "description", sortable: true },
+  { name: "Time", uid: "bookingDateTime", sortable: true },
+  { name: "Status", uid: "bookingStatus", sortable: true },
+  { name: "", uid: "actions", sortable: false },
 ];
 
 export const statusColorMap: Record<

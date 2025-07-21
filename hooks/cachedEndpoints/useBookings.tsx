@@ -65,7 +65,6 @@ const useBookings = (
         page,
         rowsPerPage
       );
-       console.log(categories,detailsItems);
        
       return {
         categories,

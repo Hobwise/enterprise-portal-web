@@ -61,12 +61,74 @@ interface PaymentCategory {
 }
 
 interface PaymentsListProps {
-  payments: PaymentItem[];
+  payments: PaymentItem[] | { payments?: PaymentItem[]; data?: PaymentItem[] } | any;
   categories: PaymentCategory[];
   searchQuery: string;
   refetch: () => void;
   isLoading?: boolean;
+  isPending?: boolean;
 }
+
+// Status mapping for payment categories
+const getStatusForPaymentCategory = (categoryName: string): number | null => {
+  switch (categoryName.toLowerCase()) {
+    case 'pending payments':
+      return 0;
+    case 'confirmed payments':
+      return 1;
+    case 'cancelled payments':
+      return 2;
+    case 'awaiting confirmation':
+      return 3;
+    default:
+      return null; // null means show all payments
+  }
+};
+
+// Function to get filtered payments based on category and pending state
+const getFilteredPaymentDetails = (
+  payments: any, 
+  isLoading: boolean, 
+  isPending: boolean, 
+  selectedCategory: string,
+  searchQuery: string = ''
+): PaymentItem[] => {
+  // Check if data is in pending state
+  if (isLoading || isPending || !payments) {
+    return [];
+  }
+  
+  // Extract payments data
+  let allPayments: PaymentItem[] = [];
+  if (payments.payments && Array.isArray(payments.payments)) {
+    allPayments = payments.payments;
+  } else if (payments.data && Array.isArray(payments.data)) {
+    allPayments = payments.data;
+  } else if (Array.isArray(payments)) {
+    allPayments = payments;
+  }
+  
+  // Get the status filter for the selected category
+  const statusFilter = getStatusForPaymentCategory(selectedCategory);
+  
+  // Filter by status if not "All Payments"
+  let filteredByStatus = allPayments;
+  if (statusFilter !== null) {
+    filteredByStatus = allPayments.filter((payment: PaymentItem) => payment.status === statusFilter);
+  }
+  
+  // Apply search filter if provided
+  if (searchQuery.trim()) {
+    filteredByStatus = filteredByStatus.filter((payment: PaymentItem) =>
+      payment.qrName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.treatedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.customer?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+  
+  return filteredByStatus;
+};
 
 const PaymentsList: React.FC<PaymentsListProps> = ({
   payments,
@@ -74,6 +136,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   searchQuery,
   refetch,
   isLoading = false,
+  isPending = false,
 }) => {
   const [singlePayment, setSinglePayment] = React.useState<PaymentItem | null>(null);
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
@@ -83,9 +146,16 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
     useGlobalContext();
 
-  const paymentDetails = payments.payments;
+  // Use the new filtered function that includes status filtering
+  const paymentDetails = getFilteredPaymentDetails(
+    payments, 
+    isLoading, 
+    isPending, 
+    tableStatus || 'All Payments', // Default to "All Payments" if tableStatus is not set
+    searchQuery
+  );
 
-  const matchingObjectArray = paymentDetails;
+  const matchingObjectArray = { data: paymentDetails, totalCount: paymentDetails.length };
   
 
   const {
@@ -107,6 +177,24 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     columns, 
     INITIAL_VISIBLE_COLUMNS
   );
+
+  // Sort the payments based on sortDescriptor
+  const sortedPayments = React.useMemo(() => {
+    if (!paymentDetails || paymentDetails.length === 0) return paymentDetails;
+    
+    return [...paymentDetails].sort((a: PaymentItem, b: PaymentItem) => {
+      const first = a[sortDescriptor.column as keyof PaymentItem];
+      const second = b[sortDescriptor.column as keyof PaymentItem];
+      
+      let cmp = 0;
+      if (first === null || first === undefined) cmp = 1;
+      else if (second === null || second === undefined) cmp = -1;
+      else if (first < second) cmp = -1;
+      else if (first > second) cmp = 1;
+      
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+    });
+  }, [paymentDetails, sortDescriptor]);
 
 
   const toggleApproveModal = (payment: PaymentItem) => {
@@ -230,7 +318,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   ]);
 
   // Determine if we should show loading spinner
-  const shouldShowLoading = isFirstTimeLoading || (isLoading && !loadedCategories.has(tableStatus));
+  const shouldShowLoading = isFirstTimeLoading || isPending || (isLoading && !loadedCategories.has(tableStatus));
 
   return (
     <section className='border border-primaryGrey rounded-lg'>
@@ -255,7 +343,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
               <TableColumn
                 key={column.uid}
                 align={column.uid === 'actions' ? 'center' : 'start'}
-                allowsSorting={true}
+                allowsSorting={column.sortable}
               >
                 {column.name}
               </TableColumn>
@@ -265,7 +353,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
             isLoading={shouldShowLoading}
             loadingContent={<SpinnerLoader size="md" />}
             emptyContent={'No payment(s) found'}
-            items={shouldShowLoading ? [] : (Array.isArray(paymentDetails) ? paymentDetails : [])}
+            items={shouldShowLoading ? [] : sortedPayments}
           >
             {(payment: PaymentItem) => (
               <TableRow key={String(payment?.id)}>

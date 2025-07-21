@@ -60,7 +60,7 @@ const Filters = ({ bookings, handleTabChange, handleTabClick, onViewBookings }: 
   return (
     <>
       <div className='flex xl:flex-row flex-col-reverse relative top-3 flex-wrap w-full border-b border-divider justify-between'>
-        <div className="relative xl:w-[70%] w-full flex items-center">
+        <div className="relative xl:w-[85%] w-full flex items-center">
           {showLeft && (
             <button
               onClick={scrollLeft}

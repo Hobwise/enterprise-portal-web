@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState, Fragment } from 'react';
@@ -74,6 +73,7 @@ interface OrdersListProps {
   searchQuery: string;
   refetch: () => void;
   isLoading?: boolean;
+  isPending?: boolean;
 }
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -86,7 +86,69 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
-const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery, refetch, isLoading = false }) => {
+// Status mapping for categories
+const getStatusForCategory = (categoryName: string): number | null => {
+  switch (categoryName.toLowerCase()) {
+    case 'open orders':
+      return 0;
+    case 'closed orders':
+      return 1;
+    case 'cancelled orders':
+      return 2;
+    case 'awaitingconfirmation orders':
+    case 'awaiting confirmation orders':
+      return 3;
+    case 'all orders':
+    default:
+      return null; // null means show all orders
+  }
+};
+
+// Function to get filtered orders based on category and pending state
+const getFilteredOrderDetails = (
+  orders: any, 
+  isLoading: boolean, 
+  isPending: boolean, 
+  selectedCategory: string,
+  searchQuery: string = ''
+): OrderItem[] => {
+  // Check if data is in pending state
+  if (isLoading || isPending || !orders) {
+    console.log(isLoading, isPending, orders);
+    return [];
+  }
+  
+  // Get the payments array
+  const allOrders = orders.payments || [];
+  
+  // Get the status filter for the selected category
+  const statusFilter = getStatusForCategory(selectedCategory);
+  
+  // Filter by status if not "All Orders"
+  let filteredByStatus = allOrders;
+  if (statusFilter !== null) {
+    filteredByStatus = allOrders.filter((order: OrderItem) => order.status === statusFilter);
+  }
+  
+  // Apply search filter if provided
+  if (searchQuery.trim()) {
+    filteredByStatus = filteredByStatus.filter((order: OrderItem) =>
+      order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order.reference.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+  
+  return filteredByStatus;
+};
+
+const OrdersList: React.FC<OrdersListProps> = ({ 
+  orders, 
+  categories, 
+  searchQuery, 
+  refetch, 
+  isLoading = false,
+  isPending = false 
+}) => {
 
   const router = useRouter();
   const { userRolePermissions, role } = usePermission();
@@ -126,25 +188,25 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
       // Stop loading state after 2 seconds for first-time loads only
       setTimeout(() => {
         setIsFirstTimeLoading(false);
-      }, 2000);
+      }, 3000);
     }
     
     setTableStatus(categoryName);
     setPage(1);
   };
 
-  const orderDetails = orders.payments;
-
-
-  const filteredOrders = orderDetails.filter(order =>
-    order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    order.reference.toLowerCase().includes(searchQuery.toLowerCase())
-    // add more fields as needed
-  );  
-
+  // Use the new filtered function that includes status filtering
+  const orderDetails = getFilteredOrderDetails(
+    orders, 
+    isLoading, 
+    isPending, 
+    tableStatus || 'All Orders', // Default to "All Orders" if tableStatus is not set
+    searchQuery
+  );
   
 
-  const matchingObjectArray = orders;
+
+  const matchingObjectArray = orderDetails; // Use filtered orders for pagination
   const {
     bottomContent,
     headerColumns,
@@ -164,6 +226,24 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
     columns, 
     INITIAL_VISIBLE_COLUMNS
   );
+
+  // Sort the orders based on sortDescriptor
+  const sortedOrders = React.useMemo(() => {
+    if (!orderDetails || orderDetails.length === 0) return orderDetails;
+    
+    return [...orderDetails].sort((a: OrderItem, b: OrderItem) => {
+      const first = a[sortDescriptor.column as keyof OrderItem];
+      const second = b[sortDescriptor.column as keyof OrderItem];
+      
+      let cmp = 0;
+      if (first === null || first === undefined) cmp = 1;
+      else if (second === null || second === undefined) cmp = -1;
+      else if (first < second) cmp = -1;
+      else if (first > second) cmp = 1;
+      
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+    });
+  }, [orderDetails, sortDescriptor]);
 
   const toggleCancelModal = (order: OrderItem) => {
     setSingleOrder(order);
@@ -188,7 +268,6 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
     setValue(index);
   };
       
-
   const renderCell = React.useCallback((order: OrderItem, columnKey: string) => {
     const cellValue = order[columnKey as keyof OrderItem];
     const options = availableOptions[statusDataMap[order.status]];
@@ -342,7 +421,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
   ]);
 
   // Determine if we should show loading spinner
-  const shouldShowLoading = isFirstTimeLoading || (isLoading && !loadedCategories.has(tableStatus));
+  const shouldShowLoading = isFirstTimeLoading || isPending || (isLoading && !loadedCategories.has(tableStatus));
 
   return (
     <section className='border border-primaryGrey rounded-lg'>
@@ -367,7 +446,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
             <TableColumn
               key={column.uid}
               align={column.uid === 'actions' ? 'center' : 'start'}
-              allowsSorting={true}
+              allowsSorting={column.sortable}
             >
               {column.name}
             </TableColumn>
@@ -375,7 +454,7 @@ const OrdersList: React.FC<OrdersListProps> = ({ orders, categories, searchQuery
         </TableHeader>
         <TableBody 
           emptyContent={'No orders found'} 
-          items={shouldShowLoading ? [] : (Array.isArray(orderDetails) ? orderDetails : [])}
+          items={shouldShowLoading ? [] : sortedOrders}
           isLoading={shouldShowLoading}
           loadingContent={<SpinnerLoader size="md" />}
         >

@@ -28,13 +28,13 @@ import noMenu from "../../../../../public/assets/images/no-menu.png";
 import CheckoutModal from "./checkoutModal";
 import {
   CheckIcon,
-  MenuSkeletonLoading,
   SelectedSkeletonLoading,
 } from "./data";
 import Filters from "./filter";
 import ViewModal from "./view";
 import { useRouter } from "next/navigation";
 import { IoIosArrowRoundBack } from "react-icons/io";
+import SpinnerLoader from "../../menu/SpinnerLoader";
 
 type Item = {
   id: string;
@@ -222,13 +222,14 @@ const MenuList = () => {
     
     if (isFirstTime && categoryId) {
       setCategoryLoading(true);
-      // Simulate loading time for first time category load
-      await new Promise(resolve => setTimeout(resolve, 800));
       setLoadedCategories(prev => new Set([...prev, categoryId]));
-      setCategoryLoading(false);
+      // Keep loading state briefly for visual feedback
+      setTimeout(() => setCategoryLoading(false), 100);
     }
     
-    setMenuIdTable(categoryId);
+    if (categoryId) {
+      setMenuIdTable(categoryId);
+    }
     setFilteredMenu(filteredMenu?.[0]?.items);
   };
 
@@ -236,7 +237,7 @@ const MenuList = () => {
     if (data) {
       setFilteredMenu(data[0]?.items);
     }
-    if (order?.id && data?.length > 0) {
+    if (order?.id && data && data.length > 0) {
       getOrderDetails();
     }
   }, [order?.id, data]);
@@ -252,7 +253,7 @@ const MenuList = () => {
   const handleOpenCheckoutModal = () => {
     setSelectedItems((prevItems) =>
       prevItems.map((item) => {
-        const menuItem = matchingObjectArray.find(
+        const menuItem = matchingObjectArray?.find(
           (menu) => menu.id === item.id
         );
 
@@ -329,13 +330,15 @@ const MenuList = () => {
         />
         <article className="flex mt-6 gap-3">
           <div className="xl:max-w-[65%] w-full">
-            {isLoading || categoryLoading ? (
-              <MenuSkeletonLoading />
+            {isLoading || categoryLoading || !matchingObjectArray ? (
+              <SpinnerLoader />
             ) : isError ? (
               <Error imageWidth="w-16" onClick={() => refetch()} />
+            ) : matchingObjectArray.length === 0 ? (
+              <SpinnerLoader />
             ) : (
               <div className="grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                {matchingObjectArray?.map((menu, index) => (
+                {matchingObjectArray.map((menu, index) => (
                   <div
                     title={menu?.isAvailable ? "select menu" : ""}
                     onClick={() =>
@@ -371,7 +374,7 @@ const MenuList = () => {
                       </Chip>
                     )}
                     {selectedItems.some((item) =>
-                      menu.varieties?.some((variety) => variety.id === item.id)
+                      menu.varieties?.some((variety: any) => variety.id === item.id)
                     ) && (
                       <Chip
                         className="absolute top-2 left-2"

@@ -16,6 +16,8 @@ import {
   DropdownMenu,
   DropdownSection,
   DropdownTrigger,
+  Selection,
+  SortDescriptor,
   Spinner,
   Table,
   TableBody,
@@ -66,6 +68,7 @@ interface BookingItem {
   bookingDateTime: string;
   bookingStatus: number;
   statusComment: string;
+  id?: number;
 }
 
 interface BookingCategory {
@@ -80,13 +83,88 @@ interface BookingsListProps {
   searchQuery: string;
   refetch: () => void;
   isLoading?: boolean;
+  isPending?: boolean;
 }
 
-const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searchQuery, refetch, isLoading = false }) => {
+// Status mapping for booking categories
+const getStatusForBookingCategory = (categoryName: string): number | null => {
+  switch (categoryName.toLowerCase()) {
+    case 'pending bookings':
+      return 0;
+    case 'confirmed bookings':
+    case 'incoming bookings':
+      return 1;
+    case 'processed bookings':
+      return null;
+    case "today's bookings":
+      return null; 
+    case 'unsuccessful bookings':
+      return 5; 
+    default:
+      return null; // null means show all bookings
+  }
+};
+
+// Function to get filtered bookings based on category and pending state
+const getFilteredBookingDetails = (
+  bookings: any, 
+  isLoading: boolean, 
+  isPending: boolean, 
+  selectedCategory: string,
+  searchQuery: string = ''
+): BookingItem[] => {
+  // Check if data is in pending state
+  if (isLoading || isPending || !bookings) {
+    console.log('Loading state:', isLoading, isPending, bookings);
+    return [];
+  }
+  
+  // Extract bookings data
+  let allBookings: BookingItem[] = [];
+  if (bookings.bookings && Array.isArray(bookings.bookings)) {
+    allBookings = bookings.bookings;
+  } else if (bookings.data && Array.isArray(bookings.data)) {
+    allBookings = bookings.data;
+  } else if (Array.isArray(bookings)) {
+    allBookings = bookings;
+  }
+  
+  // Get the status filter for the selected category
+  const statusFilter = getStatusForBookingCategory(selectedCategory);
+  
+  // Filter by status if not "All Bookings"
+  let filteredByStatus = allBookings;
+  if (statusFilter !== null) {
+    filteredByStatus = allBookings.filter((booking: BookingItem) => booking.bookingStatus === statusFilter);
+  }
+  
+  // Apply search filter if provided
+  if (searchQuery.trim()) {
+    filteredByStatus = filteredByStatus.filter((booking: BookingItem) =>
+      booking.reservationName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.emailAddress?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      booking.bookingDateTime?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+  
+  return filteredByStatus;
+};
+
+const BookingsList: React.FC<BookingsListProps> = ({ 
+  bookings, 
+  categories, 
+  searchQuery, 
+  refetch, 
+  isLoading = false,
+  isPending = false 
+}) => {
   const { userRolePermissions, role } = usePermission();
   const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
-  const [isEditBookingModal, setIsEditBookingModal] =
-    React.useState<Boolean>(false);
+  const [isEditBookingModal, setIsEditBookingModal] = React.useState<Boolean>(false);
   const [id, setId] = React.useState<Number>();
   const [eachBooking, setEachBooking] = React.useState<any>(null);
   const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
@@ -96,57 +174,58 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
     setId(id);
     setIsOpenDelete(!isOpenDelete);
   };
+  
   const toggleEditBookingModal = (booking: any) => {
     setEachBooking(booking);
     setIsEditBookingModal(!isEditBookingModal);
   };
 
-  const { page, rowsPerPage, tableStatus, setTableStatus, setPage } =
-    useGlobalContext();
+  const { 
+    page, 
+    rowsPerPage, 
+    tableStatus, 
+    setTableStatus, 
+    setPage,
+    toggleModalDelete,
+    isOpenDelete: globalIsOpenDelete,
+    setIsOpenDelete: globalSetIsOpenDelete,
+    isOpenEdit,
+    toggleModalEdit,
+  } = useGlobalContext();
 
   const handleTabClick = (categoryName: string) => {
     // Check if this category has been loaded before
     const isFirstTime = !loadedCategories.has(categoryName);
+    
     
     // Only show loading state for first-time loads
     if (isFirstTime) {
       setIsFirstTimeLoading(true);
       setLoadedCategories(prev => new Set([...prev, categoryName]));
       
-      // Stop loading state after 2 seconds for first-time loads only
       setTimeout(() => {
-        setIsFirstTimeLoading(false);
-      }, 2000);
+        if(bookings) setIsFirstTimeLoading(false);
+       
+      }, 4000);
     }
     
     setTableStatus(categoryName);
     setPage(1);
   };
 
-  const getBookingData = () => {
-    if (!bookings) return [];
-    if (bookings.bookings && Array.isArray(bookings.bookings)) {
-      return bookings.bookings;
-    }
-    if (bookings.data && Array.isArray(bookings.data)) {
-      return bookings.data;
-    }
-    return [];
-  };
-
-  const filteredBookings = getBookingData().filter(booking =>
-    booking.reservationName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    booking.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    booking.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    booking.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    booking.emailAddress?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    booking.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    booking.bookingDateTime?.toLowerCase().includes(searchQuery.toLowerCase())
+  // Use the new filtered function that includes status filtering
+  const bookingDetails = getFilteredBookingDetails(
+    bookings, 
+    isLoading, 
+    isPending || false, 
+    tableStatus || 'All Bookings', // Default to "All Bookings" if tableStatus is not set
+    searchQuery
   );
-
-  const matchingObject = { data: filteredBookings, totalCount: filteredBookings.length };
-
   
+  const matchingObject = { 
+    data: bookingDetails, 
+    totalCount: bookingDetails.length 
+  };
 
   const {
     bottomContent,
@@ -164,14 +243,32 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
     hasSearchFilter,
   } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
+  // Sort the bookings based on sortDescriptor
+  const sortedBookings = React.useMemo(() => {
+    if (!bookingDetails || bookingDetails.length === 0) return bookingDetails;
+    
+    return [...bookingDetails].sort((a: BookingItem, b: BookingItem) => {
+      const first = a[sortDescriptor.column as keyof BookingItem];
+      const second = b[sortDescriptor.column as keyof BookingItem];
+      
+      let cmp = 0;
+      if (first === null || first === undefined) cmp = 1;
+      else if (second === null || second === undefined) cmp = -1;
+      else if (first < second) cmp = -1;
+      else if (first > second) cmp = 1;
+      
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+    });
+  }, [bookingDetails, sortDescriptor]);
+
   const [value, setValue] = useState("");
 
-  const handleTabChange = (index) => {
+  const handleTabChange = (index: string) => {
     setValue(index);
   };
 
-  const updateBookingStatus = async (status, id) => {
-    const data = await postBookingStatus(id, status);
+  const updateBookingStatus = async (status: number, id: number) => {
+    const data = await postBookingStatus(String(id), status);
     if (data?.data?.isSuccessful) {
       notify({
         title: "Success!",
@@ -189,10 +286,8 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
     }
   };
 
-  
-
-  const renderCell = React.useCallback((booking, columnKey) => {
-    const cellValue = booking[columnKey];
+  const renderCell = React.useCallback((booking: BookingItem, columnKey: string) => {
+    const cellValue = booking[columnKey as keyof BookingItem];
 
     switch (columnKey) {
       case "firstName":
@@ -242,7 +337,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
                         onClick={() =>
                           updateBookingStatus(
                             submitBookingStatus(booking?.bookingStatus),
-                            booking?.id
+                            booking?.id!
                           )
                         }
                       >
@@ -261,7 +356,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
                         onClick={() =>
                           updateBookingStatus(
                             submitBookingStatus(booking?.bookingStatus),
-                            booking?.id
+                            booking?.id!
                           )
                         }
                       >
@@ -299,7 +394,6 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
                         onClick={() => {
                           toggleDeleteModal(booking?.id);
                         }}
-                        // onClick={() => updateBookingStatus(3, booking?.id)}
                       >
                         <div
                           className={` flex gap-2  items-center text-danger-500`}
@@ -318,7 +412,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
                         onClick={() =>
                           updateBookingStatus(
                             submitBookingStatus(booking?.bookingStatus),
-                            booking?.id
+                            booking?.id!
                           )
                         }
                       >
@@ -337,9 +431,9 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
           </div>
         );
       default:
-        return cellValue;
+        return cellValue ? String(cellValue) : '';
     }
-  }, []);
+  }, [role, userRolePermissions]);
 
   const topContent = React.useMemo(() => {
     return (
@@ -350,8 +444,6 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
         handleTabClick={handleTabClick}
         onViewBookings={() => {
           // Placeholder for view all bookings functionality
-          // This can be implemented based on your specific requirements
-          console.log('View all bookings clicked');
         }}
       />
     );
@@ -369,7 +461,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
   ]);
 
   // Determine if we should show loading spinner
-  const shouldShowLoading = isFirstTimeLoading || (isLoading && !loadedCategories.has(tableStatus));
+  const shouldShowLoading = isFirstTimeLoading || isPending || (isLoading && !loadedCategories.has(tableStatus));
 
   return (
     <section className="border border-primaryGrey rounded-lg">
@@ -377,7 +469,6 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
         radius="lg"
         isCompact
         removeWrapper
-        allowsSorting
         aria-label="list of bookings"
         bottomContent={bottomContent}
         topContent={topContent}
@@ -385,10 +476,10 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
         classNames={classNames}
         selectedKeys={selectedKeys}
         // selectionMode='multiple'
-        sortDescriptor={sortDescriptor}
+        sortDescriptor={sortDescriptor as SortDescriptor}
         topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
+        onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+        onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
@@ -403,12 +494,12 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
         </TableHeader>
         <TableBody
           emptyContent={"No booking(s) found"}
-          items={shouldShowLoading ? [] : filteredBookings}
+          items={shouldShowLoading ? [] : sortedBookings}
           isLoading={shouldShowLoading}
           loadingContent={<SpinnerLoader size="md" />}
         >
           {(booking: BookingItem) => (
-            <TableRow key={String(booking?.reference)}>
+            <TableRow key={String(booking?.reference || booking?.id)}>
               {(columnKey) => (
                 <TableCell>{renderCell(booking, String(columnKey))}</TableCell>
               )}
@@ -427,7 +518,7 @@ const BookingsList: React.FC<BookingsListProps> = ({ bookings, categories, searc
       <DeleteModal
         isOpen={isOpenDelete}
         text="Are you sure you want to cancel this booking?"
-        handleDelete={() => updateBookingStatus(3, id)}
+        handleDelete={() => updateBookingStatus(3, id as number)}
         setIsOpen={setIsOpenDelete}
         toggleModal={toggleDeleteModal}
       />
