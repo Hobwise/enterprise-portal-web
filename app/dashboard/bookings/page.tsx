@@ -21,7 +21,6 @@ import SuccessModal from "@/components/ui/dashboard/bookings/successModal";
 import useBookings from "@/hooks/cachedEndpoints/useBookings";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
-import useDateFilter from "@/hooks/useDateFilter";
 import { downloadCSV } from "@/lib/downloadToExcel";
 import { Button, ButtonGroup, Chip, useDisclosure } from "@nextui-org/react";
 import { IoSearchOutline } from "react-icons/io5";
@@ -30,7 +29,6 @@ import { VscLoading } from "react-icons/vsc";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import toast from "react-hot-toast";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
-import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 
 const Bookings: React.FC = () => {
   const {
@@ -39,12 +37,7 @@ const Bookings: React.FC = () => {
     isLoading,
     isError,
     refetch,
-    dropdownComponent,
-    datePickerModal,
-    filterType,
-    startDate,
-    endDate,
-  } = useDateFilter(useBookings);
+  } = useBookings();
   const businessInformation = getJsonItemFromLocalStorage("business");
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -80,7 +73,7 @@ const Bookings: React.FC = () => {
     refetch();
     setTableStatus("All Bookings");
     setPage(1);
-  }, [filterType, startDate, endDate, refetch]);
+  }, [refetch]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
@@ -163,7 +156,6 @@ const Bookings: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {dropdownComponent}
           {data?.categories.bookingCategories.length > 0 && (
             <>
               <div>
@@ -214,12 +206,6 @@ const Bookings: React.FC = () => {
         </div>
       </div>
       
-      <DateRangeDisplay 
-        startDate={startDate}
-        endDate={endDate}
-        filterType={filterType}
-      />
-      
       {data.categories.bookingCategories &&
       data.categories?.bookingCategories?.length > 0 ? (
         <BookingsList
@@ -227,11 +213,11 @@ const Bookings: React.FC = () => {
           categories={data.categories}
           refetch={refetch}
           searchQuery={searchQuery}
+          isLoading={isLoading}
         />
       ) : (
         <CreateReservation showCreateBookingModal={showCreateBookingModal} />
       )}
-      {datePickerModal}
       <CreateBooking
         openCreateBookingModal={openCreateBookingModal}
         closeCreateBookingModal={closeCreateBookingModal}

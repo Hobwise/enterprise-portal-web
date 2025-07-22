@@ -32,6 +32,7 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 
 import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import useAllBookingsData from "@/hooks/cachedEndpoints/useAllBookingsData";
 import { notify, submitBookingStatus } from "@/lib/utils";
 import { CiCalendar } from "react-icons/ci";
 import { IoCheckmark } from "react-icons/io5";
@@ -45,7 +46,6 @@ const INITIAL_VISIBLE_COLUMNS = [
   "reservationName",
   "firstName",
   "lastName",
-  "reservationName",
   "id",
   "emailAddress",
   "quantity",
@@ -78,7 +78,10 @@ interface BookingCategory {
 }
 
 interface BookingsListProps {
-  bookings: BookingItem[] | { bookings?: BookingItem[]; data?: BookingItem[] } | any;
+  bookings:
+    | BookingItem[]
+    | { bookings?: BookingItem[]; data?: BookingItem[] }
+    | any;
   categories: { bookingCategories: BookingCategory[] } | any;
   searchQuery: string;
   refetch: () => void;
@@ -89,17 +92,17 @@ interface BookingsListProps {
 // Status mapping for booking categories
 const getStatusForBookingCategory = (categoryName: string): number | null => {
   switch (categoryName.toLowerCase()) {
-    case 'pending bookings':
+    case "pending bookings":
       return 0;
-    case 'confirmed bookings':
-    case 'incoming bookings':
+    case "confirmed bookings":
+    case "incoming bookings":
       return 1;
-    case 'processed bookings':
+    case "processed bookings":
       return null;
     case "today's bookings":
-      return null; 
-    case 'unsuccessful bookings':
-      return 5; 
+      return null;
+    case "unsuccessful bookings":
+      return 5;
     default:
       return null; // null means show all bookings
   }
@@ -107,84 +110,98 @@ const getStatusForBookingCategory = (categoryName: string): number | null => {
 
 // Function to get filtered bookings based on category and pending state
 const getFilteredBookingDetails = (
-  bookings: any, 
-  isLoading: boolean, 
-  isPending: boolean, 
+  bookings: any,
+  categories: any,
+  isLoading: boolean,
+  isPending: boolean,
   selectedCategory: string,
-  searchQuery: string = ''
+  searchQuery: string = ""
 ): BookingItem[] => {
   // Check if data is in pending state
   if (isLoading || isPending || !bookings) {
-    console.log('Loading state:', isLoading, isPending, bookings);
     return [];
   }
-  
-  // Extract bookings data
-  let allBookings: BookingItem[] = [];
-  if (bookings.bookings && Array.isArray(bookings.bookings)) {
-    allBookings = bookings.bookings;
-  } else if (bookings.data && Array.isArray(bookings.data)) {
-    allBookings = bookings.data;
-  } else if (Array.isArray(bookings)) {
-    allBookings = bookings;
+
+  // Check if categories array is empty
+  if (
+    !categories?.bookingCategories ||
+    categories?.bookingCategories?.length === 0
+  ) {
+    return [];
   }
-  
+
+  // Check if the selected category has totalCount of 0
+  const selectedCategoryData = categories?.bookingCategories?.find(
+    (cat: BookingCategory) => cat.name === selectedCategory
+  );
+  if (selectedCategoryData && selectedCategoryData.totalCount === 0) {
+    return [];
+  }
+
+  // Extract bookings data - ensure it's always an array
+  let allBookings: BookingItem[] = [];
+  if (!Array.isArray(bookings)) {
+    allBookings = bookings?.data?.bookings;
+  } else {
+    return [];
+  }
+
   // Get the status filter for the selected category
   const statusFilter = getStatusForBookingCategory(selectedCategory);
-  
+
   // Filter by status if not "All Bookings"
   let filteredByStatus = allBookings;
   if (statusFilter !== null) {
-    filteredByStatus = allBookings.filter((booking: BookingItem) => booking.bookingStatus === statusFilter);
-  }
-  
-  // Apply search filter if provided
-  if (searchQuery.trim()) {
-    filteredByStatus = filteredByStatus.filter((booking: BookingItem) =>
-      booking.reservationName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.emailAddress?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.phoneNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      booking.bookingDateTime?.toLowerCase().includes(searchQuery.toLowerCase())
+    filteredByStatus = allBookings.filter(
+      (booking: BookingItem) => booking.bookingStatus === statusFilter
     );
   }
-  
+
+  // Apply search filter if provided
+  if (searchQuery.trim()) {
+    filteredByStatus = filteredByStatus.filter(
+      (booking: BookingItem) =>
+        booking.reservationName
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        booking.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.emailAddress
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        booking.phoneNumber
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        booking.bookingDateTime
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
+    );
+  }
+
   return filteredByStatus;
 };
 
-const BookingsList: React.FC<BookingsListProps> = ({ 
-  bookings, 
-  categories, 
-  searchQuery, 
-  refetch, 
+const BookingsList: React.FC<BookingsListProps> = ({
+  bookings,
+  categories,
+  searchQuery,
+  refetch,
   isLoading = false,
-  isPending = false 
+  isPending = false,
 }) => {
   const { userRolePermissions, role } = usePermission();
-  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
-  const [isEditBookingModal, setIsEditBookingModal] = React.useState<Boolean>(false);
-  const [id, setId] = React.useState<Number>();
+  const [isOpenDelete, setIsOpenDelete] = React.useState<boolean>(false);
+  const [isEditBookingModal, setIsEditBookingModal] =
+    React.useState<boolean>(false);
+  const [id, setId] = React.useState<number>();
   const [eachBooking, setEachBooking] = React.useState<any>(null);
-  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
-  const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
 
-  const toggleDeleteModal = (id?: number) => {
-    setId(id);
-    setIsOpenDelete(!isOpenDelete);
-  };
-  
-  const toggleEditBookingModal = (booking: any) => {
-    setEachBooking(booking);
-    setIsEditBookingModal(!isEditBookingModal);
-  };
-
-  const { 
-    page, 
-    rowsPerPage, 
-    tableStatus, 
-    setTableStatus, 
+  const {
+    page,
+    rowsPerPage,
+    tableStatus,
+    setTableStatus,
     setPage,
     toggleModalDelete,
     isOpenDelete: globalIsOpenDelete,
@@ -193,39 +210,44 @@ const BookingsList: React.FC<BookingsListProps> = ({
     toggleModalEdit,
   } = useGlobalContext();
 
-  const handleTabClick = (categoryName: string) => {
-    // Check if this category has been loaded before
-    const isFirstTime = !loadedCategories.has(categoryName);
-    
-    
-    // Only show loading state for first-time loads
-    if (isFirstTime) {
-      setIsFirstTimeLoading(true);
-      setLoadedCategories(prev => new Set([...prev, categoryName]));
-      
-      setTimeout(() => {
-        if(bookings) setIsFirstTimeLoading(false);
-       
-      }, 4000);
-    }
-    
+  // Use the new hook for fetching all data
+  const { getCategoryDetails, isLoadingInitial, isLoadingAll } =
+    useAllBookingsData(page, rowsPerPage, 1, undefined, undefined);
+
+  const toggleDeleteModal = (id?: number) => {
+    setId(id);
+    setIsOpenDelete(!isOpenDelete);
+  };
+
+  const toggleEditBookingModal = (booking: any) => {
+    setEachBooking(booking);
+    setIsEditBookingModal(!isEditBookingModal);
+  };
+
+  const handleTabClick = React.useCallback((categoryName: string) => {
     setTableStatus(categoryName);
     setPage(1);
-  };
+  }, [setTableStatus, setPage]);
+
+  // Get data for current category from the new hook
+  const currentCategoryData = getCategoryDetails(
+    tableStatus || categories?.bookingCategories?.[0]?.name || "All Bookings"
+  );
 
   // Use the new filtered function that includes status filtering
   const bookingDetails = getFilteredBookingDetails(
-    bookings, 
-    isLoading, 
-    isPending || false, 
-    tableStatus || 'All Bookings', // Default to "All Bookings" if tableStatus is not set
+    currentCategoryData || bookings,
+    categories,
+    isLoading || isLoadingInitial,
+    isPending || false,
+    tableStatus || "All Bookings",
     searchQuery
   );
-  
-  const matchingObject = { 
-    data: bookingDetails, 
-    totalCount: bookingDetails.length 
+
+  const matchingObject = {
+    data: bookingDetails,
   };
+
 
   const {
     bottomContent,
@@ -245,31 +267,34 @@ const BookingsList: React.FC<BookingsListProps> = ({
 
   // Sort the bookings based on sortDescriptor
   const sortedBookings = React.useMemo(() => {
-    if (!bookingDetails || bookingDetails.length === 0) return bookingDetails;
-    
+    // Ensure bookingDetails is an array and has content
+    if (!Array.isArray(bookingDetails) || bookingDetails.length === 0) {
+      return [];
+    }
+
     return [...bookingDetails].sort((a: BookingItem, b: BookingItem) => {
       const first = a[sortDescriptor.column as keyof BookingItem];
       const second = b[sortDescriptor.column as keyof BookingItem];
-      
+
       let cmp = 0;
       if (first === null || first === undefined) cmp = 1;
       else if (second === null || second === undefined) cmp = -1;
       else if (first < second) cmp = -1;
       else if (first > second) cmp = 1;
-      
+
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [bookingDetails, sortDescriptor]);
 
   const [value, setValue] = useState("");
 
-  const handleTabChange = (index: string) => {
+  const handleTabChange = React.useCallback((index: string) => {
     setValue(index);
-  };
+  }, []);
 
   const updateBookingStatus = async (status: number, id: number) => {
-    const data = await postBookingStatus(String(id), status);
-    if (data?.data?.isSuccessful) {
+    const response: any = await postBookingStatus(String(id), status);
+    if (response?.data?.isSuccessful) {
       notify({
         title: "Success!",
         text: "Operation successful",
@@ -277,163 +302,187 @@ const BookingsList: React.FC<BookingsListProps> = ({
       });
       refetch();
       status === 3 && toggleDeleteModal();
-    } else if (data?.data?.error) {
+    } else if (response?.data?.error) {
       notify({
         title: "Error!",
-        text: data?.data?.error,
+        text: response?.data?.error,
         type: "error",
       });
     }
   };
 
-  const renderCell = React.useCallback((booking: BookingItem, columnKey: string) => {
-    const cellValue = booking[columnKey as keyof BookingItem];
+  const renderCell = React.useCallback(
+    (booking: BookingItem, columnKey: string) => {
+      const cellValue = booking[columnKey as keyof BookingItem];
 
-    switch (columnKey) {
-      case "firstName":
-        return (
-          <div className="text-sm">
-            <p className="font-medium text-black">
-              {booking?.firstName} {booking?.lastName}
-            </p>
-            <p className="text-[13px] text-textGrey">{booking?.phoneNumber}</p>
-          </div>
-        );
+      switch (columnKey) {
+        case "firstName":
+          return (
+            <div className="text-sm">
+              <p className="font-medium text-black">
+                {booking?.firstName} {booking?.lastName}
+              </p>
+              <p className="text-[13px] text-textGrey">
+                {booking?.phoneNumber}
+              </p>
+            </div>
+          );
 
-      case "bookingDateTime":
-        return (
-          <div className="text-textGrey text-sm">
-            {moment(booking?.bookingDateTime).format("MMMM Do YYYY, h:mm:ss a")}
-          </div>
-        );
-      case "reference":
-        return <div className="text-textGrey text-sm">{booking.reference}</div>;
-      case "bookingStatus":
-        return (
-          <Chip
-            className="capitalize"
-            color={statusColorMap[booking?.bookingStatus]}
-            size="sm"
-            variant="bordered"
-          >
-            {statusDataMap[booking?.bookingStatus]}
-          </Chip>
-        );
-      case "actions":
-        return (
-          <div className="relative flexjustify-center items-center gap-2">
-            <Dropdown aria-label="drop down" className="">
-              <DropdownTrigger aria-label="actions">
-                <div className="cursor-pointer flex justify-center items-center text-black">
-                  <HiOutlineDotsVertical className="text-[22px] " />
+        case "bookingDateTime":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(booking?.bookingDateTime).format(
+                "MMMM Do YYYY, h:mm:ss a"
+              )}
+            </div>
+          );
+        case "reference":
+          return (
+            <div className="text-textGrey text-sm">{booking.reference}</div>
+          );
+        case "bookingStatus":
+          return (
+            <Chip
+              className="capitalize"
+              color={statusColorMap[booking?.bookingStatus]}
+              size="sm"
+              variant="bordered"
+            >
+              {statusDataMap[booking?.bookingStatus]}
+            </Chip>
+          );
+        case "actions":
+          const dropdownItems = [];
+
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            booking?.bookingStatus === 1
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="admit"
+                aria-label="admit"
+                onClick={() =>
+                  updateBookingStatus(
+                    submitBookingStatus(booking?.bookingStatus),
+                    booking?.id!
+                  )
+                }
+              >
+                <div className="flex gap-2 items-center text-grey500">
+                  <IoCheckmark className="text-[20px]" />
+                  <p>Admit</p>
                 </div>
-              </DropdownTrigger>
-              <DropdownMenu className="text-black">
-                <DropdownSection>
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 1 ? (
-                      <DropdownItem
-                        aria-label="admit"
-                        onClick={() =>
-                          updateBookingStatus(
-                            submitBookingStatus(booking?.bookingStatus),
-                            booking?.id!
-                          )
-                        }
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <IoCheckmark className="text-[20px]" />
-                          <p>Admit</p>
-                        </div>
-                      </DropdownItem>
-                    ) : null}
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 0 ? (
-                      <DropdownItem
-                        aria-label="confirm booking"
-                        onClick={() =>
-                          updateBookingStatus(
-                            submitBookingStatus(booking?.bookingStatus),
-                            booking?.id!
-                          )
-                        }
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <IoCheckmark className="text-[20px]" />
+              </DropdownItem>
+            );
+          }
 
-                          <p>Confirm booking</p>
-                        </div>
-                      </DropdownItem>
-                    ) : null}
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus !== 6 &&
-                    booking?.bookingStatus !== 4 &&
-                    booking?.bookingStatus !== 5 ? (
-                      <DropdownItem
-                        aria-label="edit booking"
-                        onClick={() => toggleEditBookingModal(booking)}
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <MdOutlineModeEditOutline className="text-[20px]" />
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            booking?.bookingStatus === 0
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="confirm"
+                aria-label="confirm booking"
+                onClick={() =>
+                  updateBookingStatus(
+                    submitBookingStatus(booking?.bookingStatus),
+                    booking?.id!
+                  )
+                }
+              >
+                <div className="flex gap-2 items-center text-grey500">
+                  <IoCheckmark className="text-[20px]" />
+                  <p>Confirm booking</p>
+                </div>
+              </DropdownItem>
+            );
+          }
 
-                          <p>Edit booking</p>
-                        </div>
-                      </DropdownItem>
-                    ) : null}
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    (booking?.bookingStatus === 0 ||
-                      booking?.bookingStatus === 1) ? (
-                      <DropdownItem
-                        aria-label="cancel"
-                        onClick={() => {
-                          toggleDeleteModal(booking?.id);
-                        }}
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-danger-500`}
-                        >
-                          <LiaTimesSolid className="text-[20px]" />
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            booking?.bookingStatus !== 6 &&
+            booking?.bookingStatus !== 4 &&
+            booking?.bookingStatus !== 5
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="edit"
+                aria-label="edit booking"
+                onClick={() => toggleEditBookingModal(booking)}
+              >
+                <div className="flex gap-2 items-center text-grey500">
+                  <MdOutlineModeEditOutline className="text-[20px]" />
+                  <p>Edit booking</p>
+                </div>
+              </DropdownItem>
+            );
+          }
 
-                          <p>Cancel booking</p>
-                        </div>
-                      </DropdownItem>
-                    ) : null}
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            (booking?.bookingStatus === 0 || booking?.bookingStatus === 1)
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="cancel"
+                aria-label="cancel"
+                onClick={() => {
+                  toggleDeleteModal(booking?.id);
+                }}
+              >
+                <div className="flex gap-2 items-center text-danger-500">
+                  <LiaTimesSolid className="text-[20px]" />
+                  <p>Cancel booking</p>
+                </div>
+              </DropdownItem>
+            );
+          }
 
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 2 ? (
-                      <DropdownItem
-                        aria-label="close booking"
-                        onClick={() =>
-                          updateBookingStatus(
-                            submitBookingStatus(booking?.bookingStatus),
-                            booking?.id!
-                          )
-                        }
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <CiCalendar className="text-[20px]" />
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            booking?.bookingStatus === 2
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="close"
+                aria-label="close booking"
+                onClick={() =>
+                  updateBookingStatus(
+                    submitBookingStatus(booking?.bookingStatus),
+                    booking?.id!
+                  )
+                }
+              >
+                <div className="flex gap-2 items-center text-grey500">
+                  <CiCalendar className="text-[20px]" />
+                  <p>Close booking</p>
+                </div>
+              </DropdownItem>
+            );
+          }
 
-                          <p>Close booking</p>
-                        </div>
-                      </DropdownItem>
-                    ) : null}
-                </DropdownSection>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        );
-      default:
-        return cellValue ? String(cellValue) : '';
-    }
-  }, [role, userRolePermissions]);
+          return (
+            <div className="relative flex justify-center items-center gap-2">
+              <Dropdown aria-label="drop down" className="">
+                <DropdownTrigger aria-label="actions">
+                  <div className="cursor-pointer flex justify-center items-center text-black">
+                    <HiOutlineDotsVertical className="text-[22px]" />
+                  </div>
+                </DropdownTrigger>
+                <DropdownMenu className="text-black">
+                  <DropdownSection>{dropdownItems}</DropdownSection>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          );
+        default:
+          return cellValue ? String(cellValue) : "";
+      }
+    },
+    [role, userRolePermissions]
+  );
 
   const topContent = React.useMemo(() => {
     return (
@@ -442,26 +491,31 @@ const BookingsList: React.FC<BookingsListProps> = ({
         handleTabChange={handleTabChange}
         value={value}
         handleTabClick={handleTabClick}
-        onViewBookings={() => {
-          // Placeholder for view all bookings functionality
-        }}
       />
     );
   }, [
-    categories,
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
-    hasSearchFilter,
+    categories?.bookingCategories,
     handleTabChange,
     value,
     handleTabClick,
   ]);
 
-  // Determine if we should show loading spinner
-  const shouldShowLoading = isFirstTimeLoading || isPending || (isLoading && !loadedCategories.has(tableStatus));
+  // Determine if we should show loading spinner - only show for initial load
+  const shouldShowLoading = isLoadingInitial && bookingDetails.length === 0;
+
+  // Check if data is in pending state
+  const isDataPending =
+    (isLoading || isLoadingInitial || isPending) && !currentCategoryData;
+
+  if (isDataPending) {
+    return (
+      <section className="border border-primaryGrey rounded-lg">
+        <div className="flex justify-center items-center h-64">
+          <SpinnerLoader size="md" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="border border-primaryGrey rounded-lg">
