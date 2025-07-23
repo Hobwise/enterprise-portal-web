@@ -26,9 +26,6 @@ interface BookingCategory {
 }
 
 const useBookings = (
-  filterType: number,
-  startDate?: string,
-  endDate?: string,
   options?: { enabled: boolean }
 ) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
@@ -37,16 +34,13 @@ const useBookings = (
   const getAllBookings = async ({ queryKey }: { queryKey: any }) => {
     const [
       _key,
-      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+      { page, rowsPerPage, tableStatus },
     ] = queryKey;
 
     try {
       // Fetch booking categories
       const categoriesResponse = await getBookingCategories(
-        businessInformation[0]?.businessId,
-        // filterType,
-        // startDate,
-        // endDate
+        businessInformation[0]?.businessId
       );
       const categories = categoriesResponse?.data?.data || [];
       
@@ -59,9 +53,6 @@ const useBookings = (
       const detailsItems = await getBookingDetails(
         businessInformation[0]?.businessId,
         targetCategory,
-        // filterType,
-        // startDate,
-        // endDate,
         page,
         rowsPerPage
       );
@@ -78,7 +69,7 @@ const useBookings = (
   const { data, isLoading, isError, refetch } = useQuery<{ categories: BookingCategory[]; details: Booking[] }>(
     [
       "bookings",
-      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+      { page, rowsPerPage, tableStatus },
     ],
     getAllBookings,
     {

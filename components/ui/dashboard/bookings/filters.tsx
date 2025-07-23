@@ -2,14 +2,11 @@
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 import { useRef, useState, useEffect } from 'react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import { LuEye } from 'react-icons/lu';
-import { VscLoading } from 'react-icons/vsc';
 
-const Filters = ({ bookings, handleTabChange, handleTabClick, onViewBookings }: any) => {
+const Filters = ({ bookings, handleTabChange, handleTabClick }: any) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
-  const [isViewBookingsLoading, setIsViewBookingsLoading] = useState(false);
 
   const checkScrollButtons = () => {
     const el = tabsRef.current;
@@ -46,21 +43,11 @@ const Filters = ({ bookings, handleTabChange, handleTabClick, onViewBookings }: 
     checkScrollButtons();
   };
 
-  const handleViewBookingsClick = async () => {
-    if (onViewBookings) {
-      setIsViewBookingsLoading(true);
-      try {
-        await onViewBookings();
-      } finally {
-        setIsViewBookingsLoading(false);
-      }
-    }
-  };
 
   return (
     <>
       <div className='flex xl:flex-row flex-col-reverse relative top-3 flex-wrap w-full border-b border-divider justify-between'>
-        <div className="relative xl:w-[85%] w-full flex items-center">
+        <div className="relative xl:w-[95%] w-full flex items-center">
           {showLeft && (
             <button
               onClick={scrollLeft}
@@ -119,21 +106,6 @@ const Filters = ({ bookings, handleTabChange, handleTabClick, onViewBookings }: 
             </button>
           )}
         </div>
-        {onViewBookings && (
-          <div className='flex gap-3 mb-2 xl:mb-0'>
-            <span
-              onClick={handleViewBookingsClick}
-              className='bg-white text-primaryColor font-semibold justify-center items-center text-sm cursor-pointer flex gap-1'
-            >
-              {isViewBookingsLoading ? (
-                <VscLoading className="animate-spin" />
-              ) : (
-                <LuEye />
-              )}
-              <span>View all bookings</span>
-            </span>
-          </div>
-        )}
       </div>
     </>
   );
