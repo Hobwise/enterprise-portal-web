@@ -2,8 +2,6 @@
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 
 const Filters = ({ campaigns, handleTabChange, handleTabClick }: any) => {
-
-
   
   return (
     <>
@@ -30,7 +28,7 @@ const Filters = ({ campaigns, handleTabChange, handleTabClick }: any) => {
                     onClick={() => handleTabClick(campaign.name)}
                     className='flex items-center h-10 space-x-2 capitalize'
                   >
-                    <span>{campaign.name}</span>
+                    <span>{campaign?.name}</span>
 
                     <Chip
                       classNames={{

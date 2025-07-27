@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 
 import { repeatCampaign } from "@/app/api/controllers/dashboard/campaigns";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import useAllCampaignsData from "@/hooks/cachedEndpoints/useAllCampaignsData";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import usePagination from "@/hooks/usePagination";
 import { notify, saveJsonItemToLocalStorage } from "@/lib/utils";
@@ -37,6 +38,7 @@ import Filters from "./filters";
 import RepeatCampaignModal from "./repeatCampaign";
 import useCampaignCategory from "@/hooks/cachedEndpoints/useCampaignCategory";
 import SpinnerLoader from "../menu/SpinnerLoader";
+import CreateCampaign from "./createCampaign";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "campaignName",
@@ -68,7 +70,7 @@ interface CampaignGroup {
   hasPrevious: boolean;
 }
 
-const CampaignList = ({ campaigns, searchQuery }: any) => {
+const CampaignList = ({ searchQuery }: any) => {
   const { userRolePermissions, role } = usePermission();
   const { setTableStatus, tableStatus, page, setPage } = useGlobalContext();
 
@@ -76,33 +78,29 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
   const [isOpenRepeat, setIsOpenRepeat] = React.useState(false);
   const [singleCampaign, setSingleCampaign] = React.useState<any>({});
 
-  // Track selected category (tab)
-  const [selectedCategory, setSelectedCategory] = useState<string>(
-    campaigns?.campaignCategories?.[0]?.name || ""
-  );
+  // Use the new hook for fetching all data
+  const { 
+    getCategoryDetails, 
+    isLoadingInitial, 
+    isLoadingAll,
+    isLoadingCurrent,
+    campaigns: allCampaigns,
+    categories
+  } = useAllCampaignsData(tableStatus);
 
-  // Fetch campaigns for the selected category
-  const {
-    data: categoryCampaigns,
-    isLoading: isCategoryLoading,
-    isError: isCategoryError,
-    refetch: refetchCategory,
-  } = useCampaignCategory({
-    category: selectedCategory,
-    page: page || 1,
-    pageSize: 10,
-  });
+  // Get data for current category from the new hook
+  const rawCategoryData = getCategoryDetails(tableStatus || 'All Campaigns');
+  
+  
+  // Extract the campaigns array for usePagination (similar to how Orders page does it)
+  // Ensure we ALWAYS have an array, even if rawCategoryData is null/undefined
+  const campaignsForPagination = (rawCategoryData && Array.isArray(rawCategoryData.data)) 
+    ? rawCategoryData.data 
+    : [];
 
-  // Use category-specific data for pagination
-  const currentCategoryData = categoryCampaigns || {
-    campaigns: [],
-    totalCount: 0,
-    currentPage: page || 1,
-    totalPages: 0,
-    hasNext: false,
-    hasPrevious: false,
-  };
-
+  // Ensure we always pass an array to usePagination
+  const paginationData = Array.isArray(campaignsForPagination) ? campaignsForPagination : [];
+  
   const {
     bottomContent,
     headerColumns,
@@ -117,7 +115,7 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(currentCategoryData, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(paginationData, columns, INITIAL_VISIBLE_COLUMNS);
 
   const toggleCampaignModal = () => {
     setIsOpenDelete(!isOpenDelete);
@@ -131,10 +129,8 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
   const router = useRouter();
 
   const handleTabClick = (categoryName: string) => {
-    setSelectedCategory(categoryName);
-    setPage(1); // Reset to first page when changing category
-    // The useCampaignCategory hook will automatically refetch with new category
-    // and handle loading states properly
+    setTableStatus(categoryName);
+    setPage(1);
   };
 
   const handleTabChange = (_: any) => {
@@ -154,7 +150,7 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
     const data = await repeatCampaign(campaign.id);
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
-      refetchCategory();
+      // Refetch campaigns - will be handled by the new hook
       toast.success("Campaign repeated successfully");
       toggleRepeatModal();
     } else if (data?.data?.error) {
@@ -166,8 +162,11 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
     }
   };
 
+  
+
   const renderCell = React.useCallback(
     (campaign: Campaign, columnKey: string) => {
+
       const cellValue = campaign[columnKey as keyof Campaign];
       switch (columnKey) {
         case "campaignDescription":
@@ -220,7 +219,7 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
                         </div>
                       </Link>
                     </DropdownItem>
-                    {isItemInCompletedArray(campaign, campaigns) ? (
+                    {isItemInCompletedArray(campaign, allCampaigns) ? (
                       <DropdownItem
                         aria-label="repeat campaign"
                         onClick={() => toggleRepeatModal(campaign)}
@@ -276,25 +275,28 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
           return cellValue;
       }
     },
-    [campaigns, role, userRolePermissions, router]
+    [ role, userRolePermissions, router]
   );
 
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        campaigns={campaigns}
+        campaigns={{ campaignCategories: categories }}
         handleTabChange={handleTabChange}
-        value={selectedCategory}
+        value={tableStatus}
         handleTabClick={handleTabClick}
       />
     );
-  }, [campaigns, selectedCategory]);
+  }, [categories, tableStatus]);
 
-  // Get the campaigns array from the category data
-  let campaignsToDisplay = currentCategoryData?.campaigns || [];
+  // Get the campaigns array from the paginated data
+  // Ensure it's always an array
+  let campaignsToDisplay = Array.isArray(campaignsForPagination) ? campaignsForPagination : [];
+
+   
 
   // Filter campaigns based on searchQuery
-  if (searchQuery && searchQuery.trim()) {
+  if (searchQuery && searchQuery.trim() && Array.isArray(campaignsToDisplay)) {
     const lowerSearch = searchQuery.toLowerCase();
     campaignsToDisplay = campaignsToDisplay.filter(
       (item: any) =>
@@ -302,6 +304,28 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
         item?.campaignDescription?.toLowerCase().includes(lowerSearch)
     );
   }
+  
+  // Final safety check to ensure campaignsToDisplay is always an array
+  if (!Array.isArray(campaignsToDisplay)) {
+    campaignsToDisplay = [];
+  }
+
+  // Show loading state
+  if ((isLoadingInitial && (!categories || categories.length === 0)) || isLoadingCurrent) {
+    return (
+      <section className="border border-primaryGrey rounded-lg p-8">
+        <div className="flex justify-center items-center">
+          <SpinnerLoader size="lg" />
+        </div>
+      </section>
+    );
+  }
+  
+  // Show empty state if no campaigns and not loading
+  if (!isLoadingInitial && allCampaigns.length === 0 && categories.length === 0) {
+    return <CreateCampaign />;
+  }
+
 
   return (
     <section className="border border-primaryGrey rounded-lg">
@@ -330,15 +354,13 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
         </TableHeader>
         <TableBody
           emptyContent={
-            isCategoryLoading ? (
+            isLoadingInitial ? (
               <SpinnerLoader size="md" />
-            ) : isCategoryError ? (
-              "Error loading campaigns"
             ) : (
               searchQuery ? "No campaigns match your search" : "No campaign found"
             )
           }
-          items={isCategoryLoading ? [] : campaignsToDisplay}
+          items={campaignsToDisplay || []}
         >
           {(item: Campaign) => (
             <TableRow key={item.id || JSON.stringify(item)}>
@@ -347,6 +369,8 @@ const CampaignList = ({ campaigns, searchQuery }: any) => {
               )}
             </TableRow>
           )}
+        
+
         </TableBody>
       </Table>
 

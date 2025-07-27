@@ -34,6 +34,7 @@ import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import useAllBookingsData from "@/hooks/cachedEndpoints/useAllBookingsData";
 import { notify, submitBookingStatus } from "@/lib/utils";
+import { useQueryClient } from "react-query";
 import { CiCalendar } from "react-icons/ci";
 import { IoCheckmark } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -138,11 +139,25 @@ const getFilteredBookingDetails = (
     return [];
   }
 
-  // Extract bookings data - ensure it's always an array
+  // Extract bookings data - ensure it's always a valid array
   let allBookings: BookingItem[] = [];
-  if (!Array.isArray(bookings)) {
-    allBookings = bookings?.data?.bookings;
+
+  if (Array.isArray(bookings)) {
+    // If bookings is directly an array
+    allBookings = bookings;
+  } else if (bookings?.data?.bookings && Array.isArray(bookings.data.bookings)) {
+    // If bookings has nested structure with data.bookings
+    allBookings = bookings.data.bookings;
+  } else if (bookings?.bookings && Array.isArray(bookings.bookings)) {
+    // Alternative structure with direct bookings property
+    allBookings = bookings.bookings;
   } else {
+    // Fallback to empty array if no valid data found
+    allBookings = [];
+  }
+
+  // Safety check - ensure allBookings is valid array before filtering
+  if (!Array.isArray(allBookings)) {
     return [];
   }
 
@@ -151,14 +166,14 @@ const getFilteredBookingDetails = (
 
   // Filter by status if not "All Bookings"
   let filteredByStatus = allBookings;
-  if (statusFilter !== null) {
+  if (statusFilter !== null && Array.isArray(allBookings)) {
     filteredByStatus = allBookings.filter(
       (booking: BookingItem) => booking.bookingStatus === statusFilter
     );
   }
 
   // Apply search filter if provided
-  if (searchQuery.trim()) {
+  if (searchQuery.trim() && Array.isArray(filteredByStatus)) {
     filteredByStatus = filteredByStatus.filter(
       (booking: BookingItem) =>
         booking.reservationName
@@ -191,6 +206,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
   isPending = false,
 }) => {
   const { userRolePermissions, role } = usePermission();
+  const queryClient = useQueryClient();
   const [isOpenDelete, setIsOpenDelete] = React.useState<boolean>(false);
   const [isEditBookingModal, setIsEditBookingModal] =
     React.useState<boolean>(false);
@@ -300,6 +316,8 @@ const BookingsList: React.FC<BookingsListProps> = ({
         text: "Operation successful",
         type: "success",
       });
+      await queryClient.invalidateQueries('bookingCategories');
+      await queryClient.invalidateQueries(['bookingDetails']);
       refetch();
       status === 3 && toggleDeleteModal();
     } else if (response?.data?.error) {
@@ -314,6 +332,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
   const renderCell = React.useCallback(
     (booking: BookingItem, columnKey: string) => {
       const cellValue = booking[columnKey as keyof BookingItem];
+      
 
       switch (columnKey) {
         case "firstName":
@@ -483,6 +502,8 @@ const BookingsList: React.FC<BookingsListProps> = ({
     },
     [role, userRolePermissions]
   );
+
+  
 
   const topContent = React.useMemo(() => {
     return (

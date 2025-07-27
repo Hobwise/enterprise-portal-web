@@ -147,8 +147,8 @@ const Payments: React.FC = () => {
             {
               data?.categories.data.paymentCategories.map((item:any, idx:any) => (
             <div className="flex-1" key={idx}>
-              <div className="text-grey600 text-lg mb-1">{item.name}</div>
-              <div className="text-3xl font-bold text-black">
+              <div className="text-grey600 text-base mb-1">{item.name}</div>
+              <div className="text-xl font-bold text-black">
                 ₦{item.totalAmount.toLocaleString()}
               </div>
             </div>
@@ -172,6 +172,9 @@ const Payments: React.FC = () => {
           refetch={refetch}
           searchQuery={searchQuery}
           isLoading={isLoading}
+          filterType={filterType}
+          startDate={startDate}
+          endDate={endDate}
         />
       ) : (
         <NoPaymentsScreen />

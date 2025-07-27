@@ -27,6 +27,7 @@ import { columns, statusColorMap, statusDataMap } from './data';
 import moment from 'moment';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
+import useAllPaymentsData from '@/hooks/cachedEndpoints/useAllPaymentsData';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice } from '@/lib/utils';
 import ApprovePayment from './approvePayment';
@@ -67,6 +68,9 @@ interface PaymentsListProps {
   refetch: () => void;
   isLoading?: boolean;
   isPending?: boolean;
+  filterType?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 // Status mapping for payment categories
@@ -98,7 +102,12 @@ const getFilteredPaymentDetails = (
     return [];
   }
   
-  // Extract payments data
+  // If payments has totalCount of 0, return empty array immediately
+  if (payments?.totalCount === 0) {
+    return [];
+  }
+  
+  // Extract payments data - ensure it's always a valid array
   let allPayments: PaymentItem[] = [];
   if (payments.payments && Array.isArray(payments.payments)) {
     allPayments = payments.payments;
@@ -106,6 +115,14 @@ const getFilteredPaymentDetails = (
     allPayments = payments.data;
   } else if (Array.isArray(payments)) {
     allPayments = payments;
+  } else {
+    // Fallback to empty array if no valid data found
+    allPayments = [];
+  }
+
+  // Safety check - ensure allPayments is valid array before filtering
+  if (!Array.isArray(allPayments)) {
+    return [];
   }
   
   // Get the status filter for the selected category
@@ -113,12 +130,12 @@ const getFilteredPaymentDetails = (
   
   // Filter by status if not "All Payments"
   let filteredByStatus = allPayments;
-  if (statusFilter !== null) {
+  if (statusFilter !== null && Array.isArray(allPayments)) {
     filteredByStatus = allPayments.filter((payment: PaymentItem) => payment.status === statusFilter);
   }
   
   // Apply search filter if provided
-  if (searchQuery.trim()) {
+  if (searchQuery.trim() && Array.isArray(filteredByStatus)) {
     filteredByStatus = filteredByStatus.filter((payment: PaymentItem) =>
       payment.qrName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -137,21 +154,31 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   refetch,
   isLoading = false,
   isPending = false,
+  filterType = 1,
+  startDate,
+  endDate
 }) => {
   const [singlePayment, setSinglePayment] = React.useState<PaymentItem | null>(null);
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
-  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
-  const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
-
   const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
     useGlobalContext();
 
+  // Use the new hook for fetching all data
+  const { 
+    getCategoryDetails, 
+    isLoadingInitial, 
+    isLoadingAll 
+  } = useAllPaymentsData(filterType, startDate, endDate, 1, 10);
+
+  // Get data for current category from the new hook
+  const currentCategoryData = getCategoryDetails(tableStatus || categories?.[0]?.name || 'All');
+  
   // Use the new filtered function that includes status filtering
   const paymentDetails = getFilteredPaymentDetails(
-    payments, 
-    isLoading, 
-    isPending, 
-    tableStatus || 'All Payments', // Default to "All Payments" if tableStatus is not set
+    currentCategoryData || payments, 
+    isLoading || isLoadingInitial, 
+    isPending || false, 
+    tableStatus || 'All', 
     searchQuery
   );
 
@@ -209,20 +236,6 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   };
 
   const handleTabClick = (categoryName: string) => {
-    // Check if this category has been loaded before
-    const isFirstTime = !loadedCategories.has(categoryName);
-    
-    // Only show loading state for first-time loads
-    if (isFirstTime) {
-      setIsFirstTimeLoading(true);
-      setLoadedCategories(prev => new Set([...prev, categoryName]));
-      
-      // Stop loading state after 2 seconds for first-time loads only
-      setTimeout(() => {
-        setIsFirstTimeLoading(false);
-      }, 2000);
-    }
-    
     setTableStatus(categoryName);
     setPage(1);
   };
@@ -318,7 +331,8 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   ]);
 
   // Determine if we should show loading spinner
-  const shouldShowLoading = isFirstTimeLoading || isPending || (isLoading && !loadedCategories.has(tableStatus));
+  // Determine if we should show loading spinner - only show for initial load
+  const shouldShowLoading = isLoadingInitial && paymentDetails.length === 0;
 
   return (
     <section className='border border-primaryGrey rounded-lg'>

@@ -11,6 +11,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from "@/lib/utils";
+import { useQueryClient } from "react-query";
 import { InfoCircle } from "@/public/assets/svg";
 import {
   CalendarDateTime,
@@ -42,6 +43,7 @@ const EditBooking = ({
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const { data } = useReservation();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
   const [quantity, setQuantity] = useState<number>(eachBooking?.quantity || 1);
@@ -160,6 +162,8 @@ const EditBooking = ({
           text: "Booking updated successfully",
           type: "success",
         });
+        await queryClient.invalidateQueries('bookingCategories');
+        await queryClient.invalidateQueries(['bookingDetails']);
         refetch();
         toggleEditBookingModal();
       } else if (response?.data?.error) {
@@ -220,7 +224,7 @@ const EditBooking = ({
 
   return (
     <Modal
-      size="2xl"
+      size="5xl"
       isDismissable={false}
       isOpen={isEditBookingModal}
       onOpenChange={toggleEditBookingModal}

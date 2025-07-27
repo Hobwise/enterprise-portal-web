@@ -182,6 +182,9 @@ const Orders: React.FC = () => {
           refetch={refetch}
           searchQuery={searchQuery}
           isLoading={isLoading}
+          filterType={filterType}
+          startDate={startDate}
+          endDate={endDate}
         />
       ) : (
         <CreateOrder />

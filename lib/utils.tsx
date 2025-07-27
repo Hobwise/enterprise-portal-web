@@ -584,13 +584,31 @@ export function formatDate(dateString: string) {
 }
 
 export function resetLoginInfo() {
-  sessionStorage.clear();
-  localStorage.clear();
-  removeCookie("token");
-  removeCookie("planCapabilities");
-  removeCookie("username");
-  removeCookie("jwt");
-  window.location.href = "/auth/login";
+  try {
+    // Clear all storage
+    sessionStorage.clear();
+    localStorage.clear();
+    
+    // Remove specific cookies that might persist
+    removeCookie("token");
+    removeCookie("planCapabilities");
+    removeCookie("username");
+    removeCookie("jwt");
+    
+    // Clear any React Query cache if available globally
+    if (typeof window !== 'undefined' && (window as any).queryClient) {
+      (window as any).queryClient.clear();
+    }
+    
+    // Add a small delay to ensure cleanup completes before redirect
+    setTimeout(() => {
+      window.location.href = "/auth/login";
+    }, 100);
+  } catch (error) {
+    console.error('Error during logout cleanup:', error);
+    // Force redirect even if cleanup fails
+    window.location.href = "/auth/login";
+  }
 }
 
 // export function generateTimeSlots(start: string, end: string) {

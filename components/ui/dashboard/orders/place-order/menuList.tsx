@@ -3,7 +3,7 @@ import { getOrder } from "@/app/api/controllers/dashboard/orders";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
-import useMenu from "@/hooks/cachedEndpoints/useMenu";
+import useAllMenuData from "@/hooks/cachedEndpoints/useAllMenuData";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import usePagination from "@/hooks/usePagination";
 import {
@@ -21,6 +21,7 @@ import {
 import Image from "next/image";
 import React, { useEffect, useMemo, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa6";
+import { IoAddCircleOutline } from "react-icons/io5";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoSearchOutline } from "react-icons/io5";
 import noImage from "../../../../../public/assets/images/no-image.svg";
@@ -67,29 +68,42 @@ const MenuList = () => {
     useGlobalContext();
 
   const [order] = useState<any>(getJsonItemFromLocalStorage("order"));
-  const { data, isLoading, isError, refetch } = useMenu();
+  const {
+    categories,
+    getCategoryDetails,
+    isLoadingInitial,
+    isLoadingAll,
+    isLoadingCurrent,
+    isError,
+    refetch,
+    allCategoryDetails
+  } = useAllMenuData(menuIdTable, page, rowsPerPage);
   const [filterValue, setFilterValue] = React.useState("");
 
   const filteredItems = useMemo(() => {
-    return data?.map((item) => ({
-      ...item,
-      items: item?.items?.filter(
-        (item) =>
-          item?.itemName?.toLowerCase().includes(filterValue) ||
-          String(item?.price)?.toLowerCase().includes(filterValue) ||
-          item?.menuName?.toLowerCase().includes(filterValue) ||
-          item?.itemDescription?.toLowerCase().includes(filterValue)
-      ),
-    }));
-  }, [data, filterValue]);
+    return categories?.map((category) => {
+      const categoryDetails = getCategoryDetails(category.id);
+      return {
+        ...category,
+        items: categoryDetails.items?.filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(filterValue) ||
+            String(item?.price)?.toLowerCase().includes(filterValue) ||
+            item?.menuName?.toLowerCase().includes(filterValue) ||
+            item?.itemDescription?.toLowerCase().includes(filterValue)
+        ) || [],
+        totalCount: categoryDetails.totalCount
+      };
+    });
+  }, [categories, getCategoryDetails, filterValue]);
 
   useEffect(() => {
-    setMenuIdTable(data?.[0]?.id);
-  }, []);
+    if (categories && categories.length > 0 && !menuIdTable) {
+      setMenuIdTable(categories[0]?.id);
+    }
+  }, [categories, menuIdTable, setMenuIdTable]);
 
   const [loading, setLoading] = useState<Boolean>(false);
-  const [categoryLoading, setCategoryLoading] = useState<Boolean>(false);
-  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
 
   const [value, setValue] = useState("");
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
@@ -97,7 +111,7 @@ const MenuList = () => {
 
   const [selectedMenu, setSelectedMenu] = useState<Item>();
   const [orderDetails, setOrderDetails] = useState([]);
-  const [filteredMenu, setFilteredMenu] = React.useState(data?.[0]?.items);
+  const [filteredMenu, setFilteredMenu] = React.useState([]);
 
   const getOrderDetails = async () => {
     setLoading(true);
@@ -141,23 +155,11 @@ const MenuList = () => {
   } = usePagination(matchingObject);
 
   useEffect(() => {
-    if (filteredItems && filterValue) {
-      const filteredData = filteredItems.map((item) => ({
-        ...item,
-        items: item?.items?.filter(
-          (item) =>
-            item?.itemName?.toLowerCase().includes(filterValue) ||
-            String(item?.price)?.toLowerCase().includes(filterValue) ||
-            item?.menuName?.toLowerCase().includes(filterValue) ||
-            item?.itemDescription?.toLowerCase().includes(filterValue)
-        ),
-      }));
-
-      setFilteredMenu(filteredData.length > 0 ? filteredData[0].items : []);
-    } else {
-      setFilteredMenu(filteredItems?.[0]?.items);
+    if (menuIdTable && categories) {
+      const currentCategory = filteredItems?.find((item) => item.id === menuIdTable);
+      setFilteredMenu(currentCategory?.items || []);
     }
-  }, [filterValue, filteredItems]);
+  }, [filterValue, filteredItems, menuIdTable, categories]);
 
   const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
@@ -174,6 +176,27 @@ const MenuList = () => {
           packingCost:
             menuItem.packingCost ||
             (menuItem.isVariety ? menuItem.packingCost : 0),
+        },
+      ]);
+    }
+  };
+
+  const handleQuickAdd = (menuItem: Item, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the variety modal
+    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
+    
+    if (existingItem) {
+      // If item exists, increment count
+      handleIncrement(menuItem.id);
+    } else {
+      // Add new item with default options
+      setSelectedItems((prevItems: any) => [
+        ...prevItems,
+        {
+          ...menuItem,
+          count: 1,
+          isPacked: false, // Default to not packed
+          packingCost: menuItem.packingCost || 0,
         },
       ]);
     }
@@ -212,35 +235,28 @@ const MenuList = () => {
     setValue(index);
   };
 
-  const handleTabClick = async (index) => {
+  const handleTabClick = async (categoryName: string) => {
     setPage(1);
-    const filteredMenu = filteredItems?.filter((item) => item.name === index);
-    const categoryId = filteredMenu?.[0]?.id;
+    const selectedCategory = categories?.find((item) => item.name === categoryName);
     
-    // Check if this category has been loaded before
-    const isFirstTime = !loadedCategories.has(categoryId);
+    if (!selectedCategory) return;
     
-    if (isFirstTime && categoryId) {
-      setCategoryLoading(true);
-      setLoadedCategories(prev => new Set([...prev, categoryId]));
-      // Keep loading state briefly for visual feedback
-      setTimeout(() => setCategoryLoading(false), 100);
-    }
+    const categoryId = selectedCategory.id;
     
-    if (categoryId) {
-      setMenuIdTable(categoryId);
-    }
-    setFilteredMenu(filteredMenu?.[0]?.items);
+    // Update current category (matches booking/menu page pattern)
+    setMenuIdTable(categoryId);
+    setValue(categoryName);
   };
 
   useEffect(() => {
-    if (data) {
-      setFilteredMenu(data[0]?.items);
+    if (categories && categories.length > 0) {
+      const firstCategory = getCategoryDetails(categories[0]?.id);
+      setFilteredMenu(firstCategory?.items || []);
     }
-    if (order?.id && data && data.length > 0) {
+    if (order?.id && categories && categories.length > 0) {
       getOrderDetails();
     }
-  }, [order?.id, data]);
+  }, [order?.id, categories, getCategoryDetails]);
 
   const handlePackingCost = (itemId: string, isPacked: boolean) => {
     setSelectedItems((prevItems) =>
@@ -323,14 +339,14 @@ const MenuList = () => {
 
       <section>
         <Filters
-          menus={data}
+          menus={categories}
           handleTabChange={handleTabChange}
           handleTabClick={handleTabClick}
-          isLoading={categoryLoading}
+          isLoading={isLoadingAll}
         />
         <article className="flex mt-6 gap-3">
           <div className="xl:max-w-[65%] w-full">
-            {isLoading || categoryLoading || !matchingObjectArray ? (
+            {isLoadingInitial || !matchingObjectArray ? (
               <SpinnerLoader />
             ) : isError ? (
               <Error imageWidth="w-16" onClick={() => refetch()} />
@@ -410,13 +426,33 @@ const MenuList = () => {
                         {formatPrice(menu.price)}
                       </p>
                     </div>
+                    
+                    {/* Quick Add Button */}
+                    {menu?.isAvailable && (
+                      <Button
+                        isIconOnly
+                        size="sm"
+                        radius="full"
+                        className="absolute -bottom-1 right-2 bg-primaryColor h-5 min-w-4 w-5 text-white shadow-md hover:scale-110 transition-transform"
+                        onClick={(e) => handleQuickAdd(menu, e)}
+                        aria-label="Quick add to cart"
+                      >
+                        {/* {selectedItems.find((item) => item.id === menu.id) ? (
+                          <span className="text-xs font-bold">
+                            {selectedItems.find((item) => item.id === menu.id)?.count}
+                          </span>
+                        ) : ( */}
+                          <IoAddCircleOutline className="text-lg" />
+                        {/* // )} */}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
             )}
 
             <Spacer y={8} />
-            <div>{!isLoading && bottomContent}</div>
+            <div>{!isLoadingInitial && bottomContent}</div>
           </div>
 
           <div className="hidden xl:block max-h-[360px] overflow-scroll bg-[#F7F6FA] p-4 rounded-lg flex-grow">

@@ -34,6 +34,7 @@ import {
 import Filters from './filters';
 
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
+import useAllOrdersData from '@/hooks/cachedEndpoints/useAllOrdersData';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
 import moment from 'moment';
@@ -74,6 +75,9 @@ interface OrdersListProps {
   refetch: () => void;
   isLoading?: boolean;
   isPending?: boolean;
+  filterType?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -114,24 +118,43 @@ const getFilteredOrderDetails = (
 ): OrderItem[] => {
   // Check if data is in pending state
   if (isLoading || isPending || !orders) {
-    console.log(isLoading, isPending, orders);
     return [];
   }
   
-  // Get the payments array
-  const allOrders = orders.payments || [];
+  // If orders has totalCount of 0, return empty array immediately
+  if (orders?.totalCount === 0) {
+    return [];
+  }
+  
+  // Extract orders data - ensure it's always a valid array
+  let allOrders: OrderItem[] = [];
+  if (orders.payments && Array.isArray(orders.payments)) {
+    allOrders = orders.payments;
+  } else if (orders.data && Array.isArray(orders.data)) {
+    allOrders = orders.data;
+  } else if (Array.isArray(orders)) {
+    allOrders = orders;
+  } else {
+    // Fallback to empty array if no valid data found
+    allOrders = [];
+  }
+
+  // Safety check - ensure allOrders is valid array before filtering
+  if (!Array.isArray(allOrders)) {
+    return [];
+  }
   
   // Get the status filter for the selected category
   const statusFilter = getStatusForCategory(selectedCategory);
   
   // Filter by status if not "All Orders"
   let filteredByStatus = allOrders;
-  if (statusFilter !== null) {
+  if (statusFilter !== null && Array.isArray(allOrders)) {
     filteredByStatus = allOrders.filter((order: OrderItem) => order.status === statusFilter);
   }
   
   // Apply search filter if provided
-  if (searchQuery.trim()) {
+  if (searchQuery.trim() && Array.isArray(filteredByStatus)) {
     filteredByStatus = filteredByStatus.filter((order: OrderItem) =>
       order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       order.reference.toLowerCase().includes(searchQuery.toLowerCase())
@@ -147,7 +170,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
   searchQuery, 
   refetch, 
   isLoading = false,
-  isPending = false 
+  isPending = false,
+  filterType = 1,
+  startDate,
+  endDate
 }) => {
 
   const router = useRouter();
@@ -159,8 +185,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [isOpenComment, setIsOpenComment] = React.useState<Boolean>(false);
-  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
-  const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
+  // Use the new hook for fetching all data
+  const { 
+    getCategoryDetails, 
+    isLoadingInitial, 
+    isLoadingAll 
+  } = useAllOrdersData(filterType, startDate, endDate, 1, 10); // Use default values for now
   
 
   const {
@@ -177,30 +207,19 @@ const OrdersList: React.FC<OrdersListProps> = ({
   } = useGlobalContext();
 
   const handleTabClick = (categoryName: string) => {
-    // Check if this category has been loaded before
-    const isFirstTime = !loadedCategories.has(categoryName);
-    
-    // Only show loading state for first-time loads
-    if (isFirstTime) {
-      setIsFirstTimeLoading(true);
-      setLoadedCategories(prev => new Set([...prev, categoryName]));
-      
-      // Stop loading state after 2 seconds for first-time loads only
-      setTimeout(() => {
-        setIsFirstTimeLoading(false);
-      }, 3000);
-    }
-    
     setTableStatus(categoryName);
     setPage(1);
   };
 
+  // Get data for current category from the new hook
+  const currentCategoryData = getCategoryDetails(tableStatus || categories?.[0]?.name || 'All Orders');
+  
   // Use the new filtered function that includes status filtering
   const orderDetails = getFilteredOrderDetails(
-    orders, 
-    isLoading, 
-    isPending, 
-    tableStatus || 'All Orders', // Default to "All Orders" if tableStatus is not set
+    currentCategoryData || orders, 
+    isLoading || isLoadingInitial, 
+    isPending || false, 
+    tableStatus || 'All Orders', 
     searchQuery
   );
   
@@ -421,7 +440,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
   ]);
 
   // Determine if we should show loading spinner
-  const shouldShowLoading = isFirstTimeLoading || isPending || (isLoading && !loadedCategories.has(tableStatus));
+  // Determine if we should show loading spinner - only show for initial load
+  const shouldShowLoading = isLoadingInitial && orderDetails.length === 0;
 
   return (
     <section className='border border-primaryGrey rounded-lg'>
