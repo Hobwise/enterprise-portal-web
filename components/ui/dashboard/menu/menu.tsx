@@ -14,8 +14,6 @@ import { HiOutlineDotsVertical } from 'react-icons/hi';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import { columns, statusColorMap, statusDataMap } from './data';
 import Filters from './filters';
-import { getMenuItems } from '@/app/api/controllers/dashboard/menu';
-import { fetchQueryConfig } from '@/lib/queryConfig';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 
 interface Column {
@@ -242,103 +240,20 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
     setPage,
   } = useGlobalContext();
   
-  const [currentCategoryId, setCurrentCategoryId] = useState<string>('');
-  const [loadedCategories, setLoadedCategories] = useState<Set<string>>(new Set());
-  const [isFirstTimeLoading, setIsFirstTimeLoading] = useState<boolean>(false);
   const queryClient = useQueryClient();
   const router = useRouter();
 
   // Initialize with first menu
   useEffect(() => {
-    if (menus && menus.length > 0 && !currentCategoryId) {
+    if (menus && menus.length > 0 && !menuIdTable) {
       const firstMenu = menus[0];
-      setCurrentCategoryId(firstMenu.id);
       setMenuIdTable(firstMenu.id);
     }
-  }, [menus, currentCategoryId, setMenuIdTable]);
+  }, [menus, menuIdTable, setMenuIdTable]);
 
-  // Fetch menu items using React Query
-  const fetchMenuItems = async (context: { queryKey: readonly unknown[] }) => {
-    const [_key, categoryId, currentPage, pageSize] = context.queryKey;
-    
-    if (!categoryId) {
-      return { items: [], totalCount: 0 };
-    }
-
-    try {
-      const itemsResponse = await getMenuItems(categoryId as string, currentPage as number, pageSize as number);
-      return {
-        items: itemsResponse?.data?.data?.items || [],
-        totalCount: itemsResponse?.data?.data?.totalCount || 0,
-        hasNext: itemsResponse?.data?.data?.hasNext || false,
-        hasPrevious: itemsResponse?.data?.data?.hasPrevious || false,
-        totalPages: itemsResponse?.data?.data?.totalPages || 0
-      };
-    } catch (error) {
-      console.error('Error loading menu items:', error);
-      throw error; // Let React Query handle the error state
-    }
-  };
-
-  const { 
-    data: menuItemsData, 
-    isLoading, 
-    isError,
-    error,
-    refetch: refetchMenuItems 
-  } = useQuery(
-    ['menuItems', currentCategoryId, page, rowsPerPage],
-    fetchMenuItems,
-    {
-      ...fetchQueryConfig(),
-      enabled: !!currentCategoryId,
-      retry: 2,
-      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000),
-      keepPreviousData: true,
-      onSuccess: (data) => {
-        // Mark this category as loaded once we get data
-        if (currentCategoryId) {
-          setLoadedCategories(prev => new Set([...prev, currentCategoryId]));
-          setIsFirstTimeLoading(false);
-        }
-      },
-      onError: () => {
-        setIsFirstTimeLoading(false);
-      }
-    }
-  );
-
-  // Update filtered menu when data changes
-  useEffect(() => {
-    if (menuItemsData?.items) {
-      setFilteredMenu(menuItemsData.items);
-    }
-  }, [menuItemsData]);
-
-  // Handle search filtering
-  useEffect(() => {
-    if (!menuItemsData?.items) {
-      return;
-    }
-
-    if (searchQuery && searchQuery.trim()) {
-      const filteredItems = menuItemsData.items.filter((item: MenuItem) =>
-        item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        String(item?.price)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item?.itemDescription?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredMenu(filteredItems);
-    } else {
-      setFilteredMenu(menuItemsData.items);
-    }
-  }, [searchQuery, menuItemsData]);
-
-  const matchingObject = menus?.find(
-    (category) => category?.id === currentCategoryId
-  );
-
-  const currentMenuItems = filteredMenu || [];
+  // Get current category data
+  const currentCategory = menus?.find(category => category.id === menuIdTable) || menus?.[0];
+  const currentMenuItems = currentCategory?.items || [];
     
   const {
     bottomContent,
@@ -354,7 +269,7 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(currentCategory, columns, INITIAL_VISIBLE_COLUMNS);
 
   const [value, setValue] = useState('');
 
@@ -370,28 +285,18 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
     
     const categoryId = selectedCategory.id;
     
-    // Check if this category has been loaded before
-    const isFirstTime = !loadedCategories.has(categoryId);
-    
     // Update current category
-    setCurrentCategoryId(categoryId);
     setMenuIdTable(categoryId);
     setValue(categoryName);
     
-    // Set first time loading state if this category hasn't been loaded
-    if (isFirstTime) {
-      setIsFirstTimeLoading(true);
-    }
-    
-    // Invalidate and refetch the query for the new category
+    // Invalidate queries to trigger fresh data fetch for tab switching
     queryClient.invalidateQueries(['menuItems', categoryId]);
   };
 
   // Function to refresh current category data
   const refreshCurrentCategory = () => {
-    if (currentCategoryId) {
-      queryClient.invalidateQueries(['menuItems', currentCategoryId]);
-      refetchMenuItems();
+    if (menuIdTable) {
+      queryClient.invalidateQueries(['menuItems', menuIdTable]);
     }
   };
 
@@ -503,8 +408,8 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
     onOpenViewMenu,
   ]);
 
-  // Determine if we should show loading spinner
-  const shouldShowLoading = (isLoading && !loadedCategories.has(currentCategoryId)) || isFirstTimeLoading;
+  // Show loading only when there are no items available yet
+  const shouldShowLoading = !currentMenuItems || currentMenuItems.length === 0;
 
   // Helper to check if click is inside actions column
   const isClickInsideActions = (event: React.MouseEvent) => {
@@ -537,28 +442,6 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
                     <SpinnerLoader size="md" />
                   </td>
                 </tr>
-              ) : isError ? (
-                <tr>
-                  <td colSpan={headerColumns.length} className="px-4 py-8 text-center">
-                    <div className="flex flex-col items-center space-y-3">
-                      <div className="text-red-500 text-sm">
-                        <svg className="w-6 h-6 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Error loading menu items
-                      </div>
-                      <button 
-                        onClick={refreshCurrentCategory}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-600 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                      >
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Try again
-                      </button>
-                    </div>
-                  </td>
-                </tr>
               ) : currentMenuItems.length === 0 ? (
                 <tr>
                   <td colSpan={headerColumns.length} className="px-4 py-12 text-center">
@@ -567,7 +450,7 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                       </svg>
                       <div className="text-sm">
-                        {searchQuery ? 'No items match your search' : currentCategoryId ? 'No items found in this category' : 'Select a category to view items'}
+                        {searchQuery ? 'No items match your search' : menuIdTable ? 'No items found in this category' : 'Select a category to view items'}
                       </div>
                     </div>
                   </td>

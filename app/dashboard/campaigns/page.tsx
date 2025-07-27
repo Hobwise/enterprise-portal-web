@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import useCampaignCategories from "@/hooks/cachedEndpoints/useCampaignCategories";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { Chip } from "@nextui-org/react";
@@ -21,14 +20,14 @@ const Compaigns: React.FC = () => {
 
   const { userRolePermissions, role } = usePermission();
 
-  const { data, isLoading, isError, refetch } = useCampaignCategories();  
+  // Data fetching is now handled by CampaignList component internally  
 
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
     setTableStatus("All Campaigns");
     setPage(1);
-  }, []);
+  }, [setTableStatus, setPage]);
 
 
 
@@ -40,9 +39,7 @@ const Compaigns: React.FC = () => {
 
 
  
-  if (isLoading) return <CustomLoading />;
-
-  if (isError) return <Error onClick={() => refetch()} />;
+  // Loading and error states are now handled by CampaignList component
 
   return (
     <>
@@ -52,15 +49,7 @@ const Compaigns: React.FC = () => {
             <div className="flex items-center">
               <span>Campaigns</span>
 
-              {data?.campaignCategories?.length > 0 && (
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data?.campaignCount}
-                </Chip>
-              )}
+              {/* Campaign count will be handled by CampaignList component */}
             </div>
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
@@ -68,7 +57,7 @@ const Compaigns: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {data?.campaignCategories?.length > 0 && (
+          {/* Always show search input */ true && (
             <>
               <div>
                 <CustomInput
@@ -88,7 +77,7 @@ const Compaigns: React.FC = () => {
 
           {(role === 0 || userRolePermissions?.canCreateCampaign === true) && (
             <>
-              {data?.campaignCategories?.length > 0 && (
+              {/* Always show create button */ true && (
                 <CustomButton
                   onClick={() =>
                     router.push("/dashboard/campaigns/create-campaign")
@@ -107,14 +96,9 @@ const Compaigns: React.FC = () => {
           )}
         </div>
       </div>
-      {data?.campaignCategories?.length > 0 ? (
-        <CampaignList
-          campaigns={data}
-          searchQuery={searchQuery}
-        />
-       ) : (
-       <CreateCampaign />
-    )}
+      <CampaignList
+        searchQuery={searchQuery}
+      />
     </>
   );
 };

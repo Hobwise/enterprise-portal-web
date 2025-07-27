@@ -81,7 +81,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
 
   return (
     <Modal
-      size="2xl"
+      size="5xl"
       isDismissable={false}
       isOpen={isOpen}
       onOpenChange={handleModalClose}

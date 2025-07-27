@@ -7,6 +7,7 @@ import { useGlobalContext } from './globalProvider';
 function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColumn: string[] = []) {
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
 
+
   // Convert these to useMemo to prevent unnecessary recalculations
   const refinedArrayToMap = useMemo(
     () => (arrayToMap ? arrayToMap?.totalPages : 1),

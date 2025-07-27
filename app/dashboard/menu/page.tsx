@@ -16,7 +16,6 @@ import {
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import Error from '@/components/error';
-import useMenu from '@/hooks/cachedEndpoints/useMenu';
 import {
   dynamicExportConfig,
   formatPrice,
@@ -43,7 +42,7 @@ import {
   IoSearchOutline,
 } from 'react-icons/io5';
 
-import useAllMenus from '@/hooks/cachedEndpoints/useAllMenus';
+import useAllMenuData from '@/hooks/cachedEndpoints/useAllMenuData';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import toast from 'react-hot-toast';
@@ -58,7 +57,7 @@ const Menu: React.FC = () => {
 
   const { userRolePermissions, role } = usePermission();
   const router = useRouter();
-  const { setPage } = useGlobalContext();
+  const { setPage, page, rowsPerPage, menuIdTable } = useGlobalContext();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
@@ -86,12 +85,16 @@ const Menu: React.FC = () => {
   >();
 
   const {
-    data: allMenus,
-    isLoading: isMenuLoading,
-    isError: isMenuError,
-    refetch: getMenu,
-  } = useAllMenus();
-  const { data, isLoading, isError, refetch } = useMenu();
+    categories,
+    getCategoryDetails,
+    isLoadingInitial,
+    isLoadingAll,
+    isLoadingCurrent,
+    isFetching,
+    isError,
+    refetch,
+    allCategoryDetails
+  } = useAllMenuData(menuIdTable, page, rowsPerPage);
 
   const queryClient = useQueryClient();
 
@@ -117,10 +120,9 @@ const Menu: React.FC = () => {
         text: 'Menu successfully created',
         type: 'success',
       });
-      await queryClient.invalidateQueries('allMenus');
-      await queryClient.invalidateQueries('menu');
+      await queryClient.invalidateQueries('menuCategories');
+      await queryClient.invalidateQueries(['menuItems']);
       await refetch();
-      await getMenu();
       onOpenChange();
       setName('');
       setPackingCost(undefined);
@@ -135,11 +137,6 @@ const Menu: React.FC = () => {
     }
   };
  
-  useEffect(() => {
-    refetch()
-  
-  
-  }, [])
   
   const handleEditMenu = (menu: any) => {
     setEditingMenu(menu);
@@ -166,10 +163,9 @@ const Menu: React.FC = () => {
     setLoading(false);
 
     if (data?.data?.isSuccessful) {
-      await queryClient.invalidateQueries('allMenus');
-      await queryClient.invalidateQueries('menu');
+      await queryClient.invalidateQueries('menuCategories');
+      await queryClient.invalidateQueries(['menuItems']);
       await refetch();
-      await getMenu();
       toast.success('Menu updated successfully');
 
       closeEditModal();
@@ -184,17 +180,22 @@ const Menu: React.FC = () => {
   };
 
   const filteredItems = useMemo(() => {
-    return data?.map((item) => ({
-      ...item,
-      items: item?.items?.filter(
-        (item) =>
-          item?.itemName?.toLowerCase().includes(searchQuery) ||
-          String(item?.price)?.toLowerCase().includes(searchQuery) ||
-          item?.menuName?.toLowerCase().includes(searchQuery) ||
-          item?.itemDescription?.toLowerCase().includes(searchQuery)
-      ),
-    }));
-  }, [data, searchQuery]);
+    return categories?.map((category) => {
+      const categoryDetails = getCategoryDetails(category.id);
+      return {
+        ...category,
+        items: categoryDetails.items?.filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(searchQuery) ||
+            String(item?.price)?.toLowerCase().includes(searchQuery) ||
+            item?.menuName?.toLowerCase().includes(searchQuery) ||
+            item?.itemDescription?.toLowerCase().includes(searchQuery)
+        ) || [],
+        // Use categoryDetails.totalCount if available, otherwise fall back to category.totalCount
+        totalCount: categoryDetails.items ? categoryDetails.totalCount : category.totalCount
+      };
+    });
+  }, [categories, getCategoryDetails, searchQuery]);
 
   const removeMenu = async () => {
     if (!selectedMenu) return;
@@ -205,10 +206,9 @@ const Menu: React.FC = () => {
     );
     setLoading(false);
     if (data?.data?.isSuccessful) {
-      await queryClient.invalidateQueries('allMenus');
-      await queryClient.invalidateQueries('menu');
+      await queryClient.invalidateQueries('menuCategories');
+      await queryClient.invalidateQueries(['menuItems']);
       await refetch();
-      await getMenu();
       toast.success('Menu deleted successfully');
       setIsOpenDeleteMenu(false);
       setIsOpenViewMenu(true);
@@ -217,8 +217,8 @@ const Menu: React.FC = () => {
     }
   };
 
-  if (isLoading || isMenuLoading) return <CustomLoading ismenuPage />;
-  if (isError || isMenuError) return <Error onClick={() => refetch()} />;
+  if (isLoadingInitial) return <CustomLoading ismenuPage />;
+  if (isError) return <Error onClick={() => refetch()} />;
 
   const exportCSV = async () => {
     setLoadingExport(true);
@@ -241,7 +241,7 @@ const Menu: React.FC = () => {
       <div className="flex flex-row flex-wrap items-center  mb-4  xl:mb-8 justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data && data?.length > 0 ? (
+            {categories && categories?.length > 0 ? (
               <div className="flex items-center">
                 <span>All menu</span>
                 <Chip
@@ -249,7 +249,7 @@ const Menu: React.FC = () => {
                     base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
                   }}
                 >
-                  {data.length}
+                  {categories.length}
                 </Chip>
               </div>
             ) : (
@@ -261,7 +261,7 @@ const Menu: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center flex-wrap gap-3">
-          {data && data.length > 0 && (
+          {categories && categories.length > 0 && (
             <>
               <div className="md:w-[242px] w-full">
                 <CustomInput
@@ -301,8 +301,8 @@ const Menu: React.FC = () => {
             </>
           )}
 
-          {data &&
-            data.length > 0 &&
+          {categories &&
+            categories.length > 0 &&
             (role === 0 || userRolePermissions?.canCreateMenu === true) && (
               <CustomButton
               onClick={onOpen}
@@ -317,7 +317,7 @@ const Menu: React.FC = () => {
             )}
         </div>
       </div>
-      {data && data.length > 0 ? (
+      {categories && categories.length > 0 ? (
         <MenuList
           menus={filteredItems || []}
           onOpen={onOpen}
@@ -494,50 +494,60 @@ const Menu: React.FC = () => {
                 </h2>
 
                 <ScrollShadow size={5} className="w-full max-h-[350px]">
-                  {allMenus?.map((item: any) => {
-                    return (
-                      <div
-                        className="text-black flex justify-between text-sm border-b border-primaryGrey py-3"
-                        key={item.id}
-                      >
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          {item.packingCost > 0 && (
-                            <p className="text-xs text-grey600">
-                              Packing cost: {formatPrice(item.packingCost)}
-                            </p>
-                          )}
-                          {item.waitingTimeMinutes > 0 && (
-                            <p className="text-xs text-grey600">
-                              Preparation time: {item.waitingTimeMinutes}mins
-                            </p>
-                          )}
+                  {isLoadingInitial || isFetching ? (
+                    <div className="flex justify-center items-center h-32">
+                      <VscLoading className="animate-spin text-primaryColor text-2xl" />
+                    </div>
+                  ) : categories && categories.length > 0 ? (
+                    categories.map((item: any) => {
+                      return (
+                        <div
+                          className="text-black flex justify-between text-sm border-b border-primaryGrey py-3"
+                          key={item.id}
+                        >
+                          <div>
+                            <p className="font-medium">{item.name}</p>
+                            {item.packingCost > 0 && (
+                              <p className="text-xs text-grey600">
+                                Packing cost: {formatPrice(item.packingCost)}
+                              </p>
+                            )}
+                            {item.waitingTimeMinutes > 0 && (
+                              <p className="text-xs text-grey600">
+                                Preparation time: {item.waitingTimeMinutes}mins
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center">
+                            <Tooltip color="secondary" content={"Edit"}>
+                              <span className="mr-3">
+                                <RiEdit2Line
+                                  onClick={() => handleEditMenu(item)}
+                                  className="text-[18px] text-primaryColor cursor-pointer"
+                                />
+                              </span>
+                            </Tooltip>
+                            <Tooltip color="danger" content={"Delete"}>
+                              <span>
+                                <RiDeleteBin6Line
+                                  onClick={() => {
+                                    setSelectedMenu(item);
+                                    setIsOpenViewMenu(false);
+                                    setIsOpenDeleteMenu(true);
+                                  }}
+                                  className="text-[18px] text-[#dc2626] cursor-pointer"
+                                />
+                              </span>
+                            </Tooltip>
+                          </div>
                         </div>
-                        <div className="flex items-center">
-                          <Tooltip color="secondary" content={"Edit"}>
-                            <span className="mr-3">
-                              <RiEdit2Line
-                                onClick={() => handleEditMenu(item)}
-                                className="text-[18px] text-primaryColor cursor-pointer"
-                              />
-                            </span>
-                          </Tooltip>
-                          <Tooltip color="danger" content={"Delete"}>
-                            <span>
-                              <RiDeleteBin6Line
-                                onClick={() => {
-                                  setSelectedMenu(item);
-                                  setIsOpenViewMenu(false);
-                                  setIsOpenDeleteMenu(true);
-                                }}
-                                className="text-[18px] text-[#dc2626] cursor-pointer"
-                              />
-                            </span>
-                          </Tooltip>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    <div className="text-center text-grey600 py-8">
+                      No menus found
+                    </div>
+                  )}
                 </ScrollShadow>
 
                 <Spacer y={4} />

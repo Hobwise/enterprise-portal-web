@@ -19,6 +19,7 @@ import {
   Modal,
   ModalBody,
   ModalContent,
+  ScrollShadow,
   Spacer,
   useDisclosure,
 } from '@nextui-org/react';
@@ -299,7 +300,12 @@ const CompleteBookingComponent = () => {
         </CustomButton>
       </form>
 
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+      <Modal 
+        size="5xl"
+        isDismissable={false}
+        isOpen={isOpen} 
+        onOpenChange={onOpenChange}
+      >
         <ModalContent>
           {(onClose) => (
             <>
@@ -307,10 +313,11 @@ const CompleteBookingComponent = () => {
                 <h2 className="text-[20px]  font-[600] mt-3 text-black ">
                   Terms and Conditions
                 </h2>
-
-                <div className="text-black text-sm">
-                  <Editor editorState={editorState} toolbarHidden readOnly />
-                </div>
+                <ScrollShadow size={5} className="w-full h-[500px]">
+                  <div className="text-black text-sm">
+                    <Editor editorState={editorState} toolbarHidden readOnly />
+                  </div>
+                </ScrollShadow>
                 <Spacer y={4} />
               </ModalBody>
             </>

@@ -15,6 +15,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from "@/lib/utils";
+import { useQueryClient } from "react-query";
 import {
   Button,
   Checkbox,
@@ -67,6 +68,7 @@ const CheckoutModal = ({
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [response, setResponse] = useState(null);
   const [orderId, setOrderId] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -165,7 +167,8 @@ const CheckoutModal = ({
         text: "Order placed",
         type: "success",
       });
-
+      await queryClient.invalidateQueries('orderCategories');
+      await queryClient.invalidateQueries(['orderDetails']);
       setScreen(2);
     } else if (data?.data?.error) {
       notify({
@@ -205,6 +208,8 @@ const CheckoutModal = ({
         text: "Order placed",
         type: "success",
       });
+      await queryClient.invalidateQueries('orderCategories');
+      await queryClient.invalidateQueries(['orderDetails']);
       setScreen(2);
     } else if (data?.data?.error) {
       notify({
@@ -234,7 +239,8 @@ const CheckoutModal = ({
         text: "Payment has been made, awaiting confirmation",
         type: "success",
       });
-
+      await queryClient.invalidateQueries('orderCategories');
+      await queryClient.invalidateQueries(['orderDetails']);
       router.push("/dashboard/orders");
     } else if (data?.data?.error) {
       notify({
@@ -285,7 +291,7 @@ const CheckoutModal = ({
           header: "px-3 md:px-6",
         }}
         isDismissable={false}
-        size={screen === 1 ? "4xl" : "md"}
+        size={screen === 1 ? "5xl" : "md"}
         isOpen={isOpen}
         onOpenChange={() => {
           setScreen(1);
@@ -343,7 +349,7 @@ const CheckoutModal = ({
                   </ModalHeader>
                   <ModalBody>
                     <div className="flex lg:flex-row flex-col gap-3 mb-4">
-                      <div className="lg:w-[60%] max-h-[300px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
+                      <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
                         {selectedItems?.map((item, index) => {
                           return (
                             <>
