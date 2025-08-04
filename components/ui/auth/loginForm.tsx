@@ -121,6 +121,12 @@ const LoginForm = () => {
 
       const response = await loginUser(loginFormData);
 
+      // Check for validation errors first
+      if (response?.errors) {
+        setErrors(response.errors);
+        return;
+      }
+
       if (response?.data?.response) {
         const decryptedData = decryptPayload(response.data.response);
         if (decryptedData?.data) {

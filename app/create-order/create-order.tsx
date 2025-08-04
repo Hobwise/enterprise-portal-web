@@ -155,12 +155,16 @@ const CreateOrder = () => {
   const handleDecrement = (id: string) => {
     setSelectedItems((prevItems: any) =>
       prevItems.map((item: any) => {
-        if (item.id === id && item.count > 1) {
-          return { ...item, count: item.count - 1 };
+        if (item.id === id) {
+          if (item.count > 1) {
+            return { ...item, count: item.count - 1 };
+          } else {
+            // Remove item when count reaches 0
+            return null;
+          }
         }
-
         return item;
-      })
+      }).filter(Boolean) // Remove null items
     );
   };
 
@@ -174,8 +178,9 @@ const CreateOrder = () => {
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
       const itemTotal = item.price * item.count;
+      // Allow packing even when packingCost is 0 or undefined
       const packingTotal = item.isPacked
-        ? (item.packingCost || 0) * item.count
+        ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
         : 0;
       return acc + itemTotal + packingTotal;
     }, 0);

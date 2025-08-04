@@ -28,6 +28,7 @@ import {
   today,
 } from "@internationalized/date";
 import { DatePicker } from "@nextui-org/date-picker";
+import { useQueryClient } from "react-query";
 import {
   Button,
   Modal,
@@ -58,6 +59,7 @@ const AddNewCampaign = () => {
   );
 
   const { refetch } = useCampaign();
+  const queryClient = useQueryClient();
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState("");
@@ -182,6 +184,10 @@ const AddNewCampaign = () => {
 
     if (data?.data?.isSuccessful) {
       onOpen();
+      // Invalidate campaign queries to refresh the campaign list
+      queryClient.invalidateQueries(['campaignCategories']);
+      queryClient.invalidateQueries(['campaignDetails']);
+      
       clearItemLocalStorage("saveCampaignToDraft");
       clearItemLocalStorage("selectedImageCampaign");
       clearItemLocalStorage("saveStartDateTime");

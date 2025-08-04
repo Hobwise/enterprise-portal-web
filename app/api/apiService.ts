@@ -114,6 +114,7 @@ api.interceptors.request.use(async (config) => {
   const business = getJsonItemFromLocalStorage('business');
   const token = userData?.token;
   const cooperateID = userData?.cooperateID;
+  const userId = userData?.id;
   const businessId = business?.businessId;
 
   if (token) {
@@ -124,6 +125,9 @@ api.interceptors.request.use(async (config) => {
   }
   if (businessId) {
     config.headers['businessId'] = businessId;
+  }
+  if (userId) {
+    config.headers['userId'] = userId;
   }
 
   const isMultipartFormData = config.headers['Content-Type'] === 'multipart/form-data';
