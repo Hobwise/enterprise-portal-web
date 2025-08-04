@@ -28,12 +28,14 @@ const Notifications = ({
   const markAsRead = async (id: string) => {
     await postMarkAsRead(id);
     refetch();
+    refetchUnreadCount();
   };
 
    
   const markAsAllRead = async () => {
     await postMarkAllAsRead(business[0].businessId);
     refetch();
+    refetchUnreadCount();
     setExpandedMessages([]);
   };
 
@@ -115,6 +117,7 @@ const Notifications = ({
           return (
             <div key={notif.id}>
               <div
+                onClick={() => !notif.isRead && markAsRead(notif.id)}
                 className={`${backgroundColorClass} flex gap-3 cursor-pointer rounded-md  p-3 text-xs`}
               >
                 <div>

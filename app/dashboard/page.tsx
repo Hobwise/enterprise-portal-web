@@ -93,6 +93,8 @@ const Dashboard: React.FC = () => {
     setValue(newValue);
     if (newValue.start && newValue.end) {
       onClose();
+      // Trigger refetch to ensure data is updated with new date range
+      setTimeout(() => refetch(), 100);
     }
   };
   return (

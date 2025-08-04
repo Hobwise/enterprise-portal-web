@@ -264,7 +264,9 @@ const CheckoutModal = ({
         value: item.id,
       }));
 
-      setQr(newData);
+      // Sort alphabetically by label/name
+      const sortedData = newData.sort((a, b) => a.label.localeCompare(b.label));
+      setQr(sortedData);
     } else if (data?.data?.error) {
     }
   };

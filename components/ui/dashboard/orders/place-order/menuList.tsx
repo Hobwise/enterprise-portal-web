@@ -205,12 +205,16 @@ const MenuList = () => {
   const handleDecrement = (id: string) => {
     setSelectedItems((prevItems: any) =>
       prevItems.map((item) => {
-        if (item.id === id && item.count > 1) {
-          return { ...item, count: item.count - 1 };
+        if (item.id === id) {
+          if (item.count > 1) {
+            return { ...item, count: item.count - 1 };
+          } else {
+            // Remove item when count reaches 0
+            return null;
+          }
         }
-
         return item;
-      })
+      }).filter(Boolean) // Remove null items
     );
   };
 
@@ -225,8 +229,9 @@ const MenuList = () => {
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
       const itemTotal = item.price * item.count;
+      // Allow packing even when packingCost is 0 or undefined
       const packingTotal = item.isPacked
-        ? (item.packingCost || 0) * item.count
+        ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
         : 0;
       return acc + itemTotal + packingTotal;
     }, 0);
@@ -356,7 +361,7 @@ const MenuList = () => {
               <div className="grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
                 {matchingObjectArray.map((menu, index) => (
                   <div
-                    title={menu?.isAvailable ? "select menu" : ""}
+                    title={menu?.isAvailable ? "Select item" : ""}
                     onClick={() =>
                       menu?.isAvailable ? toggleVarietyModal(menu) : null
                     }
@@ -467,7 +472,8 @@ const MenuList = () => {
                       <>
                         <div
                           key={item.id}
-                          className="flex py-3 justify-between"
+                          className="flex py-3 justify-between cursor-pointer"
+                          onDoubleClick={() => handleCardClick(item, item.isPacked)}
                         >
                           <div className=" rounded-lg text-black  flex">
                             <div>

@@ -25,6 +25,7 @@ import {
 } from "@nextui-org/react";
 import Image from "next/image";
 import React, { useState } from "react";
+import { useQueryClient } from "react-query";
 import { MdOutlineMailOutline, MdOutlinePhone } from "react-icons/md";
 import noImage from "../../../../public/assets/images/no-image.svg";
 
@@ -38,6 +39,7 @@ const CreateBooking = ({
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const { data } = useReservation();
+  const queryClient = useQueryClient();
 
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
@@ -101,6 +103,10 @@ const CreateBooking = ({
 
     if (data?.data?.isSuccessful) {
       refetch();
+      // Invalidate booking queries to refresh the booking list
+      queryClient.invalidateQueries(['bookingCategories']);
+      queryClient.invalidateQueries(['bookingDetails']);
+      
       setTimeNdate(now(getLocalTimeZone()));
       closeCreateBookingModal();
       showSuccessModal();
