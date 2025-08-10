@@ -30,6 +30,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useQueryClient } from "react-query";
 import {
   MdOutlineAddPhotoAlternate,
   MdOutlineFileDownload,
@@ -63,6 +64,7 @@ const AddItemToMenu = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { refetch } = useMenu();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState("");
   const [isLoadingImage, setIsLoadingImage] = useState(false);
@@ -208,6 +210,10 @@ const AddItemToMenu = () => {
         price: 0,
         imageReference: "",
       });
+      
+      // Invalidate queries to update menu counts and refresh menu items
+      await queryClient.invalidateQueries('menuCategories');
+      await queryClient.invalidateQueries(['menuItems']);
       await refetch();
 
       // setSelectedFile();
