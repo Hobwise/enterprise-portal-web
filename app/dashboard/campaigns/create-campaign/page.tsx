@@ -186,7 +186,8 @@ const AddNewCampaign = () => {
       onOpen();
       // Invalidate campaign queries to refresh the campaign list
       queryClient.invalidateQueries(['campaignCategories']);
-      queryClient.invalidateQueries(['campaignDetails']);
+      // Invalidate all campaign data for all categories to show new campaign immediately
+      queryClient.invalidateQueries(['campaignsByCategory']);
       
       clearItemLocalStorage("saveCampaignToDraft");
       clearItemLocalStorage("selectedImageCampaign");

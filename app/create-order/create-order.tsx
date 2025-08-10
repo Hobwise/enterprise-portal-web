@@ -14,7 +14,11 @@ import { useGlobalContext } from '@/hooks/globalProvider';
 import { formatPrice } from '@/lib/utils';
 import { useSearchParams } from 'next/navigation';
 import { HiArrowLongLeft } from 'react-icons/hi2';
+import { IoAddCircleOutline, IoSearchOutline } from 'react-icons/io5';
+import { FaMinus, FaPlus } from 'react-icons/fa6';
+import { CustomInput } from '@/components/CustomInput';
 import noMenu from '../../public/assets/images/no-menu.png';
+import noImage from '../../public/assets/images/no-image.svg';
 
 import useMenuUser from '@/hooks/cachedEndpoints/userMenuUser';
 import SplashScreen from '../reservation/splash-screen';
@@ -36,6 +40,7 @@ const CreateOrder = () => {
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data, isLoading, isError, refetch } = useMenuUser(
     businessId,
@@ -66,9 +71,21 @@ const CreateOrder = () => {
 
   const matchingObject = data?.find((category) => category?.id === menuIdTable);
 
-  const matchingObjectArray = matchingObject
+  const unfilteredArray = matchingObject
     ? matchingObject.items
     : filteredMenu || data?.[0]?.items || [];
+
+  // Apply search filter
+  const matchingObjectArray = useMemo(() => {
+    if (!searchQuery) return unfilteredArray;
+    
+    return unfilteredArray?.filter((item) =>
+      item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(item?.price)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item?.itemDescription?.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
+  }, [unfilteredArray, searchQuery]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -152,6 +169,27 @@ const CreateOrder = () => {
     }
   };
 
+  const handleQuickAdd = (menuItem: Item, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent opening the variety modal
+    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
+    
+    if (existingItem) {
+      // If item exists, increment count
+      handleIncrement(menuItem.id);
+    } else {
+      // Add new item with default options
+      setSelectedItems((prevItems: any) => [
+        ...prevItems,
+        {
+          ...menuItem,
+          count: 1,
+          isPacked: false, // Default to not packed
+          packingCost: menuItem.packingCost || 0,
+        },
+      ]);
+    }
+  };
+
   const handleDecrement = (id: string) => {
     setSelectedItems((prevItems: any) =>
       prevItems.map((item: any) => {
@@ -205,12 +243,12 @@ const CreateOrder = () => {
   };
 
   return (
-    <main className=' '>
+    <main className='flex'>
       <article
         style={{
           backgroundColor: menuConfig?.backgroundColour || 'white',
         }}
-        className='xl:block relative  h-screen   overflow-scroll    shadow-lg'
+        className='flex-1 xl:block relative h-screen overflow-scroll shadow-lg'
       >
         {menuConfig?.image.length > baseString.length && (
           <Image
@@ -221,33 +259,48 @@ const CreateOrder = () => {
           />
         )}
 
-        <div className='p-4 pt-6 flex justify-between'>
-          <div>
-            <h1 className='text-[28px] font-[700] text-black relative '>
-              Menu
-            </h1>
-            <p className='text-sm  text-grey600  w-full '>
-              {selectedItems.length > 0
-                ? `${selectedItems.length} items selected`
-                : 'Select items from the menu'}
-            </p>
-          </div>
-          <CustomButton
-            onClick={handleCheckoutOpen}
-            className='py-2 px-4 mb-0 text-white'
-            backgroundColor='bg-primaryColor'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              {selectedItems.length > 0 && (
-                <span className='font-bold'>
-                  {' '}
-                  {formatPrice(calculateTotalPrice())}{' '}
-                </span>
-              )}
-              <p>{'Proceed'} </p>
-              <HiArrowLongLeft className='text-[22px] rotate-180' />
+        <div className='p-4 pt-6'>
+          <div className='flex justify-between mb-4'>
+            <div>
+              <h1 className='text-[28px] font-[700] text-black relative '>
+                Menu
+              </h1>
+              <p className='text-sm  text-grey600  w-full '>
+                {selectedItems.length > 0
+                  ? `${selectedItems.reduce((total, item) => total + item.count, 0)} Item${selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? 's' : ''} selected`
+                  : 'Select items from the menu'}
+              </p>
             </div>
-          </CustomButton>
+            <CustomButton
+              onClick={handleCheckoutOpen}
+              className='py-2 px-4 mb-0 text-white'
+              backgroundColor='bg-primaryColor'
+            >
+              <div className='flex gap-2 items-center justify-center'>
+                {selectedItems.length > 0 && (
+                  <span className='font-bold'>
+                    {' '}
+                    {formatPrice(calculateTotalPrice())}{' '}
+                  </span>
+                )}
+                <p>{'Proceed'} </p>
+                <HiArrowLongLeft className='text-[22px] rotate-180' />
+              </div>
+            </CustomButton>
+          </div>
+          <div className='mb-4'>
+            <CustomInput
+              classnames={'w-full md:w-[300px]'}
+              label=''
+              size='md'
+              value={searchQuery}
+              onChange={(e: any) => setSearchQuery(e.target.value)}
+              isRequired={false}
+              startContent={<IoSearchOutline />}
+              type='text'
+              placeholder='Search menu items...'
+            />
+          </div>
         </div>
         {topContent}
 
@@ -335,6 +388,16 @@ const CreateOrder = () => {
                       </Chip>
                     )}
                   </div>
+                  {/* Quick Add Button */}
+                  {item?.isAvailable && (
+                    <button
+                      onClick={(e) => handleQuickAdd(item, e)}
+                      className="absolute bottom-2 right-2 bg-primaryColor text-white rounded-full p-2 shadow-md hover:scale-110 transition-transform"
+                      aria-label="Quick add to cart"
+                    >
+                      <IoAddCircleOutline className="text-lg" />
+                    </button>
+                  )}
                 </div>
                 {togglePreview(convertActiveTile(menuConfig?.layout))
                   ?.divider && <Divider className="text-[#E4E7EC] h-[1px]" />}
@@ -343,6 +406,79 @@ const CreateOrder = () => {
           })}
         </div>
       </article>
+
+      {/* Selected Items Sidebar - Desktop only */}
+      <aside className="hidden xl:block w-[380px] h-screen bg-[#F7F6FA] p-4 overflow-y-auto">
+        {selectedItems.length > 0 ? (
+          <>
+            <h2 className="font-[600] text-lg mb-4">
+              {selectedItems.reduce((total, item) => total + item.count, 0)} Item{selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? 's' : ''} selected
+            </h2>
+            <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
+              {selectedItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-lg p-3 flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Image
+                      src={item?.image ? `data:image/jpeg;base64,${item?.image}` : noImage}
+                      width={50}
+                      height={50}
+                      className="object-cover rounded-lg"
+                      alt={item.itemName}
+                    />
+                    <div>
+                      <p className="font-[600] text-sm">{item.itemName}</p>
+                      <p className="text-grey600 text-xs">{item.menuName}</p>
+                      <p className="font-[600] text-primaryColor text-sm">
+                        {formatPrice(item.price)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleDecrement(item.id)}
+                      className="border border-grey400 rounded p-1 hover:bg-gray-100"
+                      aria-label="minus"
+                    >
+                      <FaMinus className="text-xs" />
+                    </button>
+                    <span className="font-bold text-sm px-2">
+                      {item.count}
+                    </span>
+                    <button
+                      onClick={() => handleIncrement(item.id)}
+                      className="border border-grey400 rounded p-1 hover:bg-gray-100"
+                      aria-label="plus"
+                    >
+                      <FaPlus className="text-xs" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Divider className="my-4" />
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <p className="font-bold">Total:</p>
+                <p className="font-bold text-lg">{formatPrice(calculateTotalPrice())}</p>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col h-full justify-center items-center">
+            <Image
+              className="w-[80px] h-[80px] mb-4"
+              src={noMenu}
+              alt="no menu illustration"
+            />
+            <p className="text-sm text-grey400 text-center">
+              Selected items will appear here
+            </p>
+          </div>
+        )}
+      </aside>
 
       {isOpen && (
         <CheckoutModal

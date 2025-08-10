@@ -307,6 +307,8 @@ const CheckoutModal = ({
             quickResponseID: orderDetails?.quickResponseID || "",
             comment: orderDetails?.comment || "",
           });
+          setAdditionalCost(orderDetails?.additionalCost || 0);
+          setAdditionalCostName(orderDetails?.additionalCostName || "");
         }}
       >
         <ModalContent>

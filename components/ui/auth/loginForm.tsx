@@ -46,19 +46,43 @@ const LoginForm = () => {
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
+    let hasValidationError = false;
     
     if (!loginFormData.email) {
       newErrors.email = ["Email is required"];
+      hasValidationError = true;
+    } else if (!loginFormData.email.includes("@")) {
+      newErrors.email = ["Please enter a valid email address"];
+      hasValidationError = true;
     } else if (!/\S+@\S+\.\S+/.test(loginFormData.email)) {
       newErrors.email = ["Please enter a valid email address"];
+      hasValidationError = true;
     }
     
     if (!loginFormData.password) {
       newErrors.password = ["Password is required"];
+      hasValidationError = true;
+    } else if (loginFormData.password.length < 6) {
+      newErrors.password = ["Password must be at least 6 characters"];
+      hasValidationError = true;
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    
+    // Show a comprehensive validation error toast
+    if (hasValidationError) {
+      const errorMessages = [];
+      if (newErrors.email) errorMessages.push(newErrors.email[0]);
+      if (newErrors.password) errorMessages.push(newErrors.password[0]);
+      
+      notify({
+        title: "Validation Error",
+        text: errorMessages.join(". "),
+        type: "error",
+      });
+    }
+    
+    return !hasValidationError;
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,31 +101,73 @@ const LoginForm = () => {
   };
 
   const handleLoginSuccess = async (decryptedData: any) => {
-    const { businesses, token } = decryptedData.data;
-    
-    saveJsonItemToLocalStorage("userInformation", decryptedData.data);
-    setLoginDetails(loginFormData);
-    saveJsonItemToLocalStorage("business", businesses);
-    setTokenCookie("token", token);
+    try {
+      const { businesses, token, user } = decryptedData.data;
+      
+      // Save user data
+      saveJsonItemToLocalStorage("userInformation", decryptedData.data);
+      setLoginDetails(loginFormData);
+      saveJsonItemToLocalStorage("business", businesses);
+      setTokenCookie("token", token);
 
-    const redirectPath = businesses?.length >= 0
-      ? routePaths[businesses.length] || routePaths.default
-      : routePaths.default;
+      // Show success notification with user info
+      notify({
+        title: "Login Successful!",
+        text: `Welcome back${user?.name ? `, ${user.name}` : ''}! Redirecting...`,
+        type: "success",
+      });
 
-    // Small delay to ensure data is persisted
-    await new Promise(resolve => setTimeout(resolve, 100));
-    router.push(redirectPath);
+      const redirectPath = businesses?.length >= 0
+        ? routePaths[businesses.length] || routePaths.default
+        : routePaths.default;
+
+      // Small delay to ensure data is persisted and user sees success message
+      await new Promise(resolve => setTimeout(resolve, 500));
+      router.push(redirectPath);
+    } catch (error) {
+      console.error("Error handling login success:", error);
+      notify({
+        title: "Error",
+        text: "Failed to process login data. Please try again.",
+        type: "error",
+      });
+    }
   };
 
   const handleLoginError = (error: any) => {
-    if (error.error.responseCode === "HB016") {
-      router.push(`/auth/forget-password?email=${loginFormData.email}&screen=${2}`);
+    console.error("Login error:", error);
+    
+    // Handle specific error codes
+    if (error?.error?.responseCode === "HB016") {
+      notify({
+        title: "Password Reset Required",
+        text: "Your password needs to be reset. Redirecting to password reset page...",
+        type: "warning",
+      });
+      
+      setTimeout(() => {
+        router.push(`/auth/forget-password?email=${loginFormData.email}&screen=${2}`);
+      }, 1500);
       return;
     }
     
+    // Handle other specific error codes if needed
+    const errorMessages: Record<string, string> = {
+      "HB001": "Invalid email or password. Please check your credentials.",
+      "HB002": "Account is locked. Please contact support.",
+      "HB003": "Account not verified. Please check your email for verification link.",
+      "HB004": "Session expired. Please login again.",
+      // Add more error codes as needed
+    };
+    
+    const errorCode = error?.error?.responseCode;
+    const errorMessage = errorCode && errorMessages[errorCode] 
+      ? errorMessages[errorCode] 
+      : error?.error?.responseDescription || "An unexpected error occurred during login";
+    
     notify({
-      title: "Error!",
-      text: error.error.responseDescription || "An unexpected error occurred during login",
+      title: "Login Failed",
+      text: errorMessage,
       type: "error",
     });
   };
@@ -109,48 +175,116 @@ const LoginForm = () => {
   const submitFormData = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate form first
     if (!validateForm()) {
       return;
     }
 
     try {
+      // Clear previous session data
       queryClient.clear();
       localStorage.clear();
       setLoading(true);
       setErrors({});
 
-      const response = await loginUser(loginFormData);
+      // Show loading notification for long requests
+      const loadingTimeout = setTimeout(() => {
+        notify({
+          title: "Processing",
+          text: "Please wait while we verify your credentials...",
+          type: "info",
+        });
+      }, 2000);
 
-      // Check for validation errors first
+      const response = await loginUser(loginFormData);
+      clearTimeout(loadingTimeout);
+
+      // Handle validation errors from server
       if (response?.errors) {
         setErrors(response.errors);
+        
+        // Show server validation errors as toast
+        const serverErrors = [];
+        if (response.errors.email) serverErrors.push(`Email: ${response.errors.email[0]}`);
+        if (response.errors.password) serverErrors.push(`Password: ${response.errors.password[0]}`);
+        
+        notify({
+          title: "Validation Failed",
+          text: serverErrors.join(". "),
+          type: "error",
+        });
         return;
       }
 
+      // Handle successful response
       if (response?.data?.response) {
         const decryptedData = decryptPayload(response.data.response);
         if (decryptedData?.data) {
           await handleLoginSuccess(decryptedData);
+        } else if (decryptedData?.error) {
+          handleLoginError(decryptedData);
+        } else {
+          throw new Error("Invalid response format");
         }
-      } else if (response?.response?.data.response) {
+      } 
+      // Handle error response
+      else if (response?.response?.data?.response) {
         const decryptedData = decryptPayload(response.response.data.response);
         if (decryptedData?.error) {
           handleLoginError(decryptedData);
+        } else {
+          throw new Error("Invalid error response format");
         }
+      } 
+      // Handle unexpected response format
+      else {
+        throw new Error("Unexpected response format from server");
       }
     } catch (error: any) {
-      notify({
-        title: "Error!",
-        text: error.message || "An unexpected error occurred during login",
-        type: "error",
-      });
+      console.error("Login error:", error);
+      
+      // Handle network errors
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        notify({
+          title: "Connection Timeout",
+          text: "The request took too long. Please check your internet connection and try again.",
+          type: "error",
+        });
+      } else if (error.message.includes('Network')) {
+        notify({
+          title: "Network Error",
+          text: "Unable to connect to the server. Please check your internet connection.",
+          type: "error",
+        });
+      } else {
+        notify({
+          title: "Login Error",
+          text: error.message || "An unexpected error occurred. Please try again later.",
+          type: "error",
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
+  // Optional: Add keyboard shortcut for submit (Enter key)
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && !loading && loginFormData.email && loginFormData.password) {
+        const form = document.querySelector('form');
+        if (form) {
+          form.requestSubmit();
+        }
+      }
+    };
+
+    window.addEventListener('keypress', handleKeyPress);
+    return () => window.removeEventListener('keypress', handleKeyPress);
+  }, [loading, loginFormData]);
+
   return (
-    <form onSubmit={submitFormData} autoComplete="off">
+    <form onSubmit={submitFormData} autoComplete="off" noValidate>
       <CustomInput
         type="email"
         name="email"
@@ -159,10 +293,13 @@ const LoginForm = () => {
         value={loginFormData.email}
         label="Email Address"
         placeholder="Enter email"
+        isRequired
+        autoComplete="email"
         endContent={<FaRegEnvelope className="text-foreground-500 text-l" />}
       />
 
       <Spacer y={6} />
+      
       <CustomInput
         errorMessage={errors.password?.[0]}
         value={loginFormData.password}
@@ -171,20 +308,25 @@ const LoginForm = () => {
         label="Password"
         name="password"
         placeholder="Enter password"
+        isRequired
+        autoComplete="current-password"
       />
 
       <Spacer y={4} />
+      
       <div className="flex items-center justify-end">
         <Link
           prefetch={true}
-          className="text-primaryColor text-sm"
+          className="text-primaryColor text-sm hover:underline transition-all"
           href="/auth/forget-password"
         >
-          Forget Password?
+          Forgot Password?
         </Link>
       </div>
+      
       <Spacer y={7} />
-      <CustomButton loading={loading} disabled={loading} type="submit">
+      
+          <CustomButton loading={loading} disabled={loading} type="submit">
         Log In
       </CustomButton>
     </form>

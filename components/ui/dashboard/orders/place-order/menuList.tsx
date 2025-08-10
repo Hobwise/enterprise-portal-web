@@ -111,7 +111,6 @@ const MenuList = () => {
 
   const [selectedMenu, setSelectedMenu] = useState<Item>();
   const [orderDetails, setOrderDetails] = useState([]);
-  const [filteredMenu, setFilteredMenu] = React.useState([]);
 
   const getOrderDetails = async () => {
     setLoading(true);
@@ -121,11 +120,26 @@ const MenuList = () => {
     if (response?.data?.isSuccessful) {
       const updatedArray = response?.data?.data.orderDetails.map((item) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
+        
+        // Find the corresponding menu item to get the packing cost
+        let menuItem = null;
+        if (allCategoryDetails) {
+          // allCategoryDetails is an object with categoryId as keys
+          for (const categoryId in allCategoryDetails) {
+            const categoryDetail = allCategoryDetails[categoryId];
+            if (categoryDetail?.items) {
+              menuItem = categoryDetail.items.find((item) => item.id === itemID);
+              if (menuItem) break;
+            }
+          }
+        }
+
         return {
           ...rest,
           id: itemID,
           price: unitPrice,
           count: quantity,
+          packingCost: menuItem?.packingCost || 0, // Always preserve packing cost from menu
         };
       });
       setOrderDetails(response?.data?.data);
@@ -145,23 +159,16 @@ const MenuList = () => {
     (category) => category?.id === menuIdTable
   );
 
-  const matchingObjectArray = matchingObject
-    ? matchingObject?.items
-    : filteredMenu;
+  const matchingObjectArray = matchingObject?.items || [];
   const {
     bottomContent,
 
     // filterValue,
   } = usePagination(matchingObject);
 
-  useEffect(() => {
-    if (menuIdTable && categories) {
-      const currentCategory = filteredItems?.find((item) => item.id === menuIdTable);
-      setFilteredMenu(currentCategory?.items || []);
-    }
-  }, [filterValue, filteredItems, menuIdTable, categories]);
 
   const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
+    
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
@@ -186,8 +193,8 @@ const MenuList = () => {
     const existingItem = selectedItems.find((item) => item.id === menuItem.id);
     
     if (existingItem) {
-      // If item exists, increment count
-      handleIncrement(menuItem.id);
+      // If item exists, remove it (toggle off)
+      setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
       // Add new item with default options
       setSelectedItems((prevItems: any) => [
@@ -254,14 +261,10 @@ const MenuList = () => {
   };
 
   useEffect(() => {
-    if (categories && categories.length > 0) {
-      const firstCategory = getCategoryDetails(categories[0]?.id);
-      setFilteredMenu(firstCategory?.items || []);
-    }
     if (order?.id && categories && categories.length > 0) {
       getOrderDetails();
     }
-  }, [order?.id, categories, getCategoryDetails]);
+  }, [order?.id, categories]);
 
   const handlePackingCost = (itemId: string, isPacked: boolean) => {
     setSelectedItems((prevItems) =>
@@ -351,20 +354,34 @@ const MenuList = () => {
         />
         <article className="flex mt-6 gap-3">
           <div className="xl:max-w-[65%] w-full">
-            {isLoadingInitial || !matchingObjectArray ? (
+            {isLoadingInitial || (isLoadingCurrent && !matchingObjectArray) ? (
               <SpinnerLoader />
             ) : isError ? (
               <Error imageWidth="w-16" onClick={() => refetch()} />
-            ) : matchingObjectArray.length === 0 ? (
+            ) : matchingObjectArray.length === 0 && !isLoadingCurrent ? (
+              <div className="flex flex-col items-center justify-center py-10">
+                <Image
+                  className="w-[80px] h-[80px] mb-4"
+                  src={noMenu}
+                  alt="no menu items"
+                />
+                <p className="text-gray-500">No items in this category</p>
+              </div>
+            ) : matchingObjectArray.length === 0 && isLoadingCurrent ? (
               <SpinnerLoader />
             ) : (
               <div className="grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                {matchingObjectArray.map((menu, index) => (
+                {matchingObjectArray.map((menu: Item, index: number) => (
                   <div
                     title={menu?.isAvailable ? "Select item" : ""}
                     onClick={() =>
                       menu?.isAvailable ? toggleVarietyModal(menu) : null
                     }
+                    onDoubleClick={() => {
+                      if (menu?.isAvailable && selectedItems.find((selected) => selected.id === menu.id)) {
+                        handleCardClick(menu, selectedItems.find((selected) => selected.id === menu.id)?.isPacked || false);
+                      }
+                    }}
                     key={menu.id}
                     className={`relative ${
                       menu?.isAvailable && "cursor-pointer"
@@ -464,7 +481,7 @@ const MenuList = () => {
             {selectedItems.length > 0 ? (
               <>
                 <h2 className="font-[600] mx-2 mb-2">
-                  {selectedItems.length} Items selected
+                  {selectedItems.reduce((total, item) => total + item.count, 0)} Item{selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? 's' : ''} selected
                 </h2>
                 <div className="rounded-lg border border-[#E4E7EC80] p-2 ">
                   {selectedItems?.map((item, index) => {
@@ -473,7 +490,7 @@ const MenuList = () => {
                         <div
                           key={item.id}
                           className="flex py-3 justify-between cursor-pointer"
-                          onDoubleClick={() => handleCardClick(item, item.isPacked)}
+                          onDoubleClick={() => handleCardClick(item, item.isPacked || false)}
                         >
                           <div className=" rounded-lg text-black  flex">
                             <div>

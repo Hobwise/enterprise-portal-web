@@ -172,16 +172,28 @@ const useAllMenuData = (
   const currentCategoryHasData = currentCategory && 
     categories.some((c: any) => c.id === currentCategory && c.totalCount > 0);
     
-  const { isLoading: isLoadingCurrent, isFetching: isFetchingCurrent } = useQuery(
+  const { 
+    data: currentCategoryData,
+    isLoading: isLoadingCurrent, 
+    isFetching: isFetchingCurrent 
+  } = useQuery(
     ['menuItems', currentCategory, { page, rowsPerPage }],
     async () => {
       if (!currentCategory) return { items: [], totalCount: 0 };
       
       const response = await getMenuItems(currentCategory, page, rowsPerPage);
-      return response?.data?.data || { items: [], totalCount: 0 };
+      const data = response?.data?.data || { items: [], totalCount: 0 };
+      
+      // Also update categoryDetails for consistency
+      setCategoryDetails(prev => ({
+        ...prev,
+        [currentCategory]: data
+      }));
+      
+      return data;
     },
     {
-      enabled: currentCategoryHasData || false,
+      enabled: !!currentCategory && !!businessId && categories.length > 0,
       staleTime: 5 * 60 * 1000, // 5 minutes
       cacheTime: 10 * 60 * 1000, // 10 minutes
       refetchOnReconnect: false,
@@ -205,6 +217,15 @@ const useAllMenuData = (
     // If category has 0 items, return empty array immediately
     if (category && category.totalCount === 0) {
       return defaultResult;
+    }
+
+    // If this is the current category and we have fresh data, use it
+    if (categoryId === currentCategory && currentCategoryData) {
+      return {
+        items: currentCategoryData.items || [],
+        totalCount: currentCategoryData.totalCount || 0,
+        ...currentCategoryData
+      };
     }
 
     // Check React Query cache first
