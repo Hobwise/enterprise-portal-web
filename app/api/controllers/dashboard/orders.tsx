@@ -14,6 +14,7 @@ interface OrderDetail {
   itemID: string;
   quantity: number;
   unitPrice: number;
+  packingCost?: number;
 }
 
 export const orderSchema = z.object({

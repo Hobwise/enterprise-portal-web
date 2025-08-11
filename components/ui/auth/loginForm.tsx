@@ -113,7 +113,7 @@ const LoginForm = () => {
       // Show success notification with user info
       notify({
         title: "Login Successful!",
-        text: `Welcome back${user?.name ? `, ${user.name}` : ''}! Redirecting...`,
+        text: `Welcome back${user?.name ? `, ${user.name}` : ''}!`,
         type: "success",
       });
 

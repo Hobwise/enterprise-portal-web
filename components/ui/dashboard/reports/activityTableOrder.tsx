@@ -165,9 +165,19 @@ const ActivityTableOrder = ({
   };
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortDescriptor, setSortDescriptor] = useState({
-    column: 'dateCreated',
-    direction: 'ascending',
+  const [sortDescriptor, setSortDescriptor] = useState(() => {
+    // For Most Popular Items report (reportType === 1), sort by quantity in descending order
+    if (reportType === 1) {
+      return {
+        column: 'totalQuantitySold',
+        direction: 'descending',
+      };
+    }
+    // Default sorting for other reports
+    return {
+      column: 'dateCreated',
+      direction: 'ascending',
+    };
   });
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

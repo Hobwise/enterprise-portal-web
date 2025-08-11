@@ -118,18 +118,45 @@ const MenuList = () => {
 
     setLoading(false);
     if (response?.data?.isSuccessful) {
+      
       const updatedArray = response?.data?.data.orderDetails.map((item) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
         
         // Find the corresponding menu item to get the packing cost
         let menuItem = null;
-        if (allCategoryDetails) {
+        let foundInCategory = null;
+        
+        if (allCategoryDetails && Object.keys(allCategoryDetails).length > 0) {
           // allCategoryDetails is an object with categoryId as keys
           for (const categoryId in allCategoryDetails) {
             const categoryDetail = allCategoryDetails[categoryId];
             if (categoryDetail?.items) {
               menuItem = categoryDetail.items.find((item) => item.id === itemID);
-              if (menuItem) break;
+              if (menuItem) {
+                foundInCategory = categoryId;
+                break;
+              }
+            }
+          }
+        }
+
+        // Determine the best packing cost with robust fallback
+        let finalPackingCost = 0;
+        
+        if (menuItem?.packingCost !== undefined && menuItem.packingCost !== null) {
+          // First priority: Use menu data packing cost
+          finalPackingCost = menuItem.packingCost;
+        } else if (item.packingCost !== undefined && item.packingCost !== null) {
+          // Second priority: Use order data packing cost
+          finalPackingCost = item.packingCost;
+        } else {
+          // Last resort: Try to find item in any category using getCategoryDetails
+          for (const category of categories || []) {
+            const categoryDetails = getCategoryDetails(category.id);
+            const fallbackItem = categoryDetails?.items?.find((cItem) => cItem.id === itemID);
+            if (fallbackItem?.packingCost !== undefined) {
+              finalPackingCost = fallbackItem.packingCost;
+              break;
             }
           }
         }
@@ -139,7 +166,7 @@ const MenuList = () => {
           id: itemID,
           price: unitPrice,
           count: quantity,
-          packingCost: menuItem?.packingCost || 0, // Always preserve packing cost from menu
+          packingCost: finalPackingCost, // Always prioritize menu data for packing cost
         };
       });
       setOrderDetails(response?.data?.data);
@@ -261,10 +288,10 @@ const MenuList = () => {
   };
 
   useEffect(() => {
-    if (order?.id && categories && categories.length > 0) {
+    if (order?.id && categories && categories.length > 0 && allCategoryDetails && Object.keys(allCategoryDetails).length > 0) {
       getOrderDetails();
     }
-  }, [order?.id, categories]);
+  }, [order?.id, categories, allCategoryDetails]);
 
   const handlePackingCost = (itemId: string, isPacked: boolean) => {
     setSelectedItems((prevItems) =>
@@ -277,14 +304,19 @@ const MenuList = () => {
   const handleOpenCheckoutModal = () => {
     setSelectedItems((prevItems) =>
       prevItems.map((item) => {
-        const menuItem = matchingObjectArray?.find(
-          (menu) => menu.id === item.id
-        );
-
-        return {
-          ...item,
-          packingCost: menuItem ? menuItem.packingCost : 0,
-        };
+        // Only update packingCost if it's undefined or null
+        // This preserves the original packingCost from when the item was added
+        if (item.packingCost === undefined || item.packingCost === null) {
+          const menuItem = matchingObjectArray?.find(
+            (menu: Item) => menu.id === item.id
+          );
+          return {
+            ...item,
+            packingCost: menuItem?.packingCost || 0,
+          };
+        }
+        // Keep the existing packingCost
+        return item;
       })
     );
     onOpen();

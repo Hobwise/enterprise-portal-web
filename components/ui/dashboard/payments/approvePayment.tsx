@@ -86,7 +86,7 @@ const ApprovePayment = ({
     <>
       <Modal
         isDismissable={false}
-        size="4xl"
+        size="5xl"
         isOpen={isOpen}
         onOpenChange={() => {
           setOrder([]);

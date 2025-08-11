@@ -49,6 +49,7 @@ const InvoiceModal = ({
 
   return (
     <Modal
+    
       isDismissable={false}
       isOpen={isOpenInvoice}
       onOpenChange={toggleInvoiceModal}
