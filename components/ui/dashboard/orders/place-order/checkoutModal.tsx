@@ -144,6 +144,7 @@ const CheckoutModal = ({
       unitPrice: item.price,
       isVariety: item.isVariety,
       isPacked: item.isPacked,
+      packingCost: item?.packingCost,
     }));
     const payload = {
       status: 0,
@@ -186,6 +187,7 @@ const CheckoutModal = ({
       unitPrice: item.price,
       isVariety: item.isVariety,
       isPacked: item.isPacked,
+      packingCost: item.packingCost || 0,
     }));
     const payload = {
       status: 0,
@@ -293,7 +295,7 @@ const CheckoutModal = ({
           header: "px-3 md:px-6",
         }}
         isDismissable={false}
-        size={screen === 1 ? "5xl" : "md"}
+        size="5xl"
         isOpen={isOpen}
         onOpenChange={() => {
           setScreen(1);

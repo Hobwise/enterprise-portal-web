@@ -37,7 +37,7 @@ import DeleteCampaignModal from "./deleteCampaign";
 import Filters from "./filters";
 import RepeatCampaignModal from "./repeatCampaign";
 import useCampaignCategory from "@/hooks/cachedEndpoints/useCampaignCategory";
-import SpinnerLoader from "../menu/SpinnerLoader";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import CreateCampaign from "./createCampaign";
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -315,7 +315,7 @@ const CampaignList = ({ searchQuery }: any) => {
     return (
       <section className="border border-primaryGrey rounded-lg p-8">
         <div className="flex justify-center items-center">
-          <SpinnerLoader size="lg" />
+          <CustomLoading />
         </div>
       </section>
     );
@@ -355,7 +355,7 @@ const CampaignList = ({ searchQuery }: any) => {
         <TableBody
           emptyContent={
             isLoadingInitial ? (
-              <SpinnerLoader size="md" />
+              <CustomLoading />
             ) : (
               searchQuery ? "No campaigns match your search" : "No campaign found"
             )

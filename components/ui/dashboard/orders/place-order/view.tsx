@@ -30,7 +30,7 @@ const ViewModal = ({
   return (
     <Modal
       classNames={{
-        base: "max-h-[90%]",
+        base: "max-h-[100%]",
         wrapper: "overflow-hidden",
       }}
       isOpen={isOpenVariety}

@@ -17,7 +17,7 @@ interface OrderItem {
   status: 0 | 1 | 2 | 3;
   dateCreated: string;
   comment?: string;
-  orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number }[];
+  orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number; packingCost?: number }[];
 }
 
 interface OrderCategory {
