@@ -103,7 +103,7 @@ const ConfirmOrderModal = ({
   return (
     <Modal
       isDismissable={false}
-      size="5xl"
+      size="4xl"
       isOpen={isOpenConfirmOrder}
       onOpenChange={() => {
         setScreen(1);
