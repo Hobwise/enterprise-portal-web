@@ -19,7 +19,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import Image from "next/image";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { IoAddCircleOutline } from "react-icons/io5";
 import { HiArrowLongLeft } from "react-icons/hi2";
@@ -104,6 +104,7 @@ const MenuList = () => {
   }, [categories, menuIdTable, setMenuIdTable]);
 
   const [loading, setLoading] = useState<Boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
 
   const [value, setValue] = useState("");
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
@@ -170,7 +171,7 @@ const MenuList = () => {
         };
       });
       setOrderDetails(response?.data?.data);
-      setSelectedItems(updatedArray);
+      setSelectedItems(() => updatedArray); // Use functional form for consistency
 
       clearItemLocalStorage("order");
     } else if (response?.data?.error) {
@@ -194,71 +195,90 @@ const MenuList = () => {
   } = usePagination(matchingObject);
 
 
-  const handleCardClick = (menuItem: Item, isItemPacked: boolean) => {
-    
-    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
-    if (existingItem) {
-      setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
-    } else {
-      setSelectedItems((prevItems: any) => [
-        ...prevItems,
-        {
-          ...menuItem,
-          count: 1,
-          isPacked: isItemPacked,
+  const handleCardClick = useCallback((menuItem: Item, isItemPacked: boolean) => {
+    setSelectedItems((prevItems: any) => {
+      const existingItem = prevItems.find((item) => item.id === menuItem.id);
+      
+      if (existingItem) {
+        // Remove item if it exists
+        return prevItems.filter((item) => item.id !== menuItem.id);
+      } else {
+        // Add new item
+        return [
+          ...prevItems,
+          {
+            ...menuItem,
+            count: 1,
+            isPacked: isItemPacked,
+            packingCost:
+              menuItem.packingCost ||
+              (menuItem.isVariety ? menuItem.packingCost : 0),
+          },
+        ];
+      }
+    });
+  }, []);
 
-          packingCost:
-            menuItem.packingCost ||
-            (menuItem.isVariety ? menuItem.packingCost : 0),
-        },
-      ]);
-    }
-  };
-
-  const handleQuickAdd = (menuItem: Item, e: React.MouseEvent) => {
+  const handleQuickAdd = useCallback((menuItem: Item, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent opening the variety modal
-    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
     
-    if (existingItem) {
-      // If item exists, remove it (toggle off)
-      setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
-    } else {
-      // Add new item with default options
-      setSelectedItems((prevItems: any) => [
-        ...prevItems,
-        {
-          ...menuItem,
-          count: 1,
-          isPacked: false, // Default to not packed
-          packingCost: menuItem.packingCost || 0,
-        },
-      ]);
-    }
-  };
+    setSelectedItems((prevItems: any) => {
+      const existingItem = prevItems.find((item) => item.id === menuItem.id);
+      
+      if (existingItem) {
+        // If item exists, remove it (toggle off)
+        return prevItems.filter((item) => item.id !== menuItem.id);
+      } else {
+        // Add new item with default options
+        return [
+          ...prevItems,
+          {
+            ...menuItem,
+            count: 1,
+            isPacked: false, // Default to not packed
+            packingCost: menuItem.packingCost || 0,
+          },
+        ];
+      }
+    });
+  }, []);
 
-  const handleDecrement = (id: string) => {
-    setSelectedItems((prevItems: any) =>
-      prevItems.map((item) => {
-        if (item.id === id) {
-          if (item.count > 1) {
-            return { ...item, count: item.count - 1 };
-          } else {
-            // Remove item when count reaches 0
-            return null;
-          }
-        }
-        return item;
-      }).filter(Boolean) // Remove null items
-    );
-  };
+  const handleDecrement = useCallback((id: string) => {
+    if (isUpdating) return; // Prevent concurrent updates
+    
+    setIsUpdating(true);
+    
+    setSelectedItems((prevItems: any) => {
+      // Filter out items with count <= 1 first, then decrement others
+      const updatedItems = prevItems
+        .filter((item) => !(item.id === id && item.count <= 1))
+        .map((item) => 
+          item.id === id 
+            ? { ...item, count: Math.max(1, item.count - 1) }
+            : item
+        );
+      
+      // Use setTimeout to allow state to settle
+      setTimeout(() => setIsUpdating(false), 100);
+      return updatedItems;
+    });
+  }, [isUpdating]);
 
-  const handleIncrement = (id: string) => {
-    setSelectedItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id ? { ...item, count: item.count + 1 } : item
-      )
-    );
-  };
+  const handleIncrement = useCallback((id: string) => {
+    if (isUpdating) return; // Prevent concurrent updates
+    
+    setIsUpdating(true);
+    
+    setSelectedItems((prevItems) => {
+      const updatedItems = prevItems.map((item) =>
+        item.id === id ? { ...item, count: Math.min(item.count + 1, 999) } : item
+      );
+      
+      // Use setTimeout to allow state to settle
+      setTimeout(() => setIsUpdating(false), 100);
+      return updatedItems;
+    });
+  }, [isUpdating]);
 
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
@@ -293,15 +313,19 @@ const MenuList = () => {
     }
   }, [order?.id, categories, allCategoryDetails]);
 
-  const handlePackingCost = (itemId: string, isPacked: boolean) => {
+  const handlePackingCost = useCallback((itemId: string, isPacked: boolean) => {
+    if (isUpdating) return; // Prevent concurrent updates
+    
     setSelectedItems((prevItems) =>
       prevItems.map((item) =>
         item.id === itemId ? { ...item, isPacked } : item
       )
     );
-  };
+  }, [isUpdating]);
 
-  const handleOpenCheckoutModal = () => {
+  const handleOpenCheckoutModal = useCallback(() => {
+    if (isUpdating) return; // Prevent concurrent updates
+    
     setSelectedItems((prevItems) =>
       prevItems.map((item) => {
         // Only update packingCost if it's undefined or null
@@ -320,7 +344,7 @@ const MenuList = () => {
       })
     );
     onOpen();
-  };
+  }, [isUpdating, matchingObjectArray, onOpen]);
 
   return (
     <>
@@ -558,6 +582,7 @@ const MenuList = () => {
                               variant="faded"
                               className="border border-grey400"
                               aria-label="minus"
+                              isDisabled={isUpdating}
                             >
                               <FaMinus />
                             </Button>
@@ -572,6 +597,7 @@ const MenuList = () => {
                               variant="faded"
                               className="border border-grey400"
                               aria-label="plus"
+                              isDisabled={isUpdating}
                             >
                               <FaPlus />
                             </Button>
