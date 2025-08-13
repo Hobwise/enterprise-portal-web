@@ -104,33 +104,40 @@ const LoginForm = () => {
     try {
       const { businesses, token, user } = decryptedData.data;
       
-      // Save user data
-      saveJsonItemToLocalStorage("userInformation", decryptedData.data);
-      setLoginDetails(loginFormData);
-      saveJsonItemToLocalStorage("business", businesses);
-      setTokenCookie("token", token);
-
-      // Show success notification with user info
+      // Show immediate success notification
       notify({
         title: "Login Successful!",
         text: `Welcome back${user?.name ? `, ${user.name}` : ''}!`,
         type: "success",
       });
 
+      // Determine redirect path early
       const redirectPath = businesses?.length >= 0
         ? routePaths[businesses.length] || routePaths.default
         : routePaths.default;
 
-      // Small delay to ensure data is persisted and user sees success message
-      await new Promise(resolve => setTimeout(resolve, 500));
-      router.push(redirectPath);
+      // Optimistically start navigation while saving data in background
+      const navigationPromise = router.push(redirectPath);
+      
+      // Save user data asynchronously
+      const dataPromises = [
+        Promise.resolve().then(() => saveJsonItemToLocalStorage("userInformation", decryptedData.data)),
+        Promise.resolve().then(() => setLoginDetails(loginFormData)),
+        Promise.resolve().then(() => saveJsonItemToLocalStorage("business", businesses)),
+        Promise.resolve().then(() => setTokenCookie("token", token))
+      ];
+
+      // Wait for both navigation and data persistence
+      await Promise.all([navigationPromise, ...dataPromises]);
+      
     } catch (error) {
       console.error("Error handling login success:", error);
       notify({
-        title: "Error",
+        title: "Login Error",
         text: "Failed to process login data. Please try again.",
         type: "error",
       });
+      setLoading(false);
     }
   };
 
@@ -187,14 +194,21 @@ const LoginForm = () => {
       setLoading(true);
       setErrors({});
 
-      // Show loading notification for long requests
+      // Show immediate loading feedback
+      notify({
+        title: "Authenticating",
+        text: "Verifying your credentials...",
+        type: "info",
+      });
+      
+      // Show extended loading notification for slow requests
       const loadingTimeout = setTimeout(() => {
         notify({
-          title: "Processing",
-          text: "Please wait while we verify your credentials...",
+          title: "Still Processing",
+          text: "This is taking longer than usual. Please wait...",
           type: "info",
         });
-      }, 2000);
+      }, 3000);
 
       const response = await loginUser(loginFormData);
       clearTimeout(loadingTimeout);
