@@ -12,7 +12,7 @@ import {
 import { Spacer } from "@nextui-org/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { FaRegEnvelope } from "react-icons/fa6";
 import { useQueryClient } from "react-query";
 import { encryptPayload, decryptPayload } from "@/lib/encrypt-decrypt";
@@ -32,17 +32,13 @@ const LoginForm = () => {
   const queryClient = useQueryClient();
   const { setLoginDetails } = useGlobalContext();
   const [loading, setLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loginFormData, setLoginFormData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
-
-  const routePaths: Record<number | "default", string> = {
-    0: "/auth/business-information",
-    1: "/dashboard",
-    default: "/auth/select-business",
-  };
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -111,24 +107,30 @@ const LoginForm = () => {
         type: "success",
       });
 
-      // Determine redirect path early
-      const redirectPath = businesses?.length >= 0
-        ? routePaths[businesses.length] || routePaths.default
-        : routePaths.default;
+      // Save user data first before navigation
+      await Promise.all([
+        saveJsonItemToLocalStorage("userInformation", decryptedData.data),
+        setLoginDetails(loginFormData),
+        saveJsonItemToLocalStorage("business", businesses),
+        setTokenCookie("token", token)
+      ]);
 
-      // Optimistically start navigation while saving data in background
-      const navigationPromise = router.push(redirectPath);
+      // Determine redirect path based on business count
+      let redirectPath: string;
       
-      // Save user data asynchronously
-      const dataPromises = [
-        Promise.resolve().then(() => saveJsonItemToLocalStorage("userInformation", decryptedData.data)),
-        Promise.resolve().then(() => setLoginDetails(loginFormData)),
-        Promise.resolve().then(() => saveJsonItemToLocalStorage("business", businesses)),
-        Promise.resolve().then(() => setTokenCookie("token", token))
-      ];
+      if (!businesses || businesses.length === 0) {
+        // No businesses - go to business information setup
+        redirectPath = "/auth/business-information";
+      } else if (businesses.length === 1) {
+        // Single business - go directly to dashboard
+        redirectPath = "/dashboard";
+      } else {
+        // Multiple businesses - go to business selection
+        redirectPath = "/auth/select-business";
+      }
 
-      // Wait for both navigation and data persistence
-      await Promise.all([navigationPromise, ...dataPromises]);
+      // Navigate after data is saved
+      await router.push(redirectPath);
       
     } catch (error) {
       console.error("Error handling login success:", error);
@@ -182,36 +184,38 @@ const LoginForm = () => {
   const submitFormData = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate form first
+    // Prevent multiple submissions
+    if (isSubmitting || loading) {
+      return;
+    }
+    
+    // Set loading states immediately
+    setLoading(true);
+    setIsSubmitting(true);
+    setErrors({});
+    
+    // Validate form
     if (!validateForm()) {
+      setLoading(false);
+      setIsSubmitting(false);
       return;
     }
 
     try {
-      // Clear previous session data
-      queryClient.clear();
-      localStorage.clear();
-      setLoading(true);
-      setErrors({});
-
-      // Show immediate loading feedback
-      notify({
-        title: "Authenticating",
-        text: "Verifying your credentials...",
-        type: "info",
-      });
+      // Cancel any pending requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
       
-      // Show extended loading notification for slow requests
-      const loadingTimeout = setTimeout(() => {
-        notify({
-          title: "Still Processing",
-          text: "This is taking longer than usual. Please wait...",
-          type: "info",
-        });
-      }, 3000);
+      // Clear previous session data asynchronously
+      Promise.all([
+        queryClient.clear(),
+        Promise.resolve(localStorage.clear())
+      ]);
 
+      // Call API with abort signal support
       const response = await loginUser(loginFormData);
-      clearTimeout(loadingTimeout);
 
       // Handle validation errors from server
       if (response?.errors) {
@@ -279,13 +283,25 @@ const LoginForm = () => {
       }
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
+      abortControllerRef.current = null;
     }
   };
 
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      // Cancel any pending requests when component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+  
   // Optional: Add keyboard shortcut for submit (Enter key)
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !loading && loginFormData.email && loginFormData.password) {
+      if (e.key === 'Enter' && !loading && !isSubmitting && loginFormData.email && loginFormData.password) {
         const form = document.querySelector('form');
         if (form) {
           form.requestSubmit();
@@ -295,7 +311,7 @@ const LoginForm = () => {
 
     window.addEventListener('keypress', handleKeyPress);
     return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [loading, loginFormData]);
+  }, [loading, isSubmitting, loginFormData]);
 
   return (
     <form onSubmit={submitFormData} autoComplete="off" noValidate>
@@ -340,8 +356,12 @@ const LoginForm = () => {
       
       <Spacer y={7} />
       
-          <CustomButton loading={loading} disabled={loading} type="submit">
-        Log In
+          <CustomButton 
+        loading={loading} 
+        disabled={loading || isSubmitting} 
+        type="submit"
+      >
+        {loading ? "Logging in..." : "Log In"}
       </CustomButton>
     </form>
   );

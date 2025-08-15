@@ -350,12 +350,16 @@ const Menu: React.FC = () => {
                 />
                 <CustomInput
                   type="number"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setPackingCost(Number(e.target.value))
-                  }
-                  value={String(packingCost)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    const value = Number(e.target.value);
+                    if (value >= 0 || e.target.value === '') {
+                      setPackingCost(value || undefined);
+                    }
+                  }}
+                  value={packingCost !== undefined ? String(packingCost) : ''}
                   label="Packing cost (Optional)"
                   placeholder="This is a cost required to pack any item in this menus"
+                  min="0"
                 />
                 <CustomInput
                   type="number"
