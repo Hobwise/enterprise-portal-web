@@ -72,6 +72,7 @@ const EditQrModal: React.FC<EditQrModalProps> = ({
   return (
     <Modal
       isOpen={isOpenEdit}
+      size="md"
       onOpenChange={(isOpen) => {
         toggleQRmodalEdit();
         if (!isOpen) {

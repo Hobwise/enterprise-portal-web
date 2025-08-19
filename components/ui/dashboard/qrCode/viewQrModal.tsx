@@ -37,6 +37,7 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
       }}
       isDismissable={false}
       isOpen={isOpenView}
+      size="md"
       onOpenChange={() => {
         toggleQRmodalView();
       }}
@@ -57,11 +58,11 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
                     maxHeight: "100%",
                   }}
                   value={`${companyInfo.webUrl}/create-order?businessID=${
-                    business[0]?.businessId
-                  }&cooperateID=${userInformation?.cooperateID}&id=${
-                    qrObject?.id
+                    business[0]?.businessId || ''
+                  }&cooperateID=${userInformation?.cooperateID || ''}&id=${
+                    qrObject?.id || ''
                   }&businessName=${encodeURIComponent(
-                    business[0]?.businessName
+                    business[0]?.businessName || ''
                   )}`}
                   viewBox={`0 0 256 256`}
                 />

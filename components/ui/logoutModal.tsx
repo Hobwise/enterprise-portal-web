@@ -28,7 +28,7 @@ const LogoutModal = ({
   if (!isOpen) return null;
 
   return (
-    <Modal isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange}>
+    <Modal isDismissable={false} isOpen={isOpen} onOpenChange={onOpenChange} size="md">
       <ModalContent>
         {(onClose) => (
           <>
