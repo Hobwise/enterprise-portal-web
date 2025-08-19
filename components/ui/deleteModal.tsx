@@ -17,7 +17,7 @@ const DeleteModal = ({
   text,
 }: any) => {
   return (
-    <Modal isDismissable={false} isOpen={isOpen} onOpenChange={toggleModal}>
+    <Modal isDismissable={false} isOpen={isOpen} onOpenChange={toggleModal} size="md">
       <ModalContent>
         {(onClose) => (
           <>

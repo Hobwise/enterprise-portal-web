@@ -51,7 +51,7 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
     }
   };
   return (
-    <Modal isOpen={isOpen} onOpenChange={toggleModal}>
+    <Modal isOpen={isOpen} onOpenChange={toggleModal} size="md">
       <ModalContent>
         {(onClose) => (
           <>
