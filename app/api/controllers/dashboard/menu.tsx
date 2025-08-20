@@ -420,3 +420,13 @@ export async function getMenuItems(menuId: string, page: number, pageSize: numbe
     handleError(error, false);
   }
 }
+
+export async function getMenuVariety(itemId: string) {
+  try {
+    const data = await api.get(`${DASHBOARD.menuVariety}?itemId=${itemId}`);
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
