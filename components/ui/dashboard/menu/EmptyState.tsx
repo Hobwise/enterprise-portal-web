@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import noBooking from '../../../../public/assets/images/no-booking.png';
+import NoOrder from '../../../../public/assets/images/no-order.png';
 
 interface EmptyStateProps {
   title: string;
@@ -12,10 +12,10 @@ interface EmptyStateProps {
 
 const EmptyState = ({ title, description, actionButton }: EmptyStateProps) => {
   return (
-    <div className='rounded-lg grid place-content-center p-3 py-10 bg-[#FAFAFA]'>
+    <div className='rounded-lg grid place-content-center p-3 py-10 -mt-4'>
       <div className='space-y-5 flex justify-center text-center items-center flex-col max-w-[300px]'>
         <Image
-          src={noBooking}
+          src={NoOrder}
           width={100}
           height={100}
           className='object-cover rounded-lg'

@@ -270,14 +270,14 @@ const RestaurantMenu = () => {
 
   // Cache cleanup interval
   useEffect(() => {
-    const cleanupInterval = setInterval(() => {
-      clearExpiredCache();
-    }, 5 * 60 * 1000); // Clean up every 5 minutes
+    // const cleanupInterval = setInterval(() => {
+    //   clearExpiredCache();
+    // }, 5 * 60 * 1000); // Clean up every 5 minutes
 
-    // Clean up on component unmount
-    return () => {
-      clearInterval(cleanupInterval);
-    };
+    // // Clean up on component unmount
+    // return () => {
+    //   clearInterval(cleanupInterval);
+    // };
   }, []);
 
   // Handle category selection with background preloading
@@ -893,7 +893,7 @@ const RestaurantMenu = () => {
           </button>
         </div>
       </div>
-        <div className="flex items-center px-6 py-3 gap-6">
+        <div className="flex items-center my-3 py-3 gap-6">
           {/* Fixed left button */}
           <button onClick={onOpen} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 border border-[#5F35D2] text-[#5F35D2] rounded-lg hover:bg-[#EAE5FF]">
             <span>Create new menu</span>
@@ -907,7 +907,7 @@ const RestaurantMenu = () => {
                 <button
                   key={section.id}
                   onClick={() => handleMenuSectionSelect(section.id)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-lg transition-colors whitespace-nowrap ${
+                  className={`flex-shrink-0 px-4 py-2 bg-[#EAE5FF] rounded-lg transition-colors whitespace-nowrap ${
                     activeSubCategory === section.id
                       ? 'bg-primaryColor text-white'
                       : 'text-gray-600 hover:bg-[#EAE5FF]'
@@ -921,7 +921,7 @@ const RestaurantMenu = () => {
           
           {/* Fixed right buttons */}
           <div className="flex-shrink-0 flex gap-2">
-            <button className="text-gray-700 p-2 text-gray-600 hover:bg-[#EAE5FF] rounded-lg">
+            <button className="text-gray-700 p-2  hover:bg-[#EAE5FF] rounded-lg">
               <ChevronRight className="w-5 h-5" />
             </button>
             <button onClick={() => {
@@ -936,16 +936,13 @@ const RestaurantMenu = () => {
       {/* Menu Items Grid */}
       <div className="p-6">
         {loadingItems || menuItems === null ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Spinner size="lg" />
-            <p className="mt-4 text-gray-600">Loading menu items...</p>
-          </div>
+          <SpinnerLoader size="md"/>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
             {/* Add New Item Card */}
             <div 
               onClick={() => setIsAddItemModalOpen(true)}
-              className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[150px]"
+              className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[170px]"
             >
                 <img src="/assets/icons/menu.svg" alt="add" />
               <span className="text-gray-600 text-sm font-medium">Add new item</span>
@@ -972,7 +969,7 @@ const RestaurantMenu = () => {
                         }}
                       />
                     ) : (
-                      <div className="w-full h-24 bg-gray-200 flex items-center justify-center">
+                      <div className="w-full  h-[120px] bg-gray-200 flex items-center justify-center">
                         <span className="text-gray-400">No image</span>
                       </div>
                     )}
