@@ -58,7 +58,7 @@ const CountdownTimer = ({
           if (permission === "granted") {
             if ("serviceWorker" in navigator) {
               navigator.serviceWorker
-                .register("../../lib/sw.js")
+                .register("/sw.js")
                 .then((registration) => {
                   console.log("Service Worker registered");
                 })
