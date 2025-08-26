@@ -1,0 +1,258 @@
+
+import {
+  Modal,
+  ModalContent,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Spinner,
+} from '@nextui-org/react';
+
+interface CreateVarietyModalProps {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  selectedItem: any;
+  varietyName: string;
+  setVarietyName: (name: string) => void;
+  varietyDescription: string;
+  setVarietyDescription: (description: string) => void;
+  varietyPrice: string;
+  setVarietyPrice: (price: string) => void;
+  varietyImagePreview: string;
+  handleRemoveVarietyImage: () => void;
+  isUploadingVarietyImage: boolean;
+  handleFileChange: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    handleFile: (file: File) => void
+  ) => void;
+  handleVarietyImageFile: (file: File) => void;
+  loading: boolean;
+  handleCreateVariety: () => void;
+  backToItemDetails: () => void;
+}
+
+const CreateVarietyModal = ({
+  isOpen,
+  onOpenChange,
+  selectedItem,
+  varietyName,
+  setVarietyName,
+  varietyDescription,
+  setVarietyDescription,
+  varietyPrice,
+  setVarietyPrice,
+  varietyImagePreview,
+  handleRemoveVarietyImage,
+  isUploadingVarietyImage,
+  handleFileChange,
+  handleVarietyImageFile,
+  loading,
+  handleCreateVariety,
+  backToItemDetails,
+}: CreateVarietyModalProps) => {
+  if (!selectedItem) return null;
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      size="5xl"
+      onOpenChange={onOpenChange}
+      scrollBehavior="inside"
+      hideCloseButton
+    >
+      <ModalContent>
+        {() => (
+          <>
+            <ModalBody>
+              <div className="p-3">
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  Create variety
+                </h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  Add an item to your menu
+                </p>
+              </div>
+
+              {/* Item Card */}
+              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                <img
+                  src={
+                    selectedItem.image && selectedItem.image.trim() !== ''
+                      ? selectedItem.image.startsWith('data:') || selectedItem.image.startsWith('http')
+                        ? selectedItem.image
+                        : `data:image/jpeg;base64,${selectedItem.image}`
+                      : '/assets/images/no-image.svg'
+                  }
+                  alt={selectedItem.name}
+                  className="w-20 h-20 rounded-lg object-cover bg-orange-500"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
+                  }}
+                />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">
+                    {selectedItem.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedItem.category}
+                  </p>
+                  <p className="font-semibold text-gray-900">
+                    ₦
+                    {selectedItem.price.toLocaleString('en-NG', {
+                      minimumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-6">
+                {selectedItem.description}
+              </p>
+
+              <div className="grid grid-cols-2 gap-6">
+                {/* Left Column */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Name of new variety
+                    </label>
+                    <input
+                      type="text"
+                      value={varietyName}
+                      onChange={(e) => setVarietyName(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Add a description
+                    </label>
+                    <textarea
+                      value={varietyDescription}
+                      onChange={(e) => setVarietyDescription(e.target.value)}
+                      rows={4}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] resize-none text-gray-700"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Add a price
+                    </label>
+                    <input
+                      type="number"
+                      value={varietyPrice}
+                      onChange={(e) => setVarietyPrice(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Right Column - Image Upload */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Images
+                  </label>
+                  <div
+                    className={`h-[280px] bg-[#6D42E2]/10 flex items-center justify-center rounded-lg p-12 text-center ${
+                      varietyImagePreview
+                        ? 'border-solid border-gray-300'
+                        : 'border-gray-300'
+                    }`}
+                  >
+                    {varietyImagePreview ? (
+                      <div className="relative">
+                        <img
+                          src={varietyImagePreview}
+                          alt="Preview"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                        <button
+                          onClick={handleRemoveVarietyImage}
+                          className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-center flex-col items-center w-1/2 mb-4">
+                          <div className="w-20 h-20  rounded-lg flex items-center justify-center">
+                            {isUploadingVarietyImage ? (
+                              <Spinner size="lg" />
+                            ) : (
+                              <svg
+                                width="36"
+                                height="36"
+                                viewBox="0 0 36 36"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  d="M27.0104 31.8327H3.67708V8.49935H18.6771V5.16602H3.67708C1.84375 5.16602 0.34375 6.66602 0.34375 8.49935V31.8327C0.34375 33.666 1.84375 35.166 3.67708 35.166H27.0104C28.8438 35.166 30.3438 33.666 30.3438 31.8327V16.8327H27.0104V31.8327ZM14.0271 26.5493L10.7604 22.616L6.17708 28.4993H24.5104L18.6104 20.6493L14.0271 26.5493ZM30.3438 5.16602V0.166016H27.0104V5.16602H22.0104C22.0271 5.18268 22.0104 8.49935 22.0104 8.49935H27.0104V13.4827C27.0271 13.4993 30.3438 13.4827 30.3438 13.4827V8.49935H35.3438V5.16602H30.3438Z"
+                                  fill="#6D42E2"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          {!isUploadingVarietyImage && (
+                            <p className="text-sm text-gray-600">
+                              Drag and drop files to upload or{' '}
+                              <label className="text-[#5F35D2] cursor-pointer hover:text-[#7C69D8] font-medium">
+                                click here
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept="image/*"
+                                  onChange={(e) =>
+                                    handleFileChange(e, handleVarietyImageFile)
+                                  }
+                                />
+                              </label>{' '}
+                              to browse
+                            </p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </ModalBody>
+            <ModalFooter className="mb-3">
+              <Button
+                color="default"
+                variant="bordered"
+                onPress={backToItemDetails}
+              >
+                Back to item
+              </Button>
+              <Button
+                onPress={handleCreateVariety}
+                disabled={loading}
+                className="bg-[#5F35D2] text-white"
+              >
+                {loading ? 'Creating...' : 'Save new variety'}
+              </Button>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+};
+
+export default CreateVarietyModal;

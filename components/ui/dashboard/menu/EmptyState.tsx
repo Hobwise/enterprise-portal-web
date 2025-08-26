@@ -23,17 +23,17 @@ const EmptyState = ({ title, description, actionButton }: EmptyStateProps) => {
           alt='empty state icon'
         />
         <div>
-          <h3 className='text-[18px] leading-8 font-semibold'>
+          <h3 className='text-lg leading-8 font-semibold font-satoshi'>
             {title}
           </h3>
-          <p className='text-sm font-[400] text-grey600'>
+          <p className='text-sm font-normal text-grey600 font-satoshi'>
             {description}
           </p>
         </div>
         {actionButton && (
           <button
             onClick={actionButton.onClick}
-            className='text-white bg-primaryColor rounded-lg px-4 py-2'
+            className='text-white bg-primaryColor rounded-lg px-4 py-2 font-satoshi text-base'
           >
             {actionButton.text}
           </button>

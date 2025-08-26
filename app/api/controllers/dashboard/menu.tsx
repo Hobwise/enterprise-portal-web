@@ -128,6 +128,7 @@ export async function getMenuByBusinessUser(
 
 type payloadMenu = {
   name: string;
+  categoryId: string,
   packingCost?: number;
   waitingTimeMinutes?: number;
 };
@@ -203,7 +204,9 @@ export type payloadMenuItem = {
   itemName: string;
   itemDescription: string;
   price: number;
-  isAvailable?: boolean;
+  currency: string;
+  isAvailable: boolean;
+  hasVariety: boolean;
   imageReference: string;
 };
 export type payloadMenuVariety = {
@@ -326,10 +329,10 @@ export async function deleteVariety(businessId: string, itemId: string) {
     handleError(error);
   }
 }
-export async function deleteMenu(businessId: string, menuId: string) {
+export async function deleteMenu(businessId: string,  categoryId: string) {
   const headers = businessId ? { businessId } : {};
   try {
-    const data = await api.delete(`${DASHBOARD.getMenu}?menuId=${menuId}`, {
+    const data = await api.delete(`${DASHBOARD.getMenu}?categoryId=${categoryId}`, {
       headers,
     });
 
