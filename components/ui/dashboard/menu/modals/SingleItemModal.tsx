@@ -1,8 +1,11 @@
 
-import { Modal, ModalContent, ModalBody } from '@nextui-org/react';
+import { Modal, ModalContent, ModalBody, Switch } from '@nextui-org/react';
 import { ArrowLeft, Edit, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import EditItemModal from './EditItemModal';
+import toast from 'react-hot-toast';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import type { payloadMenuItem } from '@/app/api/controllers/dashboard/menu';
 
 interface SingleItemModalProps {
   isOpen: boolean;
@@ -28,8 +31,52 @@ const SingleItemModal = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAvailable, setIsAvailable] = useState(selectedItem?.isAvailable ?? true);
+  const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
 
   if (!selectedItem) return null;
+
+  const handleAvailabilityToggle = async (value: boolean) => {
+    setIsUpdatingAvailability(true);
+    try {
+      // Import and call the update API
+      const { editMenuItem } = await import('@/app/api/controllers/dashboard/menu');
+      const business = getJsonItemFromLocalStorage('business');
+      
+      const payload: payloadMenuItem = {
+        menuID: selectedItem.menuID,
+        itemName: selectedItem.itemName,
+        itemDescription: selectedItem.itemDescription || '',
+        price: selectedItem.price,
+        currency: 'NGN',
+        isAvailable: value,
+        hasVariety: selectedItem.varieties?.length > 0 || false,
+        imageReference: selectedItem.imageReference || '',
+      };
+
+      const response = await editMenuItem(business[0]?.businessId, payload, selectedItem.id);
+
+      if (response && 'errors' in response) {
+        toast.error('Failed to update availability');
+        return;
+      }
+
+      if (response?.data?.isSuccessful) {
+        setIsAvailable(value);
+        toast.success(`Item ${value ? 'enabled' : 'disabled'} successfully`);
+        if (onItemUpdated) {
+          onItemUpdated();
+        }
+      } else {
+        toast.error('Failed to update availability');
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      toast.error('Failed to update availability');
+    } finally {
+      setIsUpdatingAvailability(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!onDeleteItem) return;
@@ -142,6 +189,23 @@ const SingleItemModal = ({
                           </span>{' '}
                           {selectedItem.menu?.waitingTimeMinutes || 0} minutes
                         </p>
+
+                        <div className="flex items-center gap-3 mt-4 pt-4 border-t">
+                          <span className="text-gray-600 font-medium">
+                            Availability:
+                          </span>
+                          <Switch
+                            isSelected={isAvailable}
+                            onValueChange={handleAvailabilityToggle}
+                            isDisabled={isUpdatingAvailability}
+                            classNames={{
+                              wrapper: "group-data-[selected=true]:bg-[#5F35D2]",
+                            }}
+                          />
+                          <span className={`text-sm ${isAvailable ? 'text-green-600' : 'text-gray-500'}`}>
+                            {isAvailable ? 'Available' : 'Not Available'}
+                          </span>
+                        </div>
               
                     </div>
                   </div>

@@ -105,7 +105,6 @@ const ItemDetailsModal = ({
                         <h2 className="text-xl font-semibold text-gray-700">
                           {selectedItem.name}
                         </h2>
-                        <Star className="w-5 h-5 text-yellow-500 fill-current" />
                       </div>
                       <p className="text-sm text-gray-600 mt-2">
                         {selectedItem.description}
@@ -137,7 +136,7 @@ const ItemDetailsModal = ({
                           <div
                             key={variety.id}
                             onClick={() => handleVarietyClick(variety)}
-                            className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                            className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
                           >
                             <img
                               src={
@@ -168,9 +167,7 @@ const ItemDetailsModal = ({
                                 })}
                               </p>
                             </div>
-                            <button className="text-gray-700 p-2 hover:bg-gray-200 rounded">
-                              <Star className="w-5 h-5 text-gray-400" />
-                            </button>
+                         
                           </div>
                         ))
                       )}

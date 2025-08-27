@@ -48,6 +48,7 @@ const RestaurantMenu = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Modal states for menu categories
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -633,7 +634,9 @@ const RestaurantMenu = () => {
         itemName: itemName,
         itemDescription: itemDescription,
         price: parseFloat(itemPrice),
+        currency: 'NGN',
         isAvailable: true,
+        hasVariety: false,
         imageReference: itemImageReference,
       };
 
@@ -902,6 +905,24 @@ const RestaurantMenu = () => {
     }
   };
 
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  // Filter menu items based on search query
+  const filteredMenuItems = React.useMemo(() => {
+    if (!menuItems || !searchQuery.trim()) {
+      return menuItems;
+    }
+
+    const query = searchQuery.toLowerCase();
+    return menuItems.filter((item) => {
+      const nameMatch = item.name?.toLowerCase().includes(query);
+      const descriptionMatch = item.description?.toLowerCase().includes(query);
+      return nameMatch || descriptionMatch;
+    });
+  }, [menuItems, searchQuery]);
+
   const removeMenu = async (categoryId: string) => {
     if (!categoryId) return;
     setLoading(true);
@@ -935,10 +956,12 @@ const RestaurantMenu = () => {
     <div className="min-h-screen font-satoshi">
       <MenuHeader
         menuSections={menuSections}
-        menuItems={menuItems}
+        menuItems={filteredMenuItems}
         activeSubCategory={activeSubCategory}
         isExporting={isExporting}
         handleExportCSV={handleExportCSV}
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
       />
 
       <CategoryTabs
@@ -962,11 +985,12 @@ const RestaurantMenu = () => {
 
       <MenuItemsGrid
         loadingItems={loadingItems}
-        menuItems={menuItems}
+        menuItems={filteredMenuItems}
         menuSections={menuSections}
         onOpen={onOpen}
         setIsAddItemModalOpen={setIsAddItemModalOpen}
         handleItemClick={handleItemClick}
+        searchQuery={searchQuery}
       />
 
       <AddItemModal

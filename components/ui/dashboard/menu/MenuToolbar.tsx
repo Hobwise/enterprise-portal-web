@@ -67,6 +67,8 @@ const MenuToolbar = ({
   return (
     <div className="flex items-center my-3 py-3 gap-6">
       {/* Fixed left button */}
+      <div className="flex-shrink-0 flex gap-2">
+
       <button
         onClick={onOpen}
         className="flex-shrink-0 flex items-center gap-2 px-4 py-2 border border-[#5F35D2] text-[#5F35D2] rounded-lg hover:bg-[#EAE5FF] font-satoshi text-base transition-all duration-200"
@@ -74,6 +76,16 @@ const MenuToolbar = ({
         <span>Create new menu</span>
         <Plus className="w-4 h-4" />
       </button>
+
+           <button 
+          onClick={scrollLeft}
+          className={`text-gray-700 p-2 hover:bg-[#EAE5FF] rounded-lg transition-all duration-200 ${
+            showLeft ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
+          }`}
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+      </div>
 
       {/* Scrollable menu sections container */}
       <div 
@@ -86,13 +98,13 @@ const MenuToolbar = ({
             <button
               key={section.id}
               onClick={() => handleMenuSectionSelect(section.id)}
-              className={`flex-shrink-0 px-4 py-2 bg-[#EAE5FF] rounded-lg transition-colors whitespace-nowrap font-satoshi text-base ${
+              className={`flex-shrink-0 px-4 py-2 bg-[#EAE5FF] w-28 rounded-lg transition-colors whitespace-nowrap font-satoshi text-base ${
                 activeSubCategory === section.id
                   ? 'bg-primaryColor text-white'
-                  : 'text-gray-600 hover:bg-[#EAE5FF]'
+                  : 'text-[#596375] hover:bg-[#EAE5FF]'
               }`}
             >
-              {section.name} {section.totalCount > 0 && `(${section.totalCount})`}
+              {section.name.length > 5 ? `${section.name.slice(0, 5)}...` : section.name} {section.totalCount > 0 && `(${section.totalCount})`}
             </button>
           ))}
         </div>
@@ -101,14 +113,7 @@ const MenuToolbar = ({
       {/* Fixed right buttons */}
       <div className="flex-shrink-0 flex gap-2">
         {/* Left scroll arrow - only shows when can scroll left */}
-        <button 
-          onClick={scrollLeft}
-          className={`text-gray-700 p-2 hover:bg-[#EAE5FF] rounded-lg transition-all duration-200 ${
-            showLeft ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2 pointer-events-none'
-          }`}
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
+    
         
         {/* Right scroll arrow - only shows when can scroll right */}
         <button 
