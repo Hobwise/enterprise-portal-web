@@ -203,26 +203,7 @@ const EditItemModal = ({
                 <div className="grid grid-cols-2 gap-6">
                   {/* Left Column */}
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select section
-                      </label>
-                      <select
-                        value={selectedSection}
-                        onChange={(e) => setSelectedSection(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
-                      >
-                        <option value="">Select section</option>
-                        {categories.map((category) => (
-                          <option
-                            key={category.categoryId}
-                            value={category.categoryName}
-                          >
-                            {category.categoryName}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+              
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -254,7 +235,18 @@ const EditItemModal = ({
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
                       />
                     </div>
-
+  <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Add item price
+                      </label>
+                      <input
+                        type="number"
+                        value={itemPrice}
+                        onChange={(e) => setItemPrice(e.target.value)}
+                        placeholder="Enter value"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
+                      />
+                    </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Item description
@@ -270,26 +262,15 @@ const EditItemModal = ({
                   </div>
 
                   {/* Right Column */}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Add item price
-                      </label>
-                      <input
-                        type="number"
-                        value={itemPrice}
-                        onChange={(e) => setItemPrice(e.target.value)}
-                        placeholder="Enter value"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
-                      />
-                    </div>
+                  <div className="space-y-4 flex-1">
+                  
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Image
                       </label>
                       <div
-                        className={`rounded-lg flex justify-center items-center h-[280px] bg-[#6D42E2]/10 p-8 text-center ${
+                        className={`rounded-lg flex justify-center items-center h-full bg-[#6D42E2]/10 p-8 text-center ${
                           dragActive
                             ? 'border-[#6D42E2] border-2'
                             : 'border-gray-300'

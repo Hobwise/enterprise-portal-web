@@ -1,6 +1,8 @@
 
+import React, { useState } from 'react';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import EmptyState from '@/components/ui/dashboard/menu/EmptyState';
+import { Spinner } from '@nextui-org/react';
 const noImage = "/assets/images/no-image.svg";
 
 interface MenuItemsGridProps {
@@ -10,6 +12,7 @@ interface MenuItemsGridProps {
   onOpen: () => void;
   setIsAddItemModalOpen: (isOpen: boolean) => void;
   handleItemClick: (item: any) => void;
+  searchQuery?: string;
 }
 
 const MenuItemsGrid = ({
@@ -19,30 +22,50 @@ const MenuItemsGrid = ({
   onOpen,
   setIsAddItemModalOpen,
   handleItemClick,
+  searchQuery,
 }: MenuItemsGridProps) => {
+  const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
+
+  const onItemClick = async (item: any) => {
+    setLoadingItemId(item.id);
+    await handleItemClick(item);
+    // Reset loading state after a delay to ensure modal has opened
+    setTimeout(() => setLoadingItemId(null), 500);
+  };
+
   return (
     <div className="p-6">
       {loadingItems || menuItems === null ? (
         <SpinnerLoader size="md" />
+      ) : menuItems && menuItems.length === 0 && searchQuery ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <p className="text-gray-500 text-lg font-satoshi">No items found matching "{searchQuery}"</p>
+          <p className="text-gray-400 text-sm font-satoshi mt-2">Try adjusting your search terms</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 xl:grid-cols-6 gap-4 md:gap-8">
           {/* Add New Item Card */}
           <div
             onClick={() => setIsAddItemModalOpen(true)}
-            className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[170px]"
+            className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[190px]"
           >
             <img src="/assets/icons/menu.svg" alt="add" />
             <span className="text-gray-600 text-sm font-medium font-satoshi">Add new item</span>
           </div>
 
           {/* Menu Items */}
-          {menuItems && menuItems.length > 0 ? (
+          {menuItems && menuItems.length > 0 && (
             menuItems.map((item) => (
               <div
                 key={item.id}
-                onClick={() => handleItemClick(item)}
-                className="bg-white border rounded-lg shadow  hover:shadow-md h-[170px] transition-shadow cursor-pointer"
+                onClick={() => onItemClick(item)}
+                className="bg-white border rounded-lg  border-[#D5D5D5BF]  hover:shadow-md h-[190px] transition-shadow cursor-pointer relative"
               >
+                {loadingItemId === item.id && (
+                  <div className="absolute inset-0 bg-white/90 rounded-lg flex items-center justify-center z-10">
+                    <Spinner size="lg" color="secondary" />
+                  </div>
+                )}
                 <div className="relative overflow-hidden rounded-t-lg">
                     <img
                       src={
@@ -51,7 +74,7 @@ const MenuItemsGrid = ({
                           : `data:image/jpeg;base64,${item.image}`
                       }
                       alt={item.name}
-                      className="w-full h-[120px] object-cover"
+                      className="w-full h-[140px] object-cover"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           noImage;
@@ -60,10 +83,10 @@ const MenuItemsGrid = ({
                 
                 </div>
                 <div className="px-1.5 mt-1">
-                  <h3 className="text-sm font-medium text-gray-800 mb-1 truncate font-satoshi">
+                  <h3 className="text-sm font-normal text-[#596375] mb-1 truncate font-satoshi">
                     {item.name}
                   </h3>
-                  <p className="text-xs font-medium text-gray-900 font-satoshi">
+                  <p className="text-xs font-medium text-[#596375] font-satoshi">
                     ₦
                     {item.price.toLocaleString('en-NG', {
                       minimumFractionDigits: 2,
@@ -72,36 +95,8 @@ const MenuItemsGrid = ({
                 </div>
               </div>
             ))
-          ) : (
-            !loadingItems &&
-            menuSections.length === 0 && (
-              <div className="col-span-full">
-                <EmptyState
-                  title="No menu sections available"
-                  description="Create a menu section to add items to this category."
-                  actionButton={{
-                    text: 'Create Menu',
-                    onClick: onOpen,
-                  }}
-                />
-              </div>
-            )
           )}
-          {!loadingItems &&
-            menuItems !== null &&
-            menuSections.length > 0 &&
-            menuItems.length === 0 && (
-              <div className="col-span-full">
-                <EmptyState
-                  title="No items in this menu section"
-                  description="Click 'Add new item' to get started with your first menu item."
-                  actionButton={{
-                    text: 'Add New Item',
-                    onClick: () => setIsAddItemModalOpen(true),
-                  }}
-                />
-              </div>
-            )}
+         
         </div>
       )}
     </div>

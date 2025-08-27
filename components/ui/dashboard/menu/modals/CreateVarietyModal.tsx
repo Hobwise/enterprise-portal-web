@@ -1,4 +1,5 @@
 
+import React, { useRef, useEffect } from 'react';
 import {
   Modal,
   ModalContent,
@@ -50,6 +51,40 @@ const CreateVarietyModal = ({
   handleCreateVariety,
   backToItemDetails,
 }: CreateVarietyModalProps) => {
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const priceInputRef = useRef<HTMLInputElement>(null);
+  const [showErrors, setShowErrors] = React.useState(false);
+
+  useEffect(() => {
+    if (isOpen && nameInputRef.current) {
+      // Small delay to ensure modal is fully rendered
+      setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 100);
+    }
+    // Reset error state when modal opens
+    setShowErrors(false);
+  }, [isOpen]);
+
+  const handleSaveVariety = () => {
+    // Check if required fields are filled
+    if (!varietyName.trim() || !varietyPrice.trim()) {
+      setShowErrors(true);
+      
+      // Focus on the first empty required field
+      if (!varietyName.trim() && nameInputRef.current) {
+        nameInputRef.current.focus();
+      } else if (!varietyPrice.trim() && priceInputRef.current) {
+        priceInputRef.current.focus();
+      }
+      return;
+    }
+    
+    // If validation passes, proceed with creation
+    handleCreateVariety();
+    setShowErrors(false);
+  };
+
   if (!selectedItem) return null;
 
   return (
@@ -114,14 +149,26 @@ const CreateVarietyModal = ({
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name of new variety
+                      Name of new variety <span className="text-red-500">*</span>
                     </label>
                     <input
+                      ref={nameInputRef}
                       type="text"
                       value={varietyName}
-                      onChange={(e) => setVarietyName(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
+                      onChange={(e) => {
+                        setVarietyName(e.target.value);
+                        if (showErrors) setShowErrors(false);
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700 ${
+                        showErrors && !varietyName.trim() 
+                          ? 'border-red-500 ring-1 ring-red-500' 
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="Enter variety name"
                     />
+                    {showErrors && !varietyName.trim() && (
+                      <p className="text-red-500 text-xs mt-1">Variety name is required</p>
+                    )}
                   </div>
 
                   <div>
@@ -138,14 +185,26 @@ const CreateVarietyModal = ({
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Add a price
+                      Add a price <span className="text-red-500">*</span>
                     </label>
                     <input
+                      ref={priceInputRef}
                       type="number"
                       value={varietyPrice}
-                      onChange={(e) => setVarietyPrice(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
+                      onChange={(e) => {
+                        setVarietyPrice(e.target.value);
+                        if (showErrors) setShowErrors(false);
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700 ${
+                        showErrors && !varietyPrice.trim() 
+                          ? 'border-red-500 ring-1 ring-red-500' 
+                          : 'border-gray-300'
+                      }`}
+                      placeholder="Enter price"
                     />
+                    {showErrors && !varietyPrice.trim() && (
+                      <p className="text-red-500 text-xs mt-1">Price is required</p>
+                    )}
                   </div>
                 </div>
 
@@ -241,7 +300,7 @@ const CreateVarietyModal = ({
                 Back to item
               </Button>
               <Button
-                onPress={handleCreateVariety}
+                onPress={handleSaveVariety}
                 disabled={loading}
                 className="bg-[#5F35D2] text-white"
               >
