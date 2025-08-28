@@ -34,8 +34,6 @@ const SingleItemModal = ({
   onDeleteVariety,
   handleVarietyClick,
 }: SingleItemModalProps) => {
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(selectedItem?.isAvailable ?? true);
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
@@ -84,20 +82,6 @@ const SingleItemModal = ({
     }
   };
 
-  const handleDelete = async () => {
-    if (!onDeleteItem) return;
-    
-    setIsDeleting(true);
-    try {
-      await onDeleteItem(selectedItem.id);
-      setShowDeleteConfirm(false);
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error deleting item:', error);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   return (
     <Modal isOpen={isOpen} size="5xl" onOpenChange={onOpenChange} hideCloseButton>
@@ -134,7 +118,10 @@ const SingleItemModal = ({
                   </button>
                   {onDeleteItem && (
                     <button
-                      onClick={() => setShowDeleteConfirm(true)}
+                      onClick={async () => {
+                        await onDeleteItem(selectedItem.id);
+                        onOpenChange(false);
+                      }}
                       className="text-red-600 px-6 py-2.5 border border-red-300 rounded-lg hover:bg-red-50 flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -277,9 +264,7 @@ const SingleItemModal = ({
                                 <button
                                   onClick={async (e) => {
                                     e.stopPropagation();
-                                    if (window.confirm(`Are you sure you want to delete "${variety.unit || variety.name}"?`)) {
-                                      await onDeleteVariety(variety.id);
-                                    }
+                                    await onDeleteVariety(variety.id);
                                   }}
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                   title="Delete variety"
@@ -300,35 +285,6 @@ const SingleItemModal = ({
         )}
       </ModalContent>
       
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <Modal isOpen={showDeleteConfirm} size="sm" onOpenChange={setShowDeleteConfirm}>
-          <ModalContent>
-            <ModalBody className="p-6 text-center">
-              <h3 className="text-lg font-semibold mb-4">Delete Menu Item</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete "{selectedItem.itemName}"? This action cannot be undone.
-              </p>
-              <div className="flex gap-3 justify-center">
-                <button
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="px-6 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50"
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </button>
-              </div>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
-      )}
 
       {/* Edit Item Modal */}
       {isEditModalOpen && (

@@ -116,16 +116,11 @@ const RestaurantMenu = () => {
 
   // Form states for Create Variety
   const [varietyName, setVarietyName] = useState('');
-  const [varietyDescription, setVarietyDescription] = useState('');
   const [varietyPrice, setVarietyPrice] = useState('');
-  const [varietyImage, setVarietyImage] = useState<File | null>(null);
-  const [varietyImagePreview, setVarietyImagePreview] = useState('');
 
   // Upload loading states
   const [isUploadingItemImage, setIsUploadingItemImage] = useState(false);
-  const [isUploadingVarietyImage, setIsUploadingVarietyImage] = useState(false);
   const [itemImageReference, setItemImageReference] = useState('');
-  const [varietyImageReference, setVarietyImageReference] = useState('');
   const [isExporting, setIsExporting] = useState(false);
 
   // Form state for Create Section
@@ -433,34 +428,6 @@ const RestaurantMenu = () => {
     }
   };
 
-  const handleVarietyImageFile = async (file: File) => {
-    setIsUploadingVarietyImage(true);
-    try {
-      const business = getJsonItemFromLocalStorage('business');
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const response = await uploadFile(business[0]?.businessId, formData);
-
-      if (response?.data?.isSuccessful) {
-        setVarietyImage(file);
-        setVarietyImageReference(response.data.data);
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setVarietyImagePreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-        toast.success('Image uploaded successfully');
-      } else {
-        toast.error('Failed to upload image');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image');
-    } finally {
-      setIsUploadingVarietyImage(false);
-    }
-  };
 
   const handleRemoveItemImage = async () => {
     if (!itemImageReference) return;
@@ -483,26 +450,6 @@ const RestaurantMenu = () => {
     }
   };
 
-  const handleRemoveVarietyImage = async () => {
-    if (!varietyImageReference) return;
-
-    try {
-      const business = getJsonItemFromLocalStorage('business');
-      const response = await deleteFile(business[0]?.businessId, varietyImageReference);
-
-      if (response?.data?.isSuccessful) {
-        setVarietyImage(null);
-        setVarietyImagePreview('');
-        setVarietyImageReference('');
-        toast.success('Image removed successfully');
-      } else {
-        toast.error('Failed to remove image');
-      }
-    } catch (error) {
-      console.error('Error removing image:', error);
-      toast.error('Failed to remove image');
-    }
-  };
 
   const handleItemClick = async (item: any, index?: number) => {
     setSelectedItem(item);
@@ -629,11 +576,7 @@ const RestaurantMenu = () => {
       if (response?.data?.isSuccessful) {
         toast.success('Variety created successfully');
         setVarietyName('');
-        setVarietyDescription('');
         setVarietyPrice('');
-        setVarietyImage(null);
-        setVarietyImagePreview('');
-        setVarietyImageReference('');
         backToItemDetails();
         if (activeSubCategory) {
           // Invalidate cache and force refresh
@@ -1142,15 +1085,8 @@ const RestaurantMenu = () => {
         selectedItem={selectedItem}
         varietyName={varietyName}
         setVarietyName={setVarietyName}
-        varietyDescription={varietyDescription}
-        setVarietyDescription={setVarietyDescription}
         varietyPrice={varietyPrice}
         setVarietyPrice={setVarietyPrice}
-        varietyImagePreview={varietyImagePreview}
-        handleRemoveVarietyImage={handleRemoveVarietyImage}
-        isUploadingVarietyImage={isUploadingVarietyImage}
-        handleFileChange={handleFileChange}
-        handleVarietyImageFile={handleVarietyImageFile}
         loading={loading}
         handleCreateVariety={handleCreateVariety}
         backToItemDetails={backToItemDetails}

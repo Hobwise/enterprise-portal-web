@@ -15,7 +15,7 @@ import {
 } from "@/lib/utils";
 import { Avatar, ScrollShadow } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import useLogout from "@/hooks/cachedEndpoints/useLogout";
 
 const SelectBusinessForm = () => {
@@ -26,6 +26,11 @@ const SelectBusinessForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data, isLoading: loading } = useGetBusinessByCooperate();
+  
+  // Prefetch dashboard route on component mount for faster navigation
+  useEffect(() => {
+    router.prefetch('/dashboard');
+  }, [router]);
 
   const handleAuthenticationError = async (error: any) => {
     // Check for authentication-related errors
@@ -63,19 +68,13 @@ const SelectBusinessForm = () => {
         const decryptedData = decryptPayload(data.data.response);
         
         if (decryptedData?.data) {
-          // Show success notification
-          // notify({
-          //   title: "Business Selected",
-          //   text: "Redirecting to your dashboard...",
-          //   type: "success",
-          // });
-          
-          // Save data and redirect
-          saveJsonItemToLocalStorage("userInformation", decryptedData?.data);
+          // Save critical data immediately
           setTokenCookie("token", decryptedData?.data.token);
+          saveJsonItemToLocalStorage("userInformation", decryptedData?.data);
           
-          // Use optimistic navigation
-          router.push("/dashboard");
+          // Navigate immediately with replace to prevent back navigation issues
+          router.replace("/dashboard");
+          router.refresh(); // Force immediate update
         } else if (decryptedData?.error) {
           const wasAuthError = await handleAuthenticationError(decryptedData.error);
           if (!wasAuthError) {
@@ -130,12 +129,7 @@ const SelectBusinessForm = () => {
     setError(null);
     setBusiness(item);
 
-    // Show loading notification
-    notify({
-      title: "Selecting Business",
-      text: `Setting up ${item.name}...`,
-      type: "info",
-    });
+    // Remove loading notification for faster perceived performance
 
     try {
       const data = await getBusinessDetails(item);
