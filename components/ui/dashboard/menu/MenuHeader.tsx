@@ -41,7 +41,7 @@ const MenuHeader = ({
             )}
           </div>
           <p className="text-sm text-grey600">
-            Showing all menu items
+            Showing all categories
           </p>
         </div>
         <div className="flex items-center gap-3">

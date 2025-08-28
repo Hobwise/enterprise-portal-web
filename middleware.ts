@@ -7,6 +7,10 @@ export function middleware(request: NextRequest) {
   const planCapabilities = request.cookies.get("planCapabilities")
     ?.value as any;
   const pathname = request.nextUrl.pathname;
+  
+  // Skip middleware redirect for auth routes already handling their own navigation
+  const isAuthRoute = pathname.startsWith('/auth/');
+  
   const matchedBaseRoute = Object.keys(routePermissions).find((route) =>
     pathname.startsWith(route)
   );
@@ -24,7 +28,8 @@ export function middleware(request: NextRequest) {
     );
   }
 
-  if (!token) {
+  // Only redirect to login if not already on an auth route
+  if (!token && !isAuthRoute) {
     return NextResponse.redirect(new URL("/auth/login", request.url));
   }
 

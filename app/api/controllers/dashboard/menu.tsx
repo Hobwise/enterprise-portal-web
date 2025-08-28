@@ -455,7 +455,7 @@ export async function deleteCategory(businessId: string, categoryId: string) {
   
   try {
     console.log('Deleting category:', { categoryId, businessId });
-    const data = await api.delete(`${DASHBOARD.menuCategory}?menuId=${categoryId}`, {
+    const data = await api.delete(`${DASHBOARD.menuCategory}?categoryId=${categoryId}`, {
       headers,
     });
 

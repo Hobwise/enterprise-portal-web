@@ -39,6 +39,13 @@ const LoginForm = () => {
     password: "",
   });
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  // Prefetch routes on component mount for faster navigation
+  useEffect(() => {
+    router.prefetch('/dashboard');
+    router.prefetch('/auth/select-business');
+    router.prefetch('/auth/business-information');
+  }, [router]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -107,13 +114,11 @@ const LoginForm = () => {
         type: "success",
       });
 
-      // Save user data first before navigation
-      await Promise.all([
-        saveJsonItemToLocalStorage("userInformation", decryptedData.data),
-        setLoginDetails(loginFormData),
-        saveJsonItemToLocalStorage("business", businesses),
-        setTokenCookie("token", token)
-      ]);
+      // Save critical data synchronously
+      setTokenCookie("token", token);
+      saveJsonItemToLocalStorage("userInformation", decryptedData.data);
+      saveJsonItemToLocalStorage("business", businesses);
+      setLoginDetails(loginFormData);
 
       // Determine redirect path based on business count
       let redirectPath: string;
@@ -129,8 +134,9 @@ const LoginForm = () => {
         redirectPath = "/auth/select-business";
       }
 
-      // Navigate after data is saved
-      await router.push(redirectPath);
+      // Navigate immediately without await
+      router.push(redirectPath);
+      router.refresh(); // Force immediate update
       
     } catch (error) {
       console.error("Error handling login success:", error);
@@ -154,9 +160,8 @@ const LoginForm = () => {
         type: "warning",
       });
       
-      setTimeout(() => {
-        router.push(`/auth/forget-password?email=${loginFormData.email}&screen=${2}`);
-      }, 1500);
+      // Navigate immediately for better UX
+      router.push(`/auth/forget-password?email=${loginFormData.email}&screen=${2}`);
       return;
     }
     
@@ -208,11 +213,9 @@ const LoginForm = () => {
       }
       abortControllerRef.current = new AbortController();
       
-      // Clear previous session data asynchronously
-      Promise.all([
-        queryClient.clear(),
-        Promise.resolve(localStorage.clear())
-      ]);
+      // Clear previous session data without blocking
+      localStorage.clear();
+      queryClient.clear();
 
       // Call API with abort signal support
       const response = await loginUser(loginFormData);

@@ -4,8 +4,13 @@ import {
   ModalContent,
   ModalBody,
   Spinner,
+  Switch,
 } from '@nextui-org/react';
 import { ArrowLeft, Edit, Plus, Star, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import type { payloadMenuItem } from '@/app/api/controllers/dashboard/menu';
+import { useState, useEffect } from 'react';
 
 interface ItemDetailsModalProps {
   isOpen: boolean;
@@ -18,6 +23,7 @@ interface ItemDetailsModalProps {
   onDeleteItem?: (item: any) => void;
   onEditVariety?: (variety: any) => void;
   onDeleteVariety?: (varietyId: string) => Promise<void>;
+  onItemUpdated?: () => void;
 }
 
 const ItemDetailsModal = ({
@@ -31,7 +37,58 @@ const ItemDetailsModal = ({
   onDeleteItem,
   onEditVariety,
   onDeleteVariety,
+  onItemUpdated,
 }: ItemDetailsModalProps) => {
+  const [isAvailable, setIsAvailable] = useState(selectedItem?.isAvailable ?? true);
+  const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
+
+  useEffect(() => {
+    if (selectedItem) {
+      setIsAvailable(selectedItem.isAvailable ?? true);
+    }
+  }, [selectedItem]);
+
+  const handleAvailabilityToggle = async (value: boolean) => {
+    setIsUpdatingAvailability(true);
+    try {
+      const { editMenuItem } = await import('@/app/api/controllers/dashboard/menu');
+      const business = getJsonItemFromLocalStorage('business');
+      
+      const payload: payloadMenuItem = {
+        menuID: selectedItem.menuID,
+        itemName: selectedItem.itemName,
+        itemDescription: selectedItem.itemDescription || '',
+        price: selectedItem.price,
+        currency: 'NGN',
+        isAvailable: value,
+        hasVariety: selectedItem.varieties?.length > 0 || false,
+        imageReference: selectedItem.imageReference || '',
+      };
+
+      const response = await editMenuItem(business[0]?.businessId, payload, selectedItem.id);
+
+      if (response && 'errors' in response) {
+        toast.error('Failed to update availability');
+        return;
+      }
+
+      if (response?.data?.isSuccessful) {
+        setIsAvailable(value);
+        toast.success(`Item ${value ? 'enabled' : 'disabled'} successfully`);
+        if (onItemUpdated) {
+          onItemUpdated();
+        }
+      } else {
+        toast.error('Failed to update availability');
+      }
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      toast.error('Failed to update availability');
+    } finally {
+      setIsUpdatingAvailability(false);
+    }
+  };
+
   if (!selectedItem) return null;
 
   return (
@@ -122,6 +179,24 @@ const ItemDetailsModal = ({
                           minimumFractionDigits: 2,
                         })}
                       </p>
+                      
+                      {/* Availability Toggle */}
+                      <div className="flex items-center gap-3 mt-4 pt-4 border-t">
+                        <span className="text-gray-600 font-medium">
+                          Availability:
+                        </span>
+                        <Switch
+                          isSelected={isAvailable}
+                          onValueChange={handleAvailabilityToggle}
+                          isDisabled={isUpdatingAvailability}
+                          classNames={{
+                            wrapper: "group-data-[selected=true]:bg-[#5F35D2]",
+                          }}
+                        />
+                        <span className={`text-sm ${isAvailable ? 'text-green-600' : 'text-gray-500'}`}>
+                          {isAvailable ? 'Available' : 'Not Available'}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -191,9 +266,7 @@ const ItemDetailsModal = ({
                                 <button
                                   onClick={async (e) => {
                                     e.stopPropagation();
-                                    if (window.confirm(`Are you sure you want to delete "${variety.unit || variety.name}"?`)) {
-                                      await onDeleteVariety(variety.id);
-                                    }
+                                    await onDeleteVariety(variety.id);
                                   }}
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                   title="Delete variety"
