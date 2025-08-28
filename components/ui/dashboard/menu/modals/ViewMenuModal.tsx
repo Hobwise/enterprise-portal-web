@@ -61,28 +61,30 @@ const ViewMenuModal = ({
                             {category.categoryName || 'Uncategorized'}
                           </p>
                         </div>
-                        <div className="flex items-center">
-                          <Tooltip color="secondary" content={'Edit Section'}>
-                            <span className="mr-3">
-                              <RiEdit2Line
-                                onClick={() => handleEditSection(category)}
-                                className="text-[18px] text-[#5F35D2] cursor-pointer"
-                              />
-                            </span>
-                          </Tooltip>
-                          <Tooltip color="danger" content={'Delete'}>
-                            <span>
-                              <RiDeleteBin6Line
-                                onClick={() => {
-                                  setSelectedMenu(category);
-                                  onOpenChange(false);
-                                  setIsOpenDeleteMenu(true);
-                                }}
-                                className="text-[18px] text-[#dc2626] cursor-pointer"
-                              />
-                            </span>
-                          </Tooltip>
-                        </div>
+                        {category.categoryName && category.categoryName.toLowerCase() !== 'uncategorized' && (
+                          <div className="flex items-center">
+                            <Tooltip color="secondary" content={'Edit Section'}>
+                              <span className="mr-3">
+                                <RiEdit2Line
+                                  onClick={() => handleEditSection(category)}
+                                  className="text-[18px] text-[#5F35D2] cursor-pointer"
+                                />
+                              </span>
+                            </Tooltip>
+                            <Tooltip color="danger" content={'Delete'}>
+                              <span>
+                                <RiDeleteBin6Line
+                                  onClick={() => {
+                                    setSelectedMenu(category);
+                                    onOpenChange(false);
+                                    setIsOpenDeleteMenu(true);
+                                  }}
+                                  className="text-[18px] text-[#dc2626] cursor-pointer"
+                                />
+                              </span>
+                            </Tooltip>
+                          </div>
+                        )}
                       </div>
                     ))
                   ) : (

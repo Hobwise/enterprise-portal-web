@@ -1,4 +1,5 @@
 import { Plus, ChevronRight, ChevronLeft, Edit } from 'lucide-react';
+import { Tooltip } from '@nextui-org/react';
 import { useRef, useState, useEffect } from 'react';
 
 interface MenuToolbarProps {
@@ -95,17 +96,24 @@ const MenuToolbar = ({
       >
         <div className="flex gap-6 w-full">
           {menuSections.map((section) => (
-            <button
+            <Tooltip
+            className='text-gray-500'
               key={section.id}
-              onClick={() => handleMenuSectionSelect(section.id)}
-              className={`flex-shrink-0 px-4 py-2 bg-[#EAE5FF] w-28 rounded-lg transition-colors whitespace-nowrap font-satoshi text-base ${
-                activeSubCategory === section.id
-                  ? 'bg-primaryColor text-white'
-                  : 'text-[#596375] hover:bg-[#EAE5FF]'
-              }`}
+              content={section.name}
+              delay={500}
+              closeDelay={0}
             >
-              {section.name.length > 5 ? `${section.name.slice(0, 5)}...` : section.name} {section.totalCount > 0 && `(${section.totalCount})`}
-            </button>
+              <button
+                onClick={() => handleMenuSectionSelect(section.id)}
+                className={`flex-shrink-0 px-4 py-2 bg-[#EAE5FF] w-28 rounded-lg transition-colors whitespace-nowrap font-satoshi text-base ${
+                  activeSubCategory === section.id
+                    ? 'bg-primaryColor text-white'
+                    : 'text-[#596375] hover:bg-[#EAE5FF]'
+                }`}
+              >
+                {section.name.length > 5 ? `${section.name.slice(0, 5)}...` : section.name} {section.totalCount > 0 && `(${section.totalCount})`}
+              </button>
+            </Tooltip>
           ))}
         </div>
       </div>

@@ -208,6 +208,26 @@ api.interceptors.response.use(
 );
 
 export const handleError = (error: any, showError: boolean = true) => {
+  // Check for authentication-related errors
+  const errorMessage = error?.message || error?.response?.data?.error?.responseDescription || '';
+  
+  // Handle null reference errors that indicate authentication issues
+  if (errorMessage.includes('Cannot read properties of null') && 
+      (errorMessage.includes('password') || errorMessage.includes('token') || errorMessage.includes('user'))) {
+    console.warn('Authentication error detected, redirecting to login...');
+    resetLoginInfo();
+    window.location.href = '/auth/login';
+    return;
+  }
+  
+  // Handle other authentication errors
+  if (error?.response?.status === 401 || error?.response?.status === 403) {
+    console.warn('Unauthorized access, redirecting to login...');
+    resetLoginInfo();
+    window.location.href = '/auth/login';
+    return;
+  }
+  
   if (showError) {
     if (!error.response?.data?.title) {
       notify({

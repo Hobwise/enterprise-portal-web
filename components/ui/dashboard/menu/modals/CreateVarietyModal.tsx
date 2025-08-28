@@ -8,6 +8,7 @@ import {
   Button,
   Spinner,
 } from '@nextui-org/react';
+import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
 
 interface CreateVarietyModalProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ interface CreateVarietyModalProps {
   loading: boolean;
   handleCreateVariety: () => void;
   backToItemDetails: () => void;
+  onEditItem?: (item: any) => void;
+  onDeleteItem?: (itemId: string) => Promise<void>;
 }
 
 const CreateVarietyModal = ({
@@ -50,6 +53,8 @@ const CreateVarietyModal = ({
   loading,
   handleCreateVariety,
   backToItemDetails,
+  onEditItem,
+  onDeleteItem,
 }: CreateVarietyModalProps) => {
   const nameInputRef = useRef<HTMLInputElement>(null);
   const priceInputRef = useRef<HTMLInputElement>(null);
@@ -98,15 +103,52 @@ const CreateVarietyModal = ({
       <ModalContent>
         {() => (
           <>
-            <ModalBody>
-              <div className="p-3">
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  Create variety
-                </h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  Add an item to your menu
-                </p>
+            <ModalBody className="p-0">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b">
+                <button
+                  onClick={backToItemDetails}
+                  className="flex items-center gap-2 text-[#5F35D2] hover:text-[#5F35D2]"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                  <span>Back to item details</span>
+                </button>
+                <div className="flex items-center gap-2">
+                  {onEditItem && (
+                    <button 
+                      onClick={() => onEditItem(selectedItem)}
+                      className="text-gray-700 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <Edit className="w-4 h-4" />
+                      <span>Edit Item</span>
+                    </button>
+                  )}
+                  {onDeleteItem && (
+                    <button
+                      onClick={async () => {
+                        if (window.confirm(`Are you sure you want to delete "${selectedItem.name}"?`)) {
+                          await onDeleteItem(selectedItem.id);
+                        }
+                      }}
+                      className="text-red-600 px-6 py-2.5 border border-red-300 rounded-lg hover:bg-red-50 flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete Item</span>
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* Content */}
+              <div className="p-6">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    Create variety
+                  </h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Add a variety for {selectedItem.name}
+                  </p>
+                </div>
 
               {/* Item Card */}
               <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
@@ -289,6 +331,7 @@ const CreateVarietyModal = ({
                     )}
                   </div>
                 </div>
+              </div>
               </div>
             </ModalBody>
             <ModalFooter className="mb-3">

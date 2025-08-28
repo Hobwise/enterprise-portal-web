@@ -16,6 +16,8 @@ interface ItemDetailsModalProps {
   handleVarietyClick: (variety: any) => void;
   onEditItem?: (item: any) => void;
   onDeleteItem?: (item: any) => void;
+  onEditVariety?: (variety: any) => void;
+  onDeleteVariety?: (varietyId: string) => Promise<void>;
 }
 
 const ItemDetailsModal = ({
@@ -27,6 +29,8 @@ const ItemDetailsModal = ({
   handleVarietyClick,
   onEditItem,
   onDeleteItem,
+  onEditVariety,
+  onDeleteVariety,
 }: ItemDetailsModalProps) => {
   if (!selectedItem) return null;
 
@@ -135,8 +139,7 @@ const ItemDetailsModal = ({
                         selectedItem.varieties?.map((variety: any) => (
                           <div
                             key={variety.id}
-                            onClick={() => handleVarietyClick(variety)}
-                            className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                            className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors relative group"
                           >
                             <img
                               src={
@@ -147,13 +150,17 @@ const ItemDetailsModal = ({
                                   : '/assets/images/no-image.svg'
                               }
                               alt={variety.name}
-                              className="w-20 h-20 rounded-lg object-cover bg-cyan-500"
+                              className="w-20 h-20 rounded-lg object-cover bg-cyan-500 cursor-pointer"
+                              onClick={() => handleVarietyClick(variety)}
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
                               }}
                             />
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-700">{variety.name}</h3>
+                            <div 
+                              className="flex-1 cursor-pointer"
+                              onClick={() => handleVarietyClick(variety)}
+                            >
+                              <h3 className="font-semibold text-gray-700">{variety.unit || variety.name}</h3>
                               <p className="text-sm text-gray-700 mt-1">
                                 {variety.description}
                               </p>
@@ -162,12 +169,39 @@ const ItemDetailsModal = ({
                               </p>
                               <p className="font-bold mt-2 text-gray-700">
                                 ₦
-                                {variety.price.toLocaleString('en-NG', {
+                                {variety.price?.toLocaleString('en-NG', {
                                   minimumFractionDigits: 2,
                                 })}
                               </p>
                             </div>
-                         
+                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {onEditVariety && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onEditVariety({ ...variety, item: selectedItem });
+                                  }}
+                                  className="p-2 text-[#5F35D2] hover:bg-[#EAE5FF] rounded-lg transition-colors"
+                                  title="Edit variety"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                              )}
+                              {onDeleteVariety && (
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    if (window.confirm(`Are you sure you want to delete "${variety.unit || variety.name}"?`)) {
+                                      await onDeleteVariety(variety.id);
+                                    }
+                                  }}
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                  title="Delete variety"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                         ))
                       )}
