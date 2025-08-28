@@ -210,11 +210,11 @@ export type payloadMenuItem = {
   imageReference: string;
 };
 export type payloadMenuVariety = {
+  id?: string; // Required for edit, optional for create
   price: number;
   unit: string;
   itemID?: string;
   menuID?: string;
-
   currency?: string;
 };
 export async function createMenuItem(
@@ -305,13 +305,16 @@ export async function editMenuVariety(
 export async function deleteMenuItem(businessId: string, itemId: string) {
   const headers = businessId ? { businessId } : {};
   try {
+    console.log('Deleting menu item:', { itemId, businessId, url: `${DASHBOARD.menuItem}?itemId=${itemId}` });
     const data = await api.delete(`${DASHBOARD.menuItem}?itemId=${itemId}`, {
       headers,
     });
 
     return data;
   } catch (error) {
+    console.error('Delete menu item error:', error);
     handleError(error);
+    throw error; // Re-throw to handle in the calling function
   }
 }
 export async function deleteVariety(businessId: string, itemId: string) {
@@ -329,10 +332,10 @@ export async function deleteVariety(businessId: string, itemId: string) {
     handleError(error);
   }
 }
-export async function deleteMenu(businessId: string,  categoryId: string) {
+export async function deleteMenu(businessId: string,  menuId: string) {
   const headers = businessId ? { businessId } : {};
   try {
-    const data = await api.delete(`${DASHBOARD.getMenu}?categoryId=${categoryId}`, {
+    const data = await api.delete(`${DASHBOARD.getMenu}?menuId=${menuId}`, {
       headers,
     });
 
@@ -411,6 +414,56 @@ export async function getMenuCategories(businessId: string, cooperateId: string)
     return data;
   } catch (error) {
     handleError(error, false);
+  }
+}
+
+type payloadCategory = {
+  name: string;
+  orderIndex?: number;
+};
+
+export async function createCategory(businessId: string, payload: payloadCategory) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.post(DASHBOARD.menuCategory, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function updateCategory(businessId: string, categoryId: string, payload: payloadCategory) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.put(`${DASHBOARD.menuCategory}?categoryId=${categoryId}`, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function deleteCategory(businessId: string, categoryId: string) {
+  const headers = businessId ? { businessId } : {};
+  
+  try {
+    console.log('Deleting category:', { categoryId, businessId });
+    const data = await api.delete(`${DASHBOARD.menuCategory}?menuId=${categoryId}`, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Delete category error:', error);
+    handleError(error);
+    throw error;
   }
 }
 

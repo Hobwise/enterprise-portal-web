@@ -1,5 +1,5 @@
 import { AppProvider } from "@/hooks/globalProvider";
-
+import ClientProviders from "@/components/ClientProviders";
 import QueryProvider from "@/hooks/queryProvider";
 import "@/public/fonts/satoshi/stylesheet.css";
 import { Providers } from "@/utilities/providers";
@@ -33,11 +33,12 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <QueryProvider>
-          <AppProvider>
-            <Providers>
-              {children}
-              <Analytics />
+        <ClientProviders>
+          <QueryProvider>
+            <AppProvider>
+              <Providers>
+                {children}
+                <Analytics />
               <Toaster
                 toastOptions={{
                   duration: 5000,
@@ -60,6 +61,7 @@ export default function RootLayout({
             </Providers>
           </AppProvider>
         </QueryProvider>
+        </ClientProviders>
       </body>
     </html>
   );

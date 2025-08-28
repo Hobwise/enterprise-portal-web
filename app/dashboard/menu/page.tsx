@@ -30,9 +30,11 @@ import SingleItemModal from '@/components/ui/dashboard/menu/modals/SingleItemMod
 import SingleVarietyModal from '@/components/ui/dashboard/menu/modals/SingleVarietyModal';
 import CreateMenuModal from '@/components/ui/dashboard/menu/modals/CreateMenuModal';
 import EditMenuModal from '@/components/ui/dashboard/menu/modals/EditMenuModal';
+import EditItemModal from '@/components/ui/dashboard/menu/modals/EditItemModal';
 import ViewMenuModal from '@/components/ui/dashboard/menu/modals/ViewMenuModal';
 import CreateSectionModal from '@/components/ui/dashboard/menu/modals/CreateSectionModal';
 import EditSectionModal from '@/components/ui/dashboard/menu/modals/EditSectionModal';
+import EditVarietyModal from '@/components/ui/dashboard/menu/modals/EditVarietyModal';
 import DeleteModal from '@/components/ui/deleteModal';
 
 // Global cache for menu items to persist across category switches
@@ -55,6 +57,7 @@ const RestaurantMenu = () => {
   const [isOpenViewMenu, setIsOpenViewMenu] = useState(false);
   const [isOpenCreateMenu, setIsOpenCreateMenu] = useState(false);
   const [isOpenEditMenu, setIsOpenEditMenu] = useState(false);
+  const [isOpenEditItem, setIsOpenEditItem] = useState(false);
   const [isOpenDeleteMenu, setIsOpenDeleteMenu] = useState(false);
   const [isOpenCreateSection, setIsOpenCreateSection] = useState(false);
   const [viewMenuMode, setViewMenuMode] = useState<'all' | 'current'>('all');
@@ -65,6 +68,7 @@ const RestaurantMenu = () => {
   const [isItemDetailsModalOpen, setIsItemDetailsModalOpen] = useState(false);
   const [isSingleItemModalOpen, setIsSingleItemModalOpen] = useState(false);
   const [isSingleVarietyModalOpen, setIsSingleVarietyModalOpen] = useState(false);
+  const [isEditVarietyModalOpen, setIsEditVarietyModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [selectedVariety, setSelectedVariety] = useState<any>(null);
   const [varietiesLoading, setVarietiesLoading] = useState(false);
@@ -571,6 +575,33 @@ const RestaurantMenu = () => {
     setIsItemDetailsModalOpen(true);
   };
 
+  const handleEditVariety = (variety: any) => {
+    setSelectedVariety(variety);
+    setIsSingleVarietyModalOpen(false);
+    setIsItemDetailsModalOpen(false);
+    setIsEditVarietyModalOpen(true);
+  };
+
+  const handleVarietyUpdated = async () => {
+    // Refresh the selected item to get updated variety data
+    if (selectedItem) {
+      const response = await getMenuItem(selectedItem.id);
+      if (response?.data?.isSuccessful) {
+        const itemData = response.data.data;
+        const varieties = itemData?.varieties || [];
+        setSelectedItem({ ...selectedItem, varieties, ...itemData });
+      }
+    }
+    // Refresh menu items
+    if (activeSubCategory) {
+      globalMenuItemsCache.delete(activeSubCategory);
+      fetchMenuItems(activeSubCategory, true);
+    }
+    // Close edit modal and go back to item details
+    setIsEditVarietyModalOpen(false);
+    setIsItemDetailsModalOpen(true);
+  };
+
   const handleCreateVariety = async () => {
     if (!selectedItem || !varietyName || !varietyPrice) {
       toast.error('Please fill in all required fields');
@@ -678,7 +709,7 @@ const RestaurantMenu = () => {
     setIsExporting(true);
     try {
       const business = getJsonItemFromLocalStorage('business');
-      const response = await exportGrid(business[0]?.businessId, 1);
+      const response = await exportGrid(business[0]?.businessId, 0);
 
       if (response?.data) {
         const blob = new Blob([response.data], { type: 'text/csv' });
@@ -792,17 +823,31 @@ const RestaurantMenu = () => {
   const handleUpdateSection = async () => {
     if (!editingSectionName.trim() || !editingSectionId) return;
 
+    setLoading(true);
     try {
-      // TODO: Add API call to update section
-      console.log('Update section:', { id: editingSectionId, name: editingSectionName });
-      toast.success('Section updated successfully');
-      setIsOpenEditSection(false);
-      setEditingSectionName('');
-      setEditingSectionId('');
-      refetchCategories();
+      const { updateCategory } = await import('@/app/api/controllers/dashboard/menu');
+      const business = getJsonItemFromLocalStorage('business');
+      const payload = {
+        name: editingSectionName,
+        orderIndex: 0,
+      };
+
+      const response = await updateCategory(business[0]?.businessId, editingSectionId, payload);
+
+      if (response?.data?.isSuccessful) {
+        toast.success('Section updated successfully');
+        setIsOpenEditSection(false);
+        setEditingSectionName('');
+        setEditingSectionId('');
+        refetchCategories();
+      } else {
+        toast.error(response?.data?.error || 'Failed to update section');
+      }
     } catch (error) {
       console.error('Error updating section:', error);
       toast.error('Failed to update section');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -817,12 +862,23 @@ const RestaurantMenu = () => {
     if (!sectionName.trim()) return;
     setLoading(true);
     try {
-      // TODO: Add API call to create section
-      console.log('Create section:', { name: sectionName });
-      toast.success('Section created successfully');
-      setIsOpenCreateSection(false);
-      setSectionName('');
-      refetchCategories();
+      const { createCategory } = await import('@/app/api/controllers/dashboard/menu');
+      const business = getJsonItemFromLocalStorage('business');
+      const payload = {
+        name: sectionName,
+        orderIndex: 0,
+      };
+
+      const response = await createCategory(business[0]?.businessId, payload);
+
+      if (response?.data?.isSuccessful) {
+        toast.success('Section created successfully');
+        setIsOpenCreateSection(false);
+        setSectionName('');
+        refetchCategories();
+      } else {
+        toast.error(response?.data?.error || 'Failed to create section');
+      }
     } catch (error) {
       console.error('Error creating section:', error);
       toast.error('Failed to create section');
@@ -834,6 +890,14 @@ const RestaurantMenu = () => {
   const handleDeleteMenuItem = async (itemId: string) => {
     try {
       const business = getJsonItemFromLocalStorage('business');
+      
+      if (!business || !business[0]?.businessId) {
+        toast.error('Business ID not found. Please refresh and try again.');
+        return;
+      }
+
+      console.log('Attempting to delete menu item:', { itemId, businessId: business[0]?.businessId });
+      
       const response = await deleteMenuItem(business[0]?.businessId, itemId);
 
       if (response?.data?.isSuccessful) {
@@ -843,12 +907,18 @@ const RestaurantMenu = () => {
           globalMenuItemsCache.delete(activeSubCategory);
           fetchMenuItems(activeSubCategory, true); // Force refresh
         }
+        // Close any open modals
+        setIsSingleItemModalOpen(false);
+        setIsItemDetailsModalOpen(false);
       } else {
-        toast.error(response?.data?.error || 'Failed to delete menu item');
+        const errorMessage = response?.data?.error || response?.data?.message || 'Failed to delete menu item';
+        console.error('Delete failed with response:', response);
+        toast.error(errorMessage);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting menu item:', error);
-      toast.error('Failed to delete menu item');
+      const errorMessage = error?.response?.data?.message || error?.message || 'Failed to delete menu item';
+      toast.error(errorMessage);
     }
   };
 
@@ -869,7 +939,8 @@ const RestaurantMenu = () => {
           }
         }
         if (activeSubCategory) {
-          fetchMenuItems(activeSubCategory);
+          globalMenuItemsCache.delete(activeSubCategory);
+          fetchMenuItems(activeSubCategory, true);
         }
       } else {
         toast.error(response?.data?.error || 'Failed to delete variety');
@@ -887,6 +958,24 @@ const RestaurantMenu = () => {
       globalMenuItemsCache.delete(activeSubCategory);
       fetchMenuItems(activeSubCategory, true); // Force refresh
     }
+  };
+
+  const handleEditItem = (item: any) => {
+    // Close any open modals
+    setIsCreateVarietyModalOpen(false);
+    setIsItemDetailsModalOpen(false);
+    setIsSingleItemModalOpen(false);
+    setIsSingleVarietyModalOpen(false);
+    // Set the selected item and open edit modal
+    setSelectedItem(item);
+    setIsOpenEditItem(true);
+  };
+
+  const handleDeleteItemFromVarietyModal = async (itemId: string) => {
+    // Close the create variety modal first
+    setIsCreateVarietyModalOpen(false);
+    // Then call the regular delete function
+    await handleDeleteMenuItem(itemId);
   };
 
   const handleNavigateItem = (direction: 'prev' | 'next') => {
@@ -923,14 +1012,14 @@ const RestaurantMenu = () => {
     });
   }, [menuItems, searchQuery]);
 
-  const removeMenu = async (categoryId: string) => {
-    if (!categoryId) return;
+  const removeMenu = async (menuId: string) => {
+    if (!menuId) return;
     setLoading(true);
     try {
       const { deleteMenu } = await import('@/app/api/controllers/dashboard/menu');
       const business = getJsonItemFromLocalStorage('business');
 
-      const response = await deleteMenu(business[0]?.businessId, categoryId);
+      const response = await deleteMenu(business[0]?.businessId, menuId);
 
       if (response?.data?.isSuccessful) {
         toast.success('Menu deleted successfully');
@@ -943,6 +1032,31 @@ const RestaurantMenu = () => {
     } catch (error) {
       console.error('Error deleting menu:', error);
       toast.error('Failed to delete menu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeCategory = async (categoryId: string) => {
+    if (!categoryId) return;
+    setLoading(true);
+    try {
+      const { deleteCategory } = await import('@/app/api/controllers/dashboard/menu');
+      const business = getJsonItemFromLocalStorage('business');
+
+      const response = await deleteCategory(business[0]?.businessId, categoryId);
+
+      if (response?.data?.isSuccessful) {
+        toast.success('Category deleted successfully');
+        refetchCategories();
+        setIsOpenDeleteMenu(false);
+        setIsOpenViewMenu(true);
+      } else {
+        toast.error(response?.data?.error || 'Failed to delete category');
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast.error('Failed to delete category');
     } finally {
       setLoading(false);
     }
@@ -962,6 +1076,7 @@ const RestaurantMenu = () => {
         handleExportCSV={handleExportCSV}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
+        categories={categories}
       />
 
       <CategoryTabs
@@ -1039,6 +1154,8 @@ const RestaurantMenu = () => {
         loading={loading}
         handleCreateVariety={handleCreateVariety}
         backToItemDetails={backToItemDetails}
+        onEditItem={handleEditItem}
+        onDeleteItem={handleDeleteItemFromVarietyModal}
       />
 
       <ItemDetailsModal
@@ -1048,6 +1165,10 @@ const RestaurantMenu = () => {
         openCreateVarietyModal={openCreateVarietyModal}
         varietiesLoading={varietiesLoading}
         handleVarietyClick={handleVarietyClick}
+        onEditItem={handleEditItem}
+        onDeleteItem={handleDeleteMenuItem}
+        onEditVariety={handleEditVariety}
+        onDeleteVariety={handleDeleteVariety}
       />
 
       <SingleItemModal
@@ -1059,6 +1180,9 @@ const RestaurantMenu = () => {
         categories={categories}
         menuSections={menuSections}
         onItemUpdated={handleItemUpdated}
+        onEditVariety={handleEditVariety}
+        onDeleteVariety={handleDeleteVariety}
+        handleVarietyClick={handleVarietyClick}
       />
 
       <SingleVarietyModal
@@ -1068,6 +1192,16 @@ const RestaurantMenu = () => {
         selectedItem={selectedItem}
         backToItemDetailsFromVariety={backToItemDetailsFromVariety}
         onDeleteVariety={handleDeleteVariety}
+        onEditVariety={handleEditVariety}
+        onCreateVariety={openCreateVarietyModal}
+      />
+
+      <EditVarietyModal
+        isOpen={isEditVarietyModalOpen}
+        onOpenChange={setIsEditVarietyModalOpen}
+        selectedVariety={selectedVariety}
+        selectedItem={selectedItem}
+        onVarietyUpdated={handleVarietyUpdated}
       />
 
       <CreateMenuModal
@@ -1103,6 +1237,15 @@ const RestaurantMenu = () => {
         closeEditModal={closeEditModal}
       />
 
+      <EditItemModal
+        isOpen={isOpenEditItem}
+        onOpenChange={setIsOpenEditItem}
+        selectedItem={selectedItem}
+        categories={categories}
+        menuSections={menuSections}
+        onItemUpdated={handleItemUpdated}
+      />
+
       <ViewMenuModal
         isOpen={isOpenViewMenu}
         onOpenChange={setIsOpenViewMenu}
@@ -1123,9 +1266,18 @@ const RestaurantMenu = () => {
           setIsOpenDeleteMenu(false);
           setIsOpenViewMenu(true);
         }}
-        handleDelete={() => selectedMenu && removeMenu(selectedMenu.id)}
+        handleDelete={() => {
+          if (selectedMenu) {
+            // Check if it's a category (has categoryId) or menu (has id but not categoryId)
+            if (selectedMenu.categoryId) {
+              return removeCategory(selectedMenu.categoryId);
+            } else {
+              return removeMenu(selectedMenu.id);
+            }
+          }
+        }}
         isLoading={loading}
-        text="Are you sure you want to delete this menu?"
+        text={selectedMenu?.categoryId ? "Are you sure you want to delete this category?" : "Are you sure you want to delete this menu?"}
       />
 
       <CreateSectionModal

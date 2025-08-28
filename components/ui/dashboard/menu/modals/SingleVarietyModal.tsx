@@ -1,6 +1,6 @@
 
 import { Modal, ModalContent, ModalBody } from '@nextui-org/react';
-import { ArrowLeft, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Plus } from 'lucide-react';
 import { useState } from 'react';
 
 interface SingleVarietyModalProps {
@@ -11,6 +11,7 @@ interface SingleVarietyModalProps {
   backToItemDetailsFromVariety: () => void;
   onDeleteVariety?: (varietyId: string) => Promise<void>;
   onEditVariety?: (variety: any) => void;
+  onCreateVariety?: (item: any) => void;
 }
 
 const SingleVarietyModal = ({
@@ -21,6 +22,7 @@ const SingleVarietyModal = ({
   backToItemDetailsFromVariety,
   onDeleteVariety,
   onEditVariety,
+  onCreateVariety,
 }: SingleVarietyModalProps) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -58,6 +60,15 @@ const SingleVarietyModal = ({
                   <span>Back to item details</span>
                 </button>
                 <div className="flex items-center gap-2">
+                  {onCreateVariety && (
+                    <button
+                      onClick={() => onCreateVariety(selectedItem)}
+                      className="text-gray-700 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Create Variety</span>
+                    </button>
+                  )}
                   {onEditVariety && (
                     <button 
                       onClick={() => onEditVariety(selectedVariety)}

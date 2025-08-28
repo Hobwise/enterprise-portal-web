@@ -1,37 +1,48 @@
 
 import { Download, Search, X } from 'lucide-react';
+import { Chip } from '@nextui-org/react';
 
 interface MenuHeaderProps {
-  menuSections: any[];
-  menuItems: any[] | null;
-  activeSubCategory: string;
+  menuSections?: any[];  // Keep for backward compatibility but not used
+  menuItems?: any[] | null;  // Keep for backward compatibility but not used
+  activeSubCategory?: string;  // Keep for backward compatibility but not used
   isExporting: boolean;
   handleExportCSV: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
+  categories?: any[];
 }
 
 const MenuHeader = ({
-  menuSections,
-  menuItems,
-  activeSubCategory,
   isExporting,
   handleExportCSV,
   searchQuery,
   onSearchChange,
+  categories = [],
 }: MenuHeaderProps) => {
   return (
     <div className="bg-white py-4 ">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-row flex-wrap items-center justify-between">
         <div>
-          {/* <h1 className="text-3xl font-semibold font-satoshi">Menu</h1>
-          <p className="text-gray-500 text-sm font-satoshi mt-1">
-            {menuSections.length > 0
-              ? `Showing ${menuItems?.length || 0} items in ${
-                  menuSections.find((s) => s.id === activeSubCategory)?.name || 'menu'
-                }`
-              : 'Showing all menu items'}
-          </p> */}
+          <div className="text-[24px] leading-8 font-semibold">
+            {categories.length > 0 ? (
+              <div className="flex items-center">
+                <span>Menu</span>
+                <Chip
+                  classNames={{
+                    base: `ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
+                  }}
+                >
+                  {categories.length}
+                </Chip>
+              </div>
+            ) : (
+              <span>Menu</span>
+            )}
+          </div>
+          <p className="text-sm text-grey600">
+            Showing all menu items
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
