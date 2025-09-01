@@ -1,5 +1,5 @@
 
-import { Download, Search, X } from 'lucide-react';
+import { Download, Search, X, Eye } from 'lucide-react';
 import { Chip } from '@nextui-org/react';
 
 interface MenuHeaderProps {
@@ -11,6 +11,7 @@ interface MenuHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   categories?: any[];
+  onPreviewClick?: () => void;
 }
 
 const MenuHeader = ({
@@ -19,6 +20,7 @@ const MenuHeader = ({
   searchQuery,
   onSearchChange,
   categories = [],
+  onPreviewClick,
 }: MenuHeaderProps) => {
   return (
     <div className="bg-white py-4 ">
@@ -71,6 +73,15 @@ const MenuHeader = ({
             <Download className="w-4 h-4" />
             <span>{isExporting ? 'Exporting...' : 'Export CSV'}</span>
           </button>
+          {onPreviewClick && (
+            <button
+              onClick={onPreviewClick}
+              className="text-white bg-primaryColor flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-90 font-satoshi text-base"
+            >
+              <Eye className="w-4 h-4" />
+              <span>Preview Menu</span>
+            </button>
+          )}
         </div>
       </div>
     </div>

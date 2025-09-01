@@ -121,19 +121,64 @@ const SingleVarietyModal = ({
                         minimumFractionDigits: 2,
                       })}
                     </p>
-                    <div className="space-y-2 text-sm">
-                      <p className="text-gray-600">
-                        <span className="font-medium">Unit:</span>{' '}
-                        {selectedVariety?.unit}
-                      </p>
-                      <p className="text-gray-600">
-                        <span className="font-medium">Main Item:</span>{' '}
-                        {selectedItem?.itemName}
-                      </p>
-                      <p className="text-gray-600">
-                        <span className="font-medium">Category:</span>{' '}
-                        {selectedItem?.menuName}
-                      </p>
+                    {/* Availability Status */}
+                    {selectedVariety?.isAvailable === false && (
+                      <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <span className="text-red-600 font-medium">⚠️ Out of Stock</span>
+                      </div>
+                    )}
+                    
+                    <div className="space-y-3 text-sm">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="font-medium text-gray-700">Unit:</span>
+                          <p className="text-gray-600 mt-1">{selectedVariety?.unit}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-700">Availability:</span>
+                          <p className={`mt-1 ${selectedVariety?.isAvailable !== false ? 'text-green-600' : 'text-red-600'}`}>
+                            {selectedVariety?.isAvailable !== false ? 'Available' : 'Out of Stock'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <span className="font-medium text-gray-700">Main Item:</span>
+                          <p className="text-gray-600 mt-1">{selectedItem?.itemName || selectedItem?.name}</p>
+                        </div>
+                        <div>
+                          <span className="font-medium text-gray-700">Category:</span>
+                          <p className="text-gray-600 mt-1">{selectedItem?.menuName || selectedItem?.category}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Additional Details */}
+                      {(selectedVariety?.waitingTimeMinutes || selectedVariety?.packingCost || selectedItem?.waitingTimeMinutes || selectedItem?.packingCost) && (
+                        <div className="pt-3 border-t">
+                          <h4 className="font-medium text-gray-700 mb-2">Additional Information</h4>
+                          <div className="grid grid-cols-2 gap-4">
+                            {(selectedVariety?.waitingTimeMinutes || selectedItem?.waitingTimeMinutes) && (
+                              <div>
+                                <span className="font-medium text-gray-700">Waiting Time:</span>
+                                <p className="text-gray-600 mt-1">
+                                  {selectedVariety?.waitingTimeMinutes || selectedItem?.waitingTimeMinutes} minutes
+                                </p>
+                              </div>
+                            )}
+                            {(selectedVariety?.packingCost || selectedItem?.packingCost) && (
+                              <div>
+                                <span className="font-medium text-gray-700">Packing Cost:</span>
+                                <p className="text-gray-600 mt-1">
+                                  ₦{(selectedVariety?.packingCost || selectedItem?.packingCost)?.toLocaleString('en-NG', {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

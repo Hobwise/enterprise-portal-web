@@ -2,8 +2,10 @@
 "use client"
 import React, { useState, useEffect } from 'react';
 import { useDisclosure } from '@nextui-org/react';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useMenuCategories from '@/hooks/cachedEndpoints/useMenuCategories';
+import { useGlobalContext } from '@/hooks/globalProvider';
 import {
   getMenuItems,
   createMenuVariety,
@@ -36,19 +38,38 @@ import CreateSectionModal from '@/components/ui/dashboard/menu/modals/CreateSect
 import EditSectionModal from '@/components/ui/dashboard/menu/modals/EditSectionModal';
 import EditVarietyModal from '@/components/ui/dashboard/menu/modals/EditVarietyModal';
 import DeleteModal from '@/components/ui/deleteModal';
+import AddItemChoiceModal from '@/components/ui/dashboard/menu/modals/AddItemChoiceModal';
+import AddMultipleItemsModal from '@/components/ui/dashboard/menu/modals/AddMultipleItemsModal';
+import CustomPagination from '@/components/ui/dashboard/settings/BillingsComponents/CustomPagination';
 
 // Global cache for menu items to persist across category switches
-const globalMenuItemsCache = new Map<string, { items: any[], timestamp: number }>();
+const globalMenuItemsCache = new Map<string, { 
+  items: any[], 
+  timestamp: number,
+  totalPages: number,
+  totalItems: number,
+  currentPage: number 
+}>();
 const GLOBAL_CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
 const RestaurantMenu = () => {
+  const router = useRouter();
+  const { 
+    setCurrentMenuItems, 
+    setCurrentCategory, 
+    setCurrentSection, 
+    setCurrentSearchQuery 
+  } = useGlobalContext();
+  
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('');
   const [menuSections, setMenuSections] = useState<any[]>([]);
   const [menuItems, setMenuItems] = useState<any[] | null>(null);
   const [loadingItems, setLoadingItems] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 50;
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const pageSize = 20; // Reduced for better UX
   const [hasInitialized, setHasInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -64,6 +85,8 @@ const RestaurantMenu = () => {
 
   // Modal states for menu items
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
+  const [isAddItemChoiceModalOpen, setIsAddItemChoiceModalOpen] = useState(false);
+  const [isAddMultipleItemsModalOpen, setIsAddMultipleItemsModalOpen] = useState(false);
   const [isCreateVarietyModalOpen, setIsCreateVarietyModalOpen] = useState(false);
   const [isItemDetailsModalOpen, setIsItemDetailsModalOpen] = useState(false);
   const [isSingleItemModalOpen, setIsSingleItemModalOpen] = useState(false);
@@ -136,6 +159,16 @@ const RestaurantMenu = () => {
   // Form states for section selection in menus
   const [selectedCreateSection, setSelectedCreateSection] = useState('');
   const [selectedEditSection, setSelectedEditSection] = useState('');
+
+  // Pre-fill active section when modal opens and clear when closed
+  useEffect(() => {
+    if (isOpen && activeCategory) {
+      setSelectedCreateSection(activeCategory);
+    } else if (!isOpen) {
+      // Reset selection when modal closes for next time
+      setTimeout(() => setSelectedCreateSection(''), 100);
+    }
+  }, [isOpen, activeCategory]);
 
   // Fetch categories from API
   const { data: categoriesData, isLoading: loadingCategories, refetch: refetchCategories } = useMenuCategories();
@@ -223,9 +256,12 @@ const RestaurantMenu = () => {
 
     // Check global cache first
     if (!forceRefresh) {
-      const cached = globalMenuItemsCache.get(menuSectionId);
+      const cacheKey = `${menuSectionId}_page_${currentPage}`;
+      const cached = globalMenuItemsCache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
         setMenuItems(cached.items);
+        setTotalPages(cached.totalPages);
+        setTotalItems(cached.totalItems);
         setLoadingItems(false);
         return;
       }
@@ -245,12 +281,33 @@ const RestaurantMenu = () => {
           category: item.menuName,
           section: activeCategory,
           varieties: item.varieties || [],
+          isAvailable: item.isAvailable,
+          waitingTimeMinutes: item.waitingTimeMinutes,
+          packingCost: item.packingCost,
+          menuID: item.menuID,
+          itemName: item.itemName,
+          itemDescription: item.itemDescription,
+          imageReference: item.imageReference,
+          currency: item.currency,
+          hasVariety: item.hasVariety,
         }));
         
-        // Update global cache
-        globalMenuItemsCache.set(menuSectionId, {
+        // Extract pagination metadata
+        const pagination = response.data.data?.pagination;
+        const totalPagesFromAPI = pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / pageSize);
+        const totalItemsFromAPI = pagination?.totalItems || response.data.data?.totalCount || items.length;
+        
+        setTotalPages(totalPagesFromAPI);
+        setTotalItems(totalItemsFromAPI);
+
+        // Update global cache with pagination info
+        const cacheKey = `${menuSectionId}_page_${currentPage}`;
+        globalMenuItemsCache.set(cacheKey, {
           items: transformedItems,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          totalPages: totalPagesFromAPI,
+          totalItems: totalItemsFromAPI,
+          currentPage: currentPage
         });
         
         // Also update preloaded sections for compatibility
@@ -318,18 +375,27 @@ const RestaurantMenu = () => {
         setActiveSubCategory(firstSection.id);
 
         if (firstSection.totalCount > 0) {
-          // Check global cache first
-          const cached = globalMenuItemsCache.get(firstSection.id);
+          // Reset pagination for new section
+          setCurrentPage(1);
+          setTotalPages(1);
+          setTotalItems(0);
+          
+          // Check global cache first with page info
+          const cacheKey = `${firstSection.id}_page_1`;
+          const cached = globalMenuItemsCache.get(cacheKey);
           if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
             setMenuItems(cached.items);
+            setTotalPages(cached.totalPages);
+            setTotalItems(cached.totalItems);
           } else {
             // Only set to null if we're actually going to load
             setMenuItems(null);
-            setCurrentPage(1);
             fetchMenuItems(firstSection.id);
           }
         } else {
           setMenuItems([]);
+          setTotalPages(1);
+          setTotalItems(0);
         }
 
         // Background preload remaining sections
@@ -542,6 +608,12 @@ const RestaurantMenu = () => {
     // Refresh menu items
     if (activeSubCategory) {
       globalMenuItemsCache.delete(activeSubCategory);
+      // Also invalidate preloaded sections cache
+      setPreloadedSections(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(activeSubCategory);
+        return newMap;
+      });
       fetchMenuItems(activeSubCategory, true);
     }
     // Close edit modal and go back to item details
@@ -581,6 +653,12 @@ const RestaurantMenu = () => {
         if (activeSubCategory) {
           // Invalidate cache and force refresh
           globalMenuItemsCache.delete(activeSubCategory);
+          // Also invalidate preloaded sections cache
+          setPreloadedSections(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(activeSubCategory);
+            return newMap;
+          });
           fetchMenuItems(activeSubCategory, true);
         }
       } else {
@@ -635,6 +713,12 @@ const RestaurantMenu = () => {
         if (activeSubCategory) {
           // Invalidate cache and force refresh
           globalMenuItemsCache.delete(activeSubCategory);
+          // Also invalidate preloaded sections cache
+          setPreloadedSections(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(activeSubCategory);
+            return newMap;
+          });
           fetchMenuItems(activeSubCategory, true);
         }
       } else {
@@ -699,6 +783,16 @@ const RestaurantMenu = () => {
         setPackingCost(undefined);
         setEstimatedTime(undefined);
         setSelectedCreateSection('');
+        
+        // Invalidate cache for the section where menu was created
+        if (activeCategory) {
+          globalMenuItemsCache.delete(activeCategory);
+          setPreloadedSections(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(activeCategory);
+            return newMap;
+          });
+        }
       } else {
         toast.error(response?.data?.error || 'Failed to create menu');
       }
@@ -848,6 +942,12 @@ const RestaurantMenu = () => {
         if (activeSubCategory) {
           // Invalidate cache for this section
           globalMenuItemsCache.delete(activeSubCategory);
+          // Also invalidate preloaded sections cache
+          setPreloadedSections(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(activeSubCategory);
+            return newMap;
+          });
           fetchMenuItems(activeSubCategory, true); // Force refresh
         }
         // Close any open modals
@@ -883,6 +983,12 @@ const RestaurantMenu = () => {
         }
         if (activeSubCategory) {
           globalMenuItemsCache.delete(activeSubCategory);
+          // Also invalidate preloaded sections cache
+          setPreloadedSections(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(activeSubCategory);
+            return newMap;
+          });
           fetchMenuItems(activeSubCategory, true);
         }
       } else {
@@ -894,13 +1000,51 @@ const RestaurantMenu = () => {
     }
   };
 
-  const handleItemUpdated = () => {
+  const handleItemUpdated = (originalSectionId?: string) => {
     // Refresh current menu items after edit
     if (activeSubCategory) {
-      // Invalidate cache for this section
-      globalMenuItemsCache.delete(activeSubCategory);
+      // Clear all cached pages for current section
+      const keysToDelete: string[] = [];
+      globalMenuItemsCache.forEach((_, key) => {
+        if (key.startsWith(`${activeSubCategory}_page_`)) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+      
       fetchMenuItems(activeSubCategory, true); // Force refresh
     }
+    
+    // If item was moved from another section, invalidate that section's cache too
+    if (originalSectionId && originalSectionId !== activeSubCategory) {
+      const keysToDelete: string[] = [];
+      globalMenuItemsCache.forEach((_, key) => {
+        if (key.startsWith(`${originalSectionId}_page_`)) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+      
+      // Also invalidate preloaded sections cache
+      setPreloadedSections(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(originalSectionId);
+        return newMap;
+      });
+    }
+    
+    // Also invalidate all sections to be safe for item movements
+    menuSections.forEach(section => {
+      if (section.id !== activeSubCategory) {
+        const keysToDelete: string[] = [];
+        globalMenuItemsCache.forEach((_, key) => {
+          if (key.startsWith(`${section.id}_page_`)) {
+            keysToDelete.push(key);
+          }
+        });
+        keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+      }
+    });
   };
 
   const handleEditItem = (item: any) => {
@@ -939,6 +1083,92 @@ const RestaurantMenu = () => {
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
+    // Reset pagination when searching
+    if (value.trim() === '') {
+      // If clearing search, reset to page 1
+      setCurrentPage(1);
+      if (activeSubCategory) {
+        fetchMenuItems(activeSubCategory, false);
+      }
+    }
+  };
+
+  const handleSingleItemChoice = () => {
+    setIsAddItemChoiceModalOpen(false);
+    setIsAddItemModalOpen(true);
+  };
+
+  const handleMultipleItemChoice = () => {
+    setIsAddItemChoiceModalOpen(false);
+    setIsAddMultipleItemsModalOpen(true);
+  };
+
+  const handleMultipleItemsSuccess = () => {
+    // Refresh menu items after successful upload
+    if (activeSubCategory) {
+      // Clear all cached pages for this section
+      const keysToDelete: string[] = [];
+      globalMenuItemsCache.forEach((_, key) => {
+        if (key.startsWith(`${activeSubCategory}_page_`)) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+      
+      setPreloadedSections(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(activeSubCategory);
+        return newMap;
+      });
+      
+      // Reset to page 1 and fetch
+      setCurrentPage(1);
+      fetchMenuItems(activeSubCategory, true);
+    }
+  };
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    if (activeSubCategory) {
+      fetchMenuItems(activeSubCategory, false);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      handlePageChange(currentPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      handlePageChange(currentPage - 1);
+    }
+  };
+
+  const handlePreviewClick = () => {
+    // Get current category and section names
+    const currentCategoryData = categories.find(c => c.categoryId === activeCategory);
+    const currentSectionData = menuSections.find(s => s.id === activeSubCategory);
+    
+    // Set the current menu state in global context
+    setCurrentMenuItems(filteredMenuItems || []);
+    setCurrentCategory(currentCategoryData?.categoryName || '');
+    setCurrentSection(currentSectionData?.name || '');
+    setCurrentSearchQuery(searchQuery);
+    
+    // Store in sessionStorage for persistence
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('previewMenuState', JSON.stringify({
+        items: filteredMenuItems || [],
+        category: currentCategoryData?.categoryName || '',
+        section: currentSectionData?.name || '',
+        searchQuery: searchQuery
+      }));
+    }
+    
+    router.push('/dashboard/menu/preview-menu');
   };
 
   // Filter menu items based on search query
@@ -1020,6 +1250,7 @@ const RestaurantMenu = () => {
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         categories={categories}
+        onPreviewClick={handlePreviewClick}
       />
 
       <CategoryTabs
@@ -1047,9 +1278,21 @@ const RestaurantMenu = () => {
         menuSections={menuSections}
         onOpen={onOpen}
         setIsAddItemModalOpen={setIsAddItemModalOpen}
+        setIsAddItemChoiceModalOpen={setIsAddItemChoiceModalOpen}
         handleItemClick={handleItemClick}
         searchQuery={searchQuery}
       />
+
+      {/* Pagination */}
+      {menuItems && menuItems.length > 0 && totalPages > 1 && !searchQuery && (
+        <CustomPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          onNext={handleNextPage}
+          onPrevious={handlePreviousPage}
+        />
+      )}
 
       <AddItemModal
         isOpen={isAddItemModalOpen}
@@ -1233,6 +1476,19 @@ const RestaurantMenu = () => {
         handleUpdateSection={handleUpdateSection}
         loading={loading}
         handleCancelEditSection={handleCancelEditSection}
+      />
+
+      <AddItemChoiceModal
+        isOpen={isAddItemChoiceModalOpen}
+        onOpenChange={setIsAddItemChoiceModalOpen}
+        onSingleItemChoice={handleSingleItemChoice}
+        onMultipleItemChoice={handleMultipleItemChoice}
+      />
+
+      <AddMultipleItemsModal
+        isOpen={isAddMultipleItemsModalOpen}
+        onOpenChange={setIsAddMultipleItemsModalOpen}
+        onSuccess={handleMultipleItemsSuccess}
       />
     </div>
   );

@@ -24,6 +24,37 @@ interface GlobalContextType {
   toggleModalEdit: () => void;
   toggleModalDeleteVariety: () => void;
   toggleModalEditVariety: () => void;
+  currentMenuItems: any[] | null;
+  setCurrentMenuItems: (items: any[] | null) => void;
+  currentCategory: string;
+  setCurrentCategory: (category: string) => void;
+  currentSection: string;
+  setCurrentSection: (section: string) => void;
+  currentSearchQuery: string;
+  setCurrentSearchQuery: (query: string) => void;
+  // Preview-related properties
+  activeTile: string;
+  setActiveTile?: (tile: string) => void;
+  handleListItemClick?: (column: string) => void;
+  isSelectedPreview: boolean;
+  setIsSelectedPreview: (value: boolean) => void;
+  selectedImage: string;
+  setSelectedImage: (image: string) => void;
+  backgroundColor: string;
+  setBackgroundColor: (color: string) => void;
+  imageReference: string;
+  setImageReference: (reference: string) => void;
+  selectedTextColor: string;
+  setSelectedTextColor: (color: string) => void;
+  fetchMenuConfig?: () => Promise<void>;
+  userData?: any;
+  setUserData?: (data: any) => void;
+  loginDetails?: any;
+  setLoginDetails?: (details: any) => void;
+  expireTime?: any;
+  setExpireTime?: (time: any) => void;
+  businessProfileNavigate?: number;
+  setBusinessProfileNavigate?: (value: number) => void;
 }
 
 const AppContext = React.createContext<GlobalContextType | undefined>(undefined);
@@ -65,6 +96,30 @@ const AppProvider = ({ children }: any) => {
   const [loginDetails, setLoginDetails] = useState(null);
 
   const [isOpenEdit, setIsOpenEdit] = useState(false);
+  
+  // Current menu state for preview - Initialize from sessionStorage if available
+  const getInitialMenuState = () => {
+    if (typeof window !== 'undefined') {
+      const savedState = sessionStorage.getItem('previewMenuState');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        return {
+          items: parsedState.items || null,
+          category: parsedState.category || '',
+          section: parsedState.section || '',
+          searchQuery: parsedState.searchQuery || ''
+        };
+      }
+    }
+    return { items: null, category: '', section: '', searchQuery: '' };
+  };
+  
+  const initialState = getInitialMenuState();
+  const [currentMenuItems, setCurrentMenuItems] = useState<any[] | null>(initialState.items);
+  const [currentCategory, setCurrentCategory] = useState<string>(initialState.category);
+  const [currentSection, setCurrentSection] = useState<string>(initialState.section);
+  const [currentSearchQuery, setCurrentSearchQuery] = useState<string>(initialState.searchQuery);
+  
   const toggleModalDelete = () => {
     setIsOpenDelete(!isOpenDelete);
   };
@@ -141,6 +196,14 @@ const AppProvider = ({ children }: any) => {
         setTableStatus,
         menuIdTable,
         setMenuIdTable,
+        currentMenuItems,
+        setCurrentMenuItems,
+        currentCategory,
+        setCurrentCategory,
+        currentSection,
+        setCurrentSection,
+        currentSearchQuery,
+        setCurrentSearchQuery,
       }}
     >
       {children}

@@ -193,9 +193,39 @@ const ItemDetailsModal = ({
                             wrapper: "group-data-[selected=true]:bg-[#5F35D2]",
                           }}
                         />
-                        <span className={`text-sm ${isAvailable ? 'text-green-600' : 'text-gray-500'}`}>
-                          {isAvailable ? 'Available' : 'Not Available'}
+                        <span className={`text-sm ${isAvailable ? 'text-green-600' : 'text-red-500'}`}>
+                          {isAvailable ? 'Available' : 'Out of Stock'}
                         </span>
+                      </div>
+                      
+                      {/* Additional Details */}
+                      <div className="mt-4 pt-4 border-t space-y-3">
+                        {selectedItem.waitingTimeMinutes && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600 font-medium">Waiting Time:</span>
+                            <span className="text-gray-700">
+                              {selectedItem.waitingTimeMinutes} minutes
+                            </span>
+                          </div>
+                        )}
+                        {selectedItem.packingCost && selectedItem.packingCost > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600 font-medium">Packing Cost:</span>
+                            <span className="text-gray-700">
+                              ₦{selectedItem.packingCost.toLocaleString('en-NG', {
+                                minimumFractionDigits: 2,
+                              })}
+                            </span>
+                          </div>
+                        )}
+                        {selectedItem.varieties && selectedItem.varieties.length > 0 && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-600 font-medium">Varieties:</span>
+                            <span className="text-gray-700">
+                              {selectedItem.varieties.length} available
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -235,7 +265,14 @@ const ItemDetailsModal = ({
                               className="flex-1 cursor-pointer"
                               onClick={() => handleVarietyClick(variety)}
                             >
-                              <h3 className="font-semibold text-gray-700">{variety.unit || variety.name}</h3>
+                              <div className="flex items-center justify-between">
+                                <h3 className="font-semibold text-gray-700">{variety.unit || variety.name}</h3>
+                                {variety.isAvailable === false && (
+                                  <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
+                                    Out of Stock
+                                  </span>
+                                )}
+                              </div>
                               <p className="text-sm text-gray-700 mt-1">
                                 {variety.description}
                               </p>
@@ -248,6 +285,16 @@ const ItemDetailsModal = ({
                                   minimumFractionDigits: 2,
                                 })}
                               </p>
+                              {(variety.waitingTimeMinutes || variety.packingCost) && (
+                                <div className="flex gap-4 mt-2 text-xs text-gray-600">
+                                  {variety.waitingTimeMinutes && (
+                                    <span>⏱️ {variety.waitingTimeMinutes} min</span>
+                                  )}
+                                  {variety.packingCost && variety.packingCost > 0 && (
+                                    <span>📦 ₦{variety.packingCost.toLocaleString('en-NG')}</span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               {onEditVariety && (

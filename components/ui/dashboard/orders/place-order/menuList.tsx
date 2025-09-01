@@ -2,10 +2,8 @@
 import { getOrder } from "@/app/api/controllers/dashboard/orders";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
-import Error from "@/components/error";
-import useAllMenuData from "@/hooks/cachedEndpoints/useAllMenuData";
+import useMenuCategories from "@/hooks/cachedEndpoints/useMenuCategories";
 import { useGlobalContext } from "@/hooks/globalProvider";
-import usePagination from "@/hooks/usePagination";
 import {
   clearItemLocalStorage,
   formatPrice,
@@ -13,7 +11,6 @@ import {
 } from "@/lib/utils";
 import {
   Button,
-  Chip,
   Divider,
   Spacer,
   useDisclosure,
@@ -21,21 +18,21 @@ import {
 import Image from "next/image";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa6";
-import { IoAddCircleOutline } from "react-icons/io5";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoSearchOutline } from "react-icons/io5";
-import noImage from "../../../../../public/assets/images/no-image.svg";
 import noMenu from "../../../../../public/assets/images/no-menu.png";
 import CheckoutModal from "./checkoutModal";
 import {
-  CheckIcon,
   SelectedSkeletonLoading,
 } from "./data";
-import Filters from "./filter";
 import ViewModal from "./view";
 import { useRouter } from "next/navigation";
 import { IoIosArrowRoundBack } from "react-icons/io";
-import SpinnerLoader from "../../menu/SpinnerLoader";
+import OrderCategoryTabs from "./OrderCategoryTabs";
+import OrderMenuToolbar from "./OrderMenuToolbar";
+import OrderItemsGrid from "./OrderItemsGrid";
+import CustomPagination from "../../settings/BillingsComponents/CustomPagination";
+import { getMenuItems } from "@/app/api/controllers/dashboard/menu";
 
 type Item = {
   id: string;
@@ -54,64 +51,175 @@ type Item = {
   packingCost: number;
   isPacked?: boolean;
 };
-type MenuItem = {
-  name: string;
-  items: Item[];
-};
 
-type MenuData = Array<MenuItem>;
+
+// Global cache for order menu items
+const globalOrderItemsCache = new Map<string, { 
+  items: any[], 
+  timestamp: number,
+  totalPages: number,
+  totalItems: number,
+  currentPage: number 
+}>();
+const GLOBAL_CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
 const MenuList = () => {
   const router = useRouter();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const { page, setPage, rowsPerPage, menuIdTable, setMenuIdTable } =
-    useGlobalContext();
+  const { 
+    setCurrentMenuItems, 
+    setCurrentCategory, 
+    setCurrentSection
+  } = useGlobalContext();
 
   const [order] = useState<any>(getJsonItemFromLocalStorage("order"));
-  const {
-    categories,
-    getCategoryDetails,
-    isLoadingInitial,
-    isLoadingAll,
-    isLoadingCurrent,
-    isError,
-    refetch,
-    allCategoryDetails
-  } = useAllMenuData(menuIdTable, page, rowsPerPage);
+  const { data: categoriesData, isLoading: loadingCategories } = useMenuCategories();
+  const [categories, setCategories] = useState<any[]>([]);
+  
+  // State management for hierarchy
+  const [activeCategory, setActiveCategory] = useState<string>('');
+  const [activeSubCategory, setActiveSubCategory] = useState<string>('');
+  const [menuSections, setMenuSections] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState<any[] | null>(null);
+  const [loadingItems, setLoadingItems] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [, setTotalItems] = useState(0);
+  const pageSize = 20;
+  const [hasInitialized, setHasInitialized] = useState(false);
+  
   const [filterValue, setFilterValue] = React.useState("");
 
-  const filteredItems = useMemo(() => {
-    return categories?.map((category) => {
-      const categoryDetails = getCategoryDetails(category.id);
-      return {
-        ...category,
-        items: categoryDetails.items?.filter(
-          (item) =>
-            item?.itemName?.toLowerCase().includes(filterValue) ||
-            String(item?.price)?.toLowerCase().includes(filterValue) ||
-            item?.menuName?.toLowerCase().includes(filterValue) ||
-            item?.itemDescription?.toLowerCase().includes(filterValue)
-        ) || [],
-        totalCount: categoryDetails.totalCount
-      };
-    });
-  }, [categories, getCategoryDetails, filterValue]);
-
+  // Transform categories data
   useEffect(() => {
-    if (categories && categories.length > 0 && !menuIdTable) {
-      setMenuIdTable(categories[0]?.id);
+    if (categoriesData) {
+      const transformedCategories = categoriesData.map(category => ({
+        categoryId: category.categoryId,
+        categoryName: category.categoryName,
+        orderIndex: category.orderIndex,
+        menus: category.menus || []
+      }));
+      setCategories(transformedCategories);
     }
-  }, [categories, menuIdTable, setMenuIdTable]);
+  }, [categoriesData]);
+
+  const filteredItems = useMemo(() => {
+    if (!menuItems) return [];
+    
+    return menuItems.filter(item =>
+      item?.itemName?.toLowerCase().includes(filterValue.toLowerCase()) ||
+      String(item?.price)?.toLowerCase().includes(filterValue.toLowerCase()) ||
+      item?.menuName?.toLowerCase().includes(filterValue.toLowerCase()) ||
+      item?.itemDescription?.toLowerCase().includes(filterValue.toLowerCase())
+    );
+  }, [menuItems, filterValue]);
+
+  // Initialize categories and sections
+  useEffect(() => {
+    if (categories && categories.length > 0 && !hasInitialized) {
+      const firstCategory = categories[0];
+      setActiveCategory(firstCategory.categoryId);
+      
+      // Set menu sections for first category
+      const allMenuSections = firstCategory.menus.flatMap((menu: any) => 
+        menu.menuSections || []
+      );
+      setMenuSections(allMenuSections);
+      
+      // Set first section as active
+      if (allMenuSections.length > 0) {
+        setActiveSubCategory(allMenuSections[0].id);
+      }
+      
+      setHasInitialized(true);
+    }
+  }, [categories, hasInitialized]);
+
+  // Load items when active section changes
+  useEffect(() => {
+    if (activeSubCategory && !loadingItems && hasInitialized) {
+      fetchMenuItems(activeSubCategory, currentPage);
+    }
+  }, [activeSubCategory, currentPage, hasInitialized]);
 
   const [loading, setLoading] = useState<Boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [isError, setIsError] = useState<boolean>(false);
 
-  const [value, setValue] = useState("");
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
 
   const [selectedMenu, setSelectedMenu] = useState<Item>();
   const [orderDetails, setOrderDetails] = useState([]);
+
+  // Business information
+  const businessInformation = getJsonItemFromLocalStorage('business');
+
+  // Fetch menu items for a section
+  const fetchMenuItems = async (sectionId: string, page: number = 1) => {
+    const cacheKey = `${sectionId}_page_${page}`;
+    
+    // Check cache first
+    const cached = globalOrderItemsCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
+      setMenuItems(cached.items);
+      setTotalPages(cached.totalPages);
+      setTotalItems(cached.totalItems);
+      setCurrentPage(cached.currentPage);
+      return;
+    }
+
+    setLoadingItems(true);
+    setIsError(false);
+    
+    try {
+      const response = await getMenuItems(
+        sectionId,
+        page,
+        pageSize
+      );
+
+      if (response?.data?.isSuccessful) {
+        const items = response.data.data.items || [];
+        const transformedItems = items.map((item: any) => ({
+          ...item,
+          id: item.id || item.itemID,
+          itemID: item.id || item.itemID,
+          isAvailable: item.isAvailable !== false,
+          count: 0,
+          packingCost: item.packingCost || 0,
+        }));
+
+        const paginationData = {
+          items: transformedItems,
+          timestamp: Date.now(),
+          totalPages: response.data.data.totalPages || 1,
+          totalItems: response.data.data.totalItems || transformedItems.length,
+          currentPage: page
+        };
+
+        // Cache the results
+        globalOrderItemsCache.set(cacheKey, paginationData);
+        
+        setMenuItems(transformedItems);
+        setTotalPages(paginationData.totalPages);
+        setTotalItems(paginationData.totalItems);
+        setCurrentPage(page);
+        
+        // Update global context
+        setCurrentMenuItems(transformedItems);
+      } else {
+        setIsError(true);
+        setMenuItems([]);
+      }
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+      setIsError(true);
+      setMenuItems([]);
+    } finally {
+      setLoadingItems(false);
+    }
+  };
 
   const getOrderDetails = async () => {
     setLoading(true);
@@ -119,59 +227,19 @@ const MenuList = () => {
 
     setLoading(false);
     if (response?.data?.isSuccessful) {
-      
-      const updatedArray = response?.data?.data.orderDetails.map((item) => {
+      const updatedArray = response?.data?.data.orderDetails.map((item: any) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
         
-        // Find the corresponding menu item to get the packing cost
-        let menuItem = null;
-        let foundInCategory = null;
-        
-        if (allCategoryDetails && Object.keys(allCategoryDetails).length > 0) {
-          // allCategoryDetails is an object with categoryId as keys
-          for (const categoryId in allCategoryDetails) {
-            const categoryDetail = allCategoryDetails[categoryId];
-            if (categoryDetail?.items) {
-              menuItem = categoryDetail.items.find((item) => item.id === itemID);
-              if (menuItem) {
-                foundInCategory = categoryId;
-                break;
-              }
-            }
-          }
-        }
-
-        // Determine the best packing cost with robust fallback
-        let finalPackingCost = 0;
-        
-        if (menuItem?.packingCost !== undefined && menuItem.packingCost !== null) {
-          // First priority: Use menu data packing cost
-          finalPackingCost = menuItem.packingCost;
-        } else if (item.packingCost !== undefined && item.packingCost !== null) {
-          // Second priority: Use order data packing cost
-          finalPackingCost = item.packingCost;
-        } else {
-          // Last resort: Try to find item in any category using getCategoryDetails
-          for (const category of categories || []) {
-            const categoryDetails = getCategoryDetails(category.id);
-            const fallbackItem = categoryDetails?.items?.find((cItem) => cItem.id === itemID);
-            if (fallbackItem?.packingCost !== undefined) {
-              finalPackingCost = fallbackItem.packingCost;
-              break;
-            }
-          }
-        }
-
         return {
           ...rest,
           id: itemID,
           price: unitPrice,
           count: quantity,
-          packingCost: finalPackingCost, // Always prioritize menu data for packing cost
+          packingCost: item.packingCost || 0,
         };
       });
       setOrderDetails(response?.data?.data);
-      setSelectedItems(() => updatedArray); // Use functional form for consistency
+      setSelectedItems(() => updatedArray);
 
       clearItemLocalStorage("order");
     } else if (response?.data?.error) {
@@ -183,25 +251,80 @@ const MenuList = () => {
     setIsOpenVariety(!isOpenVariety);
   };
 
-  const matchingObject = filteredItems?.find(
-    (category) => category?.id === menuIdTable
-  );
+  // Category and section handlers
+  const handleCategorySelect = async (categoryId: string) => {
+    setActiveCategory(categoryId);
+    setCurrentPage(1);
+    
+    // Find selected category and set its menu sections
+    const selectedCategory = categories.find(cat => cat.categoryId === categoryId);
+    
+    if (selectedCategory) {
+      const allMenuSections = selectedCategory.menus.flatMap((menu: any) => 
+        menu.menuSections || []
+      );
+      setMenuSections(allMenuSections);
+      
+      // Auto-select first section
+      if (allMenuSections.length > 0) {
+        setActiveSubCategory(allMenuSections[0].id);
+        await fetchMenuItems(allMenuSections[0].id, 1);
+      } else {
+        setMenuItems([]);
+        setActiveSubCategory('');
+        setIsError(false); // Not an error, just empty
+      }
+      
+      // Update global context
+      setCurrentCategory(selectedCategory.categoryName);
+    } else {
+      setIsError(true);
+    }
+  };
 
-  const matchingObjectArray = matchingObject?.items || [];
-  const {
-    bottomContent,
+  const handleMenuSectionSelect = async (sectionId: string) => {
+    setActiveSubCategory(sectionId);
+    setCurrentPage(1);
+    await fetchMenuItems(sectionId, 1);
+    
+    // Update global context
+    const selectedSection = menuSections.find(section => section.id === sectionId);
+    if (selectedSection) {
+      setCurrentSection(selectedSection.name);
+    }
+  };
 
-    // filterValue,
-  } = usePagination(matchingObject);
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleNext = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleRetry = () => {
+    if (activeSubCategory) {
+      fetchMenuItems(activeSubCategory, currentPage);
+    }
+  };
 
 
   const handleCardClick = useCallback((menuItem: Item, isItemPacked: boolean) => {
     setSelectedItems((prevItems: any) => {
-      const existingItem = prevItems.find((item) => item.id === menuItem.id);
+      const existingItem = prevItems.find((item: any) => item.id === menuItem.id);
       
       if (existingItem) {
         // Remove item if it exists
-        return prevItems.filter((item) => item.id !== menuItem.id);
+        return prevItems.filter((item: any) => item.id !== menuItem.id);
       } else {
         // Add new item
         return [
@@ -223,11 +346,11 @@ const MenuList = () => {
     e.stopPropagation(); // Prevent opening the variety modal
     
     setSelectedItems((prevItems: any) => {
-      const existingItem = prevItems.find((item) => item.id === menuItem.id);
+      const existingItem = prevItems.find((item: any) => item.id === menuItem.id);
       
       if (existingItem) {
         // If item exists, remove it (toggle off)
-        return prevItems.filter((item) => item.id !== menuItem.id);
+        return prevItems.filter((item: any) => item.id !== menuItem.id);
       } else {
         // Add new item with default options
         return [
@@ -251,8 +374,8 @@ const MenuList = () => {
     setSelectedItems((prevItems: any) => {
       // Filter out items with count <= 1 first, then decrement others
       const updatedItems = prevItems
-        .filter((item) => !(item.id === id && item.count <= 1))
-        .map((item) => 
+        .filter((item: any) => !(item.id === id && item.count <= 1))
+        .map((item: any) => 
           item.id === id 
             ? { ...item, count: Math.max(1, item.count - 1) }
             : item
@@ -290,28 +413,12 @@ const MenuList = () => {
       return acc + itemTotal + packingTotal;
     }, 0);
   };
-  const handleTabChange = (index) => {
-    setValue(index);
-  };
-
-  const handleTabClick = async (categoryName: string) => {
-    setPage(1);
-    const selectedCategory = categories?.find((item) => item.name === categoryName);
-    
-    if (!selectedCategory) return;
-    
-    const categoryId = selectedCategory.id;
-    
-    // Update current category (matches booking/menu page pattern)
-    setMenuIdTable(categoryId);
-    setValue(categoryName);
-  };
 
   useEffect(() => {
-    if (order?.id && categories && categories.length > 0 && allCategoryDetails && Object.keys(allCategoryDetails).length > 0) {
+    if (order?.id && categories && categories.length > 0) {
       getOrderDetails();
     }
-  }, [order?.id, categories, allCategoryDetails]);
+  }, [order?.id, categories]);
 
   const handlePackingCost = useCallback((itemId: string, isPacked: boolean) => {
     if (isUpdating) return; // Prevent concurrent updates
@@ -331,7 +438,7 @@ const MenuList = () => {
         // Only update packingCost if it's undefined or null
         // This preserves the original packingCost from when the item was added
         if (item.packingCost === undefined || item.packingCost === null) {
-          const menuItem = matchingObjectArray?.find(
+          const menuItem = menuItems?.find(
             (menu: Item) => menu.id === item.id
           );
           return {
@@ -344,7 +451,7 @@ const MenuList = () => {
       })
     );
     onOpen();
-  }, [isUpdating, matchingObjectArray, onOpen]);
+  }, [isUpdating, menuItems, onOpen]);
 
   return (
     <>
@@ -360,10 +467,10 @@ const MenuList = () => {
             </button>
           </div>
           <div className="text-[24px] leading-8 font-semibold">
-            <span>Place an order</span>
+            <span>Create Orders</span>
           </div>
           <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
-            Select items from the menu to place order
+            Showing all orders
           </p>
         </div>
         <div className="flex items-center justify-center gap-3">
@@ -377,7 +484,7 @@ const MenuList = () => {
                 const value = e.target.value;
                 if (value) {
                   setFilterValue(value);
-                  setPage(1);
+                  setCurrentPage(1);
                 } else {
                   setFilterValue("");
                 }
@@ -401,155 +508,78 @@ const MenuList = () => {
         </div>
       </div>
 
-      <section>
-        <Filters
-          menus={categories}
-          handleTabChange={handleTabChange}
-          handleTabClick={handleTabClick}
-          isLoading={isLoadingAll}
+      <section className="mt-6 flex flex-col xl:flex-row gap-6">
+          <div className="w-full">
+             {/* Category Tabs */}
+        <OrderCategoryTabs
+          loadingCategories={loadingCategories}
+          categories={categories}
+          activeCategory={activeCategory}
+          handleCategorySelect={handleCategorySelect}
         />
-        <article className="flex mt-6 gap-3">
-          <div className="xl:max-w-[65%] w-full">
-            {isLoadingInitial || (isLoadingCurrent && !matchingObjectArray) ? (
-              <SpinnerLoader />
-            ) : isError ? (
-              <Error imageWidth="w-16" onClick={() => refetch()} />
-            ) : matchingObjectArray.length === 0 && !isLoadingCurrent ? (
-              <div className="flex flex-col items-center justify-center py-10">
-                <Image
-                  className="w-[80px] h-[80px] mb-4"
-                  src={noMenu}
-                  alt="no menu items"
-                />
-                <p className="text-gray-500">No items in this category</p>
-              </div>
-            ) : matchingObjectArray.length === 0 && isLoadingCurrent ? (
-              <SpinnerLoader />
-            ) : (
-              <div className="grid w-full grid-cols-2 md:grid-cols-4 xl:grid-cols-5 gap-4">
-                {matchingObjectArray.map((menu: Item, index: number) => (
-                  <div
-                    title={menu?.isAvailable ? "Select item" : ""}
-                    onClick={() =>
-                      menu?.isAvailable ? toggleVarietyModal(menu) : null
-                    }
-                    onDoubleClick={() => {
-                      if (menu?.isAvailable && selectedItems.find((selected) => selected.id === menu.id)) {
-                        handleCardClick(menu, selectedItems.find((selected) => selected.id === menu.id)?.isPacked || false);
-                      }
-                    }}
-                    key={menu.id}
-                    className={`relative ${
-                      menu?.isAvailable && "cursor-pointer"
-                    }`}
-                  >
-                    {menu?.isAvailable === false && (
-                      <Chip
-                        className="capitalize absolute top-2 right-2"
-                        color={"danger"}
-                        size="sm"
-                        variant="bordered"
-                      >
-                        {"Out of stock"}
-                      </Chip>
-                    )}
-                    {selectedItems.find(
-                      (selected) => selected.id === menu.id
-                    ) && (
-                      <Chip
-                        className="absolute top-2 left-2"
-                        startContent={<CheckIcon size={18} />}
-                        variant="flat"
-                        classNames={{
-                          base: "bg-primaryColor text-white text-[12px]",
-                        }}
-                      >
-                        Selected
-                      </Chip>
-                    )}
-                    {selectedItems.some((item) =>
-                      menu.varieties?.some((variety: any) => variety.id === item.id)
-                    ) && (
-                      <Chip
-                        className="absolute top-2 left-2"
-                        startContent={<CheckIcon size={18} />}
-                        variant="flat"
-                        classNames={{
-                          base: "bg-primaryColor text-white text-[12px]",
-                        }}
-                      >
-                        Selected
-                      </Chip>
-                    )}
-
-                    <Image
-                      width={163.5}
-                      height={100.54}
-                      src={
-                        menu?.image
-                          ? `data:image/jpeg;base64,${menu?.image}`
-                          : noImage
-                      }
-                      alt={index + menu?.id}
-                      style={{
-                        objectFit: "cover",
-                      }}
-                      className="w-full md:h-[100.54px] h-[150px] rounded-lg border border-primaryGrey mb-2 bg-cover"
-                    />
-                    <div className="">
-                      <h3 className="text-[14px] font-[500]">
-                        {menu.itemName}
-                      </h3>
-                      <p className="text-gray-600 text-[13px] font-[400]">
-                        {formatPrice(menu.price)}
-                      </p>
-                    </div>
-                    
-                    {/* Quick Add Button */}
-                    {menu?.isAvailable && (
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        radius="full"
-                        className="absolute -bottom-1 right-2 bg-primaryColor h-5 min-w-4 w-5 text-white shadow-md hover:scale-110 transition-transform"
-                        onClick={(e) => handleQuickAdd(menu, e)}
-                        aria-label="Quick add to cart"
-                      >
-                        {/* {selectedItems.find((item) => item.id === menu.id) ? (
-                          <span className="text-xs font-bold">
-                            {selectedItems.find((item) => item.id === menu.id)?.count}
-                          </span>
-                        ) : ( */}
-                          <IoAddCircleOutline className="text-lg" />
-                        {/* // )} */}
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
+        
+        {/* Menu Sections Toolbar - only show if we have sections */}
+        {menuSections.length > 0 && (
+          <OrderMenuToolbar
+            menuSections={menuSections}
+            activeSubCategory={activeSubCategory}
+            handleMenuSectionSelect={handleMenuSectionSelect}
+          />
+        )}
+        <div className="flex mt-6 gap-3">
+          <div className=" w-full">
+            {/* Items Grid */}
+            <OrderItemsGrid
+              loadingItems={loadingItems}
+              menuItems={filteredItems}
+              selectedItems={selectedItems}
+              onItemClick={toggleVarietyModal}
+              onQuickAdd={handleQuickAdd}
+              searchQuery={filterValue}
+              isError={isError}
+              onRetry={handleRetry}
+            />
 
             <Spacer y={8} />
-            <div>{!isLoadingInitial && bottomContent}</div>
+            {/* Pagination */}
+            {!loadingItems && totalPages > 1 && (
+              <CustomPagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            )}
           </div>
-
-          <div className="hidden xl:block max-h-[360px] overflow-scroll bg-[#F7F6FA] p-4 rounded-lg flex-grow">
+        </div>
+          </div>
+          <article className="hidden xl:flex xl:flex-col p-4 rounded-lg w-[550px] h-full">
             {selectedItems.length > 0 ? (
               <>
-                <h2 className="font-[600] mx-2 mb-2">
-                  {selectedItems.reduce((total, item) => total + item.count, 0)} Item{selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? 's' : ''} selected
-                </h2>
-                <div className="rounded-lg border border-[#E4E7EC80] p-2 ">
+                {/* Business Name Header */}
+                <div className="mb-4">
+                  <h1 className="text-lg font-[700] text-gray-800">
+                    {businessInformation[0]?.businessName || 'Business Name'}
+                  </h1>
+                </div>
+                
+                {/* Cart Items - Scrollable */}
+                <div className="flex-1 overflow-y-auto">
+                  <h2 className="font-[600] mb-2">
+                    {selectedItems.reduce((total, item) => total + item.count, 0)} Item{selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? 's' : ''} selected
+                  </h2>
+                <div className="rounded-lg ">
                   {selectedItems?.map((item, index) => {
                     return (
                       <>
                         <div
                           key={item.id}
-                          className="flex py-3 justify-between cursor-pointer"
+                          className="flex py-3 justify-between items-center cursor-pointer"
                           onDoubleClick={() => handleCardClick(item, item.isPacked || false)}
                         >
                           <div className=" rounded-lg text-black  flex">
-                            <div>
+                            {/* <div>
                               <Image
                                 src={
                                   item?.image
@@ -562,15 +592,13 @@ const MenuList = () => {
                                 aria-label="uploaded image"
                                 alt="uploaded image(s)"
                               />
-                            </div>
-                            <div className="ml-3 flex flex-col text-sm justify-center">
-                              <p className="font-[600]">{item.menuName}</p>
+                            </div> */}
+                            <div className="ml-3 flex flex-col w-24 text-sm justify-center">
+                              <p className="font-[500] text-base text-[#344054]">{item.menuName}</p>
                               <Spacer y={1} />
-                              <p className="text-grey600 ">{item.itemName}</p>
+                              <p className="text-[#475367] text-sm ">{item.itemName}</p>
 
-                              <p className="font-[600] text-primaryColor">
-                                {formatPrice(item?.price)}
-                              </p>
+                             
                             </div>
                           </div>
                           <div className="flex items-center">
@@ -580,7 +608,7 @@ const MenuList = () => {
                               radius="sm"
                               size="sm"
                               variant="faded"
-                              className="border border-grey400"
+                              className="border border-[#EFEFEF]"
                               aria-label="minus"
                               isDisabled={isUpdating}
                             >
@@ -595,13 +623,16 @@ const MenuList = () => {
                               radius="sm"
                               size="sm"
                               variant="faded"
-                              className="border border-grey400"
+                              className="border border-[#EFEFEF]"
                               aria-label="plus"
                               isDisabled={isUpdating}
                             >
                               <FaPlus />
                             </Button>
                           </div>
+                           <p className=" font-medium text-sm w-24 text-[#344054]">
+                                {formatPrice(item?.price)}
+                              </p>
                         </div>
                         {index !== selectedItems?.length - 1 && (
                           <Divider className="bg-[#E4E7EC80]" />
@@ -610,12 +641,31 @@ const MenuList = () => {
                     );
                   })}
                 </div>
-                <Spacer y={2} />
-                <div>
-                  <h3 className="text-[13px] font-[500]">Total</h3>
-                  <p className="text-[] font-[700]">
-                    {formatPrice(calculateTotalPrice())}
-                  </p>
+                </div>
+                
+                {/* Sticky Pricing Section */}
+                <div className="sticky bottom-0 bg-white   pt-4 mt-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-[13px] font-[500]">Subtotal</h3>
+                      <p className="text-[14px] font-[600]">
+                        {formatPrice(calculateTotalPrice())}
+                      </p>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-[13px] font-[500] text-gray-600">VAT (7.5%)</h3>
+                      <p className="text-[14px] font-[500] text-gray-600">
+                        {formatPrice(calculateTotalPrice() * 0.075)}
+                      </p>
+                    </div>
+                    <Divider className="my-2" />
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-[14px] font-[600]">Total</h3>
+                      <p className="text-[16px] font-[700] text-primaryColor">
+                        {formatPrice(calculateTotalPrice() * 1.075)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </>
             ) : (
@@ -630,15 +680,14 @@ const MenuList = () => {
                       alt="no menu illustration"
                     />
                     <Spacer y={3} />
-                    <p className="text-sm text-grey400">
+                    <p className="text-sm =">
                       Selected menu(s) will appear here
                     </p>
                   </div>
                 )}
               </>
             )}
-          </div>
-        </article>
+          </article>
         <CheckoutModal
           handleDecrement={handleDecrement}
           handleIncrement={handleIncrement}

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import EmptyState from '@/components/ui/dashboard/menu/EmptyState';
-import { Spinner } from '@nextui-org/react';
+import { Chip, Spinner } from '@nextui-org/react';
 const noImage = "/assets/images/no-image.svg";
 
 interface MenuItemsGridProps {
@@ -11,6 +11,7 @@ interface MenuItemsGridProps {
   menuSections: any[];
   onOpen: () => void;
   setIsAddItemModalOpen: (isOpen: boolean) => void;
+  setIsAddItemChoiceModalOpen?: (isOpen: boolean) => void;
   handleItemClick: (item: any) => void;
   searchQuery?: string;
 }
@@ -21,6 +22,7 @@ const MenuItemsGrid = ({
   menuSections,
   onOpen,
   setIsAddItemModalOpen,
+  setIsAddItemChoiceModalOpen,
   handleItemClick,
   searchQuery,
 }: MenuItemsGridProps) => {
@@ -46,7 +48,7 @@ const MenuItemsGrid = ({
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 xl:grid-cols-6 gap-4 md:gap-8">
           {/* Add New Item Card */}
           <div
-            onClick={() => setIsAddItemModalOpen(true)}
+            onClick={() => setIsAddItemChoiceModalOpen ? setIsAddItemChoiceModalOpen(true) : setIsAddItemModalOpen(true)}
             className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[190px]"
           >
             <img src="/assets/icons/menu.svg" alt="add" />
@@ -59,13 +61,28 @@ const MenuItemsGrid = ({
               <div
                 key={item.id}
                 onClick={() => onItemClick(item)}
-                className="bg-white border rounded-lg  border-[#D5D5D5BF]  hover:shadow-md h-[190px] transition-shadow cursor-pointer relative"
+                className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[190px] transition-shadow cursor-pointer relative ${
+                  item.isAvailable === false ? 'opacity-60' : ''
+                }`}
               >
                 {loadingItemId === item.id && (
                   <div className="absolute inset-0 bg-white/90 rounded-lg flex items-center justify-center z-10">
                     <Spinner size="lg" color="secondary" />
                   </div>
                 )}
+                
+                {/* Out of Stock Overlay */}
+                {item.isAvailable === false && (
+                 <Chip
+              className="capitalize bg-white absolute top-2 right-2"
+              color={"primary"}
+              size="sm"
+              variant="bordered"
+            >
+              {"Out of stock"}
+            </Chip>
+                )}
+                
                 <div className="relative overflow-hidden rounded-t-lg">
                     <img
                       src={
@@ -74,7 +91,9 @@ const MenuItemsGrid = ({
                           : `data:image/jpeg;base64,${item.image}`
                       }
                       alt={item.name}
-                      className="w-full h-[140px] object-cover"
+                      className={`w-full h-[140px] object-cover ${
+                        item.isAvailable === false ? 'grayscale' : ''
+                      }`}
                       onError={(e) => {
                         (e.target as HTMLImageElement).src =
                           noImage;
@@ -83,10 +102,14 @@ const MenuItemsGrid = ({
                 
                 </div>
                 <div className="px-1.5 mt-1">
-                  <h3 className="text-sm font-normal text-[#596375] mb-1 truncate font-satoshi">
+                  <h3 className={`text-sm font-normal mb-1 truncate font-satoshi ${
+                    item.isAvailable === false ? 'text-gray-400' : 'text-[#596375]'
+                  }`}>
                     {item.name}
                   </h3>
-                  <p className="text-xs font-medium text-[#596375] font-satoshi">
+                  <p className={`text-xs font-medium font-satoshi ${
+                    item.isAvailable === false ? 'text-gray-400' : 'text-[#596375]'
+                  }`}>
                     ₦
                     {item.price.toLocaleString('en-NG', {
                       minimumFractionDigits: 2,
