@@ -40,15 +40,15 @@ const SelectMenu = ({
   }, []);
   return (
     <section>
-      <div className='mt-8'>
-        <h1 className='text-[28px] text-black leading-8 font-bold'>
-          Select a menu
-        </h1>
-        <p className='font-[500]  text-grey600 mb-4'>
-          select a menu to add menu items
+      <div className='mb-6'>
+        <h3 className='text-lg font-semibold text-gray-800 mb-2 font-satoshi'>
+          Choose a Menu Section
+        </h3>
+        <p className='text-sm text-gray-600 font-satoshi'>
+          Select the menu section where you want to add multiple items
         </p>
       </div>
-      <Spacer y={8} />
+      <Spacer y={4} />
       <SelectInput
         label={'Select a menu'}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -59,18 +59,18 @@ const SelectMenu = ({
         contents={menuArray}
       />
 
-      <Spacer y={6} />
+      <Spacer y={4} />
       <CustomButton
-        className='w-full h-[55px] text-white'
+        className='w-full h-[48px] text-white'
         disabled={!selectedMenu}
         onClick={() => {
           setActiveScreen(2);
         }}
         type='submit'
       >
-        {'Proceed'}
+        Continue to Upload
       </CustomButton>
-      <Spacer y={8} />
+      <Spacer y={4} />
       {/* <CustomButton
         className='w-full h-[55px] bg-[#F4F2FF] text-primaryColor'
         type='submit'

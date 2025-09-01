@@ -1,12 +1,11 @@
 "use client";
 import * as React from "react";
-import { Chip, Divider, Tab, Tabs } from "@nextui-org/react";
+import { Divider } from "@nextui-org/react";
 import Image from "next/image";
 
 import { useGlobalContext } from "@/hooks/globalProvider";
 import NoMenu from "../../../../../public/assets/images/no-menu.png";
-import { menus, togglePreview } from "./data";
-import useAllMenus from "@/hooks/cachedEndpoints/useAllMenus";
+import { togglePreview } from "./data";
 import useMenu from "@/hooks/cachedEndpoints/useMenu";
 import { formatPrice } from "@/lib/utils";
 
@@ -16,15 +15,42 @@ const Preview = () => {
     isSelectedPreview,
     selectedImage,
     backgroundColor,
-    imageReference,
     selectedTextColor,
+    currentMenuItems,
+    currentCategory,
+    currentSection,
+    currentSearchQuery,
   } = useGlobalContext();
 
   const { data } = useMenu();
 
   const baseString = "data:image/jpeg;base64,";
 
-  const items = data?.flatMap((obj) => obj.items);
+  // Use currentMenuItems from context if available, otherwise fall back to all items
+  const [items, setItems] = React.useState<any[]>([]);
+  
+  React.useEffect(() => {
+    // First priority: Use items from global context
+    if (currentMenuItems && currentMenuItems.length > 0) {
+      setItems(currentMenuItems);
+    } 
+    // Second priority: Check sessionStorage for persisted state
+    else if (typeof window !== 'undefined') {
+      const savedState = sessionStorage.getItem('previewMenuState');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        setItems(parsedState.items || []);
+      } else if (data) {
+        // Fall back to all items from API if no context or saved state
+        setItems(data.flatMap((obj) => obj.items));
+      }
+    }
+    // Last resort: Use data from API
+    else if (data) {
+      setItems(data.flatMap((obj) => obj.items));
+    }
+  }, [currentMenuItems, data]);
+  
   const styles = togglePreview(activeTile);
 
   return (
@@ -52,6 +78,20 @@ const Preview = () => {
         >
           Menu
         </h1>
+        {(currentCategory || currentSection || currentSearchQuery) && (
+          <div className="mt-1">
+            {currentCategory && (
+              <p style={{ color: selectedTextColor }} className="text-sm opacity-80">
+                {currentCategory}{currentSection && ` / ${currentSection}`}
+              </p>
+            )}
+            {currentSearchQuery && (
+              <p style={{ color: selectedTextColor }} className="text-xs opacity-70 mt-1">
+                Showing results for: "{currentSearchQuery}"
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Optional tabs - currently commented out */}
         {/* <div className="overflow-x-auto w-full">
@@ -91,7 +131,7 @@ const Preview = () => {
       <main className={`${styles.main} relative px-4 pb-4`}>
         {items?.length ? (
           items.map((item) => (
-            <React.Fragment key={`${item.menuID}-${item.itemName}`}>
+            <React.Fragment key={`${item.id || item.menuID}-${item.name || item.itemName}`}>
               <div
                 className={`${styles.container} ${
                   activeTile === "List Right" &&
@@ -107,10 +147,12 @@ const Preview = () => {
                       height={activeTile.includes("Single column") ? 200 : 60}
                       src={
                         item?.image
-                          ? `data:image/jpeg;base64,${item?.image}`
+                          ? item.image.startsWith('data:') || item.image.startsWith('http')
+                            ? item.image
+                            : `data:image/jpeg;base64,${item.image}`
                           : NoMenu
                       }
-                      alt={item.itemName || "Menu item"}
+                      alt={item.name || item.itemName || "Menu item"}
                     />
                   </div>
                 )}
@@ -118,18 +160,18 @@ const Preview = () => {
                   style={{ color: selectedTextColor }}
                   className={`text-[14px] ${styles.textContainer} flex flex-col justify-center`}
                 >
-                  {item.menuName && (
-                    <span className="text-xs opacity-80">{item.menuName}</span>
+                  {(item.category || item.menuName) && (
+                    <span className="text-xs opacity-80">{item.category || item.menuName}</span>
                   )}
-                  <h3 className="font-bold">{item.itemName}</h3>
+                  <h3 className="font-bold">{item.name || item.itemName}</h3>
                   <p className="text-[13px] font-semibold">
                     {formatPrice(item.price)}
                   </p>
                   {activeTile &&
                     activeTile !== "Single column 1" &&
-                    item.itemDescription && (
+                    (item.description || item.itemDescription) && (
                       <p className="text-[13px] mt-1 opacity-90">
-                        {item.itemDescription}
+                        {item.description || item.itemDescription}
                       </p>
                     )}
                 </div>
@@ -146,7 +188,13 @@ const Preview = () => {
               height={120}
               className="opacity-50 mb-4"
             />
-            <p style={{ color: selectedTextColor }}>No menu items to display</p>
+            <p style={{ color: selectedTextColor }}>
+              {currentSearchQuery 
+                ? `No items found for "${currentSearchQuery}"`
+                : currentSection 
+                  ? `No items in ${currentSection}`
+                  : 'No menu items to display'}
+            </p>
           </div>
         )}
       </main>
