@@ -147,7 +147,7 @@ const ItemDetailsModal = ({
 
               {/* Content */}
               <div className="p-6">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="flex justify-between gap-6">
                   {/* Main Item */}
                   <div className="md:flex gap-4 text-gray-500 ">
                     <img
@@ -234,8 +234,8 @@ const ItemDetailsModal = ({
                   </div>
 
                   {/* Varieties */}
-                  <div className="">
-                    <div className="space-y-4">
+                  <div className="w-[40%] ">
+                    <div className=" h-80 overflow-y-auto">
                       {varietiesLoading ? (
                         <div className="flex justify-center py-8">
                           <Spinner size="lg" />
