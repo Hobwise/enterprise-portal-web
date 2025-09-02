@@ -7,6 +7,7 @@ import {
   Switch,
 } from '@nextui-org/react';
 import { ArrowLeft, Edit, Plus, Star, Trash2 } from 'lucide-react';
+import DeleteModal from '@/components/ui/deleteModal';
 import toast from 'react-hot-toast';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import type { payloadMenuItem } from '@/app/api/controllers/dashboard/menu';
@@ -18,7 +19,6 @@ interface ItemDetailsModalProps {
   selectedItem: any;
   openCreateVarietyModal: (item: any) => void;
   varietiesLoading: boolean;
-  handleVarietyClick: (variety: any) => void;
   onEditItem?: (item: any) => void;
   onDeleteItem?: (item: any) => void;
   onEditVariety?: (variety: any) => void;
@@ -32,7 +32,6 @@ const ItemDetailsModal = ({
   selectedItem,
   openCreateVarietyModal,
   varietiesLoading,
-  handleVarietyClick,
   onEditItem,
   onDeleteItem,
   onEditVariety,
@@ -41,6 +40,10 @@ const ItemDetailsModal = ({
 }: ItemDetailsModalProps) => {
   const [isAvailable, setIsAvailable] = useState(selectedItem?.isAvailable ?? true);
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteVarietyId, setDeleteVarietyId] = useState<string | null>(null);
+  const [isDeleteVarietyModalOpen, setIsDeleteVarietyModalOpen] = useState(false);
 
   useEffect(() => {
     if (selectedItem) {
@@ -132,7 +135,7 @@ const ItemDetailsModal = ({
                   </button>
                   {onDeleteItem && (
                     <button 
-                      onClick={() => onDeleteItem(selectedItem)}
+                      onClick={() => setIsDeleteModalOpen(true)}
                       className="text-red-600 px-6 py-2.5 border border-red-300 rounded-lg hover:bg-red-50 flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -144,9 +147,9 @@ const ItemDetailsModal = ({
 
               {/* Content */}
               <div className="p-6">
-                <div className="grid grid-cols-3 gap-6">
+                <div className="grid grid-cols-2 gap-6">
                   {/* Main Item */}
-                  <div>
+                  <div className="md:flex gap-4 text-gray-500 ">
                     <img
                       src={
                         selectedItem.image && selectedItem.image.trim() !== ''
@@ -200,15 +203,15 @@ const ItemDetailsModal = ({
                       
                       {/* Additional Details */}
                       <div className="mt-4 pt-4 border-t space-y-3">
-                        {selectedItem.waitingTimeMinutes && (
+                         {selectedItem.waitingTimeMinutes && (
                           <div className="flex items-center justify-between">
                             <span className="text-gray-600 font-medium">Waiting Time:</span>
                             <span className="text-gray-700">
                               {selectedItem.waitingTimeMinutes} minutes
                             </span>
                           </div>
-                        )}
-                        {selectedItem.packingCost && selectedItem.packingCost > 0 && (
+                        )} 
+                        {/* {selectedItem.packingCost  ( */}
                           <div className="flex items-center justify-between">
                             <span className="text-gray-600 font-medium">Packing Cost:</span>
                             <span className="text-gray-700">
@@ -217,21 +220,21 @@ const ItemDetailsModal = ({
                               })}
                             </span>
                           </div>
-                        )}
-                        {selectedItem.varieties && selectedItem.varieties.length > 0 && (
+                        {/* // )} */}
+                        {/* {selectedItem.varieties && selectedItem.varieties.length > 0 && (
                           <div className="flex items-center justify-between">
                             <span className="text-gray-600 font-medium">Varieties:</span>
                             <span className="text-gray-700">
                               {selectedItem.varieties.length} available
                             </span>
                           </div>
-                        )}
+                        )} */}
                       </div>
                     </div>
                   </div>
 
                   {/* Varieties */}
-                  <div className="col-span-2">
+                  <div className="">
                     <div className="space-y-4">
                       {varietiesLoading ? (
                         <div className="flex justify-center py-8">
@@ -246,7 +249,7 @@ const ItemDetailsModal = ({
                             key={variety.id}
                             className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors relative group"
                           >
-                            <img
+                            {/* <img
                               src={
                                 variety.image && variety.image.trim() !== ''
                                   ? variety.image.startsWith('data:') || variety.image.startsWith('http')
@@ -255,16 +258,12 @@ const ItemDetailsModal = ({
                                   : '/assets/images/no-image.svg'
                               }
                               alt={variety.name}
-                              className="w-20 h-20 rounded-lg object-cover bg-cyan-500 cursor-pointer"
-                              onClick={() => handleVarietyClick(variety)}
+                              className="w-20 h-20 rounded-lg object-cover bg-cyan-500"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
                               }}
-                            />
-                            <div 
-                              className="flex-1 cursor-pointer"
-                              onClick={() => handleVarietyClick(variety)}
-                            >
+                            /> */}
+                            <div className="flex-1">
                               <div className="flex items-center justify-between">
                                 <h3 className="font-semibold text-gray-700">{variety.unit || variety.name}</h3>
                                 {variety.isAvailable === false && (
@@ -285,18 +284,25 @@ const ItemDetailsModal = ({
                                   minimumFractionDigits: 2,
                                 })}
                               </p>
-                              {(variety.waitingTimeMinutes || variety.packingCost) && (
-                                <div className="flex gap-4 mt-2 text-xs text-gray-600">
-                                  {variety.waitingTimeMinutes && (
-                                    <span>⏱️ {variety.waitingTimeMinutes} min</span>
-                                  )}
-                                  {variety.packingCost && variety.packingCost > 0 && (
-                                    <span>📦 ₦{variety.packingCost.toLocaleString('en-NG')}</span>
-                                  )}
-                                </div>
-                              )}
+                              {/* Display waiting time and packing cost */}
+                              <div className="flex gap-4 mt-2 text-sm text-gray-600">
+                                {(variety.waitingTimeMinutes || selectedItem.waitingTimeMinutes) && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-medium">Waiting Time:</span>
+                                    <span>{variety.waitingTimeMinutes || selectedItem.waitingTimeMinutes} min</span>
+                                  </div>
+                                )}
+                                {(variety.packingCost || selectedItem.packingCost) ? (
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-medium">Packing Cost:</span>
+                                    <span>₦{(variety.packingCost || selectedItem.packingCost).toLocaleString('en-NG', {
+                                      minimumFractionDigits: 2,
+                                    })}</span>
+                                  </div>
+                                ) : null}
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-2 ">
                               {onEditVariety && (
                                 <button
                                   onClick={(e) => {
@@ -311,9 +317,10 @@ const ItemDetailsModal = ({
                               )}
                               {onDeleteVariety && (
                                 <button
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    await onDeleteVariety(variety.id);
+                                    setDeleteVarietyId(variety.id);
+                                    setIsDeleteVarietyModalOpen(true);
                                   }}
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                   title="Delete variety"
@@ -333,6 +340,44 @@ const ItemDetailsModal = ({
           </>
         )}
       </ModalContent>
+
+      {/* Delete Item Confirmation Modal */}
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        toggleModal={() => setIsDeleteModalOpen(false)}
+        handleDelete={async () => {
+          setIsDeleting(true);
+          try {
+            if (onDeleteItem) {
+              onDeleteItem(selectedItem);
+              onOpenChange(false);
+            }
+          } finally {
+            setIsDeleting(false);
+            setIsDeleteModalOpen(false);
+          }
+        }}
+        isLoading={isDeleting}
+        text="Are you sure you want to delete this menu item?"
+      />
+
+      {/* Delete Variety Confirmation Modal */}
+      <DeleteModal
+        isOpen={isDeleteVarietyModalOpen}
+        toggleModal={() => {
+          setIsDeleteVarietyModalOpen(false);
+          setDeleteVarietyId(null);
+        }}
+        handleDelete={async () => {
+          if (onDeleteVariety && deleteVarietyId) {
+            await onDeleteVariety(deleteVarietyId);
+            setIsDeleteVarietyModalOpen(false);
+            setDeleteVarietyId(null);
+          }
+        }}
+        isLoading={false}
+        text="Are you sure you want to delete this variety?"
+      />
     </Modal>
   );
 };

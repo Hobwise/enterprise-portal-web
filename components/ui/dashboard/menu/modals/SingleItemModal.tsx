@@ -1,8 +1,9 @@
 
 import { Modal, ModalContent, ModalBody, Switch } from '@nextui-org/react';
 import { ArrowLeft, Edit, Plus, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import EditItemModal from './EditItemModal';
+import DeleteModal from '@/components/ui/deleteModal';
 import toast from 'react-hot-toast';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import type { payloadMenuItem } from '@/app/api/controllers/dashboard/menu';
@@ -18,7 +19,6 @@ interface SingleItemModalProps {
   onItemUpdated?: () => void;
   onEditVariety?: (variety: any) => void;
   onDeleteVariety?: (varietyId: string) => Promise<void>;
-  handleVarietyClick?: (variety: any) => void;
 }
 
 const SingleItemModal = ({
@@ -32,11 +32,20 @@ const SingleItemModal = ({
   onItemUpdated,
   onEditVariety,
   onDeleteVariety,
-  handleVarietyClick,
 }: SingleItemModalProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAvailable, setIsAvailable] = useState(selectedItem?.isAvailable ?? true);
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteVarietyId, setDeleteVarietyId] = useState<string | null>(null);
+  const [isDeleteVarietyModalOpen, setIsDeleteVarietyModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (selectedItem) {
+      setIsAvailable(selectedItem.isAvailable ?? true);
+    }
+  }, [selectedItem]);
 
   if (!selectedItem) return null;
 
@@ -118,10 +127,7 @@ const SingleItemModal = ({
                   </button>
                   {onDeleteItem && (
                     <button
-                      onClick={async () => {
-                        await onDeleteItem(selectedItem.id);
-                        onOpenChange(false);
-                      }}
+                      onClick={() => setIsDeleteModalOpen(true)}
                       className="text-red-600 px-6 py-2.5 border border-red-300 rounded-lg hover:bg-red-50 flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -223,16 +229,12 @@ const SingleItemModal = ({
                                   : '/assets/images/no-image.svg'
                               }
                               alt={variety.name}
-                              className="w-20 h-20 rounded-lg object-cover bg-cyan-500 cursor-pointer"
-                              onClick={() => handleVarietyClick && handleVarietyClick(variety)}
+                              className="w-20 h-20 rounded-lg object-cover bg-cyan-500"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
                               }}
                             />
-                            <div 
-                              className="flex-1 cursor-pointer"
-                              onClick={() => handleVarietyClick && handleVarietyClick(variety)}
-                            >
+                            <div className="flex-1">
                               <h3 className="font-semibold text-gray-700">{variety.unit || variety.name}</h3>
                               <p className="text-sm text-gray-700 mt-1">
                                 {variety.description}
@@ -246,6 +248,23 @@ const SingleItemModal = ({
                                   minimumFractionDigits: 2,
                                 })}
                               </p>
+                              {/* Display waiting time and packing cost */}
+                              <div className="flex gap-4 mt-2 text-sm text-gray-600">
+                                {(variety.waitingTimeMinutes || selectedItem.waitingTimeMinutes) && (
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-medium">Waiting:</span>
+                                    <span>{variety.waitingTimeMinutes || selectedItem.waitingTimeMinutes} min</span>
+                                  </div>
+                                )}
+                                {(variety.packingCost || selectedItem.packingCost) ? (
+                                  <div className="flex items-center gap-1">
+                                    <span className="font-medium">Packing:</span>
+                                    <span>₦{(variety.packingCost || selectedItem.packingCost).toLocaleString('en-NG', {
+                                      minimumFractionDigits: 2,
+                                    })}</span>
+                                  </div>
+                                ) : null}
+                              </div>
                             </div>
                             <div className="flex items-center gap-2">
                               {onEditVariety && (
@@ -262,9 +281,10 @@ const SingleItemModal = ({
                               )}
                               {onDeleteVariety && (
                                 <button
-                                  onClick={async (e) => {
+                                  onClick={(e) => {
                                     e.stopPropagation();
-                                    await onDeleteVariety(variety.id);
+                                    setDeleteVarietyId(variety.id);
+                                    setIsDeleteVarietyModalOpen(true);
                                   }}
                                   className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                   title="Delete variety"
@@ -301,6 +321,44 @@ const SingleItemModal = ({
           }}
         />
       )}
+
+      {/* Delete Item Confirmation Modal */}
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        toggleModal={() => setIsDeleteModalOpen(false)}
+        handleDelete={async () => {
+          setIsDeleting(true);
+          try {
+            if (onDeleteItem) {
+              await onDeleteItem(selectedItem.id);
+              onOpenChange(false);
+            }
+          } finally {
+            setIsDeleting(false);
+            setIsDeleteModalOpen(false);
+          }
+        }}
+        isLoading={isDeleting}
+        text="Are you sure you want to delete this menu item?"
+      />
+
+      {/* Delete Variety Confirmation Modal */}
+      <DeleteModal
+        isOpen={isDeleteVarietyModalOpen}
+        toggleModal={() => {
+          setIsDeleteVarietyModalOpen(false);
+          setDeleteVarietyId(null);
+        }}
+        handleDelete={async () => {
+          if (onDeleteVariety && deleteVarietyId) {
+            await onDeleteVariety(deleteVarietyId);
+            setIsDeleteVarietyModalOpen(false);
+            setDeleteVarietyId(null);
+          }
+        }}
+        isLoading={false}
+        text="Are you sure you want to delete this variety?"
+      />
     </Modal>
   );
 };
