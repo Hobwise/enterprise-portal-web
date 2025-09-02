@@ -1,8 +1,5 @@
-import { getMenu } from '@/app/api/controllers/dashboard/menu';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Spacer } from '@nextui-org/react';
 import React, { useEffect, useState } from 'react';
 
@@ -11,41 +8,43 @@ const SelectMenu = ({
   setSelectedMenu,
   selectedMenu,
   toggleMultipleMenu,
+  activeSubCategory,
+  activeCategory,
+  menuSections = [],
 }: any) => {
   const [menuArray, setMenuArray] = useState([]);
 
-  const businessInformation = getJsonItemFromLocalStorage('business');
-  const getMenuName = async () => {
-    const data = await getMenu(businessInformation[0]?.businessId);
-
-    if (data?.data?.isSuccessful) {
-      const newData = data?.data?.data.map((item) => ({
-        ...item,
-        label: item.name,
-        value: item.id,
-      }));
-
-      setMenuArray(newData);
-    } else if (data?.data?.error) {
-      //   notify({
-      //     title: 'Error!',
-      //     text: data?.data?.error,
-      //     type: 'error',
-      //   });
-    }
-  };
-
+  // Transform menuSections to the format expected by SelectInput
   useEffect(() => {
-    getMenuName();
-  }, []);
+    if (menuSections && menuSections.length > 0) {
+      const formattedSections = menuSections.map((section: any) => ({
+        ...section,
+        label: section.name,
+        value: section.id,
+      }));
+      setMenuArray(formattedSections);
+    }
+  }, [menuSections]);
+
+  // Pre-fill with active section if available
+  useEffect(() => {
+    if (activeSubCategory) {
+      setSelectedMenu(activeSubCategory);
+    }
+  }, [activeSubCategory, setSelectedMenu]);
   return (
     <section>
-      <div className='mb-6'>
-        <h3 className='text-lg font-semibold text-gray-800 mb-2 font-satoshi'>
+      <div className='mb-8 text-center'>
+        <div className="w-16 h-16 bg-gradient-to-br from-[#EAE5FF] to-[#C3ADFF] rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-[#5F35D2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <h3 className='text-2xl font-bold text-gray-800 mb-3 font-satoshi'>
           Choose a Menu Section
         </h3>
-        <p className='text-sm text-gray-600 font-satoshi'>
-          Select the menu section where you want to add multiple items
+        <p className='text-gray-600 font-satoshi leading-relaxed max-w-md mx-auto'>
+          Select the menu section where you want to add multiple items. This will help organize your menu items properly.
         </p>
       </div>
       <Spacer y={4} />

@@ -1552,6 +1552,9 @@ const RestaurantMenu = () => {
         isOpen={isAddMultipleItemsModalOpen}
         onOpenChange={setIsAddMultipleItemsModalOpen}
         onSuccess={handleMultipleItemsSuccess}
+        activeSubCategory={activeSubCategory}
+        activeCategory={activeCategory}
+        menuSections={menuSections}
       />
     </div>
   );

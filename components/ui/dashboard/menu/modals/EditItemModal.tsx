@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { editMenuItem, payloadMenuItem, uploadFile, deleteFile } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { Edit, Upload, X, ShoppingBag } from 'lucide-react';
 
 interface EditItemModalProps {
   isOpen: boolean;
@@ -185,96 +186,120 @@ const EditItemModal = ({
   if (!selectedItem) return null;
 
   return (
-    <Modal isOpen={isOpen} size="5xl" onOpenChange={onOpenChange} hideCloseButton>
-      <ModalContent>
+    <Modal 
+      isOpen={isOpen} 
+      size="5xl" 
+      onOpenChange={onOpenChange} 
+      hideCloseButton
+      classNames={{
+        wrapper: "items-center justify-center",
+        backdrop: "bg-black/60 backdrop-blur-sm",
+        base: "border border-gray-200",
+      }}
+    >
+      <ModalContent className="bg-white rounded-2xl shadow-2xl border border-gray-200">
         {() => (
           <>
-            <ModalBody>
-              <div className="bg-white rounded-xl p-3 py-4 w-full max-h-[90vh] overflow-y-auto">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    Edit menu item
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Update item details
-                  </p>
-                </div>
+            <ModalBody className="p-8">
+              <div className="bg-white rounded-2xl w-full max-h-[90vh] overflow-y-auto">
+                {/* Enhanced Header */}
+               
+                <div className="">
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2  gap-8">
                   {/* Left Column */}
-                  <div className="space-y-4">
-              
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Edit className="w-5 h-5 text-[#5F35D2]" />
+                        <h3 className="text-lg font-semibold text-gray-800">Edit Menu Item</h3>
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select menu
-                      </label>
-                      <select
-                        value={selectedMenuType}
-                        onChange={(e) => setSelectedMenuType(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
-                      >
-                        <option value="">Select menu</option>
-                        {menuSections.map((section) => (
-                          <option key={section.id} value={section.id}>
-                            {section.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Select menu section
+                          </label>
+                          <div className="relative">
+                            <select
+                              value={selectedMenuType}
+                              onChange={(e) => setSelectedMenuType(e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                            >
+                              <option value="">Choose a section</option>
+                              {menuSections.map((section) => (
+                                <option key={section.id} value={section.id}>
+                                  {section.name}
+                                </option>
+                              ))}
+                            </select>
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Name of item
-                      </label>
-                      <input
-                        type="text"
-                        value={itemName}
-                        onChange={(e) => setItemName(e.target.value)}
-                        placeholder="Value"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
-                      />
-                    </div>
-  <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Add item price
-                      </label>
-                      <input
-                        type="number"
-                        value={itemPrice}
-                        onChange={(e) => setItemPrice(e.target.value)}
-                        placeholder="Enter value"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] text-gray-700"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Item description
-                      </label>
-                      <textarea
-                        value={itemDescription}
-                        onChange={(e) => setItemDescription(e.target.value)}
-                        placeholder="Value"
-                        rows={4}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2] resize-none text-gray-700"
-                      />
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Item name
+                          </label>
+                          <input
+                            type="text"
+                            value={itemName}
+                            onChange={(e) => setItemName(e.target.value)}
+                            placeholder="Enter item name"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Price (₦)
+                          </label>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold">₦</span>
+                            <input
+                              type="number"
+                              value={itemPrice}
+                              onChange={(e) => setItemPrice(e.target.value)}
+                              placeholder="0.00"
+                              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Description
+                          </label>
+                          <textarea
+                            value={itemDescription}
+                            onChange={(e) => setItemDescription(e.target.value)}
+                            placeholder="Describe your item..."
+                            rows={4}
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] resize-none text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Right Column */}
-                  <div className="space-y-4 flex-1">
-                  
+                  <div className="space-y-6">
+                    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Upload className="w-5 h-5 text-[#5F35D2]" />
+                        <h3 className="text-lg font-semibold text-gray-800">Item Image</h3>
+                      </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Image
-                      </label>
                       <div
-                        className={`rounded-lg flex justify-center items-center h-full bg-[#6D42E2]/10 p-8 text-center ${
+                        className={`rounded-xl border-2 border-dashed transition-all duration-300 ${
                           dragActive
-                            ? 'border-[#6D42E2] border-2'
-                            : 'border-gray-300'
-                        } ${imagePreview ? 'border-solid' : ''}`}
+                            ? 'border-[#5F35D2] bg-[#5F35D2]/5'
+                            : 'border-gray-200 bg-gray-50 hover:border-[#5F35D2]/50 hover:bg-[#5F35D2]/5'
+                        }`}
                         onDragEnter={(e) => handleDrag(e, setDragActive)}
                         onDragLeave={(e) => handleDrag(e, setDragActive)}
                         onDragOver={(e) => handleDrag(e, setDragActive)}
@@ -283,7 +308,7 @@ const EditItemModal = ({
                         }
                       >
                         {imagePreview ? (
-                          <div className="relative">
+                          <div className="relative p-4">
                             <img
                               src={
                                 imagePreview && imagePreview.trim() !== ''
@@ -293,56 +318,40 @@ const EditItemModal = ({
                                   : '/assets/images/no-image.svg'
                               }
                               alt="Preview"
-                              className="w-full h-48 object-cover rounded-lg"
+                              className="w-full h-60 object-cover rounded-lg shadow-sm"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
                               }}
                             />
                             <button
                               onClick={handleRemoveImage}
-                              className="absolute top-2 right-2 bg-white rounded-full p-1 shadow-md hover:bg-gray-100"
+                              className="absolute top-6 right-6 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 hover:scale-105"
                             >
-                              <svg
-                                className="w-4 h-4 text-gray-600"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M6 18L18 6M6 6l12 12"
-                                />
-                              </svg>
+                              <X className="w-4 h-4" />
                             </button>
+                            <div className="absolute bottom-6 left-6 bg-black/60 text-white px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
+                              Image uploaded
+                            </div>
                           </div>
                         ) : (
-                          <>
-                            <div className="flex flex-col items-center w-1/2 justify-center mb-4">
-                              <div className="w-20 h-20 rounded-lg flex items-center justify-center">
-                                {isUploadingImage ? (
-                                  <Spinner size="lg" />
-                                ) : (
-                                  <svg
-                                    width="36"
-                                    height="36"
-                                    viewBox="0 0 36 36"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                  >
-                                    <path
-                                      d="M27.0104 31.8327H3.67708V8.49935H18.6771V5.16602H3.67708C1.84375 5.16602 0.34375 6.66602 0.34375 8.49935V31.8327C0.34375 33.666 1.84375 35.166 3.67708 35.166H27.0104C28.8438 35.166 30.3438 33.666 30.3438 31.8327V16.8327H27.0104V31.8327ZM14.0271 26.5493L10.7604 22.616L6.17708 28.4993H24.5104L18.6104 20.6493L14.0271 26.5493ZM30.3438 5.16602V0.166016H27.0104V5.16602H22.0104C22.0271 5.18268 22.0104 8.49935 22.0104 8.49935H27.0104V13.4827C27.0271 13.4993 30.3438 13.4827 30.3438 13.4827V8.49935H35.3438V5.16602H30.3438Z"
-                                      fill="#6D42E2"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                              {!isUploadingImage && (
-                                <p className="text-sm text-gray-600 mb-2">
-                                  Drag and drop files to upload or{' '}
-                                  <label className="text-[#5F35D2] cursor-pointer hover:text-[#7C69D8] font-medium">
-                                    click here
+                          <div className="flex flex-col items-center justify-center p-8 min-h-[280px]">
+                            <div className="w-16 h-16 bg-[#5F35D2]/10 rounded-2xl flex items-center justify-center mb-4">
+                              {isUploadingImage ? (
+                                <Spinner size="lg" color="secondary" />
+                              ) : (
+                                <Upload className="w-8 h-8 text-[#5F35D2]" />
+                              )}
+                            </div>
+                            
+                            {!isUploadingImage && (
+                              <>
+                                <h4 className="text-lg font-semibold text-gray-700 mb-2">
+                                  Upload item image
+                                </h4>
+                                <p className="text-sm text-gray-500 text-center mb-4 max-w-xs">
+                                  Drag and drop your image here, or{' '}
+                                  <label className="text-[#5F35D2] cursor-pointer hover:text-[#7C69D8] font-semibold underline">
+                                    browse files
                                     <input
                                       type="file"
                                       className="hidden"
@@ -351,12 +360,23 @@ const EditItemModal = ({
                                         handleFileChange(e, handleImageFile)
                                       }
                                     />
-                                  </label>{' '}
-                                  to browse
+                                  </label>
                                 </p>
-                              )}
-                            </div>
-                          </>
+                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                  <span>Supported:</span>
+                                  <span className="bg-gray-100 px-2 py-1 rounded">JPG</span>
+                                  <span className="bg-gray-100 px-2 py-1 rounded">PNG</span>
+                                  <span className="bg-gray-100 px-2 py-1 rounded">WebP</span>
+                                </div>
+                              </>
+                            )}
+                            
+                            {isUploadingImage && (
+                              <p className="text-sm text-[#5F35D2] font-medium mt-2">
+                                Uploading image...
+                              </p>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -364,21 +384,33 @@ const EditItemModal = ({
                 </div>
 
                 {/* Modal Actions */}
-                <div className="flex justify-end gap-3 mt-8">
+                <div className="flex justify-end gap-4 p-6">
                   <button
                     onClick={() => onOpenChange(false)}
-                    className="px-6 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium"
+                    className="px-8 py-3 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
+                    disabled={loading}
                   >
-                    Back to menu
+                    Cancel
                   </button>
                   <button
                     onClick={handleUpdateItem}
                     disabled={loading || !itemName || !itemPrice || !selectedMenuType}
-                    className="px-6 py-2.5 bg-primaryColor text-white rounded-lg hover:bg-primaryColor font-medium disabled:opacity-50"
+                    className="px-8 py-3 bg-[#5F35D2]  text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                   >
-                    {loading ? 'Updating...' : 'Update item'}
+                    {loading ? (
+                      <div className="flex items-center gap-2">
+                        <Spinner size="sm" color="current" />
+                        <span>Updating...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Edit className="w-5 h-5" />
+                        <span>Update Item</span>
+                      </div>
+                    )}
                   </button>
                 </div>
+              </div>
               </div>
             </ModalBody>
           </>
