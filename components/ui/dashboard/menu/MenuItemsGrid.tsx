@@ -36,7 +36,7 @@ const MenuItemsGrid = ({
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-[60vh]">
       {loadingItems || menuItems === null ? (
         <SpinnerLoader size="md" />
       ) : menuItems && menuItems.length === 0 && searchQuery ? (
@@ -44,8 +44,9 @@ const MenuItemsGrid = ({
           <p className="text-gray-500 text-lg font-satoshi">No items found matching "{searchQuery}"</p>
           <p className="text-gray-400 text-sm font-satoshi mt-2">Try adjusting your search terms</p>
         </div>
+        
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 xl:grid-cols-6 gap-4 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-7 xl:grid-cols-6 gap-4 md:gap-8">
           {/* Add New Item Card */}
           <div
             onClick={() => setIsAddItemChoiceModalOpen ? setIsAddItemChoiceModalOpen(true) : setIsAddItemModalOpen(true)}

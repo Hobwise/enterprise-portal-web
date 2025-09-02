@@ -159,7 +159,7 @@ const ItemDetailsModal = ({
                           : '/assets/images/no-image.svg'
                       }
                       alt={selectedItem.name}
-                      className="w-full aspect-square rounded-lg object-cover bg-orange-500"
+                      className="w-full aspect-square h-[20rem] rounded-lg object-cover bg-orange-500"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
                       }}

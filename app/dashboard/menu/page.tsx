@@ -68,7 +68,7 @@ const RestaurantMenu = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const pageSize = 20; // Reduced for better UX
+  const pageSize = 11; // 11 items per page
   const [hasInitialized, setHasInitialized] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -94,7 +94,6 @@ const RestaurantMenu = () => {
   const [selectedVariety, setSelectedVariety] = useState<any>(null);
   const [varietiesLoading, setVarietiesLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
-  const [currentItemIndex, setCurrentItemIndex] = useState(-1);
 
   // Preloading state management
   const [preloadedSections, setPreloadedSections] = useState<Map<string, any[]>>(
@@ -179,6 +178,17 @@ const RestaurantMenu = () => {
     return Date.now() - timestamp < CACHE_EXPIRY_TIME;
   };
 
+  // Helper function to update menu section count
+  const updateMenuSectionCount = (sectionId: string, delta: number) => {
+    setMenuSections(prevSections => 
+      prevSections.map(section => 
+        section.id === sectionId 
+          ? { ...section, totalCount: Math.max(0, (section.totalCount || 0) + delta) }
+          : section
+      )
+    );
+  };
+
   // Background preloading function
   const preloadMenuSections = async (sections: any[], priority: boolean = false) => {
     if (!sections || sections.length === 0) return;
@@ -261,12 +271,14 @@ const RestaurantMenu = () => {
   };
 
   // Function to fetch menu items by section ID
-  const fetchMenuItems = async (menuSectionId: string, forceRefresh: boolean = false) => {
+  const fetchMenuItems = async (menuSectionId: string, forceRefresh: boolean = false, page?: number) => {
     if (!menuSectionId) return;
+
+    const pageToFetch = page !== undefined ? page : currentPage;
 
     // Check global cache first
     if (!forceRefresh) {
-      const cacheKey = `${menuSectionId}_page_${currentPage}`;
+      const cacheKey = `${menuSectionId}_page_${pageToFetch}`;
       const cached = globalMenuItemsCache.get(cacheKey);
       if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
         setMenuItems(cached.items);
@@ -279,7 +291,8 @@ const RestaurantMenu = () => {
 
     setLoadingItems(true);
     try {
-      const response = await getMenuItems(menuSectionId, currentPage, pageSize);
+      const pageToFetch = page !== undefined ? page : currentPage;
+      const response = await getMenuItems(menuSectionId, pageToFetch, pageSize);
       if (response?.data?.isSuccessful) {
         const items = response.data.data?.items || [];
         const transformedItems = items.map((item: any) => ({
@@ -311,13 +324,13 @@ const RestaurantMenu = () => {
         setTotalItems(totalItemsFromAPI);
 
         // Update global cache with pagination info
-        const cacheKey = `${menuSectionId}_page_${currentPage}`;
+        const cacheKey = `${menuSectionId}_page_${pageToFetch}`;
         globalMenuItemsCache.set(cacheKey, {
           items: transformedItems,
           timestamp: Date.now(),
           totalPages: totalPagesFromAPI,
           totalItems: totalItemsFromAPI,
-          currentPage: currentPage
+          currentPage: pageToFetch
         });
         
         // Also update preloaded sections for compatibility
@@ -359,8 +372,10 @@ const RestaurantMenu = () => {
           const cached = globalMenuItemsCache.get(sections[0].id);
           if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
             setMenuItems(cached.items);
+            setTotalPages(cached.totalPages || 1);
+            setTotalItems(cached.totalItems || 0);
           } else {
-            fetchMenuItems(sections[0].id);
+            fetchMenuItems(sections[0].id, false, 1);
           }
         } else {
           // No sections available, set empty items immediately
@@ -395,12 +410,13 @@ const RestaurantMenu = () => {
           const cached = globalMenuItemsCache.get(cacheKey);
           if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
             setMenuItems(cached.items);
-            setTotalPages(cached.totalPages);
-            setTotalItems(cached.totalItems);
+            setTotalPages(cached.totalPages || 1);
+            setTotalItems(cached.totalItems || 0);
+            setCurrentPage(1);
           } else {
             // Only set to null if we're actually going to load
             setMenuItems(null);
-            fetchMenuItems(firstSection.id);
+            fetchMenuItems(firstSection.id, false, 1);
           }
         } else {
           setMenuItems([]);
@@ -424,20 +440,25 @@ const RestaurantMenu = () => {
 
   const handleMenuSectionSelect = (sectionId: string) => {
     setActiveSubCategory(sectionId);
+    setCurrentPage(1); // Always reset to page 1 when switching sections
     
-    // Check global cache first
-    const cached = globalMenuItemsCache.get(sectionId);
+    // Check global cache first for page 1
+    const cacheKey = `${sectionId}_page_1`;
+    const cached = globalMenuItemsCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
       setMenuItems(cached.items);
+      setTotalPages(cached.totalPages || 1);
+      setTotalItems(cached.totalItems || 0);
     } else {
       // Only set to null and show loading if we need to fetch
       const section = menuSections.find(s => s.id === sectionId);
       if (section && section.totalCount > 0) {
         setMenuItems(null);
-        setCurrentPage(1);
-        fetchMenuItems(sectionId);
+        fetchMenuItems(sectionId, false, 1);
       } else {
         setMenuItems([]);
+        setTotalPages(1);
+        setTotalItems(0);
       }
     }
   };
@@ -527,15 +548,9 @@ const RestaurantMenu = () => {
   };
 
 
-  const handleItemClick = async (item: any, index?: number) => {
+  const handleItemClick = async (item: any) => {
     setSelectedItem(item);
     setVarietiesLoading(true);
-    if (index !== undefined) {
-      setCurrentItemIndex(index);
-    } else if (menuItems) {
-      const itemIndex = menuItems.findIndex(i => i.id === item.id);
-      setCurrentItemIndex(itemIndex);
-    }
 
     try {
       const response = await getMenuItem(item.id);
@@ -605,14 +620,22 @@ const RestaurantMenu = () => {
     }
     // Refresh menu items
     if (activeSubCategory) {
-      globalMenuItemsCache.delete(activeSubCategory);
+      // Invalidate all pages in cache for this section
+      const keysToDelete: string[] = [];
+      globalMenuItemsCache.forEach((_, key) => {
+        if (key.startsWith(`${activeSubCategory}_page_`)) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+      
       // Also invalidate preloaded sections cache
       setPreloadedSections(prev => {
         const newMap = new Map(prev);
         newMap.delete(activeSubCategory);
         return newMap;
       });
-      fetchMenuItems(activeSubCategory, true);
+      fetchMenuItems(activeSubCategory, true, currentPage);
     }
     // Close edit modal and go back to item details
     setIsEditVarietyModalOpen(false);
@@ -649,15 +672,22 @@ const RestaurantMenu = () => {
         setVarietyPrice('');
         backToItemDetails();
         if (activeSubCategory) {
-          // Invalidate cache and force refresh
-          globalMenuItemsCache.delete(activeSubCategory);
+          // Invalidate all pages in cache for this section
+          const keysToDelete: string[] = [];
+          globalMenuItemsCache.forEach((_, key) => {
+            if (key.startsWith(`${activeSubCategory}_page_`)) {
+              keysToDelete.push(key);
+            }
+          });
+          keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+          
           // Also invalidate preloaded sections cache
           setPreloadedSections(prev => {
             const newMap = new Map(prev);
             newMap.delete(activeSubCategory);
             return newMap;
           });
-          fetchMenuItems(activeSubCategory, true);
+          fetchMenuItems(activeSubCategory, true, currentPage);
         }
       } else {
         toast.error(response?.data?.error || 'Failed to create variety');
@@ -708,16 +738,31 @@ const RestaurantMenu = () => {
         setImagePreview('');
         setItemImageReference('');
         setIsAddItemModalOpen(false);
+        
+        // Update the section count for the menu where the item was added
+        if (selectedMenuType) {
+          updateMenuSectionCount(selectedMenuType, 1);
+        }
+        
         if (activeSubCategory) {
-          // Invalidate cache and force refresh
-          globalMenuItemsCache.delete(activeSubCategory);
+          // Invalidate all pages in cache for this section
+          const keysToDelete: string[] = [];
+          globalMenuItemsCache.forEach((_, key) => {
+            if (key.startsWith(`${activeSubCategory}_page_`)) {
+              keysToDelete.push(key);
+            }
+          });
+          keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+          
           // Also invalidate preloaded sections cache
           setPreloadedSections(prev => {
             const newMap = new Map(prev);
             newMap.delete(activeSubCategory);
             return newMap;
           });
-          fetchMenuItems(activeSubCategory, true);
+          // Reset to page 1 when new item is added
+          setCurrentPage(1);
+          fetchMenuItems(activeSubCategory, true, 1);
         }
       } else {
         toast.error(response?.data?.error || 'Failed to create menu item');
@@ -784,7 +829,15 @@ const RestaurantMenu = () => {
         
         // Invalidate cache for the section where menu was created
         if (activeCategory) {
-          globalMenuItemsCache.delete(activeCategory);
+          // Invalidate all pages in cache for this section
+          const keysToDelete: string[] = [];
+          globalMenuItemsCache.forEach((_, key) => {
+            if (key.startsWith(`${activeCategory}_page_`)) {
+              keysToDelete.push(key);
+            }
+          });
+          keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+          
           setPreloadedSections(prev => {
             const newMap = new Map(prev);
             newMap.delete(activeCategory);
@@ -937,16 +990,27 @@ const RestaurantMenu = () => {
 
       if (response?.data?.isSuccessful) {
         toast.success('Menu item deleted successfully');
+        
+        // Update the section count after deletion
         if (activeSubCategory) {
-          // Invalidate cache for this section
-          globalMenuItemsCache.delete(activeSubCategory);
+          updateMenuSectionCount(activeSubCategory, -1);
+          
+          // Invalidate all pages in cache for this section
+          const keysToDelete: string[] = [];
+          globalMenuItemsCache.forEach((_, key) => {
+            if (key.startsWith(`${activeSubCategory}_page_`)) {
+              keysToDelete.push(key);
+            }
+          });
+          keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+          
           // Also invalidate preloaded sections cache
           setPreloadedSections(prev => {
             const newMap = new Map(prev);
             newMap.delete(activeSubCategory);
             return newMap;
           });
-          fetchMenuItems(activeSubCategory, true); // Force refresh
+          fetchMenuItems(activeSubCategory, true, currentPage); // Force refresh current page
         }
         // Close any open modals
         setIsSingleItemModalOpen(false);
@@ -980,14 +1044,22 @@ const RestaurantMenu = () => {
           }
         }
         if (activeSubCategory) {
-          globalMenuItemsCache.delete(activeSubCategory);
+          // Invalidate all pages in cache for this section
+          const keysToDelete: string[] = [];
+          globalMenuItemsCache.forEach((_, key) => {
+            if (key.startsWith(`${activeSubCategory}_page_`)) {
+              keysToDelete.push(key);
+            }
+          });
+          keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+          
           // Also invalidate preloaded sections cache
           setPreloadedSections(prev => {
             const newMap = new Map(prev);
             newMap.delete(activeSubCategory);
             return newMap;
           });
-          fetchMenuItems(activeSubCategory, true);
+          fetchMenuItems(activeSubCategory, true, currentPage);
         }
       } else {
         toast.error(response?.data?.error || 'Failed to delete variety');
@@ -1062,31 +1134,14 @@ const RestaurantMenu = () => {
     await handleDeleteMenuItem(itemId);
   };
 
-  const handleNavigateItem = (direction: 'prev' | 'next') => {
-    if (!menuItems || menuItems.length === 0) return;
-    
-    let newIndex = currentItemIndex;
-    if (direction === 'prev' && currentItemIndex > 0) {
-      newIndex = currentItemIndex - 1;
-    } else if (direction === 'next' && currentItemIndex < menuItems.length - 1) {
-      newIndex = currentItemIndex + 1;
-    }
-    
-    if (newIndex !== currentItemIndex) {
-      const newItem = menuItems[newIndex];
-      handleItemClick(newItem, newIndex);
-    }
-  };
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
     // Reset pagination when searching
-    if (value.trim() === '') {
-      // If clearing search, reset to page 1
-      setCurrentPage(1);
-      if (activeSubCategory) {
-        fetchMenuItems(activeSubCategory, false);
-      }
+    setCurrentPage(1);
+    if (value.trim() === '' && activeSubCategory) {
+      // If clearing search, fetch page 1
+      fetchMenuItems(activeSubCategory, false, 1);
     }
   };
 
@@ -1100,7 +1155,7 @@ const RestaurantMenu = () => {
     setIsAddMultipleItemsModalOpen(true);
   };
 
-  const handleMultipleItemsSuccess = () => {
+  const handleMultipleItemsSuccess = async () => {
     // Refresh menu items after successful upload
     if (activeSubCategory) {
       // Clear all cached pages for this section
@@ -1120,7 +1175,30 @@ const RestaurantMenu = () => {
       
       // Reset to page 1 and fetch
       setCurrentPage(1);
-      fetchMenuItems(activeSubCategory, true);
+      
+      // Fetch the updated menu items to get the new total count
+      try {
+        const response = await getMenuItems(activeSubCategory, 1, pageSize);
+        if (response?.data?.isSuccessful) {
+          const totalItemsFromAPI = response.data.data?.pagination?.totalItems || 
+                                   response.data.data?.totalCount || 
+                                   response.data.data?.items?.length || 0;
+          
+          // Update the section count to reflect the new total
+          const currentSection = menuSections.find(s => s.id === activeSubCategory);
+          if (currentSection) {
+            const newCount = totalItemsFromAPI;
+            const oldCount = currentSection.totalCount || 0;
+            if (newCount !== oldCount) {
+              updateMenuSectionCount(activeSubCategory, newCount - oldCount);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching updated counts:', error);
+      }
+      
+      fetchMenuItems(activeSubCategory, true, 1);
     }
   };
 
@@ -1128,7 +1206,7 @@ const RestaurantMenu = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     if (activeSubCategory) {
-      fetchMenuItems(activeSubCategory, false);
+      fetchMenuItems(activeSubCategory, false, page);
     }
   };
 
@@ -1281,7 +1359,7 @@ const RestaurantMenu = () => {
       />
 
       {/* Pagination */}
-      {menuItems && menuItems.length > 0 && totalItems > 11 && !searchQuery && (
+      {menuItems && totalPages > 1 && (
         <CustomPagination
           currentPage={currentPage}
           totalPages={totalPages}
