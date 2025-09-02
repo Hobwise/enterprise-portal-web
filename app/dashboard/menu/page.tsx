@@ -29,7 +29,6 @@ import AddItemModal from '@/components/ui/dashboard/menu/modals/AddItemModal';
 import CreateVarietyModal from '@/components/ui/dashboard/menu/modals/CreateVarietyModal';
 import ItemDetailsModal from '@/components/ui/dashboard/menu/modals/ItemDetailsModal';
 import SingleItemModal from '@/components/ui/dashboard/menu/modals/SingleItemModal';
-import SingleVarietyModal from '@/components/ui/dashboard/menu/modals/SingleVarietyModal';
 import CreateMenuModal from '@/components/ui/dashboard/menu/modals/CreateMenuModal';
 import EditMenuModal from '@/components/ui/dashboard/menu/modals/EditMenuModal';
 import EditItemModal from '@/components/ui/dashboard/menu/modals/EditItemModal';
@@ -90,7 +89,6 @@ const RestaurantMenu = () => {
   const [isCreateVarietyModalOpen, setIsCreateVarietyModalOpen] = useState(false);
   const [isItemDetailsModalOpen, setIsItemDetailsModalOpen] = useState(false);
   const [isSingleItemModalOpen, setIsSingleItemModalOpen] = useState(false);
-  const [isSingleVarietyModalOpen, setIsSingleVarietyModalOpen] = useState(false);
   const [isEditVarietyModalOpen, setIsEditVarietyModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [selectedVariety, setSelectedVariety] = useState<any>(null);
@@ -210,12 +208,24 @@ const RestaurantMenu = () => {
               category: item.menuName,
               section: section.name,
               varieties: item.varieties || [],
+              isAvailable: item.isAvailable,
+              waitingTimeMinutes: item.waitingTimeMinutes,
+              packingCost: item.packingCost,
+              menuID: item.menuID,
+              itemName: item.itemName,
+              itemDescription: item.itemDescription,
+              imageReference: item.imageReference,
+              currency: item.currency,
+              hasVariety: item.hasVariety,
             }));
 
             // Update global cache
             globalMenuItemsCache.set(section.id, {
               items: transformedItems,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              totalPages: 1,
+              totalItems: transformedItems.length,
+              currentPage: 1
             });
 
             return { sectionId: section.id, items: transformedItems };
@@ -576,21 +586,9 @@ const RestaurantMenu = () => {
     }
   };
 
-  const handleVarietyClick = (variety: any) => {
-    setSelectedVariety(variety);
-    setIsItemDetailsModalOpen(false);
-    setIsSingleVarietyModalOpen(true);
-  };
-
-  const backToItemDetailsFromVariety = () => {
-    setIsSingleVarietyModalOpen(false);
-    setSelectedVariety(null);
-    setIsItemDetailsModalOpen(true);
-  };
 
   const handleEditVariety = (variety: any) => {
     setSelectedVariety(variety);
-    setIsSingleVarietyModalOpen(false);
     setIsItemDetailsModalOpen(false);
     setIsEditVarietyModalOpen(true);
   };
@@ -1052,7 +1050,6 @@ const RestaurantMenu = () => {
     setIsCreateVarietyModalOpen(false);
     setIsItemDetailsModalOpen(false);
     setIsSingleItemModalOpen(false);
-    setIsSingleVarietyModalOpen(false);
     // Set the selected item and open edit modal
     setSelectedItem(item);
     setIsOpenEditItem(true);
@@ -1284,7 +1281,7 @@ const RestaurantMenu = () => {
       />
 
       {/* Pagination */}
-      {menuItems && menuItems.length > 0 && totalPages > 1 && !searchQuery && (
+      {menuItems && menuItems.length > 0 && totalItems > 11 && !searchQuery && (
         <CustomPagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -1343,7 +1340,6 @@ const RestaurantMenu = () => {
         selectedItem={selectedItem}
         openCreateVarietyModal={openCreateVarietyModal}
         varietiesLoading={varietiesLoading}
-        handleVarietyClick={handleVarietyClick}
         onEditItem={handleEditItem}
         onDeleteItem={handleDeleteMenuItem}
         onEditVariety={handleEditVariety}
@@ -1361,19 +1357,8 @@ const RestaurantMenu = () => {
         onItemUpdated={handleItemUpdated}
         onEditVariety={handleEditVariety}
         onDeleteVariety={handleDeleteVariety}
-        handleVarietyClick={handleVarietyClick}
       />
 
-      <SingleVarietyModal
-        isOpen={isSingleVarietyModalOpen}
-        onOpenChange={setIsSingleVarietyModalOpen}
-        selectedVariety={selectedVariety}
-        selectedItem={selectedItem}
-        backToItemDetailsFromVariety={backToItemDetailsFromVariety}
-        onDeleteVariety={handleDeleteVariety}
-        onEditVariety={handleEditVariety}
-        onCreateVariety={openCreateVarietyModal}
-      />
 
       <EditVarietyModal
         isOpen={isEditVarietyModalOpen}

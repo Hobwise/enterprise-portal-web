@@ -62,7 +62,7 @@ const MenuItemsGrid = ({
                 key={item.id}
                 onClick={() => onItemClick(item)}
                 className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[190px] transition-shadow cursor-pointer relative ${
-                  item.isAvailable === false ? 'opacity-60' : ''
+                  item.isAvailable === false ? '' : ''
                 }`}
               >
                 {loadingItemId === item.id && (
@@ -71,44 +71,46 @@ const MenuItemsGrid = ({
                   </div>
                 )}
                 
-                {/* Out of Stock Overlay */}
+                {/* Out of Stock Badge */}
                 {item.isAvailable === false && (
-                 <Chip
-              className="capitalize bg-white absolute top-2 right-2"
-              color={"primary"}
-              size="sm"
-              variant="bordered"
-            >
-              {"Out of stock"}
-            </Chip>
+                  <Chip
+                    className="absolute top-2 right-2 z-20 bg-red-500 text-white border-red-500"
+                    size="sm"
+                    variant="flat"
+                  >
+                    Out of stock
+                  </Chip>
                 )}
                 
                 <div className="relative overflow-hidden rounded-t-lg">
-                    <img
-                      src={
-                        item.image.startsWith('data:') || item.image.startsWith('http')
-                          ? item.image
-                          : `data:image/jpeg;base64,${item.image}`
-                      }
-                      alt={item.name}
-                      className={`w-full h-[140px] object-cover ${
-                        item.isAvailable === false ? 'grayscale' : ''
-                      }`}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          noImage;
-                      }}
-                    />
-                
+                  {/* Grey overlay for unavailable items */}
+                  {item.isAvailable === false && (
+                    <div className="absolute inset-0 bg-gray-900/40 z-10 rounded-t-lg" />
+                  )}
+                  <img
+                    src={
+                      item.image.startsWith('data:') || item.image.startsWith('http')
+                        ? item.image
+                        : `data:image/jpeg;base64,${item.image}`
+                    }
+                    alt={item.name}
+                    className={`w-full h-[140px] object-cover ${
+                      item.isAvailable === false ? 'grayscale opacity-70' : ''
+                    }`}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        noImage;
+                    }}
+                  />
                 </div>
                 <div className="px-1.5 mt-1">
                   <h3 className={`text-sm font-normal mb-1 truncate font-satoshi ${
-                    item.isAvailable === false ? 'text-gray-400' : 'text-[#596375]'
+                    item.isAvailable === false ? 'text-gray-500' : 'text-[#596375]'
                   }`}>
                     {item.name}
                   </h3>
                   <p className={`text-xs font-medium font-satoshi ${
-                    item.isAvailable === false ? 'text-gray-400' : 'text-[#596375]'
+                    item.isAvailable === false ? 'text-gray-500' : 'text-[#596375]'
                   }`}>
                     ₦
                     {item.price.toLocaleString('en-NG', {
