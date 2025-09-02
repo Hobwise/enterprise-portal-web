@@ -52,7 +52,7 @@ const MenuItemsGrid = ({
             onClick={() => setIsAddItemChoiceModalOpen ? setIsAddItemChoiceModalOpen(true) : setIsAddItemModalOpen(true)}
             className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[190px]"
           >
-            <img src="/assets/icons/menu.svg" alt="add" />
+            <img src="/assets/icons/menu.svg" alt="add"  />
             <span className="text-gray-600 text-sm font-medium font-satoshi">Add new item</span>
           </div>
 

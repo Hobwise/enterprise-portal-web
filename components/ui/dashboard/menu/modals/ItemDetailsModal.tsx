@@ -147,44 +147,55 @@ const ItemDetailsModal = ({
 
               {/* Content */}
               <div className="p-6">
-                <div className="flex justify-between gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                   {/* Main Item */}
-                  <div className="md:flex gap-4 text-gray-500 ">
-                    <img
-                      src={
-                        selectedItem.image && selectedItem.image.trim() !== ''
-                          ? selectedItem.image.startsWith('data:') || selectedItem.image.startsWith('http')
-                            ? selectedItem.image
-                            : `data:image/jpeg;base64,${selectedItem.image}`
-                          : '/assets/images/no-image.svg'
-                      }
-                      alt={selectedItem.name}
-                      className="w-full aspect-square h-[20rem] rounded-lg object-cover bg-orange-500"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
-                      }}
-                    />
-                    <div className="mt-4">
-                      <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-semibold text-gray-700">
-                          {selectedItem.name}
-                        </h2>
+                  <div className="lg:col-span-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Image */}
+                      <div className="space-y-4">
+                        <div className="relative overflow-hidden rounded-xl shadow-lg">
+                          <img
+                            src={
+                              selectedItem.image && selectedItem.image.trim() !== ''
+                                ? selectedItem.image.startsWith('data:') || selectedItem.image.startsWith('http')
+                                  ? selectedItem.image
+                                  : `data:image/jpeg;base64,${selectedItem.image}`
+                                : '/assets/images/no-image.svg'
+                            }
+                            alt={selectedItem.name}
+                            className="w-full h-[20rem] object-cover transition-transform duration-300 hover:scale-105"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
+                            }}
+                          />
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        {selectedItem.description}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-2">
-                        {selectedItem.category}
-                      </p>
-                      <p className="text-2xl font-bold mt-4 text-gray-700">
-                        ₦
-                        {selectedItem.price.toLocaleString('en-NG', {
-                          minimumFractionDigits: 2,
-                        })}
-                      </p>
+                      
+                      {/* Item Details */}
+                      <div className="space-y-4">
+                        <div>
+                          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                            {selectedItem.name}
+                          </h2>
+                          <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#5F35D2]/10 text-[#5F35D2] mb-3">
+                            {selectedItem.category}
+                          </div>
+                        </div>
+                        
+                        <p className="text-gray-600 leading-relaxed">
+                          {selectedItem.description}
+                        </p>
+                        
+                        <div className="pt-4 border-t border-gray-200">
+                          <p className="text-3xl font-bold text-[#5F35D2]">
+                            ₦{selectedItem.price.toLocaleString('en-NG', {
+                              minimumFractionDigits: 2,
+                            })}
+                          </p>
+                        </div>
                       
                       {/* Availability Toggle */}
-                      <div className="flex items-center gap-3 mt-4 pt-4 border-t">
+                      <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-200">
                         <span className="text-gray-600 font-medium">
                           Availability:
                         </span>
@@ -196,145 +207,152 @@ const ItemDetailsModal = ({
                             wrapper: "group-data-[selected=true]:bg-[#5F35D2]",
                           }}
                         />
-                        <span className={`text-sm ${isAvailable ? 'text-green-600' : 'text-red-500'}`}>
+                        <span className={`text-sm font-medium ${isAvailable ? 'text-green-600' : 'text-red-500'}`}>
                           {isAvailable ? 'Available' : 'Out of Stock'}
                         </span>
                       </div>
-                      
-                      {/* Additional Details */}
-                      <div className="mt-4 pt-4 border-t space-y-3">
-                         {selectedItem.waitingTimeMinutes && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-600 font-medium">Waiting Time:</span>
-                            <span className="text-gray-700">
-                              {selectedItem.waitingTimeMinutes} minutes
-                            </span>
-                          </div>
-                        )} 
-                        {/* {selectedItem.packingCost  ( */}
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-600 font-medium">Packing Cost:</span>
-                            <span className="text-gray-700">
-                              ₦{selectedItem.packingCost.toLocaleString('en-NG', {
-                                minimumFractionDigits: 2,
-                              })}
-                            </span>
-                          </div>
-                        {/* // )} */}
-                        {/* {selectedItem.varieties && selectedItem.varieties.length > 0 && (
-                          <div className="flex items-center justify-between">
-                            <span className="text-gray-600 font-medium">Varieties:</span>
-                            <span className="text-gray-700">
-                              {selectedItem.varieties.length} available
-                            </span>
-                          </div>
-                        )} */}
-                      </div>
                     </div>
                   </div>
+                  {/* Close the main item details div */}
+                </div>
+                {/* Varieties */}
+                <div className="lg:col-span-2">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100/50 rounded-2xl p-6 h-full border border-gray-200/50 shadow-sm">
+                    {/* Header with icon and count */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-[#5F35D2] to-[#7C69D8] rounded-lg flex items-center justify-center shadow-lg">
+                          <Star className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-800">Varieties</h3>
+                          {selectedItem.varieties && selectedItem.varieties.length > 0 && (
+                            <p className="text-sm text-gray-500">
+                              {selectedItem.varieties.length} option{selectedItem.varieties.length !== 1 ? 's' : ''} available
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
 
-                  {/* Varieties */}
-                  <div className="w-[40%] ">
-                    <div className=" h-80 overflow-y-auto">
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
                       {varietiesLoading ? (
-                        <div className="flex justify-center py-8">
-                          <Spinner size="lg" />
-                          <p className="ml-4 text-gray-700">
+                        <div className="flex flex-col items-center justify-center py-16">
+                          <div className="relative">
+                            <Spinner size="lg" color="secondary" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#5F35D2] to-[#7C69D8] rounded-full opacity-20 animate-pulse"></div>
+                          </div>
+                          <p className="mt-6 text-gray-600 font-medium">
                             Loading varieties...
                           </p>
                         </div>
-                      ) : (
-                        selectedItem.varieties?.map((variety: any) => (
+                      ) : selectedItem.varieties && selectedItem.varieties.length > 0 ? (
+                        selectedItem.varieties.map((variety: any, index: number) => (
                           <div
                             key={variety.id}
-                            className="flex items-start gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors relative group"
+                            className="bg-white p-5 rounded-xl border border-gray-100  hover:border-[#5F35D2]/30 transition-all duration-300 group transform hover:-translate-y-1 "
                           >
-                            {/* <img
-                              src={
-                                variety.image && variety.image.trim() !== ''
-                                  ? variety.image.startsWith('data:') || variety.image.startsWith('http')
-                                    ? variety.image
-                                    : `data:image/jpeg;base64,${variety.image}`
-                                  : '/assets/images/no-image.svg'
-                              }
-                              alt={variety.name}
-                              className="w-20 h-20 rounded-lg object-cover bg-cyan-500"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
-                              }}
-                            /> */}
-                            <div className="flex-1">
-                              <div className="flex items-center justify-between">
-                                <h3 className="font-semibold text-gray-700">{variety.unit || variety.name}</h3>
-                                {variety.isAvailable === false && (
-                                  <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full">
-                                    Out of Stock
-                                  </span>
-                                )}
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-bold text-gray-800 text-base group-hover:text-[#5F35D2] transition-colors">
+                                  {variety.unit || variety.name}
+                                </h4>
                               </div>
-                              <p className="text-sm text-gray-700 mt-1">
-                                {variety.description}
-                              </p>
-                              <p className="text-sm text-gray-700 mt-1">
-                                {selectedItem.category}
-                              </p>
-                              <p className="font-bold mt-2 text-gray-700">
-                                ₦
-                                {variety.price?.toLocaleString('en-NG', {
-                                  minimumFractionDigits: 2,
-                                })}
-                              </p>
-                              {/* Display waiting time and packing cost */}
-                              <div className="flex gap-4 mt-2 text-sm text-gray-600">
-                                {(variety.waitingTimeMinutes || selectedItem.waitingTimeMinutes) && (
+                              <div className="flex items-center gap-2">
+                                {variety.isAvailable === false && (
                                   <div className="flex items-center gap-1">
-                                    <span className="font-medium">Waiting Time:</span>
-                                    <span>{variety.waitingTimeMinutes || selectedItem.waitingTimeMinutes} min</span>
+                                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+                                    <span className="text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded-full font-semibold border border-red-200">
+                                      Out of Stock
+                                    </span>
                                   </div>
                                 )}
-                                {(variety.packingCost || selectedItem.packingCost) ? (
-                                  <div className="flex items-center gap-1">
-                                    <span className="font-medium">Packing Cost:</span>
-                                    <span>₦{(variety.packingCost || selectedItem.packingCost).toLocaleString('en-NG', {
-                                      minimumFractionDigits: 2,
-                                    })}</span>
-                                  </div>
-                                ) : null}
+                             
+                                <div className="flex items-center gap-1  transition-all duration-200 translate-x-2 group-hover:translate-x-0">
+                                  {onEditVariety && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onEditVariety({ ...variety, item: selectedItem });
+                                      }}
+                                      className="p-2 text-[#5F35D2] hover:bg-[#5F35D2]/10 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                      title="Edit variety"
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  {onDeleteVariety && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeleteVarietyId(variety.id);
+                                        setIsDeleteVarietyModalOpen(true);
+                                      }}
+                                      className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200 hover:scale-110 hover:shadow-md"
+                                      title="Delete variety"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-2 ">
-                              {onEditVariety && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEditVariety({ ...variety, item: selectedItem });
-                                  }}
-                                  className="p-2 text-[#5F35D2] hover:bg-[#EAE5FF] rounded-lg transition-colors"
-                                  title="Edit variety"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </button>
-                              )}
-                              {onDeleteVariety && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDeleteVarietyId(variety.id);
-                                    setIsDeleteVarietyModalOpen(true);
-                                  }}
-                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                                  title="Delete variety"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                              )}
+                            
+                            {variety.description && (
+                              <p className="text-sm text-gray-600 mb-4 leading-relaxed bg-gray-50 p-3 rounded-lg border-l-4 border-[#5F35D2]/20">
+                                {variety.description}
+                              </p>
+                            )}
+                            
+                            <div className="flex justify-between items-end pt-2 border-t border-gray-100">
+                              <div className="flex items-center gap-2">
+                              
+                                  <span className="text-gray-600 text-xs font-bold">₦</span>
+                                <span className="text-xl font-bold text-gray-600 ">
+                                  {variety.price?.toLocaleString('en-NG', {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </span>
+                              </div>
+                                {variety.isAvailable !== false && (
+                                  <div className="flex items-center gap-1  transition-all duration-200">
+                                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                    <span className="text-xs text-green-600 bg-green-50 px-2 py-1 rounded-full font-medium">
+                                      Available
+                                    </span>
+                                  </div>
+                                )}
                             </div>
                           </div>
                         ))
+                      ) : (
+                        <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                          <div className="relative mb-6">
+                            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                              <Star className="w-10 h-10 text-gray-400" />
+                            </div>
+                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#5F35D2] rounded-full flex items-center justify-center">
+                              <Plus className="w-3 h-3 text-white" />
+                            </div>
+                          </div>
+                          <h4 className="text-lg font-semibold text-gray-700 mb-2">No varieties available</h4>
+                          <p className="text-sm text-gray-500 mb-4 max-w-xs mx-auto leading-relaxed">
+                            Create varieties to offer different options for this item and give customers more choices
+                          </p>
+                          <button
+                            onClick={() => openCreateVarietyModal(selectedItem)}
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#5F35D2] to-[#7C69D8] text-white rounded-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span className="font-medium">Add Variety</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
                 </div>
+                {/* Close the varieties div */}
+              </div>x
               </div>
             </ModalBody>
           </>
