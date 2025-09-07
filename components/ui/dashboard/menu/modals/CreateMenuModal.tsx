@@ -100,7 +100,7 @@ const CreateMenuModal = ({
                             onChange={(e) => setSelectedCreateSection(e.target.value)}
                             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                           >
-                            <option value="">Choose a section</option>
+                            <option value="">Choose a Menu</option>
                             {categories.map((category) => (
                               <option
                                 key={category.categoryId}

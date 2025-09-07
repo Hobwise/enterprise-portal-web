@@ -60,7 +60,7 @@ const Preview = () => {
       }}
       className="xl:block relative hidden w-[320px] border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px] shadow-lg"
     >
-      {selectedImage.length > baseString.length && (
+      {(selectedImage && selectedImage.trim() !== '') && (
         <Image
           fill
           className="absolute object-cover backdrop-brightness-125 opacity-25 -z-10"

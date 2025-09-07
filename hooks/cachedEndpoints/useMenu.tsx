@@ -114,11 +114,20 @@ const useMenu = (businessIdOutsideApp?: any, cooperateID?: any) => {
     }
   );
 
+  // Force refresh function that bypasses cache
+  const forceRefresh = () => {
+    return refetch({ 
+      throwOnError: false,
+      cancelRefetch: true 
+    });
+  };
+
   return {
     data,
     isLoading,
     isError,
     refetch,
+    forceRefresh,
   };
 };
 

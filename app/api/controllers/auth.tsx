@@ -248,6 +248,15 @@ export async function loginUserSelectedBusiness(
   formData: any,
   businessId: string
 ) {
+  if (!formData) {
+    return {
+      errors: { 
+        general: ["Session expired. Please login again."] 
+      },
+      requiresLogin: true
+    };
+  }
+
   const validatedFields = loginSchema.safeParse({
     password: formData.password,
     email: formData.email,

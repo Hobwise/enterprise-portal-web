@@ -11,7 +11,7 @@ interface EditItemModalProps {
   selectedItem: any;
   categories: any[];
   menuSections: any[];
-  onItemUpdated: () => void;
+  onItemUpdated: (originalSectionId?: string) => void;
 }
 
 const EditItemModal = ({
@@ -28,6 +28,9 @@ const EditItemModal = ({
   const [itemName, setItemName] = useState(selectedItem?.itemName || '');
   const [itemDescription, setItemDescription] = useState(selectedItem?.itemDescription || '');
   const [itemPrice, setItemPrice] = useState(selectedItem?.price?.toString() || '');
+
+  // Track original section ID for cache invalidation
+  const [originalSectionId, setOriginalSectionId] = useState('');
 
   // Image states
   const [imagePreview, setImagePreview] = useState(selectedItem?.image || '');
@@ -55,6 +58,9 @@ const EditItemModal = ({
           menuId = matchingSection.id;
         }
       }
+      
+      // Store the original section ID for cache invalidation
+      setOriginalSectionId(menuId);
       
       setSelectedMenuType(menuId);
       setItemName(selectedItem?.itemName || '');
@@ -170,7 +176,9 @@ const EditItemModal = ({
 
       if (response?.data?.isSuccessful) {
         toast.success('Menu item updated successfully');
-        onItemUpdated();
+        // Pass original section ID if item was moved to a different section
+        const wasMoved = originalSectionId !== selectedMenuType;
+        onItemUpdated(wasMoved ? originalSectionId : undefined);
         onOpenChange(false);
       } else {
         toast.error(response?.data?.error || 'Failed to update menu item');
@@ -218,7 +226,7 @@ const EditItemModal = ({
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-3">
-                            Select menu section
+                            Select Menu
                           </label>
                           <div className="relative">
                             <select
@@ -226,7 +234,7 @@ const EditItemModal = ({
                               onChange={(e) => setSelectedMenuType(e.target.value)}
                               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                             >
-                              <option value="">Choose a section</option>
+                              <option value="">Choose a Menu</option>
                               {menuSections.map((section) => (
                                 <option key={section.id} value={section.id}>
                                   {section.name}

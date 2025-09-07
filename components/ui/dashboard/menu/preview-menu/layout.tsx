@@ -121,6 +121,11 @@ const Layout: React.FC = () => {
         return setImageError('File too large');
       }
 
+      // Clean up previous blob URL if it exists
+      if (selectedImage && selectedImage.startsWith('blob:')) {
+        URL.revokeObjectURL(selectedImage);
+      }
+
       const compressedFile = await imageCompression(file, imageCompressOptions);
       const formData = new FormData();
       formData.append('file', compressedFile);
@@ -188,6 +193,15 @@ const Layout: React.FC = () => {
   useEffect(() => {
     fetchMenuConfig();
   }, []);
+
+  // Cleanup blob URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (selectedImage && selectedImage.startsWith('blob:')) {
+        URL.revokeObjectURL(selectedImage);
+      }
+    };
+  }, [selectedImage]);
   return (
     <article className="xl:w-[70%] w-full h-full p-5 border border-[#E4E7EC] rounded-lg">
       <div className="flex justify-between">
@@ -326,6 +340,22 @@ const Layout: React.FC = () => {
             <div className="flex flex-col mt-0 text-black  text-center xl:w-[240px]  w-full gap-2 justify-center items-center">
               {isLoadingImage ? (
                 <SmallLoader />
+              ) : selectedImage ? (
+                <>
+                  <div className="w-16 h-16 rounded-lg overflow-hidden mb-2">
+                    <img
+                      src={selectedImage}
+                      alt="Selected background"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-primaryColor text-sm font-medium">
+                    Background image uploaded
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Click to change image
+                  </span>
+                </>
               ) : (
                 <>
                   <MdOutlineAddPhotoAlternate className="text-[42px] text-primaryColor" />
