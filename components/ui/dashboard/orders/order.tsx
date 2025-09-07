@@ -44,6 +44,7 @@ import CancelOrderModal from './cancelOrder';
 import Comment from './comment';
 import ConfirmOrderModal from './confirmOrder';
 import InvoiceModal from './invoice';
+import UpdateOrderModal from './UpdateOrderModal';
 
 // Type definitions
 interface OrderItem {
@@ -185,6 +186,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [isOpenComment, setIsOpenComment] = React.useState<Boolean>(false);
+  const [isOpenUpdateOrder, setIsOpenUpdateOrder] = React.useState<Boolean>(false);
   // Use the new hook for fetching all data
   const { 
     getCategoryDetails, 
@@ -280,6 +282,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setSingleOrder(order);
     setIsOpenInvoice(!isOpenInvoice);
   };
+  const toggleUpdateOrderModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenUpdateOrder(!isOpenUpdateOrder);
+  };
 
   const [value, setValue] = useState('');
 
@@ -364,8 +370,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     options.includes('Update Order') && (
                       <DropdownItem
                         onClick={() => {
-                          router.push('/dashboard/orders/place-order');
                           saveJsonItemToLocalStorage('order', order);
+                          toggleUpdateOrderModal(order);
                         }}
                         aria-label='update order'
                       >
@@ -508,6 +514,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
         singleOrder={singleOrder}
         isOpenInvoice={isOpenInvoice}
         toggleInvoiceModal={toggleInvoiceModal}
+      />
+      <UpdateOrderModal
+        isOpen={isOpenUpdateOrder}
+        onOpenChange={setIsOpenUpdateOrder}
+        orderData={singleOrder}
+        onOrderUpdated={refetch}
       />
     </section>
   );

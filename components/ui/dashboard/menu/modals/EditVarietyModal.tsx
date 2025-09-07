@@ -140,7 +140,6 @@ const EditVarietyModal = ({
                           Price (₦)
                         </label>
                         <div className="relative">
-                          <span className="absolute left-2 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold z-10">₦</span>
                           <CustomInput
                           classnames=''
                             type="number"

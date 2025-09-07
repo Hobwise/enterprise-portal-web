@@ -75,7 +75,7 @@ const MenuItemsGrid = ({
                 {/* Out of Stock Badge */}
                 {item.isAvailable === false && (
                   <Chip
-                    className="absolute top-2 right-2 z-20 bg-red-500 text-white border-red-500"
+                    className="absolute top-2 right-2 z-20 bg-primaryColor text-white border-primaryColor"
                     size="sm"
                     variant="flat"
                   >

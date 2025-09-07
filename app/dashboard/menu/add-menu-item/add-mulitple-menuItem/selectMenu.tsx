@@ -41,15 +41,15 @@ const SelectMenu = ({
           </svg>
         </div>
         <h3 className='text-2xl font-bold text-gray-800 mb-3 font-satoshi'>
-          Choose a Menu Section
+          Choose a Menu
         </h3>
         <p className='text-gray-600 font-satoshi leading-relaxed max-w-md mx-auto'>
-          Select the menu section where you want to add multiple items. This will help organize your menu items properly.
+          Select the menu where you want to add multiple items. This will help organize your menu items properly.
         </p>
       </div>
       <Spacer y={4} />
       <SelectInput
-        label={'Select a menu'}
+        label={'Select a Menu'}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
           setSelectedMenu(e.target.value)
         }

@@ -47,8 +47,8 @@ export const togglePreview = (activeTile: string): PreviewStyles => {
     },
     "List Right": {
       container: "flex justify-between w-full",
-      imageContainer: "w-[27%] flex-shrink-0 flex justify-end",
-      textContainer: "w-[73%] mr-3",
+      imageContainer: "w-[25%] flex-shrink-0",
+      textContainer: "w-[73%] ml-3",
       imageClass: "h-[60px] w-[60px]",
       divider: true,
       text3: "Founded in 1743, in italy...",

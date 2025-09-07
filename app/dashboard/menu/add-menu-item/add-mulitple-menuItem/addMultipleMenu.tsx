@@ -22,7 +22,7 @@ import toast from "react-hot-toast";
 
 const AddMultipleMenu = ({ selectedMenu, onSuccess, onClose }: any) => {
   const router = useRouter();
-  const { refetch } = useMenu();
+  const { refetch, forceRefresh } = useMenu();
   const businessInformation = getJsonItemFromLocalStorage("business");
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState("");
@@ -38,12 +38,18 @@ const AddMultipleMenu = ({ selectedMenu, onSuccess, onClose }: any) => {
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
       toast.success("Upload Successful");
-      refetch();
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        router.push("/dashboard/menu");
-      }
+      
+      // Force refetch to clear React Query cache with fresh data
+      await forceRefresh();
+      
+      // Add a small delay to ensure server processing is complete
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push("/dashboard/menu");
+        }
+      }, 1000); // 1 second delay
     } else {
       notify({
         title: "Error!",

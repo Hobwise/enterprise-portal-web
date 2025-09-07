@@ -32,6 +32,18 @@ const SelectBusinessForm = () => {
     router.prefetch('/dashboard');
   }, [router]);
 
+  // Check if loginDetails is null and redirect to login
+  useEffect(() => {
+    if (loginDetails === null) {
+      notify({
+        title: "Session Expired",
+        description: "Please login again to continue.",
+        status: "warning"
+      });
+      router.replace("/auth/login");
+    }
+  }, [loginDetails, router]);
+
   const handleAuthenticationError = async (error: any) => {
     // Check for authentication-related errors
     const authErrorCodes = ['AUTH001', 'AUTH002', 'TOKEN_EXPIRED', 'UNAUTHORIZED'];
@@ -61,9 +73,31 @@ const SelectBusinessForm = () => {
   };
 
   const callLogin = async (businessId: string) => {
+    // Double-check loginDetails before making API call
+    if (!loginDetails) {
+      notify({
+        title: "Session Expired",
+        description: "Please login again to continue.",
+        status: "warning"
+      });
+      router.replace("/auth/login");
+      return;
+    }
+
     try {
       const data = await loginUserSelectedBusiness(loginDetails, businessId);
       
+      // Check if login requires redirect
+      if (data?.requiresLogin) {
+        notify({
+          title: "Session Expired",
+          description: data?.errors?.general?.[0] || "Please login again to continue.",
+          status: "warning"
+        });
+        router.replace("/auth/login");
+        return;
+      }
+
       if (data?.data?.response) {
         const decryptedData = decryptPayload(data.data.response);
         

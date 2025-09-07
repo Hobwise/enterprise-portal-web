@@ -1,12 +1,11 @@
-
-import { Modal, ModalContent, ModalBody, Switch } from '@nextui-org/react';
-import { ArrowLeft, Edit, Plus, Star, Trash2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import EditItemModal from './EditItemModal';
-import DeleteModal from '@/components/ui/deleteModal';
-import toast from 'react-hot-toast';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import type { payloadMenuItem } from '@/app/api/controllers/dashboard/menu';
+import { Modal, ModalContent, ModalBody, Switch } from "@nextui-org/react";
+import { ArrowLeft, Edit, Plus, Star, Trash2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import EditItemModal from "./EditItemModal";
+import DeleteModal from "@/components/ui/deleteModal";
+import toast from "react-hot-toast";
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import type { payloadMenuItem } from "@/app/api/controllers/dashboard/menu";
 
 interface SingleItemModalProps {
   isOpen: boolean;
@@ -34,12 +33,15 @@ const SingleItemModal = ({
   onDeleteVariety,
 }: SingleItemModalProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isAvailable, setIsAvailable] = useState(selectedItem?.isAvailable ?? true);
+  const [isAvailable, setIsAvailable] = useState(
+    selectedItem?.isAvailable ?? true
+  );
   const [isUpdatingAvailability, setIsUpdatingAvailability] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteVarietyId, setDeleteVarietyId] = useState<string | null>(null);
-  const [isDeleteVarietyModalOpen, setIsDeleteVarietyModalOpen] = useState(false);
+  const [isDeleteVarietyModalOpen, setIsDeleteVarietyModalOpen] =
+    useState(false);
 
   useEffect(() => {
     if (selectedItem) {
@@ -53,47 +55,57 @@ const SingleItemModal = ({
     setIsUpdatingAvailability(true);
     try {
       // Import and call the update API
-      const { editMenuItem } = await import('@/app/api/controllers/dashboard/menu');
-      const business = getJsonItemFromLocalStorage('business');
-      
+      const { editMenuItem } = await import(
+        "@/app/api/controllers/dashboard/menu"
+      );
+      const business = getJsonItemFromLocalStorage("business");
+
       const payload: payloadMenuItem = {
         menuID: selectedItem.menuID,
         itemName: selectedItem.itemName,
-        itemDescription: selectedItem.itemDescription || '',
+        itemDescription: selectedItem.itemDescription || "",
         price: selectedItem.price,
-        currency: 'NGN',
+        currency: "NGN",
         isAvailable: value,
         hasVariety: selectedItem.varieties?.length > 0 || false,
-        imageReference: selectedItem.imageReference || '',
+        imageReference: selectedItem.imageReference || "",
       };
 
-      const response = await editMenuItem(business[0]?.businessId, payload, selectedItem.id);
+      const response = await editMenuItem(
+        business[0]?.businessId,
+        payload,
+        selectedItem.id
+      );
 
-      if (response && 'errors' in response) {
-        toast.error('Failed to update availability');
+      if (response && "errors" in response) {
+        toast.error("Failed to update availability");
         return;
       }
 
       if (response?.data?.isSuccessful) {
         setIsAvailable(value);
-        toast.success(`Item ${value ? 'enabled' : 'disabled'} successfully`);
+        toast.success(`Item ${value ? "enabled" : "disabled"} successfully`);
         if (onItemUpdated) {
           onItemUpdated();
         }
       } else {
-        toast.error('Failed to update availability');
+        toast.error("Failed to update availability");
       }
     } catch (error) {
-      console.error('Error updating availability:', error);
-      toast.error('Failed to update availability');
+      console.error("Error updating availability:", error);
+      toast.error("Failed to update availability");
     } finally {
       setIsUpdatingAvailability(false);
     }
   };
 
-
   return (
-    <Modal isOpen={isOpen} size="5xl" onOpenChange={onOpenChange} hideCloseButton>
+    <Modal
+      isOpen={isOpen}
+      size="5xl"
+      onOpenChange={onOpenChange}
+      hideCloseButton
+    >
       <ModalContent>
         {() => (
           <>
@@ -109,9 +121,9 @@ const SingleItemModal = ({
                     <span>Back to menu</span>
                   </button>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     onClick={() => setIsEditModalOpen(true)}
                     className="text-gray-700 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
                   >
@@ -139,30 +151,33 @@ const SingleItemModal = ({
 
               {/* Content */}
               <div className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                <div className="grid grid-cols-1 items-center lg:grid-cols-5 gap-8">
                   {/* Main Item */}
                   <div className="lg:col-span-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Image */}
                       <div className="space-y-4">
-                        <div className="relative overflow-hidden rounded-xl shadow-lg">
+                        <div className="relative overflow-hidden rounded-xl ">
                           <img
                             src={
-                              selectedItem.image && selectedItem.image.trim() !== ''
-                                ? selectedItem.image.startsWith('data:') || selectedItem.image.startsWith('http')
+                              selectedItem.image &&
+                              selectedItem.image.trim() !== ""
+                                ? selectedItem.image.startsWith("data:") ||
+                                  selectedItem.image.startsWith("http")
                                   ? selectedItem.image
                                   : `data:image/jpeg;base64,${selectedItem.image}`
-                                : '/assets/images/no-image.svg'
+                                : "/assets/images/no-image.svg"
                             }
                             alt={selectedItem.itemName}
                             className="w-full h-[20rem] object-cover transition-transform duration-300 hover:scale-105"
                             onError={(e) => {
-                              (e.target as HTMLImageElement).src = '/assets/images/no-image.svg';
+                              (e.target as HTMLImageElement).src =
+                                "/assets/images/no-image.svg";
                             }}
                           />
                         </div>
                       </div>
-                      
+
                       {/* Item Details */}
                       <div className="space-y-4">
                         <div>
@@ -173,19 +188,20 @@ const SingleItemModal = ({
                             {selectedItem.menuName}
                           </div>
                         </div>
-                        
+
                         <p className="text-gray-600 leading-relaxed">
                           {selectedItem.itemDescription}
                         </p>
-                        
+
                         <div className="pt-4 border-t border-gray-200">
                           <p className="text-3xl font-bold text-[#5F35D2]">
-                            ₦{selectedItem.price.toLocaleString('en-NG', {
+                            ₦
+                            {selectedItem.price.toLocaleString("en-NG", {
                               minimumFractionDigits: 2,
                             })}
                           </p>
                         </div>
-                      
+
                         {/* Availability Toggle */}
                         <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-200">
                           <span className="text-gray-600 font-medium">
@@ -196,11 +212,16 @@ const SingleItemModal = ({
                             onValueChange={handleAvailabilityToggle}
                             isDisabled={isUpdatingAvailability}
                             classNames={{
-                              wrapper: "group-data-[selected=true]:bg-[#5F35D2]",
+                              wrapper:
+                                "group-data-[selected=true]:bg-[#5F35D2]",
                             }}
                           />
-                          <span className={`text-sm font-medium ${isAvailable ? 'text-green-600' : 'text-red-500'}`}>
-                            {isAvailable ? 'Available' : 'Out of Stock'}
+                          <span
+                            className={`text-sm font-medium ${
+                              isAvailable ? "text-green-600" : "text-red-500"
+                            }`}
+                          >
+                            {isAvailable ? "Available" : "Out of Stock"}
                           </span>
                         </div>
                       </div>
@@ -210,16 +231,24 @@ const SingleItemModal = ({
                   {/* Varieties */}
                   <div className="lg:col-span-2">
                     <div className="bg-gray-50 rounded-xl p-6 h-full">
-                      <h3 className="text-lg font-semibold text-gray-800 mb-4">Varieties</h3>
+                      <div className="w-10 h-10 bg-gradient-to-br from-[#5F35D2] to-[#7C69D8] rounded-lg flex items-center justify-center shadow-lg">
+                        <Star className="w-5 h-5 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                        Varieties
+                      </h3>
                       <div className="space-y-4 max-h-96 overflow-y-auto">
-                        {selectedItem.varieties && selectedItem.varieties.length > 0 ? (
+                        {selectedItem.varieties &&
+                        selectedItem.varieties.length > 0 ? (
                           selectedItem.varieties.map((variety: any) => (
                             <div
                               key={variety.id}
                               className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-[#5F35D2]/20 transition-all duration-200 group"
                             >
                               <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-semibold text-gray-800">{variety.unit || variety.name}</h4>
+                                <h4 className="font-semibold text-gray-800">
+                                  {variety.unit || variety.name}
+                                </h4>
                                 <div className="flex items-center gap-2">
                                   {variety.isAvailable === false && (
                                     <span className="text-xs text-red-500 bg-red-50 px-2 py-1 rounded-full font-medium">
@@ -231,7 +260,10 @@ const SingleItemModal = ({
                                       <button
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          onEditVariety({ ...variety, item: selectedItem });
+                                          onEditVariety({
+                                            ...variety,
+                                            item: selectedItem,
+                                          });
                                         }}
                                         className="p-1.5 text-[#5F35D2] hover:bg-[#5F35D2]/10 rounded-md transition-colors"
                                         title="Edit variety"
@@ -255,16 +287,17 @@ const SingleItemModal = ({
                                   </div>
                                 </div>
                               </div>
-                              
+
                               {variety.description && (
                                 <p className="text-sm text-gray-600 mb-3">
                                   {variety.description}
                                 </p>
                               )}
-                              
+
                               <div className="flex justify-between items-end">
                                 <span className="text-lg font-bold text-[#5F35D2]">
-                                  ₦{variety.price?.toLocaleString('en-NG', {
+                                  ₦
+                                  {variety.price?.toLocaleString("en-NG", {
                                     minimumFractionDigits: 2,
                                   })}
                                 </span>
@@ -272,12 +305,19 @@ const SingleItemModal = ({
                             </div>
                           ))
                         ) : (
-                          <div className="text-center py-12">
-                            <div className="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
-                              <Star className="w-8 h-8 text-gray-400" />
+                          <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-gray-200">
+                            <div className="relative mb-6">
+                              <div className="w-20 h-20 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
+                                <Star className="w-10 h-10 text-gray-400" />
+                              </div>
                             </div>
-                            <p className="text-gray-500">No varieties available</p>
-                            <p className="text-sm text-gray-400 mt-1">Create varieties to offer different options for this item</p>
+                            <h4 className="text-lg font-semibold text-gray-700 mb-2">
+                              No varieties available
+                            </h4>
+                            <p className="text-sm text-gray-500 max-w-xs mx-auto leading-relaxed">
+                              Create varieties to offer different options for
+                              this item
+                            </p>
                           </div>
                         )}
                       </div>
@@ -289,7 +329,6 @@ const SingleItemModal = ({
           </>
         )}
       </ModalContent>
-      
 
       {/* Edit Item Modal */}
       {isEditModalOpen && (

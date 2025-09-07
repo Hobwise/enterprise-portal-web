@@ -87,7 +87,7 @@ const AddItemModal = ({
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-3">
-                            Select menu section
+                            Select Menu
                           </label>
                           <div className="relative">
                             <select
@@ -95,7 +95,7 @@ const AddItemModal = ({
                               onChange={(e) => setSelectedMenuType(e.target.value)}
                               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                             >
-                              <option value="">Choose a section</option>
+                              <option value="">Choose a Menu</option>
                               {menuSections.map((section) => (
                                 <option key={section.id} value={section.id}>
                                   {section.name}

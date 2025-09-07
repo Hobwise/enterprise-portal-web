@@ -83,7 +83,7 @@ const AddMultipleItemsModal = ({
                     )}
                     <div>
                       <h2 className="text-2xl font-bold font-satoshi mb-1">
-                        {activeScreen === 1 ? 'Select Menu Section' : 'Bulk Upload Items'}
+                        {activeScreen === 1 ? 'Select Menu' : 'Bulk Upload Items'}
                       </h2>
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2">

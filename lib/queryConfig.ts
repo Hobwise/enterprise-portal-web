@@ -3,9 +3,9 @@ export const fetchQueryConfig = (options?: any) => {
     refetchOnWindowFocus: true, // Enable window focus refetching by default
     keepPreviousData: true,
     ...options,
-    staleTime: 2 * 60 * 1000, // 2 minutes - more responsive than 30 minutes
+    staleTime: 30 * 1000, // 30 seconds - much more responsive for bulk operations
 
-    cacheTime: 10 * 60 * 1000, // 10 minutes instead of Infinity
+    cacheTime: 5 * 60 * 1000, // 5 minutes instead of 10 for faster cache cleanup
 
     retry: (failureCount: number, error: unknown) => {
       if (failureCount < 3) return true;

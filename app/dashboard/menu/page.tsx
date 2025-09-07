@@ -70,6 +70,7 @@ const RestaurantMenu = () => {
   const [totalItems, setTotalItems] = useState(0);
   const pageSize = 11; // 11 items per page
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [hasInitialLoadCompleted, setHasInitialLoadCompleted] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   // Modal states for menu categories
@@ -270,6 +271,107 @@ const RestaurantMenu = () => {
     }
   };
 
+  // Function to fetch first item with priority (for initial load only)
+  const fetchFirstItemPriority = async (menuSectionId: string) => {
+    if (!menuSectionId) return;
+    
+    try {
+      // Fetch just the first item for immediate display
+      const response = await getMenuItems(menuSectionId, 1, 1); // page 1, size 1
+      if (response?.data?.isSuccessful) {
+        const items = response.data.data?.items || [];
+        if (items.length > 0) {
+          const firstItem = items[0];
+          const transformedItem = {
+            id: firstItem.id,
+            name: firstItem.itemName,
+            price: firstItem.price,
+            image: firstItem.image,
+            description: firstItem.itemDescription,
+            category: firstItem.menuName,
+            section: activeCategory,
+            varieties: firstItem.varieties || [],
+            isAvailable: firstItem.isAvailable,
+            waitingTimeMinutes: firstItem.waitingTimeMinutes,
+            packingCost: firstItem.packingCost,
+            menuID: firstItem.menuID,
+            itemName: firstItem.itemName,
+            itemDescription: firstItem.itemDescription,
+            imageReference: firstItem.imageReference,
+            currency: firstItem.currency,
+            hasVariety: firstItem.hasVariety,
+          };
+          
+          // Set first item immediately
+          setMenuItems([transformedItem]);
+          
+          // Mark initial load as completed
+          setHasInitialLoadCompleted(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching first item:', error);
+    }
+  };
+
+  // Function to fetch remaining items in background
+  const fetchRemainingItemsBackground = async (menuSectionId: string, page: number = 1) => {
+    if (!menuSectionId) return;
+    
+    setTimeout(async () => {
+      try {
+        const response = await getMenuItems(menuSectionId, page, pageSize);
+        if (response?.data?.isSuccessful) {
+          const items = response.data.data?.items || [];
+          const transformedItems = items.map((item: any) => ({
+            id: item.id,
+            name: item.itemName,
+            price: item.price,
+            image: item.image,
+            description: item.itemDescription,
+            category: item.menuName,
+            section: activeCategory,
+            varieties: item.varieties || [],
+            isAvailable: item.isAvailable,
+            waitingTimeMinutes: item.waitingTimeMinutes,
+            packingCost: item.packingCost,
+            menuID: item.menuID,
+            itemName: item.itemName,
+            itemDescription: item.itemDescription,
+            imageReference: item.imageReference,
+            currency: item.currency,
+            hasVariety: item.hasVariety,
+          }));
+          
+          // Extract pagination metadata
+          const pagination = response.data.data?.pagination;
+          const totalPagesFromAPI = pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / pageSize);
+          const totalItemsFromAPI = pagination?.totalItems || response.data.data?.totalCount || items.length;
+          
+          setTotalPages(totalPagesFromAPI);
+          setTotalItems(totalItemsFromAPI);
+
+          // Update global cache
+          const cacheKey = `${menuSectionId}_page_${page}`;
+          globalMenuItemsCache.set(cacheKey, {
+            items: transformedItems,
+            timestamp: Date.now(),
+            totalPages: totalPagesFromAPI,
+            totalItems: totalItemsFromAPI,
+            currentPage: page
+          });
+          
+          // Update menu items with all items
+          setMenuItems(transformedItems);
+          setLoadingItems(false);
+        }
+      } catch (error) {
+        console.error('Error fetching remaining items:', error);
+        setLoadingItems(false);
+      }
+    }, 100); // Small delay to ensure first item displays immediately
+  };
+
   // Function to fetch menu items by section ID
   const fetchMenuItems = async (menuSectionId: string, forceRefresh: boolean = false, page?: number) => {
     if (!menuSectionId) return;
@@ -368,14 +470,34 @@ const RestaurantMenu = () => {
         setMenuSections(sections);
         if (sections.length > 0) {
           setActiveSubCategory(sections[0].id);
-          // Check global cache first
-          const cached = globalMenuItemsCache.get(sections[0].id);
-          if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
-            setMenuItems(cached.items);
-            setTotalPages(cached.totalPages || 1);
-            setTotalItems(cached.totalItems || 0);
+          
+          // Check if this is the very first load
+          if (!hasInitialLoadCompleted) {
+            // Check cache first for immediate display
+            const cacheKey = `${sections[0].id}_page_1`;
+            const cached = globalMenuItemsCache.get(cacheKey);
+            
+            if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
+              // Use cache if available
+              setMenuItems(cached.items);
+              setTotalPages(cached.totalPages || 1);
+              setTotalItems(cached.totalItems || 0);
+              setHasInitialLoadCompleted(true);
+            } else {
+              // Priority load: fetch first item immediately, then rest in background
+              fetchFirstItemPriority(sections[0].id);
+              fetchRemainingItemsBackground(sections[0].id, 1);
+            }
           } else {
-            fetchMenuItems(sections[0].id, false, 1);
+            // Normal cache check for subsequent loads
+            const cached = globalMenuItemsCache.get(sections[0].id);
+            if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
+              setMenuItems(cached.items);
+              setTotalPages(cached.totalPages || 1);
+              setTotalItems(cached.totalItems || 0);
+            } else {
+              fetchMenuItems(sections[0].id, false, 1);
+            }
           }
         } else {
           // No sections available, set empty items immediately
@@ -386,7 +508,7 @@ const RestaurantMenu = () => {
     } else if (categoriesData) {
       setCategories(categoriesData);
     }
-  }, [categoriesData, hasInitialized]);
+  }, [categoriesData, hasInitialized, hasInitialLoadCompleted]);
 
   const handleCategorySelect = async (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -1082,7 +1204,9 @@ const RestaurantMenu = () => {
       });
       keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
       
-      fetchMenuItems(activeSubCategory, true); // Force refresh
+      // Immediately set loading state and refresh current view
+      setLoadingItems(true);
+      fetchMenuItems(activeSubCategory, true, currentPage); // Force refresh current page
     }
     
     // If item was moved from another section, invalidate that section's cache too
@@ -1101,19 +1225,31 @@ const RestaurantMenu = () => {
         newMap.delete(originalSectionId);
         return newMap;
       });
+      
+      // Update section counts
+      updateMenuSectionCount(originalSectionId, -1); // Remove from original
+      updateMenuSectionCount(activeSubCategory, 1); // Add to current
+      
+      // Force refresh the original section's first page if it's cached
+      setTimeout(() => {
+        const originalCacheKey = `${originalSectionId}_page_1`;
+        if (globalMenuItemsCache.has(originalCacheKey)) {
+          globalMenuItemsCache.delete(originalCacheKey);
+        }
+      }, 100);
     }
     
-    // Also invalidate all sections to be safe for item movements
-    menuSections.forEach(section => {
-      if (section.id !== activeSubCategory) {
-        const keysToDelete: string[] = [];
-        globalMenuItemsCache.forEach((_, key) => {
-          if (key.startsWith(`${section.id}_page_`)) {
-            keysToDelete.push(key);
-          }
-        });
-        keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
-      }
+    // Clear all section caches to ensure consistency
+    globalMenuItemsCache.clear();
+    setPreloadedSections(prev => {
+      const newMap = new Map(prev);
+      newMap.clear();
+      return newMap;
+    });
+    setCacheTimestamps(prev => {
+      const newMap = new Map(prev);
+      newMap.clear();
+      return newMap;
     });
   };
 
@@ -1158,47 +1294,58 @@ const RestaurantMenu = () => {
   const handleMultipleItemsSuccess = async () => {
     // Refresh menu items after successful upload
     if (activeSubCategory) {
-      // Clear all cached pages for this section
-      const keysToDelete: string[] = [];
-      globalMenuItemsCache.forEach((_, key) => {
-        if (key.startsWith(`${activeSubCategory}_page_`)) {
-          keysToDelete.push(key);
-        }
-      });
-      keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
+      // Clear all cached pages for ALL sections to be safe
+      globalMenuItemsCache.clear();
       
       setPreloadedSections(prev => {
         const newMap = new Map(prev);
-        newMap.delete(activeSubCategory);
+        newMap.clear(); // Clear all preloaded sections
         return newMap;
       });
       
-      // Reset to page 1 and fetch
+      setCacheTimestamps(prev => {
+        const newMap = new Map(prev);
+        newMap.clear(); // Clear all cache timestamps
+        return newMap;
+      });
+      
+      // Reset to page 1
       setCurrentPage(1);
       
-      // Fetch the updated menu items to get the new total count
-      try {
-        const response = await getMenuItems(activeSubCategory, 1, pageSize);
-        if (response?.data?.isSuccessful) {
-          const totalItemsFromAPI = response.data.data?.pagination?.totalItems || 
-                                   response.data.data?.totalCount || 
-                                   response.data.data?.items?.length || 0;
-          
-          // Update the section count to reflect the new total
-          const currentSection = menuSections.find(s => s.id === activeSubCategory);
-          if (currentSection) {
-            const newCount = totalItemsFromAPI;
-            const oldCount = currentSection.totalCount || 0;
-            if (newCount !== oldCount) {
-              updateMenuSectionCount(activeSubCategory, newCount - oldCount);
+      // Force refetch categories to get updated counts
+      await refetchCategories();
+      
+      // Add a small delay to ensure data is updated on server
+      setTimeout(async () => {
+        try {
+          // Fetch the updated menu items with force refresh
+          const response = await getMenuItems(activeSubCategory, 1, pageSize);
+          if (response?.data?.isSuccessful) {
+            const totalItemsFromAPI = response.data.data?.pagination?.totalItems || 
+                                     response.data.data?.totalCount || 
+                                     response.data.data?.items?.length || 0;
+            
+            // Update the section count to reflect the new total
+            const currentSection = menuSections.find(s => s.id === activeSubCategory);
+            if (currentSection) {
+              const newCount = totalItemsFromAPI;
+              const oldCount = currentSection.totalCount || 0;
+              if (newCount !== oldCount) {
+                updateMenuSectionCount(activeSubCategory, newCount - oldCount);
+              }
             }
           }
+        } catch (error) {
+          console.error('Error fetching updated counts:', error);
+          // Retry once more after another delay
+          setTimeout(() => {
+            fetchMenuItems(activeSubCategory, true, 1);
+          }, 1000);
         }
-      } catch (error) {
-        console.error('Error fetching updated counts:', error);
-      }
-      
-      fetchMenuItems(activeSubCategory, true, 1);
+        
+        // Force refresh the menu items display
+        fetchMenuItems(activeSubCategory, true, 1);
+      }, 500); // 500ms delay to ensure server has processed
     }
   };
 
