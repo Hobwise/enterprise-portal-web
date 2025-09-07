@@ -28,26 +28,24 @@ type Item = {
 
 interface OrderItemsGridProps {
   loadingItems: boolean;
+  loadingCategories?: boolean;
   menuItems: Item[] | null;
   selectedItems: Item[];
   onItemClick: (item: Item) => void;
   onIncrement?: (itemId: string) => void;
   handleCardClick?: (item: Item, isPacked: boolean) => void;
   searchQuery?: string;
-  isError?: boolean;
-  onRetry?: () => void;
 }
 
 const OrderItemsGrid = ({
   loadingItems,
   menuItems,
   selectedItems,
+  loadingCategories,
   onItemClick,
   onIncrement,
   handleCardClick,
   searchQuery,
-  isError,
-  onRetry,
 }: OrderItemsGridProps) => {
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
 
@@ -58,67 +56,30 @@ const OrderItemsGrid = ({
     setTimeout(() => setLoadingItemId(null), 500);
   };
 
-  if (loadingItems || menuItems === null) {
-    return (
-      <div className="p-6 h-[60vh]">
-        <SpinnerLoader size="md" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="p-6 h-[60vh] flex flex-col items-center justify-center">
-        <Image
-          width={80}
-          height={80}
-          className="w-[80px] h-[80px] mb-4"
-          src={noMenu}
-          alt="error loading items"
-        />
-        <p className="text-gray-500 mb-4 text-center">Failed to load menu items</p>
-        <p className="text-gray-400 text-sm mb-4 text-center">Something went wrong while fetching the items</p>
-        {onRetry && (
-          <button
-            onClick={onRetry}
-            className="px-6 py-3 bg-primaryColor text-white rounded-lg hover:bg-primaryColor/90 transition-colors font-medium"
-          >
-            Try Again
-          </button>
-        )}
-      </div>
-    );
-  }
-
-  if (menuItems.length === 0 && searchQuery) {
-    return (
-      <div className="p-6 h-[60vh] flex flex-col items-center justify-center">
-        <p className="text-gray-500 text-lg font-satoshi">No items found matching "{searchQuery}"</p>
-        <p className="text-gray-400 text-sm font-satoshi mt-2">Try adjusting your search terms</p>
-      </div>
-    );
-  }
-
-  if (menuItems.length === 0) {
-    return (
-      <div className="p-6 h-[60vh] flex flex-col items-center justify-center">
-        <Image
-          width={80}
-          height={80}
-          className="w-[80px] h-[80px] mb-4"
-          src={noMenu}
-          alt="no menu items"
-        />
-        <p className="text-gray-500">No items in this category</p>
-        <p className="text-gray-400 text-sm mt-2">This section doesn't have any menu items yet</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 min-h-[60vh]">
-      <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-4">
-        {menuItems.map((menu: Item, index: number) => (
+    <div className="p-6 h-[60vh]">
+      {loadingCategories || loadingItems || menuItems === null ? (
+        <SpinnerLoader size="md" />
+      ) : menuItems && menuItems.length === 0 && searchQuery ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <p className="text-gray-500 text-lg font-satoshi">No items found matching "{searchQuery}"</p>
+          <p className="text-gray-400 text-sm font-satoshi mt-2">Try adjusting your search terms</p>
+        </div>
+      ) : menuItems && menuItems.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <Image
+            width={80}
+            height={80}
+            className="w-[80px] h-[80px] mb-4"
+            src={noMenu}
+            alt="no menu items"
+          />
+          <p className="text-gray-500">No items in this category</p>
+          <p className="text-gray-400 text-sm mt-2">This section doesn't have any menu items yet</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-4">
+          {menuItems.map((menu: Item, index: number) => (
         <div
           title={menu?.isAvailable ? "Select item" : ""}
           onClick={() =>
@@ -249,7 +210,8 @@ const OrderItemsGrid = ({
           )}
           </div>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -17,6 +17,7 @@ import {
 } from "@nextui-org/react";
 import Image from "next/image";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import toast from 'react-hot-toast';
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoSearchOutline } from "react-icons/io5";
@@ -162,7 +163,6 @@ const MenuList = () => {
   useEffect(() => {
     if (categories && categories.length > 0 && !hasInitialized) {
       // Clear any previous error state on initialization
-      setIsError(false);
       
       const firstCategory = categories[0];
       setActiveCategory(firstCategory.categoryId);
@@ -197,7 +197,7 @@ const MenuList = () => {
             setCurrentMenuItems(cached.items);
             setHasInitialLoadCompleted(true);
             setIsLoadingSection(false);
-            setIsError(false); // Ensure no error state with cached data
+            // Cached data loaded successfully
           } else {
             // Priority load: fetch first item immediately, then rest in background
             fetchFirstItemPriority(firstSection.id).then(prioritySuccess => {
@@ -223,7 +223,7 @@ const MenuList = () => {
           // No items in section
           setMenuItems([]);
           setHasInitialLoadCompleted(true);
-          setIsError(false); // Not an error when section is empty
+          // Not an error when section is empty
         }
       }
       
@@ -236,7 +236,6 @@ const MenuList = () => {
 
   const [loading, setLoading] = useState<Boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
-  const [isError, setIsError] = useState<boolean>(false);
 
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
@@ -252,7 +251,7 @@ const MenuList = () => {
     if (!sectionId) return false;
     
     try {
-      setIsError(false);
+      // Clear any previous errors
       // Fetch just the first item for immediate display with retry
       const response = await retryWithBackoff(
         () => getMenuItems(sectionId, 1, 1),
@@ -286,7 +285,7 @@ const MenuList = () => {
       }
     } catch (error) {
       console.error('Error fetching first item:', error);
-      setIsError(true);
+      toast.error('Failed to load menu items');
       return false;
     }
     return false;
@@ -340,7 +339,7 @@ const MenuList = () => {
           // Update global context
           setCurrentMenuItems(transformedItems);
           setLoadingItems(false);
-          setIsError(false);
+          // Clear any previous errors
         } else {
           console.warn('Background loading: API response not successful');
           setLoadingItems(false);
@@ -349,9 +348,9 @@ const MenuList = () => {
       } catch (error) {
         console.error('Error fetching remaining items:', error);
         setLoadingItems(false);
-        // Only set error if we don't have any items loaded
+        // Only show toast if we don't have any items loaded
         if (!menuItems || menuItems.length === 0) {
-          setIsError(true);
+          toast.error('Failed to load menu items');
         }
       }
     }, 100); // Small delay to ensure first item displays immediately
@@ -423,7 +422,7 @@ const MenuList = () => {
         setTotalItems(cached.totalItems);
         setCurrentPage(cached.currentPage);
         setCurrentMenuItems(cached.items);
-        setIsError(false);
+        // Clear any previous errors
         return;
       } catch (cacheError) {
         console.error('Error setting cached data:', cacheError);
@@ -436,12 +435,11 @@ const MenuList = () => {
     }
 
     setLoadingItems(true);
-    setIsError(false);
     
     // Add timeout to prevent hanging requests  
     const timeoutId = setTimeout(() => {
       console.error('Request timeout for section:', sectionId);
-      setIsError(true);
+      toast.error('Request timeout - Failed to load menu items');
       setLoadingItems(false);
     }, 15000); // 15 second timeout
     
@@ -503,7 +501,6 @@ const MenuList = () => {
         
         // Update global context
         setCurrentMenuItems(transformedItems);
-        setIsError(false);
       } else {
         console.error('API returned unsuccessful response:', response?.data);
         throw new Error(response?.data?.message || 'API request failed');
@@ -525,7 +522,7 @@ const MenuList = () => {
           console.warn('Invalid fallback cache detected, removing:', cacheKey);
           globalOrderItemsCache.delete(cacheKey);
         }
-        setIsError(true);
+        toast.error('Failed to load menu items');
         setMenuItems([]);
       }
     } finally {
@@ -565,6 +562,8 @@ const MenuList = () => {
 
   // Category and section handlers
   const handleCategorySelect = async (categoryId: string) => {
+    // Immediately clear error state when switching categories
+    
     // Clear any existing debounce timer
     if (debounceTimer) {
       clearTimeout(debounceTimer);
@@ -574,7 +573,6 @@ const MenuList = () => {
     const newTimer = setTimeout(async () => {
       setActiveCategory(categoryId);
       setCurrentPage(1);
-      setIsError(false); // Clear any previous errors
       
       // Find selected category and set its menu sections
       const selectedCategory = categories.find(cat => cat.categoryId === categoryId);
@@ -601,13 +599,13 @@ const MenuList = () => {
             console.warn('Invalid cache data detected in category select, removing:', cacheKey);
             globalOrderItemsCache.delete(cacheKey);
           } else {
-            // Only set to null if we're actually going to load
-            setMenuItems(null);
+            // Show loading state but keep previous items visible
+            setLoadingItems(true);
             try {
               await fetchMenuItems(allMenuSections[0].id, 1);
             } catch (error) {
               console.error('Error in category select:', error);
-              setIsError(true);
+              toast.error('Failed to load menu items');
             }
           }
         } else {
@@ -615,13 +613,13 @@ const MenuList = () => {
           setActiveSubCategory('');
           setTotalPages(1);
           setTotalItems(0);
-          setIsError(false); // Not an error, just empty
+          // Clear any previous errors // Not an error, just empty
         }
         
         // Update global context
         setCurrentCategory(selectedCategory.categoryName);
       } else {
-        setIsError(true);
+        toast.error('Failed to load category data');
       }
       
       // Clear the timer reference
@@ -641,7 +639,7 @@ const MenuList = () => {
     const newTimer = setTimeout(async () => {
       setActiveSubCategory(sectionId);
       setCurrentPage(1); // Always reset to page 1 when switching sections
-      setIsError(false); // Clear any previous errors
+      // Clear any previous errors // Clear any previous errors
       
       // Check cache first for page 1
       const cacheKey = `${sectionId}_page_1`;
@@ -654,15 +652,15 @@ const MenuList = () => {
         console.warn('Invalid cache data detected in section select, removing:', cacheKey);
         globalOrderItemsCache.delete(cacheKey);
       } else {
-        // Only set to null and show loading if we need to fetch
+        // Show loading state but keep previous items visible
         const section = menuSections.find(s => s.id === sectionId);
         if (section && section.totalCount > 0) {
-          setMenuItems(null);
+          setLoadingItems(true);
           try {
             await fetchMenuItems(sectionId, 1);
           } catch (error) {
             console.error('Error in section select:', error);
-            setIsError(true);
+            toast.error('Failed to load menu section');
           }
         } else {
           setMenuItems([]);
@@ -684,21 +682,6 @@ const MenuList = () => {
     setDebounceTimer(newTimer);
   };
 
-  // Retry handler for failed requests
-  const handleRetry = () => {
-    if (!activeSubCategory) return;
-    
-    // Clear error state and invalidate cache
-    setIsError(false);
-    setLoadingItems(true);
-    
-    // Remove failed cache entries
-    const cacheKey = `${activeSubCategory}_page_${currentPage}`;
-    globalOrderItemsCache.delete(cacheKey);
-    
-    // Retry loading current section
-    fetchMenuItems(activeSubCategory, currentPage);
-  };
 
   // Pagination handlers
   const handlePageChange = (page: number) => {
@@ -938,14 +921,13 @@ const MenuList = () => {
             {/* Items Grid */}
             <OrderItemsGrid
               loadingItems={loadingItems}
+              loadingCategories={loadingCategories}
               menuItems={filteredItems}
               selectedItems={selectedItems}
               onItemClick={toggleVarietyModal}
               onIncrement={handleIncrement}
               handleCardClick={handleCardClick}
               searchQuery={filterValue}
-              isError={isError}
-              onRetry={handleRetry}
             />
 
             {/* Pagination */}

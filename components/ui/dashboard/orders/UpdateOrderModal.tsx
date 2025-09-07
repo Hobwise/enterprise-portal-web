@@ -99,9 +99,12 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         return {
           ...rest,
           id: itemID,
+          itemID: itemID,
           price: unitPrice,
           count: quantity,
           packingCost: item.packingCost || 0,
+          isVariety: item.isVariety || false,
+          isPacked: item.isPacked || false,
         };
       });
       setSelectedItems(() => updatedArray);
@@ -193,6 +196,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         additionalCostName: "",
         additionalCost: 0,
         totalAmount: calculateTotalPrice() * 1.075,
+        estimatedCompletionTime: new Date().toISOString(),
         orderDetails
       };
 
