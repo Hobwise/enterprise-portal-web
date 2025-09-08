@@ -57,7 +57,7 @@ const OrderItemsGrid = ({
   };
 
   return (
-    <div className="p-6 h-[60vh]">
+    <div className="p-6 ">
       {loadingCategories || loadingItems || menuItems === null ? (
         <SpinnerLoader size="md" />
       ) : menuItems && menuItems.length === 0 && searchQuery ? (
