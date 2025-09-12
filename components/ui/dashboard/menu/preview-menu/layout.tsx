@@ -53,6 +53,7 @@ const Layout: React.FC = () => {
 
   const handleChangeColor = (color: any) => {
     setBackgroundColor(color.hex);
+    // Clear image when selecting a color background
     setImageReference('');
     setSelectedImage('');
   };
@@ -78,9 +79,9 @@ const Layout: React.FC = () => {
       layout: convertActiveTile(),
       backgroudStyle: imageReference ? 0 : 1,
       useBackground: isSelectedPreview,
-      backgroundColour: backgroundColor,
-      imageRef: imageReference ? imageReference : '',
-      textColour: selectedTextColor,
+      backgroundColour: backgroundColor || '',
+      imageRef: imageReference || '',
+      textColour: selectedTextColor || '#000',
     };
 
     const data = await createMenuConfiguration(
@@ -106,8 +107,11 @@ const Layout: React.FC = () => {
     setIsLoadingImage(false);
     setImageError('');
     if (data?.data?.isSuccessful) {
-      setSelectedImage(URL.createObjectURL(file));
+      // Create blob URL for immediate preview
+      const blobUrl = URL.createObjectURL(file);
+      setSelectedImage(blobUrl);
       setImageReference(data.data.data);
+      // Clear background color when image is uploaded
       setBackgroundColor('');
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);

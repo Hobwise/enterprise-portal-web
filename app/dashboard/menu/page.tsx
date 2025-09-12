@@ -118,6 +118,7 @@ const RestaurantMenu = () => {
     name: string;
     packingCost?: number;
     waitingTimeMinutes?: number;
+    categoryId?: string;
   } | null>(null);
   const [editName, setEditName] = useState('');
   const [editPackingCost, setEditPackingCost] = useState<number | undefined>();
@@ -459,6 +460,13 @@ const RestaurantMenu = () => {
       setLoadingItems(false);
     }
   };
+
+  // Sync menuItems with global context whenever it changes
+  useEffect(() => {
+    if (menuItems) {
+      setCurrentMenuItems(menuItems);
+    }
+  }, [menuItems, setCurrentMenuItems]);
 
   useEffect(() => {
     if (categoriesData && categoriesData.length > 0 && !hasInitialized) {
@@ -978,11 +986,14 @@ const RestaurantMenu = () => {
   };
 
   const handleEditMenu = (menu: any) => {
-    setEditingMenu(menu);
+    setEditingMenu({
+      ...menu,
+      categoryId: menu.categoryId || activeCategory // Store current category if not provided
+    });
     setEditName(menu.name);
     setEditPackingCost(menu.packingCost);
     setEditEstimatedTime(menu.waitingTimeMinutes);
-    setSelectedEditSection(menu.section || '');
+    setSelectedEditSection(menu.categoryId || activeCategory || '');
     setIsOpenViewMenu(false);
     setIsOpenEditMenu(true);
   };
@@ -1005,7 +1016,45 @@ const RestaurantMenu = () => {
 
       if (response?.data?.isSuccessful) {
         toast.success('Menu updated successfully');
-        refetchCategories();
+        
+        // Clear all caches to ensure fresh data
+        globalMenuItemsCache.clear();
+        setPreloadedSections(new Map());
+        setCacheTimestamps(new Map());
+        
+        // Check if menu was moved to a different category
+        const menuMovedToNewCategory = editingMenu.categoryId !== selectedEditSection;
+        
+        // Refresh categories first
+        await refetchCategories();
+        
+        // If menu was moved and affects current view, refresh immediately
+        if (menuMovedToNewCategory && activeSubCategory === editingMenu.id) {
+          // Menu section was moved away from current category
+          // Need to select a different section or clear the view
+          setMenuItems([]);
+          setActiveSubCategory('');
+          
+          // Find and select the first available section in current category
+          setTimeout(() => {
+            const currentCategory = categories.find(c => c.categoryId === activeCategory);
+            if (currentCategory) {
+              const sections = currentCategory.menus[0]?.menuSections || [];
+              if (sections.length > 0) {
+                const firstSection = sections[0];
+                setActiveSubCategory(firstSection.id);
+                setMenuSections(sections);
+                fetchMenuItems(firstSection.id, true, 1);
+              }
+            }
+          }, 100);
+        } else if (activeSubCategory) {
+          // Refresh current section to get updated data
+          setTimeout(() => {
+            fetchMenuItems(activeSubCategory, true, currentPage);
+          }, 100);
+        }
+        
         closeEditModal();
       } else {
         toast.error(response?.data?.error || 'Failed to update menu');
@@ -1192,10 +1241,87 @@ const RestaurantMenu = () => {
     }
   };
 
-  const handleItemUpdated = (originalSectionId?: string) => {
-    // Refresh current menu items after edit
-    if (activeSubCategory) {
-      // Clear all cached pages for current section
+  // Helper function for optimistic updates within same section
+  const optimisticUpdateMenuItem = (updatedItem: any) => {
+    // Transform the updated item to match the expected format
+    const transformedUpdatedItem = {
+      id: updatedItem.id,
+      name: updatedItem.itemName,
+      price: updatedItem.price,
+      image: updatedItem.image,
+      description: updatedItem.itemDescription,
+      category: updatedItem.menuName,
+      section: activeCategory,
+      varieties: updatedItem.varieties || [],
+      isAvailable: updatedItem.isAvailable,
+      waitingTimeMinutes: updatedItem.waitingTimeMinutes,
+      packingCost: updatedItem.packingCost,
+      menuID: updatedItem.menuID,
+      itemName: updatedItem.itemName,
+      itemDescription: updatedItem.itemDescription,
+      imageReference: updatedItem.imageReference,
+      currency: updatedItem.currency,
+      hasVariety: updatedItem.hasVariety,
+    };
+
+    // Update menuItems state immediately
+    setMenuItems(prevItems => {
+      if (!prevItems) return prevItems;
+      return prevItems.map(item => 
+        item.id === updatedItem.id ? transformedUpdatedItem : item
+      );
+    });
+
+    // Update currentMenuItems state as well
+    setCurrentMenuItems(prevItems => {
+      if (!prevItems) return prevItems;
+      return prevItems.map(item => 
+        item.id === updatedItem.id ? transformedUpdatedItem : item
+      );
+    });
+
+    // Update cache for current page
+    const cacheKey = `${activeSubCategory}_page_${currentPage}`;
+    const cached = globalMenuItemsCache.get(cacheKey);
+    if (cached) {
+      const updatedItems = cached.items.map(item => 
+        item.id === updatedItem.id ? transformedUpdatedItem : item
+      );
+      globalMenuItemsCache.set(cacheKey, {
+        ...cached,
+        items: updatedItems,
+      });
+    }
+
+    // Also update the selected item if it's currently selected
+    if (selectedItem && selectedItem.id === updatedItem.id) {
+      setSelectedItem(transformedUpdatedItem);
+    }
+  };
+
+  // Helper function for cross-section moves
+  const handleCrossSectionMove = async (updatedItem: any, originalSectionId: string) => {
+    // Update section counts first
+    updateMenuSectionCount(originalSectionId, -1); // Remove from original
+    updateMenuSectionCount(updatedItem.menuID, 1); // Add to new section
+    
+    // If the item was moved away from the current section, remove it immediately
+    if (originalSectionId === activeSubCategory) {
+      // Remove from current view
+      setMenuItems(prevItems => {
+        if (!prevItems) return prevItems;
+        return prevItems.filter(item => item.id !== updatedItem.id);
+      });
+      
+      setCurrentMenuItems(prevItems => {
+        if (!prevItems) return prevItems;
+        return prevItems.filter(item => item.id !== updatedItem.id);
+      });
+
+      // Update total items count
+      setTotalItems(prev => Math.max(0, prev - 1));
+
+      // Clear cache for current section since item was removed
       const keysToDelete: string[] = [];
       globalMenuItemsCache.forEach((_, key) => {
         if (key.startsWith(`${activeSubCategory}_page_`)) {
@@ -1203,54 +1329,29 @@ const RestaurantMenu = () => {
         }
       });
       keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
-      
-      // Immediately set loading state and refresh current view
-      setLoadingItems(true);
-      fetchMenuItems(activeSubCategory, true, currentPage); // Force refresh current page
+    } 
+    // If the item was moved to the current section, add it
+    else if (updatedItem.menuID === activeSubCategory) {
+      // Add to current view (optimistic update)
+      optimisticUpdateMenuItem(updatedItem);
+      setTotalItems(prev => prev + 1);
     }
+
+    // Update categories structure in the background to reflect the move
+    // This ensures ViewMenuModal shows updated data
+    await refetchCategories();
+  };
+
+  const handleItemUpdated = async (updatedItem: any, originalSectionId?: string) => {
+    const itemWasMoved = originalSectionId && originalSectionId !== updatedItem.menuID;
     
-    // If item was moved from another section, invalidate that section's cache too
-    if (originalSectionId && originalSectionId !== activeSubCategory) {
-      const keysToDelete: string[] = [];
-      globalMenuItemsCache.forEach((_, key) => {
-        if (key.startsWith(`${originalSectionId}_page_`)) {
-          keysToDelete.push(key);
-        }
-      });
-      keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
-      
-      // Also invalidate preloaded sections cache
-      setPreloadedSections(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(originalSectionId);
-        return newMap;
-      });
-      
-      // Update section counts
-      updateMenuSectionCount(originalSectionId, -1); // Remove from original
-      updateMenuSectionCount(activeSubCategory, 1); // Add to current
-      
-      // Force refresh the original section's first page if it's cached
-      setTimeout(() => {
-        const originalCacheKey = `${originalSectionId}_page_1`;
-        if (globalMenuItemsCache.has(originalCacheKey)) {
-          globalMenuItemsCache.delete(originalCacheKey);
-        }
-      }, 100);
+    if (itemWasMoved) {
+      // Handle cross-section moves
+      await handleCrossSectionMove(updatedItem, originalSectionId);
+    } else {
+      // Handle same-section updates - optimistic update
+      optimisticUpdateMenuItem(updatedItem);
     }
-    
-    // Clear all section caches to ensure consistency
-    globalMenuItemsCache.clear();
-    setPreloadedSections(prev => {
-      const newMap = new Map(prev);
-      newMap.clear();
-      return newMap;
-    });
-    setCacheTimestamps(prev => {
-      const newMap = new Map(prev);
-      newMap.clear();
-      return newMap;
-    });
   };
 
   const handleEditItem = (item: any) => {
