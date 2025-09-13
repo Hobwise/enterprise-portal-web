@@ -12,11 +12,19 @@ import {
 } from "@nextui-org/react";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { FaMinus, FaPlus } from "react-icons/fa6";
+import { X } from "lucide-react";
 import { editOrder, getOrder } from "@/app/api/controllers/dashboard/orders";
-import { getJsonItemFromLocalStorage, formatPrice, clearItemLocalStorage } from "@/lib/utils";
+import {
+  getJsonItemFromLocalStorage,
+  formatPrice,
+  clearItemLocalStorage,
+  saveJsonItemToLocalStorage,
+} from "@/lib/utils";
 import { CustomButton } from "@/components/customButton";
 import SpinnerLoader from "../menu/SpinnerLoader";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { Plus } from "lucide-react";
 
 type Item = {
   id: string;
@@ -49,7 +57,12 @@ interface OrderData {
   status: 0 | 1 | 2 | 3;
   dateCreated: string;
   comment?: string;
-  orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number }[];
+  orderDetails?: {
+    itemID: string;
+    itemName: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
 }
 
 interface UpdateOrderModalProps {
@@ -65,21 +78,26 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   orderData,
   onOrderUpdated,
 }) => {
+  const router = useRouter();
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
-  
+
   // State management
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isLoadingOrderDetails, setIsLoadingOrderDetails] = useState<boolean>(false);
-  const [storedOrderData, setStoredOrderData] = useState<OrderData | null>(null);
+  const [isLoadingOrderDetails, setIsLoadingOrderDetails] =
+    useState<boolean>(false);
+  const [storedOrderData, setStoredOrderData] = useState<OrderData | null>(
+    null
+  );
+  const [fullOrderData, setFullOrderData] = useState<any>(null);
 
   // Fetch order details from API (exact logic from menuList.tsx)
   const getOrderDetails = async () => {
     // Get fresh order data from localStorage when modal opens
     const orderFromStorage = getJsonItemFromLocalStorage("order");
-    
+
     if (!orderFromStorage?.id) {
       toast.error("Order data not found");
       return;
@@ -93,20 +111,25 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
     setIsLoadingOrderDetails(false);
     if (response?.data?.isSuccessful) {
-      const updatedArray = response?.data?.data.orderDetails.map((item: any) => {
-        const { unitPrice, quantity, itemID, ...rest } = item;
-        
-        return {
-          ...rest,
-          id: itemID,
-          itemID: itemID,
-          price: unitPrice,
-          count: quantity,
-          packingCost: item.packingCost || 0,
-          isVariety: item.isVariety || false,
-          isPacked: item.isPacked || false,
-        };
-      });
+      // Store the full order data for display
+      setFullOrderData(response?.data?.data);
+
+      const updatedArray = response?.data?.data.orderDetails.map(
+        (item: any) => {
+          const { unitPrice, quantity, itemID, ...rest } = item;
+
+          return {
+            ...rest,
+            id: itemID,
+            itemID: itemID,
+            price: unitPrice,
+            count: quantity,
+            packingCost: item.packingCost || 0,
+            isVariety: item.isVariety || false,
+            isPacked: item.isPacked || false,
+          };
+        }
+      );
       setSelectedItems(() => updatedArray);
       // Don't clear localStorage here - wait until successful update
     } else if (response?.data?.error) {
@@ -121,41 +144,48 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     }
   }, [isOpen]);
 
-
   // Increment handler
-  const handleIncrement = useCallback((id: string) => {
-    if (isUpdating) return;
-    
-    setIsUpdating(true);
-    
-    setSelectedItems((prevItems) => {
-      const updatedItems = prevItems.map((item) =>
-        item.id === id ? { ...item, count: Math.min(item.count + 1, 999) } : item
-      );
-      setTimeout(() => setIsUpdating(false), 100);
-      return updatedItems;
-    });
-  }, [isUpdating]);
+  const handleIncrement = useCallback(
+    (id: string) => {
+      if (isUpdating) return;
+
+      setIsUpdating(true);
+
+      setSelectedItems((prevItems) => {
+        const updatedItems = prevItems.map((item) =>
+          item.id === id
+            ? { ...item, count: Math.min(item.count + 1, 999) }
+            : item
+        );
+        setTimeout(() => setIsUpdating(false), 100);
+        return updatedItems;
+      });
+    },
+    [isUpdating]
+  );
 
   // Decrement handler
-  const handleDecrement = useCallback((id: string) => {
-    if (isUpdating) return;
-    
-    setIsUpdating(true);
-    
-    setSelectedItems((prevItems) => {
-      const updatedItems = prevItems
-        .map((item) =>
-          item.id === id
-            ? { ...item, count: Math.max(1, item.count - 1) }
-            : item
-        )
-        .filter(item => item.count > 0);
-      
-      setTimeout(() => setIsUpdating(false), 100);
-      return updatedItems;
-    });
-  }, [isUpdating]);
+  const handleDecrement = useCallback(
+    (id: string) => {
+      if (isUpdating) return;
+
+      setIsUpdating(true);
+
+      setSelectedItems((prevItems) => {
+        const updatedItems = prevItems
+          .map((item) =>
+            item.id === id
+              ? { ...item, count: Math.max(1, item.count - 1) }
+              : item
+          )
+          .filter((item) => item.count > 0);
+
+        setTimeout(() => setIsUpdating(false), 100);
+        return updatedItems;
+      });
+    },
+    [isUpdating]
+  );
 
   // Calculate total price
   const calculateTotalPrice = () => {
@@ -168,6 +198,17 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     }, 0);
   };
 
+  // Handle Add Item - navigate to place-order page with current order
+  const handleAddItem = () => {
+    // Save the current order data to localStorage so place-order page can pick it up
+    if (storedOrderData) {
+      saveJsonItemToLocalStorage("order", storedOrderData);
+      router.push("/dashboard/orders/place-order");
+    } else {
+      toast.error("Order data not available");
+    }
+  };
+
   // Save order changes
   const handleSaveOrder = async () => {
     if (!storedOrderData || selectedItems.length === 0) {
@@ -176,14 +217,14 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     }
 
     setIsSaving(true);
-    
+
     try {
-      const orderDetails = selectedItems.map(item => ({
+      const orderDetails = selectedItems.map((item) => ({
         itemID: item.itemID,
         quantity: item.count,
         unitPrice: item.price,
         isVariety: item.isVariety || false,
-        isPacked: item.isPacked || false
+        isPacked: item.isPacked || false,
       }));
 
       const updatePayload = {
@@ -197,15 +238,12 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         additionalCost: 0,
         totalAmount: calculateTotalPrice() * 1.075,
         estimatedCompletionTime: new Date().toISOString(),
-        orderDetails
+        orderDetails,
       };
 
-      const response = await editOrder(
-        storedOrderData.id,
-        updatePayload
-      );
+      const response = await editOrder(storedOrderData.id, updatePayload);
 
-      if (response?.data?.isSuccessful) {
+      if (response && "data" in response && response.data?.isSuccessful) {
         toast.success("Order updated successfully");
         // Clear localStorage only after successful update
         clearItemLocalStorage("order");
@@ -222,7 +260,6 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     }
   };
 
-
   // Reset state when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -231,7 +268,10 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     }
   }, [isOpen]);
 
-  const totalItems = selectedItems.reduce((total, item) => total + item.count, 0);
+  const totalItems = selectedItems.reduce(
+    (total, item) => total + item.count,
+    0
+  );
 
   return (
     <>
@@ -247,13 +287,52 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         }}
       >
         <ModalContent>
-          <ModalHeader className="flex items-center gap-3 border-b border-primaryGrey">
-            <div>
-              <h2 className="text-xl font-bold text-black">Update Order</h2>
-              <p className="text-sm text-textGrey">Order #{orderData?.reference}</p>
+          <ModalHeader className="flex flex-col gap-3 border-b border-primaryGrey">
+            <div className="flex items-center justify-between w-full">
+              <div className="w-full">
+                <h2 className="text-xl font-bold text-black">Update Order</h2>
+                <p className="text-sm text-textGrey">
+                 {businessInformation?.[0]?.businessName || "N/A"}
+                </p>
+              </div>
+              <Button
+                isIconOnly
+                variant="light"
+                onPress={() => onOpenChange(false)}
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close modal"
+              >
+                <X size={20} />
+              </Button>
+            </div>
+            {/* Order Details Header */}
+            <div className="flex items-center justify-between w-full bg-gray-50 p-3 rounded-lg">
+              <div className="w-full text-sm">
+                <div className="flex items-center w-full gap-6 justify-between mb-1">
+                  <span className="text-textGrey">OrderID</span>
+                  <span className="ml-2 font-semibold text-black">
+                      {orderData?.reference}
+                  </span>
+                </div>
+                <div className="flex items-center w-full gap-6 justify-between mb-1">
+                  <span className="text-textGrey">Table:</span>
+                  <span className="ml-2 font-semibold text-black">
+                    {fullOrderData?.qrReference ||
+                      storedOrderData?.qrReference ||
+                      "N/A"}
+                  </span>
+                </div>
+                <div className="flex items-center w-full gap-6 justify-between mb-1">
+                  <span className="text-textGrey">Served by:</span>
+                  <span className="ml-2 font-semibold text-black">
+                    {fullOrderData?.placedByName || 
+                      "Not assigned"}
+                  </span>
+                </div>
+              </div>
             </div>
           </ModalHeader>
-          
+
           <ModalBody className="p-6">
             {/* Business Name Header */}
             {/* <div className="mb-6">
@@ -264,7 +343,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                 {totalItems} Item{totalItems !== 1 ? 's' : ''} 
               </p>
             </div> */}
-            
+
             {/* Cart Items */}
             {isLoadingOrderDetails ? (
               <div className="flex flex-col h-[40vh] justify-center items-center">
@@ -281,9 +360,13 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                     <React.Fragment key={item.id}>
                       <div className="flex justify-between items-center">
                         <div className="flex-1">
-                          <p className="font-[500] text-base text-[#344054]">{item.menuName || 'Menu Item'}</p>
+                          <p className="font-[500] text-base text-[#344054]">
+                            {item.menuName || "Menu Item"}
+                          </p>
                           <Spacer y={1} />
-                          <p className="text-[#475367] text-sm">{item.itemName}</p>
+                          <p className="text-[#475367] text-sm">
+                            {item.itemName}
+                          </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center">
@@ -326,52 +409,60 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                     </React.Fragment>
                   ))}
                 </div>
-                
+
                 {/* Payment Summary */}
                 <div className="mt-6 pt-4 border-t border-primaryGrey sticky bottom-0 bg-white">
                   {/* <h3 className="text-[16px] font-[600] text-black mb-3">Payment Summary</h3> */}
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <h4 className="text-[14px] font-[500] text-black">Subtotal</h4>
+                      <h4 className="text-[14px] font-[500] text-black">
+                        Subtotal
+                      </h4>
                       <p className="text-[14px] font-[600] text-black">
                         {formatPrice(calculateTotalPrice())}
                       </p>
                     </div>
                     <div className="flex justify-between items-center">
-                      <h4 className="text-[14px] font-[500] text-textGrey">VAT (7.5%)</h4>
+                      <h4 className="text-[14px] font-[500] text-textGrey">
+                        VAT (7.5%)
+                      </h4>
                       <p className="text-[14px] font-[500] text-textGrey">
                         {formatPrice(calculateTotalPrice() * 0.075)}
                       </p>
                     </div>
                     <Divider className="bg-primaryGrey my-3" />
                     <div className="flex justify-between items-center">
-                      <h4 className="text-[16px] font-[700] text-black">Total</h4>
+                      <h4 className="text-[16px] font-[700] text-black">
+                        Total
+                      </h4>
                       <p className="text-[18px] font-[700] text-primaryColor">
                         {formatPrice(calculateTotalPrice() * 1.075)}
                       </p>
                     </div>
-                
-                {/* Footer Buttons */}
-                <div className="flex gap-5 mt-3">
-                  <CustomButton
-                    onClick={() => onOpenChange(false)}
-                    className="bg-white text-black border border-primaryGrey h-[50px] w-full"
-                    disabled={isSaving}
-                  >
-                    Cancel
-                  </CustomButton>
-                  <CustomButton
-                    onClick={handleSaveOrder}
-                    className="text-white h-[50px] w-full"
-                    backgroundColor="bg-primaryColor"
-                    loading={isSaving}
-                    disabled={selectedItems.length === 0}
-                  >
-                    Update Order
-                  </CustomButton>
-                </div>
+
+                    {/* Footer Buttons */}
+                    <div className="flex gap-3 mt-6">
+                      <CustomButton
+                        onClick={handleAddItem}
+                        className="h-[50px] flex-1 bg-white text-black border border-primaryGrey flex-shrink-0"
+                        disabled={!storedOrderData}
+                      >
+                        <div className="flex  items-center gap-2">
+                          <Plus className="w-4 h-4" />
+                          <span>Add Item</span>
+                        </div>
+                      </CustomButton>
+                      <CustomButton
+                        onClick={handleSaveOrder}
+                        className="text-white h-[50px] flex-1"
+                        backgroundColor="bg-primaryColor"
+                        loading={isSaving}
+                        disabled={selectedItems.length === 0}
+                      >
+                        Update Order
+                      </CustomButton>
+                    </div>
                   </div>
-                  
                 </div>
               </div>
             ) : (
@@ -382,9 +473,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                   alt="no menu illustration"
                 />
                 <Spacer y={3} />
-                <p className="text-sm text-textGrey">
-                  No items in this order
-                </p>
+                <p className="text-sm text-textGrey">No items in this order</p>
               </div>
             )}
           </ModalBody>

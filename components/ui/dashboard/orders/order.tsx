@@ -181,12 +181,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const { userRolePermissions, role } = usePermission();
   const [singleOrder, setSingleOrder] = React.useState<OrderItem | null>(null);
   const [isOpenCancelOrder, setIsOpenCancelOrder] =
-    React.useState<Boolean>(false);
-  const [isOpenInvoice, setIsOpenInvoice] = React.useState<Boolean>(false);
+    React.useState<boolean>(false);
+  const [isOpenInvoice, setIsOpenInvoice] = React.useState<boolean>(false);
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
-    React.useState<Boolean>(false);
-  const [isOpenComment, setIsOpenComment] = React.useState<Boolean>(false);
-  const [isOpenUpdateOrder, setIsOpenUpdateOrder] = React.useState<Boolean>(false);
+    React.useState<boolean>(false);
+  const [isOpenComment, setIsOpenComment] = React.useState<boolean>(false);
+  const [isOpenUpdateOrder, setIsOpenUpdateOrder] = React.useState<boolean>(false);
   // Use the new hook for fetching all data
   const { 
     getCategoryDetails, 

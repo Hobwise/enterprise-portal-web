@@ -24,19 +24,17 @@ const Preview = () => {
 
   const { data } = useMenu();
 
-  const baseString = "data:image/jpeg;base64,";
-
   // Use currentMenuItems from context if available, otherwise fall back to all items
   const [items, setItems] = React.useState<any[]>([]);
-  
+
   React.useEffect(() => {
     // First priority: Use items from global context
     if (currentMenuItems && currentMenuItems.length > 0) {
       setItems(currentMenuItems);
-    } 
+    }
     // Second priority: Check sessionStorage for persisted state
-    else if (typeof window !== 'undefined') {
-      const savedState = sessionStorage.getItem('previewMenuState');
+    else if (typeof window !== "undefined") {
+      const savedState = sessionStorage.getItem("previewMenuState");
       if (savedState) {
         const parsedState = JSON.parse(savedState);
         setItems(parsedState.items || []);
@@ -50,28 +48,56 @@ const Preview = () => {
       setItems(data.flatMap((obj) => obj.items));
     }
   }, [currentMenuItems, data]);
-  
+
   const styles = togglePreview(activeTile);
 
   return (
     <article
-      style={{
-        backgroundColor: backgroundColor || "white",
-      }}
-      className="xl:block relative hidden w-[320px] border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px] shadow-lg"
+      // style={{
+      //   backgroundColor: backgroundColor || "white",
+      // }}
+style={{
+  ...(selectedImage && selectedImage.trim() !== "" 
+    ? {
+        backgroundImage: `url(${
+          selectedImage.startsWith("blob:") ||
+          selectedImage.startsWith("http") ||
+          selectedImage.startsWith("data:")
+            ? selectedImage
+            : `data:image/jpeg;base64,${selectedImage}`
+        })`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }
+    : { backgroundColor: backgroundColor || "white" }
+  ),
+}}
+aria-label="background"
+className={`xl:block relative hidden w-[320px] border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px]`}
     >
-      {(selectedImage && selectedImage.trim() !== '') && (
-        <Image
-          fill
-          className="absolute object-cover backdrop-brightness-125 opacity-25 -z-10"
-          src={selectedImage}
-          alt="background"
-          priority
+      {/* {selectedImage && selectedImage.trim() !== "" && (
+        <div
+          className="absolute top-0 h-screen object-cover opacity-40 -z-5"
+          style={{
+            backgroundImage: `url(${
+              selectedImage.startsWith("blob:") ||
+              selectedImage.startsWith("http") ||
+              selectedImage.startsWith("data:")
+                ? selectedImage
+                : `data:image/jpeg;base64,${selectedImage}`
+            })`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            width: "100%",
+          }}
+          aria-label="background"
         />
-      )}
+      )} */}
 
       {/* Menu header */}
-      <header className="sticky top-0 z-10 bg-inherit pt-4 px-4">
+      <header className="sticky bg-inherit top-0 z-10  pt-4 px-4">
         <h1
           style={{ color: selectedTextColor }}
           className="text-[28px] font-bold"
@@ -81,12 +107,19 @@ const Preview = () => {
         {(currentCategory || currentSection || currentSearchQuery) && (
           <div className="mt-1">
             {currentCategory && (
-              <p style={{ color: selectedTextColor }} className="text-sm opacity-80">
-                {currentCategory}{currentSection && ` / ${currentSection}`}
+              <p
+                style={{ color: selectedTextColor }}
+                className="text-sm opacity-80"
+              >
+                {currentCategory}
+                {currentSection && ` / ${currentSection}`}
               </p>
             )}
             {currentSearchQuery && (
-              <p style={{ color: selectedTextColor }} className="text-xs opacity-70 mt-1">
+              <p
+                style={{ color: selectedTextColor }}
+                className="text-xs opacity-70 mt-1"
+              >
                 Showing results for: "{currentSearchQuery}"
               </p>
             )}
@@ -131,7 +164,9 @@ const Preview = () => {
       <main className={`${styles.main} relative px-4 pb-4`}>
         {items?.length ? (
           items.map((item) => (
-            <React.Fragment key={`${item.id || item.menuID}-${item.name || item.itemName}`}>
+            <React.Fragment
+              key={`${item.id || item.menuID}-${item.name || item.itemName}`}
+            >
               <div
                 className={`${styles.container} ${
                   activeTile === "List Right" &&
@@ -147,7 +182,8 @@ const Preview = () => {
                       height={activeTile.includes("Single column") ? 200 : 60}
                       src={
                         item?.image
-                          ? item.image.startsWith('data:') || item.image.startsWith('http')
+                          ? item.image.startsWith("data:") ||
+                            item.image.startsWith("http")
                             ? item.image
                             : `data:image/jpeg;base64,${item.image}`
                           : NoMenu
@@ -161,7 +197,9 @@ const Preview = () => {
                   className={`text-[14px] ${styles.textContainer} flex flex-col justify-center`}
                 >
                   {(item.category || item.menuName) && (
-                    <span className="text-xs opacity-80">{item.category || item.menuName}</span>
+                    <span className="text-xs opacity-80">
+                      {item.category || item.menuName}
+                    </span>
                   )}
                   <h3 className="font-bold">{item.name || item.itemName}</h3>
                   <p className="text-[13px] font-semibold">
@@ -189,11 +227,11 @@ const Preview = () => {
               className="opacity-50 mb-4"
             />
             <p style={{ color: selectedTextColor }}>
-              {currentSearchQuery 
+              {currentSearchQuery
                 ? `No items found for "${currentSearchQuery}"`
-                : currentSection 
-                  ? `No items in ${currentSection}`
-                  : 'No menu items to display'}
+                : currentSection
+                ? `No items in ${currentSection}`
+                : "No menu items to display"}
             </p>
           </div>
         )}

@@ -11,7 +11,7 @@ interface EditItemModalProps {
   selectedItem: any;
   categories: any[];
   menuSections: any[];
-  onItemUpdated: (originalSectionId?: string) => void;
+  onItemUpdated: (updatedItem: any, originalSectionId?: string) => void;
 }
 
 const EditItemModal = ({
@@ -176,9 +176,26 @@ const EditItemModal = ({
 
       if (response?.data?.isSuccessful) {
         toast.success('Menu item updated successfully');
-        // Pass original section ID if item was moved to a different section
+        
+        // Create the updated item object with new values
+        const updatedItem = {
+          ...selectedItem,
+          itemName: itemName,
+          itemDescription: itemDescription,
+          price: parseFloat(itemPrice),
+          menuID: selectedMenuType,
+          menuId: selectedMenuType, // Support both naming conventions
+          image: imagePreview,
+          imageReference: imageReference,
+          // Find the menu section name for display
+          menuName: menuSections.find(section => section.id === selectedMenuType)?.name || selectedItem.menuName
+        };
+        
+        // Check if item was moved to a different section
         const wasMoved = originalSectionId !== selectedMenuType;
-        onItemUpdated(wasMoved ? originalSectionId : undefined);
+        
+        // Pass the updated item data and original section ID if moved
+        onItemUpdated(updatedItem, wasMoved ? originalSectionId : undefined);
         onOpenChange(false);
       } else {
         toast.error(response?.data?.error || 'Failed to update menu item');

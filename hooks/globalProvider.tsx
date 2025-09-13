@@ -143,11 +143,20 @@ const AppProvider = ({ children }: any) => {
 
     if (data?.data?.isSuccessful) {
       setActiveTile(convertActiveTile(data?.data?.data?.layout));
-      setSelectedImage(`data:image/jpeg;base64,${data?.data?.data?.image}`);
-      setBackgroundColor(data?.data?.data?.backgroundColour);
-      setSelectedTextColor(data?.data?.data?.textColour);
-      setImageReference(data?.data?.data?.imageRef);
-      setIsSelectedPreview(data?.data?.data?.useBackground);
+      // Handle image data from API
+      if (data?.data?.data?.image && data?.data?.data?.image !== 'undefined' && data?.data?.data?.image !== 'null') {
+        // If we have base64 image data, use it directly (no prefix needed, will be handled in preview)
+        setSelectedImage(data?.data?.data?.image);
+      } else if (data?.data?.data?.imageRef && data?.data?.data?.imageRef.startsWith('http')) {
+        // If we have an HTTP URL reference, use it directly
+        setSelectedImage(data?.data?.data?.imageRef);
+      } else {
+        setSelectedImage('');
+      }
+      setBackgroundColor(data?.data?.data?.backgroundColour || '');
+      setSelectedTextColor(data?.data?.data?.textColour || '#000');
+      setImageReference(data?.data?.data?.imageRef || '');
+      setIsSelectedPreview(data?.data?.data?.useBackground || false);
     } else if (data?.data?.error) {
     }
   };

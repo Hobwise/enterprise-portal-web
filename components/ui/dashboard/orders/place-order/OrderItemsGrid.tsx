@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Chip, Spinner, Button } from '@nextui-org/react';
 import Image from 'next/image';
-import { formatPrice } from '@/lib/utils';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import { FaPlus } from 'react-icons/fa6';
 const noImage = "/assets/images/no-image.svg";
@@ -51,7 +50,7 @@ const OrderItemsGrid = ({
 
   const onItemClickWithLoading = async (item: Item) => {
     setLoadingItemId(item.id);
-    await onItemClick(item);
+    onItemClick(item);
     // Reset loading state after a delay to ensure modal has opened
     setTimeout(() => setLoadingItemId(null), 500);
   };
@@ -79,7 +78,7 @@ const OrderItemsGrid = ({
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-4">
-          {menuItems.map((menu: Item, index: number) => (
+          {menuItems.map((menu: Item) => (
         <div
           title={menu?.isAvailable ? "Select item" : ""}
           onClick={() =>

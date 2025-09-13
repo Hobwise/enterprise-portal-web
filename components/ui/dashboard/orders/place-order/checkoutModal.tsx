@@ -98,7 +98,10 @@ const CheckoutModal = ({
   const handleClick = (methodId: number) => {
     if (methodId === 3) {
       router.push("/dashboard/orders");
-    } else {
+    } else if(screen === 3){
+      router.push("/dashboard/orders");
+    } 
+    else {
       setSelectedPaymentMethod(methodId);
       setScreen(3);
     }
@@ -295,6 +298,7 @@ const CheckoutModal = ({
           header: "px-3 md:px-6",
         }}
         isDismissable={false}
+        hideCloseButton={true}
         size={screen === 1 ? "5xl" : "md"}
         isOpen={isOpen}
         onOpenChange={() => {
@@ -334,7 +338,7 @@ const CheckoutModal = ({
                           onClick={onOpenChange}
                           className="py-2 px-4 mb-0 bg-white border border-primaryGrey"
                         >
-                          Update order
+                          Close
                         </CustomButton>
 
                         <CustomButton

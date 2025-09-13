@@ -15,7 +15,7 @@ interface SingleItemModalProps {
   onDeleteItem?: (itemId: string) => Promise<void>;
   categories?: any[];
   menuSections?: any[];
-  onItemUpdated?: () => void;
+  onItemUpdated?: (updatedItem: any, originalSectionId?: string) => void;
   onEditVariety?: (variety: any) => void;
   onDeleteVariety?: (varietyId: string) => Promise<void>;
 }
@@ -85,8 +85,15 @@ const SingleItemModal = ({
       if (response?.data?.isSuccessful) {
         setIsAvailable(value);
         toast.success(`Item ${value ? "enabled" : "disabled"} successfully`);
+        
+        // Create updated item object with new availability
+        const updatedItem = {
+          ...selectedItem,
+          isAvailable: value,
+        };
+        
         if (onItemUpdated) {
-          onItemUpdated();
+          onItemUpdated(updatedItem);
         }
       } else {
         toast.error("Failed to update availability");
@@ -338,9 +345,9 @@ const SingleItemModal = ({
           selectedItem={selectedItem}
           categories={categories}
           menuSections={menuSections}
-          onItemUpdated={() => {
+          onItemUpdated={(updatedItem, originalSectionId) => {
             if (onItemUpdated) {
-              onItemUpdated();
+              onItemUpdated(updatedItem, originalSectionId);
             }
           }}
         />

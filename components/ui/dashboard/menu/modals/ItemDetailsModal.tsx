@@ -22,7 +22,7 @@ interface ItemDetailsModalProps {
   onDeleteItem?: (item: any) => void;
   onEditVariety?: (variety: any) => void;
   onDeleteVariety?: (varietyId: string) => Promise<void>;
-  onItemUpdated?: () => void;
+  onItemUpdated?: (updatedItem: any, originalSectionId?: string) => void;
 }
 
 const ItemDetailsModal = ({
@@ -86,8 +86,15 @@ const ItemDetailsModal = ({
       if (response?.data?.isSuccessful) {
         setIsAvailable(value);
         toast.success(`Item ${value ? "enabled" : "disabled"} successfully`);
+        
+        // Create updated item object with new availability
+        const updatedItem = {
+          ...selectedItem,
+          isAvailable: value,
+        };
+        
         if (onItemUpdated) {
-          onItemUpdated();
+          onItemUpdated(updatedItem);
         }
       } else {
         toast.error("Failed to update availability");
