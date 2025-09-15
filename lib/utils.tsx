@@ -15,7 +15,7 @@ import { toPng } from "html-to-image";
 
 import cookie from "js-cookie";
 import Image from "next/image";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 import { twMerge } from "tailwind-merge";
 
 import * as XLSX from "xlsx";
@@ -23,7 +23,7 @@ import { saveAs } from "file-saver";
 
 import LoadingAvatar from "../public/assets/images/loadingAvatar.svg";
 import { companyInfo } from "./companyInfo";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import moment from "moment";
 
 export const cn = (...inputs: ClassValue[]) => {

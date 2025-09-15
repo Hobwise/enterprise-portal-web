@@ -2,7 +2,7 @@ import { logout } from "@/app/api/controllers/dashboard/settings";
 import { notify, removeCookie } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 const useLogout = () => {
   const [isLoading, setIsLoading] = useState(false);

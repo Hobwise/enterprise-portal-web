@@ -79,7 +79,7 @@ const OrderMenuToolbar = ({
       {/* Scrollable menu sections container */}
       <div
         ref={tabsRef}
-        className="flex-1 overflow-x-auto scrollbar-hide scroll-smooth"
+        className="flex-1 overflow-x-auto w-80 scrollbar-hide scroll-smooth"
         onScroll={handleTabsScroll}
       >
         <div className="flex gap-6 w-full">

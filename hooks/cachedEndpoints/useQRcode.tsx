@@ -1,7 +1,7 @@
 'use client';
 import { getQR } from '@/app/api/controllers/dashboard/quickResponse';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
@@ -31,11 +31,11 @@ const useQR = () => {
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ["qr", { page, rowsPerPage }],
-    getAllQRcode,
-    fetchQueryConfig()
-  );
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["qr", { page, rowsPerPage }],
+    queryFn: getAllQRcode,
+    ...fetchQueryConfig()
+  });
 
   return {
     data,

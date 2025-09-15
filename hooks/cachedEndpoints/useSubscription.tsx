@@ -2,7 +2,7 @@
 import { getUserSubscription } from "@/app/api/controllers/dashboard/settings";
 import { setJsonCookie } from "@/lib/cookies";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
-import { useQuery } from "react-query";
+import { useQuery } from "@tanstack/react-query";
 
 const useSubscription = () => {
   const business = getJsonItemFromLocalStorage("business");
@@ -17,13 +17,11 @@ const useSubscription = () => {
     return responseData?.data?.data as any;
   };
 
-  const { data, refetch, isLoading, isError } = useQuery<any>(
-    "userSubscription",
-    getUserSubscriptionInfo,
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { data, refetch, isLoading, isError } = useQuery<any>({
+    queryKey: ["userSubscription"],
+    queryFn: getUserSubscriptionInfo,
+    refetchOnWindowFocus: false,
+  });
 
   return { data, isLoading, isError, refetch };
 };

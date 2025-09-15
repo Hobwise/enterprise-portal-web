@@ -1,7 +1,7 @@
 'use client';
 import { getPaymentByBusiness, getPaymentDetails } from '@/app/api/controllers/dashboard/payment';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
@@ -76,19 +76,19 @@ const usePayment = (
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<{ categories: PaymentCategory[]; details: PaymentItem[] }>(
-    [
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: [
       "payments",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ],
-    getAllPayments,
-    {
+    queryFn: getAllPayments,
+    
       ...fetchQueryConfig(options),
       refetchOnWindowFocus: false,
       staleTime: 0,
       enabled: options?.enabled !== false,
-    }
-  );
+    
+  });
 
   return {
     categories: data?.categories || [],

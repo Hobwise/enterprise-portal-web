@@ -1,7 +1,7 @@
 'use client';
 import { getBusinesByCooperate } from '@/app/api/controllers/dashboard/settings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useState, useEffect } from 'react';
 
 const useGetBusinessByCooperate = () => {
@@ -22,17 +22,15 @@ const useGetBusinessByCooperate = () => {
     return responseData?.data?.data as any;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>(
-    ['businessByCooperate', businessInformation?.[0]?.businessId],
-    getAllBusinessByCooperate,
-    {
-      refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
-      cacheTime: 30 * 60 * 1000, // Cache kept for 30 minutes
-      retry: 1, // Only retry once on failure
-      enabled: isClient && !!businessInformation?.[0]?.businessId, // Only run query if we have a business ID and are on client
-    }
-  );
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ['businessByCooperate', businessInformation?.[0]?.businessId],
+    queryFn: getAllBusinessByCooperate,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // Data considered fresh for 5 minutes
+    gcTime: 30 * 60 * 1000, // Cache kept for 30 minutes (renamed from gcTime in v5)
+    retry: 1, // Only retry once on failure
+    enabled: isClient && !!businessInformation?.[0]?.businessId, // Only run query if we have a business ID and are on client
+  });
 
   return {
     data,

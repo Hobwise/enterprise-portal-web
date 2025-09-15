@@ -4,7 +4,7 @@ import {
   getCampaignsByCategory,
 } from '@/app/api/controllers/dashboard/campaigns';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 
 interface UseCampaignCategoryOptions {
@@ -33,13 +33,13 @@ const useCampaignCategory = ({ category, page, pageSize }: UseCampaignCategoryOp
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ['campaignsByCategory', businessId, category, page, pageSize],
-    fetchCampaignsByCategory,
-    {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['campaignsByCategory', businessId, category, page, pageSize],
+    queryFn: fetchCampaignsByCategory,
+    
       enabled: !!businessId && !!category,
-    }
-  );
+    
+  });
 
   return {
     data,

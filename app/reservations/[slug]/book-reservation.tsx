@@ -26,7 +26,7 @@ import {
 import { BookReservationApi, fetchAvailability } from '@/app/api/controllers/landingPage';
 import { IoCall } from 'react-icons/io5';
 import { MdEmail, MdTimer } from 'react-icons/md';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
 interface IDetails {

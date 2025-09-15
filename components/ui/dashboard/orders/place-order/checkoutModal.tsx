@@ -15,7 +15,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from "@/lib/utils";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Button,
   Checkbox,
@@ -49,6 +49,21 @@ interface OrderDetail {
   unitPrice: number;
 }
 
+interface ApiResponse {
+  data?: {
+    isSuccessful: boolean;
+    data?: {
+      id: string;
+    };
+    error?: string;
+  };
+  errors?: {
+    placedByName?: string[];
+    placedByPhoneNumber?: string[];
+    quickResponseID?: string[];
+  };
+}
+
 const CheckoutModal = ({
   isOpen,
   onOpenChange,
@@ -59,7 +74,6 @@ const CheckoutModal = ({
   orderDetails,
   id,
 
-  setSelectedItems,
   businessId,
   cooperateID,
   handlePackingCost,
@@ -69,7 +83,7 @@ const CheckoutModal = ({
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const router = useRouter();
   const queryClient = useQueryClient();
-  const [response, setResponse] = useState(null);
+  const [response, setResponse] = useState<ApiResponse | null>(null);
   const [orderId, setOrderId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -141,7 +155,7 @@ const CheckoutModal = ({
 
   const placeOrder = async () => {
     setLoading(true);
-    const transformedArray = selectedItems.map((item) => ({
+    const transformedArray = selectedItems.map((item: any) => ({
       itemId: item.id,
       quantity: item.count,
       unitPrice: item.price,
@@ -162,7 +176,7 @@ const CheckoutModal = ({
     };
     const id = businessId ? businessId : businessInformation[0]?.businessId;
     const data = await createOrder(id, payload, cooperateID);
-    setResponse(data);
+    setResponse(data as ApiResponse);
     setLoading(false);
     if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
@@ -171,8 +185,8 @@ const CheckoutModal = ({
         text: "Order placed",
         type: "success",
       });
-      await queryClient.invalidateQueries('orderCategories');
-      await queryClient.invalidateQueries(['orderDetails']);
+      await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
+      await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       setScreen(2);
     } else if (data?.data?.error) {
       notify({
@@ -184,7 +198,7 @@ const CheckoutModal = ({
   };
   const updateOrder = async () => {
     setLoading(true);
-    const transformedArray = selectedItems.map((item) => ({
+    const transformedArray = selectedItems.map((item: any) => ({
       itemId: item.id,
       quantity: item.count,
       unitPrice: item.price,
@@ -204,7 +218,7 @@ const CheckoutModal = ({
       orderDetails: transformedArray,
     };
     const data = await editOrder(id, payload);
-    setResponse(data);
+    setResponse(data as ApiResponse);
     setLoading(false);
     if (data?.data?.isSuccessful) {
       setOrderId(data.data.data.id);
@@ -213,8 +227,8 @@ const CheckoutModal = ({
         text: "Order placed",
         type: "success",
       });
-      await queryClient.invalidateQueries('orderCategories');
-      await queryClient.invalidateQueries(['orderDetails']);
+      await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
+      await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       setScreen(2);
     } else if (data?.data?.error) {
       notify({
@@ -244,8 +258,8 @@ const CheckoutModal = ({
         text: "Payment has been made, awaiting confirmation",
         type: "success",
       });
-      await queryClient.invalidateQueries('orderCategories');
-      await queryClient.invalidateQueries(['orderDetails']);
+      await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
+      await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       router.push("/dashboard/orders");
     } else if (data?.data?.error) {
       notify({
@@ -263,14 +277,14 @@ const CheckoutModal = ({
 
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;
-      const newData = response.map((item) => ({
+      const newData = response.map((item: any) => ({
         ...item,
         label: item.name,
         value: item.id,
       }));
 
       // Sort alphabetically by label/name
-      const sortedData = newData.sort((a, b) => a.label.localeCompare(b.label));
+      const sortedData = newData.sort((a: any, b: any) => a.label.localeCompare(b.label));
       setQr(sortedData);
     } else if (data?.data?.error) {
     }
@@ -293,7 +307,9 @@ const CheckoutModal = ({
     <div className="">
       <Modal
         classNames={{
-          base: "md:overflow-none overflow-scroll h-full md:h-auto",
+          base: screen === 1
+            ? "md:overflow-none overflow-scroll h-full md:h-auto max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px]"
+            : "md:overflow-none overflow-scroll h-full md:h-auto max-w-[90vw] md:max-w-[500px]",
           body: "px-1 md:px-6",
           header: "px-3 md:px-6",
         }}
@@ -318,7 +334,7 @@ const CheckoutModal = ({
         }}
       >
         <ModalContent>
-          {(onClose) => (
+          {() => (
             <>
               {screen === 1 && (
                 <>
@@ -360,7 +376,7 @@ const CheckoutModal = ({
                   <ModalBody>
                     <div className="flex lg:flex-row flex-col gap-3 mb-4">
                       <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
-                        {selectedItems?.map((item, index) => {
+                        {selectedItems?.map((item: any, index: number) => {
                           return (
                             <>
                               <div
@@ -570,7 +586,13 @@ const CheckoutModal = ({
                           // defaultValue={menuItem?.itemDescription}
                           value={order.comment}
                           name="comment"
-                          onChange={handleInputChange}
+                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                            setResponse(null);
+                            setOrder((prevOrder) => ({
+                              ...prevOrder,
+                              comment: e.target.value,
+                            }));
+                          }}
                           label="Add comment"
                           placeholder="Add a comment to this order. (optional)"
                         />
@@ -649,7 +671,7 @@ const CheckoutModal = ({
                       type="text"
                       // defaultValue={menuItem?.itemName}
                       value={reference}
-                      onChange={(e) => setReference(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReference(e.target.value)}
                       name="itemName"
                       label="Enter ref"
                       placeholder="Provide payment reference"

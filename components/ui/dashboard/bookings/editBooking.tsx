@@ -11,7 +11,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from "@/lib/utils";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import { InfoCircle } from "@/public/assets/svg";
 import {
   CalendarDateTime,

@@ -1,7 +1,7 @@
 "use client";
 
 import { getReservationsByDate } from "@/app/api/controllers/dashboard/reservations";
-import { useQuery } from "react-query";
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
 // Hook to fetch a single reservation by ID
 const useSingleReservationByDate = (reservationId: any, requestDate: string) => {
@@ -10,15 +10,15 @@ const useSingleReservationByDate = (reservationId: any, requestDate: string) => 
     return await getReservationsByDate(reservationId, requestDate);
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ["singleReservation", reservationId, requestDate],
-    getSingleReservation,
-    {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["singleReservation", reservationId, requestDate],
+    queryFn: getSingleReservation,
+    
       enabled: !!reservationId, // Fetch only if reservationId exists
-      keepPreviousData: true, // Prevent flickering on re-fetch
+      placeholderData: keepPreviousData, // Prevent flickering on re-fetch
       refetchOnWindowFocus: false, // Optimize performance
-    }
-  );
+    
+  });
 
   return {
     data,

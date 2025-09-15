@@ -3,7 +3,7 @@ import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Spinner } from '@nextui-org/react';
 import { useSearchParams } from 'next/navigation';
 import BookReservationPage from '@/app/reservations/[slug]/book-reservation';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getSingleReservationDetails } from '@/app/api/controllers/dashboard/reservations';
 
 const SingleReservationComponent = () => {

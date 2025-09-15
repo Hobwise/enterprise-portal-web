@@ -8,7 +8,7 @@ import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 
 const SignupForm = () => {
   const router = useRouter();

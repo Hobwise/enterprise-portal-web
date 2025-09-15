@@ -1,7 +1,7 @@
 'use client';
 import { getOrderCategories, getOrderDetails } from '@/app/api/controllers/dashboard/orders';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
@@ -86,19 +86,19 @@ const useOrder = (
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<{ categories: OrderCategory[]; details: OrderItem[] }>(
-    [
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: [
       "orders",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ],
-    getAllOrders,
-    {
+    queryFn: getAllOrders,
+    
       ...fetchQueryConfig(options),
       refetchOnWindowFocus: false,
       staleTime: 0, // Always consider data stale to ensure refetch on date changes
       enabled: options?.enabled !== false,
-    }
-  );
+    
+  });
 
 
   

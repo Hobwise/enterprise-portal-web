@@ -1,7 +1,7 @@
 'use client';
 import { getMenuCategories, getMenuItems } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 interface MenuItem {
@@ -56,20 +56,18 @@ const useAllMenuData = (
     isFetching: isFetchingCategories,
     isError: isCategoriesError,
     refetch: refetchCategories
-  } = useQuery(
-    ['menuCategories', businessId],
-    async () => {
+  } = useQuery({
+    queryKey: ['menuCategories', businessId],
+    queryFn: async () => {
       const response = await getMenuCategories(businessId, '');
       return response?.data?.data?.menuCategories || [];
     },
-    {
-      enabled: !!businessId,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnReconnect: false,
-      // refetchOnWindowFocus will use global default (true)
-    }
-  );
+    enabled: !!businessId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnReconnect: false,
+    // refetchOnWindowFocus will use global default (true)
+  });
 
   const categories = categoriesData || [];
 
@@ -79,23 +77,21 @@ const useAllMenuData = (
     data: firstCategoryData,
     isLoading: isLoadingFirst,
     isFetching: isFetchingFirst
-  } = useQuery(
-    ['menuItems', firstCategory, { page, rowsPerPage }],
-    async () => {
+  } = useQuery({
+    queryKey: ['menuItems', firstCategory, { page, rowsPerPage }],
+    queryFn: async () => {
       if (!firstCategory || categories[0]?.totalCount === 0) return { items: [], totalCount: 0 };
-      
+
       const response = await getMenuItems(firstCategory, page, rowsPerPage);
       return response?.data?.data || { items: [], totalCount: 0 };
     },
-    {
-      enabled: !!firstCategory && !!businessId && categories.length > 0,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnReconnect: false,
-      keepPreviousData: true,
-      // refetchOnWindowFocus will use global default (true)
-    }
-  );
+    enabled: !!firstCategory && !!businessId && categories.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnReconnect: false,
+    placeholderData: (previousData) => previousData,
+    // refetchOnWindowFocus will use global default (true)
+  });
 
   // Update categoryDetails when first category loads
   useEffect(() => {
@@ -176,31 +172,29 @@ const useAllMenuData = (
     data: currentCategoryData,
     isLoading: isLoadingCurrent, 
     isFetching: isFetchingCurrent 
-  } = useQuery(
-    ['menuItems', currentCategory, { page, rowsPerPage }],
-    async () => {
+  } = useQuery({
+    queryKey: ['menuItems', currentCategory, { page, rowsPerPage }],
+    queryFn: async () => {
       if (!currentCategory) return { items: [], totalCount: 0 };
-      
+
       const response = await getMenuItems(currentCategory, page, rowsPerPage);
       const data = response?.data?.data || { items: [], totalCount: 0 };
-      
+
       // Also update categoryDetails for consistency
       setCategoryDetails(prev => ({
         ...prev,
         [currentCategory]: data
       }));
-      
+
       return data;
     },
-    {
-      enabled: !!currentCategory && !!businessId && categories.length > 0,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnReconnect: false,
-      keepPreviousData: true,
-      // refetchOnWindowFocus will use global default (true)
-    }
-  );
+    enabled: !!currentCategory && !!businessId && categories.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnReconnect: false,
+    placeholderData: (previousData) => previousData,
+    // refetchOnWindowFocus will use global default (true)
+  });
 
   // Get details for a specific category using React Query cache as single source of truth
   const getCategoryDetails = (categoryId: string) => {

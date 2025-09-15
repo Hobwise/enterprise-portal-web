@@ -3,7 +3,7 @@ import {
   getReservation,
   payloadReservationItem,
 } from '@/app/api/controllers/dashboard/reservations';
-import { useQuery } from 'react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 
 const useSingleReservation = (reservationId: any) => {
@@ -19,17 +19,15 @@ const useSingleReservation = (reservationId: any) => {
     return responseData?.data?.data as payloadReservationItem[];
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<
-    payloadReservationItem[]
-  >(
-    ['singleReservation', { page, rowsPerPage, tableStatus }],
-    getSingleReservation,
-    {
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ['singleReservation', { page, rowsPerPage, tableStatus }],
+    queryFn: getSingleReservation,
+    
       enabled: !!reservationId,
-      keepPreviousData: true,
+      placeholderData: keepPreviousData,
       refetchOnWindowFocus: false,
-    }
-  );
+    
+  });
 
   return {
     data,

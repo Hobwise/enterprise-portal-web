@@ -1,7 +1,7 @@
 'use client';
 import { getMenuCategories } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 interface MenuSection {
   name: string;
@@ -35,14 +35,12 @@ const useMenuCategories = () => {
     return responseData?.data?.data as Category[];
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<Category[]>(
-    'menuCategories',
-    fetchMenuCategories,
-    {
-      refetchOnWindowFocus: false,
-      enabled: !!business && !!userInformation,
-    }
-  );
+  const { data, isLoading, isError, refetch } = useQuery<Category[]>({
+    queryKey: ['menuCategories'],
+    queryFn: fetchMenuCategories,
+    refetchOnWindowFocus: false,
+    enabled: !!business && !!userInformation,
+  });
 
   return { data, isLoading, isError, refetch };
 };

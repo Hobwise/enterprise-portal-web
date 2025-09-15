@@ -27,7 +27,7 @@ import {
 import useUser from "@/hooks/cachedEndpoints/useUser";
 import SelectInput from "@/components/selectInput";
 import { deleteFile, uploadFile } from "@/app/api/controllers/dashboard/menu";
-import { useMutation, useQueryClient } from "react-query";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateUser } from "@/app/api/controllers/auth";
 
 interface UserData {

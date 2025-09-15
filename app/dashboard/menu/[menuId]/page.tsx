@@ -21,7 +21,7 @@ import { GoPlus } from 'react-icons/go';
 import { IoIosArrowRoundBack } from 'react-icons/io';
 import { MdCreate } from 'react-icons/md';
 import { RiDeleteBin6Line } from 'react-icons/ri';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import DeleteMenu from './deleteMenu';
 import DeleteVariety from './deleteVariety';

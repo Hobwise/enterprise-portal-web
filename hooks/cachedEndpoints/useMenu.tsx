@@ -1,7 +1,7 @@
 'use client';
 import { getMenuCategories, getMenuItems } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
-import { useQuery } from "react-query";
+import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from "../globalProvider";
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
@@ -105,14 +105,14 @@ const useMenu = (businessIdOutsideApp?: any, cooperateID?: any) => {
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<MenuData[]>(
-    ["menus", { page, rowsPerPage, menuIdTable }],
-    getAllMenus,
-    {
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ["menus", { page, rowsPerPage, menuIdTable }],
+    queryFn: getAllMenus,
+    
       ...fetchQueryConfig(),
       retry: 1
-    }
-  );
+    
+  });
 
   // Force refresh function that bypasses cache
   const forceRefresh = () => {

@@ -46,14 +46,15 @@ const MenuItemsGrid = ({
         </div>
         
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-7 xl:grid-cols-6 gap-4 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-6 xl:grid-cols-6 gap-4 md:gap-8">
           {/* Add New Item Card */}
           <div
             onClick={() => setIsAddItemChoiceModalOpen ? setIsAddItemChoiceModalOpen(true) : setIsAddItemModalOpen(true)}
-            className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[190px]"
+            className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[180px]"
           >
             <img src="/assets/icons/menu.svg" alt="add"  />
-            <span className="text-gray-600 text-sm font-medium font-satoshi">Add new item</span>
+            <span className="text-gray-600 text-sm font-med
+            ium font-satoshi">Add new item</span>
           </div>
 
           {/* Menu Items */}
@@ -62,7 +63,7 @@ const MenuItemsGrid = ({
               <div
                 key={item.id}
                 onClick={() => onItemClick(item)}
-                className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[190px] transition-shadow cursor-pointer relative ${
+                className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[180px] transition-shadow cursor-pointer relative ${
                   item.isAvailable === false ? '' : ''
                 }`}
               >
@@ -95,7 +96,7 @@ const MenuItemsGrid = ({
                         : `data:image/jpeg;base64,${item.image}`
                     }
                     alt={item.name}
-                    className={`w-full h-[140px] object-cover ${
+                    className={`w-full h-[130px] object-cover ${
                       item.isAvailable === false ? 'grayscale opacity-70' : ''
                     }`}
                     onError={(e) => {

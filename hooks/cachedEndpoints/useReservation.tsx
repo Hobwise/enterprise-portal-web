@@ -4,7 +4,7 @@ import {
   payloadReservationItem,
 } from '@/app/api/controllers/dashboard/reservations';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
