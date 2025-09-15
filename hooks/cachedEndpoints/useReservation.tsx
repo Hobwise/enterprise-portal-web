@@ -28,13 +28,11 @@ const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<
-    payloadReservationItem[]
-  >(
-    ["reservation", { page, rowsPerPage }],
-    getAllReservation,
-    fetchQueryConfig()
-  );
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["reservation", { page, rowsPerPage }],
+    queryFn: getAllReservation,
+    ...fetchQueryConfig()
+  });
 
   return {
     data,
