@@ -24,7 +24,7 @@ const useTermsAndCondition = (
     queryKey: ['termsAndCondition'],
     queryFn: fetchTermsAndCondition,
     refetchOnWindowFocus: false,
-  );
+  });
 
   return { data, isLoading, isError, refetch };
 };

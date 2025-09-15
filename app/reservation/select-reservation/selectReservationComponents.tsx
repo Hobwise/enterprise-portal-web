@@ -9,6 +9,17 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import noImage from '../../../public/assets/images/no-image.svg';
 import SplashScreen from '../splash-screen';
 
+interface ReservationItem {
+  reservationName: string;
+  reservationDescription: string;
+  image?: string;
+  [key: string]: any;
+}
+
+interface ReservationData {
+  reservations: ReservationItem[];
+}
+
 const SelectReservationComponents = () => {
   const searchParams = useSearchParams();
   let businessName = searchParams.get('businessName');
@@ -22,7 +33,7 @@ const SelectReservationComponents = () => {
     return <Error imageHeight={'h-32'} onClick={() => refetch()} />;
   }
   if (isLoading) {
-    return <SplashScreen businessName={businessName} />;
+    return <SplashScreen businessName={businessName || ''} />;
   }
 
   return (
@@ -36,8 +47,8 @@ const SelectReservationComponents = () => {
 
       <>
         <div className="w-full">
-          {data?.reservations?.map((reservation, index) => (
-            <>
+          {(data as ReservationData)?.reservations?.map((reservation: ReservationItem, index: number) => (
+            <div key={reservation.reservationName + index}>
               <div
                 title="select reservation"
                 onClick={() => {
@@ -47,7 +58,7 @@ const SelectReservationComponents = () => {
                     `${
                       companyInfo.webUrl
                     }/reservation/select-reservation/single-reservation?businessName=${encodeURIComponent(
-                      businessName
+                      businessName || ''
                     )}&businessId=${businessId}&cooperateID=${cooperateID}`
                   );
                 }}
@@ -72,7 +83,7 @@ const SelectReservationComponents = () => {
                 </div>
               </div>
               <Divider className="bg-[#E4E7EC80] my-2" />
-            </>
+            </div>
           ))}
         </div>
       </>
