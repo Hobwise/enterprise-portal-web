@@ -25,7 +25,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { deleteFile, uploadFile } from "@/app/api/controllers/dashboard/menu";
-import { useMutation, useQueryClient } from "react-query";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PiBuildingOffice } from "react-icons/pi";
 import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
 import api from "@/app/api/apiService";

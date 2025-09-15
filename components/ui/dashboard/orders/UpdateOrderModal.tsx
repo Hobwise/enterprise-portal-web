@@ -70,6 +70,7 @@ interface UpdateOrderModalProps {
   onOpenChange: (isOpen: boolean) => void;
   orderData: OrderData | null;
   onOrderUpdated: () => void;
+  onProcessPayment?: () => void;
 }
 
 const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
@@ -77,6 +78,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   onOpenChange,
   orderData,
   onOrderUpdated,
+  onProcessPayment,
 }) => {
   const router = useRouter();
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -289,11 +291,12 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         <ModalContent>
           <ModalHeader className="flex flex-col gap-3 border-b border-primaryGrey">
             <div className="flex items-center justify-between w-full">
-              <div className="w-full">
-                <h2 className="text-xl font-bold text-black">Update Order</h2>
-                <p className="text-sm text-textGrey">
-                 {businessInformation?.[0]?.businessName || "N/A"}
+              <div className="w-full flex items-center justify-center flex-col">
+                <h2 className="text-lg font-bold text-black">{businessInformation?.[0]?.businessName || "N/A"}</h2>
+                <p className="text-base font-medium text-[#808794]">
+                  {businessInformation?.[0]?.businessAddress || "Location not available"}
                 </p>
+          
               </div>
               <Button
                 isIconOnly
@@ -357,21 +360,21 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
               <div className="flex-1 ">
                 <div className="space-y-4 max-h-[45vh] overflow-y-auto scrollbar-thin scrollbar-thumb-primaryColor scrollbar-track-gray-100 scrollbar-thumb-rounded-full scrollbar-track-rounded-full hover:scrollbar-thumb-primaryColor/80">
                   {selectedItems?.map((item, index) => (
-                    <React.Fragment key={item.id}>
+                    <React.Fragment key={`${item.id}-${index}`}>
                       <div className="flex justify-between items-center">
                         <div className="flex-1">
                           <p className="font-[500] text-base text-[#344054]">
-                            {item.menuName || "Menu Item"}
+                            {item.itemName || "Menu Item"}
                           </p>
                           <Spacer y={1} />
                           <p className="text-[#475367] text-sm">
-                            {item.itemName}
+                            {item.menuName}
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="flex items-center">
                             <Button
-                              onClick={() => handleDecrement(item.id)}
+                              onPress={() => handleDecrement(item.id)}
                               isIconOnly
                               radius="sm"
                               size="sm"
@@ -386,7 +389,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                               {item.count}
                             </span>
                             <Button
-                              onClick={() => handleIncrement(item.id)}
+                              onPress={() => handleIncrement(item.id)}
                               isIconOnly
                               radius="sm"
                               size="sm"
@@ -423,7 +426,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                       </p>
                     </div>
                     <div className="flex justify-between items-center">
-                      <h4 className="text-[14px] font-[500] text-textGrey">
+                      <h4 className="text-[14px] font-[400] text-textGrey">
                         VAT (7.5%)
                       </h4>
                       <p className="text-[14px] font-[500] text-textGrey">
@@ -431,9 +434,9 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                       </p>
                     </div>
                     <Divider className="bg-primaryGrey my-3" />
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-[16px] font-[700] text-black">
-                        Total
+                    <div className="flex justify-center flex-col items-center">
+                      <h4 className="text-[16px] font-[600] text-textGrey">
+                        Grand Total
                       </h4>
                       <p className="text-[18px] font-[700] text-primaryColor">
                         {formatPrice(calculateTotalPrice() * 1.075)}
@@ -442,6 +445,15 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
                     {/* Footer Buttons */}
                     <div className="flex gap-3 mt-6">
+                      {/* {storedOrderData?.status === 0 && onProcessPayment && (
+                        <CustomButton
+                        className="h-[50px] flex-1 bg-green-600 text-white"
+                        onClick={onProcessPayment}
+                          disabled={selectedItems.length === 0}
+                        >
+                          Process Payment
+                        </CustomButton>
+                      )} */}
                       <CustomButton
                         onClick={handleAddItem}
                         className="h-[50px] flex-1 bg-white text-black border border-primaryGrey flex-shrink-0"
@@ -453,13 +465,15 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         </div>
                       </CustomButton>
                       <CustomButton
-                        onClick={handleSaveOrder}
+                        // onClick={handleSaveOrder}
+                           onClick={onProcessPayment}
+                          disabled={selectedItems.length === 0}
                         className="text-white h-[50px] flex-1"
                         backgroundColor="bg-primaryColor"
                         loading={isSaving}
-                        disabled={selectedItems.length === 0}
+                        // disabled={selectedItems.length === 0}
                       >
-                        Update Order
+                        Process Order
                       </CustomButton>
                     </div>
                   </div>

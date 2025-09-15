@@ -1,7 +1,7 @@
 'use client';
 import { getOrderCategories, getOrderDetails } from '@/app/api/controllers/dashboard/orders';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 interface OrderItem {
@@ -44,9 +44,9 @@ const useAllOrdersData = (
     isLoading: isLoadingCategories,
     isError: isCategoriesError,
     refetch: refetchCategories
-  } = useQuery(
-    ['orderCategories', { filterType, startDate, endDate }],
-    async () => {
+  } = useQuery({
+    queryKey: ['orderCategories', { filterType, startDate, endDate }],
+    queryFn: async () => {
       const response = await getOrderCategories(
         businessInformation[0]?.businessId,
         filterType,
@@ -55,11 +55,9 @@ const useAllOrdersData = (
       );
       return response?.data?.data || [];
     },
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-    }
-  );
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   const categories = categoriesData || [];
 
@@ -68,9 +66,9 @@ const useAllOrdersData = (
   const { 
     data: firstCategoryData,
     isLoading: isLoadingFirst
-  } = useQuery(
-    ['orderDetails', firstCategory, { page, rowsPerPage, filterType, startDate, endDate }],
-    async () => {
+  } = useQuery({
+    queryKey: ['orderDetails', firstCategory, { page, rowsPerPage, filterType, startDate, endDate }],
+    queryFn: async () => {
       if (!firstCategory) return null;
       const response = await getOrderDetails(
         businessInformation[0]?.businessId,
@@ -83,12 +81,10 @@ const useAllOrdersData = (
       );
       return response;
     },
-    {
-      enabled: !!firstCategory && categories.length > 0,
-      staleTime: 5 * 60 * 1000,
-      cacheTime: 10 * 60 * 1000,
-    }
-  );
+    enabled: !!firstCategory && categories.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
   // Update categoryDetails when first category loads
   useEffect(() => {

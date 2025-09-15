@@ -1,11 +1,14 @@
-
-import { Download, Search, X, Eye } from 'lucide-react';
-import { Chip } from '@nextui-org/react';
+import { Download, Search, X, Eye } from "lucide-react";
+import { Button, ButtonGroup, Chip } from "@nextui-org/react";
+import { VscLoading } from "react-icons/vsc";
+import { MdOutlineFileDownload } from "react-icons/md";
+import { CustomInput } from "@/components/CustomInput";
+import { IoSearchOutline } from "react-icons/io5";
 
 interface MenuHeaderProps {
-  menuSections?: any[];  // Keep for backward compatibility but not used
-  menuItems?: any[] | null;  // Keep for backward compatibility but not used
-  activeSubCategory?: string;  // Keep for backward compatibility but not used
+  menuSections?: any[]; // Keep for backward compatibility but not used
+  menuItems?: any[] | null; // Keep for backward compatibility but not used
+  activeSubCategory?: string; // Keep for backward compatibility but not used
   isExporting: boolean;
   handleExportCSV: () => void;
   searchQuery: string;
@@ -42,43 +45,44 @@ const MenuHeader = ({
               <span>Menu</span>
             )}
           </div>
-          <p className="text-sm text-grey600">
-            Showing all categories
-          </p>
+          <p className="text-sm text-grey600">Showing all categories</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
+          <div>
+            <CustomInput
+              classnames={"w-[242px]"}
+              label=""
+              size="md"
               value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search menu items..."
-              className="pl-10 pr-10 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent font-satoshi text-base"
+              onChange={onSearchChange}
+              isRequired={false}
+              startContent={<IoSearchOutline />}
+              type="text"
+              placeholder="Search here..."
             />
-            {searchQuery && (
-              <button
-                onClick={() => onSearchChange('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2"
-              >
-                <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-              </button>
-            )}
           </div>
-          <button
-            onClick={handleExportCSV}
-            disabled={isExporting}
-            className="text-gray-700 flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 font-satoshi text-base"
-          >
-            <Download className="w-4 h-4" />
-            <span>{isExporting ? 'Exporting...' : 'Export CSV'}</span>
-          </button>
+
+          <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
+            <Button
+              disabled={isExporting}
+              onClick={handleExportCSV}
+              className="flex text-grey600 bg-white"
+            >
+              {isExporting ? (
+                <VscLoading className="animate-spin" />
+              ) : (
+                <MdOutlineFileDownload className="text-[22px]" />
+              )}
+
+              <p>Export csv</p>
+            </Button>
+          </ButtonGroup>
           {onPreviewClick && (
             <button
               onClick={onPreviewClick}
-              className="text-white bg-primaryColor flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-90 font-satoshi text-base"
+              className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap font-normal subpixel-antialiased overflow-hidden tap-highlight-transparent data-[pressed=true]:scale-[0.97] outline-none data-[focus-visible=true]:z-10 data-[focus-visible=true]:outline-2 data-[focus-visible=true]:outline-focus data-[focus-visible=true]:outline-offset-2 min-w-20 h-10 text-small gap-2 [&>svg]:max-w-[theme(spacing.8)] transition-transform-colors-opacity motion-reduce:transition-none data-[hover=true]:opacity-hover bg-primaryColor rounded-lg py-2 px-4 mb-0 text-white "
             >
-              <Eye className="w-4 h-4" />
+              <Eye className="w-5 h-5" />
               <span>Preview Menu</span>
             </button>
           )}

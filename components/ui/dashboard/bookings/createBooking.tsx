@@ -25,7 +25,7 @@ import {
 } from "@nextui-org/react";
 import Image from "next/image";
 import React, { useState } from "react";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import { MdOutlineMailOutline, MdOutlinePhone } from "react-icons/md";
 import noImage from "../../../../public/assets/images/no-image.svg";
 

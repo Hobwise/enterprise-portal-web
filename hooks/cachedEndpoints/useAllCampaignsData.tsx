@@ -1,23 +1,23 @@
 'use client';
 import { getCampaignCategories, getCampaignsByCategory } from '@/app/api/controllers/dashboard/campaigns';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 // Custom hook for fetching individual category data
 const useCampaignCategoryData = (categoryName: string, businessId: string, enabled: boolean = true) => {
-  return useQuery(
-    ['campaignsByCategory', categoryName, businessId],
-    async () => {
+  return useQuery({
+    queryKey: ['campaignsByCategory', categoryName, businessId],
+    queryFn: async () => {
       const payload = {
         category: categoryName,
         businessId: businessId,
         page: 1,
         pageSize: 100
       };
-      
+
       const response = await getCampaignsByCategory(payload);
-      
+
       // Check if response has the expected structure
       if (response?.data?.data) {
         const responseData = response.data.data;
@@ -35,15 +35,13 @@ const useCampaignCategoryData = (categoryName: string, businessId: string, enabl
         return { campaigns: [], totalCount: 0 };
       }
     },
-    {
-      enabled: enabled && !!categoryName && !!businessId,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnReconnect: false,
-      keepPreviousData: true,
-      // refetchOnWindowFocus will use global default (true)
-    }
-  );
+    enabled: enabled && !!categoryName && !!businessId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    // refetchOnWindowFocus will use global default (true)
+  });
 };
 
 interface CampaignItem {
@@ -72,20 +70,18 @@ const useAllCampaignsData = (currentCategory?: string) => {
     isLoading: isLoadingCategories,
     isError: isCategoriesError,
     refetch: refetchCategories
-  } = useQuery(
-    ['campaignCategories', businessInformation?.[0]?.businessId],
-    async () => {
+  } = useQuery({
+    queryKey: ['campaignCategories', businessInformation?.[0]?.businessId],
+    queryFn: async () => {
       const response = await getCampaignCategories(businessInformation?.[0]?.businessId);
       return response?.data?.data?.campaignCategories || [];
     },
-    {
-      enabled: !!businessInformation?.[0]?.businessId,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnReconnect: false,
-      // refetchOnWindowFocus will use global default (true)
-    }
-  );
+    enabled: !!businessInformation?.[0]?.businessId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnReconnect: false,
+    // refetchOnWindowFocus will use global default (true)
+  });
 
   const categories = categoriesData || [];
 
@@ -94,20 +90,20 @@ const useAllCampaignsData = (currentCategory?: string) => {
   const { 
     data: firstCategoryData,
     isLoading: isLoadingFirst
-  } = useQuery(
-    ['campaignsByCategory', firstCategory, businessInformation?.[0]?.businessId],
-    async () => {
+  } = useQuery({
+    queryKey: ['campaignsByCategory', firstCategory, businessInformation?.[0]?.businessId],
+    queryFn: async () => {
       if (!firstCategory || categories[0]?.totalCount === 0) return { campaigns: [], totalCount: 0 };
-      
+
       const payload = {
         category: firstCategory,
         businessId: businessInformation?.[0]?.businessId,
         page: 1,
         pageSize: 100 // Get all campaigns for now
       };
-      
+
       const response = await getCampaignsByCategory(payload);
-      
+
       // Check if response has the expected structure
       if (response?.data?.data) {
         // Check if it's the campaigns array or an object with campaigns
@@ -126,15 +122,13 @@ const useAllCampaignsData = (currentCategory?: string) => {
         return { campaigns: [], totalCount: 0 };
       }
     },
-    {
-      enabled: !!firstCategory && !!businessInformation?.[0]?.businessId && categories.length > 0,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnReconnect: false,
-      keepPreviousData: true,
-      // refetchOnWindowFocus will use global default (true)
-    }
-  );
+    enabled: !!firstCategory && !!businessInformation?.[0]?.businessId && categories.length > 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    // refetchOnWindowFocus will use global default (true)
+  });
 
   // Update categoryDetails when first category loads
   useEffect(() => {

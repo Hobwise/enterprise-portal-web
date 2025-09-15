@@ -1,7 +1,7 @@
 'use client';
 import { getMenu } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const useAllMenus = () => {
   const business = getJsonItemFromLocalStorage('business');
@@ -11,13 +11,11 @@ const useAllMenus = () => {
     return responseData?.data?.data as any;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>(
-    'allMenus',
-    fetchMenus,
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ['allMenus'],
+    queryFn: fetchMenus,
+    refetchOnWindowFocus: false,
+  });
 
   return { data, isLoading, isError, refetch };
 };

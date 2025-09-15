@@ -9,11 +9,8 @@ import "@fontsource/bricolage-grotesque/400.css";
 import "@fontsource/bricolage-grotesque/500.css";
 import "@fontsource/bricolage-grotesque/700.css";
 import { Toaster } from "react-hot-toast";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 import { companyInfo } from "../lib/companyInfo";
 import "./globals.css";
-import { Toaster as SonnerToast } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 
 export const metadata = {
@@ -56,8 +53,6 @@ export default function RootLayout({
                   },
                 }}
               />
-              <ToastContainer theme="light" />
-              <SonnerToast closeButton duration={2500} richColors />
             </Providers>
           </AppProvider>
         </QueryProvider>

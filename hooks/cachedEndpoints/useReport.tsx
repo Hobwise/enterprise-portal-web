@@ -1,7 +1,7 @@
 'use client';
 import { getReport } from '@/app/api/controllers/dashboard/report';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const useReport = (
   filterType: number,
@@ -21,15 +21,15 @@ const useReport = (
     return responseData?.data?.data as any;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>(
-    ['report', { filterType, startDate, endDate }],
-    fetchReport,
-    {
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ['report', { filterType, startDate, endDate }],
+    queryFn: fetchReport,
+    
       refetchOnWindowFocus: false,
 
       ...options,
-    }
-  );
+    
+  });
 
   return { data, isLoading, isError, refetch };
 };

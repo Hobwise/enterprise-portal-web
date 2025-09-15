@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, Fragment } from 'react';
+import React, { useState } from 'react';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
 import {
@@ -18,6 +18,9 @@ import {
   TableRow,
   Selection,
   SortDescriptor,
+  Modal,
+  ModalContent,
+  Spacer,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { BsCalendar2Check } from 'react-icons/bs';
@@ -36,7 +39,7 @@ import Filters from './filters';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useAllOrdersData from '@/hooks/cachedEndpoints/useAllOrdersData';
 import usePagination from '@/hooks/usePagination';
-import { formatPrice, saveJsonItemToLocalStorage } from '@/lib/utils';
+import { formatPrice, saveJsonItemToLocalStorage, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import moment from 'moment';
 import { FaCommentDots } from 'react-icons/fa6';
 import { LiaTimesSolid } from 'react-icons/lia';
@@ -45,6 +48,13 @@ import Comment from './comment';
 import ConfirmOrderModal from './confirmOrder';
 import InvoiceModal from './invoice';
 import UpdateOrderModal from './UpdateOrderModal';
+import { completeOrder } from '@/app/api/controllers/dashboard/orders';
+import { CustomInput } from '@/components/CustomInput';
+import { CustomButton } from '@/components/customButton';
+import { MdKeyboardArrowRight } from 'react-icons/md';
+import { IoIosArrowRoundBack } from 'react-icons/io';
+import { HiArrowLongLeft } from 'react-icons/hi2';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Type definitions
 interface OrderItem {
@@ -179,6 +189,9 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   const router = useRouter();
   const { userRolePermissions, role } = usePermission();
+  const queryClient = useQueryClient();
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+
   const [singleOrder, setSingleOrder] = React.useState<OrderItem | null>(null);
   const [isOpenCancelOrder, setIsOpenCancelOrder] =
     React.useState<boolean>(false);
@@ -187,22 +200,29 @@ const OrdersList: React.FC<OrdersListProps> = ({
     React.useState<boolean>(false);
   const [isOpenComment, setIsOpenComment] = React.useState<boolean>(false);
   const [isOpenUpdateOrder, setIsOpenUpdateOrder] = React.useState<boolean>(false);
+
+  // Payment modal states
+  const [isOpenPaymentModal, setIsOpenPaymentModal] = React.useState<boolean>(false);
+  const [paymentScreen, setPaymentScreen] = React.useState<number>(2);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = React.useState<number>(0);
+  const [paymentReference, setPaymentReference] = React.useState<string>('');
+  const [isProcessingPayment, setIsProcessingPayment] = React.useState<boolean>(false);
+
+  // Payment methods array
+  const paymentMethods = [
+    { text: "Pay with cash", subText: " Accept payment using cash", id: 0 },
+    { text: "Pay with Pos", subText: " Accept payment using Pos", id: 1 },
+    { text: "Pay with bank transfer", subText: "Accept payment via bank transfer", id: 2 },
+    { text: "Pay Later", subText: "Keep this order open", id: 3 },
+  ];
   // Use the new hook for fetching all data
-  const { 
-    getCategoryDetails, 
-    isLoadingInitial, 
-    isLoadingAll 
+  const {
+    getCategoryDetails,
+    isLoadingInitial
   } = useAllOrdersData(filterType, startDate, endDate, 1, 10); // Use default values for now
   
 
   const {
-    toggleModalDelete,
-    isOpenDelete,
-    setIsOpenDelete,
-    isOpenEdit,
-    toggleModalEdit,
-    page,
-    rowsPerPage,
     setTableStatus,
     tableStatus,
     setPage,
@@ -287,10 +307,81 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setIsOpenUpdateOrder(!isOpenUpdateOrder);
   };
 
+  // Payment modal functions
+  const togglePaymentModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenPaymentModal(!isOpenPaymentModal);
+    setPaymentScreen(2);
+    setPaymentReference('');
+    setSelectedPaymentMethod(0);
+  };
+
+  const handlePaymentClick = (methodId: number) => {
+    if (methodId === 3) {
+      // Pay Later - just redirect like checkoutModal does
+      router.push("/dashboard/orders");
+    } else {
+      setSelectedPaymentMethod(methodId);
+      setPaymentScreen(3);
+    }
+  };
+
+  const finalizePayment = async () => {
+    if (!singleOrder) return;
+
+    setIsProcessingPayment(true);
+    const payload = {
+      treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
+      treatedById: userInformation?.id,
+      paymentMethod: selectedPaymentMethod,
+      paymentReference: paymentReference,
+      status: 1,
+    };
+
+    const data = await completeOrder(payload, singleOrder.id);
+    setIsProcessingPayment(false);
+
+    if (data?.data?.isSuccessful) {
+      notify({
+        title: "Payment made!",
+        text: "Payment has been made, awaiting confirmation",
+        type: "success",
+      });
+      await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+      setIsOpenPaymentModal(false);
+      refetch();
+    } else if (data?.data?.error) {
+      notify({
+        title: "Error!",
+        text: data?.data?.error,
+        type: "error",
+      });
+    }
+  };
+
   const [value, setValue] = useState('');
 
   const handleTabChange = (index: string) => {
     setValue(index);
+  };
+
+  // Handle table row click based on order status
+  const handleRowClick = (order: OrderItem) => {
+    switch (order.status) {
+      case 0: // Open orders
+        saveJsonItemToLocalStorage('order', order);
+        toggleUpdateOrderModal(order);
+        break;
+      case 1: // Closed orders
+      case 3: // Awaiting confirmation
+        toggleInvoiceModal(order);
+        break;
+      case 2: // Cancelled orders
+        // No action for cancelled orders
+        break;
+      default:
+        break;
+    }
   };
       
   const renderCell = React.useCallback((order: OrderItem, columnKey: string) => {
@@ -305,7 +396,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
               {order.comment && (
                 <div
                   title={'view comment'}
-                  onClick={() => toggleCommentModal(order)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleCommentModal(order);
+                  }}
                   className=' cursor-pointer'
                 >
                   <FaCommentDots className='text-primaryColor' />
@@ -346,7 +440,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
       case 'actions':
         return (
-          <div className='relative flexjustify-center items-center gap-2'>
+          <div className='relative flexjustify-center items-center gap-2' onClick={(e) => e.stopPropagation()}>
             <Dropdown aria-label='drop down' className=''>
               <DropdownTrigger aria-label='actions'>
                 <div className='cursor-pointer flex justify-center items-center text-black'>
@@ -356,6 +450,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
               <DropdownMenu className='text-black'>
                 <DropdownSection>
                   <DropdownItem
+                    key="invoice"
                     onClick={() => toggleInvoiceModal(order)}
                     aria-label='Generate invoice'
                   >
@@ -369,6 +464,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     options &&
                     options.includes('Update Order') && (
                       <DropdownItem
+                        key="update"
                         onClick={() => {
                           saveJsonItemToLocalStorage('order', order);
                           toggleUpdateOrderModal(order);
@@ -388,6 +484,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     options &&
                     options.includes('Checkout') && (
                       <DropdownItem
+                        key="checkout"
                         onClick={() => toggleConfirmModal(order)}
                         aria-label='checkout'
                       >
@@ -401,6 +498,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     options &&
                     options.includes('Cancel Order') && (
                       <DropdownItem
+                        key="cancel"
                         onClick={() => toggleCancelModal(order)}
                         aria-label='cancel order'
                       >
@@ -478,14 +576,18 @@ const OrdersList: React.FC<OrdersListProps> = ({
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody 
-          emptyContent={'No orders found'} 
+        <TableBody
+          emptyContent={'No orders found'}
           items={shouldShowLoading ? [] : sortedOrders}
           isLoading={shouldShowLoading}
           loadingContent={<SpinnerLoader size="md" />}
         >
           {(order: OrderItem) => (
-            <TableRow key={String(order?.id)}>
+            <TableRow
+              key={String(order?.id)}
+              className={`${order.status !== 2 ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors`}
+              onClick={() => order.status !== 2 && handleRowClick(order)}
+            >
               {(columnKey) => (
                 <TableCell>{renderCell(order, String(columnKey))}</TableCell>
               )}
@@ -520,7 +622,122 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenUpdateOrder}
         orderData={singleOrder}
         onOrderUpdated={refetch}
+        onProcessPayment={() => {
+          setIsOpenUpdateOrder(false);
+          togglePaymentModal(singleOrder!);
+        }}
       />
+
+      {/* Payment Modal */}
+      <Modal
+        isOpen={isOpenPaymentModal}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setIsOpenPaymentModal(false);
+            setPaymentScreen(2);
+            setPaymentReference('');
+            setSelectedPaymentMethod(0);
+          }
+        }}
+        size="md"
+        hideCloseButton={true}
+        isDismissable={false}
+      >
+        <ModalContent>
+          {paymentScreen === 2 && (
+            <div className="p-5">
+              <div className="flex justify-between mt-3">
+                <div>
+                  <div className="text-[18px] leading-8 font-semibold">
+                    <span className="text-black">Select payment method</span>
+                  </div>
+                  <p className="text-sm text-primaryColor xl:mb-8 w-full mb-4">
+                    {formatPrice(singleOrder?.totalAmount || 0)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1 text-black">
+                {paymentMethods.map((item) => (
+                  <div
+                    key={item.id}
+                    onClick={() => handlePaymentClick(item.id)}
+                    className={`flex cursor-pointer items-center gap-2 p-4 rounded-lg justify-between ${
+                      selectedPaymentMethod === item.id ? "bg-[#EAE5FF80]" : ""
+                    }`}
+                  >
+                    <div>
+                      <p className="font-semibold">{item.text}</p>
+                      <p className="text-sm text-grey500">{item.subText}</p>
+                    </div>
+                    <MdKeyboardArrowRight />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {paymentScreen === 3 && (
+            <>
+              <div
+                onClick={() => setPaymentScreen(2)}
+                className="p-4 cursor-pointer text-black flex items-center"
+              >
+                <IoIosArrowRoundBack className="text-2xl" />
+                <span className="text-sm">Back</span>
+              </div>
+              <div className="px-5 pb-5">
+                <div>
+                  <div className="text-[18px] leading-8 font-semibold">
+                    <span className="text-black">Confirm payment</span>
+                  </div>
+                  <p className="text-sm text-grey500 xl:mb-8 w-full mb-4">
+                    confirm that customer has paid for order
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 p-4 rounded-lg justify-between bg-[#EAE5FF80]">
+                  <div>
+                    <p className="text-sm text-grey500">TOTAL ORDER</p>
+                    <p className="font-bold text-black text-[20px]">
+                      {formatPrice(singleOrder?.totalAmount || 0)}
+                    </p>
+                  </div>
+                  <MdKeyboardArrowRight />
+                </div>
+                <Spacer y={4} />
+                <CustomInput
+                  type="text"
+                  value={paymentReference}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPaymentReference(e.target.value)}
+                  name="paymentRef"
+                  label="Enter ref"
+                  placeholder="Provide payment reference"
+                />
+                <Spacer y={5} />
+                <div className="flex md:flex-row flex-col gap-5">
+                  <CustomButton
+                    onClick={() => setIsOpenPaymentModal(false)}
+                    className="bg-white h-[50px] w-full border border-primaryGrey"
+                  >
+                    Cancel
+                  </CustomButton>
+                  <CustomButton
+                    loading={isProcessingPayment}
+                    disabled={isProcessingPayment}
+                    onClick={finalizePayment}
+                    className="text-white w-full h-[50px]"
+                    backgroundColor="bg-primaryColor"
+                  >
+                    <div className="flex gap-2 items-center justify-center">
+                      <p>Confirm payment</p>
+                      <HiArrowLongLeft className="text-[22px] rotate-180" />
+                    </div>
+                  </CustomButton>
+                </div>
+              </div>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </section>
   );
 };

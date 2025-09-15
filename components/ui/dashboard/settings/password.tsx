@@ -5,7 +5,7 @@ import { CustomButton } from "@/components/customButton";
 import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { Spacer } from "@nextui-org/react";
 import React, { useState } from "react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
 
 const Password = () => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");

@@ -1,6 +1,6 @@
 import { getNotificationCount } from '@/app/api/controllers/dashboard/settings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState, useEffect } from 'react';
 
 const useNotifyCount = () => {
@@ -24,17 +24,18 @@ const useNotifyCount = () => {
     return response?.data?.data ?? 0;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ['notificationCount', businessId],
-    // The function that will be executed to fetch the data.
-    fetchNotificationCount,
-    // Configuration options for the query.
-    {
-      enabled: !!businessId && !hasInitialFetch, // Only auto-run once when businessId is available and hasn't fetched yet
-      onSuccess: () => setHasInitialFetch(true), // Mark as fetched after first successful call
-      onError: () => setHasInitialFetch(true),   // Also mark as fetched even if it fails (to prevent infinite retries)
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['notificationCount', businessId],
+    queryFn: fetchNotificationCount,
+    enabled: !!businessId && !hasInitialFetch, // Only auto-run once when businessId is available and hasn't fetched yet
+  });
+
+  // Handle success/error using useEffect since onSuccess/onError are deprecated in v5
+  useEffect(() => {
+    if (data !== undefined || isError) {
+      setHasInitialFetch(true);
     }
-  );
+  }, [data, isError]);
 
   // Manual trigger function that bypasses the hasInitialFetch check
   const triggerFetch = () => {

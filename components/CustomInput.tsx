@@ -97,7 +97,6 @@ export const CustomInput = ({
         innerWrapper: `bg-none border-none`,
         input: ["bg-none", "text-black placeholder:text-[14px] bg-none"],
       }}
-      aria-haspopup="false"
       autoCorrect="off"
       placeholder={placeholder}
       labelPlacement="outside"

@@ -1,7 +1,7 @@
 'use client';
 import { getBookingCategories, getBookingDetails } from '@/app/api/controllers/dashboard/bookings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 interface Booking {
@@ -51,19 +51,17 @@ const useAllBookingsData = (
     isLoading: isLoadingCategories,
     isError: isCategoriesError,
     refetch: refetchCategories
-  } = useQuery(
-    ['bookingCategories', { page, rowsPerPage }],
-    async () => {
+  } = useQuery({
+    queryKey: ['bookingCategories', { page, rowsPerPage }],
+    queryFn: async () => {
       const response = await getBookingCategories(
         businessInformation[0]?.businessId
       );
       return response?.data?.data || [];
     },
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-    }
-  );
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
   const categories = categoriesData?.bookingCategories   || [];
 
@@ -72,9 +70,9 @@ const useAllBookingsData = (
   const { 
     data: firstCategoryData,
     isLoading: isLoadingFirst
-  } = useQuery(
-    ['bookingDetails', firstCategory, { page, rowsPerPage }],
-    async () => {
+  } = useQuery({
+    queryKey: ['bookingDetails', firstCategory, { page, rowsPerPage }],
+    queryFn: async () => {
       if (!firstCategory) return null;
       const response = await getBookingDetails(
         businessInformation[0]?.businessId,
@@ -84,12 +82,10 @@ const useAllBookingsData = (
       );
       return response;
     },
-    {
-      enabled: !!firstCategory && categories.length > 0,
-      staleTime: 5 * 60 * 1000,
-      cacheTime: 10 * 60 * 1000,
-    }
-  );
+    enabled: !!firstCategory && categories.length > 0,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
 
   // Update categoryDetails when first category loads
   useEffect(() => {

@@ -4,7 +4,7 @@ import {
   getCampaignCategories,
 } from '@/app/api/controllers/dashboard/campaigns';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const useCampaignCategories = () => {
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -19,13 +19,13 @@ const useCampaignCategories = () => {
 
   const businessId = businessInformation?.[0]?.businessId;
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ['campaignCategories', businessId],
-    getAllCampaignCategories,
-    {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['campaignCategories', businessId],
+    queryFn: getAllCampaignCategories,
+    
       enabled: !!businessId,
-    }
-  );
+    
+  });
 
    
   return {

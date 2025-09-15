@@ -28,7 +28,7 @@ import {
   today,
 } from "@internationalized/date";
 import { DatePicker } from "@nextui-org/date-picker";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Button,
   Modal,

@@ -13,7 +13,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import CustomPagination from '@/components/ui/customPagination';
 import Image from 'next/image';
 import EmptyIcon from '@/public/assets/images/empty-image.png';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Reservations() {
   const searchParams = useSearchParams();

@@ -1,7 +1,7 @@
 'use client';
 import { getMenuByBusinessUser } from '@/app/api/controllers/dashboard/menu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 type MenuData = {
   name: string;
@@ -35,13 +35,11 @@ const useMenuUser = (businessIdOutsideApp?: any, cooperateID?: any) => {
     return responseData?.data?.data as MenuData[];
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<MenuData[]>(
-    'menusUser',
-    getAllMenus,
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { data, isLoading, isError, refetch } = useQuery<MenuData[]>({
+    queryKey: ['menusUser'],
+    queryFn: getAllMenus,
+    refetchOnWindowFocus: false,
+  });
 
   return {
     data,

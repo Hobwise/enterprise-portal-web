@@ -55,6 +55,7 @@ const Header = () => {
   const [pageSize, setPageSize] = useState(10);
   const [unreadNotCount, setUnreadNotCount] = useState(0);
   const [notifPopoverOpen, setNotifPopoverOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const { data: unreadCount = 0 } = useNotifyCount();
   const { isOpen, onOpenChange } = useDisclosure();
@@ -85,6 +86,11 @@ const Header = () => {
   );
   const isActive = subscription?.isActive;
   const onTrialVersion = subscription?.onTrialVersion;
+
+  // Set mounted state for client-side rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // SignalR connection for real-time notifications
   useEffect(() => {
@@ -218,6 +224,17 @@ const Header = () => {
                 <IoChatbubblesOutline className="text-[#494E58]  h-5 w-5 cursor-pointer" />
               </span> */}
 
+              {!isMounted ? (
+                <div className=' flex items-center gap-2 border border-gray-200 rounded-full py-1 px-2'>
+                  <div className='w-full flex flex-col gap-1'>
+                    <Skeleton className='h-2 w-16 rounded-lg' />
+                    <Skeleton className='h-2 w-16 rounded-lg' />
+                  </div>
+                  <div>
+                    <Skeleton className='flex rounded-full w-8 h-8' />
+                  </div>
+                </div>
+              ) : (
               <Dropdown placement='bottom-end'>
                 <DropdownTrigger>
                   {data ? (
@@ -274,6 +291,7 @@ const Header = () => {
                   </DropdownItem>
                 </DropdownMenu>
               </Dropdown>
+              )}
             </div>
           </div>
         </div>

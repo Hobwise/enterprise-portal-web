@@ -7,6 +7,103 @@ const nextConfig = {
         : 'https://sandbox-api.hobwise.com/',
   },
   reactStrictMode: true,
+
+  // Experimental features for performance
+  experimental: {
+    // Optimize package imports for faster builds
+    optimizePackageImports: [
+      '@nextui-org/react',
+      'lucide-react',
+      'react-icons',
+      '@iconify/react',
+      'framer-motion',
+      '@tanstack/react-query',
+      'react-chartjs-2',
+      'chart.js',
+    ],
+    // Enable Turbopack for faster builds (experimental)
+    // turbo: true, // Uncomment to enable Turbopack
+  },
+
+  // Modularize imports for better tree-shaking
+  modularizeImports: {
+    'react-icons': {
+      transform: 'react-icons/{{member}}',
+    },
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{member}}',
+    },
+  },
+
+  // Webpack optimizations
+  webpack: (config, { dev, isServer }) => {
+    // Development optimizations
+    if (dev) {
+      config.watchOptions = {
+        poll: 1000, // Check for changes every second
+        aggregateTimeout: 300, // Delay rebuild after change
+        ignored: ['**/node_modules', '**/.git', '**/.next'],
+      };
+
+      // Use filesystem cache for faster rebuilds
+      config.cache = {
+        type: 'filesystem',
+        buildDependencies: {
+          config: [__filename],
+        },
+      };
+    }
+
+    // Production optimizations
+    if (!dev && !isServer) {
+      config.optimization = {
+        ...config.optimization,
+        moduleIds: 'deterministic',
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            framework: {
+              name: 'framework',
+              chunks: 'all',
+              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
+              priority: 40,
+              enforce: true,
+            },
+            lib: {
+              test(module) {
+                return module.size() > 160000 &&
+                  /node_modules[/\\]/.test(module.identifier());
+              },
+              name(module) {
+                const hash = require('crypto').createHash('sha1');
+                hash.update(module.identifier());
+                return hash.digest('hex').substring(0, 8);
+              },
+              priority: 30,
+              minChunks: 1,
+              reuseExistingChunk: true,
+            },
+            commons: {
+              name: 'commons',
+              chunks: 'all',
+              minChunks: 2,
+              priority: 20,
+            },
+            shared: {
+              name: 'app',
+              priority: 10,
+              minChunks: 2,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      };
+    }
+
+    return config;
+  },
   headers: async () => {
     return [
       {

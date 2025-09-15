@@ -137,21 +137,7 @@ const Orders: React.FC = () => {
                   placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
-                <Button
-                  disabled={loadingExport}
-                  onClick={exportCSV}
-                  className="flex text-grey600 bg-white"
-                >
-                  {loadingExport ? (
-                    <VscLoading className="animate-spin" />
-                  ) : (
-                    <MdOutlineFileDownload className="text-[22px]" />
-                  )}
-
-                  <p>Export csv</p>
-                </Button>
-              </ButtonGroup>
+            
             </>
           )}
           {(role === 0 || userRolePermissions?.canCreateOrder === true) && (

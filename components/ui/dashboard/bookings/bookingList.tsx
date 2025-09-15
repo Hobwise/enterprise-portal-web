@@ -34,7 +34,7 @@ import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import useAllBookingsData from "@/hooks/cachedEndpoints/useAllBookingsData";
 import { notify, submitBookingStatus } from "@/lib/utils";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import { CiCalendar } from "react-icons/ci";
 import { IoCheckmark } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";

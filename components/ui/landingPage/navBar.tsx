@@ -28,7 +28,7 @@ import {
 } from "@nextui-org/react";
 import { IoIosArrowDown } from "react-icons/io";
 import { Skeleton } from "./skeleton-loading";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 import { MdOutlinePerson } from "react-icons/md";
 
 export const navItem = [

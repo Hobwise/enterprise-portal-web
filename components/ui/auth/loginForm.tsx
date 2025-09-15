@@ -14,7 +14,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { FaRegEnvelope } from "react-icons/fa6";
-import { useQueryClient } from "react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { encryptPayload, decryptPayload } from "@/lib/encrypt-decrypt";
 
 interface LoginFormData {

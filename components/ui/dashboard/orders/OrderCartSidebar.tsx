@@ -81,9 +81,9 @@ const OrderCartSidebar: React.FC<OrderCartSidebarProps> = ({
                     >
                       <div className="rounded-lg w-28 text-black flex">
                         <div className="ml-3 flex flex-col text-sm justify-center">
-                          <p className="font-[500] text-base text-[#344054]">{item.menuName}</p>
+                          <p className="font-[500] text-base text-[#344054]">{item.itemName}</p>
                           <Spacer y={1} />
-                          <p className="text-[#475367] text-sm">{item.itemName}</p>
+                          <p className="text-[#475367] text-sm">{item.menuName}</p>
                         </div>
                       </div>
                       <div className="flex w-24 items-center">
