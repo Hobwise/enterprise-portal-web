@@ -71,6 +71,7 @@ interface UpdateOrderModalProps {
   orderData: OrderData | null;
   onOrderUpdated: () => void;
   onProcessPayment?: () => void;
+  onProceedToConfirm?: (selectedItems: Item[], totalPrice: number) => void;
 }
 
 const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
@@ -79,6 +80,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   orderData,
   onOrderUpdated,
   onProcessPayment,
+  onProceedToConfirm,
 }) => {
   const router = useRouter();
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -328,7 +330,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                 <div className="flex items-center w-full gap-6 justify-between mb-1">
                   <span className="text-textGrey">Served by:</span>
                   <span className="ml-2 font-semibold text-black">
-                    {fullOrderData?.placedByName || 
+                    {userInformation?.firstName + " " + userInformation?.lastName || 
                       "Not assigned"}
                   </span>
                 </div>
@@ -337,16 +339,6 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
           </ModalHeader>
 
           <ModalBody className="p-6">
-            {/* Business Name Header */}
-            {/* <div className="mb-6">
-              <h1 className="text-lg font-[700] text-black">
-                {businessInformation?.[0]?.businessName || 'Business Name'}
-              </h1>
-              <p className="text-sm text-textGrey">
-                {totalItems} Item{totalItems !== 1 ? 's' : ''} 
-              </p>
-            </div> */}
-
             {/* Cart Items */}
             {isLoadingOrderDetails ? (
               <div className="flex flex-col h-[40vh] justify-center items-center">
@@ -465,13 +457,19 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         </div>
                       </CustomButton>
                       <CustomButton
-                        // onClick={handleSaveOrder}
-                           onClick={onProcessPayment}
-                          disabled={selectedItems.length === 0}
+                        onClick={() => {
+                          // Save current order state before proceeding
+                          if (onProceedToConfirm) {
+                            onProceedToConfirm(selectedItems, calculateTotalPrice());
+                          } else if (onProcessPayment) {
+                            // Fallback to old behavior if new prop not provided
+                            onProcessPayment();
+                          }
+                        }}
+                        disabled={selectedItems.length === 0}
                         className="text-white h-[50px] flex-1"
                         backgroundColor="bg-primaryColor"
                         loading={isSaving}
-                        // disabled={selectedItems.length === 0}
                       >
                         Process Order
                       </CustomButton>

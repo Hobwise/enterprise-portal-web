@@ -58,7 +58,7 @@ const InvoiceModal = ({
         {(onClose) => (
           <>
             <ModalBody className="flex justify-center" ref={invoiceRef}>
-              <h3 className="font-[600] text-lg text-black mt-6 mb-3">
+              <h3 className="font-[600] text-center text-lg text-black mt-6 mb-3">
                 {businessInformation[0]?.businessName}
               </h3>
               <p className="flex justify-end font-semibold text-sm text-black">

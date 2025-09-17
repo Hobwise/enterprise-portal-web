@@ -39,6 +39,9 @@ const ConfirmOrderModal = ({
 
   const handleClick = (methodId: number) => {
     if (methodId === 3) {
+      // Pay Later - close modal without payment
+      toggleConfirmModal();
+      refetch();
     } else {
       setSelectedPaymentMethod(methodId);
       setScreen(3);
@@ -57,6 +60,7 @@ const ConfirmOrderModal = ({
   ];
 
   const getOrderDetails = async () => {
+    if (!singleOrder?.id) return;
     const data = await getOrder(singleOrder.id);
 
     if (data?.data?.isSuccessful) {
@@ -66,6 +70,15 @@ const ConfirmOrderModal = ({
   };
 
   const finalizeOrder = async () => {
+    if (!singleOrder?.id) {
+      notify({
+        title: "Error!",
+        text: "Order data not available",
+        type: "error",
+      });
+      return;
+    }
+
     setIsLoading(true);
     const payload = {
       treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
@@ -75,7 +88,7 @@ const ConfirmOrderModal = ({
       status: 1,
     };
 
-    const data = await completeOrder(payload, singleOrder?.id);
+    const data = await completeOrder(payload, singleOrder.id);
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
@@ -125,7 +138,7 @@ const ConfirmOrderModal = ({
                     <div>
                       <div className="text-[24px] leading-8 font-semibold">
                         <span className="text-black">
-                          {singleOrder.reference}
+                          {singleOrder?.reference || 'Order'}
                         </span>
                       </div>
                       <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
@@ -147,7 +160,7 @@ const ConfirmOrderModal = ({
                       >
                         <div className="flex gap-2 items-center justify-center">
                           <p>
-                            Checkout {formatPrice(singleOrder.totalAmount)}{" "}
+                            Checkout {formatPrice(singleOrder?.totalAmount || 0)}{" "}
                           </p>
                           <HiArrowLongLeft className="text-[22px] rotate-180" />
                         </div>
@@ -235,15 +248,15 @@ const ConfirmOrderModal = ({
                       <div className="flex justify-between items-center">
                         <div className="text-sm">
                           <p className="font-[600] text-black">
-                            {singleOrder.placedByName}
+                            {singleOrder?.placedByName || 'Customer'}
                           </p>
                           <p className="text-grey500">
-                            {singleOrder.placedByPhoneNumber}
+                            {singleOrder?.placedByPhoneNumber || ''}
                           </p>
                         </div>
                         <div>
                           <span className="rounded-full text-sm px-4 py-2 bg-[#EAE5FF] text-primaryColor">
-                            {singleOrder.qrReference}
+                            {singleOrder?.qrReference || 'N/A'}
                           </span>
                         </div>
                       </div>
@@ -251,7 +264,7 @@ const ConfirmOrderModal = ({
                       <div className="text-sm">
                         <p className="font-[600] text-black">Comment</p>
                         <p className="text-grey500">
-                          {singleOrder.comment
+                          {singleOrder?.comment
                             ? singleOrder.comment
                             : "no comment"}
                         </p>
@@ -268,7 +281,7 @@ const ConfirmOrderModal = ({
                     <span className="text-black">Select payment method</span>
                   </div>
                   <p className="text-sm  text-primaryColor xl:mb-8 w-full mb-4">
-                    {formatPrice(singleOrder.totalAmount)}
+                    {formatPrice(singleOrder?.totalAmount || 0)}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 text-black">
@@ -317,7 +330,7 @@ const ConfirmOrderModal = ({
                       <p className="text-sm text-grey500">TOTAL ORDER</p>
                       <p className="font-bold text-black text-[20px]">
                         {" "}
-                        {formatPrice(singleOrder.totalAmount)}
+                        {formatPrice(singleOrder?.totalAmount || 0)}
                       </p>
                     </div>
                     <MdKeyboardArrowRight />

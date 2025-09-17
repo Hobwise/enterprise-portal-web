@@ -32,13 +32,13 @@ const LoginForm = () => {
   const queryClient = useQueryClient();
   const { setLoginDetails } = useGlobalContext();
   const [loading, setLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [loginFormData, setLoginFormData] = useState<LoginFormData>({
     email: "",
     password: "",
   });
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastSubmitTime = useRef<number>(0);
   
   // Prefetch routes on component mount for faster navigation
   useEffect(() => {
@@ -188,21 +188,21 @@ const LoginForm = () => {
 
   const submitFormData = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Prevent multiple submissions
-    if (isSubmitting || loading) {
+
+    // Prevent multiple submissions with debounce (500ms minimum between clicks)
+    const now = Date.now();
+    if (loading || (now - lastSubmitTime.current < 500)) {
       return;
     }
-    
-    // Set loading states immediately
+    lastSubmitTime.current = now;
+
+    // Set loading state immediately
     setLoading(true);
-    setIsSubmitting(true);
     setErrors({});
     
     // Validate form
     if (!validateForm()) {
       setLoading(false);
-      setIsSubmitting(false);
       return;
     }
 
@@ -286,7 +286,6 @@ const LoginForm = () => {
       }
     } finally {
       setLoading(false);
-      setIsSubmitting(false);
       abortControllerRef.current = null;
     }
   };
@@ -304,7 +303,7 @@ const LoginForm = () => {
   // Optional: Add keyboard shortcut for submit (Enter key)
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !loading && !isSubmitting && loginFormData.email && loginFormData.password) {
+      if (e.key === 'Enter' && !loading && loginFormData.email && loginFormData.password) {
         const form = document.querySelector('form');
         if (form) {
           form.requestSubmit();
@@ -314,7 +313,7 @@ const LoginForm = () => {
 
     window.addEventListener('keypress', handleKeyPress);
     return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [loading, isSubmitting, loginFormData]);
+  }, [loading, loginFormData]);
 
   return (
     <form onSubmit={submitFormData} autoComplete="off" noValidate>
@@ -359,9 +358,9 @@ const LoginForm = () => {
       
       <Spacer y={7} />
       
-          <CustomButton 
-        loading={loading} 
-        disabled={loading || isSubmitting} 
+          <CustomButton
+        loading={loading}
+        disabled={loading}
         type="submit"
       >
         {loading ? "Logging in..." : "Log In"}
