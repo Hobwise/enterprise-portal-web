@@ -48,6 +48,7 @@ import Comment from './comment';
 import ConfirmOrderModal from './confirmOrder';
 import InvoiceModal from './invoice';
 import UpdateOrderModal from './UpdateOrderModal';
+import CheckoutModal from './place-order/checkoutModal';
 import { completeOrder } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
@@ -200,6 +201,9 @@ const OrdersList: React.FC<OrdersListProps> = ({
     React.useState<boolean>(false);
   const [isOpenComment, setIsOpenComment] = React.useState<boolean>(false);
   const [isOpenUpdateOrder, setIsOpenUpdateOrder] = React.useState<boolean>(false);
+  const [isOpenCheckoutModal, setIsOpenCheckoutModal] = React.useState<boolean>(false);
+  const [checkoutSelectedItems, setCheckoutSelectedItems] = React.useState<any[]>([]);
+  const [checkoutTotalPrice, setCheckoutTotalPrice] = React.useState<number>(0);
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] = React.useState<boolean>(false);
@@ -462,40 +466,6 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
                   {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                     options &&
-                    options.includes('Update Order') && (
-                      <DropdownItem
-                        key="update"
-                        onClick={() => {
-                          saveJsonItemToLocalStorage('order', order);
-                          toggleUpdateOrderModal(order);
-                        }}
-                        aria-label='update order'
-                      >
-                        <div
-                          className={` flex gap-3  items-center text-grey500`}
-                        >
-                          <FaRegEdit />
-                          <p>Update order</p>
-                        </div>
-                      </DropdownItem>
-                    )) as any}
-
-                  {((role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    options &&
-                    options.includes('Checkout') && (
-                      <DropdownItem
-                        key="checkout"
-                        onClick={() => toggleConfirmModal(order)}
-                        aria-label='checkout'
-                      >
-                        <div className={`flex gap-3 items-center text-grey500`}>
-                          <BsCalendar2Check />
-                          <p>Checkout</p>
-                        </div>
-                      </DropdownItem>
-                    )) as any}
-                  {((role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    options &&
                     options.includes('Cancel Order') && (
                       <DropdownItem
                         key="cancel"
@@ -622,9 +592,52 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenUpdateOrder}
         orderData={singleOrder}
         onOrderUpdated={refetch}
+        onProceedToConfirm={(selectedItems, totalPrice) => {
+          setCheckoutSelectedItems(selectedItems);
+          setCheckoutTotalPrice(totalPrice);
+          setIsOpenUpdateOrder(false);
+          setIsOpenCheckoutModal(true);
+        }}
         onProcessPayment={() => {
           setIsOpenUpdateOrder(false);
           togglePaymentModal(singleOrder!);
+        }}
+      />
+
+      {/* Checkout Modal */}
+      <CheckoutModal
+        isOpen={isOpenCheckoutModal}
+        onOpenChange={() => setIsOpenCheckoutModal(false)}
+        selectedItems={checkoutSelectedItems}
+        totalPrice={checkoutTotalPrice}
+        orderDetails={singleOrder}
+        id={singleOrder?.id}
+        handleDecrement={(itemId: string) => {
+          setCheckoutSelectedItems(prev =>
+            prev.map(item =>
+              item.id === itemId
+                ? { ...item, count: Math.max(1, item.count - 1) }
+                : item
+            ).filter(item => item.count > 0)
+          );
+        }}
+        handleIncrement={(itemId: string) => {
+          setCheckoutSelectedItems(prev =>
+            prev.map(item =>
+              item.id === itemId
+                ? { ...item, count: Math.min(item.count + 1, 999) }
+                : item
+            )
+          );
+        }}
+        handlePackingCost={(itemId: string, isPacked: boolean) => {
+          setCheckoutSelectedItems(prev =>
+            prev.map(item =>
+              item.id === itemId
+                ? { ...item, isPacked }
+                : item
+            )
+          );
         }}
       />
 

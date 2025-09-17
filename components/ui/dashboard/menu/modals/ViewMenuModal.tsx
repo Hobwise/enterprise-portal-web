@@ -22,6 +22,7 @@ interface ViewMenuModalProps {
   handleEditMenu: (menu: any) => void;
   onOpen: () => void;
   setIsOpenCreateSection: (isOpen: boolean) => void;
+  onRefresh?: () => void | Promise<void>;
 }
 
 const ViewMenuModal = ({
@@ -36,6 +37,7 @@ const ViewMenuModal = ({
   handleEditMenu,
   onOpen,
   setIsOpenCreateSection,
+  onRefresh,
 }: ViewMenuModalProps) => {
   return (
     <Modal isOpen={isOpen} size="md" onOpenChange={onOpenChange} hideCloseButton>

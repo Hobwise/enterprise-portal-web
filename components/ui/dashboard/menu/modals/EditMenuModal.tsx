@@ -21,8 +21,9 @@ interface EditMenuModalProps {
   setSelectedEditSection: (section: string) => void;
   categories: any[];
   loading: boolean;
-  handleUpdateMenu: () => void;
+  handleUpdateMenu: () => Promise<boolean | void>;
   closeEditModal: () => void;
+  onSuccess?: () => void | Promise<void>;
 }
 
 const EditMenuModal = ({
@@ -40,6 +41,7 @@ const EditMenuModal = ({
   loading,
   handleUpdateMenu,
   closeEditModal,
+  onSuccess,
 }: EditMenuModalProps) => {
   return (
     <Modal
@@ -202,7 +204,12 @@ const EditMenuModal = ({
                   Cancel
                 </button>
                 <button
-                  onClick={handleUpdateMenu}
+                  onClick={async () => {
+                    const success = await handleUpdateMenu();
+                    if (success && onSuccess) {
+                      await onSuccess();
+                    }
+                  }}
                   disabled={!editName || loading}
                   className="px-8 py-3 bg-[#5F35D2]  text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >

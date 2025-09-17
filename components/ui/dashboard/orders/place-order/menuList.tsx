@@ -950,7 +950,7 @@ const MenuList = () => {
               <>
                 {/* Business Name Header */}
                 <div className="mb-4">
-                  <h1 className="text-lg font-[700] text-gray-800">
+                  <h1 className="text-lg text-center font-[700] text-gray-800">
                     {businessInformation[0]?.businessName || 'Business Name'}
                   </h1>
                 </div>
@@ -958,9 +958,9 @@ const MenuList = () => {
                 {/* Cart Items - Scrollable */}
                 <div className="flex-1 h-[60vh] overflow-y-auto">
                    <div className="flex justify-between items-center ">
-                    <div className="">Table</div>
+                    <div className="">Order Item</div>
                        <h2 className="font-[600] mb-2">
-                    {selectedItems.reduce((total, item) => total + item.count, 0)} Item{selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? 's' : ''} 
+                    {selectedItems.reduce((total, item) => total + item.count, 0)} {selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? '' : ''} 
                   </h2>
                    </div>
                 <div className="rounded-lg ">
@@ -1053,7 +1053,7 @@ const MenuList = () => {
                       </p>
                     </div>
                     <Divider className="my-2" />
-                    <div className="flex justify-between items-center">
+                    <div className="flex justify-between flex-col items-center">
                       <h3 className="text-[14px] font-[600]">Total</h3>
                       <p className="text-[16px] font-[700] text-primaryColor">
                         {formatPrice(calculateTotalPrice() * 1.075)}

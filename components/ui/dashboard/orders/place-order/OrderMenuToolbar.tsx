@@ -59,7 +59,7 @@ const OrderMenuToolbar = ({
   };
 
   return (
-    <div className="flex items-center my-3 py-3 gap-6">
+    <div className="flex items-center my-3 py-3 gap-2">
       {/* Fixed left scroll button */}
       {showLeft && (
         <div className="flex-shrink-0">
@@ -82,7 +82,7 @@ const OrderMenuToolbar = ({
         className="flex-1 overflow-x-auto w-80 scrollbar-hide scroll-smooth"
         onScroll={handleTabsScroll}
       >
-        <div className="flex gap-6 w-full">
+        <div className="flex gap-5 w-full">
           {menuSections.map((section) => (
             <Tooltip
               className="text-gray-500"
@@ -93,7 +93,7 @@ const OrderMenuToolbar = ({
             >
               <button
                 onClick={() => handleMenuSectionSelect(section.id)}
-                className={`flex-shrink-0 px-4 py-2 bg-[#EAE5FF] w-28 rounded-lg transition-colors whitespace-nowrap font-satoshi text-base ${
+                className={`flex-shrink-0 px-4 py-2 bg-[#EAE5FF] w-28 rounded-lg transition-colors whitespace-nowrap font-medium text-sm ${
                   activeSubCategory === section.id
                     ? "bg-primaryColor text-white"
                     : "text-[#596375] hover:bg-[#EAE5FF]"

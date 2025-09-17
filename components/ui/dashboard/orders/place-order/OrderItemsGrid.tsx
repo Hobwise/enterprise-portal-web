@@ -57,14 +57,14 @@ const OrderItemsGrid = ({
 
   return (
     <div className="p-6 ">
-      {loadingCategories || loadingItems || menuItems === null ? (
+      {loadingCategories || loadingItems || menuItems === null || menuItems.length === 0 ? (
         <SpinnerLoader size="md" />
-      ) : menuItems && menuItems.length === 0 && searchQuery ? (
+      ) : menuItems.length === 0 && searchQuery ? (
         <div className="flex flex-col items-center justify-center py-16">
           <p className="text-gray-500 text-lg font-satoshi">No items found matching "{searchQuery}"</p>
           <p className="text-gray-400 text-sm font-satoshi mt-2">Try adjusting your search terms</p>
         </div>
-      ) : menuItems && menuItems.length === 0 ? (
+      ) : menuItems.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16">
           <Image
             width={80}

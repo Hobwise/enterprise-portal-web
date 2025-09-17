@@ -15,7 +15,7 @@ import {
 } from "@/lib/utils";
 import { Avatar, ScrollShadow } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import useLogout from "@/hooks/cachedEndpoints/useLogout";
 
 const SelectBusinessForm = () => {
@@ -26,6 +26,7 @@ const SelectBusinessForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data, isLoading: loading } = useGetBusinessByCooperate();
+  const lastClickTime = useRef<number>(0);
   
   // Prefetch dashboard route on component mount for faster navigation
   useEffect(() => {
@@ -157,8 +158,13 @@ const SelectBusinessForm = () => {
   };
 
   const handleSelectedBusiness = async (item: any) => {
-    if (isLoading) return; // Prevent multiple concurrent requests
-    
+    // Prevent multiple clicks with debounce (500ms minimum between clicks)
+    const now = Date.now();
+    if (isLoading || (now - lastClickTime.current < 500)) {
+      return;
+    }
+    lastClickTime.current = now;
+
     setIsLoading(true);
     setError(null);
     setBusiness(item);
@@ -255,12 +261,14 @@ const SelectBusinessForm = () => {
             className="w-full max-h-[350px]"
           >
             <article
-              className={`bg-[#F1F2F480] rounded-xl p-3 cursor-pointer ${
-                isLoading &&
-                item.name === business?.name &&
-                "border-grey500 border"
-              }`}
-              onClick={() => handleSelectedBusiness(item)}
+              className={`bg-[#F1F2F480] rounded-xl p-3 transition-all ${
+                isLoading
+                  ? item.name === business?.name
+                    ? "border-grey500 border opacity-70"
+                    : "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer hover:bg-[#F1F2F4] active:scale-[0.98]"
+              } ${isLoading ? "pointer-events-none" : ""}`}
+              onClick={() => !isLoading && handleSelectedBusiness(item)}
               key={item.name}
             >
               <div className="flex items-center justify-between">
