@@ -135,9 +135,12 @@ const LoginForm = () => {
       }
 
       // Navigate immediately without await
-      router.push(redirectPath);
+      router.replace(redirectPath);
       router.refresh(); // Force immediate update
-      
+
+      // Reset loading state after navigation starts
+      setTimeout(() => setLoading(false), 100);
+
     } catch (error) {
       console.error("Error handling login success:", error);
       notify({
@@ -220,6 +223,9 @@ const LoginForm = () => {
       // Call API with abort signal support
       const response = await loginUser(loginFormData);
 
+      // Log the response structure for debugging
+      console.log("Login API response:", response);
+
       // Handle validation errors from server
       if (response?.errors) {
         setErrors(response.errors);
@@ -237,7 +243,7 @@ const LoginForm = () => {
         return;
       }
 
-      // Handle successful response
+      // Handle successful response from axios
       if (response?.data?.response) {
         const decryptedData = decryptPayload(response.data.response);
         if (decryptedData?.data) {
@@ -247,8 +253,8 @@ const LoginForm = () => {
         } else {
           throw new Error("Invalid response format");
         }
-      } 
-      // Handle error response
+      }
+      // Handle axios error response structure
       else if (response?.response?.data?.response) {
         const decryptedData = decryptPayload(response.response.data.response);
         if (decryptedData?.error) {
@@ -256,10 +262,41 @@ const LoginForm = () => {
         } else {
           throw new Error("Invalid error response format");
         }
-      } 
+      }
+      // Handle direct error response from loginUser catch block
+      else if (response?.response?.data) {
+        // Check if there's an encrypted payload in the error response
+        if (response.response.data.response) {
+          const decryptedData = decryptPayload(response.response.data.response);
+          handleLoginError(decryptedData);
+        }
+        // Handle plain error message
+        else if (response.response.data.message || response.response.data.error) {
+          notify({
+            title: "Login Failed",
+            text: response.response.data.message || response.response.data.error || "Authentication failed",
+            type: "error",
+          });
+        } else {
+          throw new Error("Server error occurred");
+        }
+      }
+      // Handle network errors or other error formats
+      else if (response?.message) {
+        notify({
+          title: "Login Failed",
+          text: response.message || "An unexpected error occurred",
+          type: "error",
+        });
+      }
       // Handle unexpected response format
       else {
-        throw new Error("Unexpected response format from server");
+        console.error("Unexpected response structure:", response);
+        notify({
+          title: "Login Failed",
+          text: "Unable to process server response. Please try again.",
+          type: "error",
+        });
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -290,15 +327,20 @@ const LoginForm = () => {
     }
   };
 
-  // Cleanup on unmount
+  // Prefetch routes and cleanup on unmount
   useEffect(() => {
+    // Prefetch common routes for faster navigation
+    router.prefetch('/dashboard');
+    router.prefetch('/auth/select-business');
+    router.prefetch('/auth/business-information');
+
     return () => {
       // Cancel any pending requests when component unmounts
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
-  }, []);
+  }, [router]);
   
   // Optional: Add keyboard shortcut for submit (Enter key)
   useEffect(() => {

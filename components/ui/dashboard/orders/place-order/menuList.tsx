@@ -27,7 +27,7 @@ import {
   SelectedSkeletonLoading,
 } from "./data";
 import ViewModal from "./view";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import OrderCategoryTabs from "./OrderCategoryTabs";
 import OrderMenuToolbar from "./OrderMenuToolbar";
@@ -107,10 +107,11 @@ const retryWithBackoff = async (
 
 const MenuList = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const { 
-    setCurrentMenuItems, 
-    setCurrentCategory, 
+  const {
+    setCurrentMenuItems,
+    setCurrentCategory,
     setCurrentSection
   } = useGlobalContext();
 
@@ -796,10 +797,18 @@ const MenuList = () => {
   };
 
   useEffect(() => {
-    if (order?.id && categories && categories.length > 0) {
+    // Check if we're in add-items mode (coming from UpdateOrderModal)
+    const isAddItemsMode = searchParams.get('mode') === 'add-items';
+
+    if (isAddItemsMode && order?.id && categories && categories.length > 0) {
+      // Only load order details if explicitly adding items to an existing order
       getOrderDetails();
+    } else if (!isAddItemsMode && order?.id) {
+      // Clear the order from localStorage if we're not in add-items mode
+      // This prevents accidental prefilling when creating a new order
+      clearItemLocalStorage("order");
     }
-  }, [order?.id, categories]);
+  }, [order?.id, categories, searchParams]);
 
   // Cleanup debounce timer on unmount
   useEffect(() => {

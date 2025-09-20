@@ -950,13 +950,35 @@ const RestaurantMenu = () => {
 
       if (response?.data?.isSuccessful) {
         toast.success('Menu successfully created');
-        refetchCategories();
+
+        // Refresh categories and get the fresh data
+        const result = await refetchCategories();
+        const freshCategories = result.data;
+
+        // Update categories state immediately with fresh data
+        if (freshCategories && Array.isArray(freshCategories)) {
+          setCategories(freshCategories);
+
+          // Immediately update menuSections with fresh data
+          const currentCategory = freshCategories.find((c: any) => c.categoryId === activeCategory);
+          if (currentCategory) {
+            const updatedSections = currentCategory.menus[0]?.menuSections || [];
+            setMenuSections(updatedSections); // Updates MenuToolbar immediately
+
+            // If we just created the first menu section, auto-select it
+            if (updatedSections.length === 1 && !activeSubCategory) {
+              setActiveSubCategory(updatedSections[0].id);
+              fetchMenuItems(updatedSections[0].id, true, 1);
+            }
+          }
+        }
+
         onOpenChange();
         setName('');
         setPackingCost(undefined);
         setEstimatedTime(undefined);
         setSelectedCreateSection('');
-        
+
         // Invalidate cache for the section where menu was created
         if (activeCategory) {
           // Invalidate all pages in cache for this section
@@ -967,7 +989,7 @@ const RestaurantMenu = () => {
             }
           });
           keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
-          
+
           setPreloadedSections(prev => {
             const newMap = new Map(prev);
             newMap.delete(activeCategory);
@@ -1016,25 +1038,28 @@ const RestaurantMenu = () => {
 
       if (response?.data?.isSuccessful) {
         toast.success('Menu updated successfully');
-        
+
         // Clear all caches to ensure fresh data
         globalMenuItemsCache.clear();
         setPreloadedSections(new Map());
         setCacheTimestamps(new Map());
-        
+
         // Check if menu was moved to a different category
         const menuMovedToNewCategory = editingMenu.categoryId !== selectedEditSection;
 
-        // Refresh categories first
-        await refetchCategories();
+        // Refresh categories and get the fresh data
+        const result = await refetchCategories();
+        const freshCategories = result.data;
 
-        // Always refresh menuSections for current category after any menu update
-        // This ensures both MenuToolbar and ViewMenuModal get updated data immediately
-        setTimeout(() => {
-          const currentCategory = categories.find(c => c.categoryId === activeCategory);
+        // Update categories state immediately with fresh data
+        if (freshCategories && Array.isArray(freshCategories)) {
+          setCategories(freshCategories);
+
+          // Immediately update menuSections with fresh data
+          const currentCategory = freshCategories.find((c: any) => c.categoryId === activeCategory);
           if (currentCategory) {
             const updatedSections = currentCategory.menus[0]?.menuSections || [];
-            setMenuSections(updatedSections); // Updates both MenuToolbar AND ViewMenuModal
+            setMenuSections(updatedSections); // Updates both MenuToolbar AND ViewMenuModal immediately
 
             // Handle active section management
             if (menuMovedToNewCategory && activeSubCategory === editingMenu.id) {
@@ -1051,13 +1076,13 @@ const RestaurantMenu = () => {
               }
             } else if (activeSubCategory) {
               // Refresh current section data if still valid
-              const stillExists = updatedSections.find(s => s.id === activeSubCategory);
+              const stillExists = updatedSections.find((s: any) => s.id === activeSubCategory);
               if (stillExists) {
                 fetchMenuItems(activeSubCategory, true, currentPage);
               }
             }
           }
-        }, 100);
+        }
 
         closeEditModal();
         return true; // Return success indicator
@@ -1105,7 +1130,13 @@ const RestaurantMenu = () => {
         setIsOpenEditSection(false);
         setEditingSectionName('');
         setEditingSectionId('');
-        refetchCategories();
+
+        // Refresh categories and update UI immediately
+        const result = await refetchCategories();
+        const freshCategories = result.data;
+        if (freshCategories && Array.isArray(freshCategories)) {
+          setCategories(freshCategories);
+        }
       } else {
         toast.error(response?.data?.error || 'Failed to update section');
       }
@@ -1141,7 +1172,13 @@ const RestaurantMenu = () => {
         toast.success('Section created successfully');
         setIsOpenCreateSection(false);
         setSectionName('');
-        refetchCategories();
+
+        // Refresh categories and update UI immediately
+        const result = await refetchCategories();
+        const freshCategories = result.data;
+        if (freshCategories && Array.isArray(freshCategories)) {
+          setCategories(freshCategories);
+        }
       } else {
         toast.error(response?.data?.error || 'Failed to create section');
       }
@@ -1754,7 +1791,6 @@ const RestaurantMenu = () => {
         loading={loading}
         handleUpdateMenu={handleUpdateMenu}
         closeEditModal={closeEditModal}
-        onSuccess={refetchCategories}
       />
 
       <EditItemModal
