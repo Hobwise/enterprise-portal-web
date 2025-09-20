@@ -49,7 +49,7 @@ import ConfirmOrderModal from './confirmOrder';
 import InvoiceModal from './invoice';
 import UpdateOrderModal from './UpdateOrderModal';
 import CheckoutModal from './place-order/checkoutModal';
-import { completeOrder } from '@/app/api/controllers/dashboard/orders';
+import { completeOrder, getOrder } from '@/app/api/controllers/dashboard/orders';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { MdKeyboardArrowRight } from 'react-icons/md';
@@ -369,6 +369,15 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setValue(index);
   };
 
+  // Prefetch order details on hover for better performance
+  const prefetchOrderDetails = (orderId: string) => {
+    queryClient.prefetchQuery({
+      queryKey: ['orderDetails', orderId],
+      queryFn: () => getOrder(orderId),
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    });
+  };
+
   // Handle table row click based on order status
   const handleRowClick = (order: OrderItem) => {
     switch (order.status) {
@@ -445,7 +454,15 @@ const OrdersList: React.FC<OrdersListProps> = ({
       case 'actions':
         return (
           <div className='relative flexjustify-center items-center gap-2' onClick={(e) => e.stopPropagation()}>
-            <Dropdown aria-label='drop down' className=''>
+            <Dropdown
+              aria-label='drop down'
+              className=''
+              onOpenChange={(isOpen) => {
+                if (isOpen) {
+                  prefetchOrderDetails(order.id);
+                }
+              }}
+            >
               <DropdownTrigger aria-label='actions'>
                 <div className='cursor-pointer flex justify-center items-center text-black'>
                   <HiOutlineDotsVertical className='text-[22px] ' />
@@ -557,6 +574,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
               key={String(order?.id)}
               className={`${order.status !== 2 ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors`}
               onClick={() => order.status !== 2 && handleRowClick(order)}
+              onMouseEnter={() => order.status !== 2 && prefetchOrderDetails(order.id)}
             >
               {(columnKey) => (
                 <TableCell>{renderCell(order, String(columnKey))}</TableCell>

@@ -13,7 +13,7 @@ import {
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { X } from "lucide-react";
-import { editOrder, getOrder } from "@/app/api/controllers/dashboard/orders";
+import { editOrder } from "@/app/api/controllers/dashboard/orders";
 import {
   getJsonItemFromLocalStorage,
   formatPrice,
@@ -25,6 +25,7 @@ import SpinnerLoader from "../menu/SpinnerLoader";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
+import useOrderDetails from "@/hooks/cachedEndpoints/useOrderDetails";
 
 type Item = {
   id: string;
@@ -90,63 +91,60 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isLoadingOrderDetails, setIsLoadingOrderDetails] =
-    useState<boolean>(false);
   const [storedOrderData, setStoredOrderData] = useState<OrderData | null>(
     null
   );
-  const [fullOrderData, setFullOrderData] = useState<any>(null);
 
-  // Fetch order details from API (exact logic from menuList.tsx)
-  const getOrderDetails = async () => {
-    // Get fresh order data from localStorage when modal opens
-    const orderFromStorage = getJsonItemFromLocalStorage("order");
+  // Get order from localStorage when modal opens
+  const orderFromStorage = isOpen ? getJsonItemFromLocalStorage("order") : null;
 
-    if (!orderFromStorage?.id) {
-      toast.error("Order data not found");
-      return;
+  // Use cached order details hook
+  const {
+    orderDetails: fullOrderData,
+    isLoading: isLoadingOrderDetails,
+    isSuccessful,
+    error
+  } = useOrderDetails(orderFromStorage?.id, {
+    enabled: !!orderFromStorage?.id && isOpen
+  });
+
+  // Process order details when they're loaded
+  useEffect(() => {
+    if (isOpen && orderFromStorage) {
+      // Store order data in component state
+      setStoredOrderData(orderFromStorage);
+
+      if (fullOrderData && isSuccessful) {
+        const updatedArray = fullOrderData.orderDetails.map(
+          (item: any) => {
+            const { unitPrice, quantity, itemID, ...rest } = item;
+
+            return {
+              ...rest,
+              id: itemID,
+              itemID: itemID,
+              price: unitPrice,
+              count: quantity,
+              packingCost: item.packingCost || 0,
+              isVariety: item.isVariety || false,
+              isPacked: item.isPacked || false,
+            };
+          }
+        );
+        setSelectedItems(() => updatedArray);
+      }
     }
 
-    // Store order data in component state
-    setStoredOrderData(orderFromStorage);
-
-    setIsLoadingOrderDetails(true);
-    const response = await getOrder(orderFromStorage.id);
-
-    setIsLoadingOrderDetails(false);
-    if (response?.data?.isSuccessful) {
-      // Store the full order data for display
-      setFullOrderData(response?.data?.data);
-
-      const updatedArray = response?.data?.data.orderDetails.map(
-        (item: any) => {
-          const { unitPrice, quantity, itemID, ...rest } = item;
-
-          return {
-            ...rest,
-            id: itemID,
-            itemID: itemID,
-            price: unitPrice,
-            count: quantity,
-            packingCost: item.packingCost || 0,
-            isVariety: item.isVariety || false,
-            isPacked: item.isPacked || false,
-          };
-        }
-      );
-      setSelectedItems(() => updatedArray);
-      // Don't clear localStorage here - wait until successful update
-    } else if (response?.data?.error) {
+    // Handle error case
+    if (error) {
       toast.error("Failed to load order details");
     }
-  };
 
-  // Load order details when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      getOrderDetails();
+    // Handle missing order data
+    if (isOpen && !orderFromStorage?.id) {
+      toast.error("Order data not found");
     }
-  }, [isOpen]);
+  }, [isOpen, orderFromStorage, fullOrderData, isSuccessful, error]);
 
   // Increment handler
   const handleIncrement = useCallback(
@@ -207,60 +205,9 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     // Save the current order data to localStorage so place-order page can pick it up
     if (storedOrderData) {
       saveJsonItemToLocalStorage("order", storedOrderData);
-      router.push("/dashboard/orders/place-order");
+      router.push("/dashboard/orders/place-order?mode=add-items");
     } else {
       toast.error("Order data not available");
-    }
-  };
-
-  // Save order changes
-  const handleSaveOrder = async () => {
-    if (!storedOrderData || selectedItems.length === 0) {
-      toast.error("Order data or items not found");
-      return;
-    }
-
-    setIsSaving(true);
-
-    try {
-      const orderDetails = selectedItems.map((item) => ({
-        itemID: item.itemID,
-        quantity: item.count,
-        unitPrice: item.price,
-        isVariety: item.isVariety || false,
-        isPacked: item.isPacked || false,
-      }));
-
-      const updatePayload = {
-        placedByName: storedOrderData.placedByName,
-        placedByPhoneNumber: storedOrderData.placedByPhoneNumber,
-        userId: userInformation?.id || "",
-        quickResponseID: storedOrderData.qrReference,
-        status: storedOrderData.status,
-        comment: storedOrderData.comment || "",
-        additionalCostName: "",
-        additionalCost: 0,
-        totalAmount: calculateTotalPrice() * 1.075,
-        estimatedCompletionTime: new Date().toISOString(),
-        orderDetails,
-      };
-
-      const response = await editOrder(storedOrderData.id, updatePayload);
-
-      if (response && "data" in response && response.data?.isSuccessful) {
-        toast.success("Order updated successfully");
-        // Clear localStorage only after successful update
-        clearItemLocalStorage("order");
-        onOrderUpdated();
-        onOpenChange(false);
-      } else {
-        toast.error("Failed to update order");
-      }
-    } catch (error) {
-      console.error("Error updating order:", error);
-      toast.error("Failed to update order");
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -268,14 +215,8 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   useEffect(() => {
     if (!isOpen) {
       setSelectedItems([]);
-      setIsLoadingOrderDetails(false);
     }
   }, [isOpen]);
-
-  const totalItems = selectedItems.reduce(
-    (total, item) => total + item.count,
-    0
-  );
 
   return (
     <>

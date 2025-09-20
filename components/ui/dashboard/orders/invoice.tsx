@@ -1,5 +1,4 @@
 "use client";
-import { getOrder } from "@/app/api/controllers/dashboard/orders";
 import { CustomButton } from "@/components/customButton";
 import {
   formatPrice,
@@ -17,7 +16,8 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import moment from "moment";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
+import useOrderDetails from "@/hooks/cachedEndpoints/useOrderDetails";
 
 const InvoiceModal = ({
   isOpenInvoice,
@@ -26,26 +26,17 @@ const InvoiceModal = ({
 }: any) => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const businessInformation = getJsonItemFromLocalStorage("business");
-  const [isLoading, setIsLoading] = useState(false);
-  const [order, setOrder] = useState([]);
-
   const invoiceRef = useRef(null);
 
-  const getOrderDetails = async () => {
-    setIsLoading(true);
-    const data = await getOrder(singleOrder.id);
-    setIsLoading(false);
-    if (data?.data?.isSuccessful) {
-      setOrder(data?.data?.data);
-    } else if (data?.data?.error) {
-    }
-  };
-
-  useEffect(() => {
-    if (singleOrder?.id) {
-      getOrderDetails();
-    }
-  }, [singleOrder?.id]);
+  // Use cached order details hook
+  const {
+    orderDetails: order,
+    isLoading,
+    isSuccessful,
+    error
+  } = useOrderDetails(singleOrder?.id, {
+    enabled: !!singleOrder?.id && isOpenInvoice
+  });
 
   return (
     <Modal
@@ -102,7 +93,7 @@ const InvoiceModal = ({
                     Fetching order details...
                   </p>
                 </div>
-              ) : (
+              ) : order ? (
                 <>
                   <div className="flex justify-between gap-3  text-sm text-black">
                     <p>ITEM</p>
@@ -167,10 +158,16 @@ const InvoiceModal = ({
                   </div>
                   <Divider />
                 </>
+              ) : (
+                <div className={`flex flex-col items-center my-5`}>
+                  <p className="text-center text-[13px] text-grey400">
+                    {error ? "Failed to load order details" : "No order data available"}
+                  </p>
+                </div>
               )}
             </ModalBody>
             <Spacer y={1} />
-            {!isLoading && (
+            {!isLoading && order && (
               <ModalFooter className="w-full flex  gap-5">
                 <CustomButton
                   className="bg-white text-black border border-primaryGrey flex-grow"

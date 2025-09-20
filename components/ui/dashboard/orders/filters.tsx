@@ -1,6 +1,13 @@
 'use client';
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 
+// Helper function to format category names for better readability
+const formatCategoryName = (name: string) => {
+  return name
+    .replace(/awaitingconfirmation/gi, 'Awaiting Confirmation')
+    .replace(/\b\w/g, l => l.toUpperCase()); // Title case
+};
+
 const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
   return (
     <>
@@ -27,7 +34,7 @@ const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
                     onClick={() => handleTabClick(order.name)}
                     className='flex items-center h-10 space-x-2 capitalize'
                   >
-                    <span>{order.name}</span>
+                    <span>{formatCategoryName(order.name)}</span>
 
                     <Chip
                       classNames={{
