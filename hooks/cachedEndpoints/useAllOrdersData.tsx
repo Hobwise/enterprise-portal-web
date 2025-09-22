@@ -39,8 +39,8 @@ const useAllOrdersData = (
   const [isLoadingAll, setIsLoadingAll] = useState(false);
 
   // First, fetch categories
-  const { 
-    data: categoriesData, 
+  const {
+    data: categoriesData,
     isLoading: isLoadingCategories,
     isError: isCategoriesError,
     refetch: refetchCategories
@@ -63,7 +63,7 @@ const useAllOrdersData = (
 
   // Fetch first category details immediately
   const firstCategory = categories[0]?.name;
-  const { 
+  const {
     data: firstCategoryData,
     isLoading: isLoadingFirst
   } = useQuery({
@@ -96,20 +96,21 @@ const useAllOrdersData = (
     }
   }, [firstCategoryData, firstCategory]);
 
-  // Fetch all other categories after 2 seconds
+  // Fetch all other categories immediately after first category loads
   useEffect(() => {
     if (categories.length <= 1 || isLoadingFirst) return;
 
-    const timer = setTimeout(async () => {
+    // Start fetching immediately - no delay
+    const fetchOtherCategories = async () => {
       setIsLoadingAll(true);
-      
+
       // Get categories except the first one
       const otherCategories = categories.slice(1);
-      
+
       // Fetch all other categories in parallel
-      const promises = otherCategories.map(async (category) => {
+      const promises = otherCategories.map(async (category: any) => {
         const queryKey = ['orderDetails', category.name, { page, rowsPerPage, filterType, startDate, endDate }];
-        
+
         // Check if already cached
         const cachedData = queryClient.getQueryData(queryKey);
         if (cachedData) {
@@ -127,10 +128,10 @@ const useAllOrdersData = (
             page,
             rowsPerPage
           );
-          
+
           // Cache the result
           queryClient.setQueryData(queryKey, response);
-          
+
           return { categoryName: category.name, data: response };
         } catch (error) {
           console.error(`Failed to fetch ${category.name}:`, error);
@@ -139,7 +140,7 @@ const useAllOrdersData = (
       });
 
       const results = await Promise.all(promises);
-      
+
       // Update categoryDetails with all fetched data
       const newDetails: Record<string, any> = {};
       results.forEach(result => {
@@ -147,22 +148,22 @@ const useAllOrdersData = (
           newDetails[result.categoryName] = result.data;
         }
       });
-      
+
       setCategoryDetails(prev => ({
         ...prev,
         ...newDetails
       }));
-      
-      setIsLoadingAll(false);
-    }, 2000); // 2 second delay
 
-    return () => clearTimeout(timer);
+      setIsLoadingAll(false);
+    };
+
+    fetchOtherCategories();
   }, [categories, isLoadingFirst, businessInformation, page, rowsPerPage, filterType, startDate, endDate, queryClient]);
 
   // Get details for a specific category
   const getCategoryDetails = (categoryName: string) => {
-    const category = categories.find(c => c.name === categoryName);
-    
+    const category = categories.find((c: any) => c.name === categoryName);
+
     // If category has 0 items, return empty array immediately
     if (category && category.totalCount === 0) {
       return { data: [], totalCount: 0 };
