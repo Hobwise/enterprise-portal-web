@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { dynamicExportConfig, getJsonItemFromLocalStorage } from "@/lib/utils";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
@@ -12,32 +11,13 @@ import useOrder from "@/hooks/cachedEndpoints/useOrder";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useDateFilter from "@/hooks/useDateFilter";
-import { downloadCSV } from "@/lib/downloadToExcel";
-import { Button, ButtonGroup, Chip } from "@nextui-org/react";
+import { Chip } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
-import { MdOutlineFileDownload } from "react-icons/md";
-import toast from "react-hot-toast";
-import { exportGrid } from "@/app/api/controllers/dashboard/menu";
-import { VscLoading } from "react-icons/vsc";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 
-// Type definitions
-interface OrderItem {
-  id: string;
-  placedByName: string;
-  placedByPhoneNumber: string;
-  reference: string;
-  treatedBy: string;
-  totalAmount: number;
-  qrReference: string;
-  paymentMethod: number;
-  paymentReference: string;
-  status: 0 | 1 | 2 | 3;
-  dateCreated: string;
-  comment?: string;
-}
+// Type definitions are handled in the component files
 
 const Orders: React.FC = () => {
   const router = useRouter();
@@ -55,10 +35,8 @@ const Orders: React.FC = () => {
     endDate,
   } = useDateFilter(useOrder);
   const { userRolePermissions, role } = usePermission();
-  const businessInformation = getJsonItemFromLocalStorage("business");
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [loadingExport, setLoadingExport] = useState(false);
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
@@ -73,25 +51,6 @@ const Orders: React.FC = () => {
   const data = { categories, details };
 
 
-  const exportCSV = async () => {
-    setLoadingExport(true);
-    const response = await exportGrid(
-      businessInformation[0]?.businessId,
-      1,
-      filterType
-    );
-    setLoadingExport(false);
-
-    if (response?.status === 200) {
-      dynamicExportConfig(
-        response,
-        `Orders-${businessInformation[0]?.businessName}`
-      );
-      toast.success("Orders downloaded successfully");
-    } else {
-      toast.error("Export failed, please try again");
-    }
-  };
 
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;

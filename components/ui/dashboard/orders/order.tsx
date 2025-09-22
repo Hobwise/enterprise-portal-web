@@ -203,7 +203,6 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenUpdateOrder, setIsOpenUpdateOrder] = React.useState<boolean>(false);
   const [isOpenCheckoutModal, setIsOpenCheckoutModal] = React.useState<boolean>(false);
   const [checkoutSelectedItems, setCheckoutSelectedItems] = React.useState<any[]>([]);
-  const [checkoutTotalPrice, setCheckoutTotalPrice] = React.useState<number>(0);
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] = React.useState<boolean>(false);
@@ -219,18 +218,20 @@ const OrdersList: React.FC<OrdersListProps> = ({
     { text: "Pay with bank transfer", subText: "Accept payment via bank transfer", id: 2 },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
-  // Use the new hook for fetching all data
-  const {
-    getCategoryDetails,
-    isLoadingInitial
-  } = useAllOrdersData(filterType, startDate, endDate, 1, 10); // Use default values for now
-  
 
   const {
     setTableStatus,
     tableStatus,
     setPage,
+    page,
+    rowsPerPage,
   } = useGlobalContext();
+
+  // Use the new hook for fetching all data
+  const {
+    getCategoryDetails,
+    isLoadingInitial
+  } = useAllOrdersData(filterType, startDate, endDate, page, rowsPerPage);
 
   const handleTabClick = (categoryName: string) => {
     setTableStatus(categoryName);
@@ -251,7 +252,47 @@ const OrdersList: React.FC<OrdersListProps> = ({
   
 
 
-  const matchingObjectArray = orderDetails; // Use filtered orders for pagination
+  // Create proper pagination data structure for usePagination hook
+  const paginationData = React.useMemo(() => {
+    // Extract totalCount from server response
+    let totalCount = 0;
+
+    if (currentCategoryData && typeof currentCategoryData === 'object') {
+      // Try different possible property names for total count
+      totalCount = currentCategoryData.totalCount ||
+                   currentCategoryData.total ||
+                   currentCategoryData.count ||
+                   0;
+
+      // If server response has data array, use its length as fallback
+      if (totalCount === 0 && currentCategoryData.data && Array.isArray(currentCategoryData.data)) {
+        totalCount = currentCategoryData.data.length;
+      }
+
+      // Additional fallback: check if server response has payments array (some endpoints use this)
+      if (totalCount === 0 && currentCategoryData.payments && Array.isArray(currentCategoryData.payments)) {
+        totalCount = currentCategoryData.payments.length;
+      }
+    }
+
+    // Ensure totalCount is valid
+    totalCount = Math.max(0, totalCount || 0);
+
+    // Calculate pagination properties with proper bounds checking
+    const totalPages = Math.max(1, Math.ceil(totalCount / Math.max(1, rowsPerPage)));
+    const currentPage = Math.max(1, Math.min(page, totalPages)); // Ensure page is within bounds
+    const hasNext = currentPage < totalPages;
+    const hasPrevious = currentPage > 1;
+
+    return {
+      totalPages,
+      currentPage,
+      hasNext,
+      hasPrevious,
+      totalCount // Include for debugging/reference
+    };
+  }, [currentCategoryData, page, rowsPerPage]);
+
   const {
     bottomContent,
     headerColumns,
@@ -267,25 +308,26 @@ const OrdersList: React.FC<OrdersListProps> = ({
     classNames,
     hasSearchFilter,
   } = usePagination(
-    matchingObjectArray, 
-    columns, 
+    paginationData,
+    columns,
     INITIAL_VISIBLE_COLUMNS
   );
 
-  // Sort the orders based on sortDescriptor
+  // Sort the orders based on sortDescriptor (server handles pagination)
   const sortedOrders = React.useMemo(() => {
     if (!orderDetails || orderDetails.length === 0) return orderDetails;
-    
+
+    // Only sort the orders - server already handles pagination
     return [...orderDetails].sort((a: OrderItem, b: OrderItem) => {
       const first = a[sortDescriptor.column as keyof OrderItem];
       const second = b[sortDescriptor.column as keyof OrderItem];
-      
+
       let cmp = 0;
       if (first === null || first === undefined) cmp = 1;
       else if (second === null || second === undefined) cmp = -1;
       else if (first < second) cmp = -1;
       else if (first > second) cmp = 1;
-      
+
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [orderDetails, sortDescriptor]);
@@ -610,9 +652,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenUpdateOrder}
         orderData={singleOrder}
         onOrderUpdated={refetch}
-        onProceedToConfirm={(selectedItems, totalPrice) => {
+        onProceedToConfirm={(selectedItems) => {
           setCheckoutSelectedItems(selectedItems);
-          setCheckoutTotalPrice(totalPrice);
           setIsOpenUpdateOrder(false);
           setIsOpenCheckoutModal(true);
         }}
@@ -627,7 +668,6 @@ const OrdersList: React.FC<OrdersListProps> = ({
         isOpen={isOpenCheckoutModal}
         onOpenChange={() => setIsOpenCheckoutModal(false)}
         selectedItems={checkoutSelectedItems}
-        totalPrice={checkoutTotalPrice}
         orderDetails={singleOrder}
         id={singleOrder?.id}
         handleDecrement={(itemId: string) => {

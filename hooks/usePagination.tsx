@@ -8,11 +8,103 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
 
 
-  // Convert these to useMemo to prevent unnecessary recalculations
-  const refinedArrayToMap = useMemo(
-    () => (arrayToMap ? arrayToMap?.totalPages : 1),
-    [arrayToMap?.totalPages]
-  );
+  // Universal pagination data processor to handle different data structures
+  const paginationInfo = useMemo(() => {
+    // Handle null/undefined input
+    if (!arrayToMap) {
+      return {
+        totalPages: 1,
+        currentPage: 1,
+        hasNext: false,
+        hasPrevious: false,
+        totalCount: 0
+      };
+    }
+
+    // Type 1: Already properly structured (Orders component)
+    if (arrayToMap.totalPages && arrayToMap.currentPage !== undefined &&
+        typeof arrayToMap.hasNext === 'boolean' && typeof arrayToMap.hasPrevious === 'boolean') {
+      return {
+        totalPages: arrayToMap.totalPages,
+        currentPage: arrayToMap.currentPage,
+        hasNext: arrayToMap.hasNext,
+        hasPrevious: arrayToMap.hasPrevious,
+        totalCount: arrayToMap.totalCount || 0
+      };
+    }
+
+    // Type 2: Object with data array and totalCount (Payments, some components)
+    if (arrayToMap.data && Array.isArray(arrayToMap.data) && arrayToMap.totalCount !== undefined) {
+      const totalCount = arrayToMap.totalCount || arrayToMap.data.length;
+      const totalPages = Math.max(1, Math.ceil(totalCount / rowsPerPage));
+      const currentPage = Math.max(1, Math.min(page, totalPages));
+
+      return {
+        totalPages,
+        currentPage,
+        hasNext: currentPage < totalPages,
+        hasPrevious: currentPage > 1,
+        totalCount
+      };
+    }
+
+    // Type 3: Menu category object with items array and totalCount
+    if (arrayToMap.items && Array.isArray(arrayToMap.items) && arrayToMap.totalCount !== undefined) {
+      const totalCount = arrayToMap.totalCount || arrayToMap.items.length;
+      const totalPages = Math.max(1, Math.ceil(totalCount / rowsPerPage));
+      const currentPage = Math.max(1, Math.min(page, totalPages));
+
+      return {
+        totalPages,
+        currentPage,
+        hasNext: currentPage < totalPages,
+        hasPrevious: currentPage > 1,
+        totalCount
+      };
+    }
+
+    // Type 4: Simple array (QR codes, some other components)
+    if (Array.isArray(arrayToMap)) {
+      const totalCount = arrayToMap.length;
+      const totalPages = Math.max(1, Math.ceil(totalCount / rowsPerPage));
+      const currentPage = Math.max(1, Math.min(page, totalPages));
+
+      return {
+        totalPages,
+        currentPage,
+        hasNext: currentPage < totalPages,
+        hasPrevious: currentPage > 1,
+        totalCount
+      };
+    }
+
+    // Type 5: Object with just totalCount (some edge cases)
+    if (arrayToMap.totalCount !== undefined) {
+      const totalCount = arrayToMap.totalCount;
+      const totalPages = Math.max(1, Math.ceil(totalCount / rowsPerPage));
+      const currentPage = Math.max(1, Math.min(page, totalPages));
+
+      return {
+        totalPages,
+        currentPage,
+        hasNext: currentPage < totalPages,
+        hasPrevious: currentPage > 1,
+        totalCount
+      };
+    }
+
+    // Fallback: treat as empty
+    return {
+      totalPages: 1,
+      currentPage: 1,
+      hasNext: false,
+      hasPrevious: false,
+      totalCount: 0
+    };
+  }, [arrayToMap, page, rowsPerPage]);
+
+  // Keep existing variable for backward compatibility
+  const refinedArrayToMap = paginationInfo.totalPages;
 
   const [filterValue, setFilterValue] = React.useState('');
   const [statusFilter] = React.useState('all');
@@ -104,10 +196,10 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
   }, [currentVisibleColumns, columns]);
 
   const onNextPage = useCallback(() => {
-    if (page < refinedArrayToMap) {
+    if (page < paginationInfo.totalPages) {
       setPage(page + 1);
     }
-  }, [page, refinedArrayToMap, setPage]);
+  }, [page, paginationInfo.totalPages, setPage]);
 
   const onPreviousPage = useCallback(() => {
     if (page > 1) {
@@ -145,12 +237,12 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     () => (
       <div className='py-2 px-2 flex justify-between items-center'>
         <div className='text-[14px] text-grey600'>
-          Page {arrayToMap?.currentPage} of {arrayToMap?.totalPages || 1}
+          Page {paginationInfo.currentPage} of {paginationInfo.totalPages}
         </div>
         <Pagination
           disableCursorAnimation
           page={page}
-          total={refinedArrayToMap}
+          total={paginationInfo.totalPages}
           onChange={setPage}
           className='gap-2'
           radius='full'
@@ -160,7 +252,7 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
         <div className='hidden md:flex w-[30%] justify-end gap-2'>
           <Button
             isDisabled={
-              refinedArrayToMap === 1 || arrayToMap?.hasPrevious === false
+              paginationInfo.totalPages === 1 || !paginationInfo.hasPrevious
             }
             size='sm'
             variant='flat'
@@ -170,7 +262,7 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
           </Button>
           <Button
             isDisabled={
-              refinedArrayToMap === 1 || arrayToMap?.hasNext === false
+              paginationInfo.totalPages === 1 || !paginationInfo.hasNext
             }
             size='sm'
             variant='flat'
@@ -182,12 +274,11 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
       </div>
     ),
     [
-      arrayToMap?.currentPage,
-      arrayToMap?.totalPages,
-      arrayToMap?.hasPrevious,
-      arrayToMap?.hasNext,
+      paginationInfo.currentPage,
+      paginationInfo.totalPages,
+      paginationInfo.hasPrevious,
+      paginationInfo.hasNext,
       page,
-      refinedArrayToMap,
       setPage,
       renderItem,
       onPreviousPage,

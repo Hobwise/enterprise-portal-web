@@ -269,7 +269,7 @@ const MenuList = () => {
             itemID: firstItem.id || firstItem.itemID,
             isAvailable: firstItem.isAvailable !== false,
             count: 0,
-            packingCost: firstItem.packingCost || 0,
+            packingCost: firstItem.packingCost ?? 0,
           };
           
           // Set first item immediately
@@ -311,7 +311,7 @@ const MenuList = () => {
             itemID: item.id || item.itemID,
             isAvailable: item.isAvailable !== false,
             count: 0,
-            packingCost: item.packingCost || 0,
+            packingCost: item.packingCost ?? 0,
           }));
 
           // Extract pagination metadata
@@ -382,7 +382,7 @@ const MenuList = () => {
                 itemID: item.id || item.itemID,
                 isAvailable: item.isAvailable !== false,
                 count: 0,
-                packingCost: item.packingCost || 0,
+                packingCost: item.packingCost ?? 0,
               }));
 
               const pagination = response.data.data?.pagination;
@@ -475,7 +475,7 @@ const MenuList = () => {
             itemName: item.itemName || 'Unknown Item',
             isAvailable: item.isAvailable !== false,
             count: 0,
-            packingCost: item.packingCost || 0,
+            packingCost: item.packingCost ?? 0,
           };
         }).filter(Boolean); // Remove any null items
 
@@ -545,7 +545,7 @@ const MenuList = () => {
           id: itemID,
           price: unitPrice,
           count: quantity,
-          packingCost: item.packingCost || 0,
+          packingCost: item.packingCost ?? 0,
         };
       });
       setOrderDetails(response?.data?.data);
@@ -719,9 +719,7 @@ const MenuList = () => {
             ...menuItem,
             count: 1,
             isPacked: isItemPacked,
-            packingCost:
-              menuItem.packingCost ||
-              (menuItem.isVariety ? menuItem.packingCost : 0),
+            packingCost: menuItem.packingCost ?? 0,
           },
         ];
       }
@@ -821,32 +819,37 @@ const MenuList = () => {
 
   const handlePackingCost = useCallback((itemId: string, isPacked: boolean) => {
     if (isUpdating) return; // Prevent concurrent updates
-    
+
     setSelectedItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, isPacked } : item
-      )
+      prevItems.map((item) => {
+        if (item.id === itemId) {
+          // Find the menu item to get the correct packingCost
+          const menuItem = menuItems?.find((menu: Item) => menu.id === itemId);
+          return {
+            ...item,
+            isPacked,
+            // Use menuItem's packingCost if available, otherwise keep existing
+            packingCost: menuItem?.packingCost ?? item.packingCost ?? 0
+          };
+        }
+        return item;
+      })
     );
-  }, [isUpdating]);
+  }, [isUpdating, menuItems]);
 
   const handleOpenCheckoutModal = useCallback(() => {
     if (isUpdating) return; // Prevent concurrent updates
-    
+
     setSelectedItems((prevItems) =>
       prevItems.map((item) => {
-        // Only update packingCost if it's undefined or null
-        // This preserves the original packingCost from when the item was added
-        if (item.packingCost === undefined || item.packingCost === null) {
-          const menuItem = menuItems?.find(
-            (menu: Item) => menu.id === item.id
-          );
-          return {
-            ...item,
-            packingCost: menuItem?.packingCost || 0,
-          };
-        }
-        // Keep the existing packingCost
-        return item;
+        const menuItem = menuItems?.find(
+          (menu: Item) => menu.id === item.id
+        );
+        // Always sync packingCost from menu data to ensure accuracy
+        return {
+          ...item,
+          packingCost: menuItem?.packingCost ?? item.packingCost ?? 0,
+        };
       })
     );
     onOpen();
@@ -975,9 +978,8 @@ const MenuList = () => {
                 <div className="rounded-lg ">
                   {selectedItems?.map((item, index) => {
                     return (
-                      <>
+                      <React.Fragment key={item.id}>
                         <div
-                          key={item.id}
                           className="flex py-3 justify-between items-center cursor-pointer"
                           onDoubleClick={() => handleCardClick(item, item.isPacked || false)}
                         >
@@ -1040,7 +1042,7 @@ const MenuList = () => {
                         {index !== selectedItems?.length - 1 && (
                           <Divider className="bg-[#E4E7EC80]" />
                         )}
-                      </>
+                      </React.Fragment>
                     );
                   })}
                 </div>
@@ -1097,7 +1099,6 @@ const MenuList = () => {
           handleDecrement={handleDecrement}
           handleIncrement={handleIncrement}
           selectedItems={selectedItems}
-          totalPrice={calculateTotalPrice()}
           onOpenChange={onOpenChange}
           isOpen={isOpen}
           id={order?.id}

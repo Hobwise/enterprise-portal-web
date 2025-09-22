@@ -27,7 +27,7 @@ import {
   Spacer,
 } from "@nextui-org/react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { HiArrowLongLeft } from "react-icons/hi2";
@@ -64,11 +64,16 @@ interface ApiResponse {
   };
 }
 
+
+// Type guard to check if response has data property
+const hasDataProperty = (response: any): response is ApiResponse => {
+  return response && typeof response === 'object' && 'data' in response;
+};
+
 const CheckoutModal = ({
   isOpen,
   onOpenChange,
   selectedItems,
-  totalPrice,
   handleDecrement,
   handleIncrement,
   orderDetails,
@@ -82,6 +87,7 @@ const CheckoutModal = ({
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const router = useRouter();
+  const pathname = usePathname();
   const queryClient = useQueryClient();
   const [response, setResponse] = useState<ApiResponse | null>(null);
   const [orderId, setOrderId] = useState<string>("");
@@ -111,10 +117,20 @@ const CheckoutModal = ({
 
   const handleClick = (methodId: number) => {
     if (methodId === 3) {
-      router.push("/dashboard/orders");
+      // Pay Later logic with page detection
+      if (pathname === '/dashboard/orders') {
+        // Already on orders page - just close modal and refresh data
+        queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
+        queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        onOpenChange();
+      } else {
+        // Not on orders page - navigate there
+        router.push("/dashboard/orders");
+      }
     } else if(screen === 3){
       router.push("/dashboard/orders");
-    } 
+    }
     else {
       setSelectedPaymentMethod(methodId);
       setScreen(3);
@@ -132,8 +148,21 @@ const CheckoutModal = ({
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
 
-  const finalTotalPrice =
-    totalPrice + totalPrice * (7.5 / 100) + (additionalCost || 0);
+  // Calculate detailed total price directly from selectedItems to ensure accuracy
+  const calculateDetailedTotalPrice = () => {
+    return selectedItems.reduce((acc: number, item: any) => {
+      const itemTotal = item.price * item.count;
+      // Add packing cost only if item is packed
+      const packingTotal = item.isPacked
+        ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
+        : 0;
+      return acc + itemTotal + packingTotal;
+    }, 0);
+  };
+
+  const subtotal = calculateDetailedTotalPrice();
+  const vatAmount = subtotal * (7.5 / 100);
+  const finalTotalPrice = subtotal + vatAmount + (additionalCost || 0);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -153,16 +182,124 @@ const CheckoutModal = ({
     }
   };
 
+  // Verify calculation accuracy
+  const verifyCalculation = (items: any[], addCost: number = 0): {
+    isValid: boolean;
+    calculated: number;
+    breakdown: any;
+    errors: string[];
+  } => {
+    const errors: string[] = [];
+    let subtotalCalc = 0;
+    let packingCalc = 0;
+
+    try {
+      items.forEach((item, index) => {
+        if (!item.id || !item.price || !item.count) {
+          errors.push(`Item ${index + 1}: Missing required data (id, price, or count)`);
+          return;
+        }
+
+        const itemTotal = item.price * item.count;
+        const itemPacking = item.isPacked
+          ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
+          : 0;
+
+        subtotalCalc += itemTotal;
+        packingCalc += itemPacking;
+
+        // Log each item calculation
+        console.log(`Item ${index + 1} (${item.itemName || item.id}):`, {
+          price: item.price,
+          count: item.count,
+          itemTotal,
+          isPacked: item.isPacked,
+          packingCost: item.packingCost,
+          itemPacking
+        });
+      });
+
+      const baseSubtotal = subtotalCalc + packingCalc;
+      const vatCalc = baseSubtotal * 0.075;
+      const finalCalc = baseSubtotal + vatCalc + addCost;
+
+      const breakdown = {
+        itemsSubtotal: subtotalCalc,
+        packingCosts: packingCalc,
+        baseSubtotal,
+        vatAmount: vatCalc,
+        additionalCost: addCost,
+        finalTotal: Math.round(finalCalc * 100) / 100
+      };
+
+      return {
+        isValid: errors.length === 0,
+        calculated: breakdown.finalTotal,
+        breakdown,
+        errors
+      };
+    } catch (error) {
+      errors.push(`Calculation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return {
+        isValid: false,
+        calculated: 0,
+        breakdown: {},
+        errors
+      };
+    }
+  };
+
+  // Validate payload data before API call
+  const validateOrderPayload = (payload: any): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+
+    // Validate required fields
+    if (!payload.placedByName?.trim()) {
+      errors.push('Customer name is required');
+    }
+    if (!payload.placedByPhoneNumber?.trim()) {
+      errors.push('Customer phone number is required');
+    }
+    if (!payload.quickResponseID?.trim()) {
+      errors.push('Table selection is required');
+    }
+
+    // Validate order details
+    if (!Array.isArray(payload.orderDetails) || payload.orderDetails.length === 0) {
+      errors.push('At least one item must be selected');
+    } else {
+      payload.orderDetails.forEach((item: any, index: number) => {
+        if (!item.itemID) {
+          errors.push(`Item ${index + 1}: Missing item ID`);
+        }
+        if (typeof item.quantity !== 'number' || item.quantity < 1) {
+          errors.push(`Item ${index + 1}: Invalid quantity`);
+        }
+        if (typeof item.unitPrice !== 'number' || item.unitPrice < 0) {
+          errors.push(`Item ${index + 1}: Invalid unit price`);
+        }
+      });
+    }
+
+    // Validate total amount
+    if (typeof payload.totalAmount !== 'number' || payload.totalAmount < 0) {
+      errors.push('Invalid total amount');
+    }
+
+    return { isValid: errors.length === 0, errors };
+  };
+
   const placeOrder = async () => {
     setLoading(true);
     const transformedArray = selectedItems.map((item: any) => ({
-      itemId: item.id,
+      itemID: item.id,
       quantity: item.count,
       unitPrice: item.price,
       isVariety: item.isVariety,
       isPacked: item.isPacked,
-      packingCost: item?.packingCost,
+      packingCost: item?.packingCost || 0,
     }));
+
     const payload = {
       status: 0,
       placedByName: order.placedByName,
@@ -174,24 +311,101 @@ const CheckoutModal = ({
       totalAmount: Math.round(finalTotalPrice * 100) / 100,
       orderDetails: transformedArray,
     };
+
+    // Verify calculations
+    const calculationVerification = verifyCalculation(selectedItems, additionalCost);
+    if (!calculationVerification.isValid) {
+      setLoading(false);
+      notify({
+        title: "Calculation Error",
+        text: calculationVerification.errors.join(', '),
+        type: "error",
+      });
+      return;
+    }
+
+    // Check if calculated total matches our frontend total
+    const calculationDifference = Math.abs(calculationVerification.calculated - payload.totalAmount);
+    if (calculationDifference > 0.01) {
+      console.warn('Calculation mismatch detected:', {
+        frontendTotal: payload.totalAmount,
+        verifiedTotal: calculationVerification.calculated,
+        difference: calculationDifference,
+        breakdown: calculationVerification.breakdown
+      });
+    }
+
+    // Validate payload before sending
+    const validation = validateOrderPayload(payload);
+    if (!validation.isValid) {
+      setLoading(false);
+      notify({
+        title: "Validation Error",
+        text: validation.errors.join(', '),
+        type: "error",
+      });
+      return;
+    }
+
+    // Log payload for debugging
+    console.log('Order Payload:', JSON.stringify(payload, null, 2));
+    console.log('Frontend Calculation:', {
+      subtotal,
+      vatAmount,
+      additionalCost,
+      finalTotal: finalTotalPrice,
+      itemsCount: selectedItems.length
+    });
+    console.log('Verified Calculation:', calculationVerification.breakdown);
+
     const id = businessId ? businessId : businessInformation[0]?.businessId;
     const data = await createOrder(id, payload, cooperateID);
     setResponse(data as ApiResponse);
     setLoading(false);
-    if (data?.data?.isSuccessful) {
-      setOrderId(data.data.data.id);
+
+    if (hasDataProperty(data) && data.data?.isSuccessful) {
+      setOrderId(data.data.data?.id || "");
       notify({
         title: "Success!",
-        text: "Order placed",
+        text: "Order placed successfully",
         type: "success",
       });
       await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
       await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+
+      // Force immediate refresh if on orders page
+      if (pathname === '/dashboard/orders') {
+        await queryClient.refetchQueries({ queryKey: ['orders'] });
+      }
+
       setScreen(2);
-    } else if (data?.data?.error) {
+    } else if (hasDataProperty(data) && data.data?.error) {
+      console.error('Order creation failed:', data.data.error);
+      console.error('Failed payload:', payload);
+      notify({
+        title: "Order Creation Failed",
+        text: data.data.error,
+        type: "error",
+      });
+    } else if (data && 'errors' in data) {
+      // Handle validation errors
+      const validationErrors = Object.entries(data.errors)
+        .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+        .join('; ');
+      console.error('Validation errors:', data.errors);
+      console.error('Failed payload:', payload);
+      notify({
+        title: "Validation Failed",
+        text: validationErrors,
+        type: "error",
+      });
+    } else {
+      console.error('Unexpected response format:', data);
+      console.error('Failed payload:', payload);
       notify({
         title: "Error!",
-        text: data?.data?.error,
+        text: "Unexpected error occurred. Please check the console for details.",
         type: "error",
       });
     }
@@ -199,13 +413,14 @@ const CheckoutModal = ({
   const updateOrder = async () => {
     setLoading(true);
     const transformedArray = selectedItems.map((item: any) => ({
-      itemId: item.id,
+      itemID: item.id,
       quantity: item.count,
       unitPrice: item.price,
       isVariety: item.isVariety,
       isPacked: item.isPacked,
       packingCost: item.packingCost || 0,
     }));
+
     const payload = {
       status: 0,
       placedByName: order.placedByName,
@@ -217,56 +432,167 @@ const CheckoutModal = ({
       additionalCostName,
       orderDetails: transformedArray,
     };
+
+    // Verify calculations
+    const calculationVerification = verifyCalculation(selectedItems, additionalCost);
+    if (!calculationVerification.isValid) {
+      setLoading(false);
+      notify({
+        title: "Calculation Error",
+        text: calculationVerification.errors.join(', '),
+        type: "error",
+      });
+      return;
+    }
+
+    // Check if calculated total matches our frontend total
+    const calculationDifference = Math.abs(calculationVerification.calculated - payload.totalAmount);
+    if (calculationDifference > 0.01) {
+      console.warn('Update calculation mismatch detected:', {
+        frontendTotal: payload.totalAmount,
+        verifiedTotal: calculationVerification.calculated,
+        difference: calculationDifference,
+        breakdown: calculationVerification.breakdown
+      });
+    }
+
+    // Validate payload before sending
+    const validation = validateOrderPayload(payload);
+    if (!validation.isValid) {
+      setLoading(false);
+      notify({
+        title: "Validation Error",
+        text: validation.errors.join(', '),
+        type: "error",
+      });
+      return;
+    }
+
+    // Log payload for debugging
+    console.log('Update Order Payload:', JSON.stringify(payload, null, 2));
+    console.log('Update Frontend Calculation:', {
+      subtotal,
+      vatAmount,
+      additionalCost,
+      finalTotal: finalTotalPrice,
+      itemsCount: selectedItems.length
+    });
+    console.log('Update Verified Calculation:', calculationVerification.breakdown);
+
     const data = await editOrder(id, payload);
     setResponse(data as ApiResponse);
     setLoading(false);
-    if (data?.data?.isSuccessful) {
-      setOrderId(data.data.data.id);
+
+    if (hasDataProperty(data) && data.data?.isSuccessful) {
+      setOrderId(data.data.data?.id || "");
       notify({
         title: "Success!",
-        text: "Order placed",
+        text: "Order updated successfully",
         type: "success",
       });
       await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
       await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+      await queryClient.invalidateQueries({ queryKey: ['orders'] });
+
+      // Force immediate refresh if on orders page
+      if (pathname === '/dashboard/orders') {
+        await queryClient.refetchQueries({ queryKey: ['orders'] });
+      }
+
       setScreen(2);
-    } else if (data?.data?.error) {
+    } else if (hasDataProperty(data) && data.data?.error) {
+      console.error('Order update failed:', data.data.error);
+      console.error('Failed payload:', payload);
+      notify({
+        title: "Order Update Failed",
+        text: data.data.error,
+        type: "error",
+      });
+    } else if (data && 'errors' in data) {
+      // Handle validation errors
+      const validationErrors = Object.entries(data.errors)
+        .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
+        .join('; ');
+      console.error('Validation errors:', data.errors);
+      console.error('Failed payload:', payload);
+      notify({
+        title: "Validation Failed",
+        text: validationErrors,
+        type: "error",
+      });
+    } else {
+      console.error('Unexpected response format:', data);
+      console.error('Failed payload:', payload);
       notify({
         title: "Error!",
-        text: data?.data?.error,
+        text: "Unexpected error occurred. Please check the console for details.",
         type: "error",
       });
     }
   };
 
   const finalizeOrder = async () => {
-    setIsLoading(true);
-    const payload = {
-      treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
-      treatedById: userInformation.id,
-      paymentMethod: selectedPaymentMethod,
-      paymentReference: reference,
-      status: 1,
-    };
-
-    const data = await completeOrder(payload, orderId);
-    setIsLoading(false);
-
-    if (data?.data?.isSuccessful) {
-      notify({
-        title: "Payment made!",
-        text: "Payment has been made, awaiting confirmation",
-        type: "success",
-      });
-      await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
-      await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-      router.push("/dashboard/orders");
-    } else if (data?.data?.error) {
+    if (!orderId) {
       notify({
         title: "Error!",
-        text: data?.data?.error,
+        text: "Order ID is missing. Please try again.",
         type: "error",
       });
+      return;
+    }
+
+    if (!userInformation?.id) {
+      notify({
+        title: "Error!",
+        text: "User information is missing. Please refresh and try again.",
+        type: "error",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const payload = {
+        treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
+        treatedById: userInformation.id,
+        paymentMethod: selectedPaymentMethod,
+        paymentReference: reference,
+        status: 1,
+      };
+
+      const data = await completeOrder(payload, orderId);
+
+      if (hasDataProperty(data) && data.data?.isSuccessful) {
+        notify({
+          title: "Payment made!",
+          text: "Payment has been made, awaiting confirmation",
+          type: "success",
+        });
+        await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
+        await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+        await queryClient.invalidateQueries({ queryKey: ['orders'] });
+        router.push("/dashboard/orders");
+      } else if (hasDataProperty(data) && data.data?.error) {
+        notify({
+          title: "Error!",
+          text: data.data.error,
+          type: "error",
+        });
+      } else {
+        notify({
+          title: "Error!",
+          text: "Failed to process payment. Please try again.",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      notify({
+        title: "Error!",
+        text: "Network error. Please check your connection and try again.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -378,9 +704,8 @@ const CheckoutModal = ({
                       <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
                         {selectedItems?.map((item: any, index: number) => {
                           return (
-                            <>
+                            <React.Fragment key={item.id}>
                               <div
-                                key={item.id}
                                 className="flex justify-between gap-2"
                               >
                                 <div className="py-3 w-[250px] rounded-lg  text-black  flex">
@@ -410,18 +735,20 @@ const CheckoutModal = ({
                                         {item.unit && `(${item.unit})`}
                                       </span>
                                     </p>
-                                    <Checkbox
-                                      size="sm"
-                                      defaultSelected={item.isPacked}
-                                      isSelected={item.isPacked}
-                                      onValueChange={(isSelected) =>
-                                        handlePackingCost(item.id, isSelected)
-                                      }
-                                    >
-                                      <span className="text-grey600 text-sm">
-                                        Pack In
-                                      </span>
-                                    </Checkbox>
+                                    {item.packingCost > 0 && (
+                                      <Checkbox
+                                        size="sm"
+                                        defaultSelected={item.isPacked}
+                                        isSelected={item.isPacked}
+                                        onValueChange={(isSelected) =>
+                                          handlePackingCost(item.id, isSelected)
+                                        }
+                                      >
+                                        <span className="text-grey600 text-sm">
+                                          Pack In
+                                        </span>
+                                      </Checkbox>
+                                    )}
                                     <Spacer y={2} />
                                     <div className="text-black md:w-[150px] md:hidden w-auto grid place-content-end">
                                       <h3 className="font-[600]">
@@ -432,7 +759,7 @@ const CheckoutModal = ({
                                 </div>
                                 <div className="flex  items-center">
                                   <Button
-                                    onClick={() => handleDecrement(item.id)}
+                                    onPress={() => handleDecrement(item.id)}
                                     isIconOnly
                                     size="sm"
                                     radius="sm"
@@ -446,7 +773,7 @@ const CheckoutModal = ({
                                     {item.count}
                                   </span>
                                   <Button
-                                    onClick={() => handleIncrement(item.id)}
+                                    onPress={() => handleIncrement(item.id)}
                                     isIconOnly
                                     radius="sm"
                                     size="sm"
@@ -462,21 +789,23 @@ const CheckoutModal = ({
                                     <h3 className="font-semibold text-black">
                                       {formatPrice(item?.price)}
                                     </h3>
-                                    <span
-                                      className={cn(
-                                        "text-xs text-gray-200",
-                                        item.isPacked && "font-bold text-black"
-                                      )}
-                                    >
-                                      {formatPrice(item.packingCost)}
-                                    </span>
+                                    {item.packingCost > 0 && (
+                                      <span
+                                        className={cn(
+                                          "text-xs text-gray-200",
+                                          item.isPacked && "font-bold text-black"
+                                        )}
+                                      >
+                                        {formatPrice(item.packingCost)}
+                                      </span>
+                                    )}
                                   </div>
                                 </div>
                               </div>
                               {index !== selectedItems?.length - 1 && (
                                 <Divider className="bg-[#E4E7EC80]" />
                               )}
-                            </>
+                            </React.Fragment>
                           );
                         })}
                         <div className="flex justify-end mt-auto">
@@ -484,7 +813,7 @@ const CheckoutModal = ({
                             <div className="flex justify-between">
                               <p className="text-black font-bold">Subtotal: </p>
                               <p className="text-black">
-                                {formatPrice(totalPrice)}
+                                {formatPrice(subtotal)}
                               </p>
                             </div>
                             <div className="flex justify-between">
@@ -492,7 +821,7 @@ const CheckoutModal = ({
                                 Vat (7.5%):{" "}
                               </p>
                               <p className="text-black">
-                                {formatPrice(totalPrice * (7.5 / 100))}
+                                {formatPrice(vatAmount)}
                               </p>
                             </div>
                             <div className="flex items-center justify-between gap-2">
