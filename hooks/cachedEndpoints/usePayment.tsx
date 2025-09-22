@@ -23,6 +23,16 @@ interface PaymentCategory {
   payments: PaymentItem[];
 }
 
+// Global cache for payments data to persist across status/page switches
+const globalPaymentsCache = new Map<string, {
+  items: any,
+  timestamp: number,
+  totalPages: number,
+  totalItems: number,
+  currentPage: number
+}>();
+const CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
+
 const usePayment = (
   filterType: number,
   startDate?: string,
@@ -38,6 +48,15 @@ const usePayment = (
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ] = queryKey;
 
+    // Create cache key
+    const cacheKey = `payments_${tableStatus}_${filterType}_${startDate}_${endDate}_page_${page}`;
+
+    // Check cache first
+    const cached = globalPaymentsCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
+      return cached.items;
+    }
+
     try {
       // Fetch payment categories
       const categoriesResponse = await getPaymentByBusiness(
@@ -51,8 +70,8 @@ const usePayment = (
       );
       const categories = categoriesResponse?.data|| [];
       const detail = categoriesResponse?.data.data.paymentCategories|| [];
-  
-      
+
+
       if (categories.length === 0) {
         return { categories: [], details: [] };
       }
@@ -67,10 +86,24 @@ const usePayment = (
         page,
         rowsPerPage
       );
-      return {
+      const result = {
         categories,
         details: detailsItems,
       };
+
+      // Calculate pagination info and cache
+      const totalCount = detailsItems?.totalCount || detailsItems?.length || 0;
+      const totalPages = Math.ceil(totalCount / rowsPerPage);
+
+      globalPaymentsCache.set(cacheKey, {
+        items: result,
+        timestamp: Date.now(),
+        totalPages,
+        totalItems: totalCount,
+        currentPage: page
+      });
+
+      return result;
     } catch (error) {
       return { categories: [], details: [] };
     }
@@ -90,13 +123,59 @@ const usePayment = (
     
   });
 
+  // Function to clear cache for current filters
+  const clearCache = () => {
+    const keysToDelete: string[] = [];
+    globalPaymentsCache.forEach((_, key) => {
+      if (key.includes(`payments_${tableStatus}_${filterType}`)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalPaymentsCache.delete(key));
+  };
+
+  // Function to clear all payments cache
+  const clearAllCache = () => {
+    const keysToDelete: string[] = [];
+    globalPaymentsCache.forEach((_, key) => {
+      if (key.startsWith('payments_')) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalPaymentsCache.delete(key));
+  };
+
   return {
     categories: data?.categories || [],
     details: data?.details || [],
     isLoading,
     isError,
     refetch,
+    clearCache,
+    clearAllCache,
   };
+};
+
+// Export cache utilities for external use
+export const paymentsCacheUtils = {
+  clearAll: () => {
+    const keysToDelete: string[] = [];
+    globalPaymentsCache.forEach((_, key) => {
+      if (key.startsWith('payments_')) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalPaymentsCache.delete(key));
+  },
+  invalidateStatus: (status: string) => {
+    const keysToDelete: string[] = [];
+    globalPaymentsCache.forEach((_, key) => {
+      if (key.includes(`payments_${status}_`)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalPaymentsCache.delete(key));
+  }
 };
 
 export default usePayment;

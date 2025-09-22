@@ -7,6 +7,10 @@ interface Order {
   placedByPhoneNumber: string;
   quickResponseID?: string;
   comment: string;
+  status?: number;
+  additionalCost?: number;
+  additionalCostName?: string;
+  totalAmount?: number;
   orderDetails: OrderDetail[];
 }
 
@@ -15,6 +19,8 @@ interface OrderDetail {
   quantity: number;
   unitPrice: number;
   packingCost?: number;
+  isVariety?: boolean;
+  isPacked?: boolean;
 }
 
 export const orderSchema = z.object({

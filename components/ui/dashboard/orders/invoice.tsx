@@ -93,6 +93,30 @@ const InvoiceModal = ({
                     Fetching order details...
                   </p>
                 </div>
+              ) : error ? (
+                <div className="flex flex-col items-center my-5 p-4 bg-red-50 rounded-lg">
+                  <p className="text-center text-red-600 font-medium">
+                    Failed to load order details
+                  </p>
+                  <p className="text-center text-sm text-red-500 mt-1">
+                    {error instanceof Error ? error.message : 'Unknown error occurred'}
+                  </p>
+                  <CustomButton
+                    onClick={() => window.location.reload()}
+                    className="mt-3 px-4 py-2 text-white bg-red-600 hover:bg-red-700"
+                  >
+                    Retry
+                  </CustomButton>
+                </div>
+              ) : !order || !isSuccessful ? (
+                <div className="flex flex-col items-center my-5 p-4 bg-yellow-50 rounded-lg">
+                  <p className="text-center text-yellow-700 font-medium">
+                    Order details not available
+                  </p>
+                  <p className="text-center text-sm text-yellow-600 mt-1">
+                    The order may have been deleted or is no longer accessible.
+                  </p>
+                </div>
               ) : order ? (
                 <>
                   <div className="flex justify-between gap-3  text-sm text-black">

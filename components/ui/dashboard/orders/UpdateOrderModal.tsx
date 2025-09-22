@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Modal,
   ModalContent,
@@ -26,6 +26,7 @@ import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import useOrderDetails from "@/hooks/cachedEndpoints/useOrderDetails";
+import useMenu from "@/hooks/cachedEndpoints/useMenu";
 
 type Item = {
   id: string;
@@ -72,7 +73,7 @@ interface UpdateOrderModalProps {
   orderData: OrderData | null;
   onOrderUpdated: () => void;
   onProcessPayment?: () => void;
-  onProceedToConfirm?: (selectedItems: Item[], totalPrice: number) => void;
+  onProceedToConfirm?: (selectedItems: Item[]) => void;
 }
 
 const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
@@ -95,8 +96,24 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     null
   );
 
+  // Timer ref for cleanup
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Get order from localStorage when modal opens
-  const orderFromStorage = isOpen ? getJsonItemFromLocalStorage("order") : null;
+  const [orderFromStorage, setOrderFromStorage] = useState<any>(null);
+
+  // Load order data when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const order = getJsonItemFromLocalStorage("order");
+      setOrderFromStorage(order);
+      setStoredOrderData(order);
+
+      if (!order?.id) {
+        toast.error("Order data not found");
+      }
+    }
+  }, [isOpen]);
 
   // Use cached order details hook
   const {
@@ -108,60 +125,92 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     enabled: !!orderFromStorage?.id && isOpen
   });
 
+  // Use menu hook to get current menu items with up-to-date packing costs
+  const { data: menuData, isLoading: isLoadingMenu } = useMenu();
+
+
   // Process order details when they're loaded
   useEffect(() => {
-    if (isOpen && orderFromStorage) {
-      // Store order data in component state
-      setStoredOrderData(orderFromStorage);
-
-      if (fullOrderData && isSuccessful) {
-        const updatedArray = fullOrderData.orderDetails.map(
-          (item: any) => {
-            const { unitPrice, quantity, itemID, ...rest } = item;
-
-            return {
-              ...rest,
-              id: itemID,
-              itemID: itemID,
-              price: unitPrice,
-              count: quantity,
-              packingCost: item.packingCost || 0,
-              isVariety: item.isVariety || false,
-              isPacked: item.isPacked || false,
-            };
-          }
-        );
-        setSelectedItems(() => updatedArray);
+    if (fullOrderData && isSuccessful && menuData) {
+      // Validate that we have order details
+      if (!fullOrderData.orderDetails || !Array.isArray(fullOrderData.orderDetails)) {
+        toast.error("Invalid order data structure");
+        return;
       }
+
+      // Filter out invalid items and process valid ones
+      const validItems = fullOrderData.orderDetails.filter((item: any) => {
+        return item && item.itemID && item.unitPrice != null && item.quantity > 0;
+      });
+
+      if (validItems.length === 0) {
+        toast.error("No valid items found in order");
+        return;
+      }
+
+      const updatedArray = validItems.map(
+        (item: any) => {
+          const { unitPrice, quantity, itemID, ...rest } = item;
+
+          // Get current packing cost and other details from menu data
+          const menuItem = menuData?.find((menu: any) => menu.id === itemID);
+
+          return {
+            ...rest,
+            id: itemID,
+            itemID: itemID,
+            price: unitPrice,
+            count: quantity,
+            // Use current menu packing cost and item details
+            packingCost: menuItem?.packingCost,
+            itemName: item.itemName || menuItem?.name || 'Unknown Item',
+            menuName: item.menuName || menuItem?.menuName || '',
+            itemDescription: item.itemDescription || menuItem?.description || '',
+            currency: item.currency || menuItem?.currency || 'NGN',
+            isAvailable: item.isAvailable ?? menuItem?.isAvailable ?? true,
+            hasVariety: item.hasVariety ?? menuItem?.hasVariety ?? false,
+            image: item.image || menuItem?.image || '',
+            varieties: item.varieties || menuItem?.varieties || null,
+            isVariety: item.isVariety || false,
+            // Preserve historical isPacked status if available, otherwise default to false
+            isPacked: item.isPacked || false,
+          };
+        }
+      );
+      setSelectedItems(() => updatedArray);
     }
 
     // Handle error case
     if (error) {
       toast.error("Failed to load order details");
     }
-
-    // Handle missing order data
-    if (isOpen && !orderFromStorage?.id) {
-      toast.error("Order data not found");
-    }
-  }, [isOpen, orderFromStorage, fullOrderData, isSuccessful, error]);
+  }, [fullOrderData, isSuccessful, error, menuData]);
 
   // Increment handler
   const handleIncrement = useCallback(
     (id: string) => {
       if (isUpdating) return;
 
+      // Clear any existing timer
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+
       setIsUpdating(true);
 
-      setSelectedItems((prevItems) => {
-        const updatedItems = prevItems.map((item) =>
+      setSelectedItems((prevItems) =>
+        prevItems.map((item) =>
           item.id === id
             ? { ...item, count: Math.min(item.count + 1, 999) }
             : item
-        );
-        setTimeout(() => setIsUpdating(false), 100);
-        return updatedItems;
-      });
+        )
+      );
+
+      // Set timer outside of setState
+      updateTimerRef.current = setTimeout(() => {
+        setIsUpdating(false);
+        updateTimerRef.current = null;
+      }, 100);
     },
     [isUpdating]
   );
@@ -171,20 +220,28 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     (id: string) => {
       if (isUpdating) return;
 
+      // Clear any existing timer
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+
       setIsUpdating(true);
 
-      setSelectedItems((prevItems) => {
-        const updatedItems = prevItems
+      setSelectedItems((prevItems) =>
+        prevItems
           .map((item) =>
             item.id === id
               ? { ...item, count: Math.max(1, item.count - 1) }
               : item
           )
-          .filter((item) => item.count > 0);
+          .filter((item) => item.count > 0)
+      );
 
-        setTimeout(() => setIsUpdating(false), 100);
-        return updatedItems;
-      });
+      // Set timer outside of setState
+      updateTimerRef.current = setTimeout(() => {
+        setIsUpdating(false);
+        updateTimerRef.current = null;
+      }, 100);
     },
     [isUpdating]
   );
@@ -211,12 +268,29 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     }
   };
 
-  // Reset state when modal closes
+  // Reset state and cleanup when modal closes
   useEffect(() => {
     if (!isOpen) {
       setSelectedItems([]);
+      setOrderFromStorage(null);
+      setStoredOrderData(null);
+      // Clear any pending timer
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+        updateTimerRef.current = null;
+      }
+      setIsUpdating(false);
     }
   }, [isOpen]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+      }
+    };
+  }, []);
 
   return (
     <>
@@ -281,12 +355,12 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
           <ModalBody className="p-6">
             {/* Cart Items */}
-            {isLoadingOrderDetails ? (
+            {isLoadingOrderDetails || isLoadingMenu ? (
               <div className="flex flex-col h-[40vh] justify-center items-center">
                 <SpinnerLoader size="md" />
                 <Spacer y={3} />
                 <p className="text-sm text-textGrey">
-                  Loading order details...
+                  {isLoadingOrderDetails ? "Loading order details..." : "Loading menu data..."}
                 </p>
               </div>
             ) : selectedItems.length > 0 ? (
@@ -401,7 +475,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         onClick={() => {
                           // Save current order state before proceeding
                           if (onProceedToConfirm) {
-                            onProceedToConfirm(selectedItems, calculateTotalPrice());
+                            onProceedToConfirm(selectedItems);
                           } else if (onProcessPayment) {
                             // Fallback to old behavior if new prop not provided
                             onProcessPayment();

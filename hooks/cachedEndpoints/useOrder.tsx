@@ -26,6 +26,16 @@ type OrderCategory = {
   orders: OrderItem[];
 };
 
+// Global cache for orders data to persist across status/page switches
+const globalOrdersCache = new Map<string, {
+  items: any,
+  timestamp: number,
+  totalPages: number,
+  totalItems: number,
+  currentPage: number
+}>();
+const CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
+
 
 const useOrder = (
   filterType: number,
@@ -39,6 +49,15 @@ const useOrder = (
   const getAllOrders = async ({ queryKey }: { queryKey: any }) => {
     const [_key, { page, rowsPerPage, tableStatus, filterType, startDate, endDate }] = queryKey;
 
+    // Create cache key
+    const cacheKey = `orders_${tableStatus}_${filterType}_${startDate}_${endDate}_page_${page}`;
+
+    // Check cache first
+    const cached = globalOrdersCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
+      return cached.items;
+    }
+
     try {
       // First, get order categories with updated counts for the date range
       const categoriesResponse = await getOrderCategories(
@@ -47,23 +66,23 @@ const useOrder = (
         startDate,
         endDate
       );
-      
+
       if (!categoriesResponse?.data?.orderCategories) {
         return { categories: [], details: [] };
       }
-      
+
       const categories = categoriesResponse?.data.orderCategories;
-      
+
       if (categories.length === 0) {
         return { categories: [], details: [] };
       }
 
-  
+
 
       // Fetch details for the selected category or first category
       const targetCategory = tableStatus || categories[0]?.name;
-      
-      
+
+
       const detailsItems = await getOrderDetails(
         businessInformation[0]?.businessId,
         targetCategory,
@@ -73,12 +92,25 @@ const useOrder = (
         page,
         rowsPerPage
       );
-      
-            
-      return {
+
+      const result = {
         categories,
         details: detailsItems,
       };
+
+      // Calculate pagination info and cache
+      const totalCount = detailsItems?.totalCount || detailsItems?.length || 0;
+      const totalPages = Math.ceil(totalCount / rowsPerPage);
+
+      globalOrdersCache.set(cacheKey, {
+        items: result,
+        timestamp: Date.now(),
+        totalPages,
+        totalItems: totalCount,
+        currentPage: page
+      });
+
+      return result;
 
     } catch (error) {
       console.error('Error loading orders:', error);
@@ -103,13 +135,59 @@ const useOrder = (
 
   
 
+  // Function to clear cache for current filters
+  const clearCache = () => {
+    const keysToDelete: string[] = [];
+    globalOrdersCache.forEach((_, key) => {
+      if (key.includes(`orders_${tableStatus}_${filterType}`)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalOrdersCache.delete(key));
+  };
+
+  // Function to clear all orders cache
+  const clearAllCache = () => {
+    const keysToDelete: string[] = [];
+    globalOrdersCache.forEach((_, key) => {
+      if (key.startsWith('orders_')) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalOrdersCache.delete(key));
+  };
+
   return {
     categories: data?.categories || [],
     details: data?.details || [],
     isLoading,
     isError,
     refetch,
+    clearCache,
+    clearAllCache,
   };
+};
+
+// Export cache utilities for external use
+export const ordersCacheUtils = {
+  clearAll: () => {
+    const keysToDelete: string[] = [];
+    globalOrdersCache.forEach((_, key) => {
+      if (key.startsWith('orders_')) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalOrdersCache.delete(key));
+  },
+  invalidateStatus: (status: string) => {
+    const keysToDelete: string[] = [];
+    globalOrdersCache.forEach((_, key) => {
+      if (key.includes(`orders_${status}_`)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalOrdersCache.delete(key));
+  }
 };
 
 export default useOrder;
