@@ -122,9 +122,9 @@ const getStatusForCategory = (categoryName: string): number | null => {
 
 // Function to get filtered orders based on category and pending state
 const getFilteredOrderDetails = (
-  orders: any, 
-  isLoading: boolean, 
-  isPending: boolean, 
+  orders: any,
+  isLoading: boolean,
+  isPending: boolean,
   selectedCategory: string,
   searchQuery: string = ''
 ): OrderItem[] => {
@@ -132,7 +132,7 @@ const getFilteredOrderDetails = (
   if (isLoading || isPending || !orders) {
     return [];
   }
-  
+
   // If orders has totalCount of 0, return empty array immediately
   if (orders?.totalCount === 0) {
     return [];
@@ -240,13 +240,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   // Get data for current category from the new hook
   const currentCategoryData = getCategoryDetails(tableStatus || categories?.[0]?.name || 'All Orders');
-  
+
   // Use the new filtered function that includes status filtering
   const orderDetails = getFilteredOrderDetails(
-    currentCategoryData || orders, 
-    isLoading || isLoadingInitial, 
-    isPending || false, 
-    tableStatus || 'All Orders', 
+    currentCategoryData || orders,
+    isLoading || isLoadingInitial,
+    isPending || false,
+    tableStatus || 'All Orders',
     searchQuery
   );
   
@@ -573,7 +573,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   ]);
 
   // Determine if we should show loading spinner
-  // Determine if we should show loading spinner - only show for initial load
+  // Only show for initial load when there's no data
   const shouldShowLoading = isLoadingInitial && orderDetails.length === 0;
 
   return (

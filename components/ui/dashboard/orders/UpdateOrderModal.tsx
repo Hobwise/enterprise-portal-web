@@ -95,6 +95,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   const [storedOrderData, setStoredOrderData] = useState<OrderData | null>(
     null
   );
+  const [isDataProcessingComplete, setIsDataProcessingComplete] = useState<boolean>(false);
 
   // Timer ref for cleanup
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -105,6 +106,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   // Load order data when modal opens
   useEffect(() => {
     if (isOpen) {
+      setIsDataProcessingComplete(false);
       const order = getJsonItemFromLocalStorage("order");
       setOrderFromStorage(order);
       setStoredOrderData(order);
@@ -135,6 +137,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       // Validate that we have order details
       if (!fullOrderData.orderDetails || !Array.isArray(fullOrderData.orderDetails)) {
         toast.error("Invalid order data structure");
+        setIsDataProcessingComplete(true);
         return;
       }
 
@@ -145,6 +148,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
       if (validItems.length === 0) {
         toast.error("No valid items found in order");
+        setIsDataProcessingComplete(true);
         return;
       }
 
@@ -162,7 +166,6 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
             price: unitPrice,
             count: quantity,
             // Use current menu packing cost and item details
-            packingCost: menuItem?.packingCost,
             itemName: item.itemName || menuItem?.name || 'Unknown Item',
             menuName: item.menuName || menuItem?.menuName || '',
             itemDescription: item.itemDescription || menuItem?.description || '',
@@ -178,11 +181,13 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         }
       );
       setSelectedItems(() => updatedArray);
+      setIsDataProcessingComplete(true);
     }
 
     // Handle error case
     if (error) {
       toast.error("Failed to load order details");
+      setIsDataProcessingComplete(true);
     }
   }, [fullOrderData, isSuccessful, error, menuData]);
 
@@ -274,6 +279,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       setSelectedItems([]);
       setOrderFromStorage(null);
       setStoredOrderData(null);
+      setIsDataProcessingComplete(false);
       // Clear any pending timer
       if (updateTimerRef.current) {
         clearTimeout(updateTimerRef.current);
@@ -355,12 +361,12 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
           <ModalBody className="p-6">
             {/* Cart Items */}
-            {isLoadingOrderDetails || isLoadingMenu ? (
+            {isLoadingOrderDetails || isLoadingMenu || !isDataProcessingComplete ? (
               <div className="flex flex-col h-[40vh] justify-center items-center">
                 <SpinnerLoader size="md" />
                 <Spacer y={3} />
                 <p className="text-sm text-textGrey">
-                  {isLoadingOrderDetails ? "Loading order details..." : "Loading menu data..."}
+                  {isLoadingOrderDetails ? "Loading order details..." : isLoadingMenu ? "Loading menu data..." : "Processing order data..."}
                 </p>
               </div>
             ) : selectedItems.length > 0 ? (

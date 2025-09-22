@@ -796,9 +796,9 @@ const CheckoutModal = ({
                                           item.isPacked && "font-bold text-black"
                                         )}
                                       >
-                                        {formatPrice(item.packingCost)}
+                                        {formatPrice(item?.packingCost)}
                                       </span>
-                                    )}
+                                     )}
                                   </div>
                                 </div>
                               </div>
