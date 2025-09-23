@@ -76,7 +76,7 @@ interface OrderItem {
 
 interface OrderCategory {
   name: string;
-  totalCount: number;
+  count: number;
   orders: OrderItem[];
 }
 
@@ -573,8 +573,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
   ]);
 
   // Determine if we should show loading spinner
-  // Only show for initial load when there's no data
-  const shouldShowLoading = isLoadingInitial && orderDetails.length === 0;
+  // Check if current category is genuinely empty (totalCount === 0) vs still loading (null)
+  const currentCategory = categories?.find((c: OrderCategory) => c.name === (tableStatus || categories?.[0]?.name || 'All Orders'));
+  const isCategoryEmpty = currentCategory && currentCategory.count === 0;
+  const shouldShowLoading = isLoadingInitial && !currentCategoryData && !isCategoryEmpty;
+
+
+  console.log('Rendering OrdersList with orders:', orderDetails.length === 0, 'isCategoryEmpty:', isCategoryEmpty);
 
   return (
     <section className='border border-primaryGrey rounded-lg'>
@@ -606,7 +611,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
           )}
         </TableHeader>
         <TableBody
-          emptyContent={'No orders found'}
+          emptyContent={ shouldShowLoading || isCategoryEmpty ? 'No orders found' : <SpinnerLoader size="md" /> }
           items={shouldShowLoading ? [] : sortedOrders}
           isLoading={shouldShowLoading}
           loadingContent={<SpinnerLoader size="md" />}

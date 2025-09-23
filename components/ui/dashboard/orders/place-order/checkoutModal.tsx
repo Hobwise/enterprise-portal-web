@@ -735,7 +735,7 @@ const CheckoutModal = ({
                                         {item.unit && `(${item.unit})`}
                                       </span>
                                     </p>
-                                    {item.packingCost > 0 && (
+                                    {/* {item.packingCost && ( */}
                                       <Checkbox
                                         size="sm"
                                         defaultSelected={item.isPacked}
@@ -748,7 +748,7 @@ const CheckoutModal = ({
                                           Pack In
                                         </span>
                                       </Checkbox>
-                                    )}
+                                    {/* )} */}
                                     <Spacer y={2} />
                                     <div className="text-black md:w-[150px] md:hidden w-auto grid place-content-end">
                                       <h3 className="font-[600]">
@@ -787,7 +787,7 @@ const CheckoutModal = ({
                                 <div className=" md:w-[150px] hidden w-auto md:grid place-content-center">
                                   <div className="flex flex-col">
                                     <h3 className="font-semibold text-black">
-                                      {formatPrice(item?.price)}
+                                      {formatPrice(item?.price * item.count)}
                                     </h3>
                                     {item.packingCost > 0 && (
                                       <span
