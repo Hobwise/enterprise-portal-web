@@ -1036,7 +1036,7 @@ const MenuList = () => {
                             </Button>
                           </div>
                            <p className=" font-medium text-sm text-[#344054]">
-                                {formatPrice(item?.price)}
+                                {formatPrice(item?.price * item.count)}
                               </p>
                         </div>
                         {index !== selectedItems?.length - 1 && (

@@ -415,7 +415,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                             </Button>
                           </div>
                           <p className="font-medium text-sm text-[#344054] w-20 text-right">
-                            {formatPrice(item?.price)}
+                            {formatPrice(item?.price * item.count)}
                           </p>
                         </div>
                       </div>
