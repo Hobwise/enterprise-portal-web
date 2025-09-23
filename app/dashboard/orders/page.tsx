@@ -113,13 +113,14 @@ const Orders: React.FC = () => {
           )}
         </div>
       </div>
-      
-      <DateRangeDisplay 
+
+
+      <DateRangeDisplay
         startDate={startDate}
         endDate={endDate}
         filterType={filterType}
       />
-      
+
       {data.categories && data.categories.length > 0 ? (
         <OrdersList
           orders={details?.data || []}

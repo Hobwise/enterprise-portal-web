@@ -10,6 +10,7 @@ import toast from 'react-hot-toast';
 
 interface ChangePasswordFormProps {
   email: string;
+  isForced?: boolean;
 }
 
 interface PasswordFormData {
@@ -24,7 +25,7 @@ interface FormErrors {
   oldPassword?: string[];
 }
 
-const ChangePasswordForm = ({ email }: ChangePasswordFormProps) => {
+const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps) => {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -48,7 +49,7 @@ const ChangePasswordForm = ({ email }: ChangePasswordFormProps) => {
     const newErrors: FormErrors = {};
     
     if (!passwordFormData.oldPassword) {
-      newErrors.oldPassword = ["Current password is required"];
+      newErrors.oldPassword = [isForced ? "Current password is required" : "Password is required"];
     }
 
     if (!passwordFormData.password) {
@@ -100,14 +101,24 @@ const ChangePasswordForm = ({ email }: ChangePasswordFormProps) => {
       });
 
       if (data?.data?.isSuccessful) {
-        toast.success('Your password has been changed, Proceed to login');
-        router.push('/auth/login');
+        toast.success(
+          isForced
+            ? 'Password updated successfully! You can now login with your new password.'
+            : 'Your password has been changed, Proceed to login'
+        );
+        // Add a small delay to ensure the toast is visible before redirect
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 1500);
       } else if (data?.data?.error) {
         notify({
           title: 'Error!',
-          text: data?.data?.error,
+          text: data?.data?.error?.responseDescription || data?.data?.error,
           type: 'error',
         });
+      } else if (data?.errors) {
+        // Handle validation errors
+        setErrors(data.errors);
       }
     } catch (error: any) {
       notify({
@@ -122,10 +133,21 @@ const ChangePasswordForm = ({ email }: ChangePasswordFormProps) => {
 
   return (
     <>
-      <h2 className="text-[28px] font-bold">Enter password</h2>
+      <h2 className="text-[28px] font-bold">
+        {isForced ? 'Update Password Required' : 'Enter password'}
+      </h2>
       <p className="text-sm text-tomato mb-8">
-        Enter the password that was sent to{' '}
-        <span className="font-bold">{email}</span>
+        {isForced ? (
+          <>
+            You need to update your password for security reasons. Please enter your current password and create a new one for{' '}
+            <span className="font-bold">{email}</span>
+          </>
+        ) : (
+          <>
+            Enter the password that was sent to{' '}
+            <span className="font-bold">{email}</span>
+          </>
+        )}
       </p>
 
       <Spacer y={8} />
@@ -136,8 +158,8 @@ const ChangePasswordForm = ({ email }: ChangePasswordFormProps) => {
           onChange={handleInputChange}
           name="oldPassword"
           type="password"
-          label="Enter Password"
-          placeholder="Enter password"
+          label={isForced ? "Current Password" : "Enter Password"}
+          placeholder={isForced ? "Enter current password" : "Enter password"}
         />
         <Spacer y={6} />
         <CustomInput

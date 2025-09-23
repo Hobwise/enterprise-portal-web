@@ -21,6 +21,8 @@ import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../public/assets/images/no-image.svg";
+import { ordersCacheUtils } from '@/hooks/cachedEndpoints/useOrder';
+import { useQueryClient } from '@tanstack/react-query';
 
 const ConfirmOrderModal = ({
   singleOrder,
@@ -28,6 +30,7 @@ const ConfirmOrderModal = ({
   toggleConfirmModal,
   refetch,
 }: any) => {
+  const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -97,6 +100,18 @@ const ConfirmOrderModal = ({
         text: "Payment has been made, awaiting confirmation",
         type: "success",
       });
+
+      // Clear the global orders cache to force fresh data
+      ordersCacheUtils.clearAll();
+
+      // Invalidate all related order queries
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['orderCategories'] }),
+        queryClient.invalidateQueries({ queryKey: ['orderDetails'] }),
+        queryClient.invalidateQueries({ queryKey: ['allOrdersData'] }),
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+      ]);
+
       toggleConfirmModal();
       refetch();
     } else if (data?.data?.error) {

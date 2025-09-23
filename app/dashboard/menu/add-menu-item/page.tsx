@@ -11,6 +11,7 @@ import { CustomButton } from "@/components/customButton";
 import { CustomTextArea } from "@/components/customTextArea";
 import SelectInput from "@/components/selectInput";
 import useMenu from "@/hooks/cachedEndpoints/useMenu";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import {
   SmallLoader,
   THREEMB,
@@ -63,6 +64,7 @@ interface ApiResponse {
 const AddItemToMenu = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { refetch } = useMenu();
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
@@ -245,7 +247,19 @@ const AddItemToMenu = () => {
   useEffect(() => {
     getMenuName();
   }, []);
-  
+
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canCreateMenu) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
+  // Check if user has permission to create menu items
+  if (role !== 0 && !userRolePermissions?.canCreateMenu) {
+    return null; // Will redirect via useEffect
+  }
+
   return (
     <>
       <div className="flex md:flex-row flex-col justify-between md:items-center items-start">

@@ -8,9 +8,11 @@ import {
   ModalHeader,
   Spacer,
 } from '@nextui-org/react';
+import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useState } from 'react';
 import noMenu from '../../../../public/assets/images/no-menu.png';
+import { ordersCacheUtils } from '@/hooks/cachedEndpoints/useOrder';
 
 const CancelOrderModal = ({
   isOpenCancelOrder,
@@ -18,6 +20,7 @@ const CancelOrderModal = ({
   toggleCancelModal,
   refetch,
 }: any) => {
+  const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const [loading, setLoading] = useState(false);
 
@@ -44,7 +47,17 @@ const CancelOrderModal = ({
 
       toggleCancelModal();
 
-      refetch();
+      // Clear the global orders cache to force fresh data
+      ordersCacheUtils.clearAll();
+
+      // Invalidate all related order queries to ensure immediate updates
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['orderCategories'] }),
+        queryClient.invalidateQueries({ queryKey: ['orderDetails'] }),
+        queryClient.invalidateQueries({ queryKey: ['allOrdersData'] }),
+        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        refetch() // Keep original refetch as fallback
+      ]);
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',

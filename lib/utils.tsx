@@ -146,7 +146,14 @@ const Msg = ({ title, text }: { title: string; text: string }) => {
 };
 export const notify = ({ title, text, type }: notifyType) => {
   type === "warning" &&
-    toast.warn(<Msg title={title} text={text} />, toastData);
+    toast(<Msg title={title} text={text} />, {
+      ...toastData,
+      icon: '⚠️',
+      style: {
+        background: '#F59E0B',
+        color: '#fff',
+      },
+    });
   type === "success" &&
     toast.success(<Msg title={title} text={text} />, toastData);
   type === "error" && toast.error(<Msg title={title} text={text} />, toastData);

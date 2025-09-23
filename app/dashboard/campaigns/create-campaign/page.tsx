@@ -9,6 +9,7 @@ import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { CustomTextArea } from "@/components/customTextArea";
 import useCampaign from "@/hooks/cachedEndpoints/useCampaign";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import {
   SmallLoader,
   THREEMB,
@@ -49,6 +50,7 @@ import Success from "../../../../public/assets/images/success.png";
 const AddNewCampaign = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const router = useRouter();
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
   const getCampaignSavedToDraft = getJsonItemFromLocalStorage(
     "saveCampaignToDraft"
   );
@@ -240,6 +242,18 @@ const AddNewCampaign = () => {
     );
     setSelectedImage(selectedImageSavedToDraft || "");
   }, []);
+
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canCreateCampaign) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
+  // Check if user has permission to create campaigns
+  if (role !== 0 && !userRolePermissions?.canCreateCampaign) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <>

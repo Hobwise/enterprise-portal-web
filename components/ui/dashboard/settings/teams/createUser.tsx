@@ -4,6 +4,7 @@ import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import SelectInput from '@/components/selectInput';
 import useUserByBusiness from '@/hooks/cachedEndpoints/useUserByBusiness';
+import useStaffAssignment from '@/hooks/cachedEndpoints/useStaffAssignment';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   Modal,
@@ -20,11 +21,12 @@ import follow from '../../../../../public/assets/images/follow.png';
 
 const CreateUser = ({ isOpen, onOpenChange }: any) => {
   const { refetch } = useUserByBusiness();
+  const { data: staffAssignments } = useStaffAssignment();
   const [isOpenInviteMore, setIsOpenInviteMore] = useState(false);
   const userInformation = getJsonItemFromLocalStorage('userInformation');
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState(null);
+  const [response, setResponse] = useState<any>(null);
   const [createFormData, setCreateFormData] = useState({
     firstName: '',
     lastName: '',
@@ -34,6 +36,7 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
     cooperateID: userInformation?.cooperateID,
     isActive: true,
     role: '',
+    assignmentId: '',
   });
 
   const toggleInviteMoreModal = () => {
@@ -49,14 +52,23 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
     }));
   };
 
-  const submitFormData = async (e) => {
+  const submitFormData = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...createFormData, role: +createFormData.role };
+    const payload = {
+      ...createFormData,
+      role: +createFormData.role,
+      assignmentId: createFormData.assignmentId
+    };
 
     setLoading(true);
     const data = await createAdditionalUser(payload);
     setLoading(false);
     setResponse(data);
+
+    if (data?.errors) {
+      // Handle validation errors - they're already set in response state
+      return;
+    }
 
     if (data?.data?.isSuccessful) {
       onOpenChange();
@@ -70,6 +82,7 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
         cooperateID: userInformation?.cooperateID,
         isActive: true,
         role: '',
+        assignmentId: '',
       });
       refetch();
     } else if (data?.data?.error) {
@@ -90,6 +103,11 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
       value: 1,
     },
   ];
+
+  const assignmentOptions = staffAssignments?.map((assignment) => ({
+    label: assignment.name,
+    value: assignment.id,
+  })) || [];
   return (
     <>
       <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -200,6 +218,18 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
                     onChange={handleInputChange}
                     value={createFormData?.role}
                     contents={role}
+                  />
+                  <Spacer y={6} />
+
+                  <SelectInput
+                    errorMessage={response?.errors?.assignmentId?.[0]}
+                    label='Assign Position'
+                    placeholder='Select a position'
+                    name='assignmentId'
+                    selectedKeys={[createFormData?.assignmentId]}
+                    onChange={handleInputChange}
+                    value={createFormData?.assignmentId}
+                    contents={assignmentOptions}
                   />
                   <Spacer y={6} />
                   <CustomButton

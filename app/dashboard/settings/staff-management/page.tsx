@@ -3,6 +3,7 @@
 import { CustomButton } from '@/components/customButton';
 import AssignPermission from '@/components/ui/dashboard/settings/rolesAndPrivileges/assignPermission';
 import useRoleCount from '@/hooks/cachedEndpoints/useRoleCount';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { SmallLoader, getJsonItemFromLocalStorage } from '@/lib/utils';
 import {
   Table,
@@ -13,13 +14,16 @@ import {
   TableRow,
   useDisclosure,
 } from '@nextui-org/react';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { TbEdit } from 'react-icons/tb';
 
 const RolesPage = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { data, isLoading } = useRoleCount();
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
+  const router = useRouter();
   const userInformation = getJsonItemFromLocalStorage('userInformation') || [];
 
   const columns = [
@@ -55,6 +59,19 @@ const RolesPage = () => {
         return cellValue;
     }
   }, []);
+
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canViewUser) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
+  // Check if user has permission to view users/staff
+  if (role !== 0 && !userRolePermissions?.canViewUser) {
+    return null; // Will redirect via useEffect
+  }
+
   return (
     <section>
       <div className="flex md:flex-row flex-col justify-between md:items-center items-start">

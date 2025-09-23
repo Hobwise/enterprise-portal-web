@@ -8,15 +8,23 @@ import { fetchQueryConfig } from "@/lib/queryConfig";
  * Provides caching and background refresh for order data used in Invoice and UpdateOrderModal
  */
 const useOrderDetails = (
-  orderId: string,
+  orderId: string | undefined,
   options?: { enabled?: boolean }
 ) => {
+  // Validate orderId to prevent invalid API calls
+  const isValidOrderId = orderId && typeof orderId === 'string' && orderId.trim().length > 0;
+
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['orderDetails', orderId],
-    queryFn: () => getOrder(orderId),
+    queryFn: () => {
+      if (!isValidOrderId) {
+        throw new Error('Invalid order ID provided');
+      }
+      return getOrder(orderId);
+    },
     ...fetchQueryConfig(options),
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
-    enabled: !!orderId && options?.enabled !== false,
+    enabled: isValidOrderId && options?.enabled !== false,
   });
 
   return {

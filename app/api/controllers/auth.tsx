@@ -39,6 +39,7 @@ const additionalUserSchema = z.object({
   lastName: inputNameValidation("Last name"),
   email: emailValidation(),
   role: z.number().min(0, "Select a role"),
+  assignmentId: z.string().min(1, "Select a position"),
   password: passwordValidation(),
 });
 
@@ -139,6 +140,7 @@ export async function createAdditionalUser(formData: any) {
     lastName: formData.lastName,
     email: formData.email,
     role: formData.role,
+    assignmentId: formData.assignmentId,
     password: formData.password,
   });
 
@@ -391,6 +393,20 @@ export async function getRoleCount(businessId: string, cooperateId: string) {
     const data = await api.get(
       `${AUTH.getRoleCount}?cooperateId=${cooperateId}&businessId=${businessId}`
     );
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getStaffAssignments(businessId: string) {
+  const headers = businessId ? { businessId, version: '1.0' } : {};
+
+  try {
+    const data = await api.get('https://sandbox-api.hobwise.com/api/v1/User/staff-assignment', {
+      headers,
+    });
 
     return data;
   } catch (error) {

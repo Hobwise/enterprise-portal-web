@@ -26,6 +26,7 @@ const ForgetPassword = async ({
         <EntryPoint
           userEmail={query?.email}
           screenNumber={Number(query?.screen)}
+          isForced={query?.forced === 'true'}
         />
       </div>
     </main>

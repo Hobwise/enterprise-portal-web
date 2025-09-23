@@ -789,7 +789,7 @@ const CheckoutModal = ({
                                     <h3 className="font-semibold text-black">
                                       {formatPrice(item?.price * item.count)}
                                     </h3>
-                                    {item.packingCost > 0 && (
+                                    {/* {item.packingCost > 0 && ( */}
                                       <span
                                         className={cn(
                                           "text-xs text-gray-200",
@@ -798,7 +798,7 @@ const CheckoutModal = ({
                                       >
                                         {formatPrice(item?.packingCost)}
                                       </span>
-                                     )}
+                                     {/* )} */}
                                   </div>
                                 </div>
                               </div>

@@ -8,6 +8,7 @@ import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { CustomTextArea } from "@/components/customTextArea";
 import useReservation from "@/hooks/cachedEndpoints/useReservation";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import {
   SmallLoader,
   THREEMB,
@@ -43,6 +44,7 @@ import Success from "../../../../public/assets/images/success.png";
 const AddNewReservation = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const router = useRouter();
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
   const getReservationSavedToDraft = getJsonItemFromLocalStorage(
     "saveReservationToDraft"
   );
@@ -255,6 +257,18 @@ const AddNewReservation = () => {
       allowSystemAdvert: isSelected,
     });
   };
+
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canCreateReservation) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
+  // Check if user has permission to create reservations
+  if (role !== 0 && !userRolePermissions?.canCreateReservation) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <>
