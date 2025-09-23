@@ -5,6 +5,7 @@ import { useDisclosure } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useMenuCategories from '@/hooks/cachedEndpoints/useMenuCategories';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import {
   getMenuItems,
@@ -53,13 +54,14 @@ const GLOBAL_CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
 
 const RestaurantMenu = () => {
   const router = useRouter();
-  const { 
-    setCurrentMenuItems, 
-    setCurrentCategory, 
-    setCurrentSection, 
-    setCurrentSearchQuery 
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
+  const {
+    setCurrentMenuItems,
+    setCurrentCategory,
+    setCurrentSection,
+    setCurrentSearchQuery
   } = useGlobalContext();
-  
+
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('');
   const [menuSections, setMenuSections] = useState<any[]>([]);
@@ -1624,8 +1626,24 @@ const RestaurantMenu = () => {
     }
   };
 
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canViewMenu) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
   if (loadingCategories && categories.length === 0) {
     return <CustomLoading ismenuPage={true} />;
+  }
+
+  if (isPermissionsLoading) {
+    return <CustomLoading ismenuPage={true} />;
+  }
+
+  // Check if user has permission to view menu
+  if (role !== 0 && !userRolePermissions?.canViewMenu) {
+    return null; // Will redirect via useEffect
   }
 
   return (
@@ -1659,6 +1677,7 @@ const RestaurantMenu = () => {
         handleMenuSectionSelect={handleMenuSectionSelect}
         setViewMenuMode={setViewMenuMode}
         setIsOpenViewMenu={setIsOpenViewMenu}
+        canCreateMenu={role === 0 || userRolePermissions?.canCreateMenu === true}
       />
 
       <MenuItemsGrid
@@ -1670,6 +1689,7 @@ const RestaurantMenu = () => {
         setIsAddItemChoiceModalOpen={setIsAddItemChoiceModalOpen}
         handleItemClick={handleItemClick}
         searchQuery={searchQuery}
+        canCreateMenu={role === 0 || userRolePermissions?.canCreateMenu === true}
       />
 
       {/* Pagination */}

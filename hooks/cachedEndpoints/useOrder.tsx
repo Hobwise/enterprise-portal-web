@@ -4,6 +4,7 @@ import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
+import { useEffect, useRef } from 'react';
 
 type OrderItem = {
   id: string;
@@ -45,6 +46,22 @@ const useOrder = (
 ) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage("business");
+  const previousPage = useRef(page);
+
+  // Clear cache when page changes to force fresh data
+  useEffect(() => {
+    if (previousPage.current !== page) {
+      // Clear cache for all pages of current status when page changes
+      const keysToDelete: string[] = [];
+      globalOrdersCache.forEach((_, key) => {
+        if (key.includes(`orders_${tableStatus}_${filterType}`)) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => globalOrdersCache.delete(key));
+      previousPage.current = page;
+    }
+  }, [page, tableStatus, filterType]);
 
   const getAllOrders = async ({ queryKey }: { queryKey: any }) => {
     const [_key, { page, rowsPerPage, tableStatus, filterType, startDate, endDate }] = queryKey;
@@ -52,10 +69,14 @@ const useOrder = (
     // Create cache key
     const cacheKey = `orders_${tableStatus}_${filterType}_${startDate}_${endDate}_page_${page}`;
 
-    // Check cache first
+    // Check cache first - but skip cache for pagination to ensure fresh data
     const cached = globalOrdersCache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
-      return cached.items;
+      // Only use cache if it's for the exact same page request
+      // This prevents stale data when navigating between pages
+      if (cached.currentPage === page) {
+        return cached.items;
+      }
     }
 
     try {
@@ -124,12 +145,13 @@ const useOrder = (
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ],
     queryFn: getAllOrders,
-    
+
       ...fetchQueryConfig(options),
       refetchOnWindowFocus: false,
-      staleTime: 0, // Always consider data stale to ensure refetch on date changes
+      staleTime: 0, // Always consider data stale to ensure refetch on page/date changes
+      gcTime: 5 * 60 * 1000, // Cache for 5 minutes
       enabled: options?.enabled !== false,
-    
+
   });
 
 

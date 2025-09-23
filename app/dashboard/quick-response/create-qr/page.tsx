@@ -1,10 +1,25 @@
+'use client';
 import QRform from '@/components/ui/dashboard/qrCode/QRform';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
-export const metadata = {
-  title: 'Create Quick Response',
-  description: ' Create Quick Response',
-};
 const CreateQrPage = () => {
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
+  const router = useRouter();
+
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canCreateQR) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
+  // Check if user has permission to create QR codes
+  if (role !== 0 && !userRolePermissions?.canCreateQR) {
+    return null; // Will redirect via useEffect
+  }
+
   return (
     <>
       <main className=' flex flex-col justify-center items-center'>

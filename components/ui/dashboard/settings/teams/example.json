@@ -1,0 +1,67 @@
+{
+    "data": {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJFbWFpbCI6IkJpbmt5YmVuekBnbWFpbC5jb20iLCJJcCI6Ijo6MSIsIlVzZXJJZCI6ImEyMDIwZGMwLTc4NGUtNGUwZS04MjczLTVmNGY4ZmRkNzgyNyIsIkJ1c2luZXNzSWQiOiI5MWM4YzhiYy0zMGEwLTRkOWQtODg4ZC0wZjc4NDYwMjRlMzEiLCJVc2VyUm9sZSI6Ik1hbmFnZXIiLCJDb29wZXJhdGVJZCI6IjdhOWJkMzg1LTVhZjgtNGI2MC05OThkLTlkNzNhNmQ3MDNlZCIsImp0aSI6ImMxOTIwNjI2LTM3YmYtNDc0MS1hN2YwLTcxMjE0MGY5MzllOSIsImV4cCI6MTc1ODYyMTcxMiwiaXNzIjoiaHR0cDovLzQwLjEyNC4zOC4yMDEvZHNlLyIsImF1ZCI6Imh0dHA6Ly80MC4xMjQuMzguMjAxL2RzZS8ifQ.5GE57p1AyQ29CwlrjJoM4LDcUvfNKdYsqmMHY-vjOro",
+        "refreshToken": "h2wseLBdkaly4VM19ywEqZp74VM5cpWoqCdZRboaOJ9E7vGm6jazCOgkG2JjzubUr26LX8Y67amvnF6hAIw",
+        "tokenExpiration": "2025-09-23T11:01:52.0355203",
+        "firstName": "Henry",
+        "lastName": "Okeke",
+        "id": "a2020dc0-784e-4e0e-8273-5f4f8fdd7827",
+        "cooperateID": "7a9bd385-5af8-4b60-998d-9d73a6d703ed",
+        "email": "Binkybenz@gmail.com",
+        "role": 0,
+        "staffType": 0,
+        "primaryAssignment": "Management",
+        "isOwner": true,
+        "lastLogin": "2025-09-23T10:21:51.3906411",
+        "businesses": [
+            {
+                "businessId": "91c8c8bc-30a0-4d9d-888d-0f7846024e31",
+                "businessAddress": "Lekki phase2",
+                "state": "Lagos",
+                "city": "Eti Osa",
+                "businessName": "Safari Resturant and Suite",
+                "primaryColor": "",
+                "secondaryColor": "",
+                "businessContactEmail": "Binkybenz@gmail.com",
+                "businessContactNumber": ""
+            },
+            {
+                "businessId": "b26e7c58-2b1c-4442-86dc-e15f544643bc",
+                "businessAddress": "Ikoyi axuse",
+                "state": "Lagos",
+                "city": "Lagos Island",
+                "businessName": "Safari Club",
+                "primaryColor": "",
+                "secondaryColor": "",
+                "businessContactEmail": "binkybenz@gmail.com",
+                "businessContactNumber": ""
+            }
+        ],
+        "subscription": {
+            "plan": 3,
+            "paymentPeriod": 0,
+            "nextPaymentDate": "2025-10-21T12:30:23.7043904",
+            "isActive": true,
+            "onTrialVersion": false,
+            "planCapabilities": {
+                "maxUsers": 2147483647,
+                "monthlyFee": 10000.0,
+                "yearlyFee": 100000.0,
+                "canAccessDashboard": true,
+                "canAccessMenu": true,
+                "canAccessReservations": true,
+                "canAccessNotifications": true,
+                "canAccessOrders": true,
+                "canAccessPayments": true,
+                "canAccessBookings": true,
+                "canAccessCampaigns": true,
+                "canAccessReports": true,
+                "canAccessSettings": true,
+                "canAccessQuickResponses": true,
+                "canAccessMultipleLocations": true
+            }
+        }
+    },
+    "error": null,
+    "isSuccessful": true
+}

@@ -14,6 +14,7 @@ interface MenuItemsGridProps {
   setIsAddItemChoiceModalOpen?: (isOpen: boolean) => void;
   handleItemClick: (item: any) => void;
   searchQuery?: string;
+  canCreateMenu?: boolean;
 }
 
 const MenuItemsGrid = ({
@@ -25,6 +26,7 @@ const MenuItemsGrid = ({
   setIsAddItemChoiceModalOpen,
   handleItemClick,
   searchQuery,
+  canCreateMenu = false,
 }: MenuItemsGridProps) => {
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
 
@@ -48,14 +50,16 @@ const MenuItemsGrid = ({
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-6 xl:grid-cols-6 gap-4 md:gap-8">
           {/* Add New Item Card */}
-          <div
-            onClick={() => setIsAddItemChoiceModalOpen ? setIsAddItemChoiceModalOpen(true) : setIsAddItemModalOpen(true)}
-            className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[180px]"
-          >
-            <img src="/assets/icons/menu.svg" alt="add"  />
-            <span className="text-gray-600 text-sm font-med
-            ium font-satoshi">Add new item</span>
-          </div>
+          {canCreateMenu && (
+            <div
+              onClick={() => setIsAddItemChoiceModalOpen ? setIsAddItemChoiceModalOpen(true) : setIsAddItemModalOpen(true)}
+              className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[180px]"
+            >
+              <img src="/assets/icons/menu.svg" alt="add"  />
+              <span className="text-gray-600 text-sm font-med
+              ium font-satoshi">Add new item</span>
+            </div>
+          )}
 
           {/* Menu Items */}
           {menuItems && menuItems.length > 0 && (

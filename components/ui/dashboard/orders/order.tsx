@@ -134,13 +134,18 @@ const getFilteredOrderDetails = (
   }
 
   // If orders has totalCount of 0, return empty array immediately
-  if (orders?.totalCount === 0) {
+  const totalCount = orders?.data?.totalCount ?? orders?.totalCount ?? 0;
+  if (totalCount === 0) {
     return [];
   }
   
   // Extract orders data - ensure it's always a valid array
   let allOrders: OrderItem[] = [];
-  if (orders.payments && Array.isArray(orders.payments)) {
+
+  // Check nested data structure first (API response format)
+  if (orders.data && orders.data.payments && Array.isArray(orders.data.payments)) {
+    allOrders = orders.data.payments;
+  } else if (orders.payments && Array.isArray(orders.payments)) {
     allOrders = orders.payments;
   } else if (orders.data && Array.isArray(orders.data)) {
     allOrders = orders.data;
@@ -254,15 +259,29 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   // Create proper pagination data structure for usePagination hook
   const paginationData = React.useMemo(() => {
-    // Extract totalCount from server response
-    let totalCount = 0;
-
+    // Extract pagination data from server response
     if (currentCategoryData && typeof currentCategoryData === 'object') {
-      // Try different possible property names for total count
-      totalCount = currentCategoryData.totalCount ||
-                   currentCategoryData.total ||
-                   currentCategoryData.count ||
-                   0;
+      // Check if server response has nested data with pagination info
+      if (currentCategoryData.data && typeof currentCategoryData.data === 'object') {
+        const serverData = currentCategoryData.data;
+
+        // Use server-provided pagination data when available
+        if (serverData.totalPages && serverData.totalCount !== undefined) {
+          return {
+            totalPages: Math.max(1, serverData.totalPages || 1),
+            currentPage: Math.max(1, Math.min(page, serverData.totalPages || 1)),
+            hasNext: serverData.hasNext || false,
+            hasPrevious: serverData.hasPrevious || false,
+            totalCount: serverData.totalCount || 0
+          };
+        }
+      }
+
+      // Fallback: try to extract totalCount from various possible locations
+      let totalCount = currentCategoryData.totalCount ||
+                       currentCategoryData.total ||
+                       currentCategoryData.count ||
+                       0;
 
       // If server response has data array, use its length as fallback
       if (totalCount === 0 && currentCategoryData.data && Array.isArray(currentCategoryData.data)) {
@@ -273,23 +292,29 @@ const OrdersList: React.FC<OrdersListProps> = ({
       if (totalCount === 0 && currentCategoryData.payments && Array.isArray(currentCategoryData.payments)) {
         totalCount = currentCategoryData.payments.length;
       }
+
+      // Calculate pagination properties with proper bounds checking
+      const totalPages = Math.max(1, Math.ceil(totalCount / Math.max(1, rowsPerPage)));
+      const currentPage = Math.max(1, Math.min(page, totalPages));
+      const hasNext = currentPage < totalPages;
+      const hasPrevious = currentPage > 1;
+
+      return {
+        totalPages,
+        currentPage,
+        hasNext,
+        hasPrevious,
+        totalCount
+      };
     }
 
-    // Ensure totalCount is valid
-    totalCount = Math.max(0, totalCount || 0);
-
-    // Calculate pagination properties with proper bounds checking
-    const totalPages = Math.max(1, Math.ceil(totalCount / Math.max(1, rowsPerPage)));
-    const currentPage = Math.max(1, Math.min(page, totalPages)); // Ensure page is within bounds
-    const hasNext = currentPage < totalPages;
-    const hasPrevious = currentPage > 1;
-
+    // Default pagination data when no data available
     return {
-      totalPages,
-      currentPage,
-      hasNext,
-      hasPrevious,
-      totalCount // Include for debugging/reference
+      totalPages: 1,
+      currentPage: 1,
+      hasNext: false,
+      hasPrevious: false,
+      totalCount: 0
     };
   }, [currentCategoryData, page, rowsPerPage]);
 
@@ -428,11 +453,9 @@ const OrdersList: React.FC<OrdersListProps> = ({
         toggleUpdateOrderModal(order);
         break;
       case 1: // Closed orders
+      case 2: // Cancelled orders
       case 3: // Awaiting confirmation
         toggleInvoiceModal(order);
-        break;
-      case 2: // Cancelled orders
-        // No action for cancelled orders
         break;
       default:
         break;
@@ -619,9 +642,9 @@ const OrdersList: React.FC<OrdersListProps> = ({
           {(order: OrderItem) => (
             <TableRow
               key={String(order?.id)}
-              className={`${order.status !== 2 ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors`}
-              onClick={() => order.status !== 2 && handleRowClick(order)}
-              onMouseEnter={() => order.status !== 2 && prefetchOrderDetails(order.id)}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => handleRowClick(order)}
+              onMouseEnter={() => prefetchOrderDetails(order.id)}
             >
               {(columnKey) => (
                 <TableCell>{renderCell(order, String(columnKey))}</TableCell>
@@ -651,6 +674,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         singleOrder={singleOrder}
         isOpenInvoice={isOpenInvoice}
         toggleInvoiceModal={toggleInvoiceModal}
+        onClose={() => setIsOpenInvoice(false)}
       />
       <UpdateOrderModal
         isOpen={isOpenUpdateOrder}

@@ -3,10 +3,12 @@
 import { CustomButton } from '@/components/customButton';
 import TermsCondition from '@/components/ui/dashboard/settings/business-settings/terms&condition';
 import useGetBusiness from '@/hooks/cachedEndpoints/useGetBusiness';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Divider } from '@nextui-org/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { IoCheckmarkOutline } from 'react-icons/io5';
 import { TbCopy } from 'react-icons/tb';
 import { Tab, Tabs } from '@nextui-org/react';
@@ -14,6 +16,8 @@ import { Tab, Tabs } from '@nextui-org/react';
 const BusinessSettings = () => {
   const { data } = useGetBusiness();
   const { setBusinessProfileNavigate } = useGlobalContext();
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
+  const router = useRouter();
 
   const userInformation = getJsonItemFromLocalStorage('userInformation') || [];
 
@@ -45,6 +49,18 @@ const BusinessSettings = () => {
       </div>
     );
   };
+
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canViewBusiness) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
+  // Check if user has permission to view business settings
+  if (role !== 0 && !userRolePermissions?.canViewBusiness) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <section>

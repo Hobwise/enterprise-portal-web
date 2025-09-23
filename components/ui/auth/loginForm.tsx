@@ -106,13 +106,6 @@ const LoginForm = () => {
   const handleLoginSuccess = async (decryptedData: any) => {
     try {
       const { businesses, token, user } = decryptedData.data;
-      
-      // Show immediate success notification
-      notify({
-        title: "Login Successful!",
-        text: `Welcome back${user?.name ? `, ${user.name}` : ''}!`,
-        type: "success",
-      });
 
       // Save critical data synchronously
       setTokenCookie("token", token);
@@ -120,10 +113,20 @@ const LoginForm = () => {
       saveJsonItemToLocalStorage("business", businesses);
       setLoginDetails(loginFormData);
 
-      // Determine redirect path based on business count
+      // Check if user needs to change password (common API patterns)
+      const needsPasswordChange = user?.mustChangePassword ||
+                                user?.isFirstLogin ||
+                                user?.passwordExpired ||
+                                user?.forcePasswordChange ||
+                                user?.requirePasswordChange;
+
+      // Determine redirect path based on business count and password status
       let redirectPath: string;
-      
-      if (!businesses || businesses.length === 0) {
+
+      if (needsPasswordChange) {
+        // User needs to change password - redirect to password management
+        redirectPath = "/dashboard/settings/password-management";
+      } else if (!businesses || businesses.length === 0) {
         // No businesses - go to business information setup
         redirectPath = "/auth/business-information";
       } else if (businesses.length === 1) {
@@ -132,6 +135,15 @@ const LoginForm = () => {
       } else {
         // Multiple businesses - go to business selection
         redirectPath = "/auth/select-business";
+      }
+
+      // Only show success notification if NOT redirecting to password change
+      if (!needsPasswordChange) {
+        notify({
+          title: "Login Successful!",
+          text: `Welcome back${user?.name ? `, ${user.name}` : ''}!`,
+          type: "success",
+        });
       }
 
       // Navigate immediately without await
@@ -158,13 +170,13 @@ const LoginForm = () => {
     // Handle specific error codes
     if (error?.error?.responseCode === "HB016") {
       notify({
-        title: "Password Reset Required",
-        text: "Your password needs to be reset. Redirecting to password reset page...",
+        title: "Password Update Required",
+        text: "Kindly update your password to login. Redirecting to password update page...",
         type: "warning",
       });
-      
-      // Navigate immediately for better UX
-      router.push(`/auth/forget-password?email=${loginFormData.email}&screen=${2}`);
+
+      // Navigate immediately for better UX with proper parameter formatting
+      router.push(`/auth/forget-password?email=${encodeURIComponent(loginFormData.email)}&screen=2&forced=true`);
       return;
     }
     
@@ -224,8 +236,6 @@ const LoginForm = () => {
       const response = await loginUser(loginFormData);
 
       // Log the response structure for debugging
-      console.log("Login API response:", response);
-
       // Handle validation errors from server
       if (response?.errors) {
         setErrors(response.errors);
@@ -246,8 +256,10 @@ const LoginForm = () => {
       // Handle successful response from axios
       if (response?.data?.response) {
         const decryptedData = decryptPayload(response.data.response);
+        console.log('Login decryptedData:', decryptedData);
         if (decryptedData?.data) {
-          await handleLoginSuccess(decryptedData);
+         await handleLoginSuccess(decryptedData);
+        
         } else if (decryptedData?.error) {
           handleLoginError(decryptedData);
         } else {
@@ -257,6 +269,7 @@ const LoginForm = () => {
       // Handle axios error response structure
       else if (response?.response?.data?.response) {
         const decryptedData = decryptPayload(response.response.data.response);
+        
         if (decryptedData?.error) {
           handleLoginError(decryptedData);
         } else {

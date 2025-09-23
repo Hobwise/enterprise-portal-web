@@ -9,6 +9,7 @@ interface MenuToolbarProps {
   handleMenuSectionSelect: (sectionId: string) => void;
   setViewMenuMode: (mode: 'all' | 'current') => void;
   setIsOpenViewMenu: (isOpen: boolean) => void;
+  canCreateMenu?: boolean;
 }
 
 const MenuToolbar = ({
@@ -18,6 +19,7 @@ const MenuToolbar = ({
   handleMenuSectionSelect,
   setViewMenuMode,
   setIsOpenViewMenu,
+  canCreateMenu = false,
 }: MenuToolbarProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -68,15 +70,17 @@ const MenuToolbar = ({
   return (
     <div className="flex items-center my-3 py-3 gap-6">
       {/* Create new menu button - separate from scroll controls */}
-      <div className="flex-shrink-0">
-        <button
-          onClick={onOpen}
-          className="flex items-center gap-2 py-2 px-4 border border-[#5F35D2] text-[#5F35D2] rounded-lg hover:bg-[#EAE5FF] font-semibold text-sm transition-all duration-200"
-        >
-          <span>Create new menu</span>
-          <Plus className="w-5 h-5" />
-        </button>
-      </div>
+      {canCreateMenu && (
+        <div className="flex-shrink-0">
+          <button
+            onClick={onOpen}
+            className="flex items-center gap-2 py-2 px-4 border border-[#5F35D2] text-[#5F35D2] rounded-lg hover:bg-[#EAE5FF] font-semibold text-sm transition-all duration-200"
+          >
+            <span>Create new menu</span>
+            <Plus className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       {/* Fixed left scroll button */}
       {showLeft && (
