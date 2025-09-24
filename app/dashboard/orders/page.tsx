@@ -126,6 +126,7 @@ const Orders: React.FC = () => {
           orders={details?.data || []}
           categories={data.categories}
           refetch={refetch}
+
           searchQuery={searchQuery}
           isLoading={isLoading}
           filterType={filterType}

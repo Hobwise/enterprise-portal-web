@@ -221,16 +221,18 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
                   />
                   <Spacer y={6} />
 
-                  <SelectInput
-                    errorMessage={response?.errors?.assignmentId?.[0]}
-                    label='Assign Position'
-                    placeholder='Select a position'
-                    name='assignmentId'
-                    selectedKeys={[createFormData?.assignmentId]}
-                    onChange={handleInputChange}
-                    value={createFormData?.assignmentId}
-                    contents={assignmentOptions}
-                  />
+                  {createFormData.role && (
+                    <SelectInput
+                      errorMessage={response?.errors?.assignmentId?.[0]}
+                      label='Assign Position'
+                      placeholder='Select a position'
+                      name='assignmentId'
+                      selectedKeys={[createFormData?.assignmentId]}
+                      onChange={handleInputChange}
+                      value={createFormData?.assignmentId}
+                      contents={assignmentOptions}
+                    />
+                  )}
                   <Spacer y={6} />
                   <CustomButton
                     loading={loading}
