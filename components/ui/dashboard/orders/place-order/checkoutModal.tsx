@@ -34,6 +34,7 @@ import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../../public/assets/images/no-image.svg";
+import { ordersCacheUtils } from '@/hooks/cachedEndpoints/useOrder';
 
 interface Order {
   placedByName: string;
@@ -120,6 +121,7 @@ const CheckoutModal = ({
       // Pay Later logic with page detection
       if (pathname === '/dashboard/orders') {
         // Already on orders page - just close modal and refresh data
+        ordersCacheUtils.clearAll();
         queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
         queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
         queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -291,6 +293,49 @@ const CheckoutModal = ({
 
   const placeOrder = async () => {
     setLoading(true);
+
+    // Debug logging for payload construction variables
+    console.log('Debug - placeOrder variables:', {
+      selectedItems: selectedItems?.length || 0,
+      order: order || 'undefined',
+      additionalCost,
+      additionalCostName,
+      finalTotalPrice,
+      businessId,
+      cooperateID
+    });
+
+    // Validate required variables before proceeding
+    if (!selectedItems || selectedItems.length === 0) {
+      setLoading(false);
+      notify({
+        title: "Validation Error",
+        text: "No items selected for the order",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!order || !order.placedByName || !order.placedByPhoneNumber) {
+      setLoading(false);
+      notify({
+        title: "Validation Error",
+        text: "Missing required order information (name/phone)",
+        type: "error",
+      });
+      return;
+    }
+
+    if (typeof finalTotalPrice !== 'number' || finalTotalPrice <= 0) {
+      setLoading(false);
+      notify({
+        title: "Validation Error",
+        text: "Invalid total price calculated",
+        type: "error",
+      });
+      return;
+    }
+
     const transformedArray = selectedItems.map((item: any) => ({
       itemID: item.id,
       quantity: item.count,
@@ -311,6 +356,9 @@ const CheckoutModal = ({
       totalAmount: Math.round(finalTotalPrice * 100) / 100,
       orderDetails: transformedArray,
     };
+
+    // Ensure payload is properly constructed before proceeding
+    console.log('Debug - Constructed payload:', JSON.stringify(payload, null, 2));
 
     // Verify calculations
     const calculationVerification = verifyCalculation(selectedItems, additionalCost);
@@ -370,6 +418,10 @@ const CheckoutModal = ({
         text: "Order placed successfully",
         type: "success",
       });
+
+      // Clear the global orders cache to force fresh data
+      ordersCacheUtils.clearAll();
+
       await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
       await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -395,6 +447,19 @@ const CheckoutModal = ({
         .join('; ');
       console.error('Validation errors:', data.errors);
       console.error('Failed payload:', payload);
+
+      // Additional debugging for empty payload
+      if (!payload || Object.keys(payload).length === 0) {
+        console.error('CRITICAL: Payload is empty or undefined!', {
+          payloadType: typeof payload,
+          payloadKeys: payload ? Object.keys(payload) : 'payload is falsy',
+          selectedItemsLength: selectedItems?.length,
+          orderExists: !!order,
+          finalTotalPrice,
+          additionalCost
+        });
+      }
+
       notify({
         title: "Validation Failed",
         text: validationErrors,
@@ -490,6 +555,10 @@ const CheckoutModal = ({
         text: "Order updated successfully",
         type: "success",
       });
+
+      // Clear the global orders cache to force fresh data
+      ordersCacheUtils.clearAll();
+
       await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
       await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -568,6 +637,10 @@ const CheckoutModal = ({
           text: "Payment has been made, awaiting confirmation",
           type: "success",
         });
+
+        // Clear the global orders cache to force fresh data
+        ordersCacheUtils.clearAll();
+
         await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
         await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
         await queryClient.invalidateQueries({ queryKey: ['orders'] });
