@@ -323,7 +323,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
     headerColumns,
     setSelectedKeys,
     selectedKeys,
-    sortDescriptor,
+    sortDescriptor: defaultSortDescriptor,
     setSortDescriptor,
     filterValue,
     statusFilter,
@@ -337,6 +337,14 @@ const OrdersList: React.FC<OrdersListProps> = ({
     columns,
     INITIAL_VISIBLE_COLUMNS
   );
+
+  // Override default sort descriptor for orders to show newest first
+  const sortDescriptor = React.useMemo(() => {
+    return {
+      column: 'dateCreated',
+      direction: 'descending'
+    };
+  }, []);
 
   // Sort the orders based on sortDescriptor (server handles pagination)
   const sortedOrders = React.useMemo(() => {
@@ -699,6 +707,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         selectedItems={checkoutSelectedItems}
         orderDetails={singleOrder}
         id={singleOrder?.id}
+        onOrderSuccess={refetch}
         handleDecrement={(itemId: string) => {
           setCheckoutSelectedItems(prev =>
             prev.map(item =>

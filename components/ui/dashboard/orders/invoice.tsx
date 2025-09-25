@@ -76,8 +76,8 @@ const InvoiceModal = ({
                   </p>
                 </div>
               </div>
-              <Divider />
-              <div className="flex justify-between text-sm gap-3 py-1 font-semibold text-black">
+              <Divider  className="my-1"/>
+              <div className="flex justify-between text-sm gap-3 py-2 font-semibold text-black">
                 <p>{singleOrder.qrReference}</p>
                 <p>
                   Served by{" "}
@@ -87,7 +87,7 @@ const InvoiceModal = ({
                 </p>
               </div>
 
-              <Divider />
+              <Divider  className="my-1"/>
               {isLoading ? (
                 <div className={`flex flex-col items-center my-5`}>
                   <Spinner size="sm" />
@@ -157,7 +157,7 @@ const InvoiceModal = ({
                       );
                     })}
                   </div>
-                  <Divider />
+                  <Divider  className="my-1"/>
                   <div className="text-sm text-black font-bold">
                     <div className="flex justify-between gap-3 ">
                       <p>Subtotal</p>
@@ -182,7 +182,7 @@ const InvoiceModal = ({
                       <p>{formatPrice(order.totalAmount)}</p>
                     </div>
                   </div>
-                  <Divider />
+                  <Divider  className="my-1"/>
                 </>
               ) : (
                 <div className={`flex flex-col items-center my-5`}>

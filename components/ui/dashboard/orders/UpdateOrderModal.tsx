@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   Modal,
   ModalContent,
@@ -97,25 +97,71 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   );
   const [isDataProcessingComplete, setIsDataProcessingComplete] = useState<boolean>(false);
 
+  // Progressive loading states
+  const [loadingPhase, setLoadingPhase] = useState<'initial' | 'orderDetails' | 'processing' | 'complete'>('initial');
+  const [hasInitialItems, setHasInitialItems] = useState<boolean>(false);
+
+  // Cache for processed data to avoid recomputation
+  const cacheRef = useRef<Map<string, Item[]>>(new Map());
+
   // Timer ref for cleanup
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get order from localStorage when modal opens
   const [orderFromStorage, setOrderFromStorage] = useState<any>(null);
 
+  // Function to create initial items from stored order data for immediate display
+  const createInitialItems = useCallback((order: any): Item[] => {
+    if (!order?.orderDetails || !Array.isArray(order.orderDetails)) {
+      return [];
+    }
+
+    return order.orderDetails
+      .filter((item: any) => item && item.itemID && item.unitPrice != null && item.quantity > 0)
+      .map((item: any) => ({
+        id: item.itemID,
+        itemID: item.itemID,
+        itemName: item.itemName || 'Loading...',
+        menuName: item.menuName || '',
+        itemDescription: item.itemDescription || '',
+        price: item.unitPrice,
+        count: item.quantity,
+        currency: item.currency || 'NGN',
+        isAvailable: item.isAvailable ?? true,
+        hasVariety: item.hasVariety ?? false,
+        image: item.image || '',
+        isVariety: item.isVariety || false,
+        varieties: item.varieties || null,
+        packingCost: item.packingCost || 0,
+        isPacked: item.isPacked || false,
+      }));
+  }, []);
+
   // Load order data when modal opens
   useEffect(() => {
     if (isOpen) {
+      setLoadingPhase('initial');
       setIsDataProcessingComplete(false);
+      setHasInitialItems(false);
+
       const order = getJsonItemFromLocalStorage("order");
       setOrderFromStorage(order);
       setStoredOrderData(order);
 
       if (!order?.id) {
         toast.error("Order data not found");
+        return;
+      }
+
+      // Immediately create and display items from stored data
+      const initialItems = createInitialItems(order);
+      if (initialItems.length > 0) {
+        setSelectedItems(initialItems);
+        setHasInitialItems(true);
+        setLoadingPhase('orderDetails');
       }
     }
-  }, [isOpen]);
+  }, [isOpen, createInitialItems]);
 
   // Use cached order details hook
   const {
@@ -131,65 +177,97 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   const { data: menuData, isLoading: isLoadingMenu } = useMenu();
 
 
-  // Process order details when they're loaded
-  useEffect(() => {
-    if (fullOrderData && isSuccessful && menuData) {
-      // Validate that we have order details
-      if (!fullOrderData.orderDetails || !Array.isArray(fullOrderData.orderDetails)) {
-        toast.error("Invalid order data structure");
-        setIsDataProcessingComplete(true);
-        return;
+  // Memoized enhanced items processing with caching for better performance
+  const enhancedItems = useMemo(() => {
+    if (!fullOrderData?.orderDetails || !isSuccessful) {
+      return hasInitialItems ? selectedItems : [];
+    }
+
+    // Create cache key from order ID and menu data timestamp
+    const cacheKey = `${fullOrderData.id || 'unknown'}_${menuData?.length || 0}`;
+
+    // Check cache first
+    if (cacheRef.current.has(cacheKey)) {
+      const cachedItems = cacheRef.current.get(cacheKey);
+      if (cachedItems) {
+        setLoadingPhase('complete');
+        return cachedItems;
       }
+    }
 
-      // Filter out invalid items and process valid ones
-      const validItems = fullOrderData.orderDetails.filter((item: any) => {
-        return item && item.itemID && item.unitPrice != null && item.quantity > 0;
-      });
+    setLoadingPhase('processing');
 
-      if (validItems.length === 0) {
-        toast.error("No valid items found in order");
-        setIsDataProcessingComplete(true);
-        return;
-      }
+    const validItems = fullOrderData.orderDetails.filter((item: any) =>
+      item && item.itemID && item.unitPrice != null && item.quantity > 0
+    );
 
-      const updatedArray = validItems.map(
-        (item: any) => {
-          const { unitPrice, quantity, itemID, ...rest } = item;
+    if (validItems.length === 0) {
+      return [];
+    }
 
-          // Get current packing cost and other details from menu data
-          const menuItem = menuData?.find((menu: any) => menu.id === itemID);
-
-          return {
-            ...rest,
-            id: itemID,
-            itemID: itemID,
-            price: unitPrice,
-            count: quantity,
-            // Use current menu packing cost and item details
-            itemName: item.itemName || menuItem?.name || 'Unknown Item',
-            menuName: item.menuName || menuItem?.menuName || '',
-            itemDescription: item.itemDescription || menuItem?.description || '',
-            currency: item.currency || menuItem?.currency || 'NGN',
-            isAvailable: item.isAvailable ?? menuItem?.isAvailable ?? true,
-            hasVariety: item.hasVariety ?? menuItem?.hasVariety ?? false,
-            image: item.image || menuItem?.image || '',
-            varieties: item.varieties || menuItem?.varieties || null,
-            isVariety: item.isVariety || false,
-            // Preserve historical isPacked status if available, otherwise default to false
-            isPacked: item.isPacked || false,
-          };
+    // Create a menu lookup map for better performance
+    const menuLookup = new Map();
+    if (menuData) {
+      menuData.forEach((menu: any) => {
+        if (menu.items) {
+          menu.items.forEach((item: any) => {
+            menuLookup.set(item.id, { ...item, menuName: menu.name });
+          });
         }
-      );
-      setSelectedItems(() => updatedArray);
+      });
+    }
+
+    const processedItems = validItems.map((item: any) => {
+      const menuItem = menuLookup.get(item.itemID);
+
+      return {
+        id: item.itemID,
+        itemID: item.itemID,
+        price: item.unitPrice,
+        count: item.quantity,
+        itemName: item.itemName || menuItem?.itemName || menuItem?.name || 'Unknown Item',
+        menuName: item.menuName || menuItem?.menuName || '',
+        itemDescription: item.itemDescription || menuItem?.itemDescription || menuItem?.description || '',
+        currency: item.currency || menuItem?.currency || 'NGN',
+        isAvailable: item.isAvailable ?? menuItem?.isAvailable ?? true,
+        hasVariety: item.hasVariety ?? menuItem?.hasVariety ?? false,
+        image: item.image || menuItem?.image || '',
+        varieties: item.varieties || menuItem?.varieties || null,
+        isVariety: item.isVariety || false,
+        packingCost: menuItem?.packingCost || item.packingCost || 0,
+        isPacked: item.isPacked || false,
+      };
+    });
+
+    // Cache the processed items
+    cacheRef.current.set(cacheKey, processedItems);
+
+    // Limit cache size to prevent memory leaks
+    if (cacheRef.current.size > 5) {
+      const firstKey = cacheRef.current.keys().next().value;
+      if (firstKey !== undefined) {
+        cacheRef.current.delete(firstKey);
+      }
+    }
+
+    return processedItems;
+  }, [fullOrderData, isSuccessful, menuData, hasInitialItems, selectedItems]);
+
+  // Update selected items when enhanced data is available
+  useEffect(() => {
+    if (enhancedItems.length > 0 && (fullOrderData && isSuccessful)) {
+      setSelectedItems(enhancedItems);
+      setLoadingPhase('complete');
       setIsDataProcessingComplete(true);
     }
 
     // Handle error case
     if (error) {
       toast.error("Failed to load order details");
+      setLoadingPhase('complete');
       setIsDataProcessingComplete(true);
     }
-  }, [fullOrderData, isSuccessful, error, menuData]);
+  }, [enhancedItems, fullOrderData, isSuccessful, error]);
 
   // Increment handler
   const handleIncrement = useCallback(
@@ -280,6 +358,10 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       setOrderFromStorage(null);
       setStoredOrderData(null);
       setIsDataProcessingComplete(false);
+      setLoadingPhase('initial');
+      setHasInitialItems(false);
+      // Clear cache to prevent memory leaks
+      cacheRef.current.clear();
       // Clear any pending timer
       if (updateTimerRef.current) {
         clearTimeout(updateTimerRef.current);
@@ -361,16 +443,22 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
           <ModalBody className="p-6">
             {/* Cart Items */}
-            {isLoadingOrderDetails || isLoadingMenu || !isDataProcessingComplete ? (
-              <div className="flex flex-col h-[40vh] justify-center items-center">
-                <SpinnerLoader size="md" />
-                <Spacer y={3} />
-                <p className="text-sm text-textGrey">
-                  {isLoadingOrderDetails ? "Loading order details..." : isLoadingMenu ? "Loading menu data..." : "Processing order data..."}
-                </p>
-              </div>
-            ) : selectedItems.length > 0 ? (
+            {selectedItems.length > 0 ? (
               <div className="flex-1 ">
+                {/* Loading state indicator for background updates */}
+                {loadingPhase !== 'complete' && hasInitialItems && (
+                  <div className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm text-blue-600">
+                        {loadingPhase === 'orderDetails' ? 'Fetching latest details...' :
+                         loadingPhase === 'processing' ? 'Updating item information...' :
+                         'Loading...'}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4 max-h-[45vh] overflow-y-auto scrollbar-thin scrollbar-thumb-primaryColor scrollbar-track-gray-100 scrollbar-thumb-rounded-full scrollbar-track-rounded-full hover:scrollbar-thumb-primaryColor/80">
                   {selectedItems?.map((item, index) => (
                     <React.Fragment key={`${item.id}-${index}`}>
@@ -497,6 +585,14 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                     </div>
                   </div>
                 </div>
+              </div>
+            ) : loadingPhase === 'initial' || (isLoadingOrderDetails && !hasInitialItems) ? (
+              <div className="flex flex-col h-[40vh] justify-center items-center">
+                <SpinnerLoader size="md" />
+                <Spacer y={3} />
+                <p className="text-sm text-textGrey">
+                  {loadingPhase === 'initial' ? 'Loading order...' : 'Fetching order details...'}
+                </p>
               </div>
             ) : (
               <div className="flex flex-col h-[40vh] justify-center items-center">

@@ -12,6 +12,7 @@ interface CustomInputProps {
   value?: string | number;
   name?: string;
   errorMessage?: any;
+  isInvalid?: boolean;
   size?: "lg" | "md" | "sm";
   classnames?: string;
   placeholder?: string;
@@ -40,6 +41,7 @@ export const CustomInput = ({
   defaultValue,
   classnames = "bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]",
   errorMessage,
+  isInvalid,
   size = "lg",
   min,
   max,
@@ -105,7 +107,7 @@ export const CustomInput = ({
       ng-model="name"
       autoComplete="new-password"
       errorMessage={errorMessage}
-      isInvalid={errorMessage && true}
+      isInvalid={isInvalid || (errorMessage && true)}
       size={size}
       endContent={type === "password" ? passwordEndContent : endContent}
       startContent={startContent}

@@ -18,6 +18,7 @@ const SelectInput = ({
   onChange,
   disabled,
   errorMessage,
+  isInvalid,
   selectedKeys,
   defaultSelectedKeys,
 }: any) => {
@@ -34,7 +35,7 @@ const SelectInput = ({
       value={value}
       isDisabled={disabled}
       errorMessage={errorMessage}
-      isInvalid={errorMessage && true}
+      isInvalid={isInvalid || (errorMessage && true)}
       onChange={onChange}
       radius='lg'
       placeholder={placeholder}
