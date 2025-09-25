@@ -79,7 +79,7 @@ const CheckoutModal = ({
   handleIncrement,
   orderDetails,
   id,
-
+  onOrderSuccess,
   businessId,
   cooperateID,
   handlePackingCost,
@@ -94,6 +94,12 @@ const CheckoutModal = ({
   const [orderId, setOrderId] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    placedByName?: boolean;
+    placedByPhoneNumber?: boolean;
+    quickResponseID?: boolean;
+  }>({});
   const [reference, setReference] = useState("");
   const [screen, setScreen] = useState(1);
 
@@ -116,21 +122,102 @@ const CheckoutModal = ({
     }
   }, [orderDetails]);
 
-  const handleClick = (methodId: number) => {
+  // Frontend validation helper function
+  const validateCheckoutForm = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    const fieldErrors: any = {};
+
+    // Validate required fields
+    if (!order.placedByName?.trim()) {
+      errors.push('Customer name is required');
+      fieldErrors.placedByName = true;
+    }
+    if (!order.placedByPhoneNumber?.trim()) {
+      errors.push('Customer phone number is required');
+      fieldErrors.placedByPhoneNumber = true;
+    }
+    if (!order.quickResponseID?.trim()) {
+      errors.push('Table selection is required');
+      fieldErrors.quickResponseID = true;
+    }
+
+    // Validate selected items
+    if (!selectedItems || selectedItems.length === 0) {
+      errors.push('At least one item must be selected');
+    }
+
+    // Set validation errors for UI
+    setValidationErrors(fieldErrors);
+
+    return { isValid: errors.length === 0, errors };
+  };
+
+  // Handle checkout button click - validate first, then proceed
+  const handleCheckoutClick = () => {
+    // Validate form before proceeding
+    const validation = validateCheckoutForm();
+
+    if (!validation.isValid) {
+      // Show validation errors
+      // notify({
+      //   title: "Incomplete fields",
+      //   text: validation.errors.join(', '),
+      //   type: "error",
+      // });
+      return; // Stop here if validation fails
+    }
+
+    // If validation passes, show payment screen
+    setScreen(2);
+
+    // Then process the order in background (no await - let it run async)
+    if (id) {
+      updateOrder();
+    } else {
+      placeOrder();
+    }
+  };
+
+  const handleClick = async (methodId: number) => {
+    // Clear all screen tracking states after any payment action
+    const clearScreenStates = () => {
+      setScreen(1);
+      onOpenChange();
+      setOrderId("");
+      setReference("");
+      setSelectedPaymentMethod(0);
+    };
+
     if (methodId === 3) {
       // Pay Later logic with page detection
-      if (pathname === '/dashboard/orders') {
-        // Already on orders page - just close modal and refresh data
-        ordersCacheUtils.clearAll();
-        queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
-        queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-        queryClient.invalidateQueries({ queryKey: ['orders'] });
-        onOpenChange();
-      } else {
-        // Not on orders page - navigate there
-        router.push("/dashboard/orders");
+      setIsPayLaterLoading(true);
+      clearScreenStates(); // Clear states before navigation
+
+      try {
+        if (pathname === '/dashboard/orders') {
+          // Already on orders page - just close modal and refresh data
+          await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
+          await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+          await queryClient.invalidateQueries({ queryKey: ['orders'] });
+
+          // Call the refetch function to update the table immediately
+          if (onOrderSuccess) {
+            onOrderSuccess();
+          }
+
+          // Explicitly close the modal
+          onOpenChange(false);
+        } else {
+          // Not on orders page - navigate there
+          router.push("/dashboard/orders");
+        }
+      } catch (error) {
+        console.error('Error in Pay Later:', error);
+      } finally {
+        setIsPayLaterLoading(false);
       }
     } else if(screen === 3){
+      clearScreenStates(); // Clear states before navigation
       router.push("/dashboard/orders");
     }
     else {
@@ -169,6 +256,15 @@ const CheckoutModal = ({
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = event.target;
+
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name as keyof typeof validationErrors]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: false
+      }));
+    }
+
     if (name === "placedByPhoneNumber") {
       if (/^\d{0,11}$/.test(value)) {
         setOrder((prevOrder) => ({
@@ -293,49 +389,6 @@ const CheckoutModal = ({
 
   const placeOrder = async () => {
     setLoading(true);
-
-    // Debug logging for payload construction variables
-    console.log('Debug - placeOrder variables:', {
-      selectedItems: selectedItems?.length || 0,
-      order: order || 'undefined',
-      additionalCost,
-      additionalCostName,
-      finalTotalPrice,
-      businessId,
-      cooperateID
-    });
-
-    // Validate required variables before proceeding
-    if (!selectedItems || selectedItems.length === 0) {
-      setLoading(false);
-      notify({
-        title: "Validation Error",
-        text: "No items selected for the order",
-        type: "error",
-      });
-      return;
-    }
-
-    if (!order || !order.placedByName || !order.placedByPhoneNumber) {
-      setLoading(false);
-      notify({
-        title: "Validation Error",
-        text: "Missing required order information (name/phone)",
-        type: "error",
-      });
-      return;
-    }
-
-    if (typeof finalTotalPrice !== 'number' || finalTotalPrice <= 0) {
-      setLoading(false);
-      notify({
-        title: "Validation Error",
-        text: "Invalid total price calculated",
-        type: "error",
-      });
-      return;
-    }
-
     const transformedArray = selectedItems.map((item: any) => ({
       itemID: item.id,
       quantity: item.count,
@@ -356,9 +409,6 @@ const CheckoutModal = ({
       totalAmount: Math.round(finalTotalPrice * 100) / 100,
       orderDetails: transformedArray,
     };
-
-    // Ensure payload is properly constructed before proceeding
-    console.log('Debug - Constructed payload:', JSON.stringify(payload, null, 2));
 
     // Verify calculations
     const calculationVerification = verifyCalculation(selectedItems, additionalCost);
@@ -419,9 +469,8 @@ const CheckoutModal = ({
         type: "success",
       });
 
-      // Clear the global orders cache to force fresh data
+      // Clear cache and invalidate queries
       ordersCacheUtils.clearAll();
-
       await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
       await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -429,9 +478,14 @@ const CheckoutModal = ({
       // Force immediate refresh if on orders page
       if (pathname === '/dashboard/orders') {
         await queryClient.refetchQueries({ queryKey: ['orders'] });
+        // Call the refetch function to update the table immediately
+        if (onOrderSuccess) {
+          onOrderSuccess();
+        }
       }
 
-      setScreen(2);
+      // Stay on screen 2 (payment selection) - user needs to choose payment method
+      // Screen is already set to 2 by handleCheckoutClick
     } else if (hasDataProperty(data) && data.data?.error) {
       console.error('Order creation failed:', data.data.error);
       console.error('Failed payload:', payload);
@@ -447,19 +501,6 @@ const CheckoutModal = ({
         .join('; ');
       console.error('Validation errors:', data.errors);
       console.error('Failed payload:', payload);
-
-      // Additional debugging for empty payload
-      if (!payload || Object.keys(payload).length === 0) {
-        console.error('CRITICAL: Payload is empty or undefined!', {
-          payloadType: typeof payload,
-          payloadKeys: payload ? Object.keys(payload) : 'payload is falsy',
-          selectedItemsLength: selectedItems?.length,
-          orderExists: !!order,
-          finalTotalPrice,
-          additionalCost
-        });
-      }
-
       notify({
         title: "Validation Failed",
         text: validationErrors,
@@ -556,9 +597,8 @@ const CheckoutModal = ({
         type: "success",
       });
 
-      // Clear the global orders cache to force fresh data
+      // Clear cache and invalidate queries
       ordersCacheUtils.clearAll();
-
       await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
       await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
       await queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -566,9 +606,14 @@ const CheckoutModal = ({
       // Force immediate refresh if on orders page
       if (pathname === '/dashboard/orders') {
         await queryClient.refetchQueries({ queryKey: ['orders'] });
+        // Call the refetch function to update the table immediately
+        if (onOrderSuccess) {
+          onOrderSuccess();
+        }
       }
 
-      setScreen(2);
+      // Stay on screen 2 (payment selection) - user needs to choose payment method
+      // Screen is already set to 2 by handleCheckoutClick
     } else if (hasDataProperty(data) && data.data?.error) {
       console.error('Order update failed:', data.data.error);
       console.error('Failed payload:', payload);
@@ -638,13 +683,32 @@ const CheckoutModal = ({
           type: "success",
         });
 
-        // Clear the global orders cache to force fresh data
+        // Clear cache and invalidate queries
         ordersCacheUtils.clearAll();
-
         await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
         await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
         await queryClient.invalidateQueries({ queryKey: ['orders'] });
-        router.push("/dashboard/orders");
+
+        // Call the refetch function to update the table immediately
+        if (onOrderSuccess) {
+          onOrderSuccess();
+        }
+
+        // Clear all screen states after payment completion
+        setScreen(1);
+        setOrderId("");
+        setReference("");
+        setSelectedPaymentMethod(0);
+
+        // Page detection logic same as Pay Later
+        if (pathname === '/dashboard/orders') {
+          // Already on orders page - just close modal
+          onOpenChange(false);
+        } else {
+          // Not on orders page - navigate there
+          router.push("/dashboard/orders");
+        }
+
       } else if (hasDataProperty(data) && data.data?.error) {
         notify({
           title: "Error!",
@@ -702,6 +766,18 @@ const CheckoutModal = ({
     getQrID();
   }, []);
 
+  // Reset screen and states when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setScreen(1);
+      setOrderId("");
+      setReference("");
+      setSelectedPaymentMethod(0);
+      setIsLoading(false);
+      setIsPayLaterLoading(false);
+    }
+  }, [isOpen]);
+
   return (
     <div className="">
       <Modal
@@ -716,20 +792,25 @@ const CheckoutModal = ({
         hideCloseButton={true}
         size={screen === 1 ? "5xl" : "md"}
         isOpen={isOpen}
-        onOpenChange={() => {
-          setScreen(1);
-          onOpenChange();
-          setReference("");
-          setIsLoading(false);
-          setSelectedPaymentMethod(0);
-          setOrder({
-            placedByName: orderDetails?.placedByName || "",
-            placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
-            quickResponseID: orderDetails?.quickResponseID || "",
-            comment: orderDetails?.comment || "",
-          });
-          setAdditionalCost(orderDetails?.additionalCost || 0);
-          setAdditionalCostName(orderDetails?.additionalCostName || "");
+        onOpenChange={(open) => {
+          if (!open) {
+            // When closing the modal, reset all states
+            setScreen(1);
+            setReference("");
+            setIsLoading(false);
+            setIsPayLaterLoading(false);
+            setSelectedPaymentMethod(0);
+            setOrderId("");
+            setOrder({
+              placedByName: orderDetails?.placedByName || "",
+              placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
+              quickResponseID: orderDetails?.quickResponseID || "",
+              comment: orderDetails?.comment || "",
+            });
+            setAdditionalCost(orderDetails?.additionalCost || 0);
+            setAdditionalCostName(orderDetails?.additionalCostName || "");
+          }
+          onOpenChange(open);
         }}
       >
         <ModalContent>
@@ -759,7 +840,7 @@ const CheckoutModal = ({
                         <CustomButton
                           loading={loading}
                           disabled={loading}
-                          onClick={id ? updateOrder : placeOrder}
+                          onClick={handleCheckoutClick}
                           className="py-2 px-4 mb-0 text-white"
                           backgroundColor="bg-primaryColor"
                         >
@@ -808,7 +889,7 @@ const CheckoutModal = ({
                                         {item.unit && `(${item.unit})`}
                                       </span>
                                     </p>
-                                    {/* {item.packingCost && ( */}
+                                    {item.packingCost > 0 && (
                                       <Checkbox
                                         size="sm"
                                         defaultSelected={item.isPacked}
@@ -821,7 +902,7 @@ const CheckoutModal = ({
                                           Pack In
                                         </span>
                                       </Checkbox>
-                                    {/* )} */}
+                                    )}
                                     <Spacer y={2} />
                                     <div className="text-black md:w-[150px] md:hidden w-auto grid place-content-end">
                                       <h3 className="font-[600]">
@@ -860,18 +941,18 @@ const CheckoutModal = ({
                                 <div className=" md:w-[150px] hidden w-auto md:grid place-content-center">
                                   <div className="flex flex-col">
                                     <h3 className="font-semibold text-black">
-                                      {formatPrice(item?.price * item.count)}
+                                      {formatPrice(item?.price  * item.count)}
                                     </h3>
-                                    {/* {item.packingCost > 0 && ( */}
+                                    {item.packingCost > 0 && (
                                       <span
                                         className={cn(
                                           "text-xs text-gray-200",
                                           item.isPacked && "font-bold text-black"
                                         )}
                                       >
-                                        {formatPrice(item?.packingCost)}
+                                        {formatPrice(item.packingCost)}
                                       </span>
-                                     {/* )} */}
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -954,6 +1035,7 @@ const CheckoutModal = ({
                           type="text"
                           onChange={handleInputChange}
                           errorMessage={response?.errors?.placedByName?.[0]}
+                          isInvalid={!!validationErrors.placedByName}
                           value={order.placedByName}
                           name="placedByName"
                           label="Name"
@@ -965,6 +1047,7 @@ const CheckoutModal = ({
                           errorMessage={
                             response?.errors?.placedByPhoneNumber?.[0]
                           }
+                          isInvalid={!!validationErrors.placedByPhoneNumber}
                           onChange={handleInputChange}
                           value={order.placedByPhoneNumber}
                           name="placedByPhoneNumber"
@@ -975,6 +1058,7 @@ const CheckoutModal = ({
 
                         <SelectInput
                           errorMessage={response?.errors?.quickResponseID?.[0]}
+                          isInvalid={!!validationErrors.quickResponseID}
                           label="Select a table"
                           placeholder="Select table"
                           name="quickResponseID"
@@ -1021,18 +1105,31 @@ const CheckoutModal = ({
                     {paymentMethods.map((item) => (
                       <div
                         key={item.id}
-                        onClick={() => handleClick(item.id)}
-                        className={`flex  cursor-pointer items-center gap-2 p-4 rounded-lg justify-between  ${
+                        onClick={() => !isPayLaterLoading && handleClick(item.id)}
+                        className={`flex items-center gap-2 p-4 rounded-lg justify-between ${
                           selectedPaymentMethod === item.id
                             ? "bg-[#EAE5FF80]"
                             : ""
-                        } `}
+                        } ${
+                          isPayLaterLoading
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer"
+                        }`}
                       >
                         <div>
-                          <p className="font-semibold">{item.text}</p>
+                          <p className="font-semibold">
+                            {item.text}
+                            {item.id === 3 && isPayLaterLoading && (
+                              <span className="ml-2 text-sm">Processing...</span>
+                            )}
+                          </p>
                           <p className="text-sm text-grey500">{item.subText}</p>
                         </div>
-                        <MdKeyboardArrowRight />
+                        {item.id === 3 && isPayLaterLoading ? (
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primaryColor"></div>
+                        ) : (
+                          <MdKeyboardArrowRight />
+                        )}
                       </div>
                     ))}
                   </div>

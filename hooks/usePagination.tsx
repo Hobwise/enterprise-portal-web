@@ -113,8 +113,8 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     new Set(visibleColumn)
   );
   const [sortDescriptor, setSortDescriptor] = React.useState({
-    column: 'price',
-    direction: 'ascending',
+    column: 'dateCreated',
+    direction: 'descending',
   });
 
   // Memoize the renderItem function

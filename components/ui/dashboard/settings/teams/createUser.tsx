@@ -221,7 +221,7 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
                   />
                   <Spacer y={6} />
 
-                  {createFormData.role && (
+                  {createFormData.role === '1' && (
                     <SelectInput
                       errorMessage={response?.errors?.assignmentId?.[0]}
                       label='Assign Position'
