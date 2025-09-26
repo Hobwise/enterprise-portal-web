@@ -127,15 +127,34 @@ const CheckoutModal = ({
     const errors: string[] = [];
     const fieldErrors: any = {};
 
-    // Validate required fields
+    // Validate customer name
     if (!order.placedByName?.trim()) {
       errors.push('Customer name is required');
       fieldErrors.placedByName = true;
+    } else if (order.placedByName.trim().length < 2) {
+      errors.push('Customer name must be at least 2 characters long');
+      fieldErrors.placedByName = true;
+    } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
+      errors.push('Customer name can only contain letters and spaces');
+      fieldErrors.placedByName = true;
     }
+
+    // Validate phone number
     if (!order.placedByPhoneNumber?.trim()) {
       errors.push('Customer phone number is required');
       fieldErrors.placedByPhoneNumber = true;
+    } else {
+      const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
+      if (phoneNumber.length !== 11) {
+        errors.push('Phone number must be exactly 11 digits long');
+        fieldErrors.placedByPhoneNumber = true;
+      } else if (!/^[0-9]{11}$/.test(phoneNumber)) {
+        errors.push('Phone number can only contain digits');
+        fieldErrors.placedByPhoneNumber = true;
+      }
     }
+
+    // Validate table selection
     if (!order.quickResponseID?.trim()) {
       errors.push('Table selection is required');
       fieldErrors.quickResponseID = true;
@@ -144,6 +163,17 @@ const CheckoutModal = ({
     // Validate selected items
     if (!selectedItems || selectedItems.length === 0) {
       errors.push('At least one item must be selected');
+    } else {
+      // Validate each selected item
+      const invalidItems = selectedItems.filter((item: any) =>
+        !item.id ||
+        !item.itemName ||
+        item.count <= 0 ||
+        item.price <= 0
+      );
+      if (invalidItems.length > 0) {
+        errors.push('Some selected items have invalid data');
+      }
     }
 
     // Set validation errors for UI
@@ -159,11 +189,11 @@ const CheckoutModal = ({
 
     if (!validation.isValid) {
       // Show validation errors
-      // notify({
-      //   title: "Incomplete fields",
-      //   text: validation.errors.join(', '),
-      //   type: "error",
-      // });
+      notify({
+        title: "Validation Error",
+        text: validation.errors.join(', '),
+        type: "error",
+      });
       return; // Stop here if validation fails
     }
 
@@ -646,6 +676,17 @@ const CheckoutModal = ({
   };
 
   const finalizeOrder = async () => {
+    // Validate all form data before processing payment
+    const validation = validateCheckoutForm();
+    if (!validation.isValid) {
+      notify({
+        title: "Validation Error",
+        text: "Please fix all validation errors before confirming payment: " + validation.errors.join(', '),
+        type: "error",
+      });
+      return;
+    }
+
     if (!orderId) {
       notify({
         title: "Error!",
@@ -683,6 +724,16 @@ const CheckoutModal = ({
           type: "success",
         });
 
+        // Immediately close modal or navigate to prevent flash
+        if (pathname === '/dashboard/orders') {
+          // Already on orders page - just close modal
+          onOpenChange(false);
+        } else {
+          // Not on orders page - navigate there
+          router.push("/dashboard/orders");
+        }
+
+        // Background cleanup operations (users won't see these)
         // Clear cache and invalidate queries
         ordersCacheUtils.clearAll();
         await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
@@ -699,15 +750,6 @@ const CheckoutModal = ({
         setOrderId("");
         setReference("");
         setSelectedPaymentMethod(0);
-
-        // Page detection logic same as Pay Later
-        if (pathname === '/dashboard/orders') {
-          // Already on orders page - just close modal
-          onOpenChange(false);
-        } else {
-          // Not on orders page - navigate there
-          router.push("/dashboard/orders");
-        }
 
       } else if (hasDataProperty(data) && data.data?.error) {
         notify({
@@ -728,8 +770,6 @@ const CheckoutModal = ({
         text: "Network error. Please check your connection and try again.",
         type: "error",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -773,7 +813,6 @@ const CheckoutModal = ({
       setOrderId("");
       setReference("");
       setSelectedPaymentMethod(0);
-      setIsLoading(false);
       setIsPayLaterLoading(false);
     }
   }, [isOpen]);
@@ -797,7 +836,6 @@ const CheckoutModal = ({
             // When closing the modal, reset all states
             setScreen(1);
             setReference("");
-            setIsLoading(false);
             setIsPayLaterLoading(false);
             setSelectedPaymentMethod(0);
             setOrderId("");

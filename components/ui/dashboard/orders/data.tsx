@@ -7,6 +7,7 @@ const columns = [
   { name: "Phone number", uid: "placedByPhoneNumber", sortable: true },
   { name: "Payment", uid: "payment", sortable: true },
   { name: "Status", uid: "status", sortable: true },
+  { name: "Date Created", uid: "dateCreated", sortable: true },
   { name: "", uid: "actions", sortable: false },
 ];
 export const statusColorMap: Record<
