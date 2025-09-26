@@ -130,9 +130,27 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   // Use menu hook to get current menu items with up-to-date packing costs
   const { data: menuData, isLoading: isLoadingMenu } = useMenu();
 
+  // Check if we should show loading state
+  useEffect(() => {
+    // If modal just opened and we're waiting for data
+    if (isOpen && orderFromProp?.id && !isLoadingOrderDetails && !isLoadingMenu) {
+      // If we have both successful status and menu data but still processing,
+      // it means data is ready and we should complete processing
+      if (isSuccessful && menuData && !isDataProcessingComplete && !fullOrderData) {
+        // Data fetch completed but no order details returned
+        setIsDataProcessingComplete(true);
+      }
+    }
+  }, [isOpen, orderFromProp, isLoadingOrderDetails, isLoadingMenu, isSuccessful, menuData, isDataProcessingComplete, fullOrderData]);
 
   // Process order details when they're loaded
   useEffect(() => {
+    // Only process if modal is open and we have the order prop
+    if (!isOpen || !orderFromProp?.id) {
+      return;
+    }
+
+    // Handle successful data load
     if (fullOrderData && isSuccessful && menuData) {
       // Validate that we have order details
       if (!fullOrderData.orderDetails || !Array.isArray(fullOrderData.orderDetails)) {
@@ -183,13 +201,18 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       setSelectedItems(() => updatedArray);
       setIsDataProcessingComplete(true);
     }
+    // If data is already loaded (cached) and successful, mark as complete
+    else if (isSuccessful && !isLoadingOrderDetails && !fullOrderData && menuData) {
+      // No order details available but query succeeded - mark as complete
+      setIsDataProcessingComplete(true);
+    }
 
     // Handle error case
     if (error) {
       toast.error("Failed to load order details");
       setIsDataProcessingComplete(true);
     }
-  }, [fullOrderData, isSuccessful, error, menuData]);
+  }, [fullOrderData, isSuccessful, error, menuData, isOpen, orderFromProp, isLoadingOrderDetails]);
 
   // Increment handler
   const handleIncrement = useCallback(
@@ -276,16 +299,18 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   // Reset state and cleanup when modal closes
   useEffect(() => {
     if (!isOpen) {
+      // Reset all state to initial values
       setSelectedItems([]);
       setOrderFromProp(null);
       setStoredOrderData(null);
       setIsDataProcessingComplete(false);
+      setIsUpdating(false);
+      setIsSaving(false);
       // Clear any pending timer
       if (updateTimerRef.current) {
         clearTimeout(updateTimerRef.current);
         updateTimerRef.current = null;
       }
-      setIsUpdating(false);
     }
   }, [isOpen]);
 

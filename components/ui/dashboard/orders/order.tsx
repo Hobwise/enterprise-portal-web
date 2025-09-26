@@ -143,10 +143,10 @@ const getFilteredOrderDetails = (
   let allOrders: OrderItem[] = [];
 
   // Check nested data structure first (API response format)
-  if (orders.data && orders.data.payments && Array.isArray(orders.data.payments)) {
-    allOrders = orders.data.payments;
-  } else if (orders.payments && Array.isArray(orders.payments)) {
-    allOrders = orders.payments;
+  if (orders.data && orders.data.orders && Array.isArray(orders.data.orders)) {
+    allOrders = orders.data.orders;
+  } else if (orders.orders && Array.isArray(orders.orders)) {
+    allOrders = orders.orders;
   } else if (orders.data && Array.isArray(orders.data)) {
     allOrders = orders.data;
   } else if (Array.isArray(orders)) {
@@ -290,8 +290,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
       }
 
       // Additional fallback: check if server response has payments array (some endpoints use this)
-      if (totalCount === 0 && currentCategoryData.payments && Array.isArray(currentCategoryData.payments)) {
-        totalCount = currentCategoryData.payments.length;
+      if (totalCount === 0 && currentCategoryData.orders && Array.isArray(currentCategoryData.orders)) {
+        totalCount = currentCategoryData.orders.length;
       }
 
       // Calculate pagination properties with proper bounds checking
