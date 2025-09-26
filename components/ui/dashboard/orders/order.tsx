@@ -185,6 +185,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   orders, 
   categories, 
   searchQuery, 
+  
   refetch, 
   isLoading = false,
   isPending = false,
@@ -323,7 +324,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
     headerColumns,
     setSelectedKeys,
     selectedKeys,
-    sortDescriptor: defaultSortDescriptor,
+    sortDescriptor,
     setSortDescriptor,
     filterValue,
     statusFilter,
@@ -338,14 +339,6 @@ const OrdersList: React.FC<OrdersListProps> = ({
     INITIAL_VISIBLE_COLUMNS
   );
 
-  // Override default sort descriptor for orders to show newest first
-  const sortDescriptor = React.useMemo(() => {
-    return {
-      column: 'dateCreated',
-      direction: 'descending'
-    };
-  }, []);
-
   // Sort the orders based on sortDescriptor (server handles pagination)
   const sortedOrders = React.useMemo(() => {
     if (!orderDetails || orderDetails.length === 0) return orderDetails;
@@ -358,6 +351,14 @@ const OrdersList: React.FC<OrdersListProps> = ({
       let cmp = 0;
       if (first === null || first === undefined) cmp = 1;
       else if (second === null || second === undefined) cmp = -1;
+      else if (typeof first === 'string' && typeof second === 'string') {
+        // Special handling for date strings
+        if (sortDescriptor.column === 'dateCreated') {
+          cmp = new Date(first).getTime() - new Date(second).getTime();
+        } else {
+          cmp = first.localeCompare(second);
+        }
+      }
       else if (first < second) cmp = -1;
       else if (first > second) cmp = 1;
 
@@ -628,7 +629,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
         topContent={topContent}
         topContentPlacement='outside'
         onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-        onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
+        onSortChange={(descriptor: SortDescriptor) => {
+          setSortDescriptor({
+            column: String(descriptor.column),
+            direction: descriptor.direction as string
+          });
+        }}
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
