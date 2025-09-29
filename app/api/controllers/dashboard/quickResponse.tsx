@@ -21,7 +21,7 @@ export async function getQRByBusiness(
   businessId: string,
   cooperateID?: string
 ) {
-  const headers = businessId ? { businessId, cooperateID } : {};
+  const headers = businessId ? { businessId, cooperateId: cooperateID } : {};
 
   try {
     const data = await api.get(DASHBOARD.qrAllBy, {

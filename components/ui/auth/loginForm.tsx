@@ -39,13 +39,6 @@ const LoginForm = () => {
   });
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastSubmitTime = useRef<number>(0);
-  
-  // Prefetch routes on component mount for faster navigation
-  useEffect(() => {
-    router.prefetch('/dashboard');
-    router.prefetch('/auth/select-business');
-    router.prefetch('/auth/business-information');
-  }, [router]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -120,12 +113,19 @@ const LoginForm = () => {
                                 user?.forcePasswordChange ||
                                 user?.requirePasswordChange;
 
-      // Determine redirect path based on business count and password status
+      // Determine redirect path based on user assignment, business count and password status
       let redirectPath: string;
+
+      // Check if user is a Point of Sales user
+      const isPOSUser = decryptedData.data.primaryAssignment === "Point of Sales";
+      console.log('isPOSUser:', isPOSUser, 'primaryAssignment:', decryptedData.data.primaryAssignment);
 
       if (needsPasswordChange) {
         // User needs to change password - redirect to password management
         redirectPath = "/dashboard/settings/password-management";
+      } else if (isPOSUser) {
+        // Point of Sales user - redirect to POS page
+        redirectPath = "/pos";
       } else if (!businesses || businesses.length === 0) {
         // No businesses - go to business information setup
         redirectPath = "/auth/business-information";
@@ -137,6 +137,9 @@ const LoginForm = () => {
         redirectPath = "/auth/select-business";
       }
 
+      // Clear loading state first
+      setLoading(false);
+
       // Only show success notification if NOT redirecting to password change
       if (!needsPasswordChange) {
         notify({
@@ -146,21 +149,17 @@ const LoginForm = () => {
         });
       }
 
-      // Navigate immediately without await
-      router.replace(redirectPath);
-      router.refresh(); // Force immediate update
-
-      // Reset loading state after navigation starts
-      setTimeout(() => setLoading(false), 100);
+      // Navigate to the appropriate page
+      router.push(redirectPath);
 
     } catch (error) {
       console.error("Error handling login success:", error);
+      setLoading(false);
       notify({
         title: "Login Error",
         text: "Failed to process login data. Please try again.",
         type: "error",
       });
-      setLoading(false);
     }
   };
 
@@ -175,6 +174,8 @@ const LoginForm = () => {
         type: "warning",
       });
 
+      // Clear loading state before navigating
+      setLoading(false);
       // Navigate immediately for better UX with proper parameter formatting
       router.push(`/auth/forget-password?email=${encodeURIComponent(loginFormData.email)}&screen=2&forced=true`);
       return;
@@ -199,22 +200,21 @@ const LoginForm = () => {
       text: errorMessage,
       type: "error",
     });
+    setLoading(false);
   };
 
   const submitFormData = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Prevent multiple submissions with debounce (500ms minimum between clicks)
-    const now = Date.now();
-    if (loading || (now - lastSubmitTime.current < 500)) {
+    // Prevent multiple submissions
+    if (loading) {
       return;
     }
-    lastSubmitTime.current = now;
 
     // Set loading state immediately
     setLoading(true);
     setErrors({});
-    
+
     // Validate form
     if (!validateForm()) {
       setLoading(false);
@@ -250,6 +250,7 @@ const LoginForm = () => {
           text: serverErrors.join(". "),
           type: "error",
         });
+        setLoading(false);
         return;
       }
 
@@ -258,7 +259,7 @@ const LoginForm = () => {
         const decryptedData = decryptPayload(response.data.response);
         console.log('Login decryptedData:', decryptedData);
         if (decryptedData?.data) {
-         await handleLoginSuccess(decryptedData);
+         handleLoginSuccess(decryptedData);
         
         } else if (decryptedData?.error) {
           handleLoginError(decryptedData);
@@ -290,6 +291,7 @@ const LoginForm = () => {
             text: response.response.data.message || response.response.data.error || "Authentication failed",
             type: "error",
           });
+          setLoading(false);
         } else {
           throw new Error("Server error occurred");
         }
@@ -301,6 +303,7 @@ const LoginForm = () => {
           text: response.message || "An unexpected error occurred",
           type: "error",
         });
+        setLoading(false);
       }
       // Handle unexpected response format
       else {
@@ -310,6 +313,7 @@ const LoginForm = () => {
           text: "Unable to process server response. Please try again.",
           type: "error",
         });
+        setLoading(false);
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -340,12 +344,14 @@ const LoginForm = () => {
     }
   };
 
-  // Prefetch routes and cleanup on unmount
+  // Prefetch routes on component mount for faster navigation
   useEffect(() => {
-    // Prefetch common routes for faster navigation
     router.prefetch('/dashboard');
+    router.prefetch('/pos');
     router.prefetch('/auth/select-business');
     router.prefetch('/auth/business-information');
+    router.prefetch('/auth/forget-password');
+    router.prefetch('/dashboard/settings/password-management');
 
     return () => {
       // Cancel any pending requests when component unmounts
@@ -354,21 +360,6 @@ const LoginForm = () => {
       }
     };
   }, [router]);
-  
-  // Optional: Add keyboard shortcut for submit (Enter key)
-  useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' && !loading && loginFormData.email && loginFormData.password) {
-        const form = document.querySelector('form');
-        if (form) {
-          form.requestSubmit();
-        }
-      }
-    };
-
-    window.addEventListener('keypress', handleKeyPress);
-    return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [loading, loginFormData]);
 
   return (
     <form onSubmit={submitFormData} autoComplete="off" noValidate>

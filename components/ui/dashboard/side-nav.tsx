@@ -40,12 +40,16 @@ import { SideNavItem } from "./types";
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
   const [isMounted, setIsMounted] = useState(false);
+  const [isPOSUser, setIsPOSUser] = useState(false);
 
   const { data: businessDetails, isLoading } = useGetBusiness();
   const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
 
   useEffect(() => {
     setIsMounted(true);
+    // Check if user is POS user after component mounts
+    const userInfo = getJsonItemFromLocalStorage('userInformation');
+    setIsPOSUser(userInfo?.primaryAssignment === "Point of Sales");
   }, []);
 
   const {
@@ -135,8 +139,25 @@ const SideNav = () => {
     subscription?.planCapabilities?.canAccessMultipleLocations;
 
   const filteredItems = useMemo(() => {
-    if (isPermissionsLoading) return [];
+    if (isPermissionsLoading || !isMounted) return [];
 
+    // If POS user, show only POS and Orders navigation
+    if (isPOSUser) {
+      return [
+        {
+          title: 'POS',
+          path: '/pos',
+          icon: SIDENAV_ITEMS.find(item => item.title === 'Orders')?.icon,
+        },
+        {
+          title: 'Orders',
+          path: '/dashboard/orders',
+          icon: SIDENAV_ITEMS.find(item => item.title === 'Orders')?.icon,
+        }
+      ];
+    }
+
+    // Regular filtering for non-POS users
     return SIDENAV_ITEMS.filter((item) => {
       // Early return if not role 1 (admin permissions)
       if (role !== 1) return true;
@@ -156,7 +177,7 @@ const SideNav = () => {
       const hasPermission = permissionMap[item.title];
       return hasPermission !== false; // Allow if permission is true or undefined
     });
-  }, [isPermissionsLoading, role, userRolePermissions]);
+  }, [isPermissionsLoading, role, userRolePermissions, isMounted, isPOSUser]);
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
@@ -164,7 +185,7 @@ const SideNav = () => {
         <div className="flex-shrink-0">
           <Link
             prefetch={true}
-            href="/dashboard"
+            href={isMounted && isPOSUser ? "/pos" : "/dashboard"}
             className="flex flex-row items-center justify-center md:justify-start md:px-8 md:py-10 w-full"
           >
             <CompanyLogo
