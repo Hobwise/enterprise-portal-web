@@ -91,13 +91,13 @@ const CheckoutModal = ({
   // Use cooperateID prop if provided, otherwise get from userInformation
   const effectiveCooperateID = cooperateID || userInformation?.cooperateID;
 
-  // Debug logging for cooperateID
-  console.log('CheckoutModal cooperateID debug:', {
-    propCooperateID: cooperateID,
-    userCooperateID: userInformation?.cooperateID,
-    effectiveCooperateID: effectiveCooperateID,
-    businessId: businessId || businessInformation[0]?.businessId
-  });
+  // Debug logging for cooperateID (can be removed in production)
+  // console.log('CheckoutModal cooperateID debug:', {
+  //   propCooperateID: cooperateID,
+  //   userCooperateID: userInformation?.cooperateID,
+  //   effectiveCooperateID: effectiveCooperateID,
+  //   businessId: businessId || businessInformation[0]?.businessId
+  // });
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -553,7 +553,7 @@ const CheckoutModal = ({
     try {
       const transformedArray = selectedItems.map((item: any) => {
         const finalItemID = item.itemID || item.id;
-        console.log(`Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
+        // console.log(`Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
         return {
           itemID: finalItemID,  // Use itemID if available, fallback to id
           quantity: item.count,
@@ -738,7 +738,7 @@ const CheckoutModal = ({
     setLoading(true);
     const transformedArray = selectedItems.map((item: any) => {
       const finalItemID = item.itemID || item.id;
-      console.log(`Update Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
+      // console.log(`Update Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
       return {
         itemID: finalItemID,  // Use itemID if available, fallback to id
         quantity: item.count,
