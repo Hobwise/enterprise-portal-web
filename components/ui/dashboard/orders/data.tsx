@@ -14,8 +14,8 @@ export const statusColorMap: Record<
   number,
   "warning" | "success" | "danger" | "secondary"
 > = {
-  0: "warning",
-  1: "success",
+  0: "success",
+  1: "warning",
   2: "danger",
   3: "secondary",
 };

@@ -115,7 +115,8 @@ api.interceptors.request.use(async (config) => {
   const token = userData?.token;
   const cooperateID = userData?.cooperateID;
   const userId = userData?.id;
-  const businessId = business?.businessId;
+  // Fix: business is an array, so we need to access the first element
+  const businessId = business?.[0]?.businessId;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

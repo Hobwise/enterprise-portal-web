@@ -84,9 +84,20 @@ const CheckoutModal = ({
   cooperateID,
   handlePackingCost,
 }: any) => {
-  
+
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
+
+  // Use cooperateID prop if provided, otherwise get from userInformation
+  const effectiveCooperateID = cooperateID || userInformation?.cooperateID;
+
+  // Debug logging for cooperateID
+  console.log('CheckoutModal cooperateID debug:', {
+    propCooperateID: cooperateID,
+    userCooperateID: userInformation?.cooperateID,
+    effectiveCooperateID: effectiveCooperateID,
+    businessId: businessId || businessInformation[0]?.businessId
+  });
   const router = useRouter();
   const pathname = usePathname();
   const queryClient = useQueryClient();
@@ -102,6 +113,7 @@ const CheckoutModal = ({
   }>({});
   const [reference, setReference] = useState("");
   const [screen, setScreen] = useState(1);
+  const [mobileSubStep, setMobileSubStep] = useState<'1A' | '1B' | '1C'>('1A');
 
   const [qr, setQr] = useState([]);
   const [order, setOrder] = useState<Order>({
@@ -180,6 +192,64 @@ const CheckoutModal = ({
     setValidationErrors(fieldErrors);
 
     return { isValid: errors.length === 0, errors };
+  };
+
+  // Validate customer information step (1B to 1C)
+  const validateCustomerInfo = (): { isValid: boolean; errors: string[] } => {
+    const errors: string[] = [];
+    const fieldErrors: any = {};
+
+    // Validate customer name
+    if (!order.placedByName?.trim()) {
+      errors.push('Customer name is required');
+      fieldErrors.placedByName = true;
+    } else if (order.placedByName.trim().length < 2) {
+      errors.push('Customer name must be at least 2 characters long');
+      fieldErrors.placedByName = true;
+    } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
+      errors.push('Customer name can only contain letters and spaces');
+      fieldErrors.placedByName = true;
+    }
+
+    // Validate phone number
+    if (!order.placedByPhoneNumber?.trim()) {
+      errors.push('Customer phone number is required');
+      fieldErrors.placedByPhoneNumber = true;
+    } else {
+      const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
+      if (phoneNumber.length !== 11) {
+        errors.push('Phone number must be exactly 11 digits long');
+        fieldErrors.placedByPhoneNumber = true;
+      } else if (!/^[0-9]{11}$/.test(phoneNumber)) {
+        errors.push('Phone number can only contain digits');
+        fieldErrors.placedByPhoneNumber = true;
+      }
+    }
+
+    // Validate table selection
+    if (!order.quickResponseID?.trim()) {
+      errors.push('Table selection is required');
+      fieldErrors.quickResponseID = true;
+    }
+
+    // Set validation errors for UI
+    setValidationErrors(fieldErrors);
+
+    return { isValid: errors.length === 0, errors };
+  };
+
+  // Handle mobile sub-step navigation with validation
+  const handleMobileNavigation = (targetStep: '1A' | '1B' | '1C') => {
+    // If moving from 1B to 1C, validate customer information
+    if (mobileSubStep === '1B' && targetStep === '1C') {
+      const validation = validateCustomerInfo();
+      if (!validation.isValid) {
+        return; // Stop navigation if validation fails
+      }
+    }
+
+    // If validation passes or moving to previous steps, navigate
+    setMobileSubStep(targetStep);
   };
 
   // Handle checkout button click - validate first, then proceed
@@ -269,19 +339,37 @@ const CheckoutModal = ({
 
   // Calculate detailed total price directly from selectedItems to ensure accuracy
   const calculateDetailedTotalPrice = () => {
-    return selectedItems.reduce((acc: number, item: any) => {
-      const itemTotal = item.price * item.count;
+    let itemsSubtotal = 0;
+    let packingSubtotal = 0;
+
+    selectedItems.forEach((item: any) => {
+      // Round each item calculation to prevent floating point errors
+      const itemPrice = Number(item.price) || 0;
+      const itemCount = Number(item.count) || 0;
+      const itemTotal = Math.round(itemPrice * itemCount * 100) / 100;
+
+      itemsSubtotal += itemTotal;
+
       // Add packing cost only if item is packed
-      const packingTotal = item.isPacked
-        ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
-        : 0;
-      return acc + itemTotal + packingTotal;
-    }, 0);
+      if (item.isPacked && item.packingCost > 0) {
+        const packingCostPerItem = Number(item.packingCost) || 0;
+        const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
+        packingSubtotal += packingTotal;
+      }
+    });
+
+    // Round subtotals
+    itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
+    packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+
+    return itemsSubtotal + packingSubtotal;
   };
 
   const subtotal = calculateDetailedTotalPrice();
-  const vatAmount = subtotal * (7.5 / 100);
-  const finalTotalPrice = subtotal + vatAmount + (additionalCost || 0);
+  // Round VAT calculation to 2 decimal places
+  const vatAmount = Math.round(subtotal * 7.5) / 100;
+  // Round final total to 2 decimal places
+  const finalTotalPrice = Math.round((subtotal + vatAmount + (Number(additionalCost) || 0)) * 100) / 100;
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -318,46 +406,58 @@ const CheckoutModal = ({
     errors: string[];
   } => {
     const errors: string[] = [];
-    let subtotalCalc = 0;
-    let packingCalc = 0;
+    let itemsSubtotal = 0;
+    let packingSubtotal = 0;
 
     try {
       items.forEach((item, index) => {
-        if (!item.id || !item.price || !item.count) {
+        if (!item.id || item.price === undefined || item.count === undefined) {
           errors.push(`Item ${index + 1}: Missing required data (id, price, or count)`);
           return;
         }
 
-        const itemTotal = item.price * item.count;
-        const itemPacking = item.isPacked
-          ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
-          : 0;
+        // Use same calculation logic as main function
+        const itemPrice = Number(item.price) || 0;
+        const itemCount = Number(item.count) || 0;
+        const itemTotal = Math.round(itemPrice * itemCount * 100) / 100;
 
-        subtotalCalc += itemTotal;
-        packingCalc += itemPacking;
+        itemsSubtotal += itemTotal;
+
+        // Add packing cost only if item is packed
+        if (item.isPacked && item.packingCost > 0) {
+          const packingCostPerItem = Number(item.packingCost) || 0;
+          const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
+          packingSubtotal += packingTotal;
+        }
 
         // Log each item calculation
         console.log(`Item ${index + 1} (${item.itemName || item.id}):`, {
-          price: item.price,
-          count: item.count,
+          price: itemPrice,
+          count: itemCount,
           itemTotal,
           isPacked: item.isPacked,
           packingCost: item.packingCost,
-          itemPacking
+          packingTotal: item.isPacked ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) / 100 : 0
         });
       });
 
-      const baseSubtotal = subtotalCalc + packingCalc;
-      const vatCalc = baseSubtotal * 0.075;
-      const finalCalc = baseSubtotal + vatCalc + addCost;
+      // Round subtotals
+      itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
+      packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+
+      const baseSubtotal = itemsSubtotal + packingSubtotal;
+      // Use same VAT calculation as main function
+      const vatCalc = Math.round(baseSubtotal * 7.5) / 100;
+      const additionalCostRounded = Math.round((Number(addCost) || 0) * 100) / 100;
+      const finalCalc = Math.round((baseSubtotal + vatCalc + additionalCostRounded) * 100) / 100;
 
       const breakdown = {
-        itemsSubtotal: subtotalCalc,
-        packingCosts: packingCalc,
+        itemsSubtotal,
+        packingCosts: packingSubtotal,
         baseSubtotal,
         vatAmount: vatCalc,
-        additionalCost: addCost,
-        finalTotal: Math.round(finalCalc * 100) / 100
+        additionalCost: additionalCostRounded,
+        finalTotal: finalCalc
       };
 
       return {
@@ -418,27 +518,73 @@ const CheckoutModal = ({
   };
 
   const placeOrder = async () => {
-    setLoading(true);
-    const transformedArray = selectedItems.map((item: any) => ({
-      itemID: item.id,
-      quantity: item.count,
-      unitPrice: item.price,
-      isVariety: item.isVariety,
-      isPacked: item.isPacked,
-      packingCost: item?.packingCost || 0,
-    }));
-
-    const payload = {
-      status: 0,
-      placedByName: order.placedByName,
-      placedByPhoneNumber: order.placedByPhoneNumber,
-      quickResponseID: order.quickResponseID,
-      comment: order.comment,
+    // Debug log at start
+    console.log('PlaceOrder called with:', {
+      selectedItems: selectedItems?.length || 0,
+      order,
       additionalCost,
-      additionalCostName,
-      totalAmount: Math.round(finalTotalPrice * 100) / 100,
-      orderDetails: transformedArray,
-    };
+      finalTotalPrice
+    });
+
+    // Safety check: Ensure we have required data
+    if (!selectedItems || selectedItems.length === 0) {
+      notify({
+        title: "Error",
+        text: "No items selected for checkout",
+        type: "error",
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!order.placedByName || !order.placedByPhoneNumber || !order.quickResponseID) {
+      notify({
+        title: "Error",
+        text: "Please fill in all required fields",
+        type: "error",
+      });
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    let payload = {};
+    try {
+      const transformedArray = selectedItems.map((item: any) => {
+        const finalItemID = item.itemID || item.id;
+        console.log(`Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
+        return {
+          itemID: finalItemID,  // Use itemID if available, fallback to id
+          quantity: item.count,
+          unitPrice: item.price,
+          isVariety: item.isVariety,
+          isPacked: item.isPacked,
+          packingCost: item?.packingCost || 0,
+        };
+      });
+
+      payload = {
+        status: 0,
+        placedByName: order.placedByName,
+        placedByPhoneNumber: order.placedByPhoneNumber,
+        quickResponseID: order.quickResponseID,
+        comment: order.comment,
+        additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
+        additionalCostName: additionalCostName || '',
+        totalAmount: finalTotalPrice,  // Already rounded in calculation
+        orderDetails: transformedArray,
+      };
+    } catch (error) {
+      console.error('Error building payload:', error);
+      notify({
+        title: "Error",
+        text: "Failed to prepare order data",
+        type: "error",
+      });
+      setLoading(false);
+      return;
+    }
 
     // Verify calculations
     const calculationVerification = verifyCalculation(selectedItems, additionalCost);
@@ -487,7 +633,30 @@ const CheckoutModal = ({
     console.log('Verified Calculation:', calculationVerification.breakdown);
 
     const id = businessId ? businessId : businessInformation[0]?.businessId;
-    const data = await createOrder(id, payload, cooperateID);
+
+    console.log('Calling createOrder with:', {
+      id,
+      cooperateID: effectiveCooperateID,
+      payloadSize: JSON.stringify(payload).length
+    });
+
+    const data = await createOrder(id, payload, effectiveCooperateID);
+
+    console.log('CreateOrder response:', data);
+
+    // Handle undefined response
+    if (!data) {
+      console.error('CreateOrder returned undefined');
+      console.error('Request details:', { id, cooperateID: effectiveCooperateID, payload });
+      notify({
+        title: "Error!",
+        text: "Failed to create order. Please check your connection and try again.",
+        type: "error",
+      });
+      setLoading(false);
+      return;
+    }
+
     setResponse(data as ApiResponse);
     setLoading(false);
 
@@ -547,15 +716,38 @@ const CheckoutModal = ({
     }
   };
   const updateOrder = async () => {
+    // Safety check: Ensure we have required data
+    if (!selectedItems || selectedItems.length === 0) {
+      notify({
+        title: "Error",
+        text: "No items selected for checkout",
+        type: "error",
+      });
+      return;
+    }
+
+    if (!order.placedByName || !order.placedByPhoneNumber || !order.quickResponseID) {
+      notify({
+        title: "Error",
+        text: "Please fill in all required fields",
+        type: "error",
+      });
+      return;
+    }
+
     setLoading(true);
-    const transformedArray = selectedItems.map((item: any) => ({
-      itemID: item.id,
-      quantity: item.count,
-      unitPrice: item.price,
-      isVariety: item.isVariety,
-      isPacked: item.isPacked,
-      packingCost: item.packingCost || 0,
-    }));
+    const transformedArray = selectedItems.map((item: any) => {
+      const finalItemID = item.itemID || item.id;
+      console.log(`Update Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
+      return {
+        itemID: finalItemID,  // Use itemID if available, fallback to id
+        quantity: item.count,
+        unitPrice: item.price,
+        isVariety: item.isVariety,
+        isPacked: item.isPacked,
+        packingCost: item.packingCost || 0,
+      };
+    });
 
     const payload = {
       status: 0,
@@ -563,9 +755,9 @@ const CheckoutModal = ({
       placedByPhoneNumber: order.placedByPhoneNumber,
       quickResponseID: order.quickResponseID,
       comment: order.comment,
-      totalAmount: Math.round(finalTotalPrice * 100) / 100,
-      additionalCost,
-      additionalCostName,
+      totalAmount: finalTotalPrice,  // Already rounded in calculation
+      additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
+      additionalCostName: additionalCostName || '',
       orderDetails: transformedArray,
     };
 
@@ -776,7 +968,7 @@ const CheckoutModal = ({
   const getQrID = async () => {
     const id = businessId ? businessId : businessInformation[0]?.businessId;
 
-    const data = await getQRByBusiness(id, cooperateID);
+    const data = await getQRByBusiness(id, effectiveCooperateID);
 
     if (data?.data?.isSuccessful) {
       let response = data?.data?.data;
@@ -822,10 +1014,11 @@ const CheckoutModal = ({
       <Modal
         classNames={{
           base: screen === 1
-            ? "md:overflow-none overflow-scroll h-full md:h-auto max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px]"
-            : "md:overflow-none overflow-scroll h-full md:h-auto max-w-[90vw] md:max-w-[500px]",
-          body: "px-1 md:px-6",
-          header: "px-3 md:px-6",
+            ? "md:overflow-none overflow-hidden  md:h-auto max-w-[100vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] m-0 md:m-auto"
+            : "md:overflow-none overflow-hidden  md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto",
+          body: "px-4 py-2 md:px-6 flex-1 overflow-y-auto",
+          header: "px-4 py-3 md:px-6 flex-shrink-0",
+          wrapper: "items-end md:items-center",
         }}
         isDismissable={false}
         hideCloseButton={true}
@@ -835,6 +1028,7 @@ const CheckoutModal = ({
           if (!open) {
             // When closing the modal, reset all states
             setScreen(1);
+            setMobileSubStep('1A');
             setReference("");
             setIsPayLaterLoading(false);
             setSelectedPaymentMethod(0);
@@ -856,44 +1050,116 @@ const CheckoutModal = ({
             <>
               {screen === 1 && (
                 <>
-                  <ModalHeader className="flex flex-col mt-5 gap-1">
-                    <div className="flex flex-row flex-wrap  justify-between">
-                      <div>
-                        <div className="text-[24px] leading-8 font-semibold">
-                          <span className="text-black">Confirm order</span>
-                        </div>
-                        <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
-                          Confirm order before checkout
-                        </p>
-                      </div>
-
-                      <div className="gap-3 flex ">
-                        <CustomButton
-                          onClick={onOpenChange}
-                          className="py-2 px-4 mb-0 bg-white border border-primaryGrey"
-                        >
-                          Close
-                        </CustomButton>
-
-                        <CustomButton
-                          loading={loading}
-                          disabled={loading}
-                          onClick={handleCheckoutClick}
-                          className="py-2 px-4 mb-0 text-white"
-                          backgroundColor="bg-primaryColor"
-                        >
-                          <div className="flex gap-2 items-center justify-center">
-                            <p>Checkout {formatPrice(finalTotalPrice)} </p>
-                            <HiArrowLongLeft className="text-[22px] rotate-180" />
+                  {/* Desktop Layout */}
+                  <div className="hidden md:block">
+                    <ModalHeader className="flex flex-col mt-5 gap-1">
+                      <div className="flex flex-row flex-wrap  justify-between">
+                        <div>
+                          <div className="text-[24px] leading-8 font-semibold">
+                            <span className="text-black">Confirm order</span>
                           </div>
-                        </CustomButton>
+                          <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
+                            Confirm order before checkout
+                          </p>
+                        </div>
+
+                        <div className="gap-3 flex ">
+                          <CustomButton
+                            onClick={onOpenChange}
+                            className="py-2 px-4 mb-0 bg-white border border-primaryGrey"
+                          >
+                            Close
+                          </CustomButton>
+
+                          <CustomButton
+                            loading={loading}
+                            disabled={loading}
+                            onClick={handleCheckoutClick}
+                            className="py-2 px-4 mb-0 text-white"
+                            backgroundColor="bg-primaryColor"
+                          >
+                            <div className="flex gap-2 items-center justify-center">
+                              <p>Checkout {formatPrice(finalTotalPrice)} </p>
+                              <HiArrowLongLeft className="text-[22px] rotate-180" />
+                            </div>
+                          </CustomButton>
+                        </div>
                       </div>
-                    </div>
-                    <Divider className="bg-primaryGrey" />
-                  </ModalHeader>
-                  <ModalBody>
-                    <div className="flex lg:flex-row flex-col gap-3 mb-4">
-                      <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
+                      <Divider className="bg-primaryGrey" />
+                    </ModalHeader>
+                  </div>
+
+                  {/* Mobile Layout */}
+                  <div className="block md:hidden">
+                    {mobileSubStep === '1A' && (
+                      <ModalHeader className="flex flex-col gap-3 bg-white border-b border-gray-200 sticky bottom-0 z-10">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-xl font-semibold text-black">
+                              Review Items
+                            </div>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Step 1 of 3
+                            </p>
+                          </div>
+                          <CustomButton
+                            onClick={onOpenChange}
+                            className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
+                          >
+                            Close
+                          </CustomButton>
+                        </div>
+                      </ModalHeader>
+                    )}
+
+                    {mobileSubStep === '1B' && (
+                      <ModalHeader className="flex flex-col gap-3 bg-white border-b border-gray-200 sticky top-0 z-10">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-xl font-semibold text-black">
+                              Customer Details
+                            </div>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Step 2 of 3
+                            </p>
+                          </div>
+                          <CustomButton
+                            onClick={() => handleMobileNavigation('1A')}
+                            className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
+                          >
+                            Back
+                          </CustomButton>
+                        </div>
+                      </ModalHeader>
+                    )}
+
+                    {mobileSubStep === '1C' && (
+                      <ModalHeader className="flex flex-col gap-3 bg-white border-b border-gray-200 sticky top-0 z-10">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-xl font-semibold text-black">
+                              Review Order
+                            </div>
+                            <p className="text-sm text-gray-500 mt-1">
+                              Step 3 of 3
+                            </p>
+                          </div>
+                          <CustomButton
+                            onClick={() => handleMobileNavigation('1B')}
+                            className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
+                          >
+                            Back
+                          </CustomButton>
+                        </div>
+                      </ModalHeader>
+                    )}
+                  </div>
+
+                  {/* Desktop ModalBody */}
+                  <div className="hidden md:block">
+                    <ModalBody>
+                      <div className="flex lg:flex-row flex-col gap-3 mb-4">
+                        <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
                         {selectedItems?.map((item: any, index: number) => {
                           return (
                             <React.Fragment key={item.id}>
@@ -1120,9 +1386,305 @@ const CheckoutModal = ({
                           label="Add comment"
                           placeholder="Add a comment to this order. (optional)"
                         />
+                        </div>
                       </div>
-                    </div>
-                  </ModalBody>
+                    </ModalBody>
+                  </div>
+
+                  {/* Mobile ModalBody */}
+                  <div className="block md:hidden   flex-col min-h-0">
+                    {mobileSubStep === '1A' && (
+                      <ModalBody className="h-[80vh] overflow-y-auto">
+                        {/* Mobile Step 1A: Items Review */}
+                        <div className="space-y-4 pb-4">
+                          {selectedItems?.map((item: any, index: number) => {
+                            return (
+                              <React.Fragment key={item.id}>
+                                <div className="flex flex-col space-y-3 p-4 border border-[#E4E7EC80] rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                      <Image
+                                        className="w-12 h-12 rounded-lg object-cover"
+                                        src={
+                                          item?.image
+                                            ? `data:image/jpeg;base64,${item?.image}`
+                                            : noImage
+                                        }
+                                        width={48}
+                                        height={48}
+                                        alt={item.itemName}
+                                      />
+                                      <div>
+                                        <h3 className="font-semibold text-sm text-black">
+                                          {item.itemName}
+                                        </h3>
+                                        <p className="text-xs text-grey600">{item.menuName}</p>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      <p className="font-semibold text-sm text-black">
+                                        {formatPrice(item?.price * item.count)}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center space-x-3">
+                                      <Button
+                                        onClick={() => handleDecrement(item.id)}
+                                        isIconOnly
+                                        radius="sm"
+                                        size="md"
+                                        variant="faded"
+                                        className="border border-[#EFEFEF] h-10 w-10"
+                                        aria-label="minus"
+                                      >
+                                        <FaMinus className="text-sm" />
+                                      </Button>
+                                      <span className="font-bold text-lg text-black min-w-[2rem] text-center">
+                                        {item.count}
+                                      </span>
+                                      <Button
+                                        onClick={() => handleIncrement(item.id)}
+                                        isIconOnly
+                                        radius="sm"
+                                        size="md"
+                                        variant="faded"
+                                        className="border border-[#EFEFEF] h-10 w-10"
+                                        aria-label="plus"
+                                      >
+                                        <FaPlus className="text-sm" />
+                                      </Button>
+                                    </div>
+
+                                    {(item.packingCost > 0) && (
+                                      <Checkbox
+                                        size="sm"
+                                        onChange={(e) => handlePackingCost(item.id, e.target.checked)}
+                                        isSelected={item.isPacked}
+                                        className="text-sm"
+                                      >
+                                        <span className="text-sm">
+                                           Packing ({formatPrice(item.packingCost)})
+                                        </span>
+                                      </Checkbox>
+                                    )}
+                                  </div>
+                                </div>
+                                {index !== selectedItems?.length - 1 && (
+                                  <Divider className="bg-[#E4E7EC80]" />
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+
+
+                          {/* Continue Button - Fixed at bottom */}
+                          <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200 mt-6">
+                          {/* Mobile Pricing Summary */}
+                          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-grey600">Subtotal</span>
+                                <span className="font-semibold text-sm text-black">
+                                  {formatPrice(subtotal)}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-grey600">VAT (7.5%)</span>
+                                <span className="font-semibold text-sm text-black">
+                                  {formatPrice(vatAmount)}
+                                </span>
+                              </div>
+                              <Divider className="my-2" />
+                              <div className="flex justify-between items-center">
+                                <span className="font-semibold text-base text-black">Total</span>
+                                <span className="font-bold text-lg text-primaryColor">
+                                  {formatPrice(finalTotalPrice)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                            <CustomButton
+                              onClick={() => handleMobileNavigation('1B')}
+                              className="w-full py-5 text-white font-semibold"
+                              backgroundColor="bg-primaryColor"
+                            >
+                              Continue
+                            </CustomButton>
+                          </div>
+                        </div>
+                      </ModalBody>
+                    )}
+
+                    {mobileSubStep === '1B' && (
+                      <ModalBody className="flex-1 overflow-y-auto">
+                        {/* Mobile Step 1B: Customer Information */}
+                        <div className="space-y-6 pb-4">
+                          <CustomInput
+                            type="text"
+                            value={order.placedByName}
+                            name="placedByName"
+                            onChange={handleInputChange}
+                            label="Customer name"
+                            placeholder="Enter customer name"
+                            isRequired={true}
+                            classnames="w-full h-12 mb-4"
+                            isInvalid={validationErrors.placedByName}
+                            errorMessage={validationErrors.placedByName ? "name is required" : ""}
+                          />
+
+                          <CustomInput
+                            type="text"
+                            value={order.placedByPhoneNumber}
+                            name="placedByPhoneNumber"
+                            onChange={handleInputChange}
+                            label="Phone number"
+                            placeholder="Enter phone number"
+                            isRequired={true}
+                            classnames={"h-12 w-full mb-4"}
+                            isInvalid={validationErrors.placedByPhoneNumber}
+                            errorMessage={validationErrors.placedByPhoneNumber ? "Valid phone number is required" : ""}
+                          />
+
+                          <div className="w-full">
+                            <SelectInput
+                              label="Select table"
+                              placeholder="Choose a table"
+                              isRequired={true}
+                              name="quickResponseID"
+                              selectedKeys={[order?.quickResponseID]}
+                              onChange={handleInputChange}
+                              value={order.quickResponseID}
+                              contents={qr}
+                              className="w-full"
+                              isInvalid={validationErrors.quickResponseID}
+                              errorMessage={validationErrors.quickResponseID ? "Table selection is required" : ""}
+                              isMobile={true}
+                            />
+                          </div>
+
+                          <CustomTextArea
+                            value={order.comment}
+                            name="comment"
+                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                              setResponse(null);
+                              setOrder((prevOrder) => ({
+                                ...prevOrder,
+                                comment: e.target.value,
+                              }));
+                            }}
+                            label="Add comment (optional)"
+                            placeholder="Add any special instructions or comments"
+                            classnames="w-full mb-4"
+                          />
+
+                          {/* Continue Button - Fixed at bottom */}
+                          <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200 mt-6">
+                            <CustomButton
+                              onClick={() => handleMobileNavigation('1C')}
+                              className="w-full py-4 text-white font-semibold"
+                              backgroundColor="bg-primaryColor"
+                            >
+                              Continue to Review
+                            </CustomButton>
+                          </div>
+                        </div>
+                      </ModalBody>
+                    )}
+
+                    {mobileSubStep === '1C' && (
+                      <ModalBody className="flex-1 overflow-y-auto">
+                        {/* Mobile Step 1C: Final Review */}
+                        <div className="space-y-6 pb-4">
+                          {/* Customer Information Summary */}
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <h3 className="font-semibold text-sm text-black mb-3">Customer Information</h3>
+                            <div className="space-y-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-grey600">Name:</span>
+                                <span className="text-black font-medium">{order.placedByName}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-grey600">Phone:</span>
+                                <span className="text-black font-medium">{order.placedByPhoneNumber}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-grey600">Table:</span>
+                                <span className="text-black font-medium">
+                                  {qr.find((table: any) => table.id === order.quickResponseID)?.name || order.quickResponseID}
+                                </span>
+                              </div>
+                              {order.comment && (
+                                <div className="flex justify-between">
+                                  <span className="text-grey600">Comment:</span>
+                                  <span className="text-black font-medium">{order.comment}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Items Summary */}
+                          <div className="p-4 border border-[#E4E7EC80] rounded-lg">
+                            <h3 className="font-semibold text-sm text-black mb-3">Order Items ({selectedItems?.length})</h3>
+                            <div className="space-y-3">
+                              {selectedItems?.map((item: any, index: number) => (
+                                <div key={item.id} className="flex justify-between items-center">
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-black">{item.itemName}</p>
+                                    <p className="text-xs text-grey600">
+                                      Qty: {item.count} × {formatPrice(item.price)}
+                                      {item.isPacked && ` + Packing (${formatPrice(item.packingCost)})`}
+                                    </p>
+                                  </div>
+                                  <p className="text-sm font-semibold text-black">
+                                    {formatPrice(item.price * item.count + (item.isPacked ? item.packingCost * item.count : 0))}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Final Pricing */}
+
+                          <div className="p-4 bg-primaryColor bg-opacity-10 rounded-lg">
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-grey600">Subtotal</span>
+                                <span className="font-semibold text-black">{formatPrice(subtotal)}</span>
+                              </div>
+                              <div className="flex justify-between items-center text-sm">
+                                <span className="text-grey600">VAT (7.5%)</span>
+                                <span className="font-semibold text-black">{formatPrice(vatAmount)}</span>
+                              </div>
+                              <Divider className="my-2" />
+                              <div className="flex justify-between items-center">
+                                <span className="font-bold text-lg text-black">Total</span>
+                                <span className="font-bold text-xl text-primaryColor">
+                                  {formatPrice(finalTotalPrice)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          {/* Checkout Button - Fixed at bottom */}
+                          <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200 mt-6">
+                            <CustomButton
+                              loading={loading}
+                              disabled={loading}
+                              onClick={handleCheckoutClick}
+                              className="w-full py-4 text-white font-semibold"
+                              backgroundColor="bg-primaryColor"
+                            >
+                              <div className="flex gap-2 items-center justify-center">
+                                <p className="font-semibold">Proceed to Payment</p>
+                                <HiArrowLongLeft className="text-[20px] rotate-180" />
+                              </div>
+                            </CustomButton>
+                          </div>
+                        </div>
+                      </ModalBody>
+                    )}
+                  </div>
                 </>
               )}
               {screen === 2 && (

@@ -53,6 +53,7 @@ export const DASHBOARD = {
   menuCategories: "api/v1/Menu/categories",
   menuCategory: "api/v1/Menu/category",
   menuItems: "api/v1/Menu/items",
+  menuPos: "api/v1/Menu/pos",
   // orders
   orderByBusiness: "api/v1/Order/by-business",
   orderByCategories:"/api/v1/Order/categories",

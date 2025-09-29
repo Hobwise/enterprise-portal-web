@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
 import {
@@ -23,8 +23,6 @@ import {
   Spacer,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
-import { BsCalendar2Check } from 'react-icons/bs';
-import { FaRegEdit } from 'react-icons/fa';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { TbFileInvoice } from 'react-icons/tb';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
@@ -240,6 +238,16 @@ const OrdersList: React.FC<OrdersListProps> = ({
   } = useAllOrdersData(filterType, startDate, endDate, page, rowsPerPage);
 
   const handleTabClick = (categoryName: string) => {
+    // Close all open modals when switching tabs to prevent state conflicts
+    setIsOpenUpdateOrder(false);
+    setIsOpenCancelOrder(false);
+    setIsOpenInvoice(false);
+    setIsOpenConfirmOrder(false);
+    setIsOpenComment(false);
+    setIsOpenCheckoutModal(false);
+    setIsOpenPaymentModal(false);
+    setSingleOrder(null);
+
     setTableStatus(categoryName);
     setPage(1);
   };
@@ -384,7 +392,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   };
   const toggleUpdateOrderModal = (order: OrderItem) => {
     setSingleOrder(order);
-    setIsOpenUpdateOrder(!isOpenUpdateOrder);
+    setIsOpenUpdateOrder(true);
   };
 
   // Payment modal functions
@@ -441,9 +449,33 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   const [value, setValue] = useState('');
 
+  // Category state management
+  const [currentCategory, setCurrentCategory] = useState<OrderCategory | undefined>();
+  const [isCategoryEmpty, setIsCategoryEmpty] = useState<boolean>(false);
+  const [shouldShowLoading, setShouldShowLoading] = useState<boolean>(false);
+
   const handleTabChange = (index: string) => {
     setValue(index);
   };
+
+  // useEffect to update category states
+  useEffect(() => {
+    const foundCategory = categories?.find((c: OrderCategory) => c.name === (tableStatus || categories?.[0]?.name || 'All Orders'));
+    const isEmpty = !!(foundCategory && foundCategory?.count === 0);
+    const showLoading = isLoadingInitial && !currentCategoryData && !isEmpty;
+    setCurrentCategory(foundCategory);
+    setIsCategoryEmpty(isEmpty);
+    setShouldShowLoading(showLoading);
+  }, [categories, tableStatus, isLoadingInitial, currentCategoryData]);
+
+  // Monitor tab changes to ensure modal states are properly managed
+  useEffect(() => {
+    // When tableStatus changes and there's an open modal, we ensure it's properly reset
+    // This is a backup in case handleTabClick doesn't fully reset states
+    if (isOpenUpdateOrder || isOpenCancelOrder || isOpenInvoice || isOpenConfirmOrder || isOpenComment) {
+      console.log('Tab changed with open modal, states should be reset by handleTabClick');
+    }
+  }, [tableStatus, isOpenUpdateOrder, isOpenCancelOrder, isOpenInvoice, isOpenConfirmOrder, isOpenComment]);
 
   // Prefetch order details on hover for better performance
   const prefetchOrderDetails = (orderId: string) => {
@@ -604,14 +636,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
     handleTabClick,
   ]);
 
-  // Determine if we should show loading spinner
-  // Check if current category is genuinely empty (totalCount === 0) vs still loading (null)
-  const currentCategory = categories?.find((c: OrderCategory) => c.name === (tableStatus || categories?.[0]?.name || 'All Orders'));
-  const isCategoryEmpty = currentCategory && currentCategory.count === 0;
-  const shouldShowLoading = isLoadingInitial && !currentCategoryData && !isCategoryEmpty;
+  // Loading states are now managed in useEffect above
 
 
-  console.log('Rendering OrdersList with orders:', orderDetails.length === 0, 'isCategoryEmpty:', isCategoryEmpty);
+
 
   return (
     <section className='border border-primaryGrey rounded-lg'>
@@ -648,7 +676,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
           )}
         </TableHeader>
         <TableBody
-          emptyContent={ shouldShowLoading || isCategoryEmpty ? 'No orders found' : <SpinnerLoader size="md" /> }
+          emptyContent={!shouldShowLoading || isCategoryEmpty  ? 'No orders found' : <SpinnerLoader size="md" /> }
           items={shouldShowLoading ? [] : sortedOrders}
           isLoading={shouldShowLoading}
           loadingContent={<SpinnerLoader size="md" />}

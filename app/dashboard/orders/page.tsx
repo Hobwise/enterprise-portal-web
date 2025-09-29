@@ -12,7 +12,7 @@ import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useDateFilter from "@/hooks/useDateFilter";
 import { Chip } from "@nextui-org/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
@@ -21,6 +21,7 @@ import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 
 const Orders: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const {
     categories,
@@ -48,6 +49,30 @@ const Orders: React.FC = () => {
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
+
+  // Check if user came from POS page
+  const isFromPOS = searchParams.get('from') === 'pos';
+
+  // Detect if user is POS user (staff role)
+  const isPOSUser = role === 1;
+
+  // Debug log for POS user detection
+  console.log('Orders page user detection:', {
+    role,
+    isPOSUser,
+    isFromPOS,
+    willRouteToPOS: isPOSUser || isFromPOS
+  });
+
+  // Handle create order click with conditional routing
+  const handleCreateOrderClick = () => {
+    if (isPOSUser || isFromPOS) {
+      router.push('/pos');
+    } else {
+      router.push('/dashboard/orders/place-order');
+    }
+  };
+
   const data = { categories, details };
 
 
@@ -101,13 +126,13 @@ const Orders: React.FC = () => {
           )}
           {(role === 0 || userRolePermissions?.canCreateOrder === true) && (
             <CustomButton
-              onClick={() => router.push("/dashboard/orders/place-order")}
+              onClick={handleCreateOrderClick}
               className="py-2 px-4 mb-0 text-white"
               backgroundColor="bg-primaryColor"
             >
               <div className="flex gap-2 items-center justify-center">
                 <IoAddCircleOutline className="text-[22px]" />
-                <p>{"Create order"} </p>
+                <p>{(isPOSUser || isFromPOS) ? (isFromPOS ? "Back to POS" : "Create POS Order") : "Create order"} </p>
               </div>
             </CustomButton>
           )}

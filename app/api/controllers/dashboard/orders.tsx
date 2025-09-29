@@ -204,7 +204,7 @@ export async function createOrder(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const headers = businessId ? { businessId, cooperateID } : {};
+  const headers = businessId ? { businessId, cooperateId: cooperateID } : {};
 
   try {
     const data = await api.post(DASHBOARD.placeOrder, payload, {
@@ -231,7 +231,7 @@ export async function createUserOrder(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const headers = businessId ? { businessId, cooperateID } : {};
+  const headers = businessId ? { businessId, cooperateId: cooperateID } : {};
 
   try {
     const data = await api.post(DASHBOARD.placeOrder, payload, {

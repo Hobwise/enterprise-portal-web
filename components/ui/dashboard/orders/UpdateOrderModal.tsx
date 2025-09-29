@@ -10,14 +10,11 @@ import {
   Divider,
   Spacer,
 } from "@nextui-org/react";
-import { HiArrowLongLeft } from "react-icons/hi2";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { X } from "lucide-react";
-import { editOrder } from "@/app/api/controllers/dashboard/orders";
 import {
   getJsonItemFromLocalStorage,
   formatPrice,
-  clearItemLocalStorage,
   saveJsonItemToLocalStorage,
 } from "@/lib/utils";
 import { CustomButton } from "@/components/customButton";
