@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, Suspense } from "react";
 
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
@@ -19,7 +19,7 @@ import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 
 // Type definitions are handled in the component files
 
-const Orders: React.FC = () => {
+const OrdersContent: React.FC = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -56,13 +56,13 @@ const Orders: React.FC = () => {
   // Detect if user is POS user (staff role)
   const isPOSUser = role === 1;
 
-  // Debug log for POS user detection
-  console.log('Orders page user detection:', {
-    role,
-    isPOSUser,
-    isFromPOS,
-    willRouteToPOS: isPOSUser || isFromPOS
-  });
+  // Debug log for POS user detection (can be removed in production)
+  // console.log('Orders page user detection:', {
+  //   role,
+  //   isPOSUser,
+  //   isFromPOS,
+  //   willRouteToPOS: isPOSUser || isFromPOS
+  // });
 
   // Handle create order click with conditional routing
   const handleCreateOrderClick = () => {
@@ -163,6 +163,14 @@ const Orders: React.FC = () => {
       )}
       {datePickerModal}
     </>
+  );
+};
+
+const Orders: React.FC = () => {
+  return (
+    <Suspense fallback={<CustomLoading />}>
+      <OrdersContent />
+    </Suspense>
   );
 };
 
