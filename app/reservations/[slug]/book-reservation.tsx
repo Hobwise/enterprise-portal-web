@@ -10,6 +10,7 @@ import { Modal, ModalBody, ModalContent, Select, SelectItem, Selection,Tooltip }
 import CheckImage from '@/public/assets/images/success-image.png';
 import { useRouter } from 'next/navigation';
 import { RESERVATIONS_URL } from '@/utilities/routes';
+import RestaurantBanner from '@/app/create-order/RestaurantBanner';
 
 import {
   cn,
@@ -59,9 +60,15 @@ interface IBookReservationPage {
     reservationFee: number;
   };
   className?: string;
+  menuConfig?: {
+    image?: string;
+    backgroundColour?: string;
+    textColour?: string;
+  };
+  baseString?: string;
 }
 
-export default function BookReservationPage({ reservation, className }: IBookReservationPage) {
+export default function BookReservationPage({ reservation, className, menuConfig, baseString }: IBookReservationPage) {
   const [quantity, setQuantity] = useState<number>(1);
   const [noOfGuests, setNoOfGuests] = useState<number>(1);
   const [selectedTime, setSelectedTime] = useState<Selection>(new Set([]));
@@ -198,14 +205,23 @@ export default function BookReservationPage({ reservation, className }: IBookRes
   }, [selectedTime]);
 
   return (
-    <div className={cn('font-satoshi px-6 lg:px-24 space-y-4 mt-12', className)}>
-      <section className="space-y-10">
-        <div className="space-y-2 text-[#161618]">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-[32px] font-bricolage_grotesque">Book Reservation</h1>
+    <div className={cn('font-satoshi', className)}>
+      {/* Restaurant Banner */}
+      <RestaurantBanner
+        businessName={reservation?.businessName || ''}
+        menuConfig={menuConfig}
+        showMenuButton={false}
+        baseString={baseString}
+      />
+
+      <div className="px-6 lg:px-24 space-y-4 mt-8">
+        <section className="space-y-10">
+          <div className="space-y-2 text-[#161618]">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-[32px] font-bricolage_grotesque">Book Reservation</h1>
+            </div>
+            <p className="text-sm">Please provide your details below to book this reservation</p>
           </div>
-          <p className="text-sm">Please provide your details below to book this reservation</p>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
           <div className="space-y-8">
@@ -566,6 +582,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
           </div>
         </div>
       </section>
+      </div>
       {/* <Footer /> */}
 
       <Modal isOpen={open} onOpenChange={setOpen}>

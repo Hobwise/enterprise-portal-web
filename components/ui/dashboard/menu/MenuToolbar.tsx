@@ -10,6 +10,7 @@ interface MenuToolbarProps {
   setViewMenuMode: (mode: 'all' | 'current') => void;
   setIsOpenViewMenu: (isOpen: boolean) => void;
   canCreateMenu?: boolean;
+  showEdit?: boolean;
 }
 
 const MenuToolbar = ({
@@ -20,6 +21,7 @@ const MenuToolbar = ({
   setViewMenuMode,
   setIsOpenViewMenu,
   canCreateMenu = false,
+  showEdit = true,
 }: MenuToolbarProps) => {
   const tabsRef = useRef<HTMLDivElement>(null);
 
@@ -87,6 +89,8 @@ const MenuToolbar = ({
         <div className="flex-shrink-0">
           <button
             onClick={scrollLeft}
+            aria-label="Scroll left"
+            title="Scroll left"
             className={`text-gray-700 p-2 hover:bg-[#EAE5FF] rounded-lg transition-all duration-200 ${
               showLeft
                 ? 'opacity-100 translate-x-0'
@@ -132,6 +136,8 @@ const MenuToolbar = ({
       <div className="flex-shrink-0">
         <button
           onClick={scrollRight}
+          aria-label="Scroll right"
+          title="Scroll right"
           className={`text-gray-700 p-2 hover:bg-[#EAE5FF] rounded-lg transition-all duration-200 ${
             showRight
               ? 'opacity-100 translate-x-0'
@@ -143,17 +149,21 @@ const MenuToolbar = ({
       </div>
 
       {/* Edit button - separate from scroll controls */}
-      <div className="flex-shrink-0">
-        <button
-          onClick={() => {
-            setViewMenuMode('all');
-            setIsOpenViewMenu(true);
-          }}
-          className="p-2 text-gray-600 hover:bg-[#EAE5FF] rounded-lg transition-all duration-200"
-        >
-          <Edit className="w-5 h-5" />
-        </button>
-      </div>
+      {showEdit && (
+        <div className="flex-shrink-0">
+          <button
+            onClick={() => {
+              setViewMenuMode('all');
+              setIsOpenViewMenu(true);
+            }}
+            aria-label="Edit menu"
+            title="Edit menu"
+            className="p-2 text-gray-600 hover:bg-[#EAE5FF] rounded-lg transition-all duration-200"
+          >
+            <Edit className="w-5 h-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

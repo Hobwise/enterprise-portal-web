@@ -222,7 +222,7 @@ export const CustomLoading = () => {
   );
 };
 
-export const formatPrice = (price: any, currency: any) => {
+export const formatPrice = (price: any) => {
   const formatter = new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
