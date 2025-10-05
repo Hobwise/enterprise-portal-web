@@ -693,7 +693,7 @@ const CheckoutModal = ({
 
     if (hasDataProperty(data) && data.data?.isSuccessful) {
       const apiData = data as ApiResponse;
-      setOrderId(apiData.data?.data?.id || "");
+      setOrderId(apiData.data?.data?.id || "");    
       notify({
         title: "Success!",
         text: "Order placed successfully",
@@ -943,6 +943,19 @@ const CheckoutModal = ({
         text: "Unexpected error occurred. Please check the console for details.",
         type: "error",
       });
+    }
+  };
+
+  const getPaymentConfirmationText = () => {
+    switch (selectedPaymentMethod) {
+      case 0: // Cash
+        return "This is confirmation that the total order sum has been paid by the customer in full with cash deposit";
+      case 1: // POS
+        return "This is confirmation that the total order sum has been paid by the customer in full with POS card deposit";
+      case 2: // Bank Transfer
+        return "This is confirmation that the total order sum has been transferred by the customer in full to account";
+      default:
+        return "confirm that customer has paid for order";
     }
   };
 
@@ -1864,7 +1877,7 @@ const CheckoutModal = ({
                         <span className="text-black">Confirm payment</span>
                       </div>
                       <p className="text-sm  text-grey500 xl:mb-8 w-full mb-4">
-                        confirm that customer has paid for order
+                        {getPaymentConfirmationText()}
                       </p>
                     </div>
                     <div
