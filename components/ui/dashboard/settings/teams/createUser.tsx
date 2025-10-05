@@ -224,7 +224,7 @@ const CreateUser = ({ isOpen, onOpenChange }: any) => {
                   {createFormData.role === '1' && (
                     <SelectInput
                       errorMessage={response?.errors?.assignmentId?.[0]}
-                      label='Assign Position'
+                      label='Assignment'
                       placeholder='Select a position'
                       name='assignmentId'
                       selectedKeys={[createFormData?.assignmentId]}

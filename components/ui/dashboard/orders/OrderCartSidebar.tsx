@@ -88,7 +88,7 @@ const OrderCartSidebar: React.FC<OrderCartSidebarProps> = ({
                       </div>
                       <div className="flex w-24 items-center">
                         <Button
-                          onClick={() => onDecrement(item.id)}
+                          onPress={() => onDecrement(item.id)}
                           isIconOnly
                           radius="sm"
                           size="sm"
@@ -103,7 +103,7 @@ const OrderCartSidebar: React.FC<OrderCartSidebarProps> = ({
                           {item.count}
                         </span>
                         <Button
-                          onClick={() => onIncrement(item.id)}
+                          onPress={() => onIncrement(item.id)}
                           isIconOnly
                           radius="sm"
                           size="sm"

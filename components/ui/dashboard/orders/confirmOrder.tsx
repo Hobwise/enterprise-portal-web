@@ -35,7 +35,7 @@ const ConfirmOrderModal = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const [screen, setScreen] = useState(1);
-  const [order, setOrder] = useState([]);
+  const [order, setOrder] = useState<any>([]);
   const [reference, setReference] = useState("");
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
@@ -104,12 +104,40 @@ const ConfirmOrderModal = ({
       // Clear the global orders cache to force fresh data
       ordersCacheUtils.clearAll();
 
-      // Invalidate all related order queries
+      // Invalidate all related order queries with aggressive refetch
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['orderCategories'] }),
-        queryClient.invalidateQueries({ queryKey: ['orderDetails'] }),
-        queryClient.invalidateQueries({ queryKey: ['allOrdersData'] }),
-        queryClient.invalidateQueries({ queryKey: ['orders'] }),
+        queryClient.invalidateQueries({
+          queryKey: ['orderCategories'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['orderDetails'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['allOrdersData'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['orders'],
+          refetchType: 'active'
+        })
+      ]);
+
+      // Force immediate refetch of all active queries
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['orderCategories'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['orderDetails'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['orders'],
+          type: 'active'
+        })
       ]);
 
       toggleConfirmModal();
@@ -144,7 +172,7 @@ const ConfirmOrderModal = ({
       }}
     >
       <ModalContent>
-        {(onClose) => (
+        {() => (
           <>
             {screen === 1 && (
               <>
@@ -196,7 +224,7 @@ const ConfirmOrderModal = ({
                         </div>
                       ) : (
                         <>
-                          {order?.orderDetails?.map((item, index) => {
+                          {order?.orderDetails?.map((item: any, index: number) => {
                             return (
                               <>
                                 <div
@@ -355,7 +383,7 @@ const ConfirmOrderModal = ({
                     type="text"
                     // defaultValue={menuItem?.itemName}
                     value={reference}
-                    onChange={(e) => setReference(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReference(e.target.value)}
                     name="itemName"
                     label="Enter ref"
                     placeholder="Provide payment reference"

@@ -23,8 +23,9 @@ import { saveAs } from "file-saver";
 
 import LoadingAvatar from "../public/assets/images/loadingAvatar.svg";
 import { companyInfo } from "./companyInfo";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
+import { RefObject } from "react";
 
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs));
@@ -36,22 +37,22 @@ export function capitalizeFirstLetterOfEachWord(str: string): string {
     ?.join(" ");
 }
 
-export const saveToLocalStorage = (name, itemToSave) => {
+export const saveToLocalStorage = (name: string, itemToSave: string) => {
   return typeof window !== "undefined"
     ? localStorage.setItem(name, itemToSave)
     : false;
 };
-export const getFromLocalStorage = (name) => {
+export const getFromLocalStorage = (name: string) => {
   return typeof window !== "undefined" ? localStorage.getItem(name) : false;
 };
 
-export const clearItemLocalStorage = (name) => {
+export const clearItemLocalStorage = (name: string) => {
   return typeof window !== "undefined" ? localStorage.removeItem(name) : false;
 };
-export const getJsonItemFromLocalStorage = (name) => {
-  return typeof window !== "undefined"
-    ? JSON.parse(localStorage.getItem(name))
-    : false;
+export const getJsonItemFromLocalStorage = (name: string) => {
+  if (typeof window === "undefined") return false;
+  const item = localStorage.getItem(name);
+  return item ? JSON.parse(item) : false;
 };
 
 export const saveJsonItemToLocalStorage = (
@@ -125,9 +126,10 @@ const toastData: ToastData = {
   autoClose: 5000,
   hideProgressBar: true,
   closeOnClick: true,
-  pauseOnHover: true,
+  pauseOnHover: false,
   draggable: false,
   progress: undefined,
+  theme: "light",
 };
 
 interface notifyType {
@@ -148,10 +150,10 @@ export const notify = ({ title, text, type }: notifyType) => {
   type === "warning" &&
     toast(<Msg title={title} text={text} />, {
       ...toastData,
-      icon: '⚠️',
+      icon: "⚠️",
       style: {
-        background: '#F59E0B',
-        color: '#fff',
+        background: "#F59E0B",
+        color: "#fff",
       },
     });
   type === "success" &&
@@ -233,7 +235,10 @@ export const formatPrice = (price: any) => {
   return formatter.format(price);
 };
 
-export const downloadQRImage = async (qrObject, qrRef) => {
+export const downloadQRImage = async (
+  qrObject: { name?: string },
+  qrRef: RefObject<HTMLDivElement>
+) => {
   if (qrRef.current === null) {
     return;
   }
@@ -277,7 +282,10 @@ export const SmallLoader = () => {
 };
 
 export const tableTotalCount = (data: any) => {
-  return data?.reduce((sum, category) => sum + category.totalCount, 0);
+  return data?.reduce(
+    (sum: number, category: any) => sum + category.totalCount,
+    0
+  );
 };
 
 export const formatDateTime = (dateData: any) => {
@@ -331,7 +339,7 @@ export const formatDateTime2 = (inputDate: string) => {
   return formattedDate;
 };
 
-export const reverseFormatDateTime = (formattedDate) => {
+export const reverseFormatDateTime = (formattedDate: any) => {
   if (formattedDate === undefined) {
     return null;
   }
@@ -353,7 +361,7 @@ export const reverseFormatDateTime = (formattedDate) => {
   );
 };
 
-export const formatDateTimeForPayload = (dateTime) => {
+export const formatDateTimeForPayload = (dateTime: any) => {
   const { year, month, day, hour, minute, second, millisecond } = dateTime;
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(
     2,
@@ -366,13 +374,13 @@ export const formatDateTimeForPayload = (dateTime) => {
     "0"
   )}`;
 };
-export const formatDateTimeForPayload3 = (dateTime) => {
+export const formatDateTimeForPayload3 = (dateTime: any) => {
   return `${dateTime?.year}-${String(dateTime?.month).padStart(
     2,
     "0"
   )}-${String(dateTime?.day).padStart(2, "0")}`;
 };
-export const formatDateTimeForPayload2 = (dateTime) => {
+export const formatDateTimeForPayload2 = (dateTime: any) => {
   const {
     year,
     month,
@@ -449,15 +457,19 @@ export const printPDF = async (
     .from(element)
     .set(options)
     .output("blob")
-    .then((blob) => {
+    .then((blob: Blob) => {
       const url = URL.createObjectURL(blob);
       const newTab = window.open(url, "_blank");
-      newTab.focus();
+      if (newTab) {
+        newTab.focus();
 
-      newTab.onload = () => {
-        newTab.print();
-        URL.revokeObjectURL(url);
-      };
+        newTab.onload = () => {
+          if (newTab) {
+            newTab.print();
+            URL.revokeObjectURL(url);
+          }
+        };
+      }
     });
 };
 
@@ -595,24 +607,24 @@ export function resetLoginInfo() {
     // Clear all storage
     sessionStorage.clear();
     localStorage.clear();
-    
+
     // Remove specific cookies that might persist
     removeCookie("token");
     removeCookie("planCapabilities");
     removeCookie("username");
     removeCookie("jwt");
-    
+
     // Clear any React Query cache if available globally
-    if (typeof window !== 'undefined' && (window as any).queryClient) {
+    if (typeof window !== "undefined" && (window as any).queryClient) {
       (window as any).queryClient.clear();
     }
-    
+
     // Add a small delay to ensure cleanup completes before redirect
     setTimeout(() => {
       window.location.href = "/auth/login";
     }, 100);
   } catch (error) {
-    console.error('Error during logout cleanup:', error);
+    console.error("Error during logout cleanup:", error);
     // Force redirect even if cleanup fails
     window.location.href = "/auth/login";
   }
@@ -851,5 +863,3 @@ export const reservationDuration = [
     value: 12,
   },
 ];
-
-

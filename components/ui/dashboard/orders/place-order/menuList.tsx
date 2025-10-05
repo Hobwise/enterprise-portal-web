@@ -1008,7 +1008,7 @@ const MenuList = () => {
                           </div>
                           <div className="flex w-24 items-center">
                             <Button
-                              onClick={() => handleDecrement(item.id)}
+                              onPress={() => handleDecrement(item.id)}
                               isIconOnly
                               radius="sm"
                               size="sm"
@@ -1023,7 +1023,7 @@ const MenuList = () => {
                               {item.count}
                             </span>
                             <Button
-                              onClick={() => handleIncrement(item.id)}
+                              onPress={() => handleIncrement(item.id)}
                               isIconOnly
                               radius="sm"
                               size="sm"
