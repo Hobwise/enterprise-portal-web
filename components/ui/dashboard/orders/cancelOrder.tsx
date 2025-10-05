@@ -50,14 +50,43 @@ const CancelOrderModal = ({
       // Clear the global orders cache to force fresh data
       ordersCacheUtils.clearAll();
 
-      // Invalidate all related order queries to ensure immediate updates
+      // Invalidate all related order queries to ensure immediate updates with aggressive refetch
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['orderCategories'] }),
-        queryClient.invalidateQueries({ queryKey: ['orderDetails'] }),
-        queryClient.invalidateQueries({ queryKey: ['allOrdersData'] }),
-        queryClient.invalidateQueries({ queryKey: ['orders'] }),
-        refetch() // Keep original refetch as fallback
+        queryClient.invalidateQueries({
+          queryKey: ['orderCategories'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['orderDetails'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['allOrdersData'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['orders'],
+          refetchType: 'active'
+        })
       ]);
+
+      // Force immediate refetch of all active queries
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['orderCategories'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['orderDetails'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['orders'],
+          type: 'active'
+        })
+      ]);
+
+      refetch(); // Keep original refetch as fallback
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',

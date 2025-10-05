@@ -46,9 +46,9 @@ const InvoiceModal = ({
       onOpenChange={toggleInvoiceModal}
     >
       <ModalContent>
-        {(onClose) => (
+        {() => (
           <>
-          
+
             <ModalBody className="flex max-h-[80vh] justify-center">
                <div ref={invoiceRef} className="h-auto flex flex-col overflow-y-auto">
                   <h3 className="font-[600] text-center text-lg text-black mt-6 mb-3">

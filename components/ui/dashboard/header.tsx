@@ -4,7 +4,7 @@ import useNotification from "@/hooks/cachedEndpoints/useNotifications";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 import useUser from "@/hooks/cachedEndpoints/useUser";
 import useScroll from "@/hooks/use-scroll";
-import { cn } from "@/lib/utils";
+import { cn, getJsonItemFromLocalStorage } from "@/lib/utils";
 import {
   Avatar,
   Badge,
@@ -31,7 +31,6 @@ import LogoutModal from "../logoutModal";
 import { SIDENAV_ITEMS, headerRouteMapping } from "./constants";
 import Notifications from "./notifications/notifications";
 import { NavigationBanner, useCheckExpiry } from "./subscription-notification";
-import useNotificationCount from "@/hooks/cachedEndpoints/useNotificationCount";
 import * as signalR from "@microsoft/signalr";
 import useNotifyCount from "@/hooks/cachedEndpoints/useNotificationCount";
 import CompanyLogo from "@/components/logo";
@@ -66,6 +65,43 @@ const Header = ({ ispos }: any) => {
   const { data: unreadCount = 0 } = useNotifyCount();
   const { isOpen, onOpenChange } = useDisclosure();
   const { data } = useUser();
+
+  // Get user info from localStorage for activeHours, firstLogin, lastLogin
+  const userInfo = getJsonItemFromLocalStorage('userInformation');
+
+  // Helper function to format active hours
+  const formatActiveHours = (hours: number): string => {
+    if (!hours) return "0 min";
+    const totalMinutes = Math.round(hours * 60);
+
+    if (totalMinutes < 60) {
+      return `${totalMinutes} min${totalMinutes !== 1 ? 's' : ''}`;
+    }
+
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+
+    if (mins === 0) {
+      return `${hrs}h`;
+    }
+
+    return `${hrs}h ${mins}m`;
+  };
+
+  // Helper function to format login timestamps
+  const formatLoginTime = (timestamp: string): string => {
+    if (!timestamp) return "N/A";
+    const date = new Date(timestamp);
+
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   const pathname = usePathname();
   const scrolled = useScroll(5);
@@ -206,8 +242,10 @@ const Header = ({ ispos }: any) => {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center space-x-8">
+
+             <div className="hidden md:flex items-center space-x-8">
             <div className="flex items-center space-x-4">
+                       {!ispos && (
               <Popover
                 placement="bottom"
                 onOpenChange={setNotifPopoverOpen}
@@ -243,10 +281,29 @@ const Header = ({ ispos }: any) => {
                   )}
                 </PopoverContent>
               </Popover>
+                       )}
 
-              {/* <span>
-                <IoChatbubblesOutline className="text-[#494E58]  h-5 w-5 cursor-pointer" />
-              </span> */}
+              {/* Active Hours Display */}
+              {isMounted && userInfo?.activeHours !== undefined && (
+                <div className="flex items-center space-x-2 px-3 py-1 bg-purple-50 rounded-full border border-purple-200">
+                  <svg
+                    className="w-4 h-4 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="text-xs font-medium text-purple-700">
+                    {formatActiveHours(userInfo.activeHours)}
+                  </span>
+                </div>
+              )}
 
               {!isMounted ? (
                 <div className=" flex items-center gap-2 border border-gray-200 rounded-full py-1 px-2">
@@ -293,6 +350,22 @@ const Header = ({ ispos }: any) => {
                     )}
                   </DropdownTrigger>
                   <DropdownMenu aria-label="settings Actions" variant="flat">
+                    <DropdownItem key="firstLogin" isReadOnly className="cursor-default opacity-100">
+                      <div className="flex flex-col px-2 py-1">
+                        <span className="text-xs text-gray-500">First Login</span>
+                        <span className="text-sm text-gray-900 font-medium">
+                          {userInfo?.firstLogin ? formatLoginTime(userInfo.firstLogin) : "N/A"}
+                        </span>
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem key="lastLogin" isReadOnly className="cursor-default opacity-100">
+                      <div className="flex flex-col px-2 py-1">
+                        <span className="text-xs text-gray-500">Last Login</span>
+                        <span className="text-sm text-gray-900 font-medium">
+                          {userInfo?.lastLogin ? formatLoginTime(userInfo.lastLogin) : "N/A"}
+                        </span>
+                      </div>
+                    </DropdownItem>
                     <DropdownItem key="Profile Management">
                       <Link
                         prefetch={true}
@@ -319,6 +392,7 @@ const Header = ({ ispos }: any) => {
               )}
             </div>
           </div>
+       
         </div>
 
         <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
