@@ -4,6 +4,8 @@ import { VscLoading } from "react-icons/vsc";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { CustomInput } from "@/components/CustomInput";
 import { IoSearchOutline } from "react-icons/io5";
+import { CustomButton } from "@/components/customButton";
+import { toast } from "sonner";
 
 interface MenuHeaderProps {
   menuSections?: any[]; // Keep for backward compatibility but not used
@@ -14,6 +16,12 @@ interface MenuHeaderProps {
   searchQuery: string;
   onSearchChange: (value: string) => void;
   categories?: any[];
+  businessInformation: {
+    businessId: string;
+    cooperateID?: string;
+    businessName: string;
+  }[];
+  cooperateId: string | undefined;
   onPreviewClick?: () => void;
 }
 
@@ -24,6 +32,8 @@ const MenuHeader = ({
   onSearchChange,
   categories = [],
   onPreviewClick,
+  businessInformation,
+  cooperateId,
 }: MenuHeaderProps) => {
   return (
     <div className="bg-white py-4 ">
@@ -77,6 +87,22 @@ const MenuHeader = ({
               <p>Export csv</p>
             </Button>
           </ButtonGroup>
+          <CustomButton
+            onClick={() => {
+              const menuUrl = `${
+                window.location.origin
+              }/create-order?businessID=${
+                businessInformation[0]?.businessId
+              }&cooperateID=${cooperateId || ""}&businessName=${
+                businessInformation[0]?.businessName
+              }&mode=view`;
+              navigator.clipboard.writeText(menuUrl);
+              toast.success("Menu URL copied to clipboard!");
+            }}
+            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border-2 border-primaryColor"
+          >
+            Copy Menu URL
+          </CustomButton>
           {onPreviewClick && (
             <button
               onClick={onPreviewClick}

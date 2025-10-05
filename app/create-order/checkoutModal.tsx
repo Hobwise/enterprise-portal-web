@@ -422,43 +422,32 @@ const CheckoutModal = ({
           {(onClose) => (
             <>
               <>
-                <ModalHeader className="flex flex-col mt-3 gap-1">
-                  <div className="flex flex-row flex-wrap  justify-between">
-                    {changeTitle ? (
-                      <div className="flex justify-between w-full items-center">
-                        <div>
-                          <div className="text-[24px] leading-8 font-semibold">
-                            <span className="text-black">
-                              Hello, {order.placedByName}
-                            </span>
-                          </div>
-                          <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
-                            Your orders
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <CustomButton
-                            loading={loadingCostInfo}
-                            disabled={loadingCostInfo}
-                            onClick={getOrderDetails}
-                            className="py-2 px-4 h-[50px] mb-0 bg-gray-100 border border-primaryGrey"
-                          >
-                            Refresh Cost
-                          </CustomButton>
-                        </div>
-                      </div>
-                    ) : (
+                <ModalHeader className="flex flex-col gap-1">
+                  {changeTitle ? (
+                    <div className="flex justify-between w-full items-center">
                       <div>
-                        <div className="text-[24px] leading-8 font-semibold">
-                          <span className="text-black">Confirm order</span>
-                        </div>
-                        <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
-                          Confirm order before checkout
-                        </p>
+                        <h1 className="text-xl font-bold text-black">
+                          Hello, {order.placedByName}
+                        </h1>
+                        <p className="text-sm text-gray-600">Your orders</p>
                       </div>
-                    )}
-                  </div>
-                  <Divider className="bg-primaryGrey" />
+                      <CustomButton
+                        loading={loadingCostInfo}
+                        disabled={loadingCostInfo}
+                        onClick={getOrderDetails}
+                        className="py-2 px-4 bg-gray-100 border border-gray-300"
+                      >
+                        Refresh Cost
+                      </CustomButton>
+                    </div>
+                  ) : (
+                    <div className="text-center py-2">
+                      <h1 className="text-xl font-bold text-black">
+                        {selectedItems.length} Item
+                        {selectedItems.length !== 1 ? "s" : ""}
+                      </h1>
+                    </div>
+                  )}
                 </ModalHeader>
                 <ModalBody>
                   <div className="">

@@ -212,20 +212,22 @@ const Layout: React.FC = () => {
         <div>
           <h1 className="text-[16px] leading-8 font-semibold">Layout</h1>
           <p className="text-sm xl:w-full w-[150px] text-grey600 md:mb-10 mb-4">
-            Select how your menu appears to users{' '}
+            Select how your menu appears to users{" "}
           </p>
         </div>
-        <CustomButton
-          loading={isLoading}
-          disabled={isLoading}
-          onClick={submitFormData}
-          className={`py-2 px-4 md:mb-0 mb-4 ${
-            isLoading ? 'text-white' : 'text-primaryColor'
-          }  bg-white border-2 border-primaryColor`}
-          backgroundColor="bg-primaryColor"
-        >
-          {isLoading ? 'Loading...' : 'Save Changes'}
-        </CustomButton>
+        <div className="flex gap-3">
+          <CustomButton
+            loading={isLoading}
+            disabled={isLoading}
+            onClick={submitFormData}
+            className={`py-2 px-4 md:mb-0 mb-4 ${
+              isLoading ? "text-white" : "text-primaryColor"
+            }  bg-white border-2 border-primaryColor`}
+            backgroundColor="bg-primaryColor"
+          >
+            {isLoading ? "Loading..." : "Save Changes"}
+          </CustomButton>
+        </div>
       </div>
       <div className="flex flex-wrap gap-6">
         {previewColumn.map((column) => {
@@ -258,28 +260,28 @@ const Layout: React.FC = () => {
         <Spacer y={5} />
         <div className="flex items-center gap-3">
           <Chip
-            onClick={() => handleClick('#000')}
+            onClick={() => handleClick("#000")}
             startContent={<CheckIcon size={18} />}
             variant="bordered"
             classNames={{
               base: ` cursor-pointer h-8 text-[12px] ${
-                selectedTextColor === '#000'
-                  ? 'border border-primaryColor text-primaryColor'
-                  : 'border border-primaryGrey text-grey400'
+                selectedTextColor === "#000"
+                  ? "border border-primaryColor text-primaryColor"
+                  : "border border-primaryGrey text-grey400"
               }`,
             }}
           >
             Black text
           </Chip>
           <Chip
-            onClick={() => handleClick('#fff')}
+            onClick={() => handleClick("#fff")}
             startContent={<CheckIcon size={18} />}
             variant="bordered"
             classNames={{
               base: ` cursor-pointer h-8 text-[12px] ${
-                selectedTextColor === '#fff'
-                  ? 'border border-primaryColor text-primaryColor'
-                  : 'border border-primaryGrey text-grey400'
+                selectedTextColor === "#fff"
+                  ? "border border-primaryColor text-primaryColor"
+                  : "border border-primaryGrey text-grey400"
               }`,
             }}
           >
@@ -298,7 +300,7 @@ const Layout: React.FC = () => {
         <Switch
           classNames={{
             wrapper: `m-0 ${
-              isSelectedPreview ? '!bg-primaryColor' : 'bg-[#E4E7EC]'
+              isSelectedPreview ? "!bg-primaryColor" : "bg-[#E4E7EC]"
             } `,
           }}
           isSelected={isSelectedPreview}
@@ -364,7 +366,7 @@ const Layout: React.FC = () => {
                 <>
                   <MdOutlineAddPhotoAlternate className="text-[42px] text-primaryColor" />
                   <span className="text-black">
-                    Drag and drop files to upload or{' '}
+                    Drag and drop files to upload or{" "}
                     <span className="text-primaryColor">click here</span> to
                     browse
                   </span>

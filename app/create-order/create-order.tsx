@@ -12,117 +12,250 @@ import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
 import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import { formatPrice } from '@/lib/utils';
-import { useSearchParams } from 'next/navigation';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import { IoAddCircleOutline, IoSearchOutline } from 'react-icons/io5';
-import { FaMinus, FaPlus } from 'react-icons/fa6';
-import { CustomInput } from '@/components/CustomInput';
-import noMenu from '../../public/assets/images/no-menu.png';
-import noImage from '../../public/assets/images/no-image.svg';
+import { useSearchParams, useRouter } from "next/navigation";
+import { HiArrowLongLeft } from "react-icons/hi2";
+import {
+  IoAddCircleOutline,
+  IoSearchOutline,
+  IoCart,
+  IoChevronBack,
+  IoChevronForward,
+  IoClose,
+} from "react-icons/io5";
+import { MdOutlineRestaurantMenu } from "react-icons/md";
+import { BiPackage } from "react-icons/bi";
+import { IoCalendarOutline } from "react-icons/io5";
+import { FaMinus, FaPlus } from "react-icons/fa6";
+import { CustomInput } from "@/components/CustomInput";
+import { HiOutlineMicrophone } from "react-icons/hi2";
+import { HiMenuAlt3 } from "react-icons/hi";
+import noMenu from "../../public/assets/images/no-menu.png";
+import noImage from "../../public/assets/images/no-image.svg";
 
-import useMenuUser from '@/hooks/cachedEndpoints/userMenuUser';
-import SplashScreen from '../reservation/splash-screen';
-import CheckoutModal from './checkoutModal';
-import Filters from './filter';
-import ViewModal from './viewMore';
+import useCustomerMenuCategories from "@/hooks/cachedEndpoints/useCustomerMenuCategories";
+import useCustomerMenuItems from "@/hooks/cachedEndpoints/useCustomerMenuItems";
+import MenuToolbar from "@/components/ui/dashboard/menu/MenuToolbar";
+import ViewModal from "./viewMore";
+import CartModal from "./CartModal";
+import ServingInfoModal, { ServingInfoData } from "./ServingInfoModal";
+import OrderTrackingPage from "./OrderTrackingModal";
+import TrackingDetailsPage from "./TrackingDetailsModal";
+import RestaurantBanner from "./RestaurantBanner";
+import {
+  placeCustomerOrder,
+  getCustomerOrderByReference,
+  updateCustomerOrder,
+} from "../api/controllers/customerOrder";
+import { toast } from "sonner";
 
 const CreateOrder = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  let businessName = searchParams.get('businessName');
-  let businessId = searchParams.get('businessID');
-  let cooperateID = searchParams.get('cooperateID');
-  let qrId = searchParams.get('id');
+  let businessName = searchParams.get("businessName") || "";
+  let businessId = searchParams.get("businessID");
+  let cooperateID = searchParams.get("cooperateID");
+  let qrId = searchParams.get("id");
+  const mode = searchParams.get("mode"); // 'view' for view-only mode
+
+  // View-only mode: no cart or item selection (only for copied menu URLs)
+  const isViewOnlyMode = mode === "view";
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { menuIdTable, setMenuIdTable, setPage } = useGlobalContext();
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const { data, isLoading, isError, refetch } = useMenuUser(
-    businessId,
-    cooperateID
+  // Modal states for the new flow
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isServingInfoOpen, setIsServingInfoOpen] = useState(false);
+  const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTrackingDetailsOpen, setIsTrackingDetailsOpen] = useState(false);
+
+  // Order state
+  const [orderData, setOrderData] = useState<any>(null);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderErrors, setOrderErrors] = useState<any>(null);
+  const [isUpdatingOrder, setIsUpdatingOrder] = useState(false); // Track if updating existing order
+
+  // Menu state - using React Query hooks
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  const {
+    data: categories,
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+    refetch: refetchCategories,
+  } = useCustomerMenuCategories(
+    businessId || undefined,
+    cooperateID || undefined
   );
 
-  useEffect(() => {
-    setMenuIdTable(data?.[0]?.id);
-  }, []);
-  const [filteredMenu, setFilteredMenu] = useState<any[]>([]);
-  const handleTabClick = (index: any) => {
-    setPage(1);
-    const filteredMenu = data?.filter((item) => item.name === index);
+  const {
+    data: menuItemsData,
+    isLoading: itemsLoading,
+    isError: itemsError,
+    refetch: refetchItems,
+  } = useCustomerMenuItems(selectedCategoryId, 1, 100);
 
-    setMenuIdTable(filteredMenu?.[0]?.id);
-    setFilteredMenu(filteredMenu?.[0]?.items);
+  // Auto-select first category when categories load
+  useEffect(() => {
+    if (categories && categories.length > 0 && !selectedCategoryId) {
+      const firstCategory = categories[0];
+      setSelectedCategoryId(firstCategory.id);
+      setMenuIdTable(firstCategory.name);
+    }
+  }, [categories, selectedCategoryId, setMenuIdTable]);
+
+  // Add waiting time to menu items
+  const menuItems = useMemo(() => {
+    if (!menuItemsData || !Array.isArray(menuItemsData) || !categories)
+      return [];
+
+    const selectedCategory = categories.find(
+      (cat) => cat.id === selectedCategoryId
+    );
+    return menuItemsData.map((item: any) => ({
+      ...item,
+      waitingTimeMinutes: selectedCategory?.waitingTimeMinutes || 0,
+    }));
+  }, [menuItemsData, categories, selectedCategoryId]);
+
+  const isLoading = categoriesLoading || itemsLoading;
+  const isError = categoriesError || itemsError;
+
+  const [itemsToShow, setItemsToShow] = useState(10);
+  const [activeSubCategory, setActiveSubCategory] = useState<string>("");
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+  const [categoryScrollRef, setCategoryScrollRef] =
+    useState<HTMLDivElement | null>(null);
+
+  const handleTabClick = (categoryId: string, categoryName: string) => {
+    setPage(1);
+    setItemsToShow(10); // Reset to 10 items when changing category
+    setSelectedCategoryId(categoryId);
+    setMenuIdTable(categoryName);
   };
 
-  useEffect(() => {
-    if (data?.[0]?.items) {
-      setFilteredMenu(data[0].items);
+  // Refetch menu data
+  const refetch = async () => {
+    await refetchCategories();
+    if (selectedCategoryId) {
+      await refetchItems();
     }
-  }, [data]);
+  };
 
-  const topContent = useMemo(() => {
-    return <Filters menus={data} handleTabClick={handleTabClick} />;
-  }, [data?.length]);
+  // Handle scroll to load more
+  const handleLoadMore = () => {
+    const totalFiltered = !searchQuery
+      ? (menuItems || []).length
+      : (menuItems || []).filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            String(item?.price)
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item?.itemDescription
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase())
+        ).length;
 
-  const matchingObject = data?.find((category) => category?.id === menuIdTable);
+    if (itemsToShow < totalFiltered) {
+      setItemsToShow((prev) => prev + 10);
+    }
+  };
 
-  const unfilteredArray = matchingObject
-    ? matchingObject.items
-    : filteredMenu || data?.[0]?.items || [];
+  // Handle category scroll
+  const scrollCategories = (direction: "left" | "right") => {
+    if (!categoryScrollRef) return;
+    const scrollAmount = 200;
+    const newScrollLeft =
+      direction === "left"
+        ? categoryScrollRef.scrollLeft - scrollAmount
+        : categoryScrollRef.scrollLeft + scrollAmount;
+
+    categoryScrollRef.scrollTo({ left: newScrollLeft, behavior: "smooth" });
+  };
+
+  // Check scroll position
+  const checkScrollPosition = () => {
+    if (!categoryScrollRef) return;
+    setShowLeftArrow(categoryScrollRef.scrollLeft > 0);
+    setShowRightArrow(
+      categoryScrollRef.scrollLeft <
+        categoryScrollRef.scrollWidth - categoryScrollRef.clientWidth - 10
+    );
+  };
+
+  // keep toolbar active state in sync with current menu selection
+  useEffect(() => {
+    if (menuIdTable) {
+      setActiveSubCategory(menuIdTable as string);
+    }
+  }, [menuIdTable]);
+
+  const menuSections = useMemo(() => {
+    return (
+      categories?.map((category: any) => ({
+        id: category.id,
+        name: category.name,
+        totalCount: menuItems?.length || 0, // This would need category-specific counts
+      })) || []
+    );
+  }, [categories, menuItems]);
+
+  const unfilteredArray = menuItems || [];
 
   // Apply search filter
   const matchingObjectArray = useMemo(() => {
-    if (!searchQuery) return unfilteredArray;
-    
-    return unfilteredArray?.filter((item) =>
-      item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(item?.price)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item?.itemDescription?.toLowerCase().includes(searchQuery.toLowerCase())
-    ) || [];
-  }, [unfilteredArray, searchQuery]);
+    const filtered = !searchQuery
+      ? unfilteredArray
+      : unfilteredArray?.filter(
+          (item) =>
+            item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            String(item?.price)
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase()) ||
+            item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item?.itemDescription
+              ?.toLowerCase()
+              .includes(searchQuery.toLowerCase())
+        ) || [];
+
+    // Return paginated results
+    return filtered?.slice(0, itemsToShow) || [];
+  }, [unfilteredArray, searchQuery, itemsToShow]);
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      event.returnValue = '';
+      event.returnValue = "";
     };
 
     if (selectedItems.length > 0) {
-      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener("beforeunload", handleBeforeUnload);
     }
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [selectedItems]);
 
-  if (isError) {
-    return (
-      <div className='h-screen grid place-content-center bg-white'>
-        {' '}
-        <Error imageHeight={'h-32'} onClick={() => refetch()} />
-      </div>
-    );
-  }
-  if (isLoading) {
-    return <SplashScreen businessName={businessName} type='order' />;
-  }
-  const convertActiveTile = (activeTile: number) => {
+  const convertActiveTile = (activeTile: number | undefined) => {
     const previewStyles: { [key: string]: string } = {
-      0: 'List left',
-      1: 'List Right',
-      2: 'Single column 1',
-      3: 'Single column 2',
-      4: 'Double column',
+      0: "List left",
+      1: "List Right",
+      2: "Single column 1",
+      3: "Single column 2",
+      4: "Double column",
     };
 
-    return previewStyles[activeTile];
+    return previewStyles[activeTile?.toString() || "0"];
   };
 
   type Item = {
@@ -155,14 +288,14 @@ const CreateOrder = () => {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
       // setSelectedMenu(menuItem);
-      setSelectedItems((prevItems: any) => [
+      setSelectedItems((prevItems: Item[]) => [
         ...prevItems,
         {
           ...menuItem,
           count: 1,
           isPacked: isItemPacked,
           packingCost: menuItem.isVariety
-            ? selectedMenu.packingCost
+            ? (selectedMenu as any)?.packingCost || 0
             : menuItem.packingCost || 0,
         },
       ]);
@@ -170,45 +303,33 @@ const CreateOrder = () => {
   };
 
   const handleQuickAdd = (menuItem: Item, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent opening the variety modal
-    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
-    
-    if (existingItem) {
-      // If item exists, increment count
-      handleIncrement(menuItem.id);
-    } else {
-      // Add new item with default options
-      setSelectedItems((prevItems: any) => [
-        ...prevItems,
-        {
-          ...menuItem,
-          count: 1,
-          isPacked: false, // Default to not packed
-          packingCost: menuItem.packingCost || 0,
-        },
-      ]);
-    }
+    e.stopPropagation(); // Prevent card click
+    // Open the variety modal to show item details
+    toggleVarietyModal(menuItem);
   };
 
   const handleDecrement = (id: string) => {
-    setSelectedItems((prevItems: any) =>
-      prevItems.map((item: any) => {
-        if (item.id === id) {
-          if (item.count > 1) {
-            return { ...item, count: item.count - 1 };
-          } else {
-            // Remove item when count reaches 0
-            return null;
-          }
-        }
-        return item;
-      }).filter(Boolean) // Remove null items
+    setSelectedItems(
+      (prevItems: Item[]) =>
+        prevItems
+          .map((item: Item) => {
+            if (item.id === id) {
+              if (item.count > 1) {
+                return { ...item, count: item.count - 1 };
+              } else {
+                // Remove item when count reaches 0
+                return null;
+              }
+            }
+            return item;
+          })
+          .filter((item): item is Item => item !== null) // Remove null items with type guard
     );
   };
 
   const handleIncrement = (id: string) => {
-    setSelectedItems((prevItems) =>
-      prevItems.map((item) =>
+    setSelectedItems((prevItems: Item[]) =>
+      prevItems.map((item: Item) =>
         item.id === id ? { ...item, count: item.count + 1 } : item
       )
     );
@@ -225,278 +346,745 @@ const CreateOrder = () => {
   };
 
   const handlePackingCost = (itemId: string, isPacked: boolean) => {
-    setSelectedItems((prevItems) =>
-      prevItems.map((item) =>
+    setSelectedItems((prevItems: Item[]) =>
+      prevItems.map((item: Item) =>
         item.id === itemId ? { ...item, isPacked } : item
       )
     );
   };
 
-  const baseString = 'data:image/jpeg;base64,';
+  const baseString = "data:image/jpeg;base64,";
+
+  // Handle remove item from cart
+  const handleRemoveItem = (id: string) => {
+    setSelectedItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  };
+
+  // Handle opening cart modal
   const handleCheckoutOpen = () => {
     if (selectedItems.length > 0) {
-      if (!selectedMenu || Object.keys(selectedMenu).length === 0) {
-        setSelectedMenu(selectedItems[0]);
-      }
-      onOpen();
+      setIsCartOpen(true);
     }
   };
 
+  // Handle proceeding to serving info
+  const handleProceedToServingInfo = () => {
+    setIsServingInfoOpen(true);
+  };
+
+  // Handle submitting serving info and placing order
+  const handleSubmitServingInfo = async (servingInfo: ServingInfoData) => {
+    setOrderLoading(true);
+    setOrderErrors(null);
+
+    try {
+      const subtotal = selectedItems.reduce(
+        (acc, item) => acc + item.price * item.count,
+        0
+      );
+      const packingCost = selectedItems.reduce((acc, item) => {
+        if (item.isPacked && item.packingCost) {
+          return acc + item.packingCost * item.count;
+        }
+        return acc;
+      }, 0);
+      const vat = (subtotal + packingCost) * 0.075;
+      const total = subtotal + packingCost + vat;
+
+      const orderDetails = selectedItems.map((item) => ({
+        itemId: item.id,
+        quantity: item.count,
+        unitPrice: item.price,
+        isVariety: item.isVariety || false,
+        isPacked: item.isPacked || false,
+      }));
+
+      const payload = {
+        status: 0,
+        placedByName: servingInfo.name,
+        placedByPhoneNumber: servingInfo.phoneNumber,
+        quickResponseID: qrId || "",
+        comment: servingInfo.comment,
+        totalAmount: Math.round(total * 100) / 100,
+        orderDetails,
+      };
+
+      let response;
+
+      // Check if we're updating an existing order or creating a new one
+      if (isUpdatingOrder && orderData?.id) {
+        response = await updateCustomerOrder(orderData.id, payload);
+        console.log("Update order response:", response);
+      } else {
+        response = await placeCustomerOrder(
+          payload,
+          businessId || "",
+          cooperateID || ""
+        );
+        console.log("Place order response:", response);
+      }
+
+      if (response?.isSuccessful && response?.data) {
+        // Use the order data from the response directly
+        setOrderData(response.data);
+        setIsServingInfoOpen(false);
+        setIsOrderTrackingOpen(true);
+        setIsUpdatingOrder(false); // Reset update flag
+        toast.success(
+          isUpdatingOrder
+            ? "Order updated successfully!"
+            : "Order placed successfully!"
+        );
+      } else {
+        // Handle error response
+        const errorMessage =
+          response?.error?.responseDescription ||
+          response?.error?.message ||
+          `Failed to ${
+            isUpdatingOrder ? "update" : "place"
+          } order. Please try again.`;
+        setOrderErrors(response?.errors || {});
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setOrderLoading(false);
+    }
+  };
+
+  // Handle adding more items from order tracking
+  const handleAddMoreItemsFromTracking = () => {
+    if (orderData && orderData.orderDetails) {
+      // Transform order details into cart items format with all necessary fields
+      const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
+        const basePrice = detail.unitPrice || 0;
+
+        return {
+          id: detail.itemID,
+          itemID: detail.itemID,
+          itemName: detail.itemName,
+          menuName: detail.menuName,
+          itemDescription: detail.itemDescription || "",
+          price: basePrice,
+          currency: "NGN",
+          isAvailable: true,
+          hasVariety: detail.isVariety || false,
+          image: detail.image || "",
+          isVariety: detail.isVariety || false,
+          varieties: detail.varieties || null,
+          count: detail.quantity || 1,
+          packingCost: detail.packingCost || 0,
+          isPacked: detail.isPacked || false,
+          menuID: detail.menuID || "",
+          waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+        };
+      });
+
+      setSelectedItems(cartItems);
+      setIsUpdatingOrder(true); // Set flag to update existing order
+      setIsOrderTrackingOpen(false);
+      // Scroll to top to show menu
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  // Handle checkout from order tracking - go to cart
+  const handleCheckoutFromTracking = () => {
+    if (orderData && orderData.orderDetails) {
+      // Transform order details into cart items format with all necessary fields
+      const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
+        const basePrice = detail.unitPrice || 0;
+
+        return {
+          id: detail.itemID,
+          itemID: detail.itemID,
+          itemName: detail.itemName,
+          menuName: detail.menuName,
+          itemDescription: detail.itemDescription || "",
+          price: basePrice,
+          currency: "NGN",
+          isAvailable: true,
+          hasVariety: detail.isVariety || false,
+          image: detail.image || "",
+          isVariety: detail.isVariety || false,
+          varieties: detail.varieties || null,
+          count: detail.quantity || 1,
+          packingCost: detail.packingCost || 0,
+          isPacked: detail.isPacked || false,
+          menuID: detail.menuID || "",
+          waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+        };
+      });
+
+      setSelectedItems(cartItems);
+      setIsUpdatingOrder(true); // Set flag to update existing order
+    }
+    setIsOrderTrackingOpen(false);
+    setIsCartOpen(true);
+  };
+
+  // Handle track order submission from TrackingDetailsModal
+  const handleTrackOrderSubmit = (orderData: any) => {
+    setOrderData(orderData);
+    setIsTrackingDetailsOpen(false);
+    setIsOrderTrackingOpen(true);
+  };
+
   return (
-    <main className='flex'>
-      <article
-        style={{
-          backgroundColor: menuConfig?.backgroundColour || 'white',
-        }}
-        className='flex-1 xl:block relative h-screen overflow-scroll shadow-lg'
-      >
-        {menuConfig?.image.length > baseString.length && (
-          <Image
-            fill
-            className='absolute backdrop-brightness-125 bg-cover opacity-25'
-            src={baseString + menuConfig?.image}
-            alt='background'
+    <main className="relative min-h-screen bg-white">
+      {/* Header Section with Banner */}
+      <RestaurantBanner
+        businessName={businessName || ""}
+        menuConfig={menuConfig}
+        showMenuButton={true}
+        onMenuClick={() => setIsMenuOpen(true)}
+        baseString={baseString}
+      />
+
+      {/* Search Bar */}
+      <div className="px-4 py-4 bg-white">
+        <div className="relative w-full md:max-w-2xl mx-auto">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <IoSearchOutline className="h-5 w-5 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search"
+            className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primaryColor focus:border-transparent outline-none bg-gray-50"
           />
-        )}
+          <div className="absolute inset-y-0 right-3 flex items-center">
+            <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
+          </div>
+        </div>
+      </div>
 
-        <div className='p-4 pt-6'>
-          <div className='flex justify-between mb-4'>
-            <div>
-              <h1 className='text-[28px] font-[700] text-black relative '>
-                Menu
-              </h1>
-              <p className='text-sm  text-grey600  w-full '>
-                {selectedItems.length > 0
-                  ? `${selectedItems.reduce((total, item) => total + item.count, 0)} Item${selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? 's' : ''} selected`
-                  : 'Select items from the menu'}
-              </p>
-            </div>
-            <CustomButton
-              onClick={handleCheckoutOpen}
-              className='py-2 px-4 mb-0 text-white'
-              backgroundColor='bg-primaryColor'
+      {/* Category Pills Filter with Arrows */}
+      {categories && categories.length > 0 && (
+        <div className="relative px-4 py-3 bg-white">
+          {/* Left Arrow */}
+          {showLeftArrow && (
+            <button
+              aria-label="Scroll left"
+              onClick={() => scrollCategories("left")}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
             >
-              <div className='flex gap-2 items-center justify-center'>
-                {selectedItems.length > 0 && (
-                  <span className='font-bold'>
-                    {' '}
-                    {formatPrice(calculateTotalPrice())}{' '}
-                  </span>
-                )}
-                <p>{'Proceed'} </p>
-                <HiArrowLongLeft className='text-[22px] rotate-180' />
-              </div>
-            </CustomButton>
-          </div>
-          <div className='mb-4'>
-            <CustomInput
-              classnames={'w-full md:w-[300px]'}
-              label=''
-              size='md'
-              value={searchQuery}
-              onChange={(e: any) => setSearchQuery(e.target.value)}
-              isRequired={false}
-              startContent={<IoSearchOutline />}
-              type='text'
-              placeholder='Search menu items...'
-            />
-          </div>
-        </div>
-        {topContent}
+              <IoChevronBack className="w-5 h-5 text-gray-700" />
+            </button>
+          )}
 
-        <div
-          className={`${
-            togglePreview(convertActiveTile(menuConfig?.layout))?.main
-          } relative  px-4`}
-        >
-          {matchingObjectArray?.map((item) => {
-            const isSelected =
-              selectedItems.find((selected) => selected.id === item.id) ||
-              selectedItems.some((menu) =>
-                item.varieties?.some((variety) => variety.id === menu.id)
+          {/* Category Pills */}
+          <div
+            ref={(el) => {
+              if (el && el !== categoryScrollRef) {
+                setCategoryScrollRef(el);
+                setTimeout(() => checkScrollPosition(), 100);
+              }
+            }}
+            onScroll={checkScrollPosition}
+            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {categories.map((category: any) => {
+              const isSelected = selectedCategoryId === category.id;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => handleTabClick(category.id, category.name)}
+                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isSelected
+                      ? "bg-primaryColor text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  {category.name}
+                </button>
               );
+            })}
+          </div>
 
-            return (
-              <>
-                <div
-                  onClick={() => {
-                    item?.isAvailable ? toggleVarietyModal(item) : null;
-                  }}
-                  key={item.menuID}
-                  className={`${
-                    togglePreview(convertActiveTile(menuConfig?.layout))
-                      ?.container
-                  } ${
-                    convertActiveTile(menuConfig?.layout) === "List Right" &&
-                    menuConfig?.useBackground &&
-                    "flex-row-reverse"
-                  } flex  my-4 text-black cursor-pointer relative`}
-                >
-                  {item?.isAvailable === false && (
-                    <Chip
-                      className={`capitalize absolute ${
-                        togglePreview(convertActiveTile(menuConfig?.layout))
-                          ?.chipPosition
-                      }`}
-                      color={"danger"}
-                      size="sm"
-                      variant="bordered"
-                    >
-                      {"Out of stock"}
-                    </Chip>
-                  )}
-                  {menuConfig?.useBackground && (
-                    <div
-                      className={
-                        togglePreview(convertActiveTile(menuConfig?.layout))
-                          ?.imageContainer
-                      }
-                    >
-                      <Image
-                        className={`bg-cover rounded-lg ${
-                          togglePreview(convertActiveTile(menuConfig?.layout))
-                            ?.imageClass
-                        }`}
-                        width={60}
-                        height={60}
-                        src={item.image ? `${baseString}${item.image}` : noMenu}
-                        alt="menu"
-                      />
-                    </div>
-                  )}
-                  <div
-                    style={{
-                      color: menuConfig?.textColour,
-                    }}
-                    className={`text-[14px]  ${
-                      togglePreview(convertActiveTile(menuConfig?.layout))
-                        ?.textContainer
-                    } flex flex-col justify-center `}
-                  >
-                    <p className="font-[700]">{item.itemName}</p>
-                    <p className="text-[13px]">{item.menuName}</p>
-                    <p className="text-[13px]">{formatPrice(item.price)}</p>
-                    {isSelected && (
-                      <Chip
-                        startContent={<CheckIcon size={18} />}
-                        variant="flat"
-                        classNames={{
-                          base: "bg-primaryColor text-white text-[10px] mt-1",
-                        }}
-                      >
-                        Selected
-                      </Chip>
-                    )}
-                  </div>
-                  {/* Quick Add Button */}
-                  {item?.isAvailable && (
-                    <button
-                      onClick={(e) => handleQuickAdd(item, e)}
-                      className="absolute bottom-2 right-2 bg-primaryColor text-white rounded-full p-2 shadow-md hover:scale-110 transition-transform"
-                      aria-label="Quick add to cart"
-                    >
-                      <IoAddCircleOutline className="text-lg" />
-                    </button>
-                  )}
-                </div>
-                {togglePreview(convertActiveTile(menuConfig?.layout))
-                  ?.divider && <Divider className="text-[#E4E7EC] h-[1px]" />}
-              </>
-            );
-          })}
+          {/* Right Arrow */}
+          {showRightArrow && (
+            <button
+              aria-label="Scroll right"
+              onClick={() => scrollCategories("right")}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
+            >
+              <IoChevronForward className="w-5 h-5 text-gray-700" />
+            </button>
+          )}
         </div>
-      </article>
+      )}
 
-      {/* Selected Items Sidebar - Desktop only */}
-      <aside className="hidden xl:block w-[380px] h-screen bg-[#F7F6FA] p-4 overflow-y-auto">
-        {selectedItems.length > 0 ? (
-          <>
-            <h2 className="font-[600] text-lg mb-4">
-              {selectedItems.reduce((total, item) => total + item.count, 0)} Item{selectedItems.reduce((total, item) => total + item.count, 0) !== 1 ? 's' : ''} selected
-            </h2>
-            <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto">
-              {selectedItems.map((item) => (
+      {/* Menu Items - Dynamic Layout */}
+      <div className="pb-20">
+        {/* Loading State - Skeleton Loaders */}
+        {isLoading && (
+          <div className="px-4">
+            {/* Skeleton for grid/list layouts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, index) => (
                 <div
-                  key={item.id}
-                  className="bg-white rounded-lg p-3 flex items-center justify-between"
+                  key={index}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse"
                 >
-                  <div className="flex items-center space-x-3">
-                    <Image
-                      src={item?.image ? `data:image/jpeg;base64,${item?.image}` : noImage}
-                      width={50}
-                      height={50}
-                      className="object-cover rounded-lg"
-                      alt={item.itemName}
-                    />
-                    <div>
-                      <p className="font-[600] text-sm">{item.itemName}</p>
-                      <p className="text-grey600 text-xs">{item.menuName}</p>
-                      <p className="font-[600] text-primaryColor text-sm">
-                        {formatPrice(item.price)}
-                      </p>
+                  {/* Image Skeleton */}
+                  <div className="h-48 bg-gray-200"></div>
+
+                  {/* Content Skeleton */}
+                  <div className="p-4 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="flex justify-between items-center mt-4">
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handleDecrement(item.id)}
-                      className="border border-grey400 rounded p-1 hover:bg-gray-100"
-                      aria-label="minus"
-                    >
-                      <FaMinus className="text-xs" />
-                    </button>
-                    <span className="font-bold text-sm px-2">
-                      {item.count}
-                    </span>
-                    <button
-                      onClick={() => handleIncrement(item.id)}
-                      className="border border-grey400 rounded p-1 hover:bg-gray-100"
-                      aria-label="plus"
-                    >
-                      <FaPlus className="text-xs" />
-                    </button>
                   </div>
                 </div>
               ))}
             </div>
-            <Divider className="my-4" />
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <p className="font-bold">Total:</p>
-                <p className="font-bold text-lg">{formatPrice(calculateTotalPrice())}</p>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col h-full justify-center items-center">
-            <Image
-              className="w-[80px] h-[80px] mb-4"
-              src={noMenu}
-              alt="no menu illustration"
-            />
-            <p className="text-sm text-grey400 text-center">
-              Selected items will appear here
-            </p>
           </div>
         )}
-      </aside>
 
-      {isOpen && (
-        <CheckoutModal
-          qrId={qrId}
-          handleDecrement={handleDecrement}
-          handleIncrement={handleIncrement}
-          selectedItems={selectedItems}
-          totalPrice={calculateTotalPrice()}
-          onOpenChange={onOpenChange}
-          isOpen={isOpen}
-          selectedMenu={selectedMenu}
-          closeModal={true}
-          businessId={businessId}
-          cooperateID={cooperateID}
-          handlePackingCost={handlePackingCost}
-          setSelectedItems={setSelectedItems}
-        />
+        {/* Error State */}
+        {isError && (
+          <div className="flex flex-col items-center justify-center py-20 px-4">
+            <Error
+              imageHeight="h-24"
+              imageWidth="w-24"
+              onClick={() => refetch()}
+              title="Unable to Load Menu"
+              message="We couldn't load the menu at this time. This could be due to a network issue or the menu may be temporarily unavailable. Please check your connection and try again."
+            />
+          </div>
+        )}
+
+        {/* Menu Items */}
+        {!isLoading &&
+          !isError &&
+          (() => {
+            const layoutName = convertActiveTile(menuConfig?.layout);
+            const preview = togglePreview(layoutName);
+            const isGridLayout = [
+              "Double column",
+              "Single column 2",
+              "Single column 1",
+            ].includes(layoutName || "");
+
+            return (
+              <div className={`${preview?.main || "relative px-4"}`}>
+                {matchingObjectArray?.map((item) => {
+                  const isSelected =
+                    selectedItems.find((selected) => selected.id === item.id) ||
+                    selectedItems.some((menu) =>
+                      item.varieties?.some(
+                        (variety: any) => variety.id === menu.id
+                      )
+                    );
+                  const isListLayout = layoutName?.includes("List");
+                  const isCompactGrid = layoutName === "Single column 2";
+
+                  return (
+                    <div
+                      key={item.id || item.menuID}
+                      className={`${preview?.container} ${
+                        layoutName === "List Right" &&
+                        menuConfig?.useBackground &&
+                        "flex-row-reverse"
+                      } ${
+                        isListLayout ? "flex" : ""
+                      } my-3 text-black relative transition-all ${
+                        item?.isAvailable
+                          ? "cursor-pointer shadow-md"
+                          : "bg-gray-100 shadow-md cursor-not-allowed"
+                      }`}
+                    >
+                      {item?.isAvailable === false && (
+                        <Chip
+                          className={`capitalize absolute ${preview?.chipPosition} z-20`}
+                          color={"danger"}
+                          size="sm"
+                          variant="flat"
+                        >
+                          Out of stock
+                        </Chip>
+                      )}
+
+                      {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
+                      {item?.isAvailable && !isViewOnlyMode && (
+                        <>
+                          {/* Single column 1: Full-width button at bottom */}
+                          {layoutName === "Single column 1" && (
+                            <button
+                              onClick={(e) => handleQuickAdd(item, e)}
+                              className="absolute bottom-0 left-0 right-0 bg-primaryColor text-white py-3 px-4 rounded-b-2xl font-medium text-sm hover:bg-primaryColor/90 transition-all flex items-center justify-center gap-2 z-20"
+                            >
+                              <IoAddCircleOutline className="w-5 h-5" />
+                              Add Items
+                            </button>
+                          )}
+
+                          {/* Single column 2 (3-grid) & Double column (2-grid): Circular button bottom-right */}
+                          {(layoutName === "Single column 2" ||
+                            layoutName === "Double column") && (
+                            <button
+                              onClick={(e) => handleQuickAdd(item, e)}
+                              className="absolute bottom-3 right-3 bg-primaryColor text-white rounded-full p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
+                              aria-label="Add to cart"
+                            >
+                              <IoAddCircleOutline className="w-5 h-5" />
+                            </button>
+                          )}
+
+                          {/* List left & List Right: Circular button on right side */}
+                          {(layoutName === "List left" ||
+                            layoutName === "List Right") && (
+                            <button
+                              onClick={(e) => handleQuickAdd(item, e)}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 bg-primaryColor text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
+                              aria-label="Add to cart"
+                            >
+                              <IoAddCircleOutline className="w-5 h-5" />
+                            </button>
+                          )}
+                        </>
+                      )}
+
+                      {/* Image Container */}
+                      <div
+                        className={`${preview?.imageContainer || ""} relative`}
+                      >
+                        <div
+                          className={`relative bg-gradient-to-br from-primaryColor/10 via-primaryColor/5 to-purple-100 flex items-center justify-center overflow-hidden ${
+                            preview?.imageClass || "h-32"
+                          }`}
+                        >
+                          {item.image &&
+                          item.image.length > baseString.length ? (
+                            <Image
+                              fill
+                              className="object-cover"
+                              src={`${baseString}${item.image}`}
+                              alt={item.itemName}
+                            />
+                          ) : (
+                            <Image
+                              fill
+                              className="object-contain p-4"
+                              src={noMenu}
+                              alt="No image available"
+                            />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Text Content */}
+                      <div
+                        style={{
+                          color: menuConfig?.textColour || "#1F2937",
+                        }}
+                        className={`${preview?.textContainer} flex flex-col ${
+                          isListLayout ? "justify-center" : "justify-start"
+                        }`}
+                      >
+                        <p
+                          className={`font-bold ${
+                            isCompactGrid ? "text-xs" : "text-sm"
+                          } line-clamp-1`}
+                        >
+                          {item.itemName}
+                        </p>
+                        <p
+                          className={`text-gray-500 ${
+                            isCompactGrid ? "text-[10px]" : "text-xs"
+                          } line-clamp-2 mt-0.5`}
+                        >
+                          {item.itemDescription || preview?.text3}
+                        </p>
+                        <p
+                          className={`font-semibold text-primaryColor ${
+                            isCompactGrid ? "text-xs" : "text-sm"
+                          } mt-1`}
+                        >
+                          {formatPrice(item.price)}
+                        </p>
+                        {isSelected && (
+                          <Chip
+                            startContent={<CheckIcon size={14} />}
+                            variant="flat"
+                            size="sm"
+                            classNames={{
+                              base: "bg-primaryColor text-white text-[10px] mt-1.5 h-5",
+                            }}
+                          >
+                            Selected
+                          </Chip>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Empty State - No Results */}
+                {matchingObjectArray?.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 px-4 col-span-full">
+                    <div className="text-gray-300 mb-4">
+                      <svg
+                        className="w-24 h-24 mx-auto"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                      No items found
+                    </h3>
+                    <p className="text-sm text-gray-500 text-center max-w-md">
+                      {searchQuery
+                        ? `No results for "${searchQuery}". Try a different search term.`
+                        : "No menu items available at the moment."}
+                    </p>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="mt-4 px-4 py-2 text-primaryColor hover:underline text-sm font-medium"
+                      >
+                        Clear search
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {/* Load More Button */}
+                {matchingObjectArray?.length > 0 &&
+                  unfilteredArray?.length > itemsToShow && (
+                    <div className="flex justify-center mt-6 mb-4">
+                      <button
+                        onClick={handleLoadMore}
+                        className="px-6 py-3 bg-primaryColor text-white rounded-lg font-medium hover:bg-primaryColor/90 transition-colors"
+                      >
+                        Load More ({unfilteredArray.length - itemsToShow}{" "}
+                        remaining)
+                      </button>
+                    </div>
+                  )}
+              </div>
+            );
+          })()}
+      </div>
+
+      {/* Floating Cart Icon with Badge - Only show on menu browsing page (hidden in view-only mode) */}
+      {!isViewOnlyMode &&
+        selectedItems.length > 0 &&
+        !isCartOpen &&
+        !isServingInfoOpen &&
+        !isOrderTrackingOpen && (
+          <button
+            onClick={handleCheckoutOpen}
+            className="fixed bottom-6 right-6 bg-primaryColor hover:bg-primaryColor/90 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-105 z-[60]"
+            aria-label="View cart"
+          >
+            <div className="relative">
+              <svg
+                width="22"
+                height="21"
+                viewBox="0 0 22 21"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-7 h-7"
+              >
+                <circle
+                  cx="10.9984"
+                  cy="2.49844"
+                  r="1.5"
+                  stroke="white"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M10.998 6.39648C15.9685 6.39648 19.9978 10.4261 19.998 15.3965V17.7041C19.998 17.9207 19.823 18.0965 19.6064 18.0967H2.39062C2.17401 18.0966 1.99805 17.9207 1.99805 17.7041V15.3965C1.99826 10.4262 6.0278 6.3967 10.998 6.39648Z"
+                  stroke="white"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M1.39844 19.8984H20.5984"
+                  stroke="white"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                {selectedItems.reduce((total, item) => total + item.count, 0)}
+              </span>
+            </div>
+          </button>
+        )}
+
+      {/* Hamburger Menu Drawer */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setIsMenuOpen(false)}
+          />
+
+          {/* Menu Drawer */}
+          <div className="absolute top-0 left-0 h-full w-80 bg-white shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-bold text-black">Menu</h2>
+              <button
+                aria-label="Close menu"
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <IoClose className="w-6 h-6 text-gray-700" />
+              </button>
+            </div>
+
+            {/* Menu Items */}
+            <div className="p-4">
+              {/* View Menu - Active */}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  // Scroll to top to show menu
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full flex items-start gap-4 p-4 bg-purple-50 rounded-lg transition-colors text-left"
+              >
+                <div className="p-2 bg-primaryColor rounded-lg">
+                  <MdOutlineRestaurantMenu className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-primaryColor">View Menu</h3>
+                  <p className="text-sm text-gray-600">
+                    Browse our full menu selection
+                  </p>
+                </div>
+              </button>
+
+              {/* Track Order */}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  setIsTrackingDetailsOpen(true);
+                }}
+                className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
+              >
+                <div className="p-2 bg-purple-50 rounded-lg">
+                  <BiPackage className="w-6 h-6 text-primaryColor" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-black">Track Order</h3>
+                  <p className="text-sm text-gray-600">
+                    View order preparation in real time
+                  </p>
+                </div>
+              </button>
+
+              {/* Book Reservation */}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  router.push(
+                    `/reservation/select-reservation?businessID=${businessId}&cooperateID=${
+                      cooperateID || ""
+                    }&businessName=${businessName}`
+                  );
+                }}
+                className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
+              >
+                <div className="p-2 bg-purple-50 rounded-lg">
+                  <IoCalendarOutline className="w-6 h-6 text-primaryColor" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-black">Book Reservation</h3>
+                  <p className="text-sm text-gray-600">
+                    Reserve a table for you and friends
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
+
+      {/* New Modal Flow */}
+      <CartModal
+        isOpen={isCartOpen}
+        onOpenChange={() => setIsCartOpen(false)}
+        selectedItems={selectedItems}
+        handleDecrement={handleDecrement}
+        handleIncrement={handleIncrement}
+        handleRemoveItem={handleRemoveItem}
+        handlePackingCost={handlePackingCost}
+        onProceedToServingInfo={handleProceedToServingInfo}
+        businessName={businessName}
+        menuConfig={menuConfig}
+        baseString={baseString}
+      />
+
+      <ServingInfoModal
+        isOpen={isServingInfoOpen}
+        onOpenChange={() => setIsServingInfoOpen(false)}
+        onSubmit={handleSubmitServingInfo}
+        onBack={() => {
+          setIsServingInfoOpen(false);
+          setIsCartOpen(true);
+        }}
+        loading={orderLoading}
+        errors={orderErrors}
+        businessName={businessName}
+        menuConfig={menuConfig}
+        baseString={baseString}
+      />
+
+      <OrderTrackingPage
+        isOpen={isOrderTrackingOpen}
+        onClose={() => setIsOrderTrackingOpen(false)}
+        trackingId={orderData?.reference || ""}
+        orderStatus={
+          orderData?.status === 0
+            ? "placed"
+            : orderData?.status === 1
+            ? "accepted"
+            : orderData?.status === 2
+            ? "preparing"
+            : "served"
+        }
+        estimatedTime={orderData?.estimatedCompletionTime}
+        onAddMoreItems={handleAddMoreItemsFromTracking}
+        onCheckout={handleCheckoutFromTracking}
+        businessName={businessName}
+        menuConfig={menuConfig}
+        baseString={baseString}
+        orderData={orderData}
+        businessId={businessId || ""}
+        cooperateId={cooperateID || ""}
+      />
+
+      <TrackingDetailsPage
+        isOpen={isTrackingDetailsOpen}
+        onClose={() => setIsTrackingDetailsOpen(false)}
+        onTrackOrder={handleTrackOrderSubmit}
+        businessName={businessName || ""}
+        businessId={businessId || ""}
+        cooperateId={cooperateID || ""}
+        menuConfig={menuConfig}
+        baseString={baseString}
+      />
 
       <ViewModal
         handleCheckoutOpen={handleCheckoutOpen}

@@ -1645,12 +1645,16 @@ const RestaurantMenu = () => {
   if (role !== 0 && !userRolePermissions?.canViewMenu) {
     return null; // Will redirect via useEffect
   }
-
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const cooperateId = userInformation ? userInformation?.cooperateID : null;
   return (
     <div className="min-h-screen font-satoshi">
       <MenuHeader
         menuSections={menuSections}
         menuItems={filteredMenuItems}
+        cooperateId={cooperateId}
+        businessInformation={businessInformation}
         activeSubCategory={activeSubCategory}
         isExporting={isExporting}
         handleExportCSV={handleExportCSV}
@@ -1677,7 +1681,9 @@ const RestaurantMenu = () => {
         handleMenuSectionSelect={handleMenuSectionSelect}
         setViewMenuMode={setViewMenuMode}
         setIsOpenViewMenu={setIsOpenViewMenu}
-        canCreateMenu={role === 0 || userRolePermissions?.canCreateMenu === true}
+        canCreateMenu={
+          role === 0 || userRolePermissions?.canCreateMenu === true
+        }
       />
 
       <MenuItemsGrid
@@ -1689,7 +1695,9 @@ const RestaurantMenu = () => {
         setIsAddItemChoiceModalOpen={setIsAddItemChoiceModalOpen}
         handleItemClick={handleItemClick}
         searchQuery={searchQuery}
-        canCreateMenu={role === 0 || userRolePermissions?.canCreateMenu === true}
+        canCreateMenu={
+          role === 0 || userRolePermissions?.canCreateMenu === true
+        }
       />
 
       {/* Pagination */}
@@ -1770,7 +1778,6 @@ const RestaurantMenu = () => {
         onEditVariety={handleEditVariety}
         onDeleteVariety={handleDeleteVariety}
       />
-
 
       <EditVarietyModal
         isOpen={isEditVarietyModalOpen}
@@ -1854,7 +1861,11 @@ const RestaurantMenu = () => {
           }
         }}
         isLoading={loading}
-        text={selectedMenu?.categoryId ? "Are you sure you want to delete this category?" : "Are you sure you want to delete this menu?"}
+        text={
+          selectedMenu?.categoryId
+            ? "Are you sure you want to delete this category?"
+            : "Are you sure you want to delete this menu?"
+        }
       />
 
       <CreateSectionModal

@@ -9,6 +9,7 @@ import "@fontsource/bricolage-grotesque/400.css";
 import "@fontsource/bricolage-grotesque/500.css";
 import "@fontsource/bricolage-grotesque/700.css";
 import { Toaster } from "react-hot-toast";
+import { Toaster as SonnerToaster } from "sonner";
 import { companyInfo } from "../lib/companyInfo";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
@@ -53,6 +54,7 @@ export default function RootLayout({
                   },
                 }}
               />
+              <SonnerToaster position="top-right" richColors />
             </Providers>
           </AppProvider>
         </QueryProvider>
