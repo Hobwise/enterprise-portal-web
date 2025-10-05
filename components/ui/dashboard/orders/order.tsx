@@ -68,6 +68,7 @@ interface OrderItem {
   paymentReference: string;
   status: 0 | 1 | 2 | 3;
   dateCreated: string;
+  dateUpdated: string;
   comment?: string;
   orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number }[];
 }
@@ -96,7 +97,7 @@ const INITIAL_VISIBLE_COLUMNS = [
   "qrReference",
   "orderID",
   "status",
-  "dateCreated",
+  "dateUpdated",
   "actions",
 ];
 
@@ -361,7 +362,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
       else if (second === null || second === undefined) cmp = -1;
       else if (typeof first === 'string' && typeof second === 'string') {
         // Special handling for date strings
-        if (sortDescriptor.column === 'dateCreated') {
+        if (sortDescriptor.column === 'dateUpdated') {
           cmp = new Date(first).getTime() - new Date(second).getTime();
         } else {
           cmp = first.localeCompare(second);
@@ -435,7 +436,35 @@ const OrdersList: React.FC<OrdersListProps> = ({
         text: "Payment has been made, awaiting confirmation",
         type: "success",
       });
-      await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
+
+      // Invalidate all order-related queries to force refetch from backend
+      await queryClient.invalidateQueries({
+        queryKey: ['orderCategories'],
+        refetchType: 'active'
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['orderDetails'],
+        refetchType: 'active'
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['orders'],
+        refetchType: 'active'
+      });
+
+      // Force immediate refetch of all active queries
+      await queryClient.refetchQueries({
+        queryKey: ['orderCategories'],
+        type: 'active'
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['orderDetails'],
+        type: 'active'
+      });
+      await queryClient.refetchQueries({
+        queryKey: ['orders'],
+        type: 'active'
+      });
+
       setIsOpenPaymentModal(false);
       refetch();
     } else if (data?.data?.error) {
@@ -450,7 +479,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [value, setValue] = useState('');
 
   // Category state management
-  const [currentCategory, setCurrentCategory] = useState<OrderCategory | undefined>();
+  // const [currentCategory, setCurrentCategory] = useState<OrderCategory | undefined>();
   const [isCategoryEmpty, setIsCategoryEmpty] = useState<boolean>(false);
   const [shouldShowLoading, setShouldShowLoading] = useState<boolean>(false);
 
@@ -463,7 +492,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
     const foundCategory = categories?.find((c: OrderCategory) => c.name === (tableStatus || categories?.[0]?.name || 'All Orders'));
     const isEmpty = !!(foundCategory && foundCategory?.count === 0);
     const showLoading = isLoadingInitial && !currentCategoryData && !isEmpty;
-    setCurrentCategory(foundCategory);
+    // setCurrentCategory(foundCategory);
     setIsCategoryEmpty(isEmpty);
     setShouldShowLoading(showLoading);
   }, [categories, tableStatus, isLoadingInitial, currentCategoryData]);
@@ -550,10 +579,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
             {statusDataMap[cellValue as number]}
           </Chip>
         );
-      case 'dateCreated':
+      case 'dateUpdated':
         return (
           <div className='text-textGrey text-sm'>
-            {moment(order.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+            {moment(order.dateUpdated).format('MMM DD, YYYY h:mm A')}
           </div>
         );
 

@@ -113,7 +113,7 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     new Set(visibleColumn)
   );
   const [sortDescriptor, setSortDescriptor] = React.useState({
-    column: 'dateCreated',
+    column: 'dateUpdated',
     direction: 'descending',
   });
 

@@ -55,7 +55,7 @@ const useAllOrdersData = (
       );
       return response?.data?.data || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0, // Always consider stale to ensure immediate refetch when orders are updated
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
@@ -82,7 +82,7 @@ const useAllOrdersData = (
       return response;
     },
     enabled: !!firstCategory && categories.length > 0,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0, // Always consider stale to ensure immediate refetch when orders are updated
     gcTime: 10 * 60 * 1000,
   });
 

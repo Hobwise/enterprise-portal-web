@@ -77,7 +77,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   isOpen,
   onOpenChange,
   orderData,
-  onOrderUpdated,
+  onOrderUpdated: _onOrderUpdated,
   onProcessPayment,
   onProceedToConfirm,
 }) => {
@@ -89,10 +89,12 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [storedOrderData, setStoredOrderData] = useState<OrderData | null>(
+  const [_storedOrderData, setStoredOrderData] = useState<OrderData | null>(
     null
   );
   const [isDataProcessingComplete, setIsDataProcessingComplete] = useState<boolean>(false);
+  const [additionalCost, setAdditionalCost] = useState<number>(0);
+  const [additionalCostName, setAdditionalCostName] = useState<string>("");
 
   // Timer ref for cleanup
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -196,6 +198,11 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         }
       );
       setSelectedItems(() => updatedArray);
+
+      // Extract additional cost from order details
+      setAdditionalCost(fullOrderData.additionalCost || 0);
+      setAdditionalCostName(fullOrderData.additionalCostName || "");
+
       setIsDataProcessingComplete(true);
     }
     // If data is already loaded (cached) and successful, mark as complete
@@ -468,13 +475,23 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         {formatPrice(calculateTotalPrice() * 0.075)}
                       </p>
                     </div>
+                    {additionalCost > 0 && (
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-[14px] font-[400] text-textGrey">
+                          {additionalCostName || "Additional Cost"}
+                        </h4>
+                        <p className="text-[14px] font-[500] text-textGrey">
+                          {formatPrice(additionalCost)}
+                        </p>
+                      </div>
+                    )}
                     <Divider className="bg-primaryGrey my-3" />
                     <div className="flex justify-center flex-col items-center">
                       <h4 className="text-[16px] font-[600] text-textGrey">
                         Grand Total
                       </h4>
                       <p className="text-[18px] font-[700] text-primaryColor">
-                        {formatPrice(calculateTotalPrice() * 1.075)}
+                        {formatPrice((calculateTotalPrice() * 1.075) + additionalCost)}
                       </p>
                     </div>
 

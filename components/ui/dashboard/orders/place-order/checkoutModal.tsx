@@ -110,6 +110,7 @@ const CheckoutModal = ({
     placedByName?: boolean;
     placedByPhoneNumber?: boolean;
     quickResponseID?: boolean;
+    additionalCostName?: boolean;
   }>({});
   const [reference, setReference] = useState("");
   const [screen, setScreen] = useState(1);
@@ -186,6 +187,12 @@ const CheckoutModal = ({
       if (invalidItems.length > 0) {
         errors.push('Some selected items have invalid data');
       }
+    }
+
+    // Validate additional cost name if additional cost is provided
+    if (additionalCost > 0 && !additionalCostName?.trim()) {
+      errors.push('Additional cost name is required when amount is provided');
+      fieldErrors.additionalCostName = true;
     }
 
     // Set validation errors for UI
@@ -296,9 +303,33 @@ const CheckoutModal = ({
       try {
         if (pathname === '/dashboard/orders') {
           // Already on orders page - just close modal and refresh data
-          await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
-          await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-          await queryClient.invalidateQueries({ queryKey: ['orders'] });
+          // Invalidate all order-related queries to force refetch from backend
+          await queryClient.invalidateQueries({
+            queryKey: ['orderCategories'],
+            refetchType: 'active'
+          });
+          await queryClient.invalidateQueries({
+            queryKey: ['orderDetails'],
+            refetchType: 'active'
+          });
+          await queryClient.invalidateQueries({
+            queryKey: ['orders'],
+            refetchType: 'active'
+          });
+
+          // Force immediate refetch of all active queries
+          await queryClient.refetchQueries({
+            queryKey: ['orderCategories'],
+            type: 'active'
+          });
+          await queryClient.refetchQueries({
+            queryKey: ['orderDetails'],
+            type: 'active'
+          });
+          await queryClient.refetchQueries({
+            queryKey: ['orders'],
+            type: 'active'
+          });
 
           // Call the refetch function to update the table immediately
           if (onOrderSuccess) {
@@ -549,7 +580,7 @@ const CheckoutModal = ({
 
     setLoading(true);
 
-    let payload = {};
+    let payload: any = {};
     try {
       const transformedArray = selectedItems.map((item: any) => {
         const finalItemID = item.itemID || item.id;
@@ -599,15 +630,15 @@ const CheckoutModal = ({
     }
 
     // Check if calculated total matches our frontend total
-    const calculationDifference = Math.abs(calculationVerification.calculated - payload.totalAmount);
-    if (calculationDifference > 0.01) {
-      console.warn('Calculation mismatch detected:', {
-        frontendTotal: payload.totalAmount,
-        verifiedTotal: calculationVerification.calculated,
-        difference: calculationDifference,
-        breakdown: calculationVerification.breakdown
-      });
-    }
+    const _calculationDifference = Math.abs(calculationVerification.calculated - payload.totalAmount);
+    // if (_calculationDifference > 0.01) {
+    //   console.warn('Calculation mismatch detected:', {
+    //     frontendTotal: payload.totalAmount,
+    //     verifiedTotal: calculationVerification.calculated,
+    //     difference: _calculationDifference,
+    //     breakdown: calculationVerification.breakdown
+    //   });
+    // }
 
     // Validate payload before sending
     const validation = validateOrderPayload(payload);
@@ -661,22 +692,46 @@ const CheckoutModal = ({
     setLoading(false);
 
     if (hasDataProperty(data) && data.data?.isSuccessful) {
-      setOrderId(data.data.data?.id || "");
+      const apiData = data as ApiResponse;
+      setOrderId(apiData.data?.data?.id || "");
       notify({
         title: "Success!",
         text: "Order placed successfully",
         type: "success",
       });
 
-      // Clear cache and invalidate queries
+      // Clear cache and invalidate queries - be more aggressive to ensure fresh data
       ordersCacheUtils.clearAll();
-      await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
-      await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-      await queryClient.invalidateQueries({ queryKey: ['orders'] });
 
-      // Force immediate refresh if on orders page
+      // Invalidate all order-related queries to force refetch from backend
+      await queryClient.invalidateQueries({
+        queryKey: ['orderCategories'],
+        refetchType: 'active'
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['orderDetails'],
+        refetchType: 'active'
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['orders'],
+        refetchType: 'active'
+      });
+
+      // Force immediate refetch of all active queries
       if (pathname === '/dashboard/orders') {
-        await queryClient.refetchQueries({ queryKey: ['orders'] });
+        await queryClient.refetchQueries({
+          queryKey: ['orderCategories'],
+          type: 'active'
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['orderDetails'],
+          type: 'active'
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['orders'],
+          type: 'active'
+        });
+
         // Call the refetch function to update the table immediately
         if (onOrderSuccess) {
           onOrderSuccess();
@@ -686,11 +741,12 @@ const CheckoutModal = ({
       // Stay on screen 2 (payment selection) - user needs to choose payment method
       // Screen is already set to 2 by handleCheckoutClick
     } else if (hasDataProperty(data) && data.data?.error) {
-      console.error('Order creation failed:', data.data.error);
+      const apiData = data as ApiResponse;
+      console.error('Order creation failed:', apiData.data?.error);
       console.error('Failed payload:', payload);
       notify({
         title: "Order Creation Failed",
-        text: data.data.error,
+        text: apiData.data?.error || "Unknown error",
         type: "error",
       });
     } else if (data && 'errors' in data) {
@@ -819,15 +875,38 @@ const CheckoutModal = ({
         type: "success",
       });
 
-      // Clear cache and invalidate queries
+      // Clear cache and invalidate queries - be more aggressive to ensure fresh data
       ordersCacheUtils.clearAll();
-      await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
-      await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-      await queryClient.invalidateQueries({ queryKey: ['orders'] });
 
-      // Force immediate refresh if on orders page
+      // Invalidate all order-related queries to force refetch from backend
+      await queryClient.invalidateQueries({
+        queryKey: ['orderCategories'],
+        refetchType: 'active'
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['orderDetails'],
+        refetchType: 'active'
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['orders'],
+        refetchType: 'active'
+      });
+
+      // Force immediate refetch of all active queries
       if (pathname === '/dashboard/orders') {
-        await queryClient.refetchQueries({ queryKey: ['orders'] });
+        await queryClient.refetchQueries({
+          queryKey: ['orderCategories'],
+          type: 'active'
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['orderDetails'],
+          type: 'active'
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['orders'],
+          type: 'active'
+        });
+
         // Call the refetch function to update the table immediately
         if (onOrderSuccess) {
           onOrderSuccess();
@@ -926,11 +1005,36 @@ const CheckoutModal = ({
         }
 
         // Background cleanup operations (users won't see these)
-        // Clear cache and invalidate queries
+        // Clear cache and invalidate queries - be more aggressive to ensure fresh data
         ordersCacheUtils.clearAll();
-        await queryClient.invalidateQueries({ queryKey: ['orderCategories'] });
-        await queryClient.invalidateQueries({ queryKey: ['orderDetails'] });
-        await queryClient.invalidateQueries({ queryKey: ['orders'] });
+
+        // Invalidate all order-related queries to force refetch from backend
+        await queryClient.invalidateQueries({
+          queryKey: ['orderCategories'],
+          refetchType: 'active'
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ['orderDetails'],
+          refetchType: 'active'
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ['orders'],
+          refetchType: 'active'
+        });
+
+        // Force immediate refetch of all active queries
+        await queryClient.refetchQueries({
+          queryKey: ['orderCategories'],
+          type: 'active'
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['orderDetails'],
+          type: 'active'
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['orders'],
+          type: 'active'
+        });
 
         // Call the refetch function to update the table immediately
         if (onOrderSuccess) {
@@ -1184,11 +1288,12 @@ const CheckoutModal = ({
 
                                   <div className="px-3 flex  flex-col text-sm justify-center">
                                     <p className="font-[600]">
-                                      {item.menuName}
+                                      
+                                       {item.itemName}
                                     </p>
                                     <Spacer y={2} />
                                     <p className="text-grey600">
-                                      {item.itemName}{" "}
+                                    {item.menuName} {" "}
                                       <span className="text-black">
                                         {item.unit && `(${item.unit})`}
                                       </span>
@@ -1310,12 +1415,21 @@ const CheckoutModal = ({
                                 <CustomInput
                                   type="text"
                                   size="sm"
-                                  onChange={(e: any) =>
-                                    setAdditionalCostName(e.target.value)
-                                  }
+                                  onChange={(e: any) => {
+                                    setAdditionalCostName(e.target.value);
+                                    // Clear validation error when user starts typing
+                                    if (validationErrors.additionalCostName) {
+                                      setValidationErrors(prev => ({
+                                        ...prev,
+                                        additionalCostName: false
+                                      }));
+                                    }
+                                  }}
                                   value={additionalCostName}
                                   name="additionalCostName"
                                   placeholder="Enter cost name"
+                                  isInvalid={!!validationErrors.additionalCostName}
+                                  errorMessage={validationErrors.additionalCostName ? "Cost name is required" : ""}
                                 />
                               </div>
                             </div>
@@ -1431,7 +1545,7 @@ const CheckoutModal = ({
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
                                       <Button
-                                        onClick={() => handleDecrement(item.id)}
+                                        onPress={() => handleDecrement(item.id)}
                                         isIconOnly
                                         radius="sm"
                                         size="md"
@@ -1445,7 +1559,7 @@ const CheckoutModal = ({
                                         {item.count}
                                       </span>
                                       <Button
-                                        onClick={() => handleIncrement(item.id)}
+                                        onPress={() => handleIncrement(item.id)}
                                         isIconOnly
                                         radius="sm"
                                         size="md"
@@ -1628,7 +1742,7 @@ const CheckoutModal = ({
                           <div className="p-4 border border-[#E4E7EC80] rounded-lg">
                             <h3 className="font-semibold text-sm text-black mb-3">Order Items ({selectedItems?.length})</h3>
                             <div className="space-y-3">
-                              {selectedItems?.map((item: any, index: number) => (
+                              {selectedItems?.map((item: any) => (
                                 <div key={item.id} className="flex justify-between items-center">
                                   <div className="flex-1">
                                     <p className="text-sm font-medium text-black">{item.itemName}</p>
