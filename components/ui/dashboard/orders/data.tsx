@@ -26,7 +26,7 @@ export const availableOptions: Record<string, AvailableOption[]> = {
   open: ["Update Order", "Checkout", "Cancel Order"],
   closed: ["Generate Invoice"],
   cancelled: [],
-  "awaiting confirmation": ["Generate Invoice"],
+  "awaiting confirmation": ["Update Order", "Checkout", "Cancel Order"],
 };
 export const statusDataMap: Record<
   number,

@@ -66,7 +66,7 @@ const useDateFilter = (endpoint: any) => {
   const endDate = value.end
     ? `${formatDateTimeForPayload2(value.end)}Z`
     : undefined;
-  const {  categories, details, isError, refetch, isLoading } = endpoint(
+  const {  categories, details, salesSummary, isError, refetch, isLoading } = endpoint(
     logIndexForSelectedKey(effectiveSelectedValue),
     startDate,
     endDate,
@@ -184,11 +184,13 @@ const useDateFilter = (endpoint: any) => {
   );
   const filterType = logIndexForSelectedKey(effectiveSelectedValue);
   return {
-    categories, details,
+    categories,
+    details,
+    salesSummary,
     isError,
     refetch,
     isLoading: combinedIsLoading,
-  
+
     dropdownComponent,
     datePickerModal,
     filterType,

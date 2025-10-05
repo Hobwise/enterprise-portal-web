@@ -89,13 +89,14 @@ const useOrder = (
       );
 
       if (!categoriesResponse?.data?.orderCategories) {
-        return { categories: [], details: [] };
+        return { categories: [], details: [], salesSummary: null };
       }
 
       const categories = categoriesResponse?.data.orderCategories;
+      const salesSummary = categoriesResponse?.data?.salesSummary || null;
 
       if (categories.length === 0) {
-        return { categories: [], details: [] };
+        return { categories: [], details: [], salesSummary };
       }
 
 
@@ -117,6 +118,7 @@ const useOrder = (
       const result = {
         categories,
         details: detailsItems,
+        salesSummary,
       };
 
       // Calculate pagination info and cache
@@ -135,7 +137,7 @@ const useOrder = (
 
     } catch (error) {
       console.error('Error loading orders:', error);
-      return { categories: [], details: [] };
+      return { categories: [], details: [], salesSummary: null };
     }
   };
 
@@ -182,6 +184,7 @@ const useOrder = (
   return {
     categories: data?.categories || [],
     details: data?.details || [],
+    salesSummary: data?.salesSummary || null,
     isLoading,
     isError,
     refetch,

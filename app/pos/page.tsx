@@ -30,6 +30,7 @@ const POSpage = () => {
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Business information
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -63,10 +64,25 @@ const POSpage = () => {
 
   const orderSummary = calculateOrderSummary();
 
+  // Filter menu items based on search query
+  const filteredMenuItems = menuItems.filter((item) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      item.itemName?.toLowerCase().includes(query) ||
+      item.menuName?.toLowerCase().includes(query)
+    );
+  });
+
   // Helper function to check if item is in cart
   const isItemInCart = (item: MenuItem): boolean => {
     const itemKey = item.uniqueKey || item.id;
     return orderItems.some((orderItem) => orderItem.id === itemKey);
+  };
+
+  // Handle search input change
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
   };
 
   // Modal handlers
@@ -140,7 +156,7 @@ const POSpage = () => {
       <div className="flex h-screen overflow-hidden bg-white">
         <main className="flex-1 w-full overflow-y-auto text-black">
           <Header ispos />
-          <POSHeader />
+          <POSHeader onSearch={handleSearch} />
 
           {/* Mobile Category Toggle */}
           <div className="lg:hidden bg-[#391D84] px-4 py-2">
@@ -241,13 +257,15 @@ const POSpage = () => {
                         Retry
                       </button>
                     </div>
-                  ) : menuItems.length === 0 ? (
+                  ) : filteredMenuItems.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full">
-                      <p className="text-gray-500">No items available in this category</p>
+                      <p className="text-gray-500">
+                        {searchQuery.trim() ? "No items found matching your search" : "No items available in this category"}
+                      </p>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
-                      {menuItems.map((item) => (
+                      {filteredMenuItems.map((item) => (
                         <MenuItemCard
                           key={item.uniqueKey || item.id}
                           item={item}
@@ -427,6 +445,7 @@ const POSpage = () => {
             handlePackingCost={handlePackingCost}
             businessId={businessInformation?.[0]?.businessId}
             cooperateID={userInformation?.cooperateID}
+            onOrderSuccess={clearCart}
           />
         </main>
       </div>
