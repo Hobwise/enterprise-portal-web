@@ -863,8 +863,32 @@ const CheckoutModal = ({
     });
     console.log('Update Verified Calculation:', calculationVerification.breakdown);
 
-    const data = await editOrder(id, payload);
-    setResponse(data as ApiResponse);
+    if (!id) {
+      notify({
+        title: "Error",
+        text: "Cannot update order: Order ID is missing",
+        type: "error",
+      });
+      setLoading(false);
+      return;
+    }
+
+    let data;
+    try {
+      data = await editOrder(id, payload);
+      setResponse(data as ApiResponse);
+    } catch (error) {
+      console.error('editOrder API call failed:', error);
+      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
+      setLoading(false);
+      notify({
+        title: "Error!",
+        text: "Failed to update order. Please try again.",
+        type: "error",
+      });
+      return;
+    }
+
     setLoading(false);
 
     if (hasDataProperty(data) && data.data?.isSuccessful) {
@@ -917,7 +941,7 @@ const CheckoutModal = ({
       // Screen is already set to 2 by handleCheckoutClick
     } else if (hasDataProperty(data) && data.data?.error) {
       console.error('Order update failed:', data.data.error);
-      console.error('Failed payload:', payload);
+      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
       notify({
         title: "Order Update Failed",
         text: data.data.error,
@@ -929,7 +953,7 @@ const CheckoutModal = ({
         .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
         .join('; ');
       console.error('Validation errors:', data.errors);
-      console.error('Failed payload:', payload);
+      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
       notify({
         title: "Validation Failed",
         text: validationErrors,
@@ -937,7 +961,7 @@ const CheckoutModal = ({
       });
     } else {
       console.error('Unexpected response format:', data);
-      console.error('Failed payload:', payload);
+      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
       notify({
         title: "Error!",
         text: "Unexpected error occurred. Please check the console for details.",
@@ -1119,12 +1143,12 @@ const CheckoutModal = ({
   useEffect(() => {
     if (isOpen) {
       setScreen(1);
-      setOrderId("");
+      setOrderId(id || ""); // Use the id prop if provided, otherwise empty string
       setReference("");
       setSelectedPaymentMethod(0);
       setIsPayLaterLoading(false);
     }
-  }, [isOpen]);
+  }, [isOpen, id]);
 
   return (
     <div className="">
@@ -1279,7 +1303,7 @@ const CheckoutModal = ({
                         <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
                         {selectedItems?.map((item: any, index: number) => {
                           return (
-                            <React.Fragment key={item.id}>
+                            <React.Fragment key={item.uniqueKey || `${item.id}-${index}`}>
                               <div
                                 className="flex justify-between gap-2"
                               >
@@ -1739,7 +1763,7 @@ const CheckoutModal = ({
                               <div className="flex justify-between">
                                 <span className="text-grey600">Table:</span>
                                 <span className="text-black font-medium">
-                                  {qr.find((table: any) => table.id === order.quickResponseID)?.name || order.quickResponseID}
+                                  {(qr as any[]).find((table: any) => table.id === order.quickResponseID)?.name || order.quickResponseID}
                                 </span>
                               </div>
                               {order.comment && (

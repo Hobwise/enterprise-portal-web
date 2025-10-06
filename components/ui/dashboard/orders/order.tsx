@@ -375,8 +375,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
     });
   }, [orderDetails, sortDescriptor]);
 
-  const toggleCancelModal = (order: OrderItem) => {
-    setSingleOrder(order);
+  const toggleCancelModal = (order?: OrderItem) => {
+    if (order) {
+      setSingleOrder(order);
+    }
     setIsOpenCancelOrder(!isOpenCancelOrder);
   };
   const toggleCommentModal = (order: OrderItem) => {
