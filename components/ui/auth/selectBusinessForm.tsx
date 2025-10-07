@@ -12,6 +12,7 @@ import {
   notify,
   saveJsonItemToLocalStorage,
   setTokenCookie,
+  getJsonItemFromLocalStorage,
 } from "@/lib/utils";
 import { Avatar, ScrollShadow } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
@@ -20,30 +21,40 @@ import useLogout from "@/hooks/cachedEndpoints/useLogout";
 
 const SelectBusinessForm = () => {
   const router = useRouter();
-  const { loginDetails } = useGlobalContext();
+  const { loginDetails, setLoginDetails } = useGlobalContext();
   const { logoutFn } = useLogout();
   const [business, setBusiness] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data, isLoading: loading } = useGetBusinessByCooperate();
   const lastClickTime = useRef<number>(0);
-  
+  const [currentLoginDetails, setCurrentLoginDetails] = useState(loginDetails);
+
   // Prefetch dashboard route on component mount for faster navigation
   useEffect(() => {
     router.prefetch('/dashboard');
   }, [router]);
 
-  // Check if loginDetails is null and redirect to login
+  // Restore loginDetails from localStorage if React state is null (page refresh/navigation)
   useEffect(() => {
-    if (loginDetails === null) {
-      notify({
-        title: "Session Expired",
-        description: "Please login again to continue.",
-        status: "warning"
-      });
-      router.replace("/auth/login");
+    if (!loginDetails) {
+      const storedLoginDetails = getJsonItemFromLocalStorage("loginDetails");
+      if (storedLoginDetails) {
+        setLoginDetails(storedLoginDetails);
+        setCurrentLoginDetails(storedLoginDetails);
+      } else {
+        // Only redirect if no stored credentials exist
+        notify({
+          title: "Session Expired",
+          text: "Please login again to continue.",
+          type: "warning"
+        });
+        router.replace("/auth/login");
+      }
+    } else {
+      setCurrentLoginDetails(loginDetails);
     }
-  }, [loginDetails, router]);
+  }, [loginDetails, setLoginDetails, router]);
 
   const handleAuthenticationError = async (error: any) => {
     // Check for authentication-related errors
@@ -74,19 +85,21 @@ const SelectBusinessForm = () => {
   };
 
   const callLogin = async (businessId: string) => {
-    // Double-check loginDetails before making API call
-    if (!loginDetails) {
+    // Use currentLoginDetails which is restored from localStorage if needed
+    const loginCreds = currentLoginDetails || getJsonItemFromLocalStorage("loginDetails");
+
+    if (!loginCreds) {
       notify({
         title: "Session Expired",
-        description: "Please login again to continue.",
-        status: "warning"
+        text: "Please login again to continue.",
+        type: "warning"
       });
       router.replace("/auth/login");
       return;
     }
 
     try {
-      const data = await loginUserSelectedBusiness(loginDetails, businessId);
+      const data = await loginUserSelectedBusiness(loginCreds, businessId);
       
       // Check if login requires redirect
       if (data?.requiresLogin) {
@@ -104,9 +117,14 @@ const SelectBusinessForm = () => {
         
         if (decryptedData?.data) {
           // Save critical data immediately
-          setTokenCookie("token", decryptedData?.data.token);
+          setTokenCookie("token", decryptedData?.data.token, {
+            expires: 7, // 7 days
+            path: '/',
+            sameSite: 'strict',
+            secure: process.env.NODE_ENV === 'production',
+          });
           saveJsonItemToLocalStorage("userInformation", decryptedData?.data);
-          
+
           // Navigate immediately with replace to prevent back navigation issues
           router.replace("/dashboard");
           router.refresh(); // Force immediate update

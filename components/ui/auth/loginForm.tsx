@@ -101,9 +101,16 @@ const LoginForm = () => {
       const { businesses, token, user } = decryptedData.data;
 
       // Save critical data synchronously
-      setTokenCookie("token", token);
+      setTokenCookie("token", token, {
+        expires: 7, // 7 days
+        path: '/',
+        sameSite: 'strict',
+        secure: process.env.NODE_ENV === 'production',
+      });
       saveJsonItemToLocalStorage("userInformation", decryptedData.data);
       saveJsonItemToLocalStorage("business", businesses);
+      // Persist loginDetails to sessionStorage to survive page navigation
+      saveJsonItemToLocalStorage("loginDetails", loginFormData);
       setLoginDetails(loginFormData);
 
       // Check if user needs to change password (common API patterns)
