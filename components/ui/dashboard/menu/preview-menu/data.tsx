@@ -38,8 +38,8 @@ export const togglePreview = (activeTile: string): PreviewStyles => {
   } = {
     "List left": {
       container: "flex items-start gap-3 w-full bg-white rounded-xl p-3 shadow-sm",
-      // classic list with small circular image on the left - single column in preview
-      main: "relative px-4 grid grid-cols-1 gap-3",
+      // classic list with small circular image on the left - 3 columns on desktop
+      main: "relative px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3",
       imageContainer:
         "w-[60px] h-[60px] flex-shrink-0 rounded-lg overflow-hidden",
       textContainer: "flex-1 min-w-0",
@@ -51,8 +51,8 @@ export const togglePreview = (activeTile: string): PreviewStyles => {
     "List Right": {
       container:
         "flex flex-row-reverse items-start gap-3 w-full bg-white rounded-xl p-3 shadow-sm",
-      // compact horizontal list (image on the right) - single column in preview
-      main: "relative px-4 grid grid-cols-1 gap-3",
+      // compact horizontal list (image on the right) - 3 columns on desktop
+      main: "relative px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3",
       imageContainer:
         "w-[60px] h-[60px] flex-shrink-0 rounded-lg overflow-hidden",
       textContainer: "flex-1 min-w-0",
@@ -84,9 +84,9 @@ export const togglePreview = (activeTile: string): PreviewStyles => {
       chipPosition: "top-2 left-2",
     },
     "Double column": {
-      // 2-column grid - mobile view
+      // 2-column grid on mobile, 6 columns on desktop
       container: "flex-col bg-white rounded-xl overflow-hidden shadow-sm",
-      main: "grid grid-cols-2 gap-4 px-4",
+      main: "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 px-4",
       textContainer: "p-3",
       imageClass: "w-full h-[160px] rounded-t-xl",
       imageContainer: "w-full",

@@ -21,8 +21,10 @@ const RestaurantBanner = ({
   onMenuClick,
   baseString,
 }: RestaurantBannerProps) => {
-  // Construct image source - use baseString if provided, otherwise build from menuConfig.image
-  const imageSrc = baseString || (menuConfig?.image ? `data:image/jpeg;base64,${menuConfig.image}` : null);
+  // Construct image source properly
+  const imageSrc = menuConfig?.image
+    ? (baseString && menuConfig.image ? `${baseString}${menuConfig.image}` : `data:image/jpeg;base64,${menuConfig.image}`)
+    : null;
 
   return (
     <div className="relative w-full">

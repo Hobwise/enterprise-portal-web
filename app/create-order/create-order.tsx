@@ -58,7 +58,62 @@ const CreateOrder = () => {
   const mode = searchParams.get("mode"); // 'view' for view-only mode
 
   // View-only mode: no cart or item selection (only for copied menu URLs)
-  const isViewOnlyMode = mode === "view";
+  // Use sessionStorage with businessId + cooperateID for unique key
+  const viewOnlyStorageKey = `menuViewOnly_${businessId}_${cooperateID || 'default'}`;
+
+  const [isViewOnlyMode, setIsViewOnlyMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      // Check URL parameter first
+      if (mode === "view") {
+        sessionStorage.setItem(viewOnlyStorageKey, 'true');
+        console.log('🔒 Initial: Set view-only mode from URL parameter');
+        return true;
+      }
+
+      // Then check sessionStorage
+      const stored = sessionStorage.getItem(viewOnlyStorageKey);
+      if (stored === 'true') {
+        console.log('🔒 Initial: Loaded view-only mode from storage');
+        return true;
+      }
+
+      console.log('🔓 Initial: Normal mode (not view-only)');
+      return false;
+    }
+    return mode === "view";
+  });
+
+  // Sync with URL parameter and persist to sessionStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (mode === "view") {
+        console.log('🔒 Setting view-only mode TRUE and storing');
+        setIsViewOnlyMode(true);
+        sessionStorage.setItem(viewOnlyStorageKey, 'true');
+      } else if (!mode) {
+        // No mode parameter - check storage
+        const stored = sessionStorage.getItem(viewOnlyStorageKey);
+        if (stored === 'true') {
+          console.log('🔒 No mode param but storage says view-only, maintaining state');
+          setIsViewOnlyMode(true);
+        } else {
+          console.log('🔓 No mode param and no storage, normal mode');
+          setIsViewOnlyMode(false);
+        }
+      }
+    }
+  }, [mode, viewOnlyStorageKey]);
+
+  // Debug: Log view-only mode state changes
+  useEffect(() => {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📊 View-only mode:', isViewOnlyMode);
+    console.log('📊 Mode param:', mode);
+    console.log('📊 Storage key:', viewOnlyStorageKey);
+    console.log('📊 Storage value:', typeof window !== 'undefined' ? sessionStorage.getItem(viewOnlyStorageKey) : 'N/A');
+    console.log('📊 Track Order visible:', !isViewOnlyMode);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  }, [isViewOnlyMode, mode, viewOnlyStorageKey]);
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { menuIdTable, setMenuIdTable, setPage } = useGlobalContext();
@@ -169,6 +224,23 @@ const CreateOrder = () => {
       setItemsToShow((prev) => prev + 10);
     }
   };
+
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if user has scrolled near bottom of page
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+      const threshold = 300; // Load more when 300px from bottom
+
+      if (scrollPosition >= documentHeight - threshold) {
+        handleLoadMore();
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [itemsToShow, menuItems, searchQuery]);
 
   // Handle category scroll
   const scrollCategories = (direction: "left" | "right") => {
@@ -484,13 +556,13 @@ const CreateOrder = () => {
 
       setSelectedItems(cartItems);
       setIsUpdatingOrder(true); // Set flag to update existing order
-      setIsOrderTrackingOpen(false);
-      // Scroll to top to show menu
-      window.scrollTo({ top: 0, behavior: "smooth" });
     }
+    setIsOrderTrackingOpen(false);
+    // Scroll to top to show menu
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Handle checkout from order tracking - go to cart
+  // Handle checkout from order tracking - go to serving info (confirmation)
   const handleCheckoutFromTracking = () => {
     if (orderData && orderData.orderDetails) {
       // Transform order details into cart items format with all necessary fields
@@ -520,9 +592,12 @@ const CreateOrder = () => {
 
       setSelectedItems(cartItems);
       setIsUpdatingOrder(true); // Set flag to update existing order
+      setIsOrderTrackingOpen(false);
+      // Use setTimeout to ensure state updates complete before opening serving info
+      setTimeout(() => {
+        setIsServingInfoOpen(true);
+      }, 0);
     }
-    setIsOrderTrackingOpen(false);
-    setIsCartOpen(true);
   };
 
   // Handle track order submission from TrackingDetailsModal
@@ -691,68 +766,59 @@ const CreateOrder = () => {
                   return (
                     <div
                       key={item.id || item.menuID}
-                      className={`${preview?.container} ${
-                        layoutName === "List Right" &&
-                        menuConfig?.useBackground &&
-                        "flex-row-reverse"
-                      } ${
-                        isListLayout ? "flex" : ""
-                      } my-3 text-black relative transition-all ${
-                        item?.isAvailable
-                          ? "cursor-pointer shadow-md"
-                          : "bg-gray-100 shadow-md cursor-not-allowed"
-                      }`}
+                      className={`${isListLayout ? "flex items-center gap-3" : ""} my-3 relative`}
                     >
-                      {item?.isAvailable === false && (
-                        <Chip
-                          className={`capitalize absolute ${preview?.chipPosition} z-20`}
-                          color={"danger"}
-                          size="sm"
-                          variant="flat"
-                        >
-                          Out of stock
-                        </Chip>
-                      )}
+                      <div
+                        className={`${preview?.container} ${
+                          layoutName === "List Right" &&
+                          menuConfig?.useBackground &&
+                          "flex-row-reverse"
+                        } ${
+                          isListLayout ? "flex flex-1" : ""
+                        } text-black relative transition-all ${
+                          item?.isAvailable
+                            ? "cursor-pointer shadow-md"
+                            : "bg-gray-100 shadow-md cursor-not-allowed"
+                        }`}
+                      >
+                        {item?.isAvailable === false && (
+                          <Chip
+                            className={`capitalize absolute ${preview?.chipPosition} z-20`}
+                            color={"danger"}
+                            size="sm"
+                            variant="flat"
+                          >
+                            Out of stock
+                          </Chip>
+                        )}
 
-                      {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
-                      {item?.isAvailable && !isViewOnlyMode && (
-                        <>
-                          {/* Single column 1: Full-width button at bottom */}
-                          {layoutName === "Single column 1" && (
-                            <button
-                              onClick={(e) => handleQuickAdd(item, e)}
-                              className="absolute bottom-0 left-0 right-0 bg-primaryColor text-white py-3 px-4 rounded-b-2xl font-medium text-sm hover:bg-primaryColor/90 transition-all flex items-center justify-center gap-2 z-20"
-                            >
-                              <IoAddCircleOutline className="w-5 h-5" />
-                              Add Items
-                            </button>
-                          )}
+                        {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
+                        {item?.isAvailable && !isViewOnlyMode && (
+                          <>
+                            {/* Single column 1: Full-width button at bottom */}
+                            {layoutName === "Single column 1" && (
+                              <button
+                                onClick={(e) => handleQuickAdd(item, e)}
+                                className="absolute bottom-0 left-0 right-0 bg-primaryColor text-white py-3 px-4 rounded-b-2xl font-medium text-sm hover:bg-primaryColor/90 transition-all flex items-center justify-center gap-2 z-20"
+                              >
+                                <IoAddCircleOutline className="w-5 h-5" />
+                                Add Items
+                              </button>
+                            )}
 
-                          {/* Single column 2 (3-grid) & Double column (2-grid): Circular button bottom-right */}
-                          {(layoutName === "Single column 2" ||
-                            layoutName === "Double column") && (
-                            <button
-                              onClick={(e) => handleQuickAdd(item, e)}
-                              className="absolute bottom-3 right-3 bg-primaryColor text-white rounded-full p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
-                              aria-label="Add to cart"
-                            >
-                              <IoAddCircleOutline className="w-5 h-5" />
-                            </button>
-                          )}
-
-                          {/* List left & List Right: Circular button on right side */}
-                          {(layoutName === "List left" ||
-                            layoutName === "List Right") && (
-                            <button
-                              onClick={(e) => handleQuickAdd(item, e)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 bg-primaryColor text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
-                              aria-label="Add to cart"
-                            >
-                              <IoAddCircleOutline className="w-5 h-5" />
-                            </button>
-                          )}
-                        </>
-                      )}
+                            {/* Single column 2 (3-grid) & Double column (2-grid): Circular button bottom-right */}
+                            {(layoutName === "Single column 2" ||
+                              layoutName === "Double column") && (
+                              <button
+                                onClick={(e) => handleQuickAdd(item, e)}
+                                className="absolute bottom-3 right-3 bg-primaryColor text-white rounded-full p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
+                                aria-label="Add to cart"
+                              >
+                                <IoAddCircleOutline className="w-5 h-5" />
+                              </button>
+                            )}
+                          </>
+                        )}
 
                       {/* Image Container */}
                       <div
@@ -826,6 +892,18 @@ const CreateOrder = () => {
                         )}
                       </div>
                     </div>
+
+                      {/* List Layout Button - Outside card container */}
+                      {isListLayout && item?.isAvailable && !isViewOnlyMode && (
+                        <button
+                          onClick={(e) => handleQuickAdd(item, e)}
+                          className="flex-shrink-0 bg-primaryColor text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
+                          aria-label="Add to cart"
+                        >
+                          <IoAddCircleOutline className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
                   );
                 })}
 
@@ -865,20 +943,6 @@ const CreateOrder = () => {
                     )}
                   </div>
                 )}
-
-                {/* Load More Button */}
-                {matchingObjectArray?.length > 0 &&
-                  unfilteredArray?.length > itemsToShow && (
-                    <div className="flex justify-center mt-6 mb-4">
-                      <button
-                        onClick={handleLoadMore}
-                        className="px-6 py-3 bg-primaryColor text-white rounded-lg font-medium hover:bg-primaryColor/90 transition-colors"
-                      >
-                        Load More ({unfilteredArray.length - itemsToShow}{" "}
-                        remaining)
-                      </button>
-                    </div>
-                  )}
               </div>
             );
           })()}
@@ -975,24 +1039,26 @@ const CreateOrder = () => {
                 </div>
               </button>
 
-              {/* Track Order */}
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setIsTrackingDetailsOpen(true);
-                }}
-                className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
-              >
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <BiPackage className="w-6 h-6 text-primaryColor" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-black">Track Order</h3>
-                  <p className="text-sm text-gray-600">
-                    View order preparation in real time
-                  </p>
-                </div>
-              </button>
+              {/* Track Order - Hidden in view-only mode */}
+              {!isViewOnlyMode && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsTrackingDetailsOpen(true);
+                  }}
+                  className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
+                >
+                  <div className="p-2 bg-purple-50 rounded-lg">
+                    <BiPackage className="w-6 h-6 text-primaryColor" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-black">Track Order</h3>
+                    <p className="text-sm text-gray-600">
+                      View order preparation in real time
+                    </p>
+                  </div>
+                </button>
+              )}
 
               {/* Book Reservation */}
               <button
@@ -1053,7 +1119,12 @@ const CreateOrder = () => {
 
       <OrderTrackingPage
         isOpen={isOrderTrackingOpen}
-        onClose={() => setIsOrderTrackingOpen(false)}
+        onClose={() => {
+          setIsOrderTrackingOpen(false);
+          setSelectedItems([]); // Clear selected items when leaving
+          setOrderData(null); // Clear order data
+          setIsUpdatingOrder(false); // Reset update flag
+        }}
         trackingId={orderData?.reference || ""}
         orderStatus={
           orderData?.status === 0

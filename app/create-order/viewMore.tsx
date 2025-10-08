@@ -92,14 +92,6 @@ const ViewModal = ({
                   <p className="text-gray-700 font-medium">
                     {selectedMenu?.menuName}
                   </p>
-                  {selectedMenu?.waitingTimeMinutes > 0 && (
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <MdAccessTime className="w-4 h-4" />
-                      <span>
-                        {selectedMenu?.waitingTimeMinutes} mins preparation time
-                      </span>
-                    </div>
-                  )}
                 </div>
 
                 {/* Price */}
@@ -145,31 +137,34 @@ const ViewModal = ({
                     {/* Base Item Option */}
                     <div className="flex justify-between items-start py-3 border-b border-gray-100 bg-purple-50 rounded-lg px-3 mb-2">
                       <div className="flex-1">
-                        <p className="font-medium text-black">Regular (Base Item)</p>
+                        <p className="font-medium text-black">
+                          Regular (Base Item)
+                        </p>
                         <p className="text-sm text-gray-600">
                           {formatPrice(selectedMenu?.price)}
                         </p>
                         {/* Packing Cost for Base Item */}
-                        {isItemSelected(selectedMenu.id) && selectedMenu.packingCost > 0 && (
-                          <div className="mt-2">
-                            <Checkbox
-                              size="sm"
-                              isSelected={itemIsPacked(selectedMenu.id)}
-                              onValueChange={(isSelected) =>
-                                handlePackingCost(selectedMenu.id, isSelected)
-                              }
-                            >
-                              <div className="flex flex-col">
-                                <span className="text-xs text-gray-600">
-                                  Pack this item
-                                </span>
-                                <span className="text-xs font-medium text-black">
-                                  +{formatPrice(selectedMenu.packingCost)}
-                                </span>
-                              </div>
-                            </Checkbox>
-                          </div>
-                        )}
+                        {isItemSelected(selectedMenu.id) &&
+                          selectedMenu.packingCost > 0 && (
+                            <div className="mt-2">
+                              <Checkbox
+                                size="sm"
+                                isSelected={itemIsPacked(selectedMenu.id)}
+                                onValueChange={(isSelected) =>
+                                  handlePackingCost(selectedMenu.id, isSelected)
+                                }
+                              >
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-gray-600">
+                                    Pack this item
+                                  </span>
+                                  <span className="text-xs font-medium text-black">
+                                    +{formatPrice(selectedMenu.packingCost)}
+                                  </span>
+                                </div>
+                              </Checkbox>
+                            </div>
+                          )}
                       </div>
                       <div className="flex items-center gap-2">
                         {isItemSelected(selectedMenu.id) && (

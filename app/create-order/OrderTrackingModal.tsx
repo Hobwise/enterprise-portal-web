@@ -145,7 +145,10 @@ const OrderTrackingPage = ({
 
   const handleConfirmLeave = () => {
     setShowLeaveModal(false);
-    onClose();
+    // Clear any selected items from the parent component
+    if (onClose) {
+      onClose();
+    }
   };
 
   const handleCancelLeave = () => {
@@ -275,21 +278,24 @@ const OrderTrackingPage = ({
       />
 
       {/* Header with Timer */}
-      <div className="mt-4 mb-6 px-4">
+      <div className="mt-4 mb-6 px-4 max-w-4xl flex flex-col mx-auto">
         <div className="sticky top-0 z-10 bg-white border-b shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-4">
-            <div className="w-full flex justify-end">
-              {timeLeft && timeLeft !== "00:00" && (
-                <div className="text-3xl font-bold text-primaryColor">
-                  {timeLeft}
-                </div>
-              )}
-              {timeLeft === "00:00" && (
-                <div className="text-sm font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-lg">
-                  Time elapsed
-                </div>
-              )}
-            </div>
+            {/* Only show timer for open orders (status 0 or 3) */}
+            {orderData?.status !== 1 && orderData?.status !== 2 && (
+              <div className="w-full flex justify-end">
+                {timeLeft && timeLeft !== "00:00" && (
+                  <div className="text-3xl font-bold text-primaryColor">
+                    {timeLeft}
+                  </div>
+                )}
+                {timeLeft === "00:00" && (
+                  <div className="text-sm font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-lg">
+                    Time elapsed
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <h2 className="text-2xl font-bold text-black mb-4">Order Tracking</h2>
@@ -317,12 +323,46 @@ const OrderTrackingPage = ({
             </div>
           )}
 
-          {/* View Order Link - Shows order details */}
+          {/* View Order Button - Shows order details */}
           <button
             onClick={() => setShowOrderDetails(!showOrderDetails)}
-            className="text-sm text-primaryColor hover:underline mt-3 font-medium"
+            className="mt-4 w-full py-3 px-4 bg-primaryColor/50 border-2 border-primaryColor text-primaryColor rounded-lg font-semibold hover:bg-primaryColor/100 transition-colors flex items-center justify-center gap-2"
           >
-            {showOrderDetails ? "Hide order details" : "View order"}
+            {showOrderDetails ? (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+                Hide Order Details
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+                View Order Details
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -352,7 +392,7 @@ const OrderTrackingPage = ({
                         ₦{item.unitPrice.toLocaleString()}
                       </span>
                       {item.isPacked && (
-                        <span className="text-xs bg-purple-100 text-primaryColor px-2 py-1 rounded">
+                        <span className="text-xs bg-primaryColor/50 text-primaryColor px-2 py-1 rounded">
                           Packed
                         </span>
                       )}
@@ -441,50 +481,64 @@ const OrderTrackingPage = ({
           })}
         </div>
 
-        {/* Time Elapsed Message */}
-        {timeLeft === "00:00" && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <svg
-                  className="w-6 h-6 text-orange-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-base font-semibold text-orange-800 mb-1">
-                  Estimated time has elapsed
-                </h4>
-                <p className="text-sm text-orange-700">
-                  Your order is taking longer than expected. Please contact our
-                  support staff for assistance or check with the restaurant
-                  directly.
-                </p>
+        {/* Time Elapsed Message - Only show for open orders (not cancelled or closed) */}
+        {timeLeft === "00:00" &&
+          orderData?.status !== 1 &&
+          orderData?.status !== 2 && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="w-6 h-6 text-orange-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-base font-semibold text-orange-800 mb-1">
+                    Your order is ready!
+                  </h4>
+                  <p className="text-sm text-orange-700">
+                    Your food is ready for pickup. Please contact staff to collect your order.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Disable for cancelled (2) or closed (1) orders */}
         <div className="flex gap-4 mt-8">
           <CustomButton
             onClick={onAddMoreItems}
-            className="flex-1 h-14 bg-white border-2 border-primaryColor text-primaryColor font-semibold flex items-center justify-center gap-2 text-base"
+            disabled={orderData?.status === 1 || orderData?.status === 2}
+            className={`flex-1 h-14 ${
+              orderData?.status === 1 || orderData?.status === 2
+                ? "bg-gray-100 border-2 border-gray-300 text-gray-400 cursor-not-allowed"
+                : "bg-white border-2 border-primaryColor text-primaryColor"
+            } font-semibold flex items-center justify-center gap-2 text-base`}
           >
             <IoAddCircleOutline className="w-6 h-6" />
             Add items
           </CustomButton>
           <CustomButton
             onClick={onCheckout}
-            className="flex-1 h-14 text-white font-semibold flex items-center justify-center gap-2 text-base"
-            backgroundColor="bg-primaryColor"
+            disabled={orderData?.status === 1 || orderData?.status === 2}
+            className={`flex-1 h-14 ${
+              orderData?.status === 1 || orderData?.status === 2
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "text-white"
+            } font-semibold flex items-center justify-center gap-2 text-base`}
+            backgroundColor={
+              orderData?.status === 1 || orderData?.status === 2
+                ? "bg-gray-300"
+                : "bg-primaryColor"
+            }
           >
             <span>Checkout order</span>
             <HiArrowLongLeft className="w-6 h-6 rotate-180" />
