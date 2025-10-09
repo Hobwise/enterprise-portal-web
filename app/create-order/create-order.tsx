@@ -64,18 +64,15 @@ const CreateOrder = () => {
       // Check URL parameter first
       if (mode === "view") {
         sessionStorage.setItem(viewOnlyStorageKey, "true");
-        console.log("🔒 Initial: Set view-only mode from URL parameter");
         return true;
       }
 
       // Then check sessionStorage
       const stored = sessionStorage.getItem(viewOnlyStorageKey);
       if (stored === "true") {
-        console.log("🔒 Initial: Loaded view-only mode from storage");
         return true;
       }
 
-      console.log("🔓 Initial: Normal mode (not view-only)");
       return false;
     }
     return mode === "view";
@@ -85,35 +82,15 @@ const CreateOrder = () => {
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (mode === "view") {
-        console.log("🔒 Setting view-only mode TRUE and storing");
         setIsViewOnlyMode(true);
         sessionStorage.setItem(viewOnlyStorageKey, "true");
       } else {
-        // No mode parameter or mode is explicitly not "view" - clear view-only mode
-        console.log(
-          "🔓 Mode param removed or not 'view', clearing view-only mode"
-        );
+
         setIsViewOnlyMode(false);
         sessionStorage.removeItem(viewOnlyStorageKey);
       }
     }
   }, [mode, viewOnlyStorageKey]);
-
-  // Debug: Log view-only mode state changes
-  useEffect(() => {
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-    console.log("📊 View-only mode:", isViewOnlyMode);
-    console.log("📊 Mode param:", mode);
-    console.log("📊 Storage key:", viewOnlyStorageKey);
-    console.log(
-      "📊 Storage value:",
-      typeof window !== "undefined"
-        ? sessionStorage.getItem(viewOnlyStorageKey)
-        : "N/A"
-    );
-    console.log("📊 Track Order visible:", !isViewOnlyMode);
-    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  }, [isViewOnlyMode, mode, viewOnlyStorageKey]);
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { menuIdTable, setMenuIdTable, setPage } = useGlobalContext();
@@ -506,14 +483,12 @@ const CreateOrder = () => {
       // Check if we're updating an existing order or creating a new one
       if (isUpdatingOrder && orderData?.id) {
         response = await updateCustomerOrder(orderData.id, payload);
-        console.log("Update order response:", response);
       } else {
         response = await placeCustomerOrder(
           payload,
           businessId || "",
           cooperateID || ""
         );
-        console.log("Place order response:", response);
       }
 
       if (response?.isSuccessful && response?.data) {
@@ -539,7 +514,6 @@ const CreateOrder = () => {
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Error placing order:", error);
       toast.error("Failed to place order. Please try again.");
     } finally {
       setOrderLoading(false);
@@ -584,11 +558,8 @@ const CreateOrder = () => {
 
   // Handle checkout from order tracking - go to confirmation page
   const handleCheckoutFromTracking = () => {
-    console.log("handleCheckoutFromTracking called");
-    console.log("orderData:", orderData);
 
     if (orderData && orderData.orderDetails) {
-      console.log("orderDetails found:", orderData.orderDetails);
       // Transform order details into cart items format with all necessary fields
       const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
         const basePrice = detail.unitPrice || 0;
@@ -613,8 +584,6 @@ const CreateOrder = () => {
           waitingTimeMinutes: detail.waitingTimeMinutes || 0,
         };
       });
-
-      console.log("cartItems:", cartItems);
       setSelectedItems(cartItems);
       setIsUpdatingOrder(true); // Set flag to update existing order
       setIsOrderTrackingOpen(false);
@@ -623,7 +592,6 @@ const CreateOrder = () => {
         setIsConfirmOpen(true);
       }, 0);
     } else {
-      console.log("No orderData or orderDetails found");
     }
   };
 
@@ -926,10 +894,7 @@ const CreateOrder = () => {
                                   base: "text-white text-[10px] mt-1.5 h-5",
                                 }}
                               >
-                                {selectedItems.reduce(
-                                  (total, item) => total + item.count,
-                                  0
-                                )}
+                                {selectedItems.find((selected) => selected.id === item.id)?.count || 0}
                               </Chip>
                             </div>
                           )}
