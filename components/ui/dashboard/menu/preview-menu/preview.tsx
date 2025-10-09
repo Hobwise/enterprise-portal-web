@@ -39,13 +39,22 @@ const Preview = () => {
   const [showRightArrow, setShowRightArrow] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
 
+  // Handle image URL properly - blob URLs and base64 strings
+  const isBlobUrl = selectedImage?.startsWith('blob:');
+
   const menuConfig = {
-    image: selectedImage?.replace("data:image/jpeg;base64,", ""),
+    image: isBlobUrl ? selectedImage : selectedImage?.replace("data:image/jpeg;base64,", ""),
     backgroundColour: backgroundColor,
     textColour: selectedTextColor,
+    useBackground: isSelectedPreview,
   };
 
-  const baseString = "data:image/jpeg;base64,";
+  const baseString = isBlobUrl ? "" : "data:image/jpeg;base64,";
+
+  // Dynamic color from menu config (fallback to primary color)
+  const primaryColor = backgroundColor || '#6366F1';
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
 
   const { data: categories, isLoading: categoriesLoading } =
     useCustomerMenuCategories(businessId, cooperateId);
@@ -99,7 +108,7 @@ const Preview = () => {
 
   return (
     <article
-      className={`xl:block relative hidden w-[320px] border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px] bg-white`}
+      className={`relative w-full max-w-[320px] mx-auto border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px] bg-white`}
     >
       {/* Restaurant Banner */}
       <RestaurantBanner
@@ -160,9 +169,10 @@ const Preview = () => {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategoryId(category.id)}
+                  style={isSelected ? primaryColorStyle : {}}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     isSelected
-                      ? "bg-primaryColor text-white"
+                      ? "text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -196,72 +206,86 @@ const Preview = () => {
           <div className={`${styles.main}`}>
             {filteredMenuItems.map((item) => {
               const isListLayout = activeTile?.includes("List");
+              const isCompactGrid = activeTile === "Single column 2";
+              const layoutName = activeTile;
 
               return (
                 <div
                   key={`${item.id || item.menuID}-${
                     item.name || item.itemName
                   }`}
-                  className={`${styles.container} my-3 relative`}
+                  className={`${isListLayout ? "flex items-center gap-3" : ""} my-3 relative`}
                 >
-                  {/* Image Container */}
-                  {isSelectedPreview && (
-                    <div className={`${styles.imageContainer || ""} relative`}>
-                      <div
-                        className={`relative bg-gradient-to-br from-primaryColor/10 via-primaryColor/5 to-purple-100 flex items-center justify-center overflow-hidden ${
-                          styles.imageClass || "h-32"
-                        }`}
-                      >
-                        {item?.image &&
-                        item.image.length > baseString.length ? (
-                          <Image
-                            className="object-cover w-full h-full"
-                            width={
-                              activeTile.includes("Single column") ? 300 : 60
-                            }
-                            height={
-                              activeTile.includes("Single column") ? 200 : 60
-                            }
-                            src={baseString + item.image}
-                            alt={item.itemName || "Menu item"}
-                          />
-                        ) : (
-                          <Image
-                            src={NoMenu}
-                            alt="No image"
-                            width={60}
-                            height={60}
-                            className="opacity-30"
-                          />
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Content Container */}
                   <div
-                    className={`${styles.textContainer} flex flex-col ${
-                      isListLayout ? "justify-center" : ""
-                    }`}
+                    className={`${styles.container} ${
+                      layoutName === "List Right" && "flex-row-reverse"
+                    } ${
+                      isListLayout ? "flex flex-1" : ""
+                    } text-black relative transition-all shadow-md`}
                   >
-                    {item.menuName && (
-                      <span className="text-xs text-gray-500 mb-1">
-                        {item.menuName}
-                      </span>
+                    {/* Image Container */}
+                    {isSelectedPreview && (
+                      <div className={`${styles.imageContainer || ""} relative`}>
+                        <div
+                          className={`relative bg-gradient-to-br from-primaryColor/10 via-primaryColor/5 to-purple-100 flex items-center justify-center overflow-hidden ${
+                            styles.imageClass || "h-32"
+                          }`}
+                        >
+                          {item?.image &&
+                          item.image.length > baseString.length ? (
+                            <Image
+                              className="object-cover w-full h-full"
+                              width={
+                                activeTile.includes("Single column") ? 300 : 60
+                              }
+                              height={
+                                activeTile.includes("Single column") ? 200 : 60
+                              }
+                              src={baseString + item.image}
+                              alt={item.itemName || "Menu item"}
+                            />
+                          ) : (
+                            <Image
+                              src={NoMenu}
+                              alt="No image"
+                              width={60}
+                              height={60}
+                              className="opacity-30"
+                            />
+                          )}
+                        </div>
+                      </div>
                     )}
-                    <h3 className="font-bold text-base line-clamp-1 text-black">
-                      {item.itemName}
-                    </h3>
-                    <p className="font-semibold text-sm mt-1 text-black">
-                      {formatPrice(item.price)}
-                    </p>
-                    {activeTile &&
-                      activeTile !== "Single column 1" &&
-                      item.itemDescription && (
-                        <p className="text-xs mt-2 text-gray-600 line-clamp-2">
-                          {item.itemDescription}
-                        </p>
-                      )}
+
+                    {/* Content Container */}
+                    <div
+                      className={`${styles.textContainer} flex flex-col ${
+                        isListLayout ? "justify-center" : "justify-start"
+                      }`}
+                    >
+                      <p
+                        className={`font-bold ${
+                          isCompactGrid ? "text-xs" : "text-sm"
+                        } line-clamp-1`}
+                      >
+                        {item.itemName}
+                      </p>
+                      <p
+                        className={`text-gray-500 ${
+                          isCompactGrid ? "text-[10px]" : "text-xs"
+                        } line-clamp-2 mt-0.5`}
+                      >
+                        {item.itemDescription || ""}
+                      </p>
+                      <p
+                        style={textColorStyle}
+                        className={`font-semibold ${
+                          isCompactGrid ? "text-xs" : "text-sm"
+                        } mt-1`}
+                      >
+                        {formatPrice(item.price)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );

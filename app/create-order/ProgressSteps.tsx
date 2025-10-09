@@ -3,9 +3,18 @@
 interface ProgressStepsProps {
   steps: string[];
   currentStep: number;
+  menuConfig?: {
+    backgroundColour?: string;
+  };
 }
 
-const ProgressSteps = ({ steps, currentStep }: ProgressStepsProps) => {
+const ProgressSteps = ({ steps, currentStep, menuConfig }: ProgressStepsProps) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || '#6366F1';
+  const primaryColorStyle = { backgroundColor: primaryColor, borderColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+  const borderColorStyle = { borderColor: primaryColor };
+
   return (
     <div className="w-full bg-white border-b border-gray-200 py-4 px-4">
       <div className="max-w-md mx-auto">
@@ -19,15 +28,21 @@ const ProgressSteps = ({ steps, currentStep }: ProgressStepsProps) => {
                 {/* Step Circle with Label */}
                 <div className="flex flex-col items-center">
                   <div
+                    style={
+                      isCompleted
+                        ? primaryColorStyle
+                        : isActive
+                        ? borderColorStyle
+                        : {}
+                    }
                     className={`
                       flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all
                       ${
-                        isCompleted
-                          ? "bg-primaryColor border-primaryColor"
-                          : isActive
-                          ? "bg-white border-primaryColor"
+                        isCompleted || isActive
+                          ? ""
                           : "bg-white border-gray-300"
                       }
+                      ${!isCompleted && isActive ? "bg-white" : ""}
                     `}
                   >
                     {isCompleted ? (
@@ -44,14 +59,8 @@ const ProgressSteps = ({ steps, currentStep }: ProgressStepsProps) => {
                       </svg>
                     ) : (
                       <span
-                        className={`
-                          text-sm font-semibold
-                          ${
-                            isActive
-                              ? "text-primaryColor"
-                              : "text-gray-400"
-                          }
-                        `}
+                        style={isActive ? textColorStyle : { color: '#9CA3AF' }}
+                        className={`text-sm font-semibold`}
                       >
                         {index + 1}
                       </span>
@@ -60,14 +69,8 @@ const ProgressSteps = ({ steps, currentStep }: ProgressStepsProps) => {
 
                   {/* Step Label - Always visible */}
                   <span
-                    className={`
-                      mt-2 text-xs font-medium
-                      ${
-                        isActive || isCompleted
-                          ? "text-primaryColor"
-                          : "text-gray-400"
-                      }
-                    `}
+                    style={isActive || isCompleted ? textColorStyle : { color: '#9CA3AF' }}
+                    className={`mt-2 text-xs font-medium`}
                   >
                     {step}
                   </span>
@@ -76,10 +79,8 @@ const ProgressSteps = ({ steps, currentStep }: ProgressStepsProps) => {
                 {/* Connecting Line */}
                 {index < steps.length - 1 && (
                   <div
-                    className={`
-                      w-12 sm:w-16 h-0.5 mx-2 mb-6 transition-all
-                      ${isCompleted ? "bg-primaryColor" : "bg-gray-300"}
-                    `}
+                    style={isCompleted ? { backgroundColor: primaryColor } : { backgroundColor: '#D1D5DB' }}
+                    className={`w-12 sm:w-16 h-0.5 mx-2 mb-6 transition-all`}
                   />
                 )}
               </div>

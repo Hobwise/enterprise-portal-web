@@ -32,6 +32,10 @@ const TrackingDetailsPage = ({
   menuConfig,
   baseString,
 }: TrackingDetailsPageProps) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || '#6366F1';
+  const primaryColorStyle = { backgroundColor: primaryColor };
+
   const [trackingId, setTrackingId] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -133,8 +137,8 @@ const TrackingDetailsPage = ({
             onClick={handleTrackOrder}
             disabled={!trackingId.trim() || loading}
             loading={loading}
+            style={primaryColorStyle}
             className="flex-1 h-14 text-white font-semibold text-base"
-            backgroundColor="bg-primaryColor"
           >
             Track order
           </CustomButton>

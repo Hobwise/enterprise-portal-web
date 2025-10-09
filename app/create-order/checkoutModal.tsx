@@ -24,7 +24,7 @@ import React, { useEffect, useState } from 'react';
 import { FaMinus, FaPlus, FaClock, FaGift } from "react-icons/fa6";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { toast } from "sonner";
-import noImage from "../../public/assets/images/no-image.svg";
+import noMenu from "../../public/assets/images/no-menu-1.jpg";
 import { FaCheckCircle } from "react-icons/fa";
 
 interface Order {
@@ -464,7 +464,7 @@ const CheckoutModal = ({
                                     src={
                                       item?.image
                                         ? `data:image/jpeg;base64,${item?.image}`
-                                        : noImage
+                                        : noMenu
                                     }
                                     width={20}
                                     height={20}

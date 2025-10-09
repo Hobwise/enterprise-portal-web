@@ -2,7 +2,6 @@
 import { CustomButton } from "@/components/customButton";
 import { formatPrice } from "@/lib/utils";
 import { IoArrowBack } from "react-icons/io5";
-import ProgressSteps from "./ProgressSteps";
 
 interface ConfirmOrderModalProps {
   isOpen: boolean;
@@ -10,6 +9,9 @@ interface ConfirmOrderModalProps {
   selectedItems: any[];
   onProceedToServingInfo: () => void;
   onBack?: () => void;
+  menuConfig?: {
+    backgroundColour?: string;
+  };
 }
 
 const ConfirmOrderModal = ({
@@ -18,7 +20,13 @@ const ConfirmOrderModal = ({
   selectedItems,
   onProceedToServingInfo,
   onBack,
+  menuConfig,
 }: ConfirmOrderModalProps) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || '#6366F1';
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+
   // Don't render if not open
   if (!isOpen) return null;
 
@@ -132,7 +140,7 @@ const ConfirmOrderModal = ({
           </div>
           <div className="flex justify-between text-lg font-bold pt-2 border-t-2 border-black">
             <span className="text-black">Grand Total</span>
-            <span className="text-primaryColor">{formatPrice(total)}</span>
+            <span style={textColorStyle}>{formatPrice(total)}</span>
           </div>
         </div>
       </div>
@@ -146,7 +154,7 @@ const ConfirmOrderModal = ({
               onProceedToServingInfo();
             }}
             className="w-full h-12 text-white font-semibold flex items-center justify-center gap-2"
-            backgroundColor="bg-primaryColor"
+            style={primaryColorStyle}
           >
             <span>Continue to Details</span>
           </CustomButton>

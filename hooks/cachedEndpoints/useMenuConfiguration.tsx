@@ -19,11 +19,7 @@ const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
     ? businessInformation[0]?.businessId
     : businessIdOutsideApp;
   const getMenuConfig = async () => {
-    const responseData = await getMenuConfiguration(
-      businessId,
-
-      cooperateID
-    );
+    const responseData = await getMenuConfiguration(businessId, cooperateID);
 
     return responseData?.data?.data as DesignOptions;
   };

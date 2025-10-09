@@ -21,9 +21,13 @@ const RestaurantBanner = ({
   onMenuClick,
   baseString,
 }: RestaurantBannerProps) => {
-  // Construct image source properly
+  // Construct image source properly - handle blob URLs and base64
   const imageSrc = menuConfig?.image
-    ? (baseString && menuConfig.image ? `${baseString}${menuConfig.image}` : `data:image/jpeg;base64,${menuConfig.image}`)
+    ? (menuConfig.image.startsWith('blob:')
+        ? menuConfig.image // Use blob URL directly
+        : baseString
+          ? `${baseString}${menuConfig.image}`
+          : `data:image/jpeg;base64,${menuConfig.image}`)
     : null;
 
   return (

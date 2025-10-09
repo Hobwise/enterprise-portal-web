@@ -2,10 +2,9 @@
 import { CustomButton } from "@/components/customButton";
 import { useEffect, useState } from "react";
 import { FaCheck, FaCopy } from "react-icons/fa6";
-import { IoAddCircleOutline, IoArrowBack, IoClose } from "react-icons/io5";
+import { IoAddCircleOutline } from "react-icons/io5";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { toast } from "sonner";
-import { Modal, ModalBody, ModalContent, ModalHeader } from "@nextui-org/react";
 import RestaurantBanner from "./RestaurantBanner";
 import { getCustomerOrderByReference } from "../api/controllers/customerOrder";
 import { HiMenuAlt3 } from "react-icons/hi";
@@ -45,6 +44,12 @@ const OrderTrackingPage = ({
   businessId,
   cooperateId,
 }: OrderTrackingPageProps) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || "#6366F1";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+  const borderColorStyle = { borderColor: primaryColor };
+
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
@@ -285,13 +290,13 @@ const OrderTrackingPage = ({
             {orderData?.status !== 1 && orderData?.status !== 2 && (
               <div className="w-full flex justify-end">
                 {timeLeft && timeLeft !== "00:00" && (
-                  <div className="text-3xl font-bold text-primaryColor">
+                  <div className="text-3xl font-bold" style={textColorStyle}>
                     {timeLeft}
                   </div>
                 )}
                 {timeLeft === "00:00" && (
                   <div className="text-sm font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-lg">
-                    Time elapsed
+                    Your order is ready
                   </div>
                 )}
               </div>
@@ -326,7 +331,12 @@ const OrderTrackingPage = ({
           {/* View Order Button - Shows order details */}
           <button
             onClick={() => setShowOrderDetails(!showOrderDetails)}
-            className="mt-4 w-full py-3 px-4 bg-primaryColor/50 border-2 border-primaryColor text-primaryColor rounded-lg font-semibold hover:bg-primaryColor/100 transition-colors flex items-center justify-center gap-2"
+            style={{
+              ...borderColorStyle,
+              ...textColorStyle,
+              borderWidth: "2px",
+            }}
+            className="mt-4 w-full py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
           >
             {showOrderDetails ? (
               <>
@@ -392,7 +402,13 @@ const OrderTrackingPage = ({
                         ₦{item.unitPrice.toLocaleString()}
                       </span>
                       {item.isPacked && (
-                        <span className="text-xs bg-primaryColor/50 text-primaryColor px-2 py-1 rounded">
+                        <span
+                          className="text-xs px-2 py-1 rounded"
+                          style={{
+                            ...textColorStyle,
+                            backgroundColor: `${primaryColor}50`,
+                          }}
+                        >
                           Packed
                         </span>
                       )}
@@ -408,8 +424,8 @@ const OrderTrackingPage = ({
             </div>
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex justify-between text-lg font-bold">
-                <span>Total Amount:</span>
-                <span className="text-primaryColor">
+                <span className="text-black">Total Amount:</span>
+                <span style={textColorStyle}>
                   ₦{orderData.totalAmount?.toLocaleString()}
                 </span>
               </div>
@@ -437,24 +453,24 @@ const OrderTrackingPage = ({
                 {/* Timeline Indicator */}
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    style={
                       isCompleted
-                        ? "bg-primaryColor"
+                        ? primaryColorStyle
                         : isCurrent
-                        ? "bg-primaryColor/20 border-2 border-primaryColor"
-                        : "bg-gray-200"
-                    }`}
+                        ? { backgroundColor: `${primaryColor}33`, borderColor: primaryColor, borderWidth: '2px' }
+                        : { backgroundColor: '#E5E7EB' }
+                    }
+                    className={`w-12 h-12 rounded-full flex items-center justify-center`}
                   >
                     {isCompleted && <FaCheck className="w-6 h-6 text-white" />}
                     {isCurrent && (
-                      <div className="w-3 h-3 rounded-full bg-primaryColor animate-pulse" />
+                      <div className="w-3 h-3 rounded-full animate-pulse" style={primaryColorStyle} />
                     )}
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`w-1 h-16 ${
-                        isCompleted ? "bg-primaryColor" : "bg-gray-200"
-                      }`}
+                      style={isCompleted ? primaryColorStyle : { backgroundColor: '#E5E7EB' }}
+                      className={`w-1 h-16`}
                     />
                   )}
                 </div>
@@ -462,13 +478,8 @@ const OrderTrackingPage = ({
                 {/* Step Content */}
                 <div className="flex-1 pb-4">
                   <h3
-                    className={`font-semibold text-lg ${
-                      isCurrent
-                        ? "text-primaryColor"
-                        : isCompleted
-                        ? "text-primaryColor"
-                        : "text-gray-400"
-                    }`}
+                    style={isCurrent || isCompleted ? textColorStyle : { color: '#9CA3AF' }}
+                    className={`font-semibold text-lg`}
                   >
                     {step.label}
                   </h3>
@@ -505,7 +516,8 @@ const OrderTrackingPage = ({
                     Your order is ready!
                   </h4>
                   <p className="text-sm text-orange-700">
-                    Your food is ready for pickup. Please contact staff to collect your order.
+                    Your food is ready for pickup. Please contact staff to
+                    collect your order.
                   </p>
                 </div>
               </div>
@@ -517,10 +529,15 @@ const OrderTrackingPage = ({
           <CustomButton
             onClick={onAddMoreItems}
             disabled={orderData?.status === 1 || orderData?.status === 2}
+            style={
+              orderData?.status === 1 || orderData?.status === 2
+                ? { backgroundColor: '#F3F4F6', borderColor: '#D1D5DB', color: '#9CA3AF', borderWidth: '2px' }
+                : { ...borderColorStyle, ...textColorStyle, backgroundColor: 'white', borderWidth: '2px' }
+            }
             className={`flex-1 h-14 ${
               orderData?.status === 1 || orderData?.status === 2
-                ? "bg-gray-100 border-2 border-gray-300 text-gray-400 cursor-not-allowed"
-                : "bg-white border-2 border-primaryColor text-primaryColor"
+                ? "cursor-not-allowed"
+                : ""
             } font-semibold flex items-center justify-center gap-2 text-base`}
           >
             <IoAddCircleOutline className="w-6 h-6" />
@@ -529,16 +546,16 @@ const OrderTrackingPage = ({
           <CustomButton
             onClick={onCheckout}
             disabled={orderData?.status === 1 || orderData?.status === 2}
+            style={
+              orderData?.status === 1 || orderData?.status === 2
+                ? { backgroundColor: '#D1D5DB', color: '#6B7280' }
+                : primaryColorStyle
+            }
             className={`flex-1 h-14 ${
               orderData?.status === 1 || orderData?.status === 2
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                ? "cursor-not-allowed"
                 : "text-white"
             } font-semibold flex items-center justify-center gap-2 text-base`}
-            backgroundColor={
-              orderData?.status === 1 || orderData?.status === 2
-                ? "bg-gray-300"
-                : "bg-primaryColor"
-            }
           >
             <span>Checkout order</span>
             <HiArrowLongLeft className="w-6 h-6 rotate-180" />
@@ -591,7 +608,7 @@ const OrderTrackingPage = ({
               <CustomButton
                 onClick={handleConfirmLeave}
                 className="flex-1 h-12 text-white font-semibold"
-                backgroundColor="bg-primaryColor"
+                style={primaryColorStyle}
               >
                 Leave Page
               </CustomButton>

@@ -12,8 +12,7 @@ import {
 import Image from "next/image";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { IoAddCircleOutline, IoClose } from "react-icons/io5";
-import { MdAccessTime } from "react-icons/md";
-import noImage from "../../public/assets/images/no-image.svg";
+import noMenu from "../../public/assets/images/no-menu-1.jpg";
 
 const ViewModal = ({
   selectedItems,
@@ -26,7 +25,13 @@ const ViewModal = ({
   totalPrice,
   handlePackingCost,
   handleCheckoutOpen,
+  menuConfig,
 }: any) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || "#6366F1";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+
   const getItemCount = (itemId: string) => {
     const item = selectedItems.find((item: any) => item.id === itemId);
     return item ? item.count : 0;
@@ -68,7 +73,7 @@ const ViewModal = ({
                   src={
                     selectedMenu.image
                       ? `data:image/jpeg;base64,${selectedMenu.image}`
-                      : noImage
+                      : noMenu
                   }
                   fill
                   style={{ objectFit: "cover" }}
@@ -96,7 +101,7 @@ const ViewModal = ({
 
                 {/* Price */}
                 <div className="mb-6">
-                  <p className="text-3xl font-bold text-primaryColor">
+                  <p className="text-3xl font-bold" style={textColorStyle}>
                     {formatPrice(selectedMenu?.price)}
                   </p>
                 </div>
@@ -135,7 +140,9 @@ const ViewModal = ({
                     </h3>
 
                     {/* Base Item Option */}
-                    <div className="flex justify-between items-start py-3 border-b border-gray-100 bg-purple-50 rounded-lg px-3 mb-2">
+                    <div
+                      className={`flex justify-between items-start py-3 border-b border-gray-100  rounded-lg mb-2`}
+                    >
                       <div className="flex-1">
                         <p className="font-medium text-black">
                           Regular (Base Item)
@@ -206,7 +213,8 @@ const ViewModal = ({
                               );
                             }}
                             size="sm"
-                            className="bg-primaryColor text-white hover:bg-primaryColor/90"
+                            style={primaryColorStyle}
+                            className="text-white hover:opacity-90"
                           >
                             Add
                           </Button>
@@ -323,8 +331,8 @@ const ViewModal = ({
                         );
                         onClose(); // Close modal after adding
                       }}
+                      style={primaryColorStyle}
                       className="w-full h-12 text-white font-semibold flex items-center justify-center gap-2"
-                      backgroundColor="bg-primaryColor"
                     >
                       <IoAddCircleOutline className="w-5 h-5" />
                       Add Items

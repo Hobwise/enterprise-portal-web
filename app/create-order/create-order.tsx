@@ -29,8 +29,7 @@ import { FaMinus, FaPlus } from "react-icons/fa6";
 import { CustomInput } from "@/components/CustomInput";
 import { HiOutlineMicrophone } from "react-icons/hi2";
 import { HiMenuAlt3 } from "react-icons/hi";
-import noMenu from "../../public/assets/images/no-menu.png";
-import noImage from "../../public/assets/images/no-image.svg";
+import noMenu from "../../public/assets/images/no-menu-1.jpg";
 
 import useCustomerMenuCategories from "@/hooks/cachedEndpoints/useCustomerMenuCategories";
 import useCustomerMenuItems from "@/hooks/cachedEndpoints/useCustomerMenuItems";
@@ -55,29 +54,28 @@ const CreateOrder = () => {
   let businessId = searchParams.get("businessID");
   let cooperateID = searchParams.get("cooperateID");
   let qrId = searchParams.get("id");
-  const mode = searchParams.get("mode"); // 'view' for view-only mode
-
-  // View-only mode: no cart or item selection (only for copied menu URLs)
-  // Use sessionStorage with businessId + cooperateID for unique key
-  const viewOnlyStorageKey = `menuViewOnly_${businessId}_${cooperateID || 'default'}`;
+  const mode = searchParams.get("mode");
+  const viewOnlyStorageKey = `menuViewOnly_${businessId}_${
+    cooperateID || "default"
+  }`;
 
   const [isViewOnlyMode, setIsViewOnlyMode] = useState(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Check URL parameter first
       if (mode === "view") {
-        sessionStorage.setItem(viewOnlyStorageKey, 'true');
-        console.log('🔒 Initial: Set view-only mode from URL parameter');
+        sessionStorage.setItem(viewOnlyStorageKey, "true");
+        console.log("🔒 Initial: Set view-only mode from URL parameter");
         return true;
       }
 
       // Then check sessionStorage
       const stored = sessionStorage.getItem(viewOnlyStorageKey);
-      if (stored === 'true') {
-        console.log('🔒 Initial: Loaded view-only mode from storage');
+      if (stored === "true") {
+        console.log("🔒 Initial: Loaded view-only mode from storage");
         return true;
       }
 
-      console.log('🔓 Initial: Normal mode (not view-only)');
+      console.log("🔓 Initial: Normal mode (not view-only)");
       return false;
     }
     return mode === "view";
@@ -85,38 +83,45 @@ const CreateOrder = () => {
 
   // Sync with URL parameter and persist to sessionStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (mode === "view") {
-        console.log('🔒 Setting view-only mode TRUE and storing');
+        console.log("🔒 Setting view-only mode TRUE and storing");
         setIsViewOnlyMode(true);
-        sessionStorage.setItem(viewOnlyStorageKey, 'true');
-      } else if (!mode) {
-        // No mode parameter - check storage
-        const stored = sessionStorage.getItem(viewOnlyStorageKey);
-        if (stored === 'true') {
-          console.log('🔒 No mode param but storage says view-only, maintaining state');
-          setIsViewOnlyMode(true);
-        } else {
-          console.log('🔓 No mode param and no storage, normal mode');
-          setIsViewOnlyMode(false);
-        }
+        sessionStorage.setItem(viewOnlyStorageKey, "true");
+      } else {
+        // No mode parameter or mode is explicitly not "view" - clear view-only mode
+        console.log(
+          "🔓 Mode param removed or not 'view', clearing view-only mode"
+        );
+        setIsViewOnlyMode(false);
+        sessionStorage.removeItem(viewOnlyStorageKey);
       }
     }
   }, [mode, viewOnlyStorageKey]);
 
   // Debug: Log view-only mode state changes
   useEffect(() => {
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📊 View-only mode:', isViewOnlyMode);
-    console.log('📊 Mode param:', mode);
-    console.log('📊 Storage key:', viewOnlyStorageKey);
-    console.log('📊 Storage value:', typeof window !== 'undefined' ? sessionStorage.getItem(viewOnlyStorageKey) : 'N/A');
-    console.log('📊 Track Order visible:', !isViewOnlyMode);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("📊 View-only mode:", isViewOnlyMode);
+    console.log("📊 Mode param:", mode);
+    console.log("📊 Storage key:", viewOnlyStorageKey);
+    console.log(
+      "📊 Storage value:",
+      typeof window !== "undefined"
+        ? sessionStorage.getItem(viewOnlyStorageKey)
+        : "N/A"
+    );
+    console.log("📊 Track Order visible:", !isViewOnlyMode);
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
   }, [isViewOnlyMode, mode, viewOnlyStorageKey]);
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { menuIdTable, setMenuIdTable, setPage } = useGlobalContext();
+
+  // Dynamic color from menu config (fallback to primary color)
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
@@ -238,8 +243,8 @@ const CreateOrder = () => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [itemsToShow, menuItems, searchQuery]);
 
   // Handle category scroll
@@ -376,8 +381,23 @@ const CreateOrder = () => {
 
   const handleQuickAdd = (menuItem: Item, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
-    // Open the variety modal to show item details
-    toggleVarietyModal(menuItem);
+    // Directly add item to cart
+    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
+    if (existingItem) {
+      // If item already exists, increment count
+      handleIncrement(menuItem.id);
+    } else {
+      // Add new item to cart
+      setSelectedItems((prevItems: Item[]) => [
+        ...prevItems,
+        {
+          ...menuItem,
+          count: 1,
+          isPacked: false,
+          packingCost: menuItem.packingCost || 0,
+        },
+      ]);
+    }
   };
 
   const handleDecrement = (id: string) => {
@@ -629,7 +649,8 @@ const CreateOrder = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search"
-            className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primaryColor focus:border-transparent outline-none bg-gray-50"
+            style={{ outlineColor: primaryColor }}
+            className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:border-transparent outline-none bg-gray-50"
           />
           <div className="absolute inset-y-0 right-3 flex items-center">
             <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
@@ -669,9 +690,10 @@ const CreateOrder = () => {
                 <button
                   key={category.id}
                   onClick={() => handleTabClick(category.id, category.name)}
+                  style={isSelected ? primaryColorStyle : {}}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     isSelected
-                      ? "bg-primaryColor text-white"
+                      ? "text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -766,9 +788,16 @@ const CreateOrder = () => {
                   return (
                     <div
                       key={item.id || item.menuID}
-                      className={`${isListLayout ? "flex items-center gap-3" : ""} my-3 relative`}
+                      className={`${
+                        isListLayout ? "flex items-center gap-3" : ""
+                      } my-3 relative`}
                     >
                       <div
+                        onClick={() => {
+                          if (item?.isAvailable && !isViewOnlyMode) {
+                            toggleVarietyModal(item);
+                          }
+                        }}
                         className={`${preview?.container} ${
                           layoutName === "List Right" &&
                           menuConfig?.useBackground &&
@@ -776,8 +805,10 @@ const CreateOrder = () => {
                         } ${
                           isListLayout ? "flex flex-1" : ""
                         } text-black relative transition-all ${
-                          item?.isAvailable
+                          item?.isAvailable && !isViewOnlyMode
                             ? "cursor-pointer shadow-md"
+                            : item?.isAvailable
+                            ? "shadow-md"
                             : "bg-gray-100 shadow-md cursor-not-allowed"
                         }`}
                       >
@@ -799,7 +830,8 @@ const CreateOrder = () => {
                             {layoutName === "Single column 1" && (
                               <button
                                 onClick={(e) => handleQuickAdd(item, e)}
-                                className="absolute bottom-0 left-0 right-0 bg-primaryColor text-white py-3 px-4 rounded-b-2xl font-medium text-sm hover:bg-primaryColor/90 transition-all flex items-center justify-center gap-2 z-20"
+                                style={primaryColorStyle}
+                                className="absolute bottom-0 left-0 right-0 text-white py-3 px-4 rounded-b-2xl font-medium text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 z-20"
                               >
                                 <IoAddCircleOutline className="w-5 h-5" />
                                 Add Items
@@ -811,7 +843,8 @@ const CreateOrder = () => {
                               layoutName === "Double column") && (
                               <button
                                 onClick={(e) => handleQuickAdd(item, e)}
-                                className="absolute bottom-3 right-3 bg-primaryColor text-white rounded-full p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
+                                style={primaryColorStyle}
+                                className="absolute bottom-3 right-3 text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
                                 aria-label="Add to cart"
                               >
                                 <IoAddCircleOutline className="w-5 h-5" />
@@ -820,84 +853,92 @@ const CreateOrder = () => {
                           </>
                         )}
 
-                      {/* Image Container */}
-                      <div
-                        className={`${preview?.imageContainer || ""} relative`}
-                      >
+                        {/* Image Container */}
                         <div
-                          className={`relative bg-gradient-to-br from-primaryColor/10 via-primaryColor/5 to-purple-100 flex items-center justify-center overflow-hidden ${
-                            preview?.imageClass || "h-32"
+                          className={`${
+                            preview?.imageContainer || ""
+                          } relative`}
+                        >
+                          <div
+                            style={{
+                              background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`
+                            }}
+                            className={`relative flex items-center justify-center overflow-hidden ${
+                              preview?.imageClass || "h-32"
+                            }`}
+                          >
+                            {item.image &&
+                            item.image.length > baseString.length ? (
+                              <Image
+                                fill
+                                className="object-cover"
+                                src={`${baseString}${item.image}`}
+                                alt={item.itemName}
+                              />
+                            ) : (
+                              <Image
+                                fill
+                                className="object-contain"
+                                src={noMenu}
+                                alt="No image available"
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Text Content */}
+                        <div
+                          style={{
+                            color: menuConfig?.textColour || "#1F2937",
+                          }}
+                          className={`${preview?.textContainer} flex flex-col ${
+                            isListLayout ? "justify-center" : "justify-start"
                           }`}
                         >
-                          {item.image &&
-                          item.image.length > baseString.length ? (
-                            <Image
-                              fill
-                              className="object-cover"
-                              src={`${baseString}${item.image}`}
-                              alt={item.itemName}
-                            />
-                          ) : (
-                            <Image
-                              fill
-                              className="object-contain p-4"
-                              src={noMenu}
-                              alt="No image available"
-                            />
+                          <p
+                            className={`font-bold ${
+                              isCompactGrid ? "text-xs" : "text-sm"
+                            } line-clamp-1`}
+                          >
+                            {item.itemName}
+                          </p>
+                          <p
+                            className={`text-gray-500 ${
+                              isCompactGrid ? "text-[10px]" : "text-xs"
+                            } line-clamp-2 mt-0.5`}
+                          >
+                            {item.itemDescription || preview?.text3}
+                          </p>
+                          <p
+                            style={textColorStyle}
+                            className={`font-semibold ${
+                              isCompactGrid ? "text-xs" : "text-sm"
+                            } mt-1`}
+                          >
+                            {formatPrice(item.price)}
+                          </p>
+                          {isSelected && (
+                            <Chip
+                              startContent={<CheckIcon size={14} />}
+                              variant="flat"
+                              size="sm"
+                              style={primaryColorStyle}
+                              classNames={{
+                                base: "text-white text-[10px] mt-1.5 h-5",
+                              }}
+                            >
+                              Selected
+                            </Chip>
                           )}
                         </div>
                       </div>
-
-                      {/* Text Content */}
-                      <div
-                        style={{
-                          color: menuConfig?.textColour || "#1F2937",
-                        }}
-                        className={`${preview?.textContainer} flex flex-col ${
-                          isListLayout ? "justify-center" : "justify-start"
-                        }`}
-                      >
-                        <p
-                          className={`font-bold ${
-                            isCompactGrid ? "text-xs" : "text-sm"
-                          } line-clamp-1`}
-                        >
-                          {item.itemName}
-                        </p>
-                        <p
-                          className={`text-gray-500 ${
-                            isCompactGrid ? "text-[10px]" : "text-xs"
-                          } line-clamp-2 mt-0.5`}
-                        >
-                          {item.itemDescription || preview?.text3}
-                        </p>
-                        <p
-                          className={`font-semibold text-primaryColor ${
-                            isCompactGrid ? "text-xs" : "text-sm"
-                          } mt-1`}
-                        >
-                          {formatPrice(item.price)}
-                        </p>
-                        {isSelected && (
-                          <Chip
-                            startContent={<CheckIcon size={14} />}
-                            variant="flat"
-                            size="sm"
-                            classNames={{
-                              base: "bg-primaryColor text-white text-[10px] mt-1.5 h-5",
-                            }}
-                          >
-                            Selected
-                          </Chip>
-                        )}
-                      </div>
-                    </div>
 
                       {/* List Layout Button - Outside card container */}
                       {isListLayout && item?.isAvailable && !isViewOnlyMode && (
                         <button
                           onClick={(e) => handleQuickAdd(item, e)}
-                          className="flex-shrink-0 bg-primaryColor text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
+                          style={primaryColorStyle}
+                          className="flex-shrink-0 text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
                           aria-label="Add to cart"
                         >
                           <IoAddCircleOutline className="w-5 h-5" />
@@ -936,7 +977,8 @@ const CreateOrder = () => {
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery("")}
-                        className="mt-4 px-4 py-2 text-primaryColor hover:underline text-sm font-medium"
+                        style={textColorStyle}
+                        className="mt-4 px-4 py-2 hover:underline text-sm font-medium"
                       >
                         Clear search
                       </button>
@@ -956,7 +998,8 @@ const CreateOrder = () => {
         !isOrderTrackingOpen && (
           <button
             onClick={handleCheckoutOpen}
-            className="fixed bottom-6 right-6 bg-primaryColor hover:bg-primaryColor/90 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-105 z-[60]"
+            style={primaryColorStyle}
+            className="fixed bottom-6 right-6 hover:opacity-90 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-105 z-[60]"
             aria-label="View cart"
           >
             <div className="relative">
@@ -1028,11 +1071,13 @@ const CreateOrder = () => {
                 }}
                 className="w-full flex items-start gap-4 p-4 bg-purple-50 rounded-lg transition-colors text-left"
               >
-                <div className="p-2 bg-primaryColor rounded-lg">
+                <div className="p-2 rounded-lg" style={primaryColorStyle}>
                   <MdOutlineRestaurantMenu className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-primaryColor">View Menu</h3>
+                  <h3 className="font-semibold" style={textColorStyle}>
+                    View Menu
+                  </h3>
                   <p className="text-sm text-gray-600">
                     Browse our full menu selection
                   </p>
@@ -1049,7 +1094,7 @@ const CreateOrder = () => {
                   className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
                 >
                   <div className="p-2 bg-purple-50 rounded-lg">
-                    <BiPackage className="w-6 h-6 text-primaryColor" />
+                    <BiPackage className="w-6 h-6" style={textColorStyle} />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-black">Track Order</h3>
@@ -1073,7 +1118,7 @@ const CreateOrder = () => {
                 className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
               >
                 <div className="p-2 bg-purple-50 rounded-lg">
-                  <IoCalendarOutline className="w-6 h-6 text-primaryColor" />
+                  <IoCalendarOutline className="w-6 h-6" style={textColorStyle} />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-black">Book Reservation</h3>
@@ -1168,6 +1213,7 @@ const CreateOrder = () => {
         handlePackingCost={handlePackingCost}
         toggleVarietyModal={toggleVarietyModal}
         selectedItems={selectedItems}
+        menuConfig={menuConfig}
       />
     </main>
   );
