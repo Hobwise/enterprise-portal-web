@@ -55,13 +55,52 @@ const OrderTrackingPage = ({
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [orderData, setOrderData] = useState<any>(initialOrderData);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [previousStatus, setPreviousStatus] = useState<number | null>(null);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if (
+      isOpen &&
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
+      Notification.requestPermission();
+    }
+  }, [isOpen]);
+
+  // Function to show browser notification
+  const showBrowserNotification = (title: string, message: string) => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      const notification = new Notification(title, {
+        body: message,
+        icon: "/favicon.ico",
+        badge: "/favicon.ico",
+        tag: `order-${trackingId}`,
+        requireInteraction: false,
+        silent: false,
+      });
+
+      setTimeout(() => notification.close(), 10000);
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+    } else if (Notification.permission === "denied") {
+      toast.info(title, { description: message });
+    }
+  };
 
   // Sync initialOrderData to state when it changes
   useEffect(() => {
     if (initialOrderData) {
       setOrderData(initialOrderData);
+      // Set initial status for comparison
+      if (previousStatus === null && initialOrderData.status !== undefined) {
+        setPreviousStatus(initialOrderData.status);
+      }
     }
-  }, [initialOrderData]);
+  }, [initialOrderData, previousStatus, trackingId]);
 
   // Polling for order status updates
   useEffect(() => {
@@ -76,7 +115,43 @@ const OrderTrackingPage = ({
         );
 
         if (response && response.data) {
-          setOrderData(response.data);
+          const newOrderData = response.data;
+          const newStatus = newOrderData.status;
+
+          // Check if status has changed and show notification
+          if (previousStatus !== null && previousStatus !== newStatus) {
+            const statusMessages: {
+              [key: number]: {
+                title: string;
+                message: string;
+              };
+            } = {
+              0: {
+                title: "Order Placed 📝",
+                message: "Your order has been received!",
+              },
+              3: {
+                title: "Order Accepted ✅",
+                message: "Your order has been accepted and is being prepared.",
+              },
+              2: {
+                title: "Order Ready 🎉",
+                message: "Your order is ready for pickup!",
+              },
+              1: {
+                title: "Order Completed ✨",
+                message: "Your order has been completed. Enjoy!",
+              },
+            };
+
+            const statusUpdate = statusMessages[newStatus];
+            if (statusUpdate) {
+              showBrowserNotification(statusUpdate.title, statusUpdate.message);
+            }
+          }
+
+          setPreviousStatus(newStatus);
+          setOrderData(newOrderData);
         }
       } catch (error) {
         console.error("Error polling order status:", error);
@@ -290,7 +365,7 @@ const OrderTrackingPage = ({
             {orderData?.status !== 1 && orderData?.status !== 2 && (
               <div className="w-full flex justify-end">
                 {timeLeft && timeLeft !== "00:00" && (
-                  <div className="text-3xl font-bold" style={textColorStyle}>
+                  <div className="text-3xl font-bold text-green-500">
                     {timeLeft}
                   </div>
                 )}
@@ -457,19 +532,30 @@ const OrderTrackingPage = ({
                       isCompleted
                         ? primaryColorStyle
                         : isCurrent
-                        ? { backgroundColor: `${primaryColor}33`, borderColor: primaryColor, borderWidth: '2px' }
-                        : { backgroundColor: '#E5E7EB' }
+                        ? {
+                            backgroundColor: `${primaryColor}33`,
+                            borderColor: primaryColor,
+                            borderWidth: "2px",
+                          }
+                        : { backgroundColor: "#E5E7EB" }
                     }
                     className={`w-12 h-12 rounded-full flex items-center justify-center`}
                   >
                     {isCompleted && <FaCheck className="w-6 h-6 text-white" />}
                     {isCurrent && (
-                      <div className="w-3 h-3 rounded-full animate-pulse" style={primaryColorStyle} />
+                      <div
+                        className="w-3 h-3 rounded-full animate-pulse"
+                        style={primaryColorStyle}
+                      />
                     )}
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      style={isCompleted ? primaryColorStyle : { backgroundColor: '#E5E7EB' }}
+                      style={
+                        isCompleted
+                          ? primaryColorStyle
+                          : { backgroundColor: "#E5E7EB" }
+                      }
                       className={`w-1 h-16`}
                     />
                   )}
@@ -478,7 +564,11 @@ const OrderTrackingPage = ({
                 {/* Step Content */}
                 <div className="flex-1 pb-4">
                   <h3
-                    style={isCurrent || isCompleted ? textColorStyle : { color: '#9CA3AF' }}
+                    style={
+                      isCurrent || isCompleted
+                        ? textColorStyle
+                        : { color: "#9CA3AF" }
+                    }
                     className={`font-semibold text-lg`}
                   >
                     {step.label}
@@ -528,14 +618,24 @@ const OrderTrackingPage = ({
         <div className="flex gap-4 mt-8">
           <CustomButton
             onClick={onAddMoreItems}
-            disabled={orderData?.status === 1 || orderData?.status === 2}
+            disabled={orderData?.status === 1}
             style={
-              orderData?.status === 1 || orderData?.status === 2
-                ? { backgroundColor: '#F3F4F6', borderColor: '#D1D5DB', color: '#9CA3AF', borderWidth: '2px' }
-                : { ...borderColorStyle, ...textColorStyle, backgroundColor: 'white', borderWidth: '2px' }
+              orderData?.status === 1
+                ? {
+                    backgroundColor: "#F3F4F6",
+                    borderColor: "#D1D5DB",
+                    color: "#9CA3AF",
+                    borderWidth: "2px",
+                  }
+                : {
+                    ...borderColorStyle,
+                    ...textColorStyle,
+                    backgroundColor: "white",
+                    borderWidth: "2px",
+                  }
             }
             className={`flex-1 h-14 ${
-              orderData?.status === 1 || orderData?.status === 2
+              orderData?.status === 1
                 ? "cursor-not-allowed"
                 : ""
             } font-semibold flex items-center justify-center gap-2 text-base`}
@@ -544,15 +644,18 @@ const OrderTrackingPage = ({
             Add items
           </CustomButton>
           <CustomButton
-            onClick={onCheckout}
-            disabled={orderData?.status === 1 || orderData?.status === 2}
+            onClick={() => {
+              console.log("Checkout button clicked");
+              onCheckout();
+            }}
+            disabled={orderData?.status === 1}
             style={
-              orderData?.status === 1 || orderData?.status === 2
-                ? { backgroundColor: '#D1D5DB', color: '#6B7280' }
+              orderData?.status === 1
+                ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
                 : primaryColorStyle
             }
             className={`flex-1 h-14 ${
-              orderData?.status === 1 || orderData?.status === 2
+              orderData?.status === 1
                 ? "cursor-not-allowed"
                 : "text-white"
             } font-semibold flex items-center justify-center gap-2 text-base`}

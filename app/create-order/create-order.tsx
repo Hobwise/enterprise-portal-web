@@ -582,9 +582,13 @@ const CreateOrder = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Handle checkout from order tracking - go to serving info (confirmation)
+  // Handle checkout from order tracking - go to confirmation page
   const handleCheckoutFromTracking = () => {
+    console.log("handleCheckoutFromTracking called");
+    console.log("orderData:", orderData);
+
     if (orderData && orderData.orderDetails) {
+      console.log("orderDetails found:", orderData.orderDetails);
       // Transform order details into cart items format with all necessary fields
       const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
         const basePrice = detail.unitPrice || 0;
@@ -610,13 +614,16 @@ const CreateOrder = () => {
         };
       });
 
+      console.log("cartItems:", cartItems);
       setSelectedItems(cartItems);
       setIsUpdatingOrder(true); // Set flag to update existing order
       setIsOrderTrackingOpen(false);
-      // Use setTimeout to ensure state updates complete before opening serving info
+      // Open confirmation modal instead of serving info
       setTimeout(() => {
-        setIsServingInfoOpen(true);
+        setIsConfirmOpen(true);
       }, 0);
+    } else {
+      console.log("No orderData or orderDetails found");
     }
   };
 
@@ -802,8 +809,10 @@ const CreateOrder = () => {
                           layoutName === "List Right" &&
                           menuConfig?.useBackground &&
                           "flex-row-reverse"
-                        } ${
-                          isListLayout ? "flex flex-1" : ""
+                        } ${isListLayout ? "flex flex-1" : ""} ${
+                          !isListLayout && item?.isAvailable && !isViewOnlyMode
+                            ? "pb-10"
+                            : ""
                         } text-black relative transition-all ${
                           item?.isAvailable && !isViewOnlyMode
                             ? "cursor-pointer shadow-md"
@@ -826,28 +835,17 @@ const CreateOrder = () => {
                         {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
                         {item?.isAvailable && !isViewOnlyMode && (
                           <>
-                            {/* Single column 1: Full-width button at bottom */}
-                            {layoutName === "Single column 1" && (
-                              <button
-                                onClick={(e) => handleQuickAdd(item, e)}
-                                style={primaryColorStyle}
-                                className="absolute bottom-0 left-0 right-0 text-white py-3 px-4 rounded-b-2xl font-medium text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2 z-20"
-                              >
-                                <IoAddCircleOutline className="w-5 h-5" />
-                                Add Items
-                              </button>
-                            )}
-
-                            {/* Single column 2 (3-grid) & Double column (2-grid): Circular button bottom-right */}
-                            {(layoutName === "Single column 2" ||
+                            {/* All grid layouts: Full-width button at bottom */}
+                            {(layoutName === "Single column 1" ||
+                              layoutName === "Single column 2" ||
                               layoutName === "Double column") && (
                               <button
                                 onClick={(e) => handleQuickAdd(item, e)}
                                 style={primaryColorStyle}
-                                className="absolute bottom-3 right-3 text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
-                                aria-label="Add to cart"
+                                className="absolute bottom-0 left-0 right-0 text-white py-2.5 px-3 rounded-b-xl font-medium text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 z-20"
                               >
-                                <IoAddCircleOutline className="w-5 h-5" />
+                                <IoAddCircleOutline className="w-4 h-4" />
+                                Add
                               </button>
                             )}
                           </>
@@ -861,7 +859,7 @@ const CreateOrder = () => {
                         >
                           <div
                             style={{
-                              background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`
+                              background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
                             }}
                             className={`relative flex items-center justify-center overflow-hidden ${
                               preview?.imageClass || "h-32"
@@ -878,7 +876,7 @@ const CreateOrder = () => {
                             ) : (
                               <Image
                                 fill
-                                className="object-contain"
+                                className="object-cover"
                                 src={noMenu}
                                 alt="No image available"
                               />
@@ -918,17 +916,22 @@ const CreateOrder = () => {
                             {formatPrice(item.price)}
                           </p>
                           {isSelected && (
-                            <Chip
-                              startContent={<CheckIcon size={14} />}
-                              variant="flat"
-                              size="sm"
-                              style={primaryColorStyle}
-                              classNames={{
-                                base: "text-white text-[10px] mt-1.5 h-5",
-                              }}
-                            >
-                              Selected
-                            </Chip>
+                            <div className="absolute top-2 left-2">
+                              <Chip
+                                startContent={<CheckIcon size={14} />}
+                                variant="flat"
+                                size="sm"
+                                style={primaryColorStyle}
+                                classNames={{
+                                  base: "text-white text-[10px] mt-1.5 h-5",
+                                }}
+                              >
+                                {selectedItems.reduce(
+                                  (total, item) => total + item.count,
+                                  0
+                                )}
+                              </Chip>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -1118,7 +1121,10 @@ const CreateOrder = () => {
                 className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
               >
                 <div className="p-2 bg-purple-50 rounded-lg">
-                  <IoCalendarOutline className="w-6 h-6" style={textColorStyle} />
+                  <IoCalendarOutline
+                    className="w-6 h-6"
+                    style={textColorStyle}
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-black">Book Reservation</h3>

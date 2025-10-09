@@ -129,12 +129,17 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const data = await getMenuConfiguration(businessInformation[0].businessId);
 
+      console.log("MenuProvider - fetchMenuConfig response:", data?.data?.data);
+
       if (data?.data?.isSuccessful) {
         setActiveTile(convertActiveTile(data?.data?.data?.layout));
 
         // Handle image from API
         const imageData = data?.data?.data?.image;
         const imageRef = data?.data?.data?.imageRef;
+
+        console.log("MenuProvider - imageData:", imageData);
+        console.log("MenuProvider - imageRef:", imageRef);
 
         if (imageData && imageData !== 'undefined' && imageData !== 'null') {
           // If image data exists and is not already a complete URL or blob
@@ -152,7 +157,9 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
         setBackgroundColor(data?.data?.data?.backgroundColour || '');
         setSelectedTextColor(data?.data?.data?.textColour || '#000');
-        setImageReference(data?.data?.data?.imageRef || '');
+        const finalImageRef = data?.data?.data?.imageRef || '';
+        console.log("MenuProvider - setting imageReference to:", finalImageRef);
+        setImageReference(finalImageRef);
         setIsSelectedPreview(data?.data?.data?.useBackground || false);
       }
     } catch (error) {
