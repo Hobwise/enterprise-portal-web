@@ -154,7 +154,6 @@ const OrderTrackingPage = ({
           setOrderData(newOrderData);
         }
       } catch (error) {
-        console.error("Error polling order status:", error);
       }
     };
 
@@ -618,9 +617,9 @@ const OrderTrackingPage = ({
         <div className="flex gap-4 mt-8">
           <CustomButton
             onClick={onAddMoreItems}
-            disabled={orderData?.status === 1}
+            disabled={orderData?.status === 1 || orderData?.status === 2}
             style={
-              orderData?.status === 1
+              orderData?.status === 1 || orderData?.status === 2
                 ? {
                     backgroundColor: "#F3F4F6",
                     borderColor: "#D1D5DB",
@@ -635,7 +634,7 @@ const OrderTrackingPage = ({
                   }
             }
             className={`flex-1 h-14 ${
-              orderData?.status === 1
+              orderData?.status === 1 || orderData?.status === 2
                 ? "cursor-not-allowed"
                 : ""
             } font-semibold flex items-center justify-center gap-2 text-base`}
@@ -645,17 +644,16 @@ const OrderTrackingPage = ({
           </CustomButton>
           <CustomButton
             onClick={() => {
-              console.log("Checkout button clicked");
               onCheckout();
             }}
-            disabled={orderData?.status === 1}
+            disabled={orderData?.status === 2 || orderData?.status === 1}
             style={
-              orderData?.status === 1
+              orderData?.status === 1 || orderData?.status === 1
                 ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
                 : primaryColorStyle
             }
             className={`flex-1 h-14 ${
-              orderData?.status === 1
+              orderData?.status === 1 || orderData?.status === 1
                 ? "cursor-not-allowed"
                 : "text-white"
             } font-semibold flex items-center justify-center gap-2 text-base`}

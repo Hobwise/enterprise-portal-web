@@ -557,41 +557,68 @@ const CreateOrder = () => {
   };
 
   // Handle checkout from order tracking - go to confirmation page
-  const handleCheckoutFromTracking = () => {
+  const handleCheckoutFromTracking = async () => {
+    console.log("handleCheckoutFromTracking called");
+    console.log("orderData:", orderData);
 
-    if (orderData && orderData.orderDetails) {
-      // Transform order details into cart items format with all necessary fields
-      const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
-        const basePrice = detail.unitPrice || 0;
+    // Fetch the latest order details to ensure we have complete data
+    if (orderData?.reference) {
+      try {
+        const response = await getCustomerOrderByReference(
+          orderData.reference,
+          businessId || "",
+          cooperateID || ""
+        );
 
-        return {
-          id: detail.itemID,
-          itemID: detail.itemID,
-          itemName: detail.itemName,
-          menuName: detail.menuName,
-          itemDescription: detail.itemDescription || "",
-          price: basePrice,
-          currency: "NGN",
-          isAvailable: true,
-          hasVariety: detail.isVariety || false,
-          image: detail.image || "",
-          isVariety: detail.isVariety || false,
-          varieties: detail.varieties || null,
-          count: detail.quantity || 1,
-          packingCost: detail.packingCost || 0,
-          isPacked: detail.isPacked || false,
-          menuID: detail.menuID || "",
-          waitingTimeMinutes: detail.waitingTimeMinutes || 0,
-        };
-      });
-      setSelectedItems(cartItems);
-      setIsUpdatingOrder(true); // Set flag to update existing order
-      setIsOrderTrackingOpen(false);
-      // Open confirmation modal instead of serving info
-      setTimeout(() => {
-        setIsConfirmOpen(true);
-      }, 0);
+        if (response?.data && response.data.orderDetails) {
+          const fullOrderData = response.data;
+          console.log("Fetched full order data:", fullOrderData);
+
+          // Transform order details into cart items format with all necessary fields
+          const cartItems: Item[] = fullOrderData.orderDetails.map((detail: any) => {
+            const basePrice = detail.unitPrice || 0;
+
+            return {
+              id: detail.itemID,
+              itemID: detail.itemID,
+              itemName: detail.itemName,
+              menuName: detail.menuName,
+              itemDescription: detail.itemDescription || "",
+              price: basePrice,
+              currency: "NGN",
+              isAvailable: true,
+              hasVariety: detail.isVariety || false,
+              image: detail.image || "",
+              isVariety: detail.isVariety || false,
+              varieties: detail.varieties || null,
+              count: detail.quantity || 1,
+              packingCost: detail.packingCost || 0,
+              isPacked: detail.isPacked || false,
+              menuID: detail.menuID || "",
+              waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+            };
+          });
+
+          console.log("cartItems:", cartItems);
+          setSelectedItems(cartItems);
+          setOrderData(fullOrderData); // Update with full order data
+          setIsUpdatingOrder(true); // Set flag to update existing order
+          setIsOrderTrackingOpen(false);
+          // Open cart modal
+          setTimeout(() => {
+            setIsCartOpen(true);
+          }, 0);
+        } else {
+          console.log("Failed to fetch complete order details");
+          toast.error("Unable to load order details. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error fetching order details:", error);
+        toast.error("Failed to load order details. Please try again.");
+      }
     } else {
+      console.log("No order reference found");
+      toast.error("Order reference not found. Please try again.");
     }
   };
 

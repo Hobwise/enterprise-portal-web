@@ -3,7 +3,7 @@ import * as React from "react";
 import Image from "next/image";
 
 import { useGlobalContext } from "@/hooks/globalProvider";
-import NoMenu from "../../../../../public/assets/images/no-menu.png";
+import NoMenu from "../../../../../public/assets/images/no-menu-1.jpg";
 import { togglePreview } from "./data";
 import { formatPrice, getJsonItemFromLocalStorage } from "@/lib/utils";
 import useCustomerMenuCategories from "@/hooks/cachedEndpoints/useCustomerMenuCategories";
@@ -40,10 +40,12 @@ const Preview = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
 
   // Handle image URL properly - blob URLs and base64 strings
-  const isBlobUrl = selectedImage?.startsWith('blob:');
+  const isBlobUrl = selectedImage?.startsWith("blob:");
 
   const menuConfig = {
-    image: isBlobUrl ? selectedImage : selectedImage?.replace("data:image/jpeg;base64,", ""),
+    image: isBlobUrl
+      ? selectedImage
+      : selectedImage?.replace("data:image/jpeg;base64,", ""),
     backgroundColour: backgroundColor,
     textColour: selectedTextColor,
     useBackground: isSelectedPreview,
@@ -104,7 +106,7 @@ const Preview = () => {
     checkScrollPosition();
   }, [categoryScrollRef]);
 
-  const styles = togglePreview(activeTile);
+  const styles = togglePreview(activeTile, true);
 
   return (
     <article
@@ -198,9 +200,30 @@ const Preview = () => {
       {/* Menu Items - Dynamic Layout */}
       <div className="pb-20">
         {categoriesLoading || itemsLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 px-4">
-            <div className="w-8 h-8 border-4 border-primaryColor border-t-transparent rounded-full animate-spin mb-4" />
-            <p className="text-gray-500 text-sm">Loading menu items...</p>
+          <div className="px-4">
+            {/* Skeleton for grid/list layouts */}
+            <div className="grid grid-cols-1 gap-4">
+              {[...Array(6)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse"
+                >
+                  {/* Image Skeleton */}
+                  <div className="h-36 bg-gray-200"></div>
+
+                  {/* Content Skeleton */}
+                  <div className="p-4 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="flex justify-between items-center mt-4">
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ) : filteredMenuItems && filteredMenuItems.length > 0 ? (
           <div className={`${styles.main}`}>
@@ -214,7 +237,9 @@ const Preview = () => {
                   key={`${item.id || item.menuID}-${
                     item.name || item.itemName
                   }`}
-                  className={`${isListLayout ? "flex items-center gap-3" : ""} my-3 relative`}
+                  className={`${
+                    isListLayout ? "flex items-center gap-3" : ""
+                  } my-3 relative`}
                 >
                   <div
                     className={`${styles.container} ${
@@ -225,7 +250,9 @@ const Preview = () => {
                   >
                     {/* Image Container */}
                     {isSelectedPreview && (
-                      <div className={`${styles.imageContainer || ""} relative`}>
+                      <div
+                        className={`${styles.imageContainer || ""} relative`}
+                      >
                         <div
                           className={`relative bg-gradient-to-br from-primaryColor/10 via-primaryColor/5 to-purple-100 flex items-center justify-center overflow-hidden ${
                             styles.imageClass || "h-32"
@@ -235,12 +262,8 @@ const Preview = () => {
                           item.image.length > baseString.length ? (
                             <Image
                               className="object-cover w-full h-full"
-                              width={
-                                activeTile.includes("Single column") ? 300 : 60
-                              }
-                              height={
-                                activeTile.includes("Single column") ? 200 : 60
-                              }
+                              width={300}
+                              height={200}
                               src={baseString + item.image}
                               alt={item.itemName || "Menu item"}
                             />
