@@ -14,10 +14,11 @@ function Container({ children }: any) {
   const pathname = usePathname();
   const { role } = usePermission();
 
-  // Hide sidebar for POS users (role === 1) on orders page
+  // Hide sidebar for POS users (role === 1) on orders page and specific settings pages
   const isPOSUser = role === 1;
-  const isOrdersPage = pathname === '/dashboard/orders';
-  const shouldHideSidebar = isPOSUser && isOrdersPage;
+  const isPOSSettingsPage = pathname === '/dashboard/settings/personal-information' ||
+                            pathname === '/dashboard/settings/password-management';
+  const shouldHideSidebar = isPOSUser && (pathname === '/dashboard/orders' || isPOSSettingsPage);
 
   return (
     <div className="flex h-screen overflow-hidden">

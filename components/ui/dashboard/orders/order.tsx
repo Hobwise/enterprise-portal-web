@@ -375,8 +375,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
     });
   }, [orderDetails, sortDescriptor]);
 
-  const toggleCancelModal = (order: OrderItem) => {
-    setSingleOrder(order);
+  const toggleCancelModal = (order?: OrderItem) => {
+    if (order) {
+      setSingleOrder(order);
+    }
     setIsOpenCancelOrder(!isOpenCancelOrder);
   };
   const toggleCommentModal = (order: OrderItem) => {
@@ -519,12 +521,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const handleRowClick = (order: OrderItem) => {
     switch (order.status) {
       case 0: // Open orders
+      case 3: // Awaiting confirmation
         saveJsonItemToLocalStorage('order', order);
         toggleUpdateOrderModal(order);
         break;
       case 1: // Closed orders
       case 2: // Cancelled orders
-      case 3: // Awaiting confirmation
         toggleInvoiceModal(order);
         break;
       default:
@@ -671,28 +673,29 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
 
   return (
-    <section className='border border-primaryGrey rounded-lg'>
-      <Table
-        radius='lg'
-        isCompact
-        removeWrapper
-        aria-label='list of orders'
-        bottomContent={bottomContent}
-        bottomContentPlacement='outside'
-        classNames={classNames}
-        selectedKeys={selectedKeys}
-        // selectionMode='multiple'
-        sortDescriptor={sortDescriptor as SortDescriptor}
-        topContent={topContent}
-        topContentPlacement='outside'
-        onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-        onSortChange={(descriptor: SortDescriptor) => {
-          setSortDescriptor({
-            column: String(descriptor.column),
-            direction: descriptor.direction as string
-          });
-        }}
-      >
+    <section className='border border-primaryGrey rounded-lg overflow-hidden'>
+      <div className='overflow-x-auto'>
+        <Table
+          radius='lg'
+          isCompact
+          removeWrapper
+          aria-label='list of orders'
+          bottomContent={bottomContent}
+          bottomContentPlacement='outside'
+          classNames={classNames}
+          selectedKeys={selectedKeys}
+          // selectionMode='multiple'
+          sortDescriptor={sortDescriptor as SortDescriptor}
+          topContent={topContent}
+          topContentPlacement='outside'
+          onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+          onSortChange={(descriptor: SortDescriptor) => {
+            setSortDescriptor({
+              column: String(descriptor.column),
+              direction: descriptor.direction as string
+            });
+          }}
+        >
         <TableHeader columns={headerColumns}>
           {(column) => (
             <TableColumn
@@ -724,6 +727,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
           )}
         </TableBody>
       </Table>
+      </div>
       <Comment
         toggleCommentModal={toggleCommentModal}
         singleOrder={singleOrder}

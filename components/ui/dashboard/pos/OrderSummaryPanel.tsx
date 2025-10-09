@@ -39,9 +39,6 @@ export const OrderSummaryPanel: React.FC<OrderSummaryPanelProps> = ({
         <h3 className="text-lg text-center font-semibold text-gray-900">
           {businessName || 'Business Name'}
         </h3>
-        <p className="text-sm text-center text-gray-500">
-          {businessAddress || 'Business Address'}
-        </p>
       </div>
 
      {orderItems.length > 0 && (

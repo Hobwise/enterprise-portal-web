@@ -357,6 +357,64 @@ const CheckoutModal = ({
     }
   };
 
+  // Handle cancel payment - same as "Pay Later" logic
+  const handleCancelPayment = async () => {
+    // Clear screen states
+    setScreen(1);
+    setOrderId("");
+    setReference("");
+    setSelectedPaymentMethod(0);
+
+    try {
+      if (pathname === '/dashboard/orders') {
+        // Already on orders page - just close modal and refresh data
+        // Invalidate all order-related queries to force refetch from backend
+        await queryClient.invalidateQueries({
+          queryKey: ['orderCategories'],
+          refetchType: 'active'
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ['orderDetails'],
+          refetchType: 'active'
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ['orders'],
+          refetchType: 'active'
+        });
+
+        // Force immediate refetch of all active queries
+        await queryClient.refetchQueries({
+          queryKey: ['orderCategories'],
+          type: 'active'
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['orderDetails'],
+          type: 'active'
+        });
+        await queryClient.refetchQueries({
+          queryKey: ['orders'],
+          type: 'active'
+        });
+
+        // Call the refetch function to update the table immediately
+        if (onOrderSuccess) {
+          onOrderSuccess();
+        }
+
+        // Close the modal
+        onOpenChange(false);
+      } else {
+        // Not on orders page - close modal and navigate there
+        onOpenChange(false);
+        router.push("/dashboard/orders");
+      }
+    } catch (error) {
+      console.error('Error in Cancel Payment:', error);
+      // Still close the modal even if refresh fails
+      onOpenChange(false);
+    }
+  };
+
   const paymentMethods = [
     { text: "Pay with cash", subText: " Accept payment using cash", id: 0 },
     { text: "Pay with Pos", subText: " Accept payment using Pos", id: 1 },
@@ -693,7 +751,7 @@ const CheckoutModal = ({
 
     if (hasDataProperty(data) && data.data?.isSuccessful) {
       const apiData = data as ApiResponse;
-      setOrderId(apiData.data?.data?.id || "");
+      setOrderId(apiData.data?.data?.id || "");    
       notify({
         title: "Success!",
         text: "Order placed successfully",
@@ -863,8 +921,32 @@ const CheckoutModal = ({
     });
     console.log('Update Verified Calculation:', calculationVerification.breakdown);
 
-    const data = await editOrder(id, payload);
-    setResponse(data as ApiResponse);
+    if (!id) {
+      notify({
+        title: "Error",
+        text: "Cannot update order: Order ID is missing",
+        type: "error",
+      });
+      setLoading(false);
+      return;
+    }
+
+    let data;
+    try {
+      data = await editOrder(id, payload);
+      setResponse(data as ApiResponse);
+    } catch (error) {
+      console.error('editOrder API call failed:', error);
+      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
+      setLoading(false);
+      notify({
+        title: "Error!",
+        text: "Failed to update order. Please try again.",
+        type: "error",
+      });
+      return;
+    }
+
     setLoading(false);
 
     if (hasDataProperty(data) && data.data?.isSuccessful) {
@@ -917,7 +999,7 @@ const CheckoutModal = ({
       // Screen is already set to 2 by handleCheckoutClick
     } else if (hasDataProperty(data) && data.data?.error) {
       console.error('Order update failed:', data.data.error);
-      console.error('Failed payload:', payload);
+      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
       notify({
         title: "Order Update Failed",
         text: data.data.error,
@@ -929,7 +1011,7 @@ const CheckoutModal = ({
         .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
         .join('; ');
       console.error('Validation errors:', data.errors);
-      console.error('Failed payload:', payload);
+      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
       notify({
         title: "Validation Failed",
         text: validationErrors,
@@ -937,12 +1019,25 @@ const CheckoutModal = ({
       });
     } else {
       console.error('Unexpected response format:', data);
-      console.error('Failed payload:', payload);
+      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
       notify({
         title: "Error!",
         text: "Unexpected error occurred. Please check the console for details.",
         type: "error",
       });
+    }
+  };
+
+  const getPaymentConfirmationText = () => {
+    switch (selectedPaymentMethod) {
+      case 0: // Cash
+        return "This is confirmation that the total order sum has been paid by the customer in full with cash deposit";
+      case 1: // POS
+        return "This is confirmation that the total order sum has been paid by the customer in full with POS card deposit";
+      case 2: // Bank Transfer
+        return "This is confirmation that the total order sum has been transferred by the customer in full to account";
+      default:
+        return "confirm that customer has paid for order";
     }
   };
 
@@ -989,13 +1084,22 @@ const CheckoutModal = ({
       const data = await completeOrder(payload, orderId);
 
       if (hasDataProperty(data) && data.data?.isSuccessful) {
+        // Clear loading state immediately
+        setIsLoading(false);
+
         notify({
           title: "Payment made!",
           text: "Payment has been made, awaiting confirmation",
           type: "success",
         });
 
-        // Immediately close modal or navigate to prevent flash
+        // Clear all screen states BEFORE closing modal to prevent re-renders
+        setScreen(1);
+        setOrderId("");
+        setReference("");
+        setSelectedPaymentMethod(0);
+
+        // Close modal or navigate
         if (pathname === '/dashboard/orders') {
           // Already on orders page - just close modal
           onOpenChange(false);
@@ -1041,24 +1145,20 @@ const CheckoutModal = ({
           onOrderSuccess();
         }
 
-        // Clear all screen states after payment completion
-        setScreen(1);
-        setOrderId("");
-        setReference("");
-        setSelectedPaymentMethod(0);
-
       } else if (hasDataProperty(data) && data.data?.error) {
         notify({
           title: "Error!",
           text: data.data.error,
           type: "error",
         });
+        setIsLoading(false);
       } else {
         notify({
           title: "Error!",
           text: "Failed to process payment. Please try again.",
           type: "error",
         });
+        setIsLoading(false);
       }
     } catch (error) {
       notify({
@@ -1066,6 +1166,7 @@ const CheckoutModal = ({
         text: "Network error. Please check your connection and try again.",
         type: "error",
       });
+      setIsLoading(false);
     }
   };
 
@@ -1106,12 +1207,12 @@ const CheckoutModal = ({
   useEffect(() => {
     if (isOpen) {
       setScreen(1);
-      setOrderId("");
+      setOrderId(id || ""); // Use the id prop if provided, otherwise empty string
       setReference("");
       setSelectedPaymentMethod(0);
       setIsPayLaterLoading(false);
     }
-  }, [isOpen]);
+  }, [isOpen, id]);
 
   return (
     <div className="">
@@ -1266,7 +1367,7 @@ const CheckoutModal = ({
                         <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
                         {selectedItems?.map((item: any, index: number) => {
                           return (
-                            <React.Fragment key={item.id}>
+                            <React.Fragment key={item.uniqueKey || `${item.id}-${index}`}>
                               <div
                                 className="flex justify-between gap-2"
                               >
@@ -1726,7 +1827,7 @@ const CheckoutModal = ({
                               <div className="flex justify-between">
                                 <span className="text-grey600">Table:</span>
                                 <span className="text-black font-medium">
-                                  {qr.find((table: any) => table.id === order.quickResponseID)?.name || order.quickResponseID}
+                                  {(qr as any[]).find((table: any) => table.id === order.quickResponseID)?.name || order.quickResponseID}
                                 </span>
                               </div>
                               {order.comment && (
@@ -1864,7 +1965,7 @@ const CheckoutModal = ({
                         <span className="text-black">Confirm payment</span>
                       </div>
                       <p className="text-sm  text-grey500 xl:mb-8 w-full mb-4">
-                        confirm that customer has paid for order
+                        {getPaymentConfirmationText()}
                       </p>
                     </div>
                     <div
@@ -1892,7 +1993,7 @@ const CheckoutModal = ({
                     <Spacer y={5} />
                     <div className="flex md:flex-row flex-col gap-5">
                       <CustomButton
-                        onClick={onOpenChange}
+                        onClick={handleCancelPayment}
                         className="bg-white h-[50px] w-full border border-primaryGrey"
                       >
                         Cancel

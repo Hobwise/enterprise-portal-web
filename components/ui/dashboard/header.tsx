@@ -23,6 +23,7 @@ import { usePathname, useSelectedLayoutSegment } from "next/navigation";
 import { useState, useCallback, useEffect } from "react";
 import { FiLogOut } from "react-icons/fi";
 import { IoIosArrowDown } from "react-icons/io";
+import { IoTimeOutline } from "react-icons/io5";
 import { MdOutlinePerson } from "react-icons/md";
 import { PiBookOpenTextLight } from "react-icons/pi";
 import { SlBell } from "react-icons/sl";
@@ -245,7 +246,7 @@ const Header = ({ ispos }: any) => {
 
              <div className="hidden md:flex items-center space-x-8">
             <div className="flex items-center space-x-4">
-                       {!ispos && (
+            {!ispos && (
               <Popover
                 placement="bottom"
                 onOpenChange={setNotifPopoverOpen}
@@ -281,7 +282,7 @@ const Header = ({ ispos }: any) => {
                   )}
                 </PopoverContent>
               </Popover>
-                       )}
+             )}
 
               {/* Active Hours Display */}
               {isMounted && userInfo?.activeHours !== undefined && (
@@ -351,19 +352,25 @@ const Header = ({ ispos }: any) => {
                   </DropdownTrigger>
                   <DropdownMenu aria-label="settings Actions" variant="flat">
                     <DropdownItem key="firstLogin" isReadOnly className="cursor-default opacity-100">
-                      <div className="flex flex-col px-2 py-1">
-                        <span className="text-xs text-gray-500">First Login</span>
-                        <span className="text-sm text-gray-900 font-medium">
-                          {userInfo?.firstLogin ? formatLoginTime(userInfo.firstLogin) : "N/A"}
-                        </span>
+                      <div className="flex items-center gap-2 px-2 py-1">
+                        <IoTimeOutline className="text-primaryColor text-[22px]" />
+                        <div className="flex flex-col">
+                          <span className="text-xs text-primaryColor">Clock In</span>
+                          <span className="text-xs text-primaryColor font-medium">
+                            {userInfo?.firstLogin ? formatLoginTime(userInfo.firstLogin) : "N/A"}
+                          </span>
+                        </div>
                       </div>
                     </DropdownItem>
                     <DropdownItem key="lastLogin" isReadOnly className="cursor-default opacity-100">
-                      <div className="flex flex-col px-2 py-1">
-                        <span className="text-xs text-gray-500">Last Login</span>
-                        <span className="text-sm text-gray-900 font-medium">
-                          {userInfo?.lastLogin ? formatLoginTime(userInfo.lastLogin) : "N/A"}
-                        </span>
+                      <div className="flex items-center gap-2 px-2 py-1">
+                        <IoTimeOutline className="text-primaryColor text-[22px]" />
+                        <div className="flex flex-col">
+                          <span className="text-xs text-primaryColor">Clock Out</span>
+                          <span className="text-xs text-primaryColor font-medium">
+                            {userInfo?.lastLogin ? formatLoginTime(userInfo.lastLogin) : "N/A"}
+                          </span>
+                        </div>
                       </div>
                     </DropdownItem>
                     <DropdownItem key="Profile Management">

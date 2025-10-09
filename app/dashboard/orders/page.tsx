@@ -26,6 +26,7 @@ const OrdersContent: React.FC = () => {
   const {
     categories,
     details,
+    salesSummary,
     isLoading,
     isError,
     refetch,
@@ -82,7 +83,7 @@ const OrdersContent: React.FC = () => {
 
   return (
     <>
-      <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">
+      <div className="flex flex-col md:flex-row gap-4 mb-4 xl:mb-8 items-start md:items-center justify-between w-full">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
             {data?.categories.length > 0 ? (
@@ -104,13 +105,13 @@ const OrdersContent: React.FC = () => {
             Showing all orders
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
           {dropdownComponent}
           {data?.categories.length > 0 && (
             <>
-              <div>
+              <div className="w-full sm:w-auto">
                 <CustomInput
-                  classnames={"w-[242px]"}
+                  classnames={"w-full sm:w-[242px]"}
                   label=""
                   size="md"
                   value={searchQuery}
@@ -127,18 +128,48 @@ const OrdersContent: React.FC = () => {
           {(role === 0 || userRolePermissions?.canCreateOrder === true) && (
             <CustomButton
               onClick={handleCreateOrderClick}
-              className="py-2 px-4 mb-0 text-white"
+              className="py-2 px-4 mb-0 text-white w-full sm:w-auto"
               backgroundColor="bg-primaryColor"
             >
               <div className="flex gap-2 items-center justify-center">
                 <IoAddCircleOutline className="text-[22px]" />
-                <p>{(isPOSUser || isFromPOS) ? (isFromPOS ? "Back to POS" : "Create POS Order") : "Create order"} </p>
+                <p className="hidden sm:inline">{(isPOSUser || isFromPOS) ? (isFromPOS ? "Back to POS" : "Create POS Order") : "Create order"}</p>
+                <p className="sm:hidden">{(isPOSUser || isFromPOS) ? (isFromPOS ? "POS" : "Order") : "Order"}</p>
               </div>
             </CustomButton>
           )}
         </div>
       </div>
 
+      {/* Sales Summary - Only for POS Users */}
+      {isPOSUser && salesSummary && (
+        <div className="rounded-md bg-[#F7F6FA] p-4 md:p-6 mb-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
+          <div>
+            <div className="text-grey600 text-sm md:text-base mb-1">Total Sales</div>
+            <div className="text-lg md:text-xl font-bold text-black">
+              ₦{salesSummary.totalSales?.toLocaleString() || '0'}
+            </div>
+          </div>
+          <div>
+            <div className="text-grey600 text-sm md:text-base mb-1">Confirmed Sales</div>
+            <div className="text-lg md:text-xl font-bold text-black">
+              ₦{salesSummary.confirmedSales?.toLocaleString() || '0'}
+            </div>
+          </div>
+          <div>
+            <div className="text-grey600 text-sm md:text-base mb-1">Pending Sales</div>
+            <div className="text-lg md:text-xl font-bold text-black">
+              ₦{salesSummary.pendingSales?.toLocaleString() || '0'}
+            </div>
+          </div>
+          <div>
+            <div className="text-grey600 text-sm md:text-base mb-1">Cancelled Sales</div>
+            <div className="text-lg md:text-xl font-bold text-black">
+              ₦{salesSummary.cancelledSales?.toLocaleString() || '0'}
+            </div>
+          </div>
+        </div>
+      )}
 
       <DateRangeDisplay
         startDate={startDate}
