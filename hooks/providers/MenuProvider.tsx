@@ -129,20 +129,37 @@ export const MenuProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const data = await getMenuConfiguration(businessInformation[0].businessId);
 
+      console.log("MenuProvider - fetchMenuConfig response:", data?.data?.data);
+
       if (data?.data?.isSuccessful) {
         setActiveTile(convertActiveTile(data?.data?.data?.layout));
 
-        if (data?.data?.data?.image && data?.data?.data?.image !== 'undefined' && data?.data?.data?.image !== 'null') {
-          setSelectedImage(data?.data?.data?.image);
-        } else if (data?.data?.data?.imageRef && data?.data?.data?.imageRef.startsWith('http')) {
-          setSelectedImage(data?.data?.data?.imageRef);
+        // Handle image from API
+        const imageData = data?.data?.data?.image;
+        const imageRef = data?.data?.data?.imageRef;
+
+        console.log("MenuProvider - imageData:", imageData);
+        console.log("MenuProvider - imageRef:", imageRef);
+
+        if (imageData && imageData !== 'undefined' && imageData !== 'null') {
+          // If image data exists and is not already a complete URL or blob
+          if (imageData.startsWith('http') || imageData.startsWith('blob:') || imageData.startsWith('data:')) {
+            setSelectedImage(imageData);
+          } else {
+            // Assume it's base64 without prefix, add the prefix
+            setSelectedImage(`data:image/jpeg;base64,${imageData}`);
+          }
+        } else if (imageRef && imageRef.startsWith('http')) {
+          setSelectedImage(imageRef);
         } else {
           setSelectedImage('');
         }
 
         setBackgroundColor(data?.data?.data?.backgroundColour || '');
         setSelectedTextColor(data?.data?.data?.textColour || '#000');
-        setImageReference(data?.data?.data?.imageRef || '');
+        const finalImageRef = data?.data?.data?.imageRef || '';
+        console.log("MenuProvider - setting imageReference to:", finalImageRef);
+        setImageReference(finalImageRef);
         setIsSelectedPreview(data?.data?.data?.useBackground || false);
       }
     } catch (error) {

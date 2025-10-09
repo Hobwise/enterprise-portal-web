@@ -53,18 +53,16 @@ const Layout: React.FC = () => {
 
   const handleChangeColor = (color: any) => {
     setBackgroundColor(color.hex);
-    // Clear image when selecting a color background
-    setImageReference('');
-    setSelectedImage('');
+    // Allow both color and image to be selected
   };
 
   const convertActiveTile = () => {
     const previewStyles: { [key: string]: number } = {
-      'List left': 0,
-      'List Right': 1,
-      'Single column 1': 2,
-      'Single column 2': 3,
-      'Double column': 4,
+      "List left": 0,
+      "List Right": 1,
+      "Single column 1": 2,
+      "Single column 2": 3,
+      "Double column": 4,
     };
 
     return previewStyles[activeTile];
@@ -79,9 +77,9 @@ const Layout: React.FC = () => {
       layout: convertActiveTile(),
       backgroudStyle: imageReference ? 0 : 1,
       useBackground: isSelectedPreview,
-      backgroundColour: backgroundColor || '',
-      imageRef: imageReference || '',
-      textColour: selectedTextColor || '#000',
+      backgroundColour: backgroundColor || "",
+      imageRef: imageReference || "",
+      textColour: selectedTextColor || "#000",
     };
 
     const data = await createMenuConfiguration(
@@ -92,12 +90,12 @@ const Layout: React.FC = () => {
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
-      toast.success('Changes saved');
+      toast.success("Changes saved");
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
@@ -105,14 +103,13 @@ const Layout: React.FC = () => {
     setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
     setIsLoadingImage(false);
-    setImageError('');
+    setImageError("");
     if (data?.data?.isSuccessful) {
       // Create blob URL for immediate preview
       const blobUrl = URL.createObjectURL(file);
       setSelectedImage(blobUrl);
       setImageReference(data.data.data);
-      // Clear background color when image is uploaded
-      setBackgroundColor('');
+      // Allow both color and image to be selected
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
     }
@@ -122,17 +119,17 @@ const Layout: React.FC = () => {
     if (event.target.files) {
       const file = event.target.files[0];
       if (file.size > THREEMB) {
-        return setImageError('File too large');
+        return setImageError("File too large");
       }
 
       // Clean up previous blob URL if it exists
-      if (selectedImage && selectedImage.startsWith('blob:')) {
+      if (selectedImage && selectedImage.startsWith("blob:")) {
         URL.revokeObjectURL(selectedImage);
       }
 
       const compressedFile = await imageCompression(file, imageCompressOptions);
       const formData = new FormData();
-      formData.append('file', compressedFile);
+      formData.append("file", compressedFile);
       menuFileUpload(formData, file);
     }
   };
@@ -143,52 +140,52 @@ const Layout: React.FC = () => {
 
   const previewColumn: Column[] = [
     {
-      name: 'List left',
+      name: "List left",
       icon: (active) => (
         <FaList
           className={`text-[24px]  ${
-            activeTile === active ? 'text-primaryColor' : 'text-[#A299BB]'
+            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
           }`}
         />
       ),
     },
 
     {
-      name: 'List Right',
+      name: "List Right",
       icon: (active) => (
         <FaList
           className={`text-[24px] ${
-            activeTile === active ? 'text-primaryColor' : 'text-[#A299BB]'
+            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
           } rotate-180`}
         />
       ),
     },
     {
-      name: 'Single column 1',
+      name: "Single column 1",
       icon: (active) => (
         <FaSquare
           className={`text-[22px] ${
-            activeTile === active ? 'text-primaryColor' : 'text-[#A299BB]'
+            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
           }`}
         />
       ),
     },
     {
-      name: 'Single column 2',
+      name: "Single column 2",
       icon: (active) => (
         <FaSquare
           className={`text-[22px] ${
-            activeTile === active ? 'text-primaryColor' : 'text-[#A299BB]'
+            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
           }`}
         />
       ),
     },
     {
-      name: 'Double column',
+      name: "Double column",
       icon: (active) => (
         <PiSquaresFourFill
           className={`text-[28px] ${
-            activeTile === active ? 'text-primaryColor' : 'text-[#A299BB]'
+            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
           }`}
         />
       ),
@@ -201,7 +198,7 @@ const Layout: React.FC = () => {
   // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
-      if (selectedImage && selectedImage.startsWith('blob:')) {
+      if (selectedImage && selectedImage.startsWith("blob:")) {
         URL.revokeObjectURL(selectedImage);
       }
     };
@@ -220,9 +217,10 @@ const Layout: React.FC = () => {
             loading={isLoading}
             disabled={isLoading}
             onClick={submitFormData}
-            className={`py-2 px-4 md:mb-0 mb-4 ${
-              isLoading ? "text-white" : "text-primaryColor"
-            }  bg-white border-2 border-primaryColor`}
+            className="w-[150px] bg-transparent border text-primaryColor border-primaryColor"
+            // className={`py-2 px-4 md:mb-0 mb-4 w-[150px] ${
+            //   isLoading ? "text-white" : "text-primaryColor"
+            // }  bg-white border-2 border-primaryColor`}
             backgroundColor="bg-primaryColor"
           >
             {isLoading ? "Loading..." : "Save Changes"}
@@ -308,54 +306,56 @@ const Layout: React.FC = () => {
         />
       </div>
       <Divider className="my-6 text-[#E4E7EC]" />
-      <div className="flex justify-between">
-        <div>
-          <h1 className="text-[16px] leading-8 font-semibold">Background</h1>
-          <p className="text-sm xl:w-full w-[150px] text-grey600 md:mb-10 mb-4">
-            Set a background for your menu
-          </p>
-        </div>
-        {/* <CustomButton
-          loading={isLoading}
-          disabled={isLoading}
-          //   onClick={submitFormData}
-          className='py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border-2 border-primaryColor'
-          backgroundColor='bg-primaryColor'
-        >
-          Save Changes
-        </CustomButton> */}
+      <div className="mb-4">
+        <h1 className="text-[16px] leading-8 font-semibold">
+          Background & Theme
+        </h1>
+        <p className="text-sm text-grey600">
+          Customize the appearance of your menu with colors and images
+        </p>
       </div>
-      <div className="xl:flex w-full justify-between block">
-        <div className="xl:w-[calc(50%-1rem)] w-full">
-          <label className="font-[500]">Choose a colour</label>
-          <div className="rounded-lg w-full  pt-2">
+
+      {/* Color and Image Selection - Side by Side */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Primary Color Selection */}
+        <div className="flex flex-col h-full">
+          <label className="font-[500] text-sm mb-2 block">
+            Primary Color (Optional)
+          </label>
+          <p className="text-xs text-grey600 mb-3">
+            Choose a color for buttons, highlights, and interactive elements
+          </p>
+          <div className="rounded-lg w-full flex-1 min-h-[320px]">
             <SketchPicker
               color={backgroundColor}
               onChangeComplete={handleChangeColor}
-              className="!bg-[#F5F5F5] !w-[calc(100%-1.2rem)] !rounded-[8px]"
+              className="!bg-[#F5F5F5] !w-full !rounded-[8px]"
             />
           </div>
         </div>
-        <p className="text-[20px] xl:my-0 my-2 xl:mx-4 mx-0 grid place-content-center text-grey600">
-          OR
-        </p>
 
-        <div className="xl:w-[calc(50%-1rem)] w-full">
-          <label className="font-[500]">Upload image</label>
-          <div className="flex relative flex-col p-3 mt-2 h-[calc(100%-2rem)]  border border-dashed rounded-lg justify-center items-center">
-            <div className="flex flex-col mt-0 text-black  text-center xl:w-[240px]  w-full gap-2 justify-center items-center">
+        {/* Background Image Upload */}
+        <div className="flex flex-col h-full">
+          <label className="font-[500] text-sm mb-2 block">
+            Background Image (Optional)
+          </label>
+          <p className="text-xs text-grey600 mb-3">
+            Add a background image to enhance your menu's visual appeal
+          </p>
+          <div className="flex relative flex-col p-6 border-2 border-dashed border-gray-300 rounded-lg justify-center items-center hover:border-primaryColor transition-colors bg-gray-50 flex-1 min-h-[320px]">
+            <div className="flex flex-col text-black text-center w-full gap-2 justify-center items-center">
               {isLoadingImage ? (
                 <SmallLoader />
               ) : selectedImage ? (
                 <>
-                  <div className="w-16 h-16 rounded-lg overflow-hidden mb-2">
+                  <div className="w-20 h-20 rounded-lg overflow-hidden mb-2 border-2 border-gray-100">
                     <img
                       src={selectedImage}
                       alt="Selected background"
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <span className="text-primaryColor text-sm font-medium">
+                  <span className="text-primaryColor text-sm font-semibold">
                     Background image uploaded
                   </span>
                   <span className="text-xs text-gray-500">
@@ -364,11 +364,20 @@ const Layout: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <MdOutlineAddPhotoAlternate className="text-[42px] text-primaryColor" />
-                  <span className="text-black">
-                    Drag and drop files to upload or{" "}
-                    <span className="text-primaryColor">click here</span> to
-                    browse
+                  <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                    <MdOutlineAddPhotoAlternate className="text-[24px] text-primaryColor" />
+                  </div>
+                  <span className="text-sm font-medium text-black">
+                    Upload Background Image
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Drag and drop or{" "}
+                    <span className="text-primaryColor font-medium">
+                      click to browse
+                    </span>
+                  </span>
+                  <span className="text-xs text-gray-400 mt-1">
+                    Recommended: 1920x1080px, Max 3MB
                   </span>
                 </>
               )}
@@ -381,12 +390,13 @@ const Layout: React.FC = () => {
               id="menu-upload"
               accept="image/*"
               onChange={(event) => handleImageChange(event)}
-              className="opacity-0 cursor-pointer absolute h-full bottom-0"
+              className="opacity-0 cursor-pointer absolute inset-0 w-full h-full"
             />
           </div>
+          {imageError && (
+            <p className="text-sm text-danger-600 mt-2">{imageError}</p>
+          )}
         </div>
-
-        <span className="text-sm float-left text-danger-600">{imageError}</span>
       </div>
     </article>
   );

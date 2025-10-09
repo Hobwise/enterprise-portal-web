@@ -21,8 +21,14 @@ const RestaurantBanner = ({
   onMenuClick,
   baseString,
 }: RestaurantBannerProps) => {
-  // Construct image source - use baseString if provided, otherwise build from menuConfig.image
-  const imageSrc = baseString || (menuConfig?.image ? `data:image/jpeg;base64,${menuConfig.image}` : null);
+  // Construct image source properly - handle blob URLs and base64
+  const imageSrc = menuConfig?.image
+    ? (menuConfig.image.startsWith('blob:')
+        ? menuConfig.image // Use blob URL directly
+        : baseString
+          ? `${baseString}${menuConfig.image}`
+          : `data:image/jpeg;base64,${menuConfig.image}`)
+    : null;
 
   return (
     <div className="relative w-full">
@@ -40,18 +46,18 @@ const RestaurantBanner = ({
           <div
             className="w-full h-full"
             style={{
-              backgroundColor: menuConfig?.backgroundColour || '#D3D3D3',
+              backgroundColor: menuConfig?.backgroundColour || "#D3D3D3",
             }}
           />
         )}
 
         {/* Restaurant Name Overlay */}
-        <div className="absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
           <h1
             className="text-2xl font-bold text-center px-4"
-            style={{ color: menuConfig?.textColour || 'white' }}
+            style={{ color: menuConfig?.textColour || "black" }}
           >
-            {businessName || 'Restaurant Menu'}
+            {businessName || "Restaurant Menu"}
           </h1>
         </div>
       </div>

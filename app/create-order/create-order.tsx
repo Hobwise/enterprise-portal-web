@@ -29,8 +29,7 @@ import { FaMinus, FaPlus } from "react-icons/fa6";
 import { CustomInput } from "@/components/CustomInput";
 import { HiOutlineMicrophone } from "react-icons/hi2";
 import { HiMenuAlt3 } from "react-icons/hi";
-import noMenu from "../../public/assets/images/no-menu.png";
-import noImage from "../../public/assets/images/no-image.svg";
+import noMenu from "../../public/assets/images/no-menu-1.jpg";
 
 import useCustomerMenuCategories from "@/hooks/cachedEndpoints/useCustomerMenuCategories";
 import useCustomerMenuItems from "@/hooks/cachedEndpoints/useCustomerMenuItems";
@@ -55,13 +54,51 @@ const CreateOrder = () => {
   let businessId = searchParams.get("businessID");
   let cooperateID = searchParams.get("cooperateID");
   let qrId = searchParams.get("id");
-  const mode = searchParams.get("mode"); // 'view' for view-only mode
+  const mode = searchParams.get("mode");
+  const viewOnlyStorageKey = `menuViewOnly_${businessId}_${
+    cooperateID || "default"
+  }`;
 
-  // View-only mode: no cart or item selection (only for copied menu URLs)
-  const isViewOnlyMode = mode === "view";
+  const [isViewOnlyMode, setIsViewOnlyMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      // Check URL parameter first
+      if (mode === "view") {
+        sessionStorage.setItem(viewOnlyStorageKey, "true");
+        return true;
+      }
+
+      // Then check sessionStorage
+      const stored = sessionStorage.getItem(viewOnlyStorageKey);
+      if (stored === "true") {
+        return true;
+      }
+
+      return false;
+    }
+    return mode === "view";
+  });
+
+  // Sync with URL parameter and persist to sessionStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (mode === "view") {
+        setIsViewOnlyMode(true);
+        sessionStorage.setItem(viewOnlyStorageKey, "true");
+      } else {
+
+        setIsViewOnlyMode(false);
+        sessionStorage.removeItem(viewOnlyStorageKey);
+      }
+    }
+  }, [mode, viewOnlyStorageKey]);
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { menuIdTable, setMenuIdTable, setPage } = useGlobalContext();
+
+  // Dynamic color from menu config (fallback to primary color)
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
@@ -169,6 +206,23 @@ const CreateOrder = () => {
       setItemsToShow((prev) => prev + 10);
     }
   };
+
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if user has scrolled near bottom of page
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+      const threshold = 300; // Load more when 300px from bottom
+
+      if (scrollPosition >= documentHeight - threshold) {
+        handleLoadMore();
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [itemsToShow, menuItems, searchQuery]);
 
   // Handle category scroll
   const scrollCategories = (direction: "left" | "right") => {
@@ -304,8 +358,23 @@ const CreateOrder = () => {
 
   const handleQuickAdd = (menuItem: Item, e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
-    // Open the variety modal to show item details
-    toggleVarietyModal(menuItem);
+    // Directly add item to cart
+    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
+    if (existingItem) {
+      // If item already exists, increment count
+      handleIncrement(menuItem.id);
+    } else {
+      // Add new item to cart
+      setSelectedItems((prevItems: Item[]) => [
+        ...prevItems,
+        {
+          ...menuItem,
+          count: 1,
+          isPacked: false,
+          packingCost: menuItem.packingCost || 0,
+        },
+      ]);
+    }
   };
 
   const handleDecrement = (id: string) => {
@@ -414,14 +483,12 @@ const CreateOrder = () => {
       // Check if we're updating an existing order or creating a new one
       if (isUpdatingOrder && orderData?.id) {
         response = await updateCustomerOrder(orderData.id, payload);
-        console.log("Update order response:", response);
       } else {
         response = await placeCustomerOrder(
           payload,
           businessId || "",
           cooperateID || ""
         );
-        console.log("Place order response:", response);
       }
 
       if (response?.isSuccessful && response?.data) {
@@ -447,7 +514,6 @@ const CreateOrder = () => {
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Error placing order:", error);
       toast.error("Failed to place order. Please try again.");
     } finally {
       setOrderLoading(false);
@@ -484,45 +550,76 @@ const CreateOrder = () => {
 
       setSelectedItems(cartItems);
       setIsUpdatingOrder(true); // Set flag to update existing order
-      setIsOrderTrackingOpen(false);
-      // Scroll to top to show menu
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
-  // Handle checkout from order tracking - go to cart
-  const handleCheckoutFromTracking = () => {
-    if (orderData && orderData.orderDetails) {
-      // Transform order details into cart items format with all necessary fields
-      const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
-        const basePrice = detail.unitPrice || 0;
-
-        return {
-          id: detail.itemID,
-          itemID: detail.itemID,
-          itemName: detail.itemName,
-          menuName: detail.menuName,
-          itemDescription: detail.itemDescription || "",
-          price: basePrice,
-          currency: "NGN",
-          isAvailable: true,
-          hasVariety: detail.isVariety || false,
-          image: detail.image || "",
-          isVariety: detail.isVariety || false,
-          varieties: detail.varieties || null,
-          count: detail.quantity || 1,
-          packingCost: detail.packingCost || 0,
-          isPacked: detail.isPacked || false,
-          menuID: detail.menuID || "",
-          waitingTimeMinutes: detail.waitingTimeMinutes || 0,
-        };
-      });
-
-      setSelectedItems(cartItems);
-      setIsUpdatingOrder(true); // Set flag to update existing order
     }
     setIsOrderTrackingOpen(false);
-    setIsCartOpen(true);
+    // Scroll to top to show menu
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Handle checkout from order tracking - go to confirmation page
+  const handleCheckoutFromTracking = async () => {
+    console.log("handleCheckoutFromTracking called");
+    console.log("orderData:", orderData);
+
+    // Fetch the latest order details to ensure we have complete data
+    if (orderData?.reference) {
+      try {
+        const response = await getCustomerOrderByReference(
+          orderData.reference,
+          businessId || "",
+          cooperateID || ""
+        );
+
+        if (response?.data && response.data.orderDetails) {
+          const fullOrderData = response.data;
+          console.log("Fetched full order data:", fullOrderData);
+
+          // Transform order details into cart items format with all necessary fields
+          const cartItems: Item[] = fullOrderData.orderDetails.map((detail: any) => {
+            const basePrice = detail.unitPrice || 0;
+
+            return {
+              id: detail.itemID,
+              itemID: detail.itemID,
+              itemName: detail.itemName,
+              menuName: detail.menuName,
+              itemDescription: detail.itemDescription || "",
+              price: basePrice,
+              currency: "NGN",
+              isAvailable: true,
+              hasVariety: detail.isVariety || false,
+              image: detail.image || "",
+              isVariety: detail.isVariety || false,
+              varieties: detail.varieties || null,
+              count: detail.quantity || 1,
+              packingCost: detail.packingCost || 0,
+              isPacked: detail.isPacked || false,
+              menuID: detail.menuID || "",
+              waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+            };
+          });
+
+          console.log("cartItems:", cartItems);
+          setSelectedItems(cartItems);
+          setOrderData(fullOrderData); // Update with full order data
+          setIsUpdatingOrder(true); // Set flag to update existing order
+          setIsOrderTrackingOpen(false);
+          // Open cart modal
+          setTimeout(() => {
+            setIsCartOpen(true);
+          }, 0);
+        } else {
+          console.log("Failed to fetch complete order details");
+          toast.error("Unable to load order details. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error fetching order details:", error);
+        toast.error("Failed to load order details. Please try again.");
+      }
+    } else {
+      console.log("No order reference found");
+      toast.error("Order reference not found. Please try again.");
+    }
   };
 
   // Handle track order submission from TrackingDetailsModal
@@ -554,7 +651,8 @@ const CreateOrder = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search"
-            className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primaryColor focus:border-transparent outline-none bg-gray-50"
+            style={{ outlineColor: primaryColor }}
+            className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:border-transparent outline-none bg-gray-50"
           />
           <div className="absolute inset-y-0 right-3 flex items-center">
             <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
@@ -594,9 +692,10 @@ const CreateOrder = () => {
                 <button
                   key={category.id}
                   onClick={() => handleTabClick(category.id, category.name)}
+                  style={isSelected ? primaryColorStyle : {}}
                   className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                     isSelected
-                      ? "bg-primaryColor text-white"
+                      ? "text-white"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
                 >
@@ -691,140 +790,155 @@ const CreateOrder = () => {
                   return (
                     <div
                       key={item.id || item.menuID}
-                      className={`${preview?.container} ${
-                        layoutName === "List Right" &&
-                        menuConfig?.useBackground &&
-                        "flex-row-reverse"
-                      } ${
-                        isListLayout ? "flex" : ""
-                      } my-3 text-black relative transition-all ${
-                        item?.isAvailable
-                          ? "cursor-pointer shadow-md"
-                          : "bg-gray-100 shadow-md cursor-not-allowed"
-                      }`}
+                      className={`${
+                        isListLayout ? "flex items-center gap-3" : ""
+                      } my-3 relative`}
                     >
-                      {item?.isAvailable === false && (
-                        <Chip
-                          className={`capitalize absolute ${preview?.chipPosition} z-20`}
-                          color={"danger"}
-                          size="sm"
-                          variant="flat"
-                        >
-                          Out of stock
-                        </Chip>
-                      )}
-
-                      {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
-                      {item?.isAvailable && !isViewOnlyMode && (
-                        <>
-                          {/* Single column 1: Full-width button at bottom */}
-                          {layoutName === "Single column 1" && (
-                            <button
-                              onClick={(e) => handleQuickAdd(item, e)}
-                              className="absolute bottom-0 left-0 right-0 bg-primaryColor text-white py-3 px-4 rounded-b-2xl font-medium text-sm hover:bg-primaryColor/90 transition-all flex items-center justify-center gap-2 z-20"
-                            >
-                              <IoAddCircleOutline className="w-5 h-5" />
-                              Add Items
-                            </button>
-                          )}
-
-                          {/* Single column 2 (3-grid) & Double column (2-grid): Circular button bottom-right */}
-                          {(layoutName === "Single column 2" ||
-                            layoutName === "Double column") && (
-                            <button
-                              onClick={(e) => handleQuickAdd(item, e)}
-                              className="absolute bottom-3 right-3 bg-primaryColor text-white rounded-full p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
-                              aria-label="Add to cart"
-                            >
-                              <IoAddCircleOutline className="w-5 h-5" />
-                            </button>
-                          )}
-
-                          {/* List left & List Right: Circular button on right side */}
-                          {(layoutName === "List left" ||
-                            layoutName === "List Right") && (
-                            <button
-                              onClick={(e) => handleQuickAdd(item, e)}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 bg-primaryColor text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:bg-primaryColor/90 transition-all z-20"
-                              aria-label="Add to cart"
-                            >
-                              <IoAddCircleOutline className="w-5 h-5" />
-                            </button>
-                          )}
-                        </>
-                      )}
-
-                      {/* Image Container */}
                       <div
-                        className={`${preview?.imageContainer || ""} relative`}
+                        onClick={() => {
+                          if (item?.isAvailable && !isViewOnlyMode) {
+                            toggleVarietyModal(item);
+                          }
+                        }}
+                        className={`${preview?.container} ${
+                          layoutName === "List Right" &&
+                          menuConfig?.useBackground &&
+                          "flex-row-reverse"
+                        } ${isListLayout ? "flex flex-1" : ""} ${
+                          !isListLayout && item?.isAvailable && !isViewOnlyMode
+                            ? "pb-10"
+                            : ""
+                        } text-black relative transition-all ${
+                          item?.isAvailable && !isViewOnlyMode
+                            ? "cursor-pointer shadow-md"
+                            : item?.isAvailable
+                            ? "shadow-md"
+                            : "bg-gray-100 shadow-md cursor-not-allowed"
+                        }`}
                       >
+                        {item?.isAvailable === false && (
+                          <Chip
+                            className={`capitalize absolute ${preview?.chipPosition} z-20`}
+                            color={"danger"}
+                            size="sm"
+                            variant="flat"
+                          >
+                            Out of stock
+                          </Chip>
+                        )}
+
+                        {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
+                        {item?.isAvailable && !isViewOnlyMode && (
+                          <>
+                            {/* All grid layouts: Full-width button at bottom */}
+                            {(layoutName === "Single column 1" ||
+                              layoutName === "Single column 2" ||
+                              layoutName === "Double column") && (
+                              <button
+                                onClick={(e) => handleQuickAdd(item, e)}
+                                style={primaryColorStyle}
+                                className="absolute bottom-0 left-0 right-0 text-white py-2.5 px-3 rounded-b-xl font-medium text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 z-20"
+                              >
+                                <IoAddCircleOutline className="w-4 h-4" />
+                                Add
+                              </button>
+                            )}
+                          </>
+                        )}
+
+                        {/* Image Container */}
                         <div
-                          className={`relative bg-gradient-to-br from-primaryColor/10 via-primaryColor/5 to-purple-100 flex items-center justify-center overflow-hidden ${
-                            preview?.imageClass || "h-32"
+                          className={`${
+                            preview?.imageContainer || ""
+                          } relative`}
+                        >
+                          <div
+                            style={{
+                              background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                            }}
+                            className={`relative flex items-center justify-center overflow-hidden ${
+                              preview?.imageClass || "h-32"
+                            }`}
+                          >
+                            {item.image &&
+                            item.image.length > baseString.length ? (
+                              <Image
+                                fill
+                                className="object-cover"
+                                src={`${baseString}${item.image}`}
+                                alt={item.itemName}
+                              />
+                            ) : (
+                              <Image
+                                fill
+                                className="object-cover"
+                                src={noMenu}
+                                alt="No image available"
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Text Content */}
+                        <div
+                          style={{
+                            color: menuConfig?.textColour || "#1F2937",
+                          }}
+                          className={`${preview?.textContainer} flex flex-col ${
+                            isListLayout ? "justify-center" : "justify-start"
                           }`}
                         >
-                          {item.image &&
-                          item.image.length > baseString.length ? (
-                            <Image
-                              fill
-                              className="object-cover"
-                              src={`${baseString}${item.image}`}
-                              alt={item.itemName}
-                            />
-                          ) : (
-                            <Image
-                              fill
-                              className="object-contain p-4"
-                              src={noMenu}
-                              alt="No image available"
-                            />
+                          <p
+                            className={`font-bold ${
+                              isCompactGrid ? "text-xs" : "text-sm"
+                            } line-clamp-1`}
+                          >
+                            {item.itemName}
+                          </p>
+                          <p
+                            className={`text-gray-500 ${
+                              isCompactGrid ? "text-[10px]" : "text-xs"
+                            } line-clamp-2 mt-0.5`}
+                          >
+                            {item.itemDescription || preview?.text3}
+                          </p>
+                          <p
+                            style={textColorStyle}
+                            className={`font-semibold ${
+                              isCompactGrid ? "text-xs" : "text-sm"
+                            } mt-1`}
+                          >
+                            {formatPrice(item.price)}
+                          </p>
+                          {isSelected && (
+                            <div className="absolute top-2 left-2">
+                              <Chip
+                                startContent={<CheckIcon size={14} />}
+                                variant="flat"
+                                size="sm"
+                                style={primaryColorStyle}
+                                classNames={{
+                                  base: "text-white text-[10px] mt-1.5 h-5",
+                                }}
+                              >
+                                {selectedItems.find((selected) => selected.id === item.id)?.count || 0}
+                              </Chip>
+                            </div>
                           )}
                         </div>
                       </div>
 
-                      {/* Text Content */}
-                      <div
-                        style={{
-                          color: menuConfig?.textColour || "#1F2937",
-                        }}
-                        className={`${preview?.textContainer} flex flex-col ${
-                          isListLayout ? "justify-center" : "justify-start"
-                        }`}
-                      >
-                        <p
-                          className={`font-bold ${
-                            isCompactGrid ? "text-xs" : "text-sm"
-                          } line-clamp-1`}
+                      {/* List Layout Button - Outside card container */}
+                      {isListLayout && item?.isAvailable && !isViewOnlyMode && (
+                        <button
+                          onClick={(e) => handleQuickAdd(item, e)}
+                          style={primaryColorStyle}
+                          className="flex-shrink-0 text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+                          aria-label="Add to cart"
                         >
-                          {item.itemName}
-                        </p>
-                        <p
-                          className={`text-gray-500 ${
-                            isCompactGrid ? "text-[10px]" : "text-xs"
-                          } line-clamp-2 mt-0.5`}
-                        >
-                          {item.itemDescription || preview?.text3}
-                        </p>
-                        <p
-                          className={`font-semibold text-primaryColor ${
-                            isCompactGrid ? "text-xs" : "text-sm"
-                          } mt-1`}
-                        >
-                          {formatPrice(item.price)}
-                        </p>
-                        {isSelected && (
-                          <Chip
-                            startContent={<CheckIcon size={14} />}
-                            variant="flat"
-                            size="sm"
-                            classNames={{
-                              base: "bg-primaryColor text-white text-[10px] mt-1.5 h-5",
-                            }}
-                          >
-                            Selected
-                          </Chip>
-                        )}
-                      </div>
+                          <IoAddCircleOutline className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
@@ -858,27 +972,14 @@ const CreateOrder = () => {
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery("")}
-                        className="mt-4 px-4 py-2 text-primaryColor hover:underline text-sm font-medium"
+                        style={textColorStyle}
+                        className="mt-4 px-4 py-2 hover:underline text-sm font-medium"
                       >
                         Clear search
                       </button>
                     )}
                   </div>
                 )}
-
-                {/* Load More Button */}
-                {matchingObjectArray?.length > 0 &&
-                  unfilteredArray?.length > itemsToShow && (
-                    <div className="flex justify-center mt-6 mb-4">
-                      <button
-                        onClick={handleLoadMore}
-                        className="px-6 py-3 bg-primaryColor text-white rounded-lg font-medium hover:bg-primaryColor/90 transition-colors"
-                      >
-                        Load More ({unfilteredArray.length - itemsToShow}{" "}
-                        remaining)
-                      </button>
-                    </div>
-                  )}
               </div>
             );
           })()}
@@ -892,7 +993,8 @@ const CreateOrder = () => {
         !isOrderTrackingOpen && (
           <button
             onClick={handleCheckoutOpen}
-            className="fixed bottom-6 right-6 bg-primaryColor hover:bg-primaryColor/90 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-105 z-[60]"
+            style={primaryColorStyle}
+            className="fixed bottom-6 right-6 hover:opacity-90 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-105 z-[60]"
             aria-label="View cart"
           >
             <div className="relative">
@@ -964,35 +1066,39 @@ const CreateOrder = () => {
                 }}
                 className="w-full flex items-start gap-4 p-4 bg-purple-50 rounded-lg transition-colors text-left"
               >
-                <div className="p-2 bg-primaryColor rounded-lg">
+                <div className="p-2 rounded-lg" style={primaryColorStyle}>
                   <MdOutlineRestaurantMenu className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-primaryColor">View Menu</h3>
+                  <h3 className="font-semibold" style={textColorStyle}>
+                    View Menu
+                  </h3>
                   <p className="text-sm text-gray-600">
                     Browse our full menu selection
                   </p>
                 </div>
               </button>
 
-              {/* Track Order */}
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setIsTrackingDetailsOpen(true);
-                }}
-                className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
-              >
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <BiPackage className="w-6 h-6 text-primaryColor" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-black">Track Order</h3>
-                  <p className="text-sm text-gray-600">
-                    View order preparation in real time
-                  </p>
-                </div>
-              </button>
+              {/* Track Order - Hidden in view-only mode */}
+              {!isViewOnlyMode && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsTrackingDetailsOpen(true);
+                  }}
+                  className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
+                >
+                  <div className="p-2 bg-purple-50 rounded-lg">
+                    <BiPackage className="w-6 h-6" style={textColorStyle} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-black">Track Order</h3>
+                    <p className="text-sm text-gray-600">
+                      View order preparation in real time
+                    </p>
+                  </div>
+                </button>
+              )}
 
               {/* Book Reservation */}
               <button
@@ -1007,7 +1113,10 @@ const CreateOrder = () => {
                 className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
               >
                 <div className="p-2 bg-purple-50 rounded-lg">
-                  <IoCalendarOutline className="w-6 h-6 text-primaryColor" />
+                  <IoCalendarOutline
+                    className="w-6 h-6"
+                    style={textColorStyle}
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-black">Book Reservation</h3>
@@ -1053,7 +1162,12 @@ const CreateOrder = () => {
 
       <OrderTrackingPage
         isOpen={isOrderTrackingOpen}
-        onClose={() => setIsOrderTrackingOpen(false)}
+        onClose={() => {
+          setIsOrderTrackingOpen(false);
+          setSelectedItems([]); // Clear selected items when leaving
+          setOrderData(null); // Clear order data
+          setIsUpdatingOrder(false); // Reset update flag
+        }}
         trackingId={orderData?.reference || ""}
         orderStatus={
           orderData?.status === 0
@@ -1097,6 +1211,7 @@ const CreateOrder = () => {
         handlePackingCost={handlePackingCost}
         toggleVarietyModal={toggleVarietyModal}
         selectedItems={selectedItems}
+        menuConfig={menuConfig}
       />
     </main>
   );

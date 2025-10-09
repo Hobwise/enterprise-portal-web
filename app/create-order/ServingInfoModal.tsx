@@ -5,7 +5,6 @@ import { CustomTextArea } from "@/components/customTextArea";
 import { useState } from "react";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoArrowBack } from "react-icons/io5";
-import ProgressSteps from "./ProgressSteps";
 import RestaurantBanner from "./RestaurantBanner";
 
 interface ServingInfoModalProps {
@@ -41,6 +40,10 @@ const ServingInfoModal = ({
   menuConfig,
   baseString,
 }: ServingInfoModalProps) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+
   const [formData, setFormData] = useState<ServingInfoData>({
     name: "",
     phoneNumber: "",
@@ -202,8 +205,8 @@ const ServingInfoModal = ({
             onClick={handleSubmit}
             disabled={!isFormValid || loading}
             loading={loading}
+            style={primaryColorStyle}
             className="w-full h-12 text-white font-semibold flex items-center justify-center gap-2"
-            backgroundColor="bg-primaryColor"
           >
             <span>Confirm Order</span>
             <HiArrowLongLeft className="w-5 h-5 rotate-180" />

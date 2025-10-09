@@ -32,7 +32,24 @@ const SelectReservationComponents = () => {
   let businessName = searchParams.get("businessName");
   let businessId = searchParams.get("businessID"); // Changed from 'businessId' to 'businessID'
   let cooperateID = searchParams.get("cooperateID");
+  const mode = searchParams.get("mode"); // Check for view-only mode
   const router = useRouter();
+
+  // Check if we're in view-only mode
+  const viewOnlyStorageKey = `menuViewOnly_${businessId}_${cooperateID || 'default'}`;
+  const [isViewOnlyMode, setIsViewOnlyMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      if (mode === "view") {
+        sessionStorage.setItem(viewOnlyStorageKey, 'true');
+        return true;
+      } else {
+        // Clear view-only mode when not in view mode
+        sessionStorage.removeItem(viewOnlyStorageKey);
+        return false;
+      }
+    }
+    return mode === "view";
+  });
 
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const { data, isLoading, isError, refetch } = useReservationUser(
@@ -217,24 +234,26 @@ const SelectReservationComponents = () => {
                 </div>
               </button>
 
-              {/* Track Order */}
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  router.push(`/create-order?businessID=${businessId}&cooperateID=${cooperateID || ""}&businessName=${businessName}`);
-                }}
-                className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
-              >
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <BiPackage className="w-6 h-6 text-primaryColor" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-black">Track Order</h3>
-                  <p className="text-sm text-gray-600">
-                    Check the status of your order
-                  </p>
-                </div>
-              </button>
+              {/* Track Order - Hidden in view-only mode */}
+              {!isViewOnlyMode && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    router.push(`/create-order?businessID=${businessId}&cooperateID=${cooperateID || ""}&businessName=${businessName}`);
+                  }}
+                  className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
+                >
+                  <div className="p-2 bg-purple-50 rounded-lg">
+                    <BiPackage className="w-6 h-6 text-primaryColor" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-black">Track Order</h3>
+                    <p className="text-sm text-gray-600">
+                      Check the status of your order
+                    </p>
+                  </div>
+                </button>
+              )}
 
               {/* Book Reservation - Active */}
               <button

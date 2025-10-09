@@ -2,10 +2,9 @@
 import { CustomButton } from "@/components/customButton";
 import { useEffect, useState } from "react";
 import { FaCheck, FaCopy } from "react-icons/fa6";
-import { IoAddCircleOutline, IoArrowBack, IoClose } from "react-icons/io5";
+import { IoAddCircleOutline } from "react-icons/io5";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { toast } from "sonner";
-import { Modal, ModalBody, ModalContent, ModalHeader } from "@nextui-org/react";
 import RestaurantBanner from "./RestaurantBanner";
 import { getCustomerOrderByReference } from "../api/controllers/customerOrder";
 import { HiMenuAlt3 } from "react-icons/hi";
@@ -45,18 +44,63 @@ const OrderTrackingPage = ({
   businessId,
   cooperateId,
 }: OrderTrackingPageProps) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+  const borderColorStyle = { borderColor: primaryColor };
+
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const [orderData, setOrderData] = useState<any>(initialOrderData);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [previousStatus, setPreviousStatus] = useState<number | null>(null);
+
+  // Request notification permission on mount
+  useEffect(() => {
+    if (
+      isOpen &&
+      "Notification" in window &&
+      Notification.permission === "default"
+    ) {
+      Notification.requestPermission();
+    }
+  }, [isOpen]);
+
+  // Function to show browser notification
+  const showBrowserNotification = (title: string, message: string) => {
+    if ("Notification" in window && Notification.permission === "granted") {
+      const notification = new Notification(title, {
+        body: message,
+        icon: "/favicon.ico",
+        badge: "/favicon.ico",
+        tag: `order-${trackingId}`,
+        requireInteraction: false,
+        silent: false,
+      });
+
+      setTimeout(() => notification.close(), 10000);
+
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+      };
+    } else if (Notification.permission === "denied") {
+      toast.info(title, { description: message });
+    }
+  };
 
   // Sync initialOrderData to state when it changes
   useEffect(() => {
     if (initialOrderData) {
       setOrderData(initialOrderData);
+      // Set initial status for comparison
+      if (previousStatus === null && initialOrderData.status !== undefined) {
+        setPreviousStatus(initialOrderData.status);
+      }
     }
-  }, [initialOrderData]);
+  }, [initialOrderData, previousStatus, trackingId]);
 
   // Polling for order status updates
   useEffect(() => {
@@ -71,10 +115,45 @@ const OrderTrackingPage = ({
         );
 
         if (response && response.data) {
-          setOrderData(response.data);
+          const newOrderData = response.data;
+          const newStatus = newOrderData.status;
+
+          // Check if status has changed and show notification
+          if (previousStatus !== null && previousStatus !== newStatus) {
+            const statusMessages: {
+              [key: number]: {
+                title: string;
+                message: string;
+              };
+            } = {
+              0: {
+                title: "Order Placed 📝",
+                message: "Your order has been received!",
+              },
+              3: {
+                title: "Order Accepted ✅",
+                message: "Your order has been accepted and is being prepared.",
+              },
+              2: {
+                title: "Order Ready 🎉",
+                message: "Your order is ready for pickup!",
+              },
+              1: {
+                title: "Order Completed ✨",
+                message: "Your order has been completed. Enjoy!",
+              },
+            };
+
+            const statusUpdate = statusMessages[newStatus];
+            if (statusUpdate) {
+              showBrowserNotification(statusUpdate.title, statusUpdate.message);
+            }
+          }
+
+          setPreviousStatus(newStatus);
+          setOrderData(newOrderData);
         }
       } catch (error) {
-        console.error("Error polling order status:", error);
       }
     };
 
@@ -145,7 +224,10 @@ const OrderTrackingPage = ({
 
   const handleConfirmLeave = () => {
     setShowLeaveModal(false);
-    onClose();
+    // Clear any selected items from the parent component
+    if (onClose) {
+      onClose();
+    }
   };
 
   const handleCancelLeave = () => {
@@ -275,21 +357,24 @@ const OrderTrackingPage = ({
       />
 
       {/* Header with Timer */}
-      <div className="mt-4 mb-6 px-4">
+      <div className="mt-4 mb-6 px-4 max-w-4xl flex flex-col mx-auto">
         <div className="sticky top-0 z-10 bg-white border-b shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-4">
-            <div className="w-full flex justify-end">
-              {timeLeft && timeLeft !== "00:00" && (
-                <div className="text-3xl font-bold text-primaryColor">
-                  {timeLeft}
-                </div>
-              )}
-              {timeLeft === "00:00" && (
-                <div className="text-sm font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-lg">
-                  Time elapsed
-                </div>
-              )}
-            </div>
+            {/* Only show timer for open orders (status 0 or 3) */}
+            {orderData?.status !== 1 && orderData?.status !== 2 && (
+              <div className="w-full flex justify-end">
+                {timeLeft && timeLeft !== "00:00" && (
+                  <div className="text-3xl font-bold text-green-500">
+                    {timeLeft}
+                  </div>
+                )}
+                {timeLeft === "00:00" && (
+                  <div className="text-sm font-medium text-orange-600 bg-orange-50 px-3 py-1 rounded-lg">
+                    Your order is ready
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <h2 className="text-2xl font-bold text-black mb-4">Order Tracking</h2>
@@ -317,12 +402,51 @@ const OrderTrackingPage = ({
             </div>
           )}
 
-          {/* View Order Link - Shows order details */}
+          {/* View Order Button - Shows order details */}
           <button
             onClick={() => setShowOrderDetails(!showOrderDetails)}
-            className="text-sm text-primaryColor hover:underline mt-3 font-medium"
+            style={{
+              ...borderColorStyle,
+              ...textColorStyle,
+              borderWidth: "2px",
+            }}
+            className="mt-4 w-full py-3 px-4 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
           >
-            {showOrderDetails ? "Hide order details" : "View order"}
+            {showOrderDetails ? (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 15l7-7 7 7"
+                  />
+                </svg>
+                Hide Order Details
+              </>
+            ) : (
+              <>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+                View Order Details
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -352,7 +476,13 @@ const OrderTrackingPage = ({
                         ₦{item.unitPrice.toLocaleString()}
                       </span>
                       {item.isPacked && (
-                        <span className="text-xs bg-purple-100 text-primaryColor px-2 py-1 rounded">
+                        <span
+                          className="text-xs px-2 py-1 rounded"
+                          style={{
+                            ...textColorStyle,
+                            backgroundColor: `${primaryColor}50`,
+                          }}
+                        >
                           Packed
                         </span>
                       )}
@@ -368,8 +498,8 @@ const OrderTrackingPage = ({
             </div>
             <div className="mt-4 pt-4 border-t border-gray-200">
               <div className="flex justify-between text-lg font-bold">
-                <span>Total Amount:</span>
-                <span className="text-primaryColor">
+                <span className="text-black">Total Amount:</span>
+                <span style={textColorStyle}>
                   ₦{orderData.totalAmount?.toLocaleString()}
                 </span>
               </div>
@@ -397,24 +527,35 @@ const OrderTrackingPage = ({
                 {/* Timeline Indicator */}
                 <div className="flex flex-col items-center">
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                    style={
                       isCompleted
-                        ? "bg-primaryColor"
+                        ? primaryColorStyle
                         : isCurrent
-                        ? "bg-primaryColor/20 border-2 border-primaryColor"
-                        : "bg-gray-200"
-                    }`}
+                        ? {
+                            backgroundColor: `${primaryColor}33`,
+                            borderColor: primaryColor,
+                            borderWidth: "2px",
+                          }
+                        : { backgroundColor: "#E5E7EB" }
+                    }
+                    className={`w-12 h-12 rounded-full flex items-center justify-center`}
                   >
                     {isCompleted && <FaCheck className="w-6 h-6 text-white" />}
                     {isCurrent && (
-                      <div className="w-3 h-3 rounded-full bg-primaryColor animate-pulse" />
+                      <div
+                        className="w-3 h-3 rounded-full animate-pulse"
+                        style={primaryColorStyle}
+                      />
                     )}
                   </div>
                   {index < steps.length - 1 && (
                     <div
-                      className={`w-1 h-16 ${
-                        isCompleted ? "bg-primaryColor" : "bg-gray-200"
-                      }`}
+                      style={
+                        isCompleted
+                          ? primaryColorStyle
+                          : { backgroundColor: "#E5E7EB" }
+                      }
+                      className={`w-1 h-16`}
                     />
                   )}
                 </div>
@@ -422,13 +563,12 @@ const OrderTrackingPage = ({
                 {/* Step Content */}
                 <div className="flex-1 pb-4">
                   <h3
-                    className={`font-semibold text-lg ${
-                      isCurrent
-                        ? "text-primaryColor"
-                        : isCompleted
-                        ? "text-primaryColor"
-                        : "text-gray-400"
-                    }`}
+                    style={
+                      isCurrent || isCompleted
+                        ? textColorStyle
+                        : { color: "#9CA3AF" }
+                    }
+                    className={`font-semibold text-lg`}
                   >
                     {step.label}
                   </h3>
@@ -441,50 +581,82 @@ const OrderTrackingPage = ({
           })}
         </div>
 
-        {/* Time Elapsed Message */}
-        {timeLeft === "00:00" && (
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <svg
-                  className="w-6 h-6 text-orange-500"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h4 className="text-base font-semibold text-orange-800 mb-1">
-                  Estimated time has elapsed
-                </h4>
-                <p className="text-sm text-orange-700">
-                  Your order is taking longer than expected. Please contact our
-                  support staff for assistance or check with the restaurant
-                  directly.
-                </p>
+        {/* Time Elapsed Message - Only show for open orders (not cancelled or closed) */}
+        {timeLeft === "00:00" &&
+          orderData?.status !== 1 &&
+          orderData?.status !== 2 && (
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="w-6 h-6 text-orange-500"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-base font-semibold text-orange-800 mb-1">
+                    Your order is ready!
+                  </h4>
+                  <p className="text-sm text-orange-700">
+                    Your food is ready for pickup. Please contact staff to
+                    collect your order.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Disable for cancelled (2) or closed (1) orders */}
         <div className="flex gap-4 mt-8">
           <CustomButton
             onClick={onAddMoreItems}
-            className="flex-1 h-14 bg-white border-2 border-primaryColor text-primaryColor font-semibold flex items-center justify-center gap-2 text-base"
+            disabled={orderData?.status === 1 || orderData?.status === 2}
+            style={
+              orderData?.status === 1 || orderData?.status === 2
+                ? {
+                    backgroundColor: "#F3F4F6",
+                    borderColor: "#D1D5DB",
+                    color: "#9CA3AF",
+                    borderWidth: "2px",
+                  }
+                : {
+                    ...borderColorStyle,
+                    ...textColorStyle,
+                    backgroundColor: "white",
+                    borderWidth: "2px",
+                  }
+            }
+            className={`flex-1 h-14 ${
+              orderData?.status === 1 || orderData?.status === 2
+                ? "cursor-not-allowed"
+                : ""
+            } font-semibold flex items-center justify-center gap-2 text-base`}
           >
             <IoAddCircleOutline className="w-6 h-6" />
             Add items
           </CustomButton>
           <CustomButton
-            onClick={onCheckout}
-            className="flex-1 h-14 text-white font-semibold flex items-center justify-center gap-2 text-base"
-            backgroundColor="bg-primaryColor"
+            onClick={() => {
+              onCheckout();
+            }}
+            disabled={orderData?.status === 2 || orderData?.status === 1}
+            style={
+              orderData?.status === 1 || orderData?.status === 1
+                ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
+                : primaryColorStyle
+            }
+            className={`flex-1 h-14 ${
+              orderData?.status === 1 || orderData?.status === 1
+                ? "cursor-not-allowed"
+                : "text-white"
+            } font-semibold flex items-center justify-center gap-2 text-base`}
           >
             <span>Checkout order</span>
             <HiArrowLongLeft className="w-6 h-6 rotate-180" />
@@ -537,7 +709,7 @@ const OrderTrackingPage = ({
               <CustomButton
                 onClick={handleConfirmLeave}
                 className="flex-1 h-12 text-white font-semibold"
-                backgroundColor="bg-primaryColor"
+                style={primaryColorStyle}
               >
                 Leave Page
               </CustomButton>

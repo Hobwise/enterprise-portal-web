@@ -7,8 +7,7 @@ import { useEffect } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { IoAddCircleOutline, IoArrowBack } from "react-icons/io5";
 import { MdDelete } from "react-icons/md";
-import noImage from "../../public/assets/images/no-image.svg";
-import ProgressSteps from "./ProgressSteps";
+import noMenu from "../../public/assets/images/no-menu-1.jpg";
 import RestaurantBanner from "./RestaurantBanner";
 
 interface CartModalProps {
@@ -42,6 +41,12 @@ const CartModal = ({
   menuConfig,
   baseString,
 }: CartModalProps) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+  const borderColorStyle = { borderColor: primaryColor };
+
   // Close when no items left
   useEffect(() => {
     if (isOpen && selectedItems.length === 0) {
@@ -111,9 +116,7 @@ const CartModal = ({
               <div className="relative w-20 h-20 flex-shrink-0">
                 <Image
                   src={
-                    item.image
-                      ? `data:image/jpeg;base64,${item.image}`
-                      : noImage
+                    item.image ? `data:image/jpeg;base64,${item.image}` : noMenu
                   }
                   fill
                   className="object-cover rounded-lg"
@@ -129,7 +132,7 @@ const CartModal = ({
                 <p className="text-xs text-gray-600 line-clamp-1 mt-0.5">
                   {item.itemDescription || item.menuName}
                 </p>
-                <p className="text-sm font-bold text-primaryColor mt-1">
+                <p className="text-sm font-bold mt-1" style={textColorStyle}>
                   {formatPrice(item.price)}
                 </p>
 
@@ -214,7 +217,7 @@ const CartModal = ({
           </div>
           <div className="flex justify-between text-base font-bold border-t pt-2">
             <span className="text-black">Total</span>
-            <span className="text-primaryColor">{formatPrice(total)}</span>
+            <span style={textColorStyle}>{formatPrice(total)}</span>
           </div>
         </div>
 
@@ -238,7 +241,12 @@ const CartModal = ({
         <div className="flex gap-3">
           <CustomButton
             onClick={onOpenChange}
-            className="flex-1 h-12 bg-white border-2 border-primaryColor text-primaryColor font-semibold"
+            style={{
+              ...borderColorStyle,
+              ...textColorStyle,
+              borderWidth: "2px",
+            }}
+            className="flex-1 h-12 bg-white font-semibold"
           >
             <IoAddCircleOutline className="w-5 h-5 mr-2" />
             Add Items
@@ -248,8 +256,8 @@ const CartModal = ({
               onOpenChange();
               onProceedToServingInfo();
             }}
+            style={primaryColorStyle}
             className="flex-1 h-12 text-white font-semibold"
-            backgroundColor="bg-primaryColor"
           >
             <span>Checkout</span>
           </CustomButton>
