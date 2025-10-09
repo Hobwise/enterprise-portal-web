@@ -52,7 +52,7 @@ const Preview = () => {
   const baseString = isBlobUrl ? "" : "data:image/jpeg;base64,";
 
   // Dynamic color from menu config (fallback to primary color)
-  const primaryColor = backgroundColor || '#6366F1';
+  const primaryColor = backgroundColor || "#5F35D2";
   const primaryColorStyle = { backgroundColor: primaryColor };
   const textColorStyle = { color: primaryColor };
 

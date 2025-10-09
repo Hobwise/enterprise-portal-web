@@ -41,7 +41,7 @@ const ServingInfoModal = ({
   baseString,
 }: ServingInfoModalProps) => {
   // Dynamic color from menu config
-  const primaryColor = menuConfig?.backgroundColour || "#6366F1";
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
   const primaryColorStyle = { backgroundColor: primaryColor };
 
   const [formData, setFormData] = useState<ServingInfoData>({
