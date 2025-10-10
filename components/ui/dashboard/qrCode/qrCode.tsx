@@ -83,7 +83,6 @@ const QrList = ({ qr, searchQuery, data }: any) => {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -94,6 +93,8 @@ const QrList = ({ qr, searchQuery, data }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
+    displayData,
+    isMobile,
   } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
 
   const toggleCancelModal = (order: any) => {
@@ -235,7 +236,7 @@ const QrList = ({ qr, searchQuery, data }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No qr found'} items={filteredQr}>
+        <TableBody emptyContent={'No qr found'} items={displayData || filteredQr}>
           {(item, index) => (
             <TableRow 
               key={item?.id || item?.name || `qr-row-${index}`}

@@ -112,24 +112,12 @@ type ToastData = {
     | "bottom-right"
     | "bottom-left"
     | "bottom-center";
-  autoClose: number | false;
-  hideProgressBar: boolean;
-  closeOnClick: boolean;
-  pauseOnHover: boolean;
-  draggable: boolean;
-  progress: number | undefined;
-  theme: "light" | "dark";
+  duration: number;
 };
 
 const toastData: ToastData = {
   position: "top-right",
-  autoClose: 5000,
-  hideProgressBar: true,
-  closeOnClick: true,
-  pauseOnHover: false,
-  draggable: false,
-  progress: undefined,
-  theme: "light",
+  duration: 2000,
 };
 
 interface notifyType {

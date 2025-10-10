@@ -115,8 +115,9 @@ const ActivityTablePayment = ({
     headerColumns,
     setSelectedKeys,
     selectedKeys,
-
     classNames,
+    displayData,
+    isMobile,
   } = usePagination(columns?.data, columns?.column, columns?.visibleColumn);
 
   const [showMore, setShowMore] = useState(false);

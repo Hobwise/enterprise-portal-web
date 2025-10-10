@@ -199,29 +199,32 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
+    displayData,
+    isMobile,
   } = usePagination(
-    matchingObjectArray, 
-    columns, 
+    matchingObjectArray,
+    columns,
     INITIAL_VISIBLE_COLUMNS
   );
 
   // Sort the payments based on sortDescriptor
+  // Use displayData which contains accumulated data on mobile, current page on desktop
   const sortedPayments = React.useMemo(() => {
-    if (!paymentDetails || paymentDetails.length === 0) return paymentDetails;
-    
-    return [...paymentDetails].sort((a: PaymentItem, b: PaymentItem) => {
+    if (!displayData || displayData.length === 0) return displayData;
+
+    return [...displayData].sort((a: PaymentItem, b: PaymentItem) => {
       const first = a[sortDescriptor.column as keyof PaymentItem];
       const second = b[sortDescriptor.column as keyof PaymentItem];
-      
+
       let cmp = 0;
       if (first === null || first === undefined) cmp = 1;
       else if (second === null || second === undefined) cmp = -1;
       else if (first < second) cmp = -1;
       else if (first > second) cmp = 1;
-      
+
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [paymentDetails, sortDescriptor]);
+  }, [displayData, sortDescriptor]);
 
 
   const toggleApproveModal = (payment: PaymentItem) => {

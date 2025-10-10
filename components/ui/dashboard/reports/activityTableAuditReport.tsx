@@ -176,8 +176,9 @@ const ActivityTableAudit = ({
     headerColumns,
     setSelectedKeys,
     selectedKeys,
-
     classNames,
+    displayData,
+    isMobile,
   } = usePagination(filteredItems, columns?.column, columns?.visibleColumn);
 
   return (

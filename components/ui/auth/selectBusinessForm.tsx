@@ -36,25 +36,30 @@ const SelectBusinessForm = () => {
   }, [router]);
 
   // Restore loginDetails from localStorage if React state is null (page refresh/navigation)
+  // Check localStorage FIRST before checking React state
   useEffect(() => {
-    if (!loginDetails) {
-      const storedLoginDetails = getJsonItemFromLocalStorage("loginDetails");
-      if (storedLoginDetails) {
+    const storedLoginDetails = getJsonItemFromLocalStorage("loginDetails");
+
+    if (storedLoginDetails) {
+      // Restore from localStorage immediately
+      if (!currentLoginDetails) {
         setLoginDetails(storedLoginDetails);
         setCurrentLoginDetails(storedLoginDetails);
-      } else {
-        // Only redirect if no stored credentials exist
-        notify({
-          title: "Session Expired",
-          text: "Please login again to continue.",
-          type: "warning"
-        });
-        router.replace("/auth/login");
       }
-    } else {
+    } else if (!loginDetails && !currentLoginDetails) {
+      // Only redirect if no stored credentials exist AND no React state
+      notify({
+        title: "Session Expired",
+        text: "Please login again to continue.",
+        type: "warning"
+      });
+      router.replace("/auth/login");
+    } else if (loginDetails && !currentLoginDetails) {
+      // Use the existing React state
       setCurrentLoginDetails(loginDetails);
     }
-  }, [loginDetails, setLoginDetails, router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAuthenticationError = async (error: any) => {
     // Check for authentication-related errors

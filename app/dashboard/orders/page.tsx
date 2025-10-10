@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
+import CustomPagination from "@/components/ui/dashboard/settings/BillingsComponents/CustomPagination";
 
 // Type definitions are handled in the component files
 
@@ -39,7 +40,7 @@ const OrdersContent: React.FC = () => {
   const { userRolePermissions, role } = usePermission();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const { setPage, setTableStatus } = useGlobalContext();
+  const { setPage, setTableStatus, page } = useGlobalContext();
 
   useEffect(() => {
     refetch();
@@ -76,7 +77,44 @@ const OrdersContent: React.FC = () => {
 
   const data = { categories, details };
 
+  // Extract pagination info from details response
+  const paginationData = React.useMemo(() => {
+    if (details?.data && typeof details.data === 'object') {
+      return {
+        currentPage: details.data.currentPage || page,
+        totalPages: details.data.totalPages || 1,
+        hasNext: details.data.hasNext || false,
+        hasPrevious: details.data.hasPrevious || false,
+        totalCount: details.data.totalCount || 0,
+        orders: details.data.orders || []
+      };
+    }
+    return {
+      currentPage: page,
+      totalPages: 1,
+      hasNext: false,
+      hasPrevious: false,
+      totalCount: 0,
+      orders: []
+    };
+  }, [details, page]);
 
+  // Pagination handlers
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleNext = () => {
+    if (paginationData.hasNext) {
+      setPage(page + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (paginationData.hasPrevious) {
+      setPage(page - 1);
+    }
+  };
 
   if (isLoading) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
@@ -133,8 +171,8 @@ const OrdersContent: React.FC = () => {
             >
               <div className="flex gap-2 items-center justify-center">
                 <IoAddCircleOutline className="text-[22px]" />
-                <p className="hidden sm:inline">{(isPOSUser || isFromPOS) ? (isFromPOS ? "Back to POS" : "Create POS Order") : "Create order"}</p>
-                <p className="sm:hidden">{(isPOSUser || isFromPOS) ? (isFromPOS ? "POS" : "Order") : "Order"}</p>
+                <p className="hidden sm:inline">{(isPOSUser || isFromPOS) ? (isFromPOS ? "Back to POS" : "Create Order") : "Create order"}</p>
+                <p className="sm:hidden">{(isPOSUser || isFromPOS) ? (isFromPOS ? "POS" : "Order") : "Create order"}</p>
               </div>
             </CustomButton>
           )}
@@ -178,17 +216,36 @@ const OrdersContent: React.FC = () => {
       />
 
       {data.categories && data.categories.length > 0 ? (
-        <OrdersList
-          orders={details?.data || []}
-          categories={data.categories}
-          refetch={refetch}
+        <>
+          <OrdersList
+            orders={paginationData.orders}
+            categories={data.categories}
+            refetch={refetch}
+            searchQuery={searchQuery}
+            isLoading={isLoading}
+            filterType={filterType}
+            startDate={startDate}
+            endDate={endDate}
+            currentPage={paginationData.currentPage}
+            totalPages={paginationData.totalPages}
+            hasNext={paginationData.hasNext}
+            hasPrevious={paginationData.hasPrevious}
+            totalCount={paginationData.totalCount}
+          />
 
-          searchQuery={searchQuery}
-          isLoading={isLoading}
-          filterType={filterType}
-          startDate={startDate}
-          endDate={endDate}
-        />
+          {/* Pagination at page level */}
+          {paginationData.totalPages > 1 && (
+            <div className="mt-4">
+              <CustomPagination
+                currentPage={paginationData.currentPage}
+                totalPages={paginationData.totalPages}
+                onPageChange={handlePageChange}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            </div>
+          )}
+        </>
       ) : (
         <CreateOrder />
       )}
