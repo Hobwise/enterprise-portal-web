@@ -53,10 +53,27 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
   if (matchedBaseRoute && token && planCapabilities !== "undefined") {
-    const requiredPermission = routePermissions[matchedBaseRoute];
-    if (!JSON.parse(planCapabilities)[requiredPermission]) {
+    try {
+      // Validate planCapabilities before parsing
+      if (!planCapabilities || planCapabilities.trim() === "") {
+        return NextResponse.rewrite(
+          new URL("/dashboard/subscription-error", request.url)
+        );
+      }
+
+      const requiredPermission = routePermissions[matchedBaseRoute];
+      const capabilities = JSON.parse(planCapabilities);
+
+      if (!capabilities[requiredPermission]) {
+        return NextResponse.rewrite(
+          new URL("/dashboard/unauthorized", request.url)
+        );
+      }
+    } catch (error) {
+      // If JSON parsing fails, treat as subscription error
+      console.error("Failed to parse planCapabilities:", error);
       return NextResponse.rewrite(
-        new URL("/dashboard/unauthorized", request.url)
+        new URL("/dashboard/subscription-error", request.url)
       );
     }
   }
