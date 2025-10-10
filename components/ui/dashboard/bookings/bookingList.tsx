@@ -279,16 +279,18 @@ const BookingsList: React.FC<BookingsListProps> = ({
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
+    displayData,
+    isMobile,
   } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
 
   // Sort the bookings based on sortDescriptor
+  // Use displayData which contains accumulated data on mobile, current page on desktop
   const sortedBookings = React.useMemo(() => {
-    // Ensure bookingDetails is an array and has content
-    if (!Array.isArray(bookingDetails) || bookingDetails.length === 0) {
-      return [];
+    if (!displayData || displayData.length === 0) {
+      return displayData || [];
     }
 
-    return [...bookingDetails].sort((a: BookingItem, b: BookingItem) => {
+    return [...displayData].sort((a: BookingItem, b: BookingItem) => {
       const first = a[sortDescriptor.column as keyof BookingItem];
       const second = b[sortDescriptor.column as keyof BookingItem];
 
@@ -300,7 +302,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [bookingDetails, sortDescriptor]);
+  }, [displayData, sortDescriptor]);
 
   const [value, setValue] = useState("");
 

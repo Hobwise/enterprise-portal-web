@@ -65,12 +65,12 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
-
     classNames,
+    displayData,
+    isMobile,
   } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
 
   const renderCell = React.useCallback((reservation, columnKey) => {
@@ -212,7 +212,7 @@ const ReservationList = ({ reservation, searchQuery, data }: any) => {
         </TableHeader>
         <TableBody
           emptyContent={"No reservation found"}
-          items={filteredReservation}
+          items={displayData || filteredReservation}
         >
           {(item, index) => (
             <TableRow key={item?.id || item?.name || `reservation-row-${index}`}>

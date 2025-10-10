@@ -25,7 +25,7 @@ function Container({ children }: any) {
       {!shouldHideSidebar && <SideNav />}
       <main className="flex-1 w-full overflow-y-auto">
         <MarginWidthWrapper shouldHideSidebar={shouldHideSidebar}>
-          <Header />
+          <Header ispos={isPOSUser} />
           <HeaderMobile />
           <PageWrapper>{children}</PageWrapper>
         </MarginWidthWrapper>

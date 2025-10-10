@@ -19,6 +19,8 @@ import { HiArrowLongLeft } from "react-icons/hi2";
 import noImage from "../../../../public/assets/images/no-image.svg";
 import Success from "../../../../public/assets/images/success.png";
 import { paymentMethodMap } from "./data";
+import { useQueryClient } from "@tanstack/react-query";
+import { paymentsCacheUtils } from "@/hooks/cachedEndpoints/usePayment";
 
 const ApprovePayment = ({
   singlePayment,
@@ -27,6 +29,7 @@ const ApprovePayment = ({
   refetch,
 }: any) => {
   const { userRolePermissions, role } = usePermission();
+  const queryClient = useQueryClient();
 
   const [reference, setReference] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -55,7 +58,17 @@ const ApprovePayment = ({
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
+      // Clear all payment caches for immediate data refresh
+      paymentsCacheUtils.clearAll();
+
+      // Invalidate all payment-related React Query caches
+      queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['paymentCategories'] });
+      queryClient.invalidateQueries({ queryKey: ['paymentDetails'] });
+
+      // Refetch current data
       refetch();
+
       toggleApproveModal();
       toggleSuccessModal();
     } else if (data?.data?.error) {

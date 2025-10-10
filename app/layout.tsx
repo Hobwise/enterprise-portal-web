@@ -38,7 +38,7 @@ export default function RootLayout({
                 <Analytics />
               <Toaster
                 toastOptions={{
-                  duration: 5000,
+                  duration: 2000,
                   success: {
                     style: {
                       border: "2px solid #3a9ea5",

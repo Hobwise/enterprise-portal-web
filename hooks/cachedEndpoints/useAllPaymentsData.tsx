@@ -54,8 +54,8 @@ const useAllPaymentsData = (
       );
       return response?.data?.data?.categories || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 0, // Always refetch for immediate updates
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const categories = categoriesData || [];
@@ -81,8 +81,8 @@ const useAllPaymentsData = (
       return response?.data?.data;
     },
     enabled: !!firstCategory && categories.length > 0,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 0, // Always refetch for immediate updates
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Update categoryDetails when first category loads

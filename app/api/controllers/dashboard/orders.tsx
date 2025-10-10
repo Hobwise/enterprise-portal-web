@@ -81,28 +81,31 @@ export async function getOrderDetails(
   page?: number,
   pageSize?: number
 ) {
-  const headers = businessId ? { businessId } : {};
+  // Default to current day if dates are not provided
+  const now = new Date();
+  const defaultStartDate = startDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
+  const defaultEndDate = endDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+
+  // Build URL with query parameters
+  const pageParam = page || 1;
+  const pageSizeParam = pageSize || 10;
+  const url = `${DASHBOARD.orderItems}?page=${pageParam}&pageSize=${pageSizeParam}`;
+
   const payload = {
-    startDate: startDate,
-    endDate: endDate,
+    startDate: defaultStartDate,
+    endDate: defaultEndDate,
     filterType: filterType,
     category: category,
     businessId: businessId,
-    page: page || 0,
-    pageSize: pageSize || 10,
   };
 
 
   try {
-    const response = await api.post(DASHBOARD.orderItems, payload, {
-      headers,
-    });
-
-
+    const response = await api.post(url, payload);
 
     return response.data;
   } catch (error) {
-    
+
     handleError(error, false);
   }
 }

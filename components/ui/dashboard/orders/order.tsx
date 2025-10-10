@@ -35,7 +35,6 @@ import {
 import Filters from './filters';
 
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import useAllOrdersData from '@/hooks/cachedEndpoints/useAllOrdersData';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice, saveJsonItemToLocalStorage, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import moment from 'moment';
@@ -89,6 +88,11 @@ interface OrdersListProps {
   filterType?: number;
   startDate?: string;
   endDate?: string;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  totalCount: number;
 }
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -119,78 +123,18 @@ const getStatusForCategory = (categoryName: string): number | null => {
   }
 };
 
-// Function to get filtered orders based on category and pending state
-const getFilteredOrderDetails = (
-  orders: any,
-  isLoading: boolean,
-  isPending: boolean,
-  selectedCategory: string,
-  searchQuery: string = ''
-): OrderItem[] => {
-  // Check if data is in pending state
-  if (isLoading || isPending || !orders) {
-    return [];
-  }
-
-  // If orders has totalCount of 0, return empty array immediately
-  const totalCount = orders?.data?.totalCount ?? orders?.totalCount ?? 0;
-  if (totalCount === 0) {
-    return [];
-  }
-  
-  // Extract orders data - ensure it's always a valid array
-  let allOrders: OrderItem[] = [];
-
-  // Check nested data structure first (API response format)
-  if (orders.data && orders.data.orders && Array.isArray(orders.data.orders)) {
-    allOrders = orders.data.orders;
-  } else if (orders.orders && Array.isArray(orders.orders)) {
-    allOrders = orders.orders;
-  } else if (orders.data && Array.isArray(orders.data)) {
-    allOrders = orders.data;
-  } else if (Array.isArray(orders)) {
-    allOrders = orders;
-  } else {
-    // Fallback to empty array if no valid data found
-    allOrders = [];
-  }
-
-  // Safety check - ensure allOrders is valid array before filtering
-  if (!Array.isArray(allOrders)) {
-    return [];
-  }
-  
-  // Get the status filter for the selected category
-  const statusFilter = getStatusForCategory(selectedCategory);
-  
-  // Filter by status if not "All Orders"
-  let filteredByStatus = allOrders;
-  if (statusFilter !== null && Array.isArray(allOrders)) {
-    filteredByStatus = allOrders.filter((order: OrderItem) => order.status === statusFilter);
-  }
-  
-  // Apply search filter if provided
-  if (searchQuery.trim() && Array.isArray(filteredByStatus)) {
-    filteredByStatus = filteredByStatus.filter((order: OrderItem) =>
-      order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.reference.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-  
-  return filteredByStatus;
-};
-
-const OrdersList: React.FC<OrdersListProps> = ({ 
-  orders, 
-  categories, 
-  searchQuery, 
-  
-  refetch, 
+const OrdersList: React.FC<OrdersListProps> = ({
+  orders,
+  categories,
+  searchQuery,
+  refetch,
   isLoading = false,
   isPending = false,
-  filterType = 1,
-  startDate,
-  endDate
+  currentPage: propCurrentPage,
+  totalPages: propTotalPages,
+  hasNext: propHasNext,
+  hasPrevious: propHasPrevious,
+  totalCount: propTotalCount
 }) => {
 
   const router = useRouter();
@@ -228,15 +172,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setTableStatus,
     tableStatus,
     setPage,
-    page,
-    rowsPerPage,
   } = useGlobalContext();
-
-  // Use the new hook for fetching all data
-  const {
-    getCategoryDetails,
-    isLoadingInitial
-  } = useAllOrdersData(filterType, startDate, endDate, page, rowsPerPage);
 
   const handleTabClick = (categoryName: string) => {
     // Close all open modals when switching tabs to prevent state conflicts
@@ -253,83 +189,44 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setPage(1);
   };
 
-  // Get data for current category from the new hook
-  const currentCategoryData = getCategoryDetails(tableStatus || categories?.[0]?.name || 'All Orders');
-
-  // Use the new filtered function that includes status filtering
-  const orderDetails = getFilteredOrderDetails(
-    currentCategoryData || orders,
-    isLoading || isLoadingInitial,
-    isPending || false,
-    tableStatus || 'All Orders',
-    searchQuery
-  );
-  
-
-
-  // Create proper pagination data structure for usePagination hook
-  const paginationData = React.useMemo(() => {
-    // Extract pagination data from server response
-    if (currentCategoryData && typeof currentCategoryData === 'object') {
-      // Check if server response has nested data with pagination info
-      if (currentCategoryData.data && typeof currentCategoryData.data === 'object') {
-        const serverData = currentCategoryData.data;
-
-        // Use server-provided pagination data when available
-        if (serverData.totalPages && serverData.totalCount !== undefined) {
-          return {
-            totalPages: Math.max(1, serverData.totalPages || 1),
-            currentPage: Math.max(1, Math.min(page, serverData.totalPages || 1)),
-            hasNext: serverData.hasNext || false,
-            hasPrevious: serverData.hasPrevious || false,
-            totalCount: serverData.totalCount || 0
-          };
-        }
-      }
-
-      // Fallback: try to extract totalCount from various possible locations
-      let totalCount = currentCategoryData.totalCount ||
-                       currentCategoryData.total ||
-                       currentCategoryData.count ||
-                       0;
-
-      // If server response has data array, use its length as fallback
-      if (totalCount === 0 && currentCategoryData.data && Array.isArray(currentCategoryData.data)) {
-        totalCount = currentCategoryData.data.length;
-      }
-
-      // Additional fallback: check if server response has payments array (some endpoints use this)
-      if (totalCount === 0 && currentCategoryData.orders && Array.isArray(currentCategoryData.orders)) {
-        totalCount = currentCategoryData.orders.length;
-      }
-
-      // Calculate pagination properties with proper bounds checking
-      const totalPages = Math.max(1, Math.ceil(totalCount / Math.max(1, rowsPerPage)));
-      const currentPage = Math.max(1, Math.min(page, totalPages));
-      const hasNext = currentPage < totalPages;
-      const hasPrevious = currentPage > 1;
-
-      return {
-        totalPages,
-        currentPage,
-        hasNext,
-        hasPrevious,
-        totalCount
-      };
+  // Filter orders based on category and search query
+  const orderDetails = React.useMemo(() => {
+    if (isLoading || isPending || !orders) {
+      return [];
     }
 
-    // Default pagination data when no data available
+    let filteredOrders = orders;
+
+    // Filter by status based on category
+    const statusFilter = getStatusForCategory(tableStatus || 'All Orders');
+    if (statusFilter !== null) {
+      filteredOrders = orders.filter((order: OrderItem) => order.status === statusFilter);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      filteredOrders = filteredOrders.filter((order: OrderItem) =>
+        order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.reference.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return filteredOrders;
+  }, [orders, tableStatus, searchQuery, isLoading, isPending]);
+
+  // Create pagination data structure from props
+  const paginationData = React.useMemo(() => {
     return {
-      totalPages: 1,
-      currentPage: 1,
-      hasNext: false,
-      hasPrevious: false,
-      totalCount: 0
+      data: orderDetails,
+      totalPages: propTotalPages,
+      currentPage: propCurrentPage,
+      hasNext: propHasNext,
+      hasPrevious: propHasPrevious,
+      totalCount: propTotalCount
     };
-  }, [currentCategoryData, page, rowsPerPage]);
+  }, [orderDetails, propCurrentPage, propTotalPages, propHasNext, propHasPrevious, propTotalCount]);
 
   const {
-    bottomContent,
     headerColumns,
     setSelectedKeys,
     selectedKeys,
@@ -342,18 +239,19 @@ const OrdersList: React.FC<OrdersListProps> = ({
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
+    displayData,
   } = usePagination(
     paginationData,
     columns,
     INITIAL_VISIBLE_COLUMNS
   );
 
-  // Sort the orders based on sortDescriptor (server handles pagination)
+  // Sort the orders based on sortDescriptor
+  // Use displayData which contains accumulated data on mobile, current page on desktop
   const sortedOrders = React.useMemo(() => {
-    if (!orderDetails || orderDetails.length === 0) return orderDetails;
+    if (!displayData || displayData.length === 0) return displayData;
 
-    // Only sort the orders - server already handles pagination
-    return [...orderDetails].sort((a: OrderItem, b: OrderItem) => {
+    return [...displayData].sort((a: OrderItem, b: OrderItem) => {
       const first = a[sortDescriptor.column as keyof OrderItem];
       const second = b[sortDescriptor.column as keyof OrderItem];
 
@@ -373,7 +271,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [orderDetails, sortDescriptor]);
+  }, [displayData, sortDescriptor]);
 
   const toggleCancelModal = (order?: OrderItem) => {
     if (order) {
@@ -493,18 +391,21 @@ const OrdersList: React.FC<OrdersListProps> = ({
   useEffect(() => {
     const foundCategory = categories?.find((c: OrderCategory) => c.name === (tableStatus || categories?.[0]?.name || 'All Orders'));
     const isEmpty = !!(foundCategory && foundCategory?.count === 0);
-    const showLoading = isLoadingInitial && !currentCategoryData && !isEmpty;
-    // setCurrentCategory(foundCategory);
+
+    // Show loading only if we don't have data and category isn't empty
+    const hasData = orderDetails.length > 0;
+    const showLoading = !hasData && !isEmpty && isLoading;
+
     setIsCategoryEmpty(isEmpty);
     setShouldShowLoading(showLoading);
-  }, [categories, tableStatus, isLoadingInitial, currentCategoryData]);
+  }, [categories, tableStatus, isLoading, orderDetails]);
 
   // Monitor tab changes to ensure modal states are properly managed
   useEffect(() => {
     // When tableStatus changes and there's an open modal, we ensure it's properly reset
     // This is a backup in case handleTabClick doesn't fully reset states
     if (isOpenUpdateOrder || isOpenCancelOrder || isOpenInvoice || isOpenConfirmOrder || isOpenComment) {
-      console.log('Tab changed with open modal, states should be reset by handleTabClick');
+      // Modal states should be reset by handleTabClick
     }
   }, [tableStatus, isOpenUpdateOrder, isOpenCancelOrder, isOpenInvoice, isOpenConfirmOrder, isOpenComment]);
 
@@ -669,9 +570,6 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   // Loading states are now managed in useEffect above
 
-
-
-
   return (
     <section className='border border-primaryGrey rounded-lg overflow-hidden'>
       <div className='overflow-x-auto'>
@@ -680,7 +578,6 @@ const OrdersList: React.FC<OrdersListProps> = ({
           isCompact
           removeWrapper
           aria-label='list of orders'
-          bottomContent={bottomContent}
           bottomContentPlacement='outside'
           classNames={classNames}
           selectedKeys={selectedKeys}
@@ -708,8 +605,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
           )}
         </TableHeader>
         <TableBody
-          emptyContent={!shouldShowLoading || isCategoryEmpty  ? 'No orders found' : <SpinnerLoader size="md" /> }
-          items={shouldShowLoading ? [] : sortedOrders}
+          emptyContent={!shouldShowLoading && isCategoryEmpty  ? 'No orders found' : <SpinnerLoader size="md" /> }
+          items={shouldShowLoading ? [] : (sortedOrders || [])}
           isLoading={shouldShowLoading}
           loadingContent={<SpinnerLoader size="md" />}
         >

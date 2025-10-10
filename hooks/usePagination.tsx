@@ -1,12 +1,20 @@
 'use client';
-import { Button, Pagination, PaginationItemType, cn } from '@nextui-org/react';
-import React, { useCallback, useMemo } from 'react';
+import { Button, Pagination, PaginationItemType, cn, Spinner } from '@nextui-org/react';
+import React, { useCallback, useMemo, useState, useEffect, useRef } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { useGlobalContext } from './globalProvider';
+import { useMobile } from './useMobile';
 
 function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColumn: string[] = []) {
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
 
+  // Mobile detection
+  const isMobile = useMobile();
+
+  // Infinite scroll state for mobile
+  const [accumulatedData, setAccumulatedData] = useState<any[]>([]);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   // Universal pagination data processor to handle different data structures
   const paginationInfo = useMemo(() => {
@@ -232,52 +240,151 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     setPage(1);
   }, [setPage]);
 
-  // Memoize the bottomContent
+  // Extract current page data based on data structure
+  const getCurrentPageData = useCallback(() => {
+    if (!arrayToMap) return [];
+
+    // Type 1: Already has data array
+    if (Array.isArray(arrayToMap.data)) return arrayToMap.data;
+
+    // Type 2: Has items array (menu)
+    if (Array.isArray(arrayToMap.items)) return arrayToMap.items;
+
+    // Type 3: Is itself an array
+    if (Array.isArray(arrayToMap)) return arrayToMap;
+
+    return [];
+  }, [arrayToMap]);
+
+  // Handle data accumulation for mobile infinite scroll
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const currentData = getCurrentPageData();
+
+    if (page === 1) {
+      // Reset accumulated data on first page
+      setAccumulatedData(currentData);
+      setIsLoadingMore(false);
+    } else if (currentData.length > 0) {
+      // Append new data to accumulated data
+      setAccumulatedData(prev => {
+        // Avoid duplicates by checking IDs
+        const existingIds = new Set(prev.map((item: any) => item.id || item.itemID));
+        const newItems = currentData.filter((item: any) => !existingIds.has(item.id || item.itemID));
+        return [...prev, ...newItems];
+      });
+      setIsLoadingMore(false);
+    }
+  }, [isMobile, page, getCurrentPageData]);
+
+  // IntersectionObserver for mobile infinite scroll
+  useEffect(() => {
+    if (!isMobile || !sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && paginationInfo.hasNext && !isLoadingMore) {
+          setIsLoadingMore(true);
+          setPage(page + 1);
+        }
+      },
+      {
+        root: null,
+        rootMargin: '100px', // Start loading 100px before reaching bottom
+        threshold: 0.1
+      }
+    );
+
+    observer.observe(sentinelRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isMobile, paginationInfo.hasNext, isLoadingMore, page, setPage]);
+
+  // Reset accumulated data when filters change on mobile
+  useEffect(() => {
+    if (isMobile && page === 1) {
+      setAccumulatedData([]);
+    }
+  }, [isMobile, filterValue]);
+
+  // Memoize the bottomContent - different for mobile vs desktop
   const bottomContent = useMemo(
-    () => (
-      <div className='py-2 px-2 flex justify-between items-center'>
-        <div className='text-[14px] text-grey600'>
-          Page {paginationInfo.currentPage} of {paginationInfo.totalPages}
+    () => {
+      // Mobile: Show infinite scroll indicator
+      if (isMobile) {
+        return (
+          <div className='py-4 flex flex-col items-center justify-center gap-2'>
+            {/* Sentinel element for IntersectionObserver */}
+            <div ref={sentinelRef} className='h-1 w-full' />
+
+            {/* Loading indicator */}
+            {isLoadingMore && paginationInfo.hasNext && (
+              <div className='flex items-center gap-2 text-sm text-gray-500'>
+                <Spinner size='sm' />
+                <span>Loading more...</span>
+              </div>
+            )}
+
+            {/* End of list indicator */}
+            {!paginationInfo.hasNext && accumulatedData.length > 0 && (
+              <div className='text-sm text-gray-500'>No more items</div>
+            )}
+          </div>
+        );
+      }
+
+      // Desktop: Show traditional pagination
+      return (
+        <div className='py-2 px-2 flex justify-between items-center'>
+          <div className='text-[14px] text-grey600'>
+            Page {paginationInfo.currentPage} of {paginationInfo.totalPages}
+          </div>
+          <Pagination
+            disableCursorAnimation
+            page={paginationInfo.currentPage}
+            total={paginationInfo.totalPages}
+            onChange={setPage}
+            className='gap-2'
+            radius='full'
+            renderItem={renderItem}
+            variant='light'
+          />
+          <div className='hidden md:flex w-[30%] justify-end gap-2'>
+            <Button
+              isDisabled={
+                paginationInfo.totalPages === 1 || !paginationInfo.hasPrevious
+              }
+              size='sm'
+              variant='flat'
+              onPress={onPreviousPage}
+            >
+              Previous
+            </Button>
+            <Button
+              isDisabled={
+                paginationInfo.totalPages === 1 || !paginationInfo.hasNext
+              }
+              size='sm'
+              variant='flat'
+              onPress={onNextPage}
+            >
+              Next
+            </Button>
+          </div>
         </div>
-        <Pagination
-          disableCursorAnimation
-          page={page}
-          total={paginationInfo.totalPages}
-          onChange={setPage}
-          className='gap-2'
-          radius='full'
-          renderItem={renderItem}
-          variant='light'
-        />
-        <div className='hidden md:flex w-[30%] justify-end gap-2'>
-          <Button
-            isDisabled={
-              paginationInfo.totalPages === 1 || !paginationInfo.hasPrevious
-            }
-            size='sm'
-            variant='flat'
-            onPress={onPreviousPage}
-          >
-            Previous
-          </Button>
-          <Button
-            isDisabled={
-              paginationInfo.totalPages === 1 || !paginationInfo.hasNext
-            }
-            size='sm'
-            variant='flat'
-            onPress={onNextPage}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    ),
+      );
+    },
     [
+      isMobile,
+      isLoadingMore,
       paginationInfo.currentPage,
       paginationInfo.totalPages,
       paginationInfo.hasPrevious,
       paginationInfo.hasNext,
+      accumulatedData.length,
       page,
       setPage,
       renderItem,
@@ -313,6 +420,14 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     []
   );
 
+  // Get the data to display based on mobile/desktop mode
+  const displayData = useMemo(() => {
+    if (isMobile && accumulatedData.length > 0) {
+      return accumulatedData;
+    }
+    return getCurrentPageData();
+  }, [isMobile, accumulatedData, getCurrentPageData]);
+
   return {
     bottomContent,
     headerColumns,
@@ -328,6 +443,9 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     hasSearchFilter,
     classNames,
     onClear,
+    displayData, // NEW: Accumulated data on mobile, current page on desktop
+    isMobile, // NEW: Mobile detection flag
+    isLoadingMore, // NEW: Loading more indicator for mobile
   };
 }
 
