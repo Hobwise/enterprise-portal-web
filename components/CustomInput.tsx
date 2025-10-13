@@ -3,7 +3,7 @@
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 import { Input } from "@nextui-org/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface CustomInputProps {
   type?: string;
@@ -24,6 +24,8 @@ interface CustomInputProps {
   startContent?: string | JSX.Element;
   min?: string;
   max?: string;
+  autoComplete?: string;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export const CustomInput = ({
@@ -45,8 +47,11 @@ export const CustomInput = ({
   size = "lg",
   min,
   max,
+  autoComplete,
+  onFocus,
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
+  const inputRef = useRef<HTMLDivElement>(null);
 
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
@@ -78,8 +83,28 @@ export const CustomInput = ({
     }
   };
 
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Call the passed onFocus handler if provided
+    if (onFocus) {
+      onFocus(e);
+    }
+
+    // Scroll the input into view on mobile devices
+    // Add a small delay to account for keyboard animation
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+      }
+    }, 300);
+  };
+
   return (
-    <Input
+    <div ref={inputRef}>
+      <Input
       key="outside"
       type={type === "password" ? passwordType : type}
       label={label}
@@ -105,7 +130,7 @@ export const CustomInput = ({
       isRequired={isRequired}
       spellCheck="false"
       ng-model="name"
-      autoComplete="new-password"
+      autoComplete={autoComplete || "new-password"}
       errorMessage={errorMessage}
       isInvalid={isInvalid || (errorMessage && true)}
       size={size}
@@ -113,8 +138,10 @@ export const CustomInput = ({
       startContent={startContent}
       onCopy={handleCopy}
       onPaste={handlePaste}
+      onFocus={handleFocus}
       min={min}
       max={max}
     />
+    </div>
   );
 };

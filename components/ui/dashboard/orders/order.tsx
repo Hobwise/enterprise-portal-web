@@ -56,6 +56,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 // Type definitions
 interface OrderItem {
+  quickResponseID: string;
   id: string;
   placedByName: string;
   placedByPhoneNumber: string;
@@ -240,6 +241,9 @@ const OrdersList: React.FC<OrdersListProps> = ({
     classNames,
     hasSearchFilter,
     displayData,
+    isMobile,
+    isLoadingMore,
+    bottomContent,
   } = usePagination(
     paginationData,
     columns,
@@ -398,7 +402,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
     setIsCategoryEmpty(isEmpty);
     setShouldShowLoading(showLoading);
-  }, [categories, tableStatus, isLoading, orderDetails]);
+  }, [categories, tableStatus, isLoading, orderDetails]);;
 
   // Monitor tab changes to ensure modal states are properly managed
   useEffect(() => {
@@ -417,6 +421,15 @@ const OrdersList: React.FC<OrdersListProps> = ({
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
+
+  // Transform order data to match CheckoutModal expectations (qrReference -> quickResponseID)
+  const transformedOrderDetails = React.useMemo(() => {
+    if (!singleOrder) return null;
+    return {
+      ...singleOrder,
+      quickResponseID: singleOrder.qrReference || singleOrder.quickResponseID,
+    };
+  }, [singleOrder]);
 
   // Handle table row click based on order status
   const handleRowClick = (order: OrderItem) => {
@@ -572,59 +585,210 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   return (
     <section className='border border-primaryGrey rounded-lg overflow-hidden'>
-      <div className='overflow-x-auto'>
-        <Table
-          radius='lg'
-          isCompact
-          removeWrapper
-          aria-label='list of orders'
-          bottomContentPlacement='outside'
-          classNames={classNames}
-          selectedKeys={selectedKeys}
-          // selectionMode='multiple'
-          sortDescriptor={sortDescriptor as SortDescriptor}
-          topContent={topContent}
-          topContentPlacement='outside'
-          onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-          onSortChange={(descriptor: SortDescriptor) => {
-            setSortDescriptor({
-              column: String(descriptor.column),
-              direction: descriptor.direction as string
-            });
-          }}
-        >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
+      {/* Filters - shown on both mobile and desktop */}
+      {topContent}
+
+      {/* Mobile Card Layout */}
+      {isMobile ? (
+        <div className='divide-y divide-primaryGrey'>
+          {/* Loading state */}
+          {shouldShowLoading && (
+            <div className='flex justify-center items-center py-16'>
+              <SpinnerLoader size="md" />
+            </div>
           )}
-        </TableHeader>
-        <TableBody
-          emptyContent={!shouldShowLoading && isCategoryEmpty  ? 'No orders found' : <SpinnerLoader size="md" /> }
-          items={shouldShowLoading ? [] : (sortedOrders || [])}
-          isLoading={shouldShowLoading}
-          loadingContent={<SpinnerLoader size="md" />}
-        >
-          {(order: OrderItem) => (
-            <TableRow
-              key={String(order?.id)}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
+
+          {/* Empty state */}
+          {!shouldShowLoading && sortedOrders.length === 0 && (
+            <div className='flex justify-center items-center py-16 text-textGrey'>
+              {orderDetails.length === 0
+                ? `No results found for "${searchQuery.trim()}"`
+                : isCategoryEmpty
+                  ? 'No orders found'
+                  : 'No orders available'
+              }
+            </div>
+          )}
+
+          {/* Order Cards */}
+          {!shouldShowLoading && sortedOrders.map((order: OrderItem) => (
+            <article
+              key={order.id}
+              className='p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors'
               onClick={() => handleRowClick(order)}
               onMouseEnter={() => prefetchOrderDetails(order.id)}
             >
-              {(columnKey) => (
-                <TableCell>{renderCell(order, String(columnKey))}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      </div>
+              {/* Header: Name + Phone + Comment */}
+              <div className='flex items-start justify-between mb-3'>
+                <div className='flex-1'>
+                  <div className='flex items-center gap-2 mb-1'>
+                    <span className='font-semibold text-black text-[15px]'>
+                      {order.placedByName}
+                    </span>
+                    {order.comment && (
+                      <div
+                        title='view comment'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCommentModal(order);
+                        }}
+                        className='cursor-pointer'
+                      >
+                        <FaCommentDots className='text-primaryColor text-[14px]' />
+                      </div>
+                    )}
+                  </div>
+                  <div className='text-textGrey text-[13px]'>
+                    {order.placedByPhoneNumber}
+                  </div>
+                </div>
+
+                {/* Actions Dropdown */}
+                <div className='ml-2' onClick={(e) => e.stopPropagation()}>
+                  <Dropdown
+                    aria-label='order actions'
+                    onOpenChange={(isOpen) => {
+                      if (isOpen) {
+                        prefetchOrderDetails(order.id);
+                      }
+                    }}
+                  >
+                    <DropdownTrigger aria-label='actions'>
+                      <div className='cursor-pointer flex justify-center items-center text-black p-2 -m-2'>
+                        <HiOutlineDotsVertical className='text-[20px]' />
+                      </div>
+                    </DropdownTrigger>
+                    <DropdownMenu className='text-black'>
+                      <DropdownSection>
+                        <DropdownItem
+                          key="invoice"
+                          onClick={() => toggleInvoiceModal(order)}
+                          aria-label='Generate invoice'
+                        >
+                          <div className='flex gap-3 items-center text-grey500'>
+                            <TbFileInvoice className='text-[18px]' />
+                            <p>Generate invoice</p>
+                          </div>
+                        </DropdownItem>
+                        {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                          availableOptions[statusDataMap[order.status]] &&
+                          availableOptions[statusDataMap[order.status]].includes('Cancel Order') && (
+                            <DropdownItem
+                              key="cancel"
+                              onClick={() => toggleCancelModal(order)}
+                              aria-label='cancel order'
+                            >
+                              <div className='text-danger-500 flex items-center gap-3'>
+                                <LiaTimesSolid />
+                                <p>Cancel order</p>
+                              </div>
+                            </DropdownItem>
+                          )) as any}
+                      </DropdownSection>
+                    </DropdownMenu>
+                  </Dropdown>
+                </div>
+              </div>
+
+              {/* Order Details Grid */}
+              <div className='grid grid-cols-2 gap-3 mb-3'>
+                <div>
+                  <div className='text-[11px] text-textGrey uppercase mb-1'>Amount</div>
+                  <div className='text-black font-semibold text-[15px]'>
+                    {formatPrice(order.totalAmount)}
+                  </div>
+                </div>
+                <div>
+                  <div className='text-[11px] text-textGrey uppercase mb-1'>Order ID</div>
+                  <div className='text-black text-[13px] truncate'>
+                    {order.reference}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status + Date */}
+              <div className='flex items-center justify-between'>
+                <Chip
+                  className='capitalize'
+                  color={statusColorMap[order.status]}
+                  size='sm'
+                  variant='bordered'
+                >
+                  {statusDataMap[order.status]}
+                </Chip>
+                <div className='text-textGrey text-[12px]'>
+                  {moment(order.dateUpdated).format('MMM DD, YYYY h:mm A')}
+                </div>
+              </div>
+            </article>
+          ))}
+
+          {/* Infinite Scroll Sentinel & Loading Indicator from usePagination */}
+          {bottomContent}
+        </div>
+      ) : (
+        /* Desktop Table Layout */
+        <div className='overflow-x-auto'>
+          <Table
+            radius='lg'
+            isCompact
+            removeWrapper
+            aria-label='list of orders'
+            bottomContent={bottomContent}
+            bottomContentPlacement='outside'
+            classNames={classNames}
+            selectedKeys={selectedKeys}
+            // selectionMode='multiple'
+            sortDescriptor={sortDescriptor as SortDescriptor}
+            topContent={null}
+            topContentPlacement='outside'
+            onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+            onSortChange={(descriptor: SortDescriptor) => {
+              setSortDescriptor({
+                column: String(descriptor.column),
+                direction: descriptor.direction as string
+              });
+            }}
+          >
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === 'actions' ? 'center' : 'start'}
+                allowsSorting={column.sortable}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            emptyContent={
+              orderDetails.length === 0
+                ? `No results found for "${searchQuery.trim()}"`
+                : !shouldShowLoading && isCategoryEmpty
+                  ? 'No orders found'
+                  : <SpinnerLoader size="md" />
+            }
+            items={shouldShowLoading ? [] : (sortedOrders || [])}
+            isLoading={shouldShowLoading}
+            loadingContent={<SpinnerLoader size="md" />}
+          >
+            {(order: OrderItem) => (
+              <TableRow
+                key={String(order?.id)}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => handleRowClick(order)}
+                onMouseEnter={() => prefetchOrderDetails(order.id)}
+              >
+                {(columnKey) => (
+                  <TableCell>{renderCell(order, String(columnKey))}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        </div>
+      )}
       <Comment
         toggleCommentModal={toggleCommentModal}
         singleOrder={singleOrder}
@@ -669,7 +833,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         isOpen={isOpenCheckoutModal}
         onOpenChange={() => setIsOpenCheckoutModal(false)}
         selectedItems={checkoutSelectedItems}
-        orderDetails={singleOrder}
+        orderDetails={transformedOrderDetails}
         id={singleOrder?.id}
         onOrderSuccess={refetch}
         handleDecrement={(itemId: string) => {

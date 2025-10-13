@@ -32,6 +32,7 @@ import React, { useEffect, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa6";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
+import { IoClose } from "react-icons/io5";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../../public/assets/images/no-image.svg";
 import { ordersCacheUtils } from '@/hooks/cachedEndpoints/useOrder';
@@ -120,7 +121,7 @@ const CheckoutModal = ({
   const [order, setOrder] = useState<Order>({
     placedByName: orderDetails?.placedByName || "",
     placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
-    quickResponseID: orderDetails?.quickResponseID || "",
+    quickResponseID: orderDetails?.quickResponseID || orderDetails?.qrReference || "",
     comment: orderDetails?.comment || "",
   });
 
@@ -158,11 +159,8 @@ const CheckoutModal = ({
       fieldErrors.placedByPhoneNumber = true;
     } else {
       const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
-      if (phoneNumber.length !== 11) {
-        errors.push('Phone number must be exactly 11 digits long');
-        fieldErrors.placedByPhoneNumber = true;
-      } else if (!/^[0-9]{11}$/.test(phoneNumber)) {
-        errors.push('Phone number can only contain digits');
+      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
+        errors.push('Phone number must be 10-11 digits');
         fieldErrors.placedByPhoneNumber = true;
       }
     }
@@ -224,11 +222,8 @@ const CheckoutModal = ({
       fieldErrors.placedByPhoneNumber = true;
     } else {
       const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
-      if (phoneNumber.length !== 11) {
-        errors.push('Phone number must be exactly 11 digits long');
-        fieldErrors.placedByPhoneNumber = true;
-      } else if (!/^[0-9]{11}$/.test(phoneNumber)) {
-        errors.push('Phone number can only contain digits');
+      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
+        errors.push('Phone number must be 10-11 digits');
         fieldErrors.placedByPhoneNumber = true;
       }
     }
@@ -749,70 +744,72 @@ const CheckoutModal = ({
     setResponse(data as ApiResponse);
     setLoading(false);
 
-    if (hasDataProperty(data) && data.data?.isSuccessful) {
+    if (hasDataProperty(data)) {
       const apiData = data as ApiResponse;
-      setOrderId(apiData.data?.data?.id || "");    
-      notify({
-        title: "Success!",
-        text: "Order placed successfully",
-        type: "success",
-      });
+      if (apiData.data?.isSuccessful) {
+        setOrderId(apiData.data?.data?.id || "");
+        notify({
+          title: "Success!",
+          text: "Order placed successfully",
+          type: "success",
+        });
 
-      // Clear cache and invalidate queries - be more aggressive to ensure fresh data
-      ordersCacheUtils.clearAll();
+        // Clear cache and invalidate queries - be more aggressive to ensure fresh data
+        ordersCacheUtils.clearAll();
 
-      // Invalidate all order-related queries to force refetch from backend
-      await queryClient.invalidateQueries({
-        queryKey: ['orderCategories'],
-        refetchType: 'active'
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ['orderDetails'],
-        refetchType: 'active'
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ['orders'],
-        refetchType: 'active'
-      });
-
-      // Force immediate refetch of all active queries
-      if (pathname === '/dashboard/orders') {
-        await queryClient.refetchQueries({
+        // Invalidate all order-related queries to force refetch from backend
+        await queryClient.invalidateQueries({
           queryKey: ['orderCategories'],
-          type: 'active'
+          refetchType: 'active'
         });
-        await queryClient.refetchQueries({
+        await queryClient.invalidateQueries({
           queryKey: ['orderDetails'],
-          type: 'active'
+          refetchType: 'active'
         });
-        await queryClient.refetchQueries({
+        await queryClient.invalidateQueries({
           queryKey: ['orders'],
-          type: 'active'
+          refetchType: 'active'
         });
 
-        // Call the refetch function to update the table immediately
-        if (onOrderSuccess) {
-          onOrderSuccess();
-        }
-      }
+        // Force immediate refetch of all active queries
+        if (pathname === '/dashboard/orders') {
+          await queryClient.refetchQueries({
+            queryKey: ['orderCategories'],
+            type: 'active'
+          });
+          await queryClient.refetchQueries({
+            queryKey: ['orderDetails'],
+            type: 'active'
+          });
+          await queryClient.refetchQueries({
+            queryKey: ['orders'],
+            type: 'active'
+          });
 
-      // Stay on screen 2 (payment selection) - user needs to choose payment method
-      // Screen is already set to 2 by handleCheckoutClick
-    } else if (hasDataProperty(data) && data.data?.error) {
-      const apiData = data as ApiResponse;
-      console.error('Order creation failed:', apiData.data?.error);
-      console.error('Failed payload:', payload);
-      notify({
-        title: "Order Creation Failed",
-        text: apiData.data?.error || "Unknown error",
-        type: "error",
-      });
+          // Call the refetch function to update the table immediately
+          if (onOrderSuccess) {
+            onOrderSuccess();
+          }
+        }
+
+        // Stay on screen 2 (payment selection) - user needs to choose payment method
+        // Screen is already set to 2 by handleCheckoutClick
+      } else if (apiData.data?.error) {
+        console.error('Order creation failed:', apiData.data?.error);
+        console.error('Failed payload:', payload);
+        notify({
+          title: "Order Creation Failed",
+          text: apiData.data?.error || "Unknown error",
+          type: "error",
+        });
+      }
     } else if (data && 'errors' in data) {
       // Handle validation errors
-      const validationErrors = Object.entries(data.errors)
+      const errorData = data as ApiResponse;
+      const validationErrors = Object.entries(errorData.errors || {})
         .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
         .join('; ');
-      console.error('Validation errors:', data.errors);
+      console.error('Validation errors:', errorData.errors);
       console.error('Failed payload:', payload);
       notify({
         title: "Validation Failed",
@@ -934,7 +931,13 @@ const CheckoutModal = ({
     let data;
     try {
       data = await editOrder(id, payload);
-      setResponse(data as ApiResponse);
+      // Clear phone validation errors for existing orders
+      if (data && 'errors' in data && data.errors?.placedByPhoneNumber) {
+        const { placedByPhoneNumber, ...otherErrors } = data.errors;
+        setResponse({ ...data, errors: otherErrors } as ApiResponse);
+      } else {
+        setResponse(data as ApiResponse);
+      }
     } catch (error) {
       console.error('editOrder API call failed:', error);
       console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
@@ -1007,10 +1010,11 @@ const CheckoutModal = ({
       });
     } else if (data && 'errors' in data) {
       // Handle validation errors
-      const validationErrors = Object.entries(data.errors)
+      const errorData = data as ApiResponse;
+      const validationErrors = Object.entries(errorData.errors || {})
         .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
         .join('; ');
-      console.error('Validation errors:', data.errors);
+      console.error('Validation errors:', errorData.errors);
       console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
       notify({
         title: "Validation Failed",
@@ -1194,14 +1198,15 @@ const CheckoutModal = ({
     setOrder({
       placedByName: orderDetails?.placedByName || "",
       placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
-      quickResponseID: orderDetails?.quickResponseID || "",
+      quickResponseID: orderDetails?.quickResponseID || orderDetails?.qrReference || "",
       comment: orderDetails?.comment || "",
     });
   }, [orderDetails]);
-
   useEffect(() => {
     getQrID();
   }, []);
+
+  console.log(orderDetails?.quickResponseID || orderDetails?.qrReference || orderDetails)
 
   // Reset screen and states when modal opens
   useEffect(() => {
@@ -1219,11 +1224,11 @@ const CheckoutModal = ({
       <Modal
         classNames={{
           base: screen === 1
-            ? "md:overflow-none overflow-hidden  md:h-auto max-w-[100vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] m-0 md:m-auto"
-            : "md:overflow-none overflow-hidden  md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto",
+            ? "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] m-0 md:m-auto mb-safe"
+            : "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto mb-safe",
           body: "px-4 py-2 md:px-6 flex-1 overflow-y-auto",
           header: "px-4 py-3 md:px-6 flex-shrink-0",
-          wrapper: "items-end md:items-center",
+          wrapper: "items-end md:items-center pb-4",
         }}
         isDismissable={false}
         hideCloseButton={true}
@@ -1241,7 +1246,7 @@ const CheckoutModal = ({
             setOrder({
               placedByName: orderDetails?.placedByName || "",
               placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
-              quickResponseID: orderDetails?.quickResponseID || "",
+              quickResponseID: orderDetails?.quickResponseID || orderDetails?.qrReference || "",
               comment: orderDetails?.comment || "",
             });
             setAdditionalCost(orderDetails?.additionalCost || 0);
@@ -1273,7 +1278,7 @@ const CheckoutModal = ({
                             onClick={onOpenChange}
                             className="py-2 px-4 mb-0 bg-white border border-primaryGrey"
                           >
-                            Close
+                            <IoClose className="text-xl" />
                           </CustomButton>
 
                           <CustomButton
@@ -1311,7 +1316,7 @@ const CheckoutModal = ({
                             onClick={onOpenChange}
                             className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
                           >
-                            Close
+                            <IoClose className="text-lg" />
                           </CustomButton>
                         </div>
                       </ModalHeader>
@@ -1564,7 +1569,7 @@ const CheckoutModal = ({
                         <CustomInput
                           type="text"
                           errorMessage={
-                            response?.errors?.placedByPhoneNumber?.[0]
+                            !id && response?.errors?.placedByPhoneNumber?.[0]
                           }
                           isInvalid={!!validationErrors.placedByPhoneNumber}
                           onChange={handleInputChange}
@@ -1607,9 +1612,9 @@ const CheckoutModal = ({
                   </div>
 
                   {/* Mobile ModalBody */}
-                  <div className="block md:hidden   flex-col min-h-0">
+                  <div className="block md:hidden flex-col min-h-0">
                     {mobileSubStep === '1A' && (
-                      <ModalBody className="h-[80vh] overflow-y-auto">
+                      <ModalBody className="flex-1 overflow-y-auto" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '2rem', maxHeight: 'calc(100vh - 12rem)' }}>
                         {/* Mobile Step 1A: Items Review */}
                         <div className="space-y-4 pb-4">
                           {selectedItems?.map((item: any, index: number) => {
@@ -1694,10 +1699,10 @@ const CheckoutModal = ({
                           })}
 
 
-                          {/* Continue Button - Fixed at bottom */}
-                          <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200 mt-6">
+                          {/* Continue Button - At bottom */}
+                          <div className="bg-white pt-4 pb-safe border-t border-gray-200 mt-6">
                           {/* Mobile Pricing Summary */}
-                          <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                          <div className="p-4 bg-gray-50 rounded-lg mb-4">
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
                                 <span className="text-sm text-grey600">Subtotal</span>
@@ -1733,9 +1738,9 @@ const CheckoutModal = ({
                     )}
 
                     {mobileSubStep === '1B' && (
-                      <ModalBody className="flex-1 overflow-y-auto">
+                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: 'calc(100vh - 12rem)' }}>
                         {/* Mobile Step 1B: Customer Information */}
-                        <div className="space-y-6 pb-4">
+                        <div className="space-y-6 pb-32">
                           <CustomInput
                             type="text"
                             value={order.placedByName}
@@ -1794,8 +1799,8 @@ const CheckoutModal = ({
                             classnames="w-full mb-4"
                           />
 
-                          {/* Continue Button - Fixed at bottom */}
-                          <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200 mt-6">
+                          {/* Continue Button - At bottom */}
+                          <div className="bg-white pt-4 pb-safe mt-auto">
                             <CustomButton
                               onClick={() => handleMobileNavigation('1C')}
                               className="w-full py-4 text-white font-semibold"
@@ -1809,7 +1814,7 @@ const CheckoutModal = ({
                     )}
 
                     {mobileSubStep === '1C' && (
-                      <ModalBody className="flex-1 overflow-y-auto">
+                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: 'calc(100vh - 12rem)' }}>
                         {/* Mobile Step 1C: Final Review */}
                         <div className="space-y-6 pb-4">
                           {/* Customer Information Summary */}
@@ -1881,8 +1886,8 @@ const CheckoutModal = ({
                               </div>
                             </div>
                           </div>
-                          {/* Checkout Button - Fixed at bottom */}
-                          <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-gray-200 mt-6">
+                          {/* Checkout Button - At bottom */}
+                          <div className="bg-white pt-4 pb-safe mt-auto">
                             <CustomButton
                               loading={loading}
                               disabled={loading}

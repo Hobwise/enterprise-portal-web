@@ -1,0 +1,10 @@
+{
+  "name": "Enterprise Portal - Hobwise",
+  "short_name": "Portal",
+  "description": "Streamline your business processes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6F3FF5",
+  "icons": []
+}

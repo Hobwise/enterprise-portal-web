@@ -39,7 +39,8 @@ const useAllPaymentsData = (
     data: categoriesData,
     isLoading: isLoadingCategories,
     isError: isCategoriesError,
-    refetch: refetchCategories
+    refetch: refetchCategories,
+    isFetching: isFetchingCategories
   } = useQuery({
     queryKey: ['paymentCategories', { filterType, startDate, endDate }],
     queryFn: async () => {
@@ -54,8 +55,10 @@ const useAllPaymentsData = (
       );
       return response?.data?.data?.categories || [];
     },
-    staleTime: 0, // Always refetch for immediate updates
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const categories = categoriesData || [];
@@ -64,7 +67,8 @@ const useAllPaymentsData = (
   const firstCategory = categories[0]?.name || 'All';
   const {
     data: firstCategoryData,
-    isLoading: isLoadingFirst
+    isLoading: isLoadingFirst,
+    isFetching: isFetchingFirst
   } = useQuery({
     queryKey: ['paymentDetails', firstCategory, { page, rowsPerPage, filterType, startDate, endDate }],
     queryFn: async () => {
@@ -81,8 +85,10 @@ const useAllPaymentsData = (
       return response?.data?.data;
     },
     enabled: !!firstCategory && categories.length > 0,
-    staleTime: 0, // Always refetch for immediate updates
-    gcTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   // Update categoryDetails when first category loads
@@ -180,6 +186,7 @@ const useAllPaymentsData = (
     categories,
     getCategoryDetails,
     isLoadingInitial: isLoadingCategories || isLoadingFirst,
+    isFetchingInitial: isFetchingCategories || isFetchingFirst,
     isLoadingAll,
     isError: isCategoriesError,
     refetch: refetchCategories,
