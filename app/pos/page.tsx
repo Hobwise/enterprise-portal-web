@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { ShoppingCart, X, Plus, Minus } from "lucide-react";
 import { useDisclosure } from "@nextui-org/react";
 import { useSearchParams } from "next/navigation";
@@ -28,7 +28,7 @@ import { MenuItem, Variety } from "./types";
 // Constants
 import { LOADING_SKELETON_COUNT } from "./constants";
 
-const POSpage = () => {
+const POSContent = () => {
   const searchParams = useSearchParams();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
@@ -581,6 +581,21 @@ const POSpage = () => {
         </main>
       </div>
     </>
+  );
+};
+
+const POSpage = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5F35D2] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading POS...</p>
+        </div>
+      </div>
+    }>
+      <POSContent />
+    </Suspense>
   );
 };
 

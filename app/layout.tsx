@@ -16,6 +16,7 @@ import { Analytics } from "@vercel/analytics/next";
 export const metadata = {
   title: companyInfo.name,
   description: "Streamline your business processes",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
