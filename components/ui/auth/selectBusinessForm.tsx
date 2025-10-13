@@ -16,12 +16,10 @@ import {
 import { Avatar, ScrollShadow } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import useLogout from "@/hooks/cachedEndpoints/useLogout";
 
 const SelectBusinessForm = () => {
   const router = useRouter();
   const { loginDetails, setLoginDetails } = useGlobalContext();
-  const { logoutFn } = useLogout();
   const [business, setBusiness] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,19 +53,19 @@ const SelectBusinessForm = () => {
         setCurrentLoginDetails(storedLoginDetails);
       }
     } else if (!loginDetails && !currentLoginDetails) {
-      // Only redirect if no stored credentials exist AND no React state
-      console.error('[REDIRECT #1] Missing loginDetails - redirecting to login', {
+      // Show error instead of redirecting
+      console.error('[ERROR] Missing loginDetails', {
         reason: 'No credentials found in localStorage or React state',
         location: 'useEffect - line 55',
         timestamp: new Date().toISOString()
       });
 
+      setError("No login credentials found. Please go back and login again.");
       notify({
-        title: "Session Expired [R1]",
-        text: "No login credentials found. Please login again.",
-        type: "warning"
+        title: "Missing Credentials",
+        text: "No login credentials found. Please go back and login again.",
+        type: "error"
       });
-      router.replace("/auth/login?reason=no-credentials");
     } else if (loginDetails && !currentLoginDetails) {
       // Use the existing React state
       console.log('[SelectBusiness] Using React state loginDetails');
@@ -87,7 +85,7 @@ const SelectBusinessForm = () => {
         errorMessage.toLowerCase().includes('unauthorized') ||
         errorMessage.toLowerCase().includes('authentication')) {
 
-      console.error('[REDIRECT #5] Authentication Error Detected', {
+      console.error('[AUTH ERROR] Authentication Error Detected', {
         errorCode,
         errorMessage,
         location: 'handleAuthenticationError',
@@ -96,15 +94,13 @@ const SelectBusinessForm = () => {
       });
 
       notify({
-        title: "Session Expired [R5]",
-        text: "Your session has expired. Please log in again.",
-        type: "warning",
+        title: "Authentication Error",
+        text: errorMessage || "Authentication failed. Please try selecting your business again or logout and login.",
+        type: "error",
       });
 
-      // Logout user after a short delay
-      setTimeout(async () => {
-        await logoutFn();
-      }, 2000);
+      // Set error state instead of auto-redirecting
+      setError(errorMessage || "Authentication failed");
 
       return true; // Indicates auth error was handled
     }
@@ -124,20 +120,21 @@ const SelectBusinessForm = () => {
     });
 
     if (!loginCreds) {
-      console.error('[REDIRECT #2] No login credentials available', {
+      console.error('[ERROR] No login credentials available', {
         reason: 'loginCreds is null/undefined',
-        location: 'callLogin - line 101',
+        location: 'callLogin',
         businessId,
         timestamp: new Date().toISOString()
       });
 
+      const errorMsg = "Login credentials lost. Please go back and login again.";
+      setError(errorMsg);
       notify({
-        title: "Session Expired [R2]",
-        text: "Login credentials lost. Please login again.",
-        type: "warning"
+        title: "Missing Credentials",
+        text: errorMsg,
+        type: "error"
       });
-      router.replace("/auth/login?reason=no-credentials-business");
-      return;
+      throw new Error(errorMsg); // Throw so caller can handle
     }
 
     try {
@@ -152,20 +149,21 @@ const SelectBusinessForm = () => {
 
       // Check if login requires redirect
       if (data && 'requiresLogin' in data && data.requiresLogin) {
-        console.error('[REDIRECT #3] Backend requires re-login', {
+        console.error('[ERROR] Backend requires re-login', {
           reason: 'API returned requiresLogin: true',
-          location: 'callLogin - line 115',
+          location: 'callLogin',
           errors: (data as any)?.errors,
           timestamp: new Date().toISOString()
         });
 
+        const errorMsg = (data as any)?.errors?.general?.[0] || "Server requires re-authentication. Please go back and login again.";
+        setError(errorMsg);
         notify({
-          title: "Session Expired [R3]",
-          text: (data as any)?.errors?.general?.[0] || "Server requires re-authentication.",
-          type: "warning"
+          title: "Re-authentication Required",
+          text: errorMsg,
+          type: "error"
         });
-        router.replace("/auth/login?reason=requires-relogin");
-        return;
+        throw new Error(errorMsg); // Throw so caller can handle
       }
 
       if (data && 'data' in data && data.data?.response) {
@@ -186,7 +184,7 @@ const SelectBusinessForm = () => {
 
           if (!receivedToken || receivedToken === 'null' || receivedToken.trim() === '') {
             // Backend returned null/invalid token - check if we can retry
-            console.error('[REDIRECT #4] Backend returned NULL token', {
+            console.error('[ERROR] Backend returned NULL token', {
               reason: 'Token is null, "null", or empty string',
               location: 'callLogin - token validation',
               retryCount: retryCountRef.current,
@@ -215,21 +213,17 @@ const SelectBusinessForm = () => {
               return await callLogin(businessId);
             }
 
-            // Max retries reached or no credentials to retry with
+            // Max retries reached - show error instead of redirecting
+            retryCountRef.current = 0; // Reset for next attempt
+            const errorMsg = "Server returned invalid token after retry. Please try selecting your business again or go back and login.";
+            setError(errorMsg);
             notify({
-              title: "Authentication Failed [R4]",
-              text: "Server returned invalid token after retry. Please login again.",
+              title: "Authentication Failed",
+              text: errorMsg,
               type: "error",
             });
 
-            // Clear any stale data and redirect to login
-            setTimeout(async () => {
-              console.log('[REDIRECT #4] Max retries reached, calling logoutFn in 2 seconds...');
-              retryCountRef.current = 0; // Reset for next attempt
-              await logoutFn();
-            }, 2000);
-
-            return;
+            throw new Error(errorMsg); // Throw so caller can handle
           }
 
           // Reset retry count on success
