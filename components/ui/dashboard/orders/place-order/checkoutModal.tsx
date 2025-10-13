@@ -744,70 +744,72 @@ const CheckoutModal = ({
     setResponse(data as ApiResponse);
     setLoading(false);
 
-    if (hasDataProperty(data) && data.data?.isSuccessful) {
+    if (hasDataProperty(data)) {
       const apiData = data as ApiResponse;
-      setOrderId(apiData.data?.data?.id || "");    
-      notify({
-        title: "Success!",
-        text: "Order placed successfully",
-        type: "success",
-      });
+      if (apiData.data?.isSuccessful) {
+        setOrderId(apiData.data?.data?.id || "");
+        notify({
+          title: "Success!",
+          text: "Order placed successfully",
+          type: "success",
+        });
 
-      // Clear cache and invalidate queries - be more aggressive to ensure fresh data
-      ordersCacheUtils.clearAll();
+        // Clear cache and invalidate queries - be more aggressive to ensure fresh data
+        ordersCacheUtils.clearAll();
 
-      // Invalidate all order-related queries to force refetch from backend
-      await queryClient.invalidateQueries({
-        queryKey: ['orderCategories'],
-        refetchType: 'active'
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ['orderDetails'],
-        refetchType: 'active'
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ['orders'],
-        refetchType: 'active'
-      });
-
-      // Force immediate refetch of all active queries
-      if (pathname === '/dashboard/orders') {
-        await queryClient.refetchQueries({
+        // Invalidate all order-related queries to force refetch from backend
+        await queryClient.invalidateQueries({
           queryKey: ['orderCategories'],
-          type: 'active'
+          refetchType: 'active'
         });
-        await queryClient.refetchQueries({
+        await queryClient.invalidateQueries({
           queryKey: ['orderDetails'],
-          type: 'active'
+          refetchType: 'active'
         });
-        await queryClient.refetchQueries({
+        await queryClient.invalidateQueries({
           queryKey: ['orders'],
-          type: 'active'
+          refetchType: 'active'
         });
 
-        // Call the refetch function to update the table immediately
-        if (onOrderSuccess) {
-          onOrderSuccess();
-        }
-      }
+        // Force immediate refetch of all active queries
+        if (pathname === '/dashboard/orders') {
+          await queryClient.refetchQueries({
+            queryKey: ['orderCategories'],
+            type: 'active'
+          });
+          await queryClient.refetchQueries({
+            queryKey: ['orderDetails'],
+            type: 'active'
+          });
+          await queryClient.refetchQueries({
+            queryKey: ['orders'],
+            type: 'active'
+          });
 
-      // Stay on screen 2 (payment selection) - user needs to choose payment method
-      // Screen is already set to 2 by handleCheckoutClick
-    } else if (hasDataProperty(data) && data.data?.error) {
-      const apiData = data as ApiResponse;
-      console.error('Order creation failed:', apiData.data?.error);
-      console.error('Failed payload:', payload);
-      notify({
-        title: "Order Creation Failed",
-        text: apiData.data?.error || "Unknown error",
-        type: "error",
-      });
+          // Call the refetch function to update the table immediately
+          if (onOrderSuccess) {
+            onOrderSuccess();
+          }
+        }
+
+        // Stay on screen 2 (payment selection) - user needs to choose payment method
+        // Screen is already set to 2 by handleCheckoutClick
+      } else if (apiData.data?.error) {
+        console.error('Order creation failed:', apiData.data?.error);
+        console.error('Failed payload:', payload);
+        notify({
+          title: "Order Creation Failed",
+          text: apiData.data?.error || "Unknown error",
+          type: "error",
+        });
+      }
     } else if (data && 'errors' in data) {
       // Handle validation errors
-      const validationErrors = Object.entries(data.errors)
+      const errorData = data as ApiResponse;
+      const validationErrors = Object.entries(errorData.errors || {})
         .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
         .join('; ');
-      console.error('Validation errors:', data.errors);
+      console.error('Validation errors:', errorData.errors);
       console.error('Failed payload:', payload);
       notify({
         title: "Validation Failed",
@@ -1008,10 +1010,11 @@ const CheckoutModal = ({
       });
     } else if (data && 'errors' in data) {
       // Handle validation errors
-      const validationErrors = Object.entries(data.errors)
+      const errorData = data as ApiResponse;
+      const validationErrors = Object.entries(errorData.errors || {})
         .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
         .join('; ');
-      console.error('Validation errors:', data.errors);
+      console.error('Validation errors:', errorData.errors);
       console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
       notify({
         title: "Validation Failed",
@@ -1199,7 +1202,6 @@ const CheckoutModal = ({
       comment: orderDetails?.comment || "",
     });
   }, [orderDetails]);
-
   useEffect(() => {
     getQrID();
   }, []);

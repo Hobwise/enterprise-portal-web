@@ -56,6 +56,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 // Type definitions
 interface OrderItem {
+  quickResponseID: string;
   id: string;
   placedByName: string;
   placedByPhoneNumber: string;
