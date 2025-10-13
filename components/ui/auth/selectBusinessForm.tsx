@@ -251,7 +251,13 @@ const SelectBusinessForm = () => {
 
           // Navigate immediately with replace to prevent back navigation issues
           router.replace("/dashboard");
-          router.refresh(); // Force immediate update
+
+          // Fallback to hard navigation if router.replace fails
+          setTimeout(() => {
+            if (window.location.pathname === "/auth/select-business") {
+              window.location.href = "/dashboard";
+            }
+          }, 200);
         } else if (decryptedData?.error) {
           const wasAuthError = await handleAuthenticationError(decryptedData.error);
           if (!wasAuthError) {
