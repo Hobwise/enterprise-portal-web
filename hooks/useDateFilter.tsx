@@ -66,7 +66,7 @@ const useDateFilter = (endpoint: any) => {
   const endDate = value.end
     ? `${formatDateTimeForPayload2(value.end)}Z`
     : undefined;
-  const {  categories, details, salesSummary, isError, refetch, isLoading } = endpoint(
+  const {  categories, details, salesSummary, isError, refetch, isLoading, isFetching } = endpoint(
     logIndexForSelectedKey(effectiveSelectedValue),
     startDate,
     endDate,
@@ -75,6 +75,9 @@ const useDateFilter = (endpoint: any) => {
 
   // Combined loading state that includes both API loading and date changing
   const combinedIsLoading = isLoading || isDateChanging;
+
+  // Combined fetching state
+  const combinedIsFetching = isFetching || isDateChanging;
 
   useEffect(() => {
     if (shouldFetchReport && selectedValue !== "Custom date") {
@@ -190,6 +193,7 @@ const useDateFilter = (endpoint: any) => {
     isError,
     refetch,
     isLoading: combinedIsLoading,
+    isFetching: combinedIsFetching,
 
     dropdownComponent,
     datePickerModal,

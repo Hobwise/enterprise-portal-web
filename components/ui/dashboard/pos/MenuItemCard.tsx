@@ -23,6 +23,13 @@ export const MenuItemCard: React.FC<MenuItemCardProps> = ({
       }`}
     >
       <div className="p-3 sm:p-4 flex flex-col items-center flex-1 relative">
+        {/* Variety Badge */}
+        {item.hasVariety && (
+          <div className="absolute top-2 right-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm">
+            Varieties
+          </div>
+        )}
+
         <h3 className="font-medium text-center text-gray-900 text-xs sm:text-sm mb-1 leading-tight">
           {item.itemName}
         </h3>

@@ -15,6 +15,7 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
   const [accumulatedData, setAccumulatedData] = useState<any[]>([]);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false); // Ref to prevent observer recreation
 
   // Universal pagination data processor to handle different data structures
   const paginationInfo = useMemo(() => {
@@ -266,6 +267,7 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
       // Reset accumulated data on first page
       setAccumulatedData(currentData);
       setIsLoadingMore(false);
+      isLoadingRef.current = false; // Reset ref to allow next load
     } else if (currentData.length > 0) {
       // Append new data to accumulated data
       setAccumulatedData(prev => {
@@ -275,6 +277,11 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
         return [...prev, ...newItems];
       });
       setIsLoadingMore(false);
+      isLoadingRef.current = false; // Reset ref to allow next load
+    } else {
+      // Handle empty response on page > 1 (prevents infinite loading)
+      setIsLoadingMore(false);
+      isLoadingRef.current = false;
     }
   }, [isMobile, page, getCurrentPageData]);
 
@@ -284,9 +291,11 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && paginationInfo.hasNext && !isLoadingMore) {
-          setIsLoadingMore(true);
-          setPage(page + 1);
+        // Use ref to check loading state - prevents multiple triggers
+        if (entries[0].isIntersecting && paginationInfo.hasNext && !isLoadingRef.current) {
+          isLoadingRef.current = true; // Set ref immediately to block concurrent requests
+          setIsLoadingMore(true); // Update UI state
+          setPage(page + 1); // Trigger API call
         }
       },
       {
@@ -301,7 +310,7 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     return () => {
       observer.disconnect();
     };
-  }, [isMobile, paginationInfo.hasNext, isLoadingMore, page, setPage]);
+  }, [isMobile, paginationInfo.hasNext, page, setPage]);
 
   // Reset accumulated data when filters change on mobile
   useEffect(() => {
@@ -317,8 +326,10 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
       if (isMobile) {
         return (
           <div className='py-4 flex flex-col items-center justify-center gap-2'>
-            {/* Sentinel element for IntersectionObserver */}
-            <div ref={sentinelRef} className='h-1 w-full' />
+            {/* Sentinel element - always rendered when hasNext to keep observer attached */}
+            {paginationInfo.hasNext && (
+              <div ref={sentinelRef} className='h-1 w-full' />
+            )}
 
             {/* Loading indicator */}
             {isLoadingMore && paginationInfo.hasNext && (

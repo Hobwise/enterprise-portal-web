@@ -116,7 +116,12 @@ const OrdersContent: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
+  // Check if we already know the table is empty (categories count is 0)
+  const hasEmptyData = categories && categories.length === 0;
+
+  // Only show loading spinner if we're loading AND we don't yet know it's empty
+  // Skip loading for empty state to show illustration immediately
+  if (isLoading && !hasEmptyData) return <CustomLoading />;
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (
@@ -234,7 +239,7 @@ const OrdersContent: React.FC = () => {
           />
 
           {/* Pagination at page level */}
-          {paginationData.totalPages > 1 && (
+          {/* {paginationData.totalPages > 1 && (
             <div className="mt-4">
               <CustomPagination
                 currentPage={paginationData.currentPage}
@@ -244,7 +249,7 @@ const OrdersContent: React.FC = () => {
                 onPrevious={handlePrevious}
               />
             </div>
-          )}
+          )} */}
         </>
       ) : (
         <CreateOrder />

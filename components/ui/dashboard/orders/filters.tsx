@@ -11,15 +11,15 @@ const formatCategoryName = (name: string) => {
 const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
   return (
     <>
-      <div className='flex  relative w-full top-4 px-3  border-b border-primaryGrey justify-between'>
+      <div className='flex relative w-full md:mb-4 top-4 px-3 border-b border-primaryGrey justify-between overflow-x-auto scrollbar-hide'>
         <Tabs
           classNames={{
             tabList:
-              'gap-4  relative rounded-none p-0 w-[100%] text-[#344054] overflow-scroll',
+              'gap-4 relative rounded-none p-0 w-auto min-w-full text-[#344054] overflow-x-auto flex-nowrap scrollbar-hide',
             cursor: 'w-full bg-primaryColor h-[1px]',
-            tab: 'max-w-fit px-0 py-0 h-10 px-4',
+            tab: 'max-w-fit px-0 py-0 h-10 px-4 flex-shrink-0',
             tabContent:
-              'group-data-[selected=true]:text-primaryColor group-data-[selected=true]:font-semibold',
+              'group-data-[selected=true]:text-primaryColor group-data-[selected=true]:font-semibold whitespace-nowrap',
           }}
           variant={'underlined'}
           aria-label='order filter'

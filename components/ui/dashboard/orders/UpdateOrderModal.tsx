@@ -85,6 +85,9 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
 
+  // Check if user is a POS user
+  const isPOSUser = userInformation?.primaryAssignment === "Point of Sales";
+
   // State management
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
@@ -289,12 +292,18 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     }, 0);
   };
 
-  // Handle Add Item - navigate to place-order page with current order
+  // Handle Add Item - navigate to place-order page (admin) or POS page (POS users) with current order
   const handleAddItem = () => {
-    // Save the current order data to localStorage so place-order page can pick it up
+    // Save the current order data to localStorage so the target page can pick it up
     if (orderData) {
       saveJsonItemToLocalStorage("order", orderData);
-      router.push("/dashboard/orders/place-order?mode=add-items");
+
+      // Navigate to appropriate page based on user type
+      if (isPOSUser) {
+        router.push("/pos?mode=add-items");
+      } else {
+        router.push("/dashboard/orders/place-order?mode=add-items");
+      }
     } else {
       toast.error("Order data not available");
     }

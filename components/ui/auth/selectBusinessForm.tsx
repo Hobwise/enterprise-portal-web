@@ -5,7 +5,6 @@ import {
 } from "@/app/api/controllers/auth";
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
 import { useGlobalContext } from "@/hooks/globalProvider";
-import { setJsonCookie } from "@/lib/cookies";
 import { decryptPayload } from "@/lib/encrypt-decrypt";
 import {
   SmallLoader,
@@ -23,12 +22,13 @@ const SelectBusinessForm = () => {
   const router = useRouter();
   const { loginDetails, setLoginDetails } = useGlobalContext();
   const { logoutFn } = useLogout();
-  const [business, setBusiness] = useState(null);
+  const [business, setBusiness] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { data, isLoading: loading } = useGetBusinessByCooperate();
   const lastClickTime = useRef<number>(0);
   const [currentLoginDetails, setCurrentLoginDetails] = useState(loginDetails);
+  const retryCountRef = useRef<number>(0);
 
   // Prefetch dashboard route on component mount for faster navigation
   useEffect(() => {
@@ -40,22 +40,37 @@ const SelectBusinessForm = () => {
   useEffect(() => {
     const storedLoginDetails = getJsonItemFromLocalStorage("loginDetails");
 
+    console.log('[SelectBusiness] Page Load Check:', {
+      hasStoredDetails: !!storedLoginDetails,
+      hasLoginDetails: !!loginDetails,
+      hasCurrentDetails: !!currentLoginDetails,
+      timestamp: new Date().toISOString()
+    });
+
     if (storedLoginDetails) {
       // Restore from localStorage immediately
       if (!currentLoginDetails) {
+        console.log('[SelectBusiness] Restoring loginDetails from localStorage');
         setLoginDetails(storedLoginDetails);
         setCurrentLoginDetails(storedLoginDetails);
       }
     } else if (!loginDetails && !currentLoginDetails) {
       // Only redirect if no stored credentials exist AND no React state
+      console.error('[REDIRECT #1] Missing loginDetails - redirecting to login', {
+        reason: 'No credentials found in localStorage or React state',
+        location: 'useEffect - line 55',
+        timestamp: new Date().toISOString()
+      });
+
       notify({
-        title: "Session Expired",
-        text: "Please login again to continue.",
+        title: "Session Expired [R1]",
+        text: "No login credentials found. Please login again.",
         type: "warning"
       });
-      router.replace("/auth/login");
+      router.replace("/auth/login?reason=no-credentials");
     } else if (loginDetails && !currentLoginDetails) {
       // Use the existing React state
+      console.log('[SelectBusiness] Using React state loginDetails');
       setCurrentLoginDetails(loginDetails);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,26 +81,34 @@ const SelectBusinessForm = () => {
     const authErrorCodes = ['AUTH001', 'AUTH002', 'TOKEN_EXPIRED', 'UNAUTHORIZED'];
     const errorCode = error?.code || error?.responseCode;
     const errorMessage = error?.message || error?.responseDescription || "";
-    
-    if (authErrorCodes.includes(errorCode) || 
+
+    if (authErrorCodes.includes(errorCode) ||
         errorMessage.toLowerCase().includes('token') ||
         errorMessage.toLowerCase().includes('unauthorized') ||
         errorMessage.toLowerCase().includes('authentication')) {
-      
+
+      console.error('[REDIRECT #5] Authentication Error Detected', {
+        errorCode,
+        errorMessage,
+        location: 'handleAuthenticationError',
+        timestamp: new Date().toISOString(),
+        fullError: error
+      });
+
       notify({
-        title: "Session Expired",
+        title: "Session Expired [R5]",
         text: "Your session has expired. Please log in again.",
         type: "warning",
       });
-      
+
       // Logout user after a short delay
       setTimeout(async () => {
         await logoutFn();
       }, 2000);
-      
+
       return true; // Indicates auth error was handled
     }
-    
+
     return false; // Not an auth error
   };
 
@@ -93,42 +116,144 @@ const SelectBusinessForm = () => {
     // Use currentLoginDetails which is restored from localStorage if needed
     const loginCreds = currentLoginDetails || getJsonItemFromLocalStorage("loginDetails");
 
+    console.log('[callLogin] Starting business login', {
+      hasCurrentDetails: !!currentLoginDetails,
+      hasStoredDetails: !!getJsonItemFromLocalStorage("loginDetails"),
+      businessId,
+      timestamp: new Date().toISOString()
+    });
+
     if (!loginCreds) {
+      console.error('[REDIRECT #2] No login credentials available', {
+        reason: 'loginCreds is null/undefined',
+        location: 'callLogin - line 101',
+        businessId,
+        timestamp: new Date().toISOString()
+      });
+
       notify({
-        title: "Session Expired",
-        text: "Please login again to continue.",
+        title: "Session Expired [R2]",
+        text: "Login credentials lost. Please login again.",
         type: "warning"
       });
-      router.replace("/auth/login");
+      router.replace("/auth/login?reason=no-credentials-business");
       return;
     }
 
     try {
       const data = await loginUserSelectedBusiness(loginCreds, businessId);
-      
+
+      console.log('[callLogin] API Response received', {
+        hasData: !!data,
+        hasDataProperty: !!(data && 'data' in data),
+        requiresLogin: data && 'requiresLogin' in data ? (data as any).requiresLogin : undefined,
+        timestamp: new Date().toISOString()
+      });
+
       // Check if login requires redirect
-      if (data?.requiresLogin) {
-        notify({
-          title: "Session Expired",
-          description: data?.errors?.general?.[0] || "Please login again to continue.",
-          status: "warning"
+      if (data && 'requiresLogin' in data && data.requiresLogin) {
+        console.error('[REDIRECT #3] Backend requires re-login', {
+          reason: 'API returned requiresLogin: true',
+          location: 'callLogin - line 115',
+          errors: (data as any)?.errors,
+          timestamp: new Date().toISOString()
         });
-        router.replace("/auth/login");
+
+        notify({
+          title: "Session Expired [R3]",
+          text: (data as any)?.errors?.general?.[0] || "Server requires re-authentication.",
+          type: "warning"
+        });
+        router.replace("/auth/login?reason=requires-relogin");
         return;
       }
 
-      if (data?.data?.response) {
+      if (data && 'data' in data && data.data?.response) {
         const decryptedData = decryptPayload(data.data.response);
-        
+
+        console.log('[callLogin] Decrypted data received', {
+          hasData: !!decryptedData?.data,
+          hasToken: !!decryptedData?.data?.token,
+          token: decryptedData?.data?.token,
+          tokenType: typeof decryptedData?.data?.token,
+          isSuccessful: decryptedData?.isSuccessful,
+          timestamp: new Date().toISOString()
+        });
+
         if (decryptedData?.data) {
-          // Save critical data immediately
-          setTokenCookie("token", decryptedData?.data.token, {
+          // Validate token before proceeding
+          const receivedToken = decryptedData?.data.token;
+
+          if (!receivedToken || receivedToken === 'null' || receivedToken.trim() === '') {
+            // Backend returned null/invalid token - check if we can retry
+            console.error('[REDIRECT #4] Backend returned NULL token', {
+              reason: 'Token is null, "null", or empty string',
+              location: 'callLogin - token validation',
+              retryCount: retryCountRef.current,
+              userId: decryptedData?.data.id,
+              email: decryptedData?.data.email,
+              businessId: businessId,
+              isSuccessful: decryptedData?.isSuccessful,
+              receivedToken: receivedToken,
+              timestamp: new Date().toISOString(),
+              fullResponse: decryptedData
+            });
+
+            // Retry once if this is the first failure
+            if (retryCountRef.current === 0 && loginCreds) {
+              retryCountRef.current = 1;
+              console.log('[RETRY] Attempting to retry business selection once...');
+
+              notify({
+                title: "Retrying...",
+                text: "Token was invalid, retrying authentication...",
+                type: "warning",
+              });
+
+              // Wait 1 second and retry
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              return await callLogin(businessId);
+            }
+
+            // Max retries reached or no credentials to retry with
+            notify({
+              title: "Authentication Failed [R4]",
+              text: "Server returned invalid token after retry. Please login again.",
+              type: "error",
+            });
+
+            // Clear any stale data and redirect to login
+            setTimeout(async () => {
+              console.log('[REDIRECT #4] Max retries reached, calling logoutFn in 2 seconds...');
+              retryCountRef.current = 0; // Reset for next attempt
+              await logoutFn();
+            }, 2000);
+
+            return;
+          }
+
+          // Reset retry count on success
+          retryCountRef.current = 0;
+
+          console.log('[callLogin] Token is valid, setting cookie', {
+            tokenLength: receivedToken.length,
+            timestamp: new Date().toISOString()
+          });
+
+          // Token is valid - proceed with setting cookie
+          setTokenCookie("token", receivedToken, {
             expires: 7, // 7 days
             path: '/',
             sameSite: 'strict',
             secure: process.env.NODE_ENV === 'production',
           });
           saveJsonItemToLocalStorage("userInformation", decryptedData?.data);
+
+          console.log('[callLogin] SUCCESS! Redirecting to dashboard', {
+            userId: decryptedData?.data.id,
+            email: decryptedData?.data.email,
+            timestamp: new Date().toISOString()
+          });
 
           // Navigate immediately with replace to prevent back navigation issues
           router.replace("/dashboard");
@@ -139,9 +264,9 @@ const SelectBusinessForm = () => {
             throw new Error(decryptedData.error?.message || "Failed to process business selection");
           }
         }
-      } else if (data?.response?.data?.response) {
+      } else if (data && 'response' in data && (data as any).response?.data?.response) {
         // Handle error response format
-        const decryptedData = decryptPayload(data.response.data.response);
+        const decryptedData = decryptPayload((data as any).response.data.response);
         if (decryptedData?.error) {
           const wasAuthError = await handleAuthenticationError(decryptedData.error);
           if (!wasAuthError) {

@@ -1,7 +1,7 @@
 'use client';
 import { getPaymentByBusiness, getPaymentDetails } from '@/app/api/controllers/dashboard/payment';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
@@ -23,16 +23,6 @@ interface PaymentCategory {
   payments: PaymentItem[];
 }
 
-// Global cache for payments data to persist across status/page switches
-const globalPaymentsCache = new Map<string, {
-  items: any,
-  timestamp: number,
-  totalPages: number,
-  totalItems: number,
-  currentPage: number
-}>();
-const CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
-
 const usePayment = (
   filterType: number,
   startDate?: string,
@@ -41,21 +31,13 @@ const usePayment = (
 ) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage("business");
+  const queryClient = useQueryClient();
 
   const getAllPayments = async ({ queryKey }: { queryKey: any }) => {
     const [
       _key,
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ] = queryKey;
-
-    // Create cache key
-    const cacheKey = `payments_${tableStatus}_${filterType}_${startDate}_${endDate}_page_${page}`;
-
-    // Check cache first
-    const cached = globalPaymentsCache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
-      return cached.items;
-    }
 
     try {
       // Fetch payment categories
@@ -91,64 +73,53 @@ const usePayment = (
         details: detailsItems,
       };
 
-      // Calculate pagination info and cache
-      const totalCount = detailsItems?.totalCount || detailsItems?.length || 0;
-      const totalPages = Math.ceil(totalCount / rowsPerPage);
-
-      globalPaymentsCache.set(cacheKey, {
-        items: result,
-        timestamp: Date.now(),
-        totalPages,
-        totalItems: totalCount,
-        currentPage: page
-      });
-
       return result;
     } catch (error) {
       return { categories: [], details: [] };
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery<any>({
     queryKey: [
       "payments",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
     ],
     queryFn: getAllPayments,
-    
+
       ...fetchQueryConfig(options),
       refetchOnWindowFocus: false,
-      staleTime: 0,
+      refetchOnMount: false,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
       enabled: options?.enabled !== false,
-    
+
   });
 
-  // Function to clear cache for current filters
+  // Function to invalidate cache for current filters using React Query
   const clearCache = () => {
-    const keysToDelete: string[] = [];
-    globalPaymentsCache.forEach((_, key) => {
-      if (key.includes(`payments_${tableStatus}_${filterType}`)) {
-        keysToDelete.push(key);
+    queryClient.invalidateQueries({
+      queryKey: ["payments"],
+      predicate: (query) => {
+        const queryKey = query.queryKey as any[];
+        return queryKey[0] === "payments" &&
+               queryKey[1]?.tableStatus === tableStatus &&
+               queryKey[1]?.filterType === filterType;
       }
     });
-    keysToDelete.forEach(key => globalPaymentsCache.delete(key));
   };
 
-  // Function to clear all payments cache
+  // Function to invalidate all payments cache using React Query
   const clearAllCache = () => {
-    const keysToDelete: string[] = [];
-    globalPaymentsCache.forEach((_, key) => {
-      if (key.startsWith('payments_')) {
-        keysToDelete.push(key);
-      }
+    queryClient.invalidateQueries({
+      queryKey: ["payments"]
     });
-    keysToDelete.forEach(key => globalPaymentsCache.delete(key));
   };
 
   return {
     categories: data?.categories || [],
     details: data?.details || [],
     isLoading,
+    isFetching,
     isError,
     refetch,
     clearCache,
@@ -156,25 +127,21 @@ const usePayment = (
   };
 };
 
-// Export cache utilities for external use
+// Export cache utilities for external use with React Query
 export const paymentsCacheUtils = {
-  clearAll: () => {
-    const keysToDelete: string[] = [];
-    globalPaymentsCache.forEach((_, key) => {
-      if (key.startsWith('payments_')) {
-        keysToDelete.push(key);
-      }
+  clearAll: (queryClient: any) => {
+    queryClient.invalidateQueries({
+      queryKey: ["payments"]
     });
-    keysToDelete.forEach(key => globalPaymentsCache.delete(key));
   },
-  invalidateStatus: (status: string) => {
-    const keysToDelete: string[] = [];
-    globalPaymentsCache.forEach((_, key) => {
-      if (key.includes(`payments_${status}_`)) {
-        keysToDelete.push(key);
+  invalidateStatus: (queryClient: any, status: string) => {
+    queryClient.invalidateQueries({
+      queryKey: ["payments"],
+      predicate: (query: any) => {
+        const queryKey = query.queryKey as any[];
+        return queryKey[0] === "payments" && queryKey[1]?.tableStatus === status;
       }
     });
-    keysToDelete.forEach(key => globalPaymentsCache.delete(key));
   }
 };
 

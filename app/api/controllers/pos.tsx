@@ -3,6 +3,15 @@ import api, { handleError } from "../apiService";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
 
 // Type definitions for POS Menu response
+export interface POSVariety {
+  id: string;
+  unit: string;
+  name?: string;
+  description?: string;
+  price: number;
+  isAvailable: boolean;
+}
+
 export interface POSMenuItem {
   id: string;
   itemName: string;
@@ -11,6 +20,8 @@ export interface POSMenuItem {
   currency: string;
   isAvailable: boolean;
   hasVariety: boolean;
+  varieties?: POSVariety[] | null;
+  image?: string;
 }
 
 export interface POSMenu {

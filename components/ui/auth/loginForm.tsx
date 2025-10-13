@@ -9,6 +9,7 @@ import {
   saveJsonItemToLocalStorage,
   setTokenCookie,
   getTokenCookie,
+  getJsonItemFromLocalStorage,
 } from "@/lib/utils";
 import { Spacer } from "@nextui-org/react";
 import Link from "next/link";
@@ -118,6 +119,23 @@ const LoginForm = () => {
       // Persist loginDetails to sessionStorage to survive page navigation
       saveJsonItemToLocalStorage("loginDetails", loginFormData);
       setLoginDetails(loginFormData);
+
+      console.log('[LoginForm] Saved loginDetails to localStorage', {
+        email: loginFormData.email,
+        hasPassword: !!loginFormData.password,
+        timestamp: new Date().toISOString()
+      });
+
+      // Verify loginDetails persistence
+      const verifyLoginDetails = getJsonItemFromLocalStorage("loginDetails");
+      if (!verifyLoginDetails) {
+        console.error("[LoginForm] WARNING: loginDetails not found in localStorage after saving!");
+      } else {
+        console.log('[LoginForm] Verified loginDetails in localStorage:', {
+          email: verifyLoginDetails.email,
+          hasPassword: !!verifyLoginDetails.password
+        });
+      }
 
       // Verify token cookie was actually set
       const cookieVerified = getTokenCookie("token");
