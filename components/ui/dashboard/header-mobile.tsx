@@ -12,6 +12,7 @@ import { FiLogOut } from 'react-icons/fi';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
 import { SideNavItem } from './types';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
 
 type MenuItemWithSubMenuProps = {
   item: SideNavItem;
@@ -40,11 +41,17 @@ const sidebar = {
 const HeaderMobile = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const { role } = usePermission();
 
   const pathname = usePathname();
   const containerRef = useRef(null);
   const { height } = useDimensions(containerRef);
   const [isOpenClass, toggleOpen] = useCycle(false, true);
+
+  // Hide mobile menu for POS users (role === 1)
+  if (role === 1) {
+    return null;
+  }
 
   return (
     <motion.nav

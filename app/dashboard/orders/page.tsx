@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState } from "react";
 
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
@@ -12,7 +12,7 @@ import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useDateFilter from "@/hooks/useDateFilter";
 import { Chip } from "@nextui-org/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
@@ -22,7 +22,6 @@ import CustomPagination from "@/components/ui/dashboard/settings/BillingsCompone
 
 const OrdersContent: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const {
     categories,
@@ -52,23 +51,12 @@ const OrdersContent: React.FC = () => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  // Check if user came from POS page
-  const isFromPOS = searchParams.get('from') === 'pos';
-
   // Detect if user is POS user (staff role)
   const isPOSUser = role === 1;
 
-  // Debug log for POS user detection (can be removed in production)
-  // console.log('Orders page user detection:', {
-  //   role,
-  //   isPOSUser,
-  //   isFromPOS,
-  //   willRouteToPOS: isPOSUser || isFromPOS
-  // });
-
   // Handle create order click with conditional routing
   const handleCreateOrderClick = () => {
-    if (isPOSUser || isFromPOS) {
+    if (isPOSUser) {
       router.push('/pos');
     } else {
       router.push('/dashboard/orders/place-order');
@@ -116,12 +104,11 @@ const OrdersContent: React.FC = () => {
     }
   };
 
-  // Check if we already know the table is empty (categories count is 0)
-  const hasEmptyData = categories && categories.length === 0;
-
-  // Only show loading spinner if we're loading AND we don't yet know it's empty
-  // Skip loading for empty state to show illustration immediately
-  if (isLoading && !hasEmptyData) return <CustomLoading />;
+  // Show loading during initial load (when loading and no data yet)
+  // Skip loading for empty state refetches to show illustration immediately
+  if (isLoading && categories.length === 0) {
+    return <CustomLoading />;
+  }
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (
@@ -176,8 +163,8 @@ const OrdersContent: React.FC = () => {
             >
               <div className="flex gap-2 items-center justify-center">
                 <IoAddCircleOutline className="text-[22px]" />
-                <p className="hidden sm:inline">{(isPOSUser || isFromPOS) ? (isFromPOS ? "Back to POS" : "Create Order") : "Create order"}</p>
-                <p className="sm:hidden">{(isPOSUser || isFromPOS) ? (isFromPOS ? "POS" : "Order") : "Create order"}</p>
+                <p className="hidden sm:inline">Create Order</p>
+                <p className="sm:hidden">Create Order</p>
               </div>
             </CustomButton>
           )}
@@ -252,7 +239,9 @@ const OrdersContent: React.FC = () => {
           )} */}
         </>
       ) : (
-        <CreateOrder />
+        // <CreateOrder />"
+        // ""
+        ""
       )}
       {datePickerModal}
     </>
@@ -260,11 +249,7 @@ const OrdersContent: React.FC = () => {
 };
 
 const Orders: React.FC = () => {
-  return (
-    <Suspense fallback={<CustomLoading />}>
-      <OrdersContent />
-    </Suspense>
-  );
+  return <OrdersContent />;
 };
 
 export default Orders;

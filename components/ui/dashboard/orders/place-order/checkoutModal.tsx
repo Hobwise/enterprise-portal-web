@@ -117,7 +117,7 @@ const CheckoutModal = ({
   const [screen, setScreen] = useState(1);
   const [mobileSubStep, setMobileSubStep] = useState<'1A' | '1B' | '1C'>('1A');
 
-  const [qr, setQr] = useState([]);
+  const [qr, setQr] = useState<{ id: string; label: string; name?: string; value?: string }[]>([]);
   const [order, setOrder] = useState<Order>({
     placedByName: orderDetails?.placedByName || "",
     placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
@@ -1195,13 +1195,25 @@ const CheckoutModal = ({
   };
 
   useEffect(() => {
-    setOrder({
-      placedByName: orderDetails?.placedByName || "",
-      placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
-      quickResponseID: orderDetails?.quickResponseID || orderDetails?.qrReference || "",
-      comment: orderDetails?.comment || "",
-    });
-  }, [orderDetails]);
+    if (orderDetails) {
+      // If we have a qrReference (table name), find the corresponding ID from the qr array
+      let tableId = orderDetails?.quickResponseID || "";
+
+      // If quickResponseID is empty or is actually a table name, find the ID
+      if (!tableId || qr.some((table: any) => table.label === tableId)) {
+        const tableName = orderDetails?.qrReference || tableId;
+        const matchingTable = qr.find((table: any) => table.label === tableName);
+        tableId = matchingTable?.id || tableId;
+      }
+
+      setOrder({
+        placedByName: orderDetails?.placedByName || "",
+        placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
+        quickResponseID: tableId,
+        comment: orderDetails?.comment || "",
+      });
+    }
+  }, [orderDetails, qr]);
   useEffect(() => {
     getQrID();
   }, []);
@@ -1586,7 +1598,7 @@ const CheckoutModal = ({
                           label="Select a table"
                           placeholder="Select table"
                           name="quickResponseID"
-                          selectedKeys={[order?.quickResponseID]}
+                          selectedKeys={order?.quickResponseID ? [order.quickResponseID] : []}
                           onChange={handleInputChange}
                           value={order.quickResponseID}
                           contents={qr}
@@ -1773,7 +1785,7 @@ const CheckoutModal = ({
                               placeholder="Choose a table"
                               isRequired={true}
                               name="quickResponseID"
-                              selectedKeys={[order?.quickResponseID]}
+                              selectedKeys={order?.quickResponseID ? [order.quickResponseID] : []}
                               onChange={handleInputChange}
                               value={order.quickResponseID}
                               contents={qr}

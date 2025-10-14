@@ -28,7 +28,6 @@ export const orderSchema = z.object({
   placedByPhoneNumber: z
     .string()
     .length(11, "Phone number must be 11 digits long")
-    .startsWith("0", "Phone number must start with 0")
     .refine((value) => /^\d+$/.test(value), {
       message: "Phone number must only contain digits",
     }),
@@ -39,7 +38,6 @@ export const orderSchemaUser = z.object({
   placedByPhoneNumber: z
     .string()
     .length(11, "Phone number must be 11 digits long")
-    .startsWith("0", "Phone number must start with 0")
     .refine((value) => /^\d+$/.test(value), {
       message: "Phone number must only contain digits",
     }),

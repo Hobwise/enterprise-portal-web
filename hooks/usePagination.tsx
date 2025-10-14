@@ -271,10 +271,19 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     } else if (currentData.length > 0) {
       // Append new data to accumulated data
       setAccumulatedData(prev => {
-        // Avoid duplicates by checking IDs
-        const existingIds = new Set(prev.map((item: any) => item.id || item.itemID));
-        const newItems = currentData.filter((item: any) => !existingIds.has(item.id || item.itemID));
-        return [...prev, ...newItems];
+        // Avoid duplicates by checking IDs (support multiple ID field names)
+        const existingIds = new Set(
+          prev.map((item: any) => item.id || item.itemID || item.ID || item._id)
+        );
+        const newItems = currentData.filter(
+          (item: any) => !existingIds.has(item.id || item.itemID || item.ID || item._id)
+        );
+
+        // Only append if we have new items to avoid unnecessary re-renders
+        if (newItems.length > 0) {
+          return [...prev, ...newItems];
+        }
+        return prev;
       });
       setIsLoadingMore(false);
       isLoadingRef.current = false; // Reset ref to allow next load
@@ -295,12 +304,13 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
         if (entries[0].isIntersecting && paginationInfo.hasNext && !isLoadingRef.current) {
           isLoadingRef.current = true; // Set ref immediately to block concurrent requests
           setIsLoadingMore(true); // Update UI state
-          setPage(page + 1); // Trigger API call
+          // Use functional update to avoid stale closure
+          setPage((currentPage) => currentPage + 1); // Trigger API call
         }
       },
       {
         root: null,
-        rootMargin: '100px', // Start loading 100px before reaching bottom
+        rootMargin: '200px', // Start loading 200px before reaching bottom (increased for better UX)
         threshold: 0.1
       }
     );
@@ -310,14 +320,23 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     return () => {
       observer.disconnect();
     };
-  }, [isMobile, paginationInfo.hasNext, page, setPage]);
+  }, [isMobile, paginationInfo.hasNext, setPage]); // Removed 'page' to prevent observer recreation
 
   // Reset accumulated data when filters change on mobile
   useEffect(() => {
     if (isMobile && page === 1) {
       setAccumulatedData([]);
+      isLoadingRef.current = false; // Reset loading state
     }
   }, [isMobile, filterValue]);
+
+  // Additional safeguard: Reset loading state when we reach the last page
+  useEffect(() => {
+    if (isMobile && !paginationInfo.hasNext && isLoadingRef.current) {
+      isLoadingRef.current = false;
+      setIsLoadingMore(false);
+    }
+  }, [isMobile, paginationInfo.hasNext]);
 
   // Memoize the bottomContent - different for mobile vs desktop
   const bottomContent = useMemo(
