@@ -153,15 +153,15 @@ const Profile = () => {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
       <div>
         <h2 className="font-semibold text-[#101928]">Personal information</h2>
         <p className="text-sm text-[#667185]">
           See your full personal information
         </p>
       </div>
-      <div className="border border-secondaryGrey rounded-[10px] p-4 space-y-8">
-        <div className="flex items-center justify-between w-full">
+      <div className="border border-secondaryGrey rounded-[10px] p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 lg:space-y-8">
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
           {userFormData?.image ? (
             <div className="relative">
               <Avatar
@@ -277,11 +277,11 @@ const Profile = () => {
               Edit
             </CustomButton>
           ) : (
-            <div className="flex">
+            <div className="flex flex-wrap gap-2">
               <CustomButton
                 disableRipple
                 loading={updateUserMutation.isLoading}
-                className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
+                className="flex rounded-[10px] text-xs p-2 h-[30px] text-white"
                 onClick={() => updateUserMutation.mutate()}
               >
                 <IoCheckmarkCircleOutline className="text-base" />
@@ -306,16 +306,16 @@ const Profile = () => {
           </div>
           <Divider />
         </div>
-        <div className="grid grid-cols-2 gap-x-6 gap-y-3 ">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 ">
           {!isEditing ? (
             <>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1" />
-                <div className="flex flex-col">
+                <MdLockOutline className="mt-1 flex-shrink-0" />
+                <div className="flex flex-col min-w-0">
                   <span className="text-sm">First Name</span>
                   <span
                     className={cn(
-                      "text-sm",
+                      "text-sm break-words",
                       data?.firstName.length > 0 ? "text-black" : "text-red-500"
                     )}
                   >
@@ -326,12 +326,12 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1" />
-                <div className="flex flex-col">
+                <MdLockOutline className="mt-1 flex-shrink-0" />
+                <div className="flex flex-col min-w-0">
                   <span className="text-sm">Last Name</span>
                   <span
                     className={cn(
-                      "text-sm",
+                      "text-sm break-words",
                       data?.lastName.length > 0 ? "text-black" : "text-red-500"
                     )}
                   >
@@ -340,12 +340,12 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1" />
-                <div className="flex flex-col">
+                <MdLockOutline className="mt-1 flex-shrink-0" />
+                <div className="flex flex-col min-w-0">
                   <span className="text-sm">Email</span>
                   <span
                     className={cn(
-                      "text-sm",
+                      "text-sm break-words",
                       data?.email.length > 0 ? "text-black" : "text-red-500"
                     )}
                   >
@@ -354,12 +354,12 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
+                <div className="h-4 w-4 flex-shrink-0"></div>
+                <div className="flex flex-col min-w-0">
                   <span className="text-sm">Phone No</span>
                   <span
                     className={cn(
-                      "text-sm",
+                      "text-sm break-words",
                       data?.phoneNumber?.length > 0
                         ? "text-black"
                         : "text-red-500"
@@ -372,12 +372,12 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
+                <div className="h-4 w-4 flex-shrink-0"></div>
+                <div className="flex flex-col min-w-0">
                   <span className="text-sm">Username</span>
                   <span
                     className={cn(
-                      "text-sm",
+                      "text-sm break-words",
                       data?.userName?.length > 0 ? "text-black" : "text-red-500"
                     )}
                   >
@@ -388,12 +388,12 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
+                <div className="h-4 w-4 flex-shrink-0"></div>
+                <div className="flex flex-col min-w-0">
                   <span className="text-sm">Gender</span>
                   <span
                     className={cn(
-                      "text-sm",
+                      "text-sm break-words",
                       !Number.isNaN(data?.gender)
                         ? "text-black"
                         : "text-red-500"
@@ -409,7 +409,7 @@ const Profile = () => {
           ) : (
             <>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-4/5">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
                     name="firstName"
@@ -422,7 +422,7 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-4/5">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
                     name="lastName"
@@ -436,7 +436,7 @@ const Profile = () => {
                 </div>
               </div>
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-4/5">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
                     name="email"
@@ -451,7 +451,7 @@ const Profile = () => {
               </div>
 
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-4/5">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
                     name="phoneNumber"
@@ -465,7 +465,7 @@ const Profile = () => {
               </div>
 
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-4/5">
+                <div className="flex flex-col w-full">
                   <CustomInput
                     type="text"
                     name="userName"
@@ -479,7 +479,7 @@ const Profile = () => {
               </div>
 
               <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-4/5">
+                <div className="flex flex-col w-full">
                   <SelectInput
                     type="text"
                     name="gender"

@@ -18,9 +18,9 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
         Take a look at your polices and the new policy to see what is covered
       </p>
       <Spacer y={8} />
-      <section className="grid grid-cols-12 gap-4">
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         <SettingsSidebar />
-        <div className="col-span-9 border border-secondaryGrey rounded-lg p-5">
+        <div className="col-span-1 lg:col-span-9 border border-secondaryGrey rounded-lg p-5">
           {children}
         </div>
       </section>

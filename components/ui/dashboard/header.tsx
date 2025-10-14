@@ -210,10 +210,12 @@ const Header = ({ ispos }: any) => {
         )}
         <div className={`flex h-[64px] bg-white text-black ${ispos ? "": "border-b"} border-primaryGrey items-center justify-between px-6`}>
           {ispos && (
-            <CompanyLogo
-              textColor="text-black font-lexend text-[28px] font-[600]"
-              containerClass="flex gap-2 items-center"
-            />
+            <Link href="/" className="cursor-pointer">
+              <CompanyLogo
+                textColor="text-black font-lexend text-[28px] font-[600]"
+                containerClass="flex gap-2 items-center"
+              />
+            </Link>
           )}
         {
           !ispos && (

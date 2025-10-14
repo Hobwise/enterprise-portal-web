@@ -244,8 +244,9 @@ const MenuList = () => {
   const [selectedMenu, setSelectedMenu] = useState<Item>();
   const [orderDetails, setOrderDetails] = useState([]);
 
-  // Business information
+  // Business and user information
   const businessInformation = getJsonItemFromLocalStorage('business');
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
 
   // Function to fetch first item with priority (for initial load only)
   const fetchFirstItemPriority = async (sectionId: string) => {
@@ -537,9 +538,11 @@ const MenuList = () => {
 
     setLoading(false);
     if (response?.data?.isSuccessful) {
-      const updatedArray = response?.data?.data.orderDetails.map((item: any) => {
+      const orderData = response?.data?.data;
+
+      const updatedArray = orderData.orderDetails.map((item: any) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
-        
+
         return {
           ...rest,
           id: itemID,
@@ -548,7 +551,17 @@ const MenuList = () => {
           packingCost: item.packingCost,
         };
       });
-      setOrderDetails(response?.data?.data);
+
+      // Transform order data to ensure quickResponseID is populated
+      // API may return qrReference instead of quickResponseID
+      const transformedOrderData = {
+        ...orderData,
+        quickResponseID: orderData.quickResponseID || orderData.qrReference || order.qrReference,
+        placedByName: orderData.placedByName || order.placedByName || '',
+        placedByPhoneNumber: orderData.placedByPhoneNumber || order.placedByPhoneNumber || '',
+      };
+
+      setOrderDetails(transformedOrderData);
       setSelectedItems(() => updatedArray);
 
       clearItemLocalStorage("order");
@@ -1104,6 +1117,8 @@ const MenuList = () => {
           id={order?.id}
           orderDetails={orderDetails}
           handlePackingCost={handlePackingCost}
+          businessId={businessInformation?.[0]?.businessId}
+          cooperateID={userInformation?.cooperateID}
         />
         <ViewModal
           handleCardClick={handleCardClick}

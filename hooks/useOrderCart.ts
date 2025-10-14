@@ -109,7 +109,7 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
         varieties: item.varieties || null,
         count: 1,
         packingCost: item.packingCost || 0,
-        isPacked: false,
+        isPacked: item.isPacked || false,
       };
       setOrderItems((prev) => [...prev, newItem]);
     }

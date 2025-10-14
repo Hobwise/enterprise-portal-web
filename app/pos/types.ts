@@ -23,10 +23,14 @@ export type Variety = {
   name?: string;
   description?: string;
   price: number;
-  isAvailable: boolean;
+  currency?: string;
+  isAvailable?: boolean;
+  itemID?: string;
+  menuID?: string;
 };
 
 export type MenuItem = {
+  [x: string]: ReactNode;
   id: string;
   itemName: string;
   itemDescription?: string;

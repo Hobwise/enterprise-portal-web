@@ -141,13 +141,6 @@ const POSContent = () => {
     }
 
     addItemToCart(item);
-
-    notify({
-      title: 'Added to cart',
-      text: `${item.itemName} added to cart${includePacking ? ' with packing' : ''}`,
-      type: 'success'
-    });
-
     closeItemModal();
   };
 
@@ -157,28 +150,19 @@ const POSContent = () => {
       // Adding a variety
       const varietyItem: MenuItem = {
         ...baseItem,
+        uniqueKey: undefined, // Prevent inheriting base uniqueKey to ensure variety.id is used
         id: variety.id,
         itemName: `${baseItem.itemName} (${variety.unit || variety.name || 'Variety'})`,
         price: variety.price,
+        currency: variety.currency || baseItem.currency,
         isVariety: true,
       };
 
       addItemToCart(varietyItem);
-
-      notify({
-        title: 'Added to cart',
-        text: `${varietyItem.itemName} added to cart`,
-        type: 'success'
-      });
     } else {
-      // Adding base item
-      addItemToCart(baseItem);
-
-      notify({
-        title: 'Added to cart',
-        text: `${baseItem.itemName} (Base) added to cart`,
-        type: 'success'
-      });
+      // Adding base item with packing if specified
+      const itemToAdd = includePacking ? { ...baseItem, isPacked: true } : baseItem;
+      addItemToCart(itemToAdd);
     }
   };
 
@@ -186,12 +170,6 @@ const POSContent = () => {
   const handleRemoveVarietyFromCart = (itemId: string) => {
     // Find the item in cart and decrement or remove
     handleDecrement(itemId);
-
-    notify({
-      title: 'Removed from cart',
-      text: 'Item removed from cart',
-      type: 'info'
-    });
   };
 
   // Load existing order when in add-items mode
@@ -221,7 +199,8 @@ const POSContent = () => {
               if (menuItem) {
                 const transformedItem = {
                   ...menuItem,
-                  id: item.itemID,
+                  id: menuItem.uniqueKey || item.itemID,
+                  itemID: item.itemID,
                   itemName: item.itemName || menuItem.itemName,
                   menuName: item.menuName || menuItem.menuName,
                   price: item.unitPrice,
@@ -549,9 +528,10 @@ const POSContent = () => {
           <ItemDetailsModal
             isOpen={isItemModalOpen}
             item={selectedItem}
+            orderItems={orderItems}
             onClose={closeItemModal}
-            onAddToCart={handleAddItemFromModal}
-            onOpenVarietyModal={openVarietyModal}
+            onAddToCart={handleAddVarietyToCart}
+            onRemoveFromCart={handleRemoveVarietyFromCart}
           />
 
           {/* Variety Selection Modal */}

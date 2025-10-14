@@ -47,6 +47,7 @@ import InvoiceModal from './invoice';
 import UpdateOrderModal from './UpdateOrderModal';
 import CheckoutModal from './place-order/checkoutModal';
 import { completeOrder, getOrder } from '@/app/api/controllers/dashboard/orders';
+import useOrderDetails from '@/hooks/cachedEndpoints/useOrderDetails';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { MdKeyboardArrowRight } from 'react-icons/md';
@@ -422,14 +423,31 @@ const OrdersList: React.FC<OrdersListProps> = ({
     });
   };
 
+  // Fetch full order details for CheckoutModal
+  const {
+    orderDetails: fullOrderDetails,
+    isLoading: isLoadingFullOrderDetails
+  } = useOrderDetails(singleOrder?.id, {
+    enabled: !!singleOrder?.id && isOpenCheckoutModal
+  });
+
+      console.log(orderDetails)
+
+
   // Transform order data to match CheckoutModal expectations (qrReference -> quickResponseID)
   const transformedOrderDetails = React.useMemo(() => {
     if (!singleOrder) return null;
+
+    // Use full order details if available (includes qrReference)
+    const sourceData = fullOrderDetails || singleOrder;
+
+    console.log(sourceData)
+
     return {
-      ...singleOrder,
-      quickResponseID: singleOrder.qrReference || singleOrder.quickResponseID,
+      ...sourceData,
+      quickResponseID: sourceData.qrReference || sourceData.quickResponseID || '',
     };
-  }, [singleOrder]);
+  }, [singleOrder, fullOrderDetails]);
 
   // Handle table row click based on order status
   const handleRowClick = (order: OrderItem) => {
