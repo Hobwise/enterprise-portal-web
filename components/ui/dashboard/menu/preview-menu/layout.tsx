@@ -2,26 +2,27 @@
 import {
   createMenuConfiguration,
   uploadFile,
-} from '@/app/api/controllers/dashboard/menu';
-import { CustomButton } from '@/components/customButton';
-import { useGlobalContext } from '@/hooks/globalProvider';
+  getMenuConfiguration,
+} from "@/app/api/controllers/dashboard/menu";
+import { CustomButton } from "@/components/customButton";
+import { useGlobalContext } from "@/hooks/globalProvider";
 import {
   SmallLoader,
   THREEMB,
   getJsonItemFromLocalStorage,
   imageCompressOptions,
   notify,
-} from '@/lib/utils';
-import { Chip, Divider, Spacer, Switch } from '@nextui-org/react';
-import imageCompression from 'browser-image-compression';
-import React, { useEffect, useState } from 'react';
-import { SketchPicker } from 'react-color';
-import toast from 'react-hot-toast';
-import { FaList } from 'react-icons/fa';
-import { FaSquare } from 'react-icons/fa6';
-import { MdOutlineAddPhotoAlternate } from 'react-icons/md';
-import { PiSquaresFourFill } from 'react-icons/pi';
-import { CheckIcon } from '../../orders/place-order/data';
+} from "@/lib/utils";
+import { Chip, Divider, Spacer, Switch } from "@nextui-org/react";
+import imageCompression from "browser-image-compression";
+import React, { useEffect, useState } from "react";
+import { SketchPicker } from "react-color";
+import toast from "react-hot-toast";
+import { FaList } from "react-icons/fa";
+import { FaSquare } from "react-icons/fa6";
+import { MdOutlineAddPhotoAlternate } from "react-icons/md";
+import { PiSquaresFourFill } from "react-icons/pi";
+import { CheckIcon } from "../../orders/place-order/data";
 
 interface Column {
   name: string;
@@ -29,7 +30,7 @@ interface Column {
 }
 
 const Layout: React.FC = () => {
-  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const {
     activeTile,
     handleListItemClick,
@@ -48,8 +49,9 @@ const Layout: React.FC = () => {
   } = useGlobalContext();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [imageError, setImageError] = useState('');
+  const [imageError, setImageError] = useState("");
   const [isLoadingImage, setIsLoadingImage] = useState(false);
+  const [savedConfig, setSavedConfig] = useState<any>(null);
 
   const handleChangeColor = (color: any) => {
     setBackgroundColor(color.hex);
@@ -71,16 +73,33 @@ const Layout: React.FC = () => {
   const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
 
+    console.log("=== SUBMIT START ===");
+    console.log("Submit - selectedImage:", selectedImage);
+    console.log("Submit - imageReference:", imageReference);
+    console.log("Submit - savedConfig:", savedConfig);
+    console.log("Submit - savedConfig.imageRef:", savedConfig?.imageRef);
+
     setIsLoading(true);
+
+    // Determine the final image reference to use
+    // Priority:
+    // 1. imageReference - if user just uploaded a new image in this session
+    // 2. savedConfig.imageRef - the stored reference ID from previous upload
+    // 3. empty string
+    let finalImageRef = imageReference || savedConfig?.imageRef || "";
+
+    console.log("Submit - finalImageRef to send:", finalImageRef);
 
     const payload = {
       layout: convertActiveTile(),
-      backgroudStyle: imageReference ? 0 : 1,
+      backgroudStyle: finalImageRef ? 0 : 1,
       useBackground: isSelectedPreview,
       backgroundColour: backgroundColor || "",
-      imageRef: imageReference || "",
+      imageRef: finalImageRef || "",
       textColour: selectedTextColor || "#000",
     };
+
+    console.log("Submit - payload:", payload);
 
     const data = await createMenuConfiguration(
       businessInformation[0]?.businessId,
@@ -91,6 +110,37 @@ const Layout: React.FC = () => {
 
     if (data?.data?.isSuccessful) {
       toast.success("Changes saved");
+      // Update saved config with the new data
+      const updatedConfig = await getMenuConfiguration(
+        businessInformation[0]?.businessId
+      );
+      if (updatedConfig?.data?.isSuccessful) {
+        const newConfig = updatedConfig.data.data;
+        console.log("=== AFTER SAVE - FETCHED CONFIG ===");
+        console.log("After save - fetched config:", newConfig);
+        console.log("After save - fetched imageRef:", newConfig?.imageRef);
+        console.log("After save - current selectedImage:", selectedImage);
+        console.log("After save - current imageReference:", imageReference);
+
+        // Ensure imageRef is preserved - use the one we just saved if API doesn't return it
+        const configToSave = {
+          ...newConfig,
+          imageRef: newConfig?.imageRef || finalImageRef
+        };
+
+        console.log("After save - config to save:", configToSave);
+        setSavedConfig(configToSave);
+
+        // Preserve the imageReference in global context
+        if (finalImageRef) {
+          setImageReference(finalImageRef);
+          console.log("After save - preserved imageReference in global context:", finalImageRef);
+        }
+
+        // IMPORTANT: Don't call fetchMenuConfig here as it might reset the selectedImage
+        // The image is already in the state, we just need to preserve it
+        console.log("After save - selectedImage should still be:", selectedImage);
+      }
     } else if (data?.data?.error) {
       notify({
         title: "Error!",
@@ -100,6 +150,7 @@ const Layout: React.FC = () => {
     }
   };
   const menuFileUpload = async (formData: FormData, file) => {
+    console.log("=== IMAGE UPLOAD START ===");
     setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
     setIsLoadingImage(false);
@@ -107,11 +158,32 @@ const Layout: React.FC = () => {
     if (data?.data?.isSuccessful) {
       // Create blob URL for immediate preview
       const blobUrl = URL.createObjectURL(file);
+      console.log("Image upload - created blob URL:", blobUrl);
       setSelectedImage(blobUrl);
-      setImageReference(data.data.data);
-      // Allow both color and image to be selected
+
+      const imageRef = data.data.data;
+      console.log("Image upload - received imageRef from API:", imageRef);
+      setImageReference(imageRef);
+
+      // Store imageRef in localStorage for persistence across page reloads
+      const storageKey = `menuImageRef_${businessInformation[0]?.businessId}`;
+      localStorage.setItem(storageKey, imageRef);
+      console.log("Image upload - stored imageRef in localStorage:", storageKey, imageRef);
+
+      // Update savedConfig with the new imageRef
+      const updatedConfig = {
+        ...savedConfig,
+        imageRef: imageRef,
+      };
+      console.log("Image upload - updating savedConfig:", updatedConfig);
+      setSavedConfig(updatedConfig);
+
+      console.log("=== IMAGE UPLOAD COMPLETE ===");
+      console.log("Image upload - selectedImage is now:", blobUrl);
+      console.log("Image upload - imageReference is now:", imageRef);
     } else if (data?.data?.error) {
       setImageError(data?.data?.error);
+      console.log("Image upload - error:", data?.data?.error);
     }
   };
 
@@ -192,7 +264,41 @@ const Layout: React.FC = () => {
     },
   ];
   useEffect(() => {
-    fetchMenuConfig();
+    const loadConfig = async () => {
+      console.log("=== INITIAL LOAD ===");
+
+      // Check localStorage for imageRef
+      const storageKey = `menuImageRef_${businessInformation[0]?.businessId}`;
+      const storedImageRef = localStorage.getItem(storageKey);
+      console.log("Initial load - checking localStorage for imageRef:", storageKey, storedImageRef);
+
+      // Fetch config data to store locally
+      const configData = await getMenuConfiguration(
+        businessInformation[0]?.businessId
+      );
+      if (configData?.data?.isSuccessful) {
+        console.log("Initial load - config data from API:", configData.data.data);
+
+        // Merge with stored imageRef if available
+        const configToSave = {
+          ...configData.data.data,
+          imageRef: storedImageRef || configData.data.data.imageRef || ''
+        };
+        console.log("Initial load - merged config with localStorage imageRef:", configToSave);
+        setSavedConfig(configToSave);
+
+        // Set imageReference in global context if we have it
+        if (storedImageRef) {
+          setImageReference(storedImageRef);
+          console.log("Initial load - restored imageReference from localStorage:", storedImageRef);
+        }
+      }
+
+      // Also call the global fetch - this will set selectedImage from API
+      await fetchMenuConfig();
+      console.log("Initial load - after fetchMenuConfig");
+    };
+    loadConfig();
   }, []);
 
   // Cleanup blob URLs on unmount

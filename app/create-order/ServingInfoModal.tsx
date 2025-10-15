@@ -2,7 +2,7 @@
 import { CustomButton } from "@/components/customButton";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomTextArea } from "@/components/customTextArea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoArrowBack } from "react-icons/io5";
 import RestaurantBanner from "./RestaurantBanner";
@@ -49,6 +49,17 @@ const ServingInfoModal = ({
     phoneNumber: "",
     comment: "",
   });
+
+  // Reset form data when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        name: "",
+        phoneNumber: "",
+        comment: "",
+      });
+    }
+  }, [isOpen]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

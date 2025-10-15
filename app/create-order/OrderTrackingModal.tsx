@@ -16,7 +16,7 @@ interface OrderTrackingPageProps {
   orderStatus: "placed" | "accepted" | "preparing" | "served";
   estimatedTime?: string;
   onAddMoreItems: () => void;
-  onCheckout: () => void;
+  onCheckout: (updatedOrderData?: any) => void;
   businessName?: string;
   menuConfig?: {
     image?: string;
@@ -56,6 +56,12 @@ const OrderTrackingPage = ({
   const [orderData, setOrderData] = useState<any>(initialOrderData);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [previousStatus, setPreviousStatus] = useState<number | null>(null);
+
+  // Log the trackingId when component mounts or when it changes
+  useEffect(() => {
+    console.log("OrderTrackingModal - trackingId prop:", trackingId);
+    console.log("OrderTrackingModal - initialOrderData:", initialOrderData);
+  }, [trackingId, initialOrderData]);
 
   // Request notification permission on mount
   useEffect(() => {
@@ -115,7 +121,19 @@ const OrderTrackingPage = ({
         );
 
         if (response && response.data) {
-          const newOrderData = response.data;
+          let newOrderData = response.data;
+
+          // Extract the reference from orderDetails if available and not already present
+          if (newOrderData.orderDetails && newOrderData.orderDetails.length > 0) {
+            const orderID = newOrderData.orderDetails[0]?.orderID;
+            if (orderID && !newOrderData.reference) {
+              newOrderData = { ...newOrderData, reference: orderID };
+              console.log("Added reference field to polled orderData:", orderID);
+            }
+          }
+
+          console.log("Polled order data:", newOrderData);
+          console.log("Polled order data keys:", Object.keys(newOrderData));
           const newStatus = newOrderData.status;
 
           // Check if status has changed and show notification
@@ -644,7 +662,8 @@ const OrderTrackingPage = ({
           </CustomButton>
           <CustomButton
             onClick={() => {
-              onCheckout();
+              // Pass the updated order data (which includes reference) to parent
+              onCheckout(orderData);
             }}
             disabled={orderData?.status === 2 || orderData?.status === 1}
             style={

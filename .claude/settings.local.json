@@ -4,7 +4,8 @@
       "Bash(for file in create-order.tsx CartModal.tsx ServingInfoModal.tsx OrderTrackingModal.tsx ConfirmOrderModal.tsx viewMore.tsx)",
       "Bash(do echo \"=== $file ===\")",
       "Bash(grep:*)",
-      "Bash(done)"
+      "Bash(done)",
+      "Bash(git checkout:*)"
     ],
     "deny": [],
     "ask": []

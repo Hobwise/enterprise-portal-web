@@ -6,15 +6,14 @@ import { saveJsonItemToLocalStorage, saveToLocalStorage } from '@/lib/utils';
 import { Divider } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import noImage from '../../../public/assets/images/no-image.svg';
-import SplashScreen from '../splash-screen';
-import RestaurantBanner from "@/app/create-order/RestaurantBanner";
+import noImage from "../../../public/assets/images/no-image.svg";
 import useMenuConfig from "@/hooks/cachedEndpoints/useMenuConfiguration";
-import { useState } from 'react';
-import { IoClose } from 'react-icons/io5';
-import { MdOutlineRestaurantMenu } from 'react-icons/md';
-import { BiPackage } from 'react-icons/bi';
-import { IoCalendarOutline } from 'react-icons/io5';
+import { useState } from "react";
+import { IoClose } from "react-icons/io5";
+import { MdOutlineRestaurantMenu } from "react-icons/md";
+import { BiPackage } from "react-icons/bi";
+import { IoCalendarOutline } from "react-icons/io5";
+import RestaurantBanner from "@/app/create-order/RestaurantBanner";
 
 interface ReservationItem {
   reservationName: string;
@@ -36,14 +35,19 @@ const SelectReservationComponents = () => {
   const router = useRouter();
 
   // Check if we're in view-only mode
-  const viewOnlyStorageKey = `menuViewOnly_${businessId}_${cooperateID || 'default'}`;
+  const viewOnlyStorageKey = `menuViewOnly_${businessId}_${
+    cooperateID || "default"
+  }`;
   const [isViewOnlyMode, setIsViewOnlyMode] = useState(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       if (mode === "view") {
-        sessionStorage.setItem(viewOnlyStorageKey, 'true');
+        sessionStorage.setItem(viewOnlyStorageKey, "true");
         return true;
+      } else if (mode === null || mode === undefined) {
+        // If no mode param, check sessionStorage to preserve state
+        return sessionStorage.getItem(viewOnlyStorageKey) === "true";
       } else {
-        // Clear view-only mode when not in view mode
+        // If mode is explicitly something other than "view", clear it
         sessionStorage.removeItem(viewOnlyStorageKey);
         return false;
       }
@@ -59,29 +63,29 @@ const SelectReservationComponents = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+
   if (isError) {
     return (
-      <div className="min-h-screen w-full  bg-white">
-        <RestaurantBanner
-          businessName={businessName || ""}
-          menuConfig={menuConfig}
-          showMenuButton={true}
-          baseString=""
-        />
-        <div className="px-4">
-          <Error imageHeight={"h-22"} imageWidth={"w-22"} onClick={() => refetch()} />
+      <div className="min-h-screen w-full bg-white px-4 py-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-black">{businessName}</h1>
         </div>
+        <Error
+          imageHeight={"h-22"}
+          imageWidth={"w-22"}
+          onClick={() => refetch()}
+        />
       </div>
     );
   }
-
-  const baseString = menuConfig?.image
-    ? `data:image/jpeg;base64,${menuConfig.image}`
-    : "";
-
+  const baseString = "data:image/jpeg;base64,";
   return (
     <div className="min-h-screen w-full  bg-white">
-      {/* Restaurant Banner */}
+      {/* Header */}
       <RestaurantBanner
         businessName={businessName || ""}
         menuConfig={menuConfig}
@@ -89,21 +93,15 @@ const SelectReservationComponents = () => {
         onMenuClick={() => setIsMenuOpen(true)}
         baseString={baseString}
       />
-
       <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h2 className="text-xl sm:text-2xl text-black font-bold">Reservations</h2>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
-            Select a reservation to make a booking
-          </p>
-        </div>
-
         {/* Loading State - Skeleton */}
         {isLoading ? (
           <div className="space-y-3 sm:space-y-4">
             {[...Array(5)].map((_, index) => (
-              <div key={index} className="flex gap-3 sm:gap-4 animate-pulse p-2 sm:p-3">
+              <div
+                key={index}
+                className="flex gap-3 sm:gap-4 animate-pulse p-2 sm:p-3"
+              >
                 <div className="w-16 h-16 sm:w-[70px] sm:h-[60px] bg-gray-200 rounded-lg flex-shrink-0"></div>
                 <div className="flex-1 space-y-2">
                   <div className="h-4 sm:h-5 bg-gray-200 rounded w-3/4"></div>
@@ -134,7 +132,8 @@ const SelectReservationComponents = () => {
               No Reservations Available
             </h3>
             <p className="text-sm sm:text-base text-gray-600 text-center max-w-sm">
-              There are currently no reservations available for booking. Please check back later or contact the restaurant for more information.
+              There are currently no reservations available for booking. Please
+              check back later or contact the restaurant for more information.
             </p>
           </div>
         ) : (
@@ -205,7 +204,7 @@ const SelectReservationComponents = () => {
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-xl font-bold text-black">Menu</h2>
               <button
-                aria-label='Close menu'
+                aria-label="Close menu"
                 onClick={() => setIsMenuOpen(false)}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
@@ -219,12 +218,20 @@ const SelectReservationComponents = () => {
               <button
                 onClick={() => {
                   setIsMenuOpen(false);
-                  router.push(`/create-order?businessID=${businessId}&cooperateID=${cooperateID || ""}&businessName=${businessName}`);
+                  const modeParam = isViewOnlyMode ? "&mode=view" : "";
+                  router.push(
+                    `/create-order?businessID=${businessId}&cooperateID=${
+                      cooperateID || ""
+                    }&businessName=${businessName}${modeParam}`
+                  );
                 }}
                 className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left"
               >
                 <div className="p-2 bg-purple-50 rounded-lg">
-                  <MdOutlineRestaurantMenu className="w-6 h-6 text-primaryColor" />
+                  <MdOutlineRestaurantMenu
+                    className="w-6 h-6"
+                    style={textColorStyle}
+                  />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-black">View Menu</h3>
@@ -239,12 +246,16 @@ const SelectReservationComponents = () => {
                 <button
                   onClick={() => {
                     setIsMenuOpen(false);
-                    router.push(`/create-order?businessID=${businessId}&cooperateID=${cooperateID || ""}&businessName=${businessName}`);
+                    router.push(
+                      `/create-order?businessID=${businessId}&cooperateID=${
+                        cooperateID || ""
+                      }&businessName=${businessName}`
+                    );
                   }}
                   className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
                 >
                   <div className="p-2 bg-purple-50 rounded-lg">
-                    <BiPackage className="w-6 h-6 text-primaryColor" />
+                    <BiPackage className="w-6 h-6" style={textColorStyle} />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-black">Track Order</h3>
@@ -262,11 +273,13 @@ const SelectReservationComponents = () => {
                 }}
                 className="w-full flex items-start gap-4 p-4 bg-purple-50 rounded-lg transition-colors text-left mt-2"
               >
-                <div className="p-2 bg-primaryColor rounded-lg">
+                <div className="p-2 rounded-lg" style={primaryColorStyle}>
                   <IoCalendarOutline className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-semibold text-primaryColor">Book Reservation</h3>
+                  <h3 className="font-semibold" style={textColorStyle}>
+                    Book Reservation
+                  </h3>
                   <p className="text-sm text-gray-600">
                     Reserve a table for you and friends
                   </p>

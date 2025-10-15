@@ -62,8 +62,8 @@ export const togglePreview = (activeTile: string, isMobilePreview: boolean = fal
       chipPosition: "top-2 right-2",
     },
     "Single column 1": {
-      container: "flex-col bg-white rounded-2xl overflow-hidden shadow-sm pb-14",
-      textContainer: "p-4",
+      container: "flex-col bg-white rounded-2xl overflow-hidden shadow-sm pb-14 h-full",
+      textContainer: "p-4 flex-grow",
       // desktop: 2 columns, mobile: 1 column
       main: isMobilePreview ? "grid grid-cols-1 gap-6 px-4" : "grid grid-cols-1 md:grid-cols-2 gap-6 px-4",
       imageClass: "w-full h-[220px]",
@@ -73,8 +73,8 @@ export const togglePreview = (activeTile: string, isMobilePreview: boolean = fal
       chipPosition: "top-4 left-4",
     },
     "Single column 2": {
-      container: "flex-col bg-white rounded-xl overflow-hidden shadow-sm",
-      textContainer: "p-3 text-left",
+      container: "flex-col bg-white rounded-xl overflow-hidden shadow-sm h-full",
+      textContainer: "p-3 text-left flex-grow",
       imageClass: "w-full h-[120px] rounded-t-xl",
       imageContainer: "w-full",
       // desktop: 3 columns, mobile: 2 columns
@@ -84,10 +84,10 @@ export const togglePreview = (activeTile: string, isMobilePreview: boolean = fal
       chipPosition: "top-2 left-2",
     },
     "Double column": {
-      container: "flex-col bg-white rounded-xl overflow-hidden shadow-sm",
+      container: "flex-col bg-white rounded-xl overflow-hidden shadow-sm h-full",
       // desktop: 6 columns, mobile: 3 columns
       main: isMobilePreview ? "grid grid-cols-3 gap-4 px-4" : "grid grid-cols-3 md:grid-cols-6 gap-4 px-4",
-      textContainer: "p-3",
+      textContainer: "p-3 flex-grow",
       imageClass: "w-full h-[160px] rounded-t-xl",
       imageContainer: "w-full",
       divider: false,

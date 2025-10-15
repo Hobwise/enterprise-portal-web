@@ -104,7 +104,7 @@ const CartModal = ({
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
         {/* Cart Items List */}
         <div className="space-y-4 mb-4">
           {selectedItems.map((item) => (
@@ -236,7 +236,7 @@ const CartModal = ({
       </div>
 
       {/* Fixed Bottom Section */}
-      <div className="border-t border-gray-200 bg-white px-4 py-4">
+      <div className="border-t border-gray-200 bg-white px-4 py-4 pb-safe">
         {/* Action Buttons */}
         <div className="flex gap-3">
           <CustomButton
@@ -246,7 +246,7 @@ const CartModal = ({
               ...textColorStyle,
               borderWidth: "2px",
             }}
-            className="flex-1 h-12 bg-white font-semibold"
+            className="flex-1 h-12 bg-white font-semibold touch-manipulation"
           >
             <IoAddCircleOutline className="w-5 h-5 mr-2" />
             Add Items
@@ -257,7 +257,7 @@ const CartModal = ({
               onProceedToServingInfo();
             }}
             style={primaryColorStyle}
-            className="flex-1 h-12 text-white font-semibold"
+            className="flex-1 h-12 text-white font-semibold touch-manipulation"
           >
             <span>Checkout</span>
           </CustomButton>
