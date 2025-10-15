@@ -431,7 +431,6 @@ const OrdersList: React.FC<OrdersListProps> = ({
     enabled: !!singleOrder?.id && isOpenCheckoutModal
   });
 
-      console.log(orderDetails)
 
 
   // Transform order data to match CheckoutModal expectations (qrReference -> quickResponseID)
@@ -441,7 +440,6 @@ const OrdersList: React.FC<OrdersListProps> = ({
     // Use full order details if available (includes qrReference)
     const sourceData = fullOrderDetails || singleOrder;
 
-    console.log(sourceData)
 
     return {
       ...sourceData,
@@ -620,7 +618,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
           {!shouldShowLoading && sortedOrders.length === 0 && (
             <div className='flex justify-center items-center py-16 text-textGrey'>
               {orderDetails.length === 0
-                ? `No results found for "${searchQuery.trim()}"`
+                ? `No results found`
                 : isCategoryEmpty
                   ? 'No orders found'
                   : 'No orders available'
@@ -637,29 +635,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
               onMouseEnter={() => prefetchOrderDetails(order.id)}
             >
               {/* Header: Name + Phone + Comment */}
-              <div className='flex items-start justify-between mb-3'>
-                <div className='flex-1'>
-                  <div className='flex items-center gap-2 mb-1'>
-                    <span className='font-semibold text-black text-[15px]'>
-                      {order.placedByName}
-                    </span>
-                    {order.comment && (
-                      <div
-                        title='view comment'
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleCommentModal(order);
-                        }}
-                        className='cursor-pointer'
-                      >
-                        <FaCommentDots className='text-primaryColor text-[14px]' />
-                      </div>
-                    )}
-                  </div>
-                  <div className='text-textGrey text-[13px]'>
-                    {order.placedByPhoneNumber}
-                  </div>
-                </div>
+              <div className='flex items-end justify-end -mb-5 mb-3 mt-2'>
+            
 
                 {/* Actions Dropdown */}
                 <div className='ml-2' onClick={(e) => e.stopPropagation()}>
@@ -710,10 +687,38 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
               {/* Order Details Grid */}
               <div className='grid grid-cols-2 gap-3 mb-3'>
+                    <div className='flex-1'>
+                  <div className='flex items-center gap-2 mb-1'>
+                    <span className='font-semibold text-black text-[15px]'>
+                      {order.placedByName}
+                    </span>
+                    {order.comment && (
+                      <div
+                        title='view comment'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCommentModal(order);
+                        }}
+                        className='cursor-pointer'
+                      >
+                        <FaCommentDots className='text-primaryColor text-[14px]' />
+                      </div>
+                    )}
+                  </div>
+                  <div className='text-textGrey text-[13px]'>
+                    {order.placedByPhoneNumber}
+                  </div>
+                </div>
                 <div>
                   <div className='text-[11px] text-textGrey uppercase mb-1'>Amount</div>
                   <div className='text-black font-semibold text-[15px]'>
                     {formatPrice(order.totalAmount)}
+                  </div>
+                </div>
+                   <div>
+                  <div className='text-[11px] text-textGrey uppercase mb-1'>Table Name</div>
+                  <div className='text-black font-semibold text-[15px]'>
+                    {order.qrReference}
                   </div>
                 </div>
                 <div>
@@ -723,7 +728,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                   </div>
                 </div>
               </div>
-
+ 
               {/* Status + Date */}
               <div className='flex items-center justify-between'>
                 <Chip
