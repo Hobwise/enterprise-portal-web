@@ -435,7 +435,7 @@ const POSContent = () => {
                     {orderItems.map((item) => (
                       <div key={item.id} className="flex items-start space-x-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium w-48 text-xs">{item.itemName}</h4>
+                          <h4 className="font-medium  text-xs">{item.itemName}</h4>
                           <p className="text-xs text-gray-500">{item.menuName}</p>
                           {item.isPacked && <p className="text-xs text-blue-600">+ Packing</p>}
                         </div>
