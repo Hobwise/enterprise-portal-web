@@ -151,7 +151,7 @@ const SelectReservationComponents = () => {
                       saveToLocalStorage("businessName", businessName);
                       router.push(
                         `${
-                          companyInfo.webUrl
+                          window.location.origin || companyInfo.webUrl
                         }/reservation/select-reservation/single-reservation?businessName=${encodeURIComponent(
                           businessName || ""
                         )}&businessID=${businessId}&cooperateID=${cooperateID}`
