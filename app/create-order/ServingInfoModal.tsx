@@ -21,6 +21,7 @@ interface ServingInfoModalProps {
     textColour?: string;
   };
   baseString?: string;
+  initialData?: ServingInfoData; // Initial data for prefilling form
 }
 
 export interface ServingInfoData {
@@ -39,6 +40,7 @@ const ServingInfoModal = ({
   businessName,
   menuConfig,
   baseString,
+  initialData,
 }: ServingInfoModalProps) => {
   // Dynamic color from menu config
   const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
@@ -50,16 +52,23 @@ const ServingInfoModal = ({
     comment: "",
   });
 
-  // Reset form data when modal closes
+  // Prefill form data when modal opens with initial data
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen && initialData) {
+      setFormData({
+        name: initialData.name || "",
+        phoneNumber: initialData.phoneNumber || "",
+        comment: initialData.comment || "",
+      });
+    } else if (!isOpen) {
+      // Reset form data when modal closes
       setFormData({
         name: "",
         phoneNumber: "",
         comment: "",
       });
     }
-  }, [isOpen]);
+  }, [isOpen, initialData]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>

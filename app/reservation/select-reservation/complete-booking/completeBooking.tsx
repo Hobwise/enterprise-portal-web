@@ -118,14 +118,14 @@ const CompleteBookingComponent = () => {
       reservationId
         ? router.push(
             `${
-              companyInfo.webUrl
+              window.location.origin || companyInfo.webUrl
             }/reservation/select-reservation/complete-booking/success?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
           )
         : router.push(
             `${
-              companyInfo.webUrl
+              window.location.origin || companyInfo.webUrl
             }/reservation/select-reservation/complete-booking/success?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}`
@@ -160,7 +160,7 @@ const CompleteBookingComponent = () => {
           <BackButton
             color="text-black"
             url={`${
-              companyInfo.webUrl
+              window.location.origin || companyInfo.webUrl
             }/reservation/select-reservation/single-reservation?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}`}
@@ -307,10 +307,10 @@ const CompleteBookingComponent = () => {
         </CustomButton>
       </form>
 
-      <Modal 
+      <Modal
         size="5xl"
         isDismissable={false}
-        isOpen={isOpen} 
+        isOpen={isOpen}
         onOpenChange={onOpenChange}
       >
         <ModalContent>

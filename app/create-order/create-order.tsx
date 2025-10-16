@@ -130,6 +130,7 @@ const CreateOrder = () => {
   const [orderErrors, setOrderErrors] = useState<any>(null);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false); // Track if updating existing order
   const [originalOrderItems, setOriginalOrderItems] = useState<Item[]>([]); // Store original order items for comparison
+  const [servingInfo, setServingInfo] = useState<ServingInfoData | null>(null); // Store serving info for prefilling
 
   // Menu state - using React Query hooks
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
@@ -448,11 +449,14 @@ const CreateOrder = () => {
   };
 
   // Handle submitting serving info and placing order
-  const handleSubmitServingInfo = async (servingInfo: ServingInfoData) => {
+  const handleSubmitServingInfo = async (servingInfoData: ServingInfoData) => {
     setOrderLoading(true);
     setOrderErrors(null);
 
     try {
+      // Store serving info for prefilling on future updates
+      setServingInfo(servingInfoData);
+
       // If updating an existing order and nothing changed, just go back to tracking
       if (
         isUpdatingOrder &&
@@ -487,10 +491,10 @@ const CreateOrder = () => {
 
       const payload = {
         status: 0,
-        placedByName: servingInfo.name,
-        placedByPhoneNumber: servingInfo.phoneNumber,
+        placedByName: servingInfoData.name,
+        placedByPhoneNumber: servingInfoData.phoneNumber,
         quickResponseID: qrId || "",
-        comment: servingInfo.comment,
+        comment: servingInfoData.comment,
         totalAmount: Math.round(total * 100) / 100,
         orderDetails,
       };
@@ -578,6 +582,15 @@ const CreateOrder = () => {
       setSelectedItems(cartItems);
       setOriginalOrderItems(cartItems); // Store original items for comparison
       setIsUpdatingOrder(true); // Set flag to update existing order
+
+      // Extract and store serving info from order data for prefilling
+      if (orderData.placedByName || orderData.placedByPhoneNumber) {
+        setServingInfo({
+          name: orderData.placedByName || "",
+          phoneNumber: orderData.placedByPhoneNumber || "",
+          comment: orderData.comment || "",
+        });
+      }
     }
     setIsOrderTrackingOpen(false);
     // Scroll to top to show menu
@@ -642,6 +655,16 @@ const CreateOrder = () => {
       setOriginalOrderItems(cartItems); // Store original items for comparison
       setOrderData(fullOrderData); // Update with full order data
       setIsUpdatingOrder(true); // Set flag to update existing order
+
+      // Extract and store serving info from order data for prefilling
+      if (fullOrderData.placedByName || fullOrderData.placedByPhoneNumber) {
+        setServingInfo({
+          name: fullOrderData.placedByName || "",
+          phoneNumber: fullOrderData.placedByPhoneNumber || "",
+          comment: fullOrderData.comment || "",
+        });
+      }
+
       setIsOrderTrackingOpen(false);
       // Open cart modal
       setTimeout(() => {
@@ -1003,9 +1026,6 @@ const CreateOrder = () => {
                               toggleVarietyModal(item);
                             }
                           }}
-                          style={{
-                            color: menuConfig?.textColour || "#1F2937",
-                          }}
                           className={`${preview?.textContainer} flex flex-col ${
                             isListLayout
                               ? "justify-center flex-1"
@@ -1352,6 +1372,7 @@ const CreateOrder = () => {
         businessName={businessName}
         menuConfig={menuConfig}
         baseString={baseString}
+        initialData={servingInfo || undefined}
       />
 
       <OrderTrackingPage
@@ -1362,6 +1383,7 @@ const CreateOrder = () => {
           setOriginalOrderItems([]); // Clear original items
           setOrderData(null); // Clear order data
           setIsUpdatingOrder(false); // Reset update flag
+          setServingInfo(null); // Clear serving info for fresh orders
         }}
         trackingId={orderData?.reference || ""}
         orderStatus={

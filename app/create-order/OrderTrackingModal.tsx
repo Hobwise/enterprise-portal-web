@@ -335,11 +335,18 @@ const OrderTrackingPage = ({
   const getCurrentStepIndex = () => {
     const status = orderData?.status;
 
+    // Check if time has expired (timer shows 00:00)
+    const isTimeExpired = timeLeft === "00:00";
+
     // Return current step index (steps before this are complete, this step is in progress)
     switch (status) {
       case 3: // AwaitingConfirmation - currently on step 1 (awaiting confirmation)
         return 1;
       case 0: // Open - currently on step 1 (preparing) - step 0 complete
+        // If time expired, mark all steps as complete
+        if (isTimeExpired) {
+          return 999; // Use large number to mark all steps as complete
+        }
         return 1;
       case 1: // Closed - all steps complete (served)
         return 999; // Use large number to mark all steps as complete

@@ -49,7 +49,6 @@ const QrList = ({ qr, searchQuery, data }: any) => {
   const [isOpenConfirmOrder, setIsOpenConfirmOrder] =
     React.useState<Boolean>(false);
   const [filteredQr, setFilteredQr] = React.useState(data?.quickResponses);
-
   const toggleQRmodalModal = () => {
     setIsOpenDelete(!isOpenDelete);
   };
@@ -96,7 +95,6 @@ const QrList = ({ qr, searchQuery, data }: any) => {
     displayData,
     isMobile,
   } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
-
   const toggleCancelModal = (order: any) => {
     setSingleOrder(order);
     setIsOpenCancelOrder(!isOpenCancelOrder);
@@ -110,7 +108,7 @@ const QrList = ({ qr, searchQuery, data }: any) => {
   const isClickInsideActions = (event: React.MouseEvent) => {
     let node = event.target as HTMLElement | null;
     while (node) {
-      if (node.getAttribute && node.getAttribute('aria-label') === 'actions') {
+      if (node.getAttribute && node.getAttribute("aria-label") === "actions") {
         return true;
       }
       node = node.parentElement;
@@ -120,7 +118,7 @@ const QrList = ({ qr, searchQuery, data }: any) => {
 
   const handleRowClick = (qr: any, event: React.MouseEvent) => {
     if (!isClickInsideActions(event)) {
-      saveJsonItemToLocalStorage('qr', qr);
+      saveJsonItemToLocalStorage("qr", qr);
       toggleQRmodalView();
     }
   };
@@ -129,38 +127,38 @@ const QrList = ({ qr, searchQuery, data }: any) => {
     const cellValue = qr[columnKey];
 
     switch (columnKey) {
-      case 'name':
+      case "name":
         return (
-          <div className='flex text-black font-medium text-sm'>{qr.name}</div>
+          <div className="flex text-black font-medium text-sm">{qr.name}</div>
         );
 
-      case 'dateCreated':
+      case "dateCreated":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(qr.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(qr.dateCreated).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
 
-      case 'actions':
+      case "actions":
         return (
-          <div className='relative flexjustify-center items-center gap-2'>
-            <Dropdown aria-label='drop down' className=''>
-              <DropdownTrigger aria-label='actions'>
-                <div className='cursor-pointer flex justify-center items-center text-black'>
-                  <HiOutlineDotsVertical className='text-[22px] ' />
+          <div className="relative flexjustify-center items-center gap-2">
+            <Dropdown aria-label="drop down" className="">
+              <DropdownTrigger aria-label="actions">
+                <div className="cursor-pointer flex justify-center items-center text-black">
+                  <HiOutlineDotsVertical className="text-[22px] " />
                 </div>
               </DropdownTrigger>
-              <DropdownMenu className='text-black'>
+              <DropdownMenu className="text-black">
                 <DropdownSection>
                   <DropdownItem
                     onClick={() => {
-                      saveJsonItemToLocalStorage('qr', qr);
+                      saveJsonItemToLocalStorage("qr", qr);
                       toggleQRmodalView();
                     }}
-                    aria-label='View QR'
+                    aria-label="View QR"
                   >
                     <div className={` flex gap-2  items-center text-grey500`}>
-                      <GrFormView className='text-[20px]' />
+                      <GrFormView className="text-[20px]" />
                       <p>View QR</p>
                     </div>
                   </DropdownItem>
@@ -168,10 +166,10 @@ const QrList = ({ qr, searchQuery, data }: any) => {
                   {(role === 0 || userRolePermissions?.canEditQR === true) && (
                     <DropdownItem
                       onClick={() => {
-                        saveJsonItemToLocalStorage('qr', qr);
+                        saveJsonItemToLocalStorage("qr", qr);
                         toggleQRmodalEdit();
                       }}
-                      aria-label='Edit QR'
+                      aria-label="Edit QR"
                     >
                       <div className={`flex gap-3 items-center text-grey500`}>
                         <FaRegEdit />
@@ -184,9 +182,9 @@ const QrList = ({ qr, searchQuery, data }: any) => {
                     <DropdownItem
                       onClick={() => {
                         toggleQRmodalModal();
-                        saveJsonItemToLocalStorage('qr', qr);
+                        saveJsonItemToLocalStorage("qr", qr);
                       }}
-                      aria-label='delete QR'
+                      aria-label="delete QR"
                     >
                       <div
                         className={` text-danger-500 flex  items-center gap-3 `}
@@ -208,20 +206,20 @@ const QrList = ({ qr, searchQuery, data }: any) => {
   }, []);
 
   return (
-    <section className='border border-primaryGrey rounded-lg'>
+    <section className="border border-primaryGrey rounded-lg">
       <Table
-        radius='lg'
+        radius="lg"
         isCompact
         removeWrapper
         allowsSorting
-        aria-label='list of orders'
+        aria-label="list of orders"
         bottomContent={bottomContent}
-        bottomContentPlacement='outside'
+        bottomContentPlacement="outside"
         classNames={classNames}
         selectedKeys={selectedKeys}
         // selectionMode='multiple'
         sortDescriptor={sortDescriptor}
-        topContentPlacement='outside'
+        topContentPlacement="outside"
         onSelectionChange={setSelectedKeys}
         onSortChange={setSortDescriptor}
       >
@@ -229,16 +227,19 @@ const QrList = ({ qr, searchQuery, data }: any) => {
           {(column) => (
             <TableColumn
               key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
+              align={column.uid === "actions" ? "center" : "start"}
               allowsSorting={column.sortable}
             >
               {column.name}
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={'No qr found'} items={displayData || filteredQr}>
+        <TableBody
+          emptyContent={"No qr found"}
+          items={filteredQr || displayData}
+        >
           {(item, index) => (
-            <TableRow 
+            <TableRow
               key={item?.id || item?.name || `qr-row-${index}`}
               className="cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={(e) => handleRowClick(item, e)}
