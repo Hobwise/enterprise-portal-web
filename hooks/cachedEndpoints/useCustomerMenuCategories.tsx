@@ -14,9 +14,8 @@ const useCustomerMenuCategories = (businessId?: string, cooperateId?: string) =>
   const fetchCategories = async () => {
     if (!businessId) return [];
 
-    const responseData = await getCustomerMenuCategories(businessId, cooperateId);
+const responseData = await getCustomerMenuCategories(businessId, cooperateId);
 
-    // Transform the nested structure to flat array of menu sections
     const categories = responseData?.data || [];
     const menuSections: MenuCategory[] = [];
 

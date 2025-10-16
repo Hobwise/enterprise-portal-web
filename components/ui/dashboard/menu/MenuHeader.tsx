@@ -6,6 +6,7 @@ import { CustomInput } from "@/components/CustomInput";
 import { IoSearchOutline } from "react-icons/io5";
 import { CustomButton } from "@/components/customButton";
 import { toast } from "sonner";
+import { generateShortMenuUrlBrowser } from "@/lib/urlShortener";
 
 interface MenuHeaderProps {
   menuSections?: any[]; // Keep for backward compatibility but not used
@@ -89,15 +90,19 @@ const MenuHeader = ({
           </ButtonGroup>
           <CustomButton
             onClick={() => {
-              const menuUrl = `${
-                window.location.origin
-              }/create-order?businessID=${
-                businessInformation[0]?.businessId
-              }&cooperateID=${cooperateId || ""}&businessName=${
-                businessInformation[0]?.businessName
-              }&mode=view`;
-              navigator.clipboard.writeText(menuUrl);
-              toast.success("Menu URL copied to clipboard!");
+              // Generate shortened URL using base64 encoding
+              const shortUrl = generateShortMenuUrlBrowser(
+                window.location.origin,
+                {
+                  businessID: businessInformation[0]?.businessId,
+                  cooperateID: cooperateId,
+                  businessName: businessInformation[0]?.businessName,
+                  mode: "view",
+                }
+              );
+
+              navigator.clipboard.writeText(shortUrl);
+              toast.success("Short menu URL copied to clipboard!");
             }}
             className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border-2 border-primaryColor"
           >
