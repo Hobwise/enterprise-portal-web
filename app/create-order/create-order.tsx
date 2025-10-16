@@ -1,17 +1,17 @@
 'use client';
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from "react";
 
-import { CustomButton } from '@/components/customButton';
-import Error from '@/components/error';
-import { togglePreview } from '@/components/ui/dashboard/menu/preview-menu/data';
+import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
+import { togglePreview } from "@/components/ui/dashboard/menu/preview-menu/data";
 
-import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
+import { CheckIcon } from "@/components/ui/dashboard/orders/place-order/data";
 
-import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { formatPrice } from '@/lib/utils';
+import useMenuConfig from "@/hooks/cachedEndpoints/useMenuConfiguration";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { formatPrice } from "@/lib/utils";
 import { useSearchParams, useRouter } from "next/navigation";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import {
@@ -85,14 +85,16 @@ const CreateOrder = () => {
         setIsViewOnlyMode(true);
         sessionStorage.setItem(viewOnlyStorageKey, "true");
       } else {
-
         setIsViewOnlyMode(false);
         sessionStorage.removeItem(viewOnlyStorageKey);
       }
     }
   }, [mode, viewOnlyStorageKey]);
 
-  const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
+  const { data: menuConfig, isLoading: menuConfigLoading } = useMenuConfig(
+    businessId,
+    cooperateID
+  );
   const { menuIdTable, setMenuIdTable, setPage } = useGlobalContext();
 
   // Dynamic color from menu config (fallback to primary color)
@@ -104,6 +106,16 @@ const CreateOrder = () => {
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  // Debounce search query - wait 500ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Modal states for the new flow
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -117,6 +129,7 @@ const CreateOrder = () => {
   const [orderLoading, setOrderLoading] = useState(false);
   const [orderErrors, setOrderErrors] = useState<any>(null);
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false); // Track if updating existing order
+  const [originalOrderItems, setOriginalOrderItems] = useState<Item[]>([]); // Store original order items for comparison
 
   // Menu state - using React Query hooks
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
@@ -133,10 +146,14 @@ const CreateOrder = () => {
 
   const {
     data: menuItemsData,
+    totalCount,
     isLoading: itemsLoading,
     isError: itemsError,
     refetch: refetchItems,
-  } = useCustomerMenuItems(selectedCategoryId, 1, 100);
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCustomerMenuItems(selectedCategoryId, debouncedSearchQuery, 10);
 
   // Auto-select first category when categories load
   useEffect(() => {
@@ -164,7 +181,6 @@ const CreateOrder = () => {
   const isLoading = categoriesLoading || itemsLoading;
   const isError = categoriesError || itemsError;
 
-  const [itemsToShow, setItemsToShow] = useState(10);
   const [activeSubCategory, setActiveSubCategory] = useState<string>("");
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -173,7 +189,6 @@ const CreateOrder = () => {
 
   const handleTabClick = (categoryId: string, categoryName: string) => {
     setPage(1);
-    setItemsToShow(10); // Reset to 10 items when changing category
     setSelectedCategoryId(categoryId);
     setMenuIdTable(categoryName);
   };
@@ -186,28 +201,7 @@ const CreateOrder = () => {
     }
   };
 
-  // Handle scroll to load more
-  const handleLoadMore = () => {
-    const totalFiltered = !searchQuery
-      ? (menuItems || []).length
-      : (menuItems || []).filter(
-          (item) =>
-            item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            String(item?.price)
-              ?.toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item?.itemDescription
-              ?.toLowerCase()
-              .includes(searchQuery.toLowerCase())
-        ).length;
-
-    if (itemsToShow < totalFiltered) {
-      setItemsToShow((prev) => prev + 10);
-    }
-  };
-
-  // Infinite scroll handler
+  // Infinite scroll handler - load more items from server
   useEffect(() => {
     const handleScroll = () => {
       // Check if user has scrolled near bottom of page
@@ -215,14 +209,18 @@ const CreateOrder = () => {
       const documentHeight = document.documentElement.scrollHeight;
       const threshold = 300; // Load more when 300px from bottom
 
-      if (scrollPosition >= documentHeight - threshold) {
-        handleLoadMore();
+      if (
+        scrollPosition >= documentHeight - threshold &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
+        fetchNextPage();
       }
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [itemsToShow, menuItems, searchQuery]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Handle category scroll
   const scrollCategories = (direction: "left" | "right") => {
@@ -263,27 +261,8 @@ const CreateOrder = () => {
     );
   }, [categories, menuItems]);
 
-  const unfilteredArray = menuItems || [];
-
-  // Apply search filter
-  const matchingObjectArray = useMemo(() => {
-    const filtered = !searchQuery
-      ? unfilteredArray
-      : unfilteredArray?.filter(
-          (item) =>
-            item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            String(item?.price)
-              ?.toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item?.itemDescription
-              ?.toLowerCase()
-              .includes(searchQuery.toLowerCase())
-        ) || [];
-
-    // Return paginated results
-    return filtered?.slice(0, itemsToShow) || [];
-  }, [unfilteredArray, searchQuery, itemsToShow]);
+  // No need for client-side filtering anymore - data is filtered on server
+  const matchingObjectArray = menuItems || [];
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -414,6 +393,33 @@ const CreateOrder = () => {
     }, 0);
   };
 
+  // Helper function to check if order items have changed
+  const hasOrderChanged = (original: Item[], current: Item[]) => {
+    if (original.length !== current.length) return true;
+
+    // Create sorted arrays for comparison
+    const sortedOriginal = [...original].sort((a, b) =>
+      a.id.localeCompare(b.id)
+    );
+    const sortedCurrent = [...current].sort((a, b) => a.id.localeCompare(b.id));
+
+    // Check if any item differs
+    for (let i = 0; i < sortedOriginal.length; i++) {
+      const orig = sortedOriginal[i];
+      const curr = sortedCurrent[i];
+
+      if (
+        orig.id !== curr.id ||
+        orig.count !== curr.count ||
+        orig.isPacked !== curr.isPacked
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const handlePackingCost = (itemId: string, isPacked: boolean) => {
     setSelectedItems((prevItems: Item[]) =>
       prevItems.map((item: Item) =>
@@ -447,6 +453,17 @@ const CreateOrder = () => {
     setOrderErrors(null);
 
     try {
+      // If updating an existing order and nothing changed, just go back to tracking
+      if (
+        isUpdatingOrder &&
+        !hasOrderChanged(originalOrderItems, selectedItems)
+      ) {
+        setIsServingInfoOpen(false);
+        setIsOrderTrackingOpen(true);
+        setOrderLoading(false);
+        toast.info("No changes detected. Returning to order tracking.");
+        return;
+      }
       const subtotal = selectedItems.reduce(
         (acc, item) => acc + item.price * item.count,
         0
@@ -492,8 +509,18 @@ const CreateOrder = () => {
       }
 
       if (response?.isSuccessful && response?.data) {
-        // Use the order data from the response directly
-        setOrderData(response.data);
+        let orderDataToStore = response.data;
+        if (
+          response.data.orderDetails &&
+          response.data.orderDetails.length > 0
+        ) {
+          const orderID = response.data.orderDetails[0]?.orderID;
+          if (orderID && !response.data.reference) {
+            orderDataToStore = { ...response.data, reference: orderID };
+          }
+        }
+
+        setOrderData(orderDataToStore);
         setIsServingInfoOpen(false);
         setIsOrderTrackingOpen(true);
         setIsUpdatingOrder(false); // Reset update flag
@@ -549,6 +576,7 @@ const CreateOrder = () => {
       });
 
       setSelectedItems(cartItems);
+      setOriginalOrderItems(cartItems); // Store original items for comparison
       setIsUpdatingOrder(true); // Set flag to update existing order
     }
     setIsOrderTrackingOpen(false);
@@ -557,68 +585,70 @@ const CreateOrder = () => {
   };
 
   // Handle checkout from order tracking - go to confirmation page
-  const handleCheckoutFromTracking = async () => {
-    console.log("handleCheckoutFromTracking called");
-    console.log("orderData:", orderData);
+  const handleCheckoutFromTracking = async (updatedOrderData?: any) => {
+    const currentOrderData = updatedOrderData || orderData;
+    let orderReference =
+      currentOrderData?.reference ||
+      currentOrderData?.orderReference ||
+      currentOrderData?.Reference ||
+      currentOrderData?.OrderReference ||
+      currentOrderData?.trackingId ||
+      currentOrderData?.TrackingId;
 
-    // Fetch the latest order details to ensure we have complete data
-    if (orderData?.reference) {
-      try {
-        const response = await getCustomerOrderByReference(
-          orderData.reference,
-          businessId || "",
-          cooperateID || ""
-        );
+    // If no direct reference found, try to extract from orderDetails
+    if (
+      !orderReference &&
+      currentOrderData?.orderDetails &&
+      currentOrderData.orderDetails.length > 0
+    ) {
+      orderReference = currentOrderData.orderDetails[0]?.orderID;
+    }
+    // Check if we already have complete order data
+    if (
+      currentOrderData?.orderDetails &&
+      currentOrderData.orderDetails.length > 0
+    ) {
+      // We already have the order data, just transform it
+      const fullOrderData = currentOrderData;
 
-        if (response?.data && response.data.orderDetails) {
-          const fullOrderData = response.data;
-          console.log("Fetched full order data:", fullOrderData);
+      // Transform order details into cart items format with all necessary fields
+      const cartItems: Item[] = fullOrderData.orderDetails.map(
+        (detail: any) => {
+          const basePrice = detail.unitPrice || 0;
 
-          // Transform order details into cart items format with all necessary fields
-          const cartItems: Item[] = fullOrderData.orderDetails.map((detail: any) => {
-            const basePrice = detail.unitPrice || 0;
-
-            return {
-              id: detail.itemID,
-              itemID: detail.itemID,
-              itemName: detail.itemName,
-              menuName: detail.menuName,
-              itemDescription: detail.itemDescription || "",
-              price: basePrice,
-              currency: "NGN",
-              isAvailable: true,
-              hasVariety: detail.isVariety || false,
-              image: detail.image || "",
-              isVariety: detail.isVariety || false,
-              varieties: detail.varieties || null,
-              count: detail.quantity || 1,
-              packingCost: detail.packingCost || 0,
-              isPacked: detail.isPacked || false,
-              menuID: detail.menuID || "",
-              waitingTimeMinutes: detail.waitingTimeMinutes || 0,
-            };
-          });
-
-          console.log("cartItems:", cartItems);
-          setSelectedItems(cartItems);
-          setOrderData(fullOrderData); // Update with full order data
-          setIsUpdatingOrder(true); // Set flag to update existing order
-          setIsOrderTrackingOpen(false);
-          // Open cart modal
-          setTimeout(() => {
-            setIsCartOpen(true);
-          }, 0);
-        } else {
-          console.log("Failed to fetch complete order details");
-          toast.error("Unable to load order details. Please try again.");
+          return {
+            id: detail.itemID,
+            itemID: detail.itemID,
+            itemName: detail.itemName,
+            menuName: detail.menuName,
+            itemDescription: detail.itemDescription || "",
+            price: basePrice,
+            currency: "NGN",
+            isAvailable: true,
+            hasVariety: detail.isVariety || false,
+            image: detail.image || "",
+            isVariety: detail.isVariety || false,
+            varieties: detail.varieties || null,
+            count: detail.quantity || 1,
+            packingCost: detail.packingCost || 0,
+            isPacked: detail.isPacked || false,
+            menuID: detail.menuID || "",
+            waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+          };
         }
-      } catch (error) {
-        console.error("Error fetching order details:", error);
-        toast.error("Failed to load order details. Please try again.");
-      }
+      );
+
+      setSelectedItems(cartItems);
+      setOriginalOrderItems(cartItems); // Store original items for comparison
+      setOrderData(fullOrderData); // Update with full order data
+      setIsUpdatingOrder(true); // Set flag to update existing order
+      setIsOrderTrackingOpen(false);
+      // Open cart modal
+      setTimeout(() => {
+        setIsCartOpen(true);
+      }, 0);
     } else {
-      console.log("No order reference found");
-      toast.error("Order reference not found. Please try again.");
+      toast.error("Unable to load order details. Please try again.");
     }
   };
 
@@ -632,90 +662,118 @@ const CreateOrder = () => {
   return (
     <main className="relative min-h-screen bg-white">
       {/* Header Section with Banner */}
-      <RestaurantBanner
-        businessName={businessName || ""}
-        menuConfig={menuConfig}
-        showMenuButton={true}
-        onMenuClick={() => setIsMenuOpen(true)}
-        baseString={baseString}
-      />
+      {menuConfigLoading ? (
+        <div className="relative w-full">
+          <div className="h-[192px] w-full bg-gray-200 animate-pulse" />
+        </div>
+      ) : (
+        <RestaurantBanner
+          businessName={businessName || ""}
+          menuConfig={menuConfig}
+          showMenuButton={true}
+          onMenuClick={() => setIsMenuOpen(true)}
+          baseString={baseString}
+        />
+      )}
 
       {/* Search Bar */}
       <div className="px-4 py-4 bg-white">
-        <div className="relative w-full md:max-w-2xl mx-auto">
-          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-            <IoSearchOutline className="h-5 w-5 text-gray-400" />
+        {menuConfigLoading ? (
+          <div className="w-full md:max-w-2xl mx-auto h-10 bg-gray-200 rounded-lg animate-pulse" />
+        ) : (
+          <div className="relative w-full md:max-w-2xl mx-auto">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <IoSearchOutline className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search menu items..."
+              style={{ outlineColor: primaryColor }}
+              className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:border-transparent outline-none bg-gray-50"
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center">
+              {searchQuery !== debouncedSearchQuery ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400" />
+              ) : (
+                <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
+              )}
+            </div>
           </div>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search"
-            style={{ outlineColor: primaryColor }}
-            className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:border-transparent outline-none bg-gray-50"
-          />
-          <div className="absolute inset-y-0 right-3 flex items-center">
-            <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Category Pills Filter with Arrows */}
-      {categories && categories.length > 0 && (
-        <div className="relative px-4 py-3 bg-white">
-          {/* Left Arrow */}
-          {showLeftArrow && (
-            <button
-              aria-label="Scroll left"
-              onClick={() => scrollCategories("left")}
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
-            >
-              <IoChevronBack className="w-5 h-5 text-gray-700" />
-            </button>
-          )}
-
-          {/* Category Pills */}
-          <div
-            ref={(el) => {
-              if (el && el !== categoryScrollRef) {
-                setCategoryScrollRef(el);
-                setTimeout(() => checkScrollPosition(), 100);
-              }
-            }}
-            onScroll={checkScrollPosition}
-            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
-            {categories.map((category: any) => {
-              const isSelected = selectedCategoryId === category.id;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => handleTabClick(category.id, category.name)}
-                  style={isSelected ? primaryColorStyle : {}}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                    isSelected
-                      ? "text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
-                >
-                  {category.name}
-                </button>
-              );
-            })}
+      {menuConfigLoading ? (
+        <div className="px-4 py-3 bg-white">
+          <div className="flex gap-3 overflow-hidden">
+            {[...Array(5)].map((_, index) => (
+              <div
+                key={index}
+                className="flex-shrink-0 h-9 w-24 bg-gray-200 rounded-full animate-pulse"
+              />
+            ))}
           </div>
-
-          {/* Right Arrow */}
-          {showRightArrow && (
-            <button
-              aria-label="Scroll right"
-              onClick={() => scrollCategories("right")}
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
-            >
-              <IoChevronForward className="w-5 h-5 text-gray-700" />
-            </button>
-          )}
         </div>
+      ) : (
+        categories &&
+        categories.length > 0 && (
+          <div className="relative px-4 py-3 bg-white">
+            {/* Left Arrow */}
+            {showLeftArrow && (
+              <button
+                aria-label="Scroll left"
+                onClick={() => scrollCategories("left")}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
+              >
+                <IoChevronBack className="w-5 h-5 text-gray-700" />
+              </button>
+            )}
+
+            {/* Category Pills */}
+            <div
+              ref={(el) => {
+                if (el && el !== categoryScrollRef) {
+                  setCategoryScrollRef(el);
+                  setTimeout(() => checkScrollPosition(), 100);
+                }
+              }}
+              onScroll={checkScrollPosition}
+              className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {categories.map((category: any) => {
+                const isSelected = selectedCategoryId === category.id;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => handleTabClick(category.id, category.name)}
+                    style={isSelected ? primaryColorStyle : {}}
+                    className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      isSelected
+                        ? "text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right Arrow */}
+            {showRightArrow && (
+              <button
+                aria-label="Scroll right"
+                onClick={() => scrollCategories("right")}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
+              >
+                <IoChevronForward className="w-5 h-5 text-gray-700" />
+              </button>
+            )}
+          </div>
+        )
       )}
 
       {/* Menu Items - Dynamic Layout */}
@@ -790,35 +848,37 @@ const CreateOrder = () => {
                   return (
                     <div
                       key={item.id || item.menuID}
-                      className={`${
-                        isListLayout ? "flex items-center gap-3" : ""
-                      } my-3 relative`}
+                      className={`my-3 relative`}
                     >
                       <div
-                        onClick={() => {
-                          if (item?.isAvailable && !isViewOnlyMode) {
-                            toggleVarietyModal(item);
-                          }
-                        }}
-                        className={`${preview?.container} ${
-                          layoutName === "List Right" &&
-                          menuConfig?.useBackground &&
-                          "flex-row-reverse"
-                        } ${isListLayout ? "flex flex-1" : ""} ${
+                        className={`${
+                          isListLayout
+                            ? "flex flex-1 min-h-[120px] items-center gap-3 w-full bg-white rounded-xl p-3 shadow-sm"
+                            : `${preview?.container} flex flex-col h-full`
+                        } ${
                           !isListLayout && item?.isAvailable && !isViewOnlyMode
                             ? "pb-10"
+                            : !isListLayout && !item?.isAvailable
+                            ? ""
                             : ""
                         } text-black relative transition-all ${
                           item?.isAvailable && !isViewOnlyMode
-                            ? "cursor-pointer shadow-md"
+                            ? "cursor-pointer"
                             : item?.isAvailable
-                            ? "shadow-md"
-                            : "bg-gray-100 shadow-md cursor-not-allowed"
+                            ? ""
+                            : "bg-gray-100 cursor-not-allowed"
                         }`}
                       >
                         {item?.isAvailable === false && (
                           <Chip
-                            className={`capitalize absolute ${preview?.chipPosition} z-20`}
+                            className={`capitalize absolute ${
+                              menuConfig?.useBackground === false &&
+                              (layoutName === "Single column 1" ||
+                                layoutName === "Single column 2" ||
+                                layoutName === "Double column")
+                                ? "bottom-2 right-2"
+                                : preview?.chipPosition
+                            }  z-20`}
                             color={"danger"}
                             size="sm"
                             variant="flat"
@@ -826,6 +886,52 @@ const CreateOrder = () => {
                             Out of stock
                           </Chip>
                         )}
+
+                        {/* Image for Grid Layouts */}
+                        {(layoutName === "Single column 1" ||
+                          layoutName === "Single column 2" ||
+                          layoutName === "Double column") &&
+                          menuConfig?.useBackground !== false && (
+                            <div
+                              className={`${
+                                preview?.imageContainer || ""
+                              } relative flex items-center justify-center`}
+                            >
+                              <div
+                                style={{
+                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                }}
+                                className={`relative flex items-center justify-center overflow-hidden ${
+                                  preview?.imageClass || "h-48"
+                                }`}
+                              >
+                                {item.image &&
+                                item.image.length > baseString.length ? (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={`${baseString}${item.image}`}
+                                    alt={item.itemName}
+                                  />
+                                ) : (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={noMenu}
+                                    alt="No image available"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
 
                         {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
                         {item?.isAvailable && !isViewOnlyMode && (
@@ -846,46 +952,64 @@ const CreateOrder = () => {
                           </>
                         )}
 
-                        {/* Image Container */}
-                        <div
-                          className={`${
-                            preview?.imageContainer || ""
-                          } relative`}
-                        >
-                          <div
-                            style={{
-                              background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
-                            }}
-                            className={`relative flex items-center justify-center overflow-hidden ${
-                              preview?.imageClass || "h-32"
-                            }`}
-                          >
-                            {item.image &&
-                            item.image.length > baseString.length ? (
-                              <Image
-                                fill
-                                className="object-cover"
-                                src={`${baseString}${item.image}`}
-                                alt={item.itemName}
-                              />
-                            ) : (
-                              <Image
-                                fill
-                                className="object-cover"
-                                src={noMenu}
-                                alt="No image available"
-                              />
-                            )}
-                          </div>
-                        </div>
+                        {/* For List Left: Image on left */}
+                        {layoutName === "List left" &&
+                          menuConfig?.useBackground !== false && (
+                            <div
+                              className={`${
+                                preview?.imageContainer || ""
+                              } relative flex-shrink-0 flex items-center justify-center`}
+                            >
+                              <div
+                                style={{
+                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                }}
+                                className={`relative flex items-center justify-center overflow-hidden ${
+                                  preview?.imageClass || "h-32"
+                                }`}
+                              >
+                                {item.image &&
+                                item.image.length > baseString.length ? (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={`${baseString}${item.image}`}
+                                    alt={item.itemName}
+                                  />
+                                ) : (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={noMenu}
+                                    alt="No image available"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
 
                         {/* Text Content */}
                         <div
+                          onClick={() => {
+                            if (item?.isAvailable && !isViewOnlyMode) {
+                              toggleVarietyModal(item);
+                            }
+                          }}
                           style={{
                             color: menuConfig?.textColour || "#1F2937",
                           }}
                           className={`${preview?.textContainer} flex flex-col ${
-                            isListLayout ? "justify-center" : "justify-start"
+                            isListLayout
+                              ? "justify-center flex-1"
+                              : "justify-start"
                           }`}
                         >
                           <p
@@ -921,24 +1045,98 @@ const CreateOrder = () => {
                                   base: "text-white text-[10px] mt-1.5 h-5",
                                 }}
                               >
-                                {selectedItems.find((selected) => selected.id === item.id)?.count || 0}
+                                {selectedItems.find(
+                                  (selected) => selected.id === item.id
+                                )?.count || 0}
                               </Chip>
                             </div>
                           )}
                         </div>
-                      </div>
 
-                      {/* List Layout Button - Outside card container */}
-                      {isListLayout && item?.isAvailable && !isViewOnlyMode && (
-                        <button
-                          onClick={(e) => handleQuickAdd(item, e)}
-                          style={primaryColorStyle}
-                          className="flex-shrink-0 text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
-                          aria-label="Add to cart"
-                        >
-                          <IoAddCircleOutline className="w-5 h-5" />
-                        </button>
-                      )}
+                        {/* For List Right: Image and button grouped on the right */}
+                        {layoutName === "List Right" && (
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            {/* Image */}
+                            {menuConfig?.useBackground !== false && (
+                              <div
+                                className={`${
+                                  preview?.imageContainer || ""
+                                } relative flex items-center justify-center`}
+                              >
+                                <div
+                                  style={{
+                                    background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                  }}
+                                  className={`relative flex items-center justify-center overflow-hidden ${
+                                    preview?.imageClass || "h-32"
+                                  }`}
+                                >
+                                  {item.image &&
+                                  item.image.length > baseString.length ? (
+                                    <Image
+                                      fill
+                                      className={`object-cover ${
+                                        !item?.isAvailable
+                                          ? "opacity-40 grayscale"
+                                          : ""
+                                      }`}
+                                      src={`${baseString}${item.image}`}
+                                      alt={item.itemName}
+                                    />
+                                  ) : (
+                                    <Image
+                                      fill
+                                      className={`object-cover ${
+                                        !item?.isAvailable
+                                          ? "opacity-40 grayscale"
+                                          : ""
+                                      }`}
+                                      src={noMenu}
+                                      alt="No image available"
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Button - Always reserve space for alignment */}
+                            <div className="flex items-center justify-center w-[48px]">
+                              {item?.isAvailable && !isViewOnlyMode && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuickAdd(item, e);
+                                  }}
+                                  style={primaryColorStyle}
+                                  className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+                                  aria-label="Add to cart"
+                                >
+                                  <IoAddCircleOutline className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* List Left Button - on the right side after text */}
+                        {layoutName === "List left" && (
+                          <div className="flex-shrink-0 flex items-center justify-center w-[48px]">
+                            {item?.isAvailable && !isViewOnlyMode && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickAdd(item, e);
+                                }}
+                                style={primaryColorStyle}
+                                className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+                                aria-label="Add to cart"
+                              >
+                                <IoAddCircleOutline className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -1045,7 +1243,7 @@ const CreateOrder = () => {
           <div className="absolute top-0 left-0 h-full w-80 bg-white shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-bold text-black">Menu</h2>
+              <h2 className="text-xl font-bold text-black">{businessName}</h2>
               <button
                 aria-label="Close menu"
                 onClick={() => setIsMenuOpen(false)}
@@ -1101,15 +1299,11 @@ const CreateOrder = () => {
               )}
 
               {/* Book Reservation */}
-              <button
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  router.push(
-                    `/reservation/select-reservation?businessID=${businessId}&cooperateID=${
-                      cooperateID || ""
-                    }&businessName=${businessName}`
-                  );
-                }}
+              <a
+                href={`/reservation/select-reservation?businessID=${businessId}&cooperateID=${
+                  cooperateID || ""
+                }&businessName=${businessName}`}
+                onClick={() => setIsMenuOpen(false)}
                 className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
               >
                 <div className="p-2 bg-purple-50 rounded-lg">
@@ -1124,7 +1318,7 @@ const CreateOrder = () => {
                     Reserve a table for you and friends
                   </p>
                 </div>
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -1165,6 +1359,7 @@ const CreateOrder = () => {
         onClose={() => {
           setIsOrderTrackingOpen(false);
           setSelectedItems([]); // Clear selected items when leaving
+          setOriginalOrderItems([]); // Clear original items
           setOrderData(null); // Clear order data
           setIsUpdatingOrder(false); // Reset update flag
         }}

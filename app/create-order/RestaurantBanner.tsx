@@ -21,6 +21,11 @@ const RestaurantBanner = ({
   onMenuClick,
   baseString,
 }: RestaurantBannerProps) => {
+  // Debug logging
+  console.log("RestaurantBanner - menuConfig:", menuConfig);
+  console.log("RestaurantBanner - menuConfig.image:", menuConfig?.image);
+  console.log("RestaurantBanner - baseString:", baseString);
+
   // Construct image source properly - handle blob URLs and base64
   const imageSrc = menuConfig?.image
     ? (menuConfig.image.startsWith('blob:')
@@ -29,6 +34,8 @@ const RestaurantBanner = ({
           ? `${baseString}${menuConfig.image}`
           : `data:image/jpeg;base64,${menuConfig.image}`)
     : null;
+
+  console.log("RestaurantBanner - imageSrc:", imageSrc);
 
   return (
     <div className="relative w-full">
@@ -41,6 +48,10 @@ const RestaurantBanner = ({
             src={imageSrc}
             alt="restaurant banner"
             priority
+            unoptimized={imageSrc.startsWith('data:') || imageSrc.startsWith('blob:')}
+            onError={(e) => {
+              console.error("RestaurantBanner - Image load error:", e);
+            }}
           />
         ) : (
           <div
@@ -54,8 +65,8 @@ const RestaurantBanner = ({
         {/* Restaurant Name Overlay */}
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center pointer-events-none">
           <h1
-            className="text-2xl font-bold text-center px-4"
-            style={{ color: menuConfig?.textColour || "black" }}
+            className="text-2xl font-bold text-center px-4 break-words"
+            style={{ color: menuConfig?.textColour || "black", wordBreak: "break-word" }}
           >
             {businessName || "Restaurant Menu"}
           </h1>

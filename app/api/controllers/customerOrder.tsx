@@ -37,10 +37,16 @@ export const getCustomerMenuCategories = async (
 export const getCustomerMenuItems = async (
   menuId: string,
   page: number = 1,
-  pageSize: number = 21
+  pageSize: number = 10,
+  searchTerm: string = ""
 ) => {
   try {
-    const url = `${BASE_URL}/Menu/items?MenuId=${menuId}&Page=${page}&PageSize=${pageSize}`;
+    let url = `${BASE_URL}/Menu/items?MenuId=${menuId}&Page=${page}&PageSize=${pageSize}`;
+
+    // Add SearchTerm parameter if provided
+    if (searchTerm && searchTerm.trim() !== "") {
+      url += `&SearchTerm=${encodeURIComponent(searchTerm.trim())}`;
+    }
 
     const response = await fetch(url, {
       method: "GET",
