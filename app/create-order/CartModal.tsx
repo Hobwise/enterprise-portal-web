@@ -97,14 +97,14 @@ const CartModal = ({
       />
 
       {/* Header */}
-      <div className="flex px-4 py-4 border-b border-gray-200">
+      <div className="max-w-4xl flex flex-col mx-auto w-full px-4 py-4 border-b border-gray-200">
         <h2 className="text-xl font-bold text-black">
           {selectedItems.length} Item{selectedItems.length !== 1 ? "s" : ""}
         </h2>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 pb-24">
+      <div className="flex-1 max-w-4xl flex flex-col mx-auto w-full  overflow-y-auto px-4 py-4 pb-24">
         {/* Cart Items List */}
         <div className="space-y-4 mb-4">
           {selectedItems.map((item) => (
@@ -236,7 +236,7 @@ const CartModal = ({
       </div>
 
       {/* Fixed Bottom Section */}
-      <div className="border-t border-gray-200 bg-white px-4 py-4 pb-safe">
+      <div className="border-t max-w-4xl flex flex-col mx-auto w-full  border-gray-200 bg-white px-4 py-4 pb-safe">
         {/* Action Buttons */}
         <div className="flex gap-3">
           <CustomButton
