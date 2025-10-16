@@ -32,7 +32,7 @@ export const POSHeader: React.FC<POSHeaderProps> = ({ onSearch }) => {
             className="flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 text-[#5F35D2] border border-[#5F35D2] rounded-md hover:bg-purple-50 text-sm"
           >
             <List className="w-4 h-4 text-[#5F35D2]" />
-            <span className="hidden sm:inline">Order list</span>
+            <span className="">Order list</span>
           </button>
         </div>
       </div>

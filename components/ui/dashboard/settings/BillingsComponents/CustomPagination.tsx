@@ -73,7 +73,7 @@ const CustomPagination = ({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-center p-4">
+    <div className="hidden md:flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between items-center p-4">
       <div className="hidden md:block text-[14px] text-grey600 mb-2 md:mb-0">
         Page {currentPage} of {totalPages || 1}
       </div>

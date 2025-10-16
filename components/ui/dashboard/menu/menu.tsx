@@ -253,8 +253,7 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
 
   // Get current category data
   const currentCategory = menus?.find(category => category.id === menuIdTable) || menus?.[0];
-  const currentMenuItems = currentCategory?.items || [];
-    
+
   const {
     bottomContent,
     headerColumns,
@@ -269,7 +268,12 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
+    displayData,
+    isMobile,
   } = usePagination(currentCategory, columns, INITIAL_VISIBLE_COLUMNS);
+
+  // Use displayData which contains accumulated data on mobile, current page on desktop
+  const currentMenuItems = displayData || [];
 
   const [value, setValue] = useState('');
 
@@ -294,11 +298,11 @@ const MenuList: React.FC<MenuListProps> = ({ menus, onOpen, onOpenViewMenu, sear
   };
 
   // Function to refresh current category data
-  const refreshCurrentCategory = () => {
-    if (menuIdTable) {
-      queryClient.invalidateQueries(['menuItems', menuIdTable]);
-    }
-  };
+  // const refreshCurrentCategory = () => {
+  //   if (menuIdTable) {
+  //     queryClient.invalidateQueries(['menuItems', menuIdTable]);
+  //   }
+  // };
 
   const renderCell = React.useCallback((menu: MenuItem, columnKey: string) => {
     switch (columnKey) {

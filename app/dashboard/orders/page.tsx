@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState } from "react";
 
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
@@ -12,16 +12,16 @@ import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useDateFilter from "@/hooks/useDateFilter";
 import { Chip } from "@nextui-org/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
+import CustomPagination from "@/components/ui/dashboard/settings/BillingsComponents/CustomPagination";
 
 // Type definitions are handled in the component files
 
 const OrdersContent: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const {
     categories,
@@ -39,7 +39,7 @@ const OrdersContent: React.FC = () => {
   const { userRolePermissions, role } = usePermission();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const { setPage, setTableStatus } = useGlobalContext();
+  const { setPage, setTableStatus, page } = useGlobalContext();
 
   useEffect(() => {
     refetch();
@@ -51,23 +51,12 @@ const OrdersContent: React.FC = () => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  // Check if user came from POS page
-  const isFromPOS = searchParams.get('from') === 'pos';
-
   // Detect if user is POS user (staff role)
   const isPOSUser = role === 1;
 
-  // Debug log for POS user detection (can be removed in production)
-  // console.log('Orders page user detection:', {
-  //   role,
-  //   isPOSUser,
-  //   isFromPOS,
-  //   willRouteToPOS: isPOSUser || isFromPOS
-  // });
-
   // Handle create order click with conditional routing
   const handleCreateOrderClick = () => {
-    if (isPOSUser || isFromPOS) {
+    if (isPOSUser) {
       router.push('/pos');
     } else {
       router.push('/dashboard/orders/place-order');
@@ -76,9 +65,50 @@ const OrdersContent: React.FC = () => {
 
   const data = { categories, details };
 
+  // Extract pagination info from details response
+  const paginationData = React.useMemo(() => {
+    if (details?.data && typeof details.data === 'object') {
+      return {
+        currentPage: details.data.currentPage || page,
+        totalPages: details.data.totalPages || 1,
+        hasNext: details.data.hasNext || false,
+        hasPrevious: details.data.hasPrevious || false,
+        totalCount: details.data.totalCount || 0,
+        orders: details.data.orders || []
+      };
+    }
+    return {
+      currentPage: page,
+      totalPages: 1,
+      hasNext: false,
+      hasPrevious: false,
+      totalCount: 0,
+      orders: []
+    };
+  }, [details, page]);
 
+  // Pagination handlers
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
-  if (isLoading) return <CustomLoading />;
+  const handleNext = () => {
+    if (paginationData.hasNext) {
+      setPage(page + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (paginationData.hasPrevious) {
+      setPage(page - 1);
+    }
+  };
+
+  // Show loading during initial load (when loading and no data yet)
+  // Skip loading for empty state refetches to show illustration immediately
+  if (isLoading && categories.length === 0) {
+    return <CustomLoading />;
+  }
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (
@@ -133,8 +163,8 @@ const OrdersContent: React.FC = () => {
             >
               <div className="flex gap-2 items-center justify-center">
                 <IoAddCircleOutline className="text-[22px]" />
-                <p className="hidden sm:inline">{(isPOSUser || isFromPOS) ? (isFromPOS ? "Back to POS" : "Create POS Order") : "Create order"}</p>
-                <p className="sm:hidden">{(isPOSUser || isFromPOS) ? (isFromPOS ? "POS" : "Order") : "Order"}</p>
+                <p className="hidden sm:inline">Create Order</p>
+                <p className="sm:hidden">Create Order</p>
               </div>
             </CustomButton>
           )}
@@ -178,19 +208,40 @@ const OrdersContent: React.FC = () => {
       />
 
       {data.categories && data.categories.length > 0 ? (
-        <OrdersList
-          orders={details?.data || []}
-          categories={data.categories}
-          refetch={refetch}
+        <>
+          <OrdersList
+            orders={paginationData.orders}
+            categories={data.categories}
+            refetch={refetch}
+            searchQuery={searchQuery}
+            isLoading={isLoading}
+            filterType={filterType}
+            startDate={startDate}
+            endDate={endDate}
+            currentPage={paginationData.currentPage}
+            totalPages={paginationData.totalPages}
+            hasNext={paginationData.hasNext}
+            hasPrevious={paginationData.hasPrevious}
+            totalCount={paginationData.totalCount}
+          />
 
-          searchQuery={searchQuery}
-          isLoading={isLoading}
-          filterType={filterType}
-          startDate={startDate}
-          endDate={endDate}
-        />
+          {/* Pagination at page level */}
+          {/* {paginationData.totalPages > 1 && (
+            <div className="mt-4">
+              <CustomPagination
+                currentPage={paginationData.currentPage}
+                totalPages={paginationData.totalPages}
+                onPageChange={handlePageChange}
+                onNext={handleNext}
+                onPrevious={handlePrevious}
+              />
+            </div>
+          )} */}
+        </>
       ) : (
-        <CreateOrder />
+        // <CreateOrder />"
+        // ""
+        ""
       )}
       {datePickerModal}
     </>
@@ -198,11 +249,7 @@ const OrdersContent: React.FC = () => {
 };
 
 const Orders: React.FC = () => {
-  return (
-    <Suspense fallback={<CustomLoading />}>
-      <OrdersContent />
-    </Suspense>
-  );
+  return <OrdersContent />;
 };
 
 export default Orders;

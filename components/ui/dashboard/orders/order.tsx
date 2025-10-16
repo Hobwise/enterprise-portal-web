@@ -35,7 +35,6 @@ import {
 import Filters from './filters';
 
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import useAllOrdersData from '@/hooks/cachedEndpoints/useAllOrdersData';
 import usePagination from '@/hooks/usePagination';
 import { formatPrice, saveJsonItemToLocalStorage, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import moment from 'moment';
@@ -48,6 +47,7 @@ import InvoiceModal from './invoice';
 import UpdateOrderModal from './UpdateOrderModal';
 import CheckoutModal from './place-order/checkoutModal';
 import { completeOrder, getOrder } from '@/app/api/controllers/dashboard/orders';
+import useOrderDetails from '@/hooks/cachedEndpoints/useOrderDetails';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { MdKeyboardArrowRight } from 'react-icons/md';
@@ -57,6 +57,7 @@ import { useQueryClient } from '@tanstack/react-query';
 
 // Type definitions
 interface OrderItem {
+  quickResponseID: string;
   id: string;
   placedByName: string;
   placedByPhoneNumber: string;
@@ -89,6 +90,11 @@ interface OrdersListProps {
   filterType?: number;
   startDate?: string;
   endDate?: string;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+  totalCount: number;
 }
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -119,78 +125,18 @@ const getStatusForCategory = (categoryName: string): number | null => {
   }
 };
 
-// Function to get filtered orders based on category and pending state
-const getFilteredOrderDetails = (
-  orders: any,
-  isLoading: boolean,
-  isPending: boolean,
-  selectedCategory: string,
-  searchQuery: string = ''
-): OrderItem[] => {
-  // Check if data is in pending state
-  if (isLoading || isPending || !orders) {
-    return [];
-  }
-
-  // If orders has totalCount of 0, return empty array immediately
-  const totalCount = orders?.data?.totalCount ?? orders?.totalCount ?? 0;
-  if (totalCount === 0) {
-    return [];
-  }
-  
-  // Extract orders data - ensure it's always a valid array
-  let allOrders: OrderItem[] = [];
-
-  // Check nested data structure first (API response format)
-  if (orders.data && orders.data.orders && Array.isArray(orders.data.orders)) {
-    allOrders = orders.data.orders;
-  } else if (orders.orders && Array.isArray(orders.orders)) {
-    allOrders = orders.orders;
-  } else if (orders.data && Array.isArray(orders.data)) {
-    allOrders = orders.data;
-  } else if (Array.isArray(orders)) {
-    allOrders = orders;
-  } else {
-    // Fallback to empty array if no valid data found
-    allOrders = [];
-  }
-
-  // Safety check - ensure allOrders is valid array before filtering
-  if (!Array.isArray(allOrders)) {
-    return [];
-  }
-  
-  // Get the status filter for the selected category
-  const statusFilter = getStatusForCategory(selectedCategory);
-  
-  // Filter by status if not "All Orders"
-  let filteredByStatus = allOrders;
-  if (statusFilter !== null && Array.isArray(allOrders)) {
-    filteredByStatus = allOrders.filter((order: OrderItem) => order.status === statusFilter);
-  }
-  
-  // Apply search filter if provided
-  if (searchQuery.trim() && Array.isArray(filteredByStatus)) {
-    filteredByStatus = filteredByStatus.filter((order: OrderItem) =>
-      order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.reference.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-  
-  return filteredByStatus;
-};
-
-const OrdersList: React.FC<OrdersListProps> = ({ 
-  orders, 
-  categories, 
-  searchQuery, 
-  
-  refetch, 
+const OrdersList: React.FC<OrdersListProps> = ({
+  orders,
+  categories,
+  searchQuery,
+  refetch,
   isLoading = false,
   isPending = false,
-  filterType = 1,
-  startDate,
-  endDate
+  currentPage: propCurrentPage,
+  totalPages: propTotalPages,
+  hasNext: propHasNext,
+  hasPrevious: propHasPrevious,
+  totalCount: propTotalCount
 }) => {
 
   const router = useRouter();
@@ -228,15 +174,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setTableStatus,
     tableStatus,
     setPage,
-    page,
-    rowsPerPage,
   } = useGlobalContext();
-
-  // Use the new hook for fetching all data
-  const {
-    getCategoryDetails,
-    isLoadingInitial
-  } = useAllOrdersData(filterType, startDate, endDate, page, rowsPerPage);
 
   const handleTabClick = (categoryName: string) => {
     // Close all open modals when switching tabs to prevent state conflicts
@@ -253,83 +191,44 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setPage(1);
   };
 
-  // Get data for current category from the new hook
-  const currentCategoryData = getCategoryDetails(tableStatus || categories?.[0]?.name || 'All Orders');
-
-  // Use the new filtered function that includes status filtering
-  const orderDetails = getFilteredOrderDetails(
-    currentCategoryData || orders,
-    isLoading || isLoadingInitial,
-    isPending || false,
-    tableStatus || 'All Orders',
-    searchQuery
-  );
-  
-
-
-  // Create proper pagination data structure for usePagination hook
-  const paginationData = React.useMemo(() => {
-    // Extract pagination data from server response
-    if (currentCategoryData && typeof currentCategoryData === 'object') {
-      // Check if server response has nested data with pagination info
-      if (currentCategoryData.data && typeof currentCategoryData.data === 'object') {
-        const serverData = currentCategoryData.data;
-
-        // Use server-provided pagination data when available
-        if (serverData.totalPages && serverData.totalCount !== undefined) {
-          return {
-            totalPages: Math.max(1, serverData.totalPages || 1),
-            currentPage: Math.max(1, Math.min(page, serverData.totalPages || 1)),
-            hasNext: serverData.hasNext || false,
-            hasPrevious: serverData.hasPrevious || false,
-            totalCount: serverData.totalCount || 0
-          };
-        }
-      }
-
-      // Fallback: try to extract totalCount from various possible locations
-      let totalCount = currentCategoryData.totalCount ||
-                       currentCategoryData.total ||
-                       currentCategoryData.count ||
-                       0;
-
-      // If server response has data array, use its length as fallback
-      if (totalCount === 0 && currentCategoryData.data && Array.isArray(currentCategoryData.data)) {
-        totalCount = currentCategoryData.data.length;
-      }
-
-      // Additional fallback: check if server response has payments array (some endpoints use this)
-      if (totalCount === 0 && currentCategoryData.orders && Array.isArray(currentCategoryData.orders)) {
-        totalCount = currentCategoryData.orders.length;
-      }
-
-      // Calculate pagination properties with proper bounds checking
-      const totalPages = Math.max(1, Math.ceil(totalCount / Math.max(1, rowsPerPage)));
-      const currentPage = Math.max(1, Math.min(page, totalPages));
-      const hasNext = currentPage < totalPages;
-      const hasPrevious = currentPage > 1;
-
-      return {
-        totalPages,
-        currentPage,
-        hasNext,
-        hasPrevious,
-        totalCount
-      };
+  // Filter orders based on category and search query
+  const orderDetails = React.useMemo(() => {
+    if (isLoading || isPending || !orders) {
+      return [];
     }
 
-    // Default pagination data when no data available
+    let filteredOrders = orders;
+
+    // Filter by status based on category
+    const statusFilter = getStatusForCategory(tableStatus || 'All Orders');
+    if (statusFilter !== null) {
+      filteredOrders = orders.filter((order: OrderItem) => order.status === statusFilter);
+    }
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      filteredOrders = filteredOrders.filter((order: OrderItem) =>
+        order.placedByName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.reference.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return filteredOrders;
+  }, [orders, tableStatus, searchQuery, isLoading, isPending]);
+
+  // Create pagination data structure from props
+  const paginationData = React.useMemo(() => {
     return {
-      totalPages: 1,
-      currentPage: 1,
-      hasNext: false,
-      hasPrevious: false,
-      totalCount: 0
+      data: orderDetails,
+      totalPages: propTotalPages,
+      currentPage: propCurrentPage,
+      hasNext: propHasNext,
+      hasPrevious: propHasPrevious,
+      totalCount: propTotalCount
     };
-  }, [currentCategoryData, page, rowsPerPage]);
+  }, [orderDetails, propCurrentPage, propTotalPages, propHasNext, propHasPrevious, propTotalCount]);
 
   const {
-    bottomContent,
     headerColumns,
     setSelectedKeys,
     selectedKeys,
@@ -342,18 +241,22 @@ const OrdersList: React.FC<OrdersListProps> = ({
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
+    displayData,
+    isMobile,
+    isLoadingMore,
+    bottomContent,
   } = usePagination(
     paginationData,
     columns,
     INITIAL_VISIBLE_COLUMNS
   );
 
-  // Sort the orders based on sortDescriptor (server handles pagination)
+  // Sort the orders based on sortDescriptor
+  // Use displayData which contains accumulated data on mobile, current page on desktop
   const sortedOrders = React.useMemo(() => {
-    if (!orderDetails || orderDetails.length === 0) return orderDetails;
+    if (!displayData || displayData.length === 0) return displayData;
 
-    // Only sort the orders - server already handles pagination
-    return [...orderDetails].sort((a: OrderItem, b: OrderItem) => {
+    return [...displayData].sort((a: OrderItem, b: OrderItem) => {
       const first = a[sortDescriptor.column as keyof OrderItem];
       const second = b[sortDescriptor.column as keyof OrderItem];
 
@@ -373,7 +276,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
-  }, [orderDetails, sortDescriptor]);
+  }, [displayData, sortDescriptor]);
 
   const toggleCancelModal = (order?: OrderItem) => {
     if (order) {
@@ -493,18 +396,21 @@ const OrdersList: React.FC<OrdersListProps> = ({
   useEffect(() => {
     const foundCategory = categories?.find((c: OrderCategory) => c.name === (tableStatus || categories?.[0]?.name || 'All Orders'));
     const isEmpty = !!(foundCategory && foundCategory?.count === 0);
-    const showLoading = isLoadingInitial && !currentCategoryData && !isEmpty;
-    // setCurrentCategory(foundCategory);
+
+    // Show loading only if we don't have data and category isn't empty
+    const hasData = orderDetails.length > 0;
+    const showLoading = !hasData && !isEmpty && isLoading;
+
     setIsCategoryEmpty(isEmpty);
     setShouldShowLoading(showLoading);
-  }, [categories, tableStatus, isLoadingInitial, currentCategoryData]);
+  }, [categories, tableStatus, isLoading, orderDetails]);;
 
   // Monitor tab changes to ensure modal states are properly managed
   useEffect(() => {
     // When tableStatus changes and there's an open modal, we ensure it's properly reset
     // This is a backup in case handleTabClick doesn't fully reset states
     if (isOpenUpdateOrder || isOpenCancelOrder || isOpenInvoice || isOpenConfirmOrder || isOpenComment) {
-      console.log('Tab changed with open modal, states should be reset by handleTabClick');
+      // Modal states should be reset by handleTabClick
     }
   }, [tableStatus, isOpenUpdateOrder, isOpenCancelOrder, isOpenInvoice, isOpenConfirmOrder, isOpenComment]);
 
@@ -516,6 +422,30 @@ const OrdersList: React.FC<OrdersListProps> = ({
       staleTime: 5 * 60 * 1000, // 5 minutes
     });
   };
+
+  // Fetch full order details for CheckoutModal
+  const {
+    orderDetails: fullOrderDetails,
+    isLoading: isLoadingFullOrderDetails
+  } = useOrderDetails(singleOrder?.id, {
+    enabled: !!singleOrder?.id && isOpenCheckoutModal
+  });
+
+
+
+  // Transform order data to match CheckoutModal expectations (qrReference -> quickResponseID)
+  const transformedOrderDetails = React.useMemo(() => {
+    if (!singleOrder) return null;
+
+    // Use full order details if available (includes qrReference)
+    const sourceData = fullOrderDetails || singleOrder;
+
+
+    return {
+      ...sourceData,
+      quickResponseID: sourceData.qrReference || sourceData.quickResponseID || '',
+    };
+  }, [singleOrder, fullOrderDetails]);
 
   // Handle table row click based on order status
   const handleRowClick = (order: OrderItem) => {
@@ -669,65 +599,219 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   // Loading states are now managed in useEffect above
 
-
-
-
   return (
     <section className='border border-primaryGrey rounded-lg overflow-hidden'>
-      <div className='overflow-x-auto'>
-        <Table
-          radius='lg'
-          isCompact
-          removeWrapper
-          aria-label='list of orders'
-          bottomContent={bottomContent}
-          bottomContentPlacement='outside'
-          classNames={classNames}
-          selectedKeys={selectedKeys}
-          // selectionMode='multiple'
-          sortDescriptor={sortDescriptor as SortDescriptor}
-          topContent={topContent}
-          topContentPlacement='outside'
-          onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-          onSortChange={(descriptor: SortDescriptor) => {
-            setSortDescriptor({
-              column: String(descriptor.column),
-              direction: descriptor.direction as string
-            });
-          }}
-        >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
+      {/* Filters - shown on both mobile and desktop */}
+      {topContent}
+
+      {/* Mobile Card Layout */}
+      {isMobile ? (
+        <div className='divide-y divide-primaryGrey'>
+          {/* Loading state */}
+          {shouldShowLoading && (
+            <div className='flex justify-center items-center py-16'>
+              <SpinnerLoader size="md" />
+            </div>
           )}
-        </TableHeader>
-        <TableBody
-          emptyContent={!shouldShowLoading || isCategoryEmpty  ? 'No orders found' : <SpinnerLoader size="md" /> }
-          items={shouldShowLoading ? [] : sortedOrders}
-          isLoading={shouldShowLoading}
-          loadingContent={<SpinnerLoader size="md" />}
-        >
-          {(order: OrderItem) => (
-            <TableRow
-              key={String(order?.id)}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
+
+          {/* Empty state */}
+          {!shouldShowLoading && sortedOrders.length === 0 && (
+            <div className='flex justify-center items-center py-16 text-textGrey'>
+              {orderDetails.length === 0
+                ? `No results found`
+                : isCategoryEmpty
+                  ? 'No orders found'
+                  : 'No orders available'
+              }
+            </div>
+          )}
+
+          {/* Order Cards */}
+          {!shouldShowLoading && sortedOrders.map((order: OrderItem) => (
+            <article
+              key={order.id}
+              className='p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors'
               onClick={() => handleRowClick(order)}
               onMouseEnter={() => prefetchOrderDetails(order.id)}
             >
-              {(columnKey) => (
-                <TableCell>{renderCell(order, String(columnKey))}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      </div>
+              {/* Header: Name + Phone + Comment */}
+              <div className='flex items-end justify-end -mb-5 mb-3 mt-2'>
+            
+
+                {/* Actions Dropdown */}
+                <div className='ml-2' onClick={(e) => e.stopPropagation()}>
+                  <Dropdown
+                    aria-label='order actions'
+                    onOpenChange={(isOpen) => {
+                      if (isOpen) {
+                        prefetchOrderDetails(order.id);
+                      }
+                    }}
+                  >
+                    <DropdownTrigger aria-label='actions'>
+                      <div className='cursor-pointer flex justify-center items-center text-black p-2 -m-2'>
+                        <HiOutlineDotsVertical className='text-[20px]' />
+                      </div>
+                    </DropdownTrigger>
+                    <DropdownMenu className='text-black'>
+                      <DropdownSection>
+                        <DropdownItem
+                          key="invoice"
+                          onClick={() => toggleInvoiceModal(order)}
+                          aria-label='Generate invoice'
+                        >
+                          <div className='flex gap-3 items-center text-grey500'>
+                            <TbFileInvoice className='text-[18px]' />
+                            <p>Generate invoice</p>
+                          </div>
+                        </DropdownItem>
+                        {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                          availableOptions[statusDataMap[order.status]] &&
+                          availableOptions[statusDataMap[order.status]].includes('Cancel Order') && (
+                            <DropdownItem
+                              key="cancel"
+                              onClick={() => toggleCancelModal(order)}
+                              aria-label='cancel order'
+                            >
+                              <div className='text-danger-500 flex items-center gap-3'>
+                                <LiaTimesSolid />
+                                <p>Cancel order</p>
+                              </div>
+                            </DropdownItem>
+                          )) as any}
+                      </DropdownSection>
+                    </DropdownMenu>
+                  </Dropdown>
+                </div>
+              </div>
+
+              {/* Order Details Grid */}
+              <div className='grid grid-cols-2 gap-3 mb-3'>
+                    <div className='flex-1'>
+                  <div className='flex items-center gap-2 mb-1'>
+                    <span className='font-semibold text-black text-[15px]'>
+                      {order.placedByName}
+                    </span>
+                    {order.comment && (
+                      <div
+                        title='view comment'
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCommentModal(order);
+                        }}
+                        className='cursor-pointer'
+                      >
+                        <FaCommentDots className='text-primaryColor text-[14px]' />
+                      </div>
+                    )}
+                  </div>
+                  <div className='text-textGrey text-[13px]'>
+                    {order.placedByPhoneNumber}
+                  </div>
+                </div>
+                <div>
+                  <div className='text-[11px] text-textGrey uppercase mb-1'>Amount</div>
+                  <div className='text-black font-semibold text-[15px]'>
+                    {formatPrice(order.totalAmount)}
+                  </div>
+                </div>
+                   <div>
+                  <div className='text-[11px] text-textGrey uppercase mb-1'>Table Name</div>
+                  <div className='text-black font-semibold text-[15px]'>
+                    {order.qrReference}
+                  </div>
+                </div>
+                <div>
+                  <div className='text-[11px] text-textGrey uppercase mb-1'>Order ID</div>
+                  <div className='text-black text-[13px] truncate'>
+                    {order.reference}
+                  </div>
+                </div>
+              </div>
+ 
+              {/* Status + Date */}
+              <div className='flex items-center justify-between'>
+                <Chip
+                  className='capitalize'
+                  color={statusColorMap[order.status]}
+                  size='sm'
+                  variant='bordered'
+                >
+                  {statusDataMap[order.status]}
+                </Chip>
+                <div className='text-textGrey text-[12px]'>
+                  {moment(order.dateUpdated).format('MMM DD, YYYY h:mm A')}
+                </div>
+              </div>
+            </article>
+          ))}
+
+          {/* Infinite Scroll Sentinel & Loading Indicator from usePagination */}
+          {bottomContent}
+        </div>
+      ) : (
+        /* Desktop Table Layout */
+        <div className='overflow-x-auto'>
+          <Table
+            radius='lg'
+            isCompact
+            removeWrapper
+            aria-label='list of orders'
+            bottomContent={bottomContent}
+            bottomContentPlacement='outside'
+            classNames={classNames}
+            selectedKeys={selectedKeys}
+            // selectionMode='multiple'
+            sortDescriptor={sortDescriptor as SortDescriptor}
+            topContent={null}
+            topContentPlacement='outside'
+            onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+            onSortChange={(descriptor: SortDescriptor) => {
+              setSortDescriptor({
+                column: String(descriptor.column),
+                direction: descriptor.direction as string
+              });
+            }}
+          >
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === 'actions' ? 'center' : 'start'}
+                allowsSorting={column.sortable}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            emptyContent={
+              orderDetails.length === 0
+                ? `No results found for "${searchQuery.trim()}"`
+                : !shouldShowLoading && isCategoryEmpty
+                  ? 'No orders found'
+                  : <SpinnerLoader size="md" />
+            }
+            items={shouldShowLoading ? [] : (sortedOrders || [])}
+            isLoading={shouldShowLoading}
+            loadingContent={<SpinnerLoader size="md" />}
+          >
+            {(order: OrderItem) => (
+              <TableRow
+                key={String(order?.id)}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => handleRowClick(order)}
+                onMouseEnter={() => prefetchOrderDetails(order.id)}
+              >
+                {(columnKey) => (
+                  <TableCell>{renderCell(order, String(columnKey))}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        </div>
+      )}
       <Comment
         toggleCommentModal={toggleCommentModal}
         singleOrder={singleOrder}
@@ -772,7 +856,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         isOpen={isOpenCheckoutModal}
         onOpenChange={() => setIsOpenCheckoutModal(false)}
         selectedItems={checkoutSelectedItems}
-        orderDetails={singleOrder}
+        orderDetails={transformedOrderDetails}
         id={singleOrder?.id}
         onOrderSuccess={refetch}
         handleDecrement={(itemId: string) => {

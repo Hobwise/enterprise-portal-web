@@ -7,6 +7,7 @@ import { Spacer } from "@nextui-org/react";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 
+
 const Password = () => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isLoading, setIsLoading] = useState(false);

@@ -52,7 +52,7 @@ const SettingsSidebar = () => {
   }, [pathname]);
 
   return (
-    <ul className="col-span-3 border inline-flex flex-col border-secondaryGrey p-3 rounded-lg h-fit">
+    <ul className="col-span-1 lg:col-span-3 border flex flex-col border-secondaryGrey p-3 rounded-lg h-fit">
       {filteredLists.map((item) => (
         <li
           key={item.href}

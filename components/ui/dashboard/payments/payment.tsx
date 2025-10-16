@@ -27,8 +27,6 @@ import { columns, statusColorMap, statusDataMap } from './data';
 import moment from 'moment';
 
 import { useGlobalContext } from '@/hooks/globalProvider';
-import useAllPaymentsData from '@/hooks/cachedEndpoints/useAllPaymentsData';
-import usePagination from '@/hooks/usePagination';
 import { formatPrice } from '@/lib/utils';
 import ApprovePayment from './approvePayment';
 import Filters from './filters';
@@ -71,50 +69,33 @@ interface PaymentsListProps {
   filterType?: number;
   startDate?: string;
   endDate?: string;
+  currentPage?: number;
+  totalPages?: number;
+  hasNext?: boolean;
+  hasPrevious?: boolean;
+  totalCount?: number;
 }
 
-// Status mapping for payment categories
-const getStatusForPaymentCategory = (categoryName: string): number | null => {
-  switch (categoryName.toLowerCase()) {
-    case 'pending payments':
-      return 0;
-    case 'confirmed payments':
-      return 1;
-    case 'cancelled payments':
-      return 2;
-    case 'awaiting confirmation':
-      return 3;
-    default:
-      return null; // null means show all payments
-  }
-};
-
-// Function to get filtered payments based on category and pending state
+// Function to get filtered payments based on search query
 const getFilteredPaymentDetails = (
-  payments: any, 
-  isLoading: boolean, 
-  isPending: boolean, 
-  selectedCategory: string,
+  payments: any,
+  isLoading: boolean,
+  isPending: boolean,
   searchQuery: string = ''
 ): PaymentItem[] => {
   // Check if data is in pending state
   if (isLoading || isPending || !payments) {
     return [];
   }
-  
-  // If payments has totalCount of 0, return empty array immediately
-  if (payments?.totalCount === 0) {
-    return [];
-  }
-  
+
   // Extract payments data - ensure it's always a valid array
   let allPayments: PaymentItem[] = [];
-  if (payments.payments && Array.isArray(payments.payments)) {
+  if (Array.isArray(payments)) {
+    allPayments = payments;
+  } else if (payments.payments && Array.isArray(payments.payments)) {
     allPayments = payments.payments;
   } else if (payments.data && Array.isArray(payments.data)) {
     allPayments = payments.data;
-  } else if (Array.isArray(payments)) {
-    allPayments = payments;
   } else {
     // Fallback to empty array if no valid data found
     allPayments = [];
@@ -124,27 +105,18 @@ const getFilteredPaymentDetails = (
   if (!Array.isArray(allPayments)) {
     return [];
   }
-  
-  // Get the status filter for the selected category
-  const statusFilter = getStatusForPaymentCategory(selectedCategory);
-  
-  // Filter by status if not "All Payments"
-  let filteredByStatus = allPayments;
-  if (statusFilter !== null && Array.isArray(allPayments)) {
-    filteredByStatus = allPayments.filter((payment: PaymentItem) => payment.status === statusFilter);
-  }
-  
+
   // Apply search filter if provided
-  if (searchQuery.trim() && Array.isArray(filteredByStatus)) {
-    filteredByStatus = filteredByStatus.filter((payment: PaymentItem) =>
+  if (searchQuery.trim()) {
+    return allPayments.filter((payment: PaymentItem) =>
       payment.qrName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.treatedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       payment.customer?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   }
-  
-  return filteredByStatus;
+
+  return allPayments;
 };
 
 const PaymentsList: React.FC<PaymentsListProps> = ({
@@ -156,69 +128,54 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   isPending = false,
   filterType = 1,
   startDate,
-  endDate
+  endDate,
+  currentPage,
+  totalPages,
+  hasNext,
+  hasPrevious,
+  totalCount
 }) => {
   const [singlePayment, setSinglePayment] = React.useState<PaymentItem | null>(null);
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
   const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
     useGlobalContext();
 
-  // Use the new hook for fetching all data
-  const { 
-    getCategoryDetails, 
-    isLoadingInitial, 
-    isLoadingAll 
-  } = useAllPaymentsData(filterType, startDate, endDate, 1, 10);
-
-  // Get data for current category from the new hook
-  const currentCategoryData = getCategoryDetails(tableStatus || categories?.[0]?.name || 'All');
-  
-  // Use the new filtered function that includes status filtering
+  // Use the payments prop directly - API already returns category-specific data
   const paymentDetails = getFilteredPaymentDetails(
-    currentCategoryData || payments, 
-    isLoading || isLoadingInitial, 
-    isPending || false, 
-    tableStatus || 'All', 
+    payments,
+    isLoading,
+    isPending || false,
     searchQuery
   );
 
-  const matchingObjectArray = { data: paymentDetails, totalCount: paymentDetails.length };
-  
+  // State for table sorting and selection
+  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
+  const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
+    column: 'dateCreated',
+    direction: 'descending',
+  });
 
-  const {
-    bottomContent,
-    headerColumns,
-    setSelectedKeys,
-    selectedKeys,
-    sortDescriptor,
-    setSortDescriptor,
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
-    classNames,
-    hasSearchFilter,
-  } = usePagination(
-    matchingObjectArray, 
-    columns, 
-    INITIAL_VISIBLE_COLUMNS
-  );
+  // Filter visible columns
+  const headerColumns = React.useMemo(() => {
+    return columns.filter((column) =>
+      INITIAL_VISIBLE_COLUMNS.includes(column.uid)
+    );
+  }, []);
 
   // Sort the payments based on sortDescriptor
   const sortedPayments = React.useMemo(() => {
     if (!paymentDetails || paymentDetails.length === 0) return paymentDetails;
-    
+
     return [...paymentDetails].sort((a: PaymentItem, b: PaymentItem) => {
       const first = a[sortDescriptor.column as keyof PaymentItem];
       const second = b[sortDescriptor.column as keyof PaymentItem];
-      
+
       let cmp = 0;
       if (first === null || first === undefined) cmp = 1;
       else if (second === null || second === undefined) cmp = -1;
       else if (first < second) cmp = -1;
       else if (first > second) cmp = 1;
-      
+
       return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [paymentDetails, sortDescriptor]);
@@ -280,7 +237,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
 
       case 'actions':
         return (
-          <div className='relative flexjustify-center items-center gap-2'>
+          <div className='relative flexjustify-center items-center gap-2' onClick={(e) => e.stopPropagation()}>
             <Dropdown className=''>
               <DropdownTrigger aria-label='actions'>
                 <div className='cursor-pointer flex justify-center items-center text-black'>
@@ -317,35 +274,55 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
         handleTabClick={handleTabClick}
       />
     );
-  }, [
-    categories,
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
-    hasSearchFilter,
-    handleTabChange,
-    value,
-    handleTabClick,
-  ]);
+  }, [categories, value]);
 
   // Determine if we should show loading spinner
-  // Determine if we should show loading spinner - only show for initial load
-  const shouldShowLoading = isLoadingInitial && paymentDetails.length === 0;
+  // Only show loading spinner on initial load when there's no data
+  const shouldShowLoading = isLoading && paymentDetails.length === 0;
+
+  // Table styling - matching order table
+  const classNames = React.useMemo(
+    () => ({
+      wrapper: ['max-h-[382px]'],
+      th: [
+        'text-default-500',
+        'text-sm',
+        'border-b',
+        'border-divider',
+        'py-4',
+        'rounded-none',
+        'bg-grey300',
+      ],
+      tr: 'border-b border-divider rounded-none',
+      td: [
+        'py-3',
+        'text-textGrey',
+        'group-data-[first=true]:first:before:rounded-none',
+        'group-data-[first=true]:last:before:rounded-none',
+        'group-data-[middle=true]:before:rounded-none',
+        'group-data-[last=true]:first:before:rounded-none',
+        'group-data-[last=true]:last:before:rounded-none',
+      ],
+    }),
+    []
+  );
+
+  // Handle row click to open payment details
+  const handleRowClick = (payment: PaymentItem) => {
+    toggleApproveModal(payment);
+  };
 
   return (
-    <section className='border border-primaryGrey rounded-lg'>
+    <section className='border border-primaryGrey rounded-lg overflow-hidden'>
+      <div className='overflow-x-auto'>
         <Table
           radius='lg'
           isCompact
           removeWrapper
           aria-label='list of payments'
-          bottomContent={bottomContent}
           bottomContentPlacement='outside'
           classNames={classNames}
           selectedKeys={selectedKeys}
-          // selectionMode='multiple'
           sortDescriptor={sortDescriptor as SortDescriptor}
           topContent={topContent}
           topContentPlacement='outside'
@@ -363,14 +340,18 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
               </TableColumn>
             )}
           </TableHeader>
-          <TableBody 
+          <TableBody
             isLoading={shouldShowLoading}
             loadingContent={<SpinnerLoader size="md" />}
             emptyContent={'No payment(s) found'}
             items={shouldShowLoading ? [] : sortedPayments}
           >
             {(payment: PaymentItem) => (
-              <TableRow key={String(payment?.id)}>
+              <TableRow
+                key={String(payment?.id)}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={() => handleRowClick(payment)}
+              >
                 {(columnKey) => (
                   <TableCell>{renderCell(payment, String(columnKey))}</TableCell>
                 )}
@@ -378,12 +359,13 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
             )}
           </TableBody>
         </Table>
-        <ApprovePayment
-          refetch={refetch}
-          singlePayment={singlePayment}
-          isOpen={isOpen}
-          toggleApproveModal={toggleApproveModal}
-        />
+      </div>
+      <ApprovePayment
+        refetch={refetch}
+        singlePayment={singlePayment}
+        isOpen={isOpen}
+        toggleApproveModal={toggleApproveModal}
+      />
     </section>
   );
 };

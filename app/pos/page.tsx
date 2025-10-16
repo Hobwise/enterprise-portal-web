@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { ShoppingCart, Menu, X, Plus, Minus } from "lucide-react";
+import React, { useState, useEffect, Suspense } from "react";
+import { ShoppingCart, X, Plus, Minus } from "lucide-react";
 import { useDisclosure } from "@nextui-org/react";
+import { useSearchParams } from "next/navigation";
 import Header from "@/components/ui/dashboard/header";
 import CheckoutModal from "@/components/ui/dashboard/orders/place-order/checkoutModal";
-import { getJsonItemFromLocalStorage, formatPrice, notify } from "@/lib/utils";
+import { getJsonItemFromLocalStorage, formatPrice, notify, clearItemLocalStorage } from "@/lib/utils";
+import { getOrder } from "@/app/api/controllers/dashboard/orders";
+import toast from "react-hot-toast";
 
 // Hooks
 import { usePOSMenu } from "@/hooks/usePOSMenu";
@@ -17,20 +20,25 @@ import { POSHeader } from "@/components/ui/dashboard/pos/POSHeader";
 import { MenuItemCard } from "@/components/ui/dashboard/pos/MenuItemCard";
 import { OrderSummaryPanel } from "@/components/ui/dashboard/pos/OrderSummaryPanel";
 import { ItemDetailsModal } from "@/components/ui/dashboard/pos/ItemDetailsModal";
+import { VarietySelectionModal } from "@/components/ui/dashboard/pos/VarietySelectionModal";
 
 // Types
-import { MenuItem } from "./types";
+import { MenuItem, Variety } from "./types";
 
 // Constants
 import { LOADING_SKELETON_COUNT } from "./constants";
 
-const POSpage = () => {
+const POSContent = () => {
+  const searchParams = useSearchParams();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState(false);
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
+  const [isVarietyModalOpen, setIsVarietyModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [selectedVarietyItem, setSelectedVarietyItem] = useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [existingOrder, setExistingOrder] = useState<any>(null);
+  const [isLoadingExistingOrder, setIsLoadingExistingOrder] = useState(false);
 
   // Business information
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -86,7 +94,6 @@ const POSpage = () => {
   };
 
   // Modal handlers
-  const toggleCategoryMenu = () => setIsCategoryMenuOpen(!isCategoryMenuOpen);
   const openOrderModal = () => setIsOrderModalOpen(true);
   const closeOrderModal = () => setIsOrderModalOpen(false);
 
@@ -98,6 +105,16 @@ const POSpage = () => {
   const closeItemModal = () => {
     setIsItemModalOpen(false);
     setSelectedItem(null);
+  };
+
+  const openVarietyModal = (item: MenuItem) => {
+    setSelectedVarietyItem(item);
+    setIsVarietyModalOpen(true);
+  };
+
+  const closeVarietyModal = () => {
+    setIsVarietyModalOpen(false);
+    setSelectedVarietyItem(null);
   };
 
   const handleQuickAdd = (item: MenuItem) => {
@@ -124,15 +141,113 @@ const POSpage = () => {
     }
 
     addItemToCart(item);
-
-    notify({
-      title: 'Added to cart',
-      text: `${item.itemName} added to cart${includePacking ? ' with packing' : ''}`,
-      type: 'success'
-    });
-
     closeItemModal();
   };
+
+  // Handle adding variety items to cart
+  const handleAddVarietyToCart = (baseItem: MenuItem, variety?: Variety, includePacking?: boolean) => {
+    if (variety) {
+      // Adding a variety
+      const varietyItem: MenuItem = {
+        ...baseItem,
+        uniqueKey: undefined, // Prevent inheriting base uniqueKey to ensure variety.id is used
+        id: variety.id,
+        itemName: `${baseItem.itemName} (${variety.unit || variety.name || 'Variety'})`,
+        price: variety.price,
+        currency: variety.currency || baseItem.currency,
+        isVariety: true,
+      };
+
+      addItemToCart(varietyItem);
+    } else {
+      // Adding base item with packing if specified
+      const itemToAdd = includePacking ? { ...baseItem, isPacked: true } : baseItem;
+      addItemToCart(itemToAdd);
+    }
+  };
+
+  // Handle removing variety items from cart
+  const handleRemoveVarietyFromCart = (itemId: string) => {
+    // Find the item in cart and decrement or remove
+    handleDecrement(itemId);
+  };
+
+  // Load existing order when in add-items mode
+  useEffect(() => {
+    const loadExistingOrder = async () => {
+      // Check if we're in add-items mode (coming from UpdateOrderModal)
+      const isAddItemsMode = searchParams.get('mode') === 'add-items';
+      const order = getJsonItemFromLocalStorage('order');
+
+      if (isAddItemsMode && order?.id && menuItems.length > 0) {
+        setIsLoadingExistingOrder(true);
+        try {
+          const response = await getOrder(order.id);
+
+          if (response?.data?.isSuccessful) {
+            const orderData = response?.data?.data;
+            const orderDetails = orderData.orderDetails || [];
+
+            // Debug logging
+            console.log('API orderData:', orderData);
+            console.log('localStorage order:', order);
+
+            // Transform order details to match POS cart format
+            orderDetails.forEach((item: any) => {
+              const menuItem = menuItems.find((m: MenuItem) => m.id === item.itemID);
+
+              if (menuItem) {
+                const transformedItem = {
+                  ...menuItem,
+                  id: menuItem.uniqueKey || item.itemID,
+                  itemID: item.itemID,
+                  itemName: item.itemName || menuItem.itemName,
+                  menuName: item.menuName || menuItem.menuName,
+                  price: item.unitPrice,
+                  isPacked: item.isPacked || false,
+                  packingCost: item.packingCost || menuItem.packingCost || 0,
+                } as MenuItem;
+
+                // Add item to cart multiple times to match the quantity
+                for (let i = 0; i < item.quantity; i++) {
+                  addItemToCart(transformedItem);
+                }
+              }
+            });
+
+            // Map qrReference to quickResponseID for CheckoutModal compatibility
+            // Use localStorage order as fallback if API response doesn't have the field
+            const transformedOrderData = {
+              ...orderData,
+              quickResponseID: orderData.quickResponseID || orderData.qrReference || order.qrReference,
+              placedByName: orderData.placedByName || order.placedByName || '',
+              placedByPhoneNumber: orderData.placedByPhoneNumber || order.placedByPhoneNumber || '',
+            };
+
+            console.log('Transformed orderData:', transformedOrderData);
+
+            setExistingOrder(transformedOrderData);
+            toast.success(`Loading order ${order.reference || order.id}`);
+
+            // Clear the order from localStorage after loading
+            clearItemLocalStorage("order");
+          } else {
+            toast.error("Failed to load order details");
+          }
+        } catch (error) {
+          console.error("Error loading existing order:", error);
+          toast.error("Failed to load order details");
+        } finally {
+          setIsLoadingExistingOrder(false);
+        }
+      } else if (!isAddItemsMode && order?.id) {
+        // Clear the order from localStorage if we're not in add-items mode
+        clearItemLocalStorage("order");
+      }
+    };
+
+    loadExistingOrder();
+  }, [searchParams, menuItems.length]);
 
   return (
     <>
@@ -158,42 +273,8 @@ const POSpage = () => {
           <Header ispos />
           <POSHeader onSearch={handleSearch} />
 
-          {/* Mobile Category Toggle */}
-          <div className="lg:hidden bg-[#391D84] px-4 py-2">
-            <button
-              onClick={toggleCategoryMenu}
-              className="flex items-center space-x-2 text-white"
-            >
-              <Menu className="w-5 h-5" />
-              <span className="text-sm font-medium">{selectedCategory}</span>
-            </button>
-          </div>
-
-          {/* Mobile Category Dropdown */}
-          {isCategoryMenuOpen && (
-            <div className="lg:hidden bg-[#391D84] border-t border-purple-600">
-              <div className="max-h-60 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-1 p-2">
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => {
-                        setSelectedCategory(category);
-                        setIsCategoryMenuOpen(false);
-                      }}
-                      className={`py-2 px-3 text-center rounded text-xs transition-colors ${
-                        selectedCategory === category
-                          ? "bg-[#251258] text-white"
-                          : "text-purple-200 hover:bg-purple-700 hover:text-white"
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Mobile Category Tabs */}
+     
 
           <div className="h-[83vh] lg:h-[83vh] bg-gray-50 flex">
             <div className="flex flex-1 overflow-hidden bg-white">
@@ -201,7 +282,7 @@ const POSpage = () => {
               <div className="hidden lg:block w-48 bg-[#391D84] text-white overflow-y-auto">
                 <div className="py-1">
                   <div className="space-y-1">
-                    {categories.map((category) => (
+                    {categories.filter((category) => category.toLowerCase() !== "all menu").map((category) => (
                       <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
@@ -223,7 +304,7 @@ const POSpage = () => {
                 {/* Top Navigation */}
                 <div className="bg-[#5F35D2]">
                   <div className="flex overflow-x-auto scrollbar-hide">
-                    {mainTabs.map((tab) => (
+                    {mainTabs.filter((tab) => tab.toLowerCase() !== "all menu").map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setSelectedSection(tab)}
@@ -238,6 +319,24 @@ const POSpage = () => {
                     ))}
                   </div>
                 </div>
+
+                     <div className="lg:hidden bg-[#391D84]">
+            <div className="flex overflow-x-auto scrollbar-hide">
+              {categories.filter((category) => category.toLowerCase() !== "all menu").map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    selectedCategory === category
+                      ? "text-white bg-[#251258] border-[#A07EFF]"
+                      : "text-purple-200 border-transparent hover:text-white"
+                  }`}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
+          </div>
 
                 {/* Menu Grid */}
                 <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto">
@@ -336,7 +435,7 @@ const POSpage = () => {
                     {orderItems.map((item) => (
                       <div key={item.id} className="flex items-start space-x-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium w-48 text-xs">{item.itemName}</h4>
+                          <h4 className="font-medium  text-xs">{item.itemName}</h4>
                           <p className="text-xs text-gray-500">{item.menuName}</p>
                           {item.isPacked && <p className="text-xs text-blue-600">+ Packing</p>}
                         </div>
@@ -429,8 +528,20 @@ const POSpage = () => {
           <ItemDetailsModal
             isOpen={isItemModalOpen}
             item={selectedItem}
+            orderItems={orderItems}
             onClose={closeItemModal}
-            onAddToCart={handleAddItemFromModal}
+            onAddToCart={handleAddVarietyToCart}
+            onRemoveFromCart={handleRemoveVarietyFromCart}
+          />
+
+          {/* Variety Selection Modal */}
+          <VarietySelectionModal
+            isOpen={isVarietyModalOpen}
+            item={selectedVarietyItem}
+            orderItems={orderItems}
+            onClose={closeVarietyModal}
+            onAddToCart={handleAddVarietyToCart}
+            onRemoveFromCart={handleRemoveVarietyFromCart}
           />
 
           {/* Checkout Modal */}
@@ -440,8 +551,8 @@ const POSpage = () => {
             selectedItems={orderItems}
             onOpenChange={onOpenChange}
             isOpen={isOpen}
-            id={null}
-            orderDetails={null}
+            id={existingOrder?.id || null}
+            orderDetails={existingOrder}
             handlePackingCost={handlePackingCost}
             businessId={businessInformation?.[0]?.businessId}
             cooperateID={userInformation?.cooperateID}
@@ -450,6 +561,21 @@ const POSpage = () => {
         </main>
       </div>
     </>
+  );
+};
+
+const POSpage = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex h-screen items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5F35D2] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading POS...</p>
+        </div>
+      </div>
+    }>
+      <POSContent />
+    </Suspense>
   );
 };
 

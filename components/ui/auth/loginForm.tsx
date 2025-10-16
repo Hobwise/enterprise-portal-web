@@ -8,6 +8,8 @@ import {
   notify,
   saveJsonItemToLocalStorage,
   setTokenCookie,
+  getTokenCookie,
+  getJsonItemFromLocalStorage,
 } from "@/lib/utils";
 import { Spacer } from "@nextui-org/react";
 import Link from "next/link";
@@ -100,6 +102,11 @@ const LoginForm = () => {
     try {
       const { businesses, token, user } = decryptedData.data;
 
+      // Clear old session data BEFORE saving new data
+      localStorage.clear();
+      sessionStorage.clear();
+      queryClient.clear();
+
       // Save critical data synchronously
       setTokenCookie("token", token, {
         expires: 7, // 7 days
@@ -112,6 +119,30 @@ const LoginForm = () => {
       // Persist loginDetails to sessionStorage to survive page navigation
       saveJsonItemToLocalStorage("loginDetails", loginFormData);
       setLoginDetails(loginFormData);
+
+      console.log('[LoginForm] Saved loginDetails to localStorage', {
+        email: loginFormData.email,
+        hasPassword: !!loginFormData.password,
+        timestamp: new Date().toISOString()
+      });
+
+      // Verify loginDetails persistence
+      const verifyLoginDetails = getJsonItemFromLocalStorage("loginDetails");
+      if (!verifyLoginDetails) {
+        console.error("[LoginForm] WARNING: loginDetails not found in localStorage after saving!");
+      } else {
+        console.log('[LoginForm] Verified loginDetails in localStorage:', {
+          email: verifyLoginDetails.email,
+          hasPassword: !!verifyLoginDetails.password
+        });
+      }
+
+      // Verify token cookie was actually set
+      const cookieVerified = getTokenCookie("token");
+      if (!cookieVerified) {
+        console.error("Token cookie was not set properly");
+        throw new Error("Failed to save authentication token");
+      }
 
       // Check if user needs to change password (common API patterns)
       const needsPasswordChange = user?.mustChangePassword ||
@@ -156,8 +187,18 @@ const LoginForm = () => {
         });
       }
 
-      // Navigate to the appropriate page
-      router.push(redirectPath);
+      // Add small delay to ensure cookies are persisted before navigation
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Use replace to prevent back button issues
+      router.replace(redirectPath);
+
+      // Fallback to hard navigation if router.replace fails
+      setTimeout(() => {
+        if (window.location.pathname === "/auth/login") {
+          window.location.href = redirectPath;
+        }
+      }, 200);
 
     } catch (error) {
       console.error("Error handling login success:", error);
@@ -234,12 +275,8 @@ const LoginForm = () => {
         abortControllerRef.current.abort();
       }
       abortControllerRef.current = new AbortController();
-      
-      // Clear previous session data without blocking
-      localStorage.clear();
-      queryClient.clear();
 
-      // Call API with abort signal support
+      // Call API with abort signal support (DON'T clear storage yet)
       const response = await loginUser(loginFormData);
 
       // Log the response structure for debugging

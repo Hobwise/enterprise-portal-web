@@ -210,12 +210,16 @@ const Header = ({ ispos }: any) => {
         )}
         <div className={`flex h-[64px] bg-white text-black ${ispos ? "": "border-b"} border-primaryGrey items-center justify-between px-6`}>
           {ispos && (
-            <CompanyLogo
-              textColor="text-black font-lexend text-[28px] font-[600]"
-              containerClass="flex gap-2 items-center"
-            />
+            <Link href="/pos" className="cursor-pointer">
+              <CompanyLogo
+                textColor="text-black font-lexend text-[28px] font-[600]"
+                containerClass="flex gap-2 items-center"
+              />
+            </Link>
           )}
-          <div className="flex items-center space-x-4">
+        {
+          !ispos && (
+              <div className="flex items-center space-x-4">
             <div className="flex items-center gap-2">
               {navItem ? (
                 <>
@@ -242,9 +246,11 @@ const Header = ({ ispos }: any) => {
               )}
             </div>
           </div>
+          )
+        }
 
 
-             <div className="hidden md:flex items-center space-x-8">
+             <div className="flex items-center space-x-8">
             <div className="flex items-center space-x-4">
             {!ispos && (
               <Popover
@@ -254,7 +260,7 @@ const Header = ({ ispos }: any) => {
               >
                 <PopoverTrigger>
                   {unreadCount === 0 ? (
-                    <SlBell className="text-[#494E58] h-5 w-5 cursor-pointer" />
+                    <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
                   ) : (
                     <Badge
                       className="cursor-pointer h-6 w-6 flex justify-center items-center rounded-full"
@@ -321,7 +327,7 @@ const Header = ({ ispos }: any) => {
                   <DropdownTrigger>
                     {data ? (
                       <div className="flex items-center py-2 px-4 rounded-full border border-gray-300 gap-2 cursor-pointer">
-                        <div className="flex flex-col leading-4 ">
+                        <div className=" hidden md:flex flex-col leading-4 ">
                           <span className="text-xs font-bold">
                             {data?.firstName} {data?.lastName}
                           </span>

@@ -19,7 +19,7 @@ const BackButton: React.FC<BackButtonProps> = ({
       className={`p-4 cursor-pointer ${color} flex items-center`}
     >
       <IoIosArrowRoundBack className='text-2xl' />
-      <span className='text-sm'>Back</span>
+      <span className='md:text-lg text-sm'>Back</span>
     </Link>
   );
 };

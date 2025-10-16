@@ -53,9 +53,9 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
             currency: menuItem.currency,
             isAvailable: menuItem.isAvailable,
             hasVariety: menuItem.hasVariety,
-            image: '',
-            isVariety: false,
-            varieties: null,
+            image: menuItem.image || '',
+            isVariety: menuItem.isVariety || false,
+            varieties: menuItem.varieties || null,
             count: 1,
             isPacked: false,
             packingCost: menuItem.packingCost || 0
@@ -104,12 +104,12 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
         currency: item.currency,
         isAvailable: item.isAvailable,
         hasVariety: item.hasVariety,
-        image: '',
-        isVariety: false,
-        varieties: null,
+        image: item.image || '',
+        isVariety: item.isVariety || false,
+        varieties: item.varieties || null,
         count: 1,
         packingCost: item.packingCost || 0,
-        isPacked: false,
+        isPacked: item.isPacked || false,
       };
       setOrderItems((prev) => [...prev, newItem]);
     }

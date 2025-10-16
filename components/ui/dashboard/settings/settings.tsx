@@ -8,6 +8,7 @@ import Pricings from './pricings';
 import Profile from './profile';
 import Roles from './rolesAndPrivileges/roles';
 import Teams from './teams/teams';
+import BackButton from '@/components/backButton';
 
 interface ListItemProps {
   title: string;
@@ -74,7 +75,7 @@ const SettingsComponent: React.FC = () => {
         className={`border 
         inline-flex flex-col
           border-secondaryGrey w-full xl:w-[284px] p-3 rounded-[8px] h-fit`}
-      >
+      > 
         <ul className='flex xl:flex-col flex-row xl:gap-1 gap-3 overflow-x-auto'>
           {listItems.map((item) => (
             <li
@@ -91,6 +92,7 @@ const SettingsComponent: React.FC = () => {
           ))}
         </ul>
       </article>
+      
       <article className='border min-h-[400px] w-full border-secondaryGrey p-6 rounded-[8px]'>
         {activeScreen === 1 && <Profile />}
         {activeScreen === 2 && <Password />}

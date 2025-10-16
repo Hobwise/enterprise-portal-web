@@ -55,12 +55,12 @@ const Users = ({ data, refetch }: any) => {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
-
     classNames,
+    displayData,
+    isMobile,
   } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isOpenEdit, setIsOpenEdit] = useState(false);
@@ -258,7 +258,7 @@ const Users = ({ data, refetch }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No reservation found"} items={data}>
+        <TableBody emptyContent={"No reservation found"} items={displayData || data}>
           {(item) => (
             <TableRow key={item?.id}>
               {(columnKey) => (

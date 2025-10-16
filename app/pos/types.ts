@@ -17,7 +17,20 @@ export type Item = {
   isPacked?: boolean;
 };
 
+export type Variety = {
+  id: string;
+  unit: string;
+  name?: string;
+  description?: string;
+  price: number;
+  currency?: string;
+  isAvailable?: boolean;
+  itemID?: string;
+  menuID?: string;
+};
+
 export type MenuItem = {
+  [x: string]: ReactNode;
   id: string;
   itemName: string;
   itemDescription?: string;
@@ -25,6 +38,9 @@ export type MenuItem = {
   currency: string;
   isAvailable: boolean;
   hasVariety: boolean;
+  varieties?: Variety[] | null;
+  isVariety?: boolean;
+  image?: string;
   uniqueKey?: string;
   menuName: string;
   menuId: string;

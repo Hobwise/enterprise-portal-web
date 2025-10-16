@@ -115,6 +115,8 @@ const CampaignList = ({ searchQuery }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
+    displayData,
+    isMobile,
   } = usePagination(paginationData, columns, INITIAL_VISIBLE_COLUMNS);
 
   const toggleCampaignModal = () => {
@@ -289,11 +291,8 @@ const CampaignList = ({ searchQuery }: any) => {
     );
   }, [categories, tableStatus]);
 
-  // Get the campaigns array from the paginated data
-  // Ensure it's always an array
-  let campaignsToDisplay = Array.isArray(campaignsForPagination) ? campaignsForPagination : [];
-
-   
+  // Use displayData which contains accumulated data on mobile, current page on desktop
+  let campaignsToDisplay = displayData && Array.isArray(displayData) ? displayData : [];
 
   // Filter campaigns based on searchQuery
   if (searchQuery && searchQuery.trim() && Array.isArray(campaignsToDisplay)) {
@@ -304,7 +303,7 @@ const CampaignList = ({ searchQuery }: any) => {
         item?.campaignDescription?.toLowerCase().includes(lowerSearch)
     );
   }
-  
+
   // Final safety check to ensure campaignsToDisplay is always an array
   if (!Array.isArray(campaignsToDisplay)) {
     campaignsToDisplay = [];
