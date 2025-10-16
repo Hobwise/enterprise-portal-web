@@ -62,7 +62,7 @@ const Preview = () => {
     useCustomerMenuCategories(businessId, cooperateId);
   const { data: menuItems, isLoading: itemsLoading } = useCustomerMenuItems(
     selectedCategoryId,
-    1,
+    "",
     100
   );
 

@@ -1,17 +1,17 @@
 'use client';
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from "react";
 
-import { CustomButton } from '@/components/customButton';
-import Error from '@/components/error';
-import { togglePreview } from '@/components/ui/dashboard/menu/preview-menu/data';
+import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
+import { togglePreview } from "@/components/ui/dashboard/menu/preview-menu/data";
 
-import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
+import { CheckIcon } from "@/components/ui/dashboard/orders/place-order/data";
 
-import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { formatPrice } from '@/lib/utils';
+import useMenuConfig from "@/hooks/cachedEndpoints/useMenuConfiguration";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { formatPrice } from "@/lib/utils";
 import { useSearchParams, useRouter } from "next/navigation";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import {
@@ -85,7 +85,6 @@ const CreateOrder = () => {
         setIsViewOnlyMode(true);
         sessionStorage.setItem(viewOnlyStorageKey, "true");
       } else {
-
         setIsViewOnlyMode(false);
         sessionStorage.removeItem(viewOnlyStorageKey);
       }
@@ -107,6 +106,16 @@ const CreateOrder = () => {
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+
+  // Debounce search query - wait 500ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Modal states for the new flow
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -137,10 +146,14 @@ const CreateOrder = () => {
 
   const {
     data: menuItemsData,
+    totalCount,
     isLoading: itemsLoading,
     isError: itemsError,
     refetch: refetchItems,
-  } = useCustomerMenuItems(selectedCategoryId, 1, 100);
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCustomerMenuItems(selectedCategoryId, debouncedSearchQuery, 10);
 
   // Auto-select first category when categories load
   useEffect(() => {
@@ -168,7 +181,6 @@ const CreateOrder = () => {
   const isLoading = categoriesLoading || itemsLoading;
   const isError = categoriesError || itemsError;
 
-  const [itemsToShow, setItemsToShow] = useState(10);
   const [activeSubCategory, setActiveSubCategory] = useState<string>("");
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -177,7 +189,6 @@ const CreateOrder = () => {
 
   const handleTabClick = (categoryId: string, categoryName: string) => {
     setPage(1);
-    setItemsToShow(10); // Reset to 10 items when changing category
     setSelectedCategoryId(categoryId);
     setMenuIdTable(categoryName);
   };
@@ -190,28 +201,7 @@ const CreateOrder = () => {
     }
   };
 
-  // Handle scroll to load more
-  const handleLoadMore = () => {
-    const totalFiltered = !searchQuery
-      ? (menuItems || []).length
-      : (menuItems || []).filter(
-          (item) =>
-            item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            String(item?.price)
-              ?.toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item?.itemDescription
-              ?.toLowerCase()
-              .includes(searchQuery.toLowerCase())
-        ).length;
-
-    if (itemsToShow < totalFiltered) {
-      setItemsToShow((prev) => prev + 10);
-    }
-  };
-
-  // Infinite scroll handler
+  // Infinite scroll handler - load more items from server
   useEffect(() => {
     const handleScroll = () => {
       // Check if user has scrolled near bottom of page
@@ -219,14 +209,18 @@ const CreateOrder = () => {
       const documentHeight = document.documentElement.scrollHeight;
       const threshold = 300; // Load more when 300px from bottom
 
-      if (scrollPosition >= documentHeight - threshold) {
-        handleLoadMore();
+      if (
+        scrollPosition >= documentHeight - threshold &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
+        fetchNextPage();
       }
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [itemsToShow, menuItems, searchQuery]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Handle category scroll
   const scrollCategories = (direction: "left" | "right") => {
@@ -267,27 +261,8 @@ const CreateOrder = () => {
     );
   }, [categories, menuItems]);
 
-  const unfilteredArray = menuItems || [];
-
-  // Apply search filter
-  const matchingObjectArray = useMemo(() => {
-    const filtered = !searchQuery
-      ? unfilteredArray
-      : unfilteredArray?.filter(
-          (item) =>
-            item?.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            String(item?.price)
-              ?.toLowerCase()
-              .includes(searchQuery.toLowerCase()) ||
-            item?.menuName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item?.itemDescription
-              ?.toLowerCase()
-              .includes(searchQuery.toLowerCase())
-        ) || [];
-
-    // Return paginated results
-    return filtered?.slice(0, itemsToShow) || [];
-  }, [unfilteredArray, searchQuery, itemsToShow]);
+  // No need for client-side filtering anymore - data is filtered on server
+  const matchingObjectArray = menuItems || [];
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -714,12 +689,16 @@ const CreateOrder = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search"
+              placeholder="Search menu items..."
               style={{ outlineColor: primaryColor }}
               className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:border-transparent outline-none bg-gray-50"
             />
             <div className="absolute inset-y-0 right-3 flex items-center">
-              <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
+              {searchQuery !== debouncedSearchQuery ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400" />
+              ) : (
+                <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
+              )}
             </div>
           </div>
         )}
@@ -892,7 +871,14 @@ const CreateOrder = () => {
                       >
                         {item?.isAvailable === false && (
                           <Chip
-                            className={`capitalize absolute ${preview?.chipPosition} z-20`}
+                            className={`capitalize absolute ${
+                              menuConfig?.useBackground === false &&
+                              (layoutName === "Single column 1" ||
+                                layoutName === "Single column 2" ||
+                                layoutName === "Double column")
+                                ? "bottom-2 right-2"
+                                : preview?.chipPosition
+                            }  z-20`}
                             color={"danger"}
                             size="sm"
                             variant="flat"
@@ -900,6 +886,52 @@ const CreateOrder = () => {
                             Out of stock
                           </Chip>
                         )}
+
+                        {/* Image for Grid Layouts */}
+                        {(layoutName === "Single column 1" ||
+                          layoutName === "Single column 2" ||
+                          layoutName === "Double column") &&
+                          menuConfig?.useBackground !== false && (
+                            <div
+                              className={`${
+                                preview?.imageContainer || ""
+                              } relative flex items-center justify-center`}
+                            >
+                              <div
+                                style={{
+                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                }}
+                                className={`relative flex items-center justify-center overflow-hidden ${
+                                  preview?.imageClass || "h-48"
+                                }`}
+                              >
+                                {item.image &&
+                                item.image.length > baseString.length ? (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={`${baseString}${item.image}`}
+                                    alt={item.itemName}
+                                  />
+                                ) : (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={noMenu}
+                                    alt="No image available"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
 
                         {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
                         {item?.isAvailable && !isViewOnlyMode && (

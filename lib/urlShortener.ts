@@ -255,3 +255,112 @@ export function decodeShortUrl(encoded: string): {
     return null;
   }
 }
+
+/**
+ * Browser-safe version of generateShortReservationUrl
+ * For all reservations listing page
+ */
+export function generateShortReservationUrlBrowser(
+  baseUrl: string,
+  params: {
+    businessId: string;
+    cooperateID?: string;
+    businessName: string;
+  }
+): string {
+  const compact: any = {
+    b: compressUUID(params.businessId),
+    n: params.businessName,
+  };
+
+  if (params.cooperateID) {
+    compact.c = compressUUID(params.cooperateID);
+  }
+
+  // Convert to JSON and encode
+  const jsonString = JSON.stringify(compact);
+  const encoded = btoa(unescape(encodeURIComponent(jsonString)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  return `${baseUrl}/r/${encoded}`;
+}
+
+/**
+ * Browser-safe version for single reservation URL
+ */
+export function generateShortSingleReservationUrlBrowser(
+  baseUrl: string,
+  params: {
+    reservationId: string;
+  }
+): string {
+  const compact: any = {
+    r: compressUUID(params.reservationId),
+  };
+
+  // Convert to JSON and encode
+  const jsonString = JSON.stringify(compact);
+  const encoded = btoa(unescape(encodeURIComponent(jsonString)))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
+
+  return `${baseUrl}/r/${encoded}`;
+}
+
+/**
+ * Decode the short reservation URL back to parameters
+ */
+export function decodeShortReservationUrl(encoded: string): {
+  businessId?: string;
+  cooperateID?: string;
+  businessName?: string;
+  reservationId?: string;
+} | null {
+  try {
+    console.log('Decoding short reservation URL:', encoded);
+
+    // Decode from base64
+    let base64 = encoded
+      .replace(/-/g, '+')
+      .replace(/_/g, '/');
+
+    while (base64.length % 4) {
+      base64 += '=';
+    }
+
+    // Decode the JSON string
+    const jsonString = decodeURIComponent(escape(atob(base64)));
+    console.log('Decoded JSON string:', jsonString);
+
+    const compact = JSON.parse(jsonString);
+    console.log('Compact object:', compact);
+
+    const result: any = {};
+
+    // Check if this is a single reservation (has 'r' key) or all reservations (has 'b' key)
+    if (compact.r) {
+      // Single reservation
+      result.reservationId = decompressUUID(compact.r);
+      console.log('Decompressed reservationId:', result.reservationId);
+    } else if (compact.b) {
+      // All reservations
+      result.businessId = decompressUUID(compact.b);
+      result.businessName = compact.n || '';
+      console.log('Decompressed businessId:', result.businessId);
+
+      if (compact.c) {
+        result.cooperateID = decompressUUID(compact.c);
+        console.log('Decompressed cooperateID:', result.cooperateID);
+      }
+    }
+
+    console.log('Final decoded reservation result:', result);
+    return result;
+  } catch (error) {
+    console.error('Error decoding short reservation URL:', error);
+    return null;
+  }
+}

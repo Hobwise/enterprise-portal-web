@@ -74,29 +74,53 @@ const Layout: React.FC = () => {
     e.preventDefault();
 
     console.log("=== SUBMIT START ===");
+    console.log("Submit - activeTile:", activeTile);
+    console.log("Submit - backgroundColor:", backgroundColor);
+    console.log("Submit - selectedTextColor:", selectedTextColor);
+    console.log("Submit - isSelectedPreview:", isSelectedPreview);
     console.log("Submit - selectedImage:", selectedImage);
     console.log("Submit - imageReference:", imageReference);
     console.log("Submit - savedConfig:", savedConfig);
-    console.log("Submit - savedConfig.imageRef:", savedConfig?.imageRef);
 
     setIsLoading(true);
 
-    // Determine the final image reference to use
-    // Priority:
-    // 1. imageReference - if user just uploaded a new image in this session
-    // 2. savedConfig.imageRef - the stored reference ID from previous upload
-    // 3. empty string
-    let finalImageRef = imageReference || savedConfig?.imageRef || "";
+    // Check localStorage for all config values
+    const storageKey = `menuImageRef_${businessInformation[0]?.businessId}`;
+    const storedImageRef = localStorage.getItem(storageKey);
 
-    console.log("Submit - finalImageRef to send:", finalImageRef);
+    // Determine the final values for each field with proper fallbacks
+    // Priority: current state → savedConfig → localStorage → default
+
+    // Image reference
+    let finalImageRef = imageReference || savedConfig?.imageRef || storedImageRef || "";
+
+    // Layout - use current state (user just selected) or fall back to savedConfig
+    const finalLayout = convertActiveTile();
+
+    // Background color - use current state or fall back to savedConfig
+    const finalBackgroundColor = backgroundColor || savedConfig?.backgroundColour || "";
+
+    // Text color - use current state or fall back to savedConfig
+    const finalTextColor = selectedTextColor || savedConfig?.textColour || "#000";
+
+    // Use background - use current state or fall back to savedConfig
+    const finalUseBackground = isSelectedPreview;
+
+    console.log("Submit - final values:");
+    console.log("  - layout:", finalLayout);
+    console.log("  - backgroundColor:", finalBackgroundColor);
+    console.log("  - textColor:", finalTextColor);
+    console.log("  - useBackground:", finalUseBackground);
+    console.log("  - imageRef:", finalImageRef, "from:",
+      imageReference ? "imageReference" : savedConfig?.imageRef ? "savedConfig" : storedImageRef ? "localStorage" : "none");
 
     const payload = {
-      layout: convertActiveTile(),
+      layout: finalLayout,
       backgroudStyle: finalImageRef ? 0 : 1,
-      useBackground: isSelectedPreview,
-      backgroundColour: backgroundColor || "",
-      imageRef: finalImageRef || "",
-      textColour: selectedTextColor || "#000",
+      useBackground: finalUseBackground,
+      backgroundColour: finalBackgroundColor,
+      imageRef: finalImageRef,
+      textColour: finalTextColor,
     };
 
     console.log("Submit - payload:", payload);
@@ -110,6 +134,13 @@ const Layout: React.FC = () => {
 
     if (data?.data?.isSuccessful) {
       toast.success("Changes saved");
+
+      // Ensure imageRef persists in localStorage
+      if (finalImageRef) {
+        localStorage.setItem(storageKey, finalImageRef);
+        console.log("After save - ensured imageRef in localStorage:", finalImageRef);
+      }
+
       // Update saved config with the new data
       const updatedConfig = await getMenuConfiguration(
         businessInformation[0]?.businessId
@@ -118,27 +149,33 @@ const Layout: React.FC = () => {
         const newConfig = updatedConfig.data.data;
         console.log("=== AFTER SAVE - FETCHED CONFIG ===");
         console.log("After save - fetched config:", newConfig);
-        console.log("After save - fetched imageRef:", newConfig?.imageRef);
-        console.log("After save - current selectedImage:", selectedImage);
-        console.log("After save - current imageReference:", imageReference);
 
-        // Ensure imageRef is preserved - use the one we just saved if API doesn't return it
+        // Ensure ALL fields are preserved - use what we just saved if API doesn't return it
         const configToSave = {
           ...newConfig,
-          imageRef: newConfig?.imageRef || finalImageRef
+          layout: newConfig?.layout ?? finalLayout,
+          backgroundColour: newConfig?.backgroundColour || finalBackgroundColor,
+          textColour: newConfig?.textColour || finalTextColor,
+          useBackground: newConfig?.useBackground ?? finalUseBackground,
+          imageRef: newConfig?.imageRef || finalImageRef,
         };
 
-        console.log("After save - config to save:", configToSave);
+        console.log("After save - config to save with all fields preserved:", configToSave);
         setSavedConfig(configToSave);
 
-        // Preserve the imageReference in global context
+        // Preserve ALL values in global context
         if (finalImageRef) {
           setImageReference(finalImageRef);
-          console.log("After save - preserved imageReference in global context:", finalImageRef);
         }
+        if (finalBackgroundColor) {
+          setBackgroundColor(finalBackgroundColor);
+        }
+        if (finalTextColor) {
+          setSelectedTextColor(finalTextColor);
+        }
+        setIsSelectedPreview(finalUseBackground);
 
-        // IMPORTANT: Don't call fetchMenuConfig here as it might reset the selectedImage
-        // The image is already in the state, we just need to preserve it
+        console.log("After save - all values preserved in global context");
         console.log("After save - selectedImage should still be:", selectedImage);
       }
     } else if (data?.data?.error) {
@@ -272,29 +309,45 @@ const Layout: React.FC = () => {
       const storedImageRef = localStorage.getItem(storageKey);
       console.log("Initial load - checking localStorage for imageRef:", storageKey, storedImageRef);
 
-      // Fetch config data to store locally
+      // Fetch config data to store locally and set up initial state
       const configData = await getMenuConfiguration(
         businessInformation[0]?.businessId
       );
       if (configData?.data?.isSuccessful) {
-        console.log("Initial load - config data from API:", configData.data.data);
+        const apiConfig = configData.data.data;
+        console.log("Initial load - config data from API:", apiConfig);
 
-        // Merge with stored imageRef if available
+        // Merge with stored imageRef if available - prioritize localStorage for imageRef
+        const apiImageRef = apiConfig.imageRef || '';
+        const finalImageRef = storedImageRef || apiImageRef;
+
         const configToSave = {
-          ...configData.data.data,
-          imageRef: storedImageRef || configData.data.data.imageRef || ''
+          ...apiConfig,
+          imageRef: finalImageRef
         };
         console.log("Initial load - merged config with localStorage imageRef:", configToSave);
         setSavedConfig(configToSave);
 
-        // Set imageReference in global context if we have it
-        if (storedImageRef) {
-          setImageReference(storedImageRef);
-          console.log("Initial load - restored imageReference from localStorage:", storedImageRef);
+        // Set imageReference in global context - prioritize localStorage
+        if (finalImageRef) {
+          setImageReference(finalImageRef);
+          console.log("Initial load - restored imageReference:", finalImageRef, "from:", storedImageRef ? "localStorage" : "API");
         }
+
+        // Initialize all other fields from the saved config if they're not already set
+        // This ensures that when the component loads, it has the full config available
+        if (apiConfig.backgroundColour && !backgroundColor) {
+          setBackgroundColor(apiConfig.backgroundColour);
+          console.log("Initial load - set backgroundColor:", apiConfig.backgroundColour);
+        }
+        if (apiConfig.textColour && !selectedTextColor) {
+          setSelectedTextColor(apiConfig.textColour);
+          console.log("Initial load - set textColor:", apiConfig.textColour);
+        }
+        // Note: useBackground and layout are set by fetchMenuConfig below
       }
 
-      // Also call the global fetch - this will set selectedImage from API
+      // Also call the global fetch - this will set selectedImage, layout, and other fields from API
       await fetchMenuConfig();
       console.log("Initial load - after fetchMenuConfig");
     };

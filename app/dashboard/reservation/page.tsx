@@ -27,6 +27,7 @@ import {
   dynamicExportConfig,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
+import { generateShortReservationUrlBrowser } from "@/lib/urlShortener";
 import { IoMdAdd } from "react-icons/io";
 import { VscCopy, VscLoading } from "react-icons/vsc";
 import { MdOutlineFileDownload } from "react-icons/md";
@@ -97,15 +98,21 @@ const Reservation: React.FC = () => {
       .filter((item) => Object.keys(item).length > 0);
   }, [data, searchQuery]);
 
-  const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `${
-      companyInfo.webUrl
-    }/reservation/select-reservation?businessName=${encodeURIComponent(
-      business[0]?.businessName
-    )}&businessId=${business[0]?.businessId}&cooperateID=${
-      userInformation.cooperateID
-    }`
-  );
+  // Generate shortened URL for all reservations
+  const shortReservationUrl = useMemo(() => {
+    if (!business?.[0]?.businessId) return "";
+
+    return generateShortReservationUrlBrowser(
+      typeof window !== 'undefined' ? window.location.origin : companyInfo.webUrl,
+      {
+        businessId: business[0]?.businessId,
+        cooperateID: userInformation?.cooperateID,
+        businessName: business[0]?.businessName,
+      }
+    );
+  }, [business, userInformation]);
+
+  const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(shortReservationUrl);
 
   const exportCSV = async (): Promise<void> => {
     setLoadingExport(true);
