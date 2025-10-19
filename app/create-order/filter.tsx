@@ -1,53 +1,56 @@
 'use client';
-import { Chip, Tab, Tabs } from '@nextui-org/react';
+import { useState } from "react";
 
-const Filters = ({
-  menus,
+const Filters = ({ menus, handleTabClick }: any) => {
+  const [selectedCategory, setSelectedCategory] = useState(
+    menus?.[0]?.name || ""
+  );
 
-  handleTabClick,
-}: any) => {
+  const handleCategoryClick = (menuName: string) => {
+    setSelectedCategory(menuName);
+    handleTabClick(menuName);
+  };
+
   return (
-    <>
-      <div className="flex w-full px-3 justify-between">
-        <Tabs
-          classNames={{
-            tabList:
-              'gap-4  relative rounded-none p-0 w-[100%] text-[#344054] overflow-scroll',
-            cursor: 'w-full bg-primaryColor h-[1px]',
-            tab: 'max-w-fit px-0 py-0 h-10 px-4',
-            tabContent:
-              'group-data-[selected=true]:text-primaryColor group-data-[selected=true]:font-semibold',
-          }}
-          fullWidth={true}
-          variant={'underlined'}
-          aria-label="menu filter"
-        >
-          {menus?.map((menu: any) => {
-            return (
-              <Tab
-                key={menu.name}
-                title={
-                  <div
-                    onClick={() => handleTabClick(menu.name)}
-                    className="flex items-center h-10 space-x-2 capitalize"
-                  >
-                    <span>{menu.name}</span>
+    <div className="w-full">
+      {/* Category Pills */}
+      <div
+        className="flex gap-3 overflow-x-auto pb-2"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {menus?.map((menu: any) => {
+          const isSelected = selectedCategory === menu.name;
 
-                    <Chip
-                      classNames={{
-                        base: `text-xs h-5  w-3 text-white group-data-[selected=true]:bg-primaryColor`,
-                      }}
-                    >
-                      {menu?.totalCount}
-                    </Chip>
-                  </div>
-                }
-              />
-            );
-          })}
-        </Tabs>
+          return (
+            <button
+              key={menu.name}
+              onClick={() => handleCategoryClick(menu.name)}
+              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                isSelected
+                  ? "bg-primaryColor text-white"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              }`}
+            >
+              {menu.name}
+            </button>
+          );
+        })}
       </div>
-    </>
+
+      {/* Scroll indicator dots */}
+      <div className="flex justify-center mt-2">
+        <div className="flex space-x-1">
+          {[...Array(Math.ceil((menus?.length || 0) / 4))].map((_, i) => (
+            <div
+              key={i}
+              className={`w-1 h-1 rounded-full ${
+                i === 0 ? "bg-gray-400" : "bg-gray-200"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 };
 

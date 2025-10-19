@@ -29,6 +29,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { MdOutlineMailOutline, MdOutlinePhone } from 'react-icons/md';
 import { toast } from 'sonner';
+import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
 
 const Editor = dynamic(
   () => import('react-draft-wysiwyg').then((mod) => mod.Editor),
@@ -46,7 +47,12 @@ const CompleteBookingComponent = () => {
   let reservationId = searchParams.get('reservationId');
 
   const { data } = useTermsAndCondition(false, cooperateID, businessId);
+  const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
   const router = useRouter();
+
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const textColorStyle = { color: primaryColor };
 
   const [response, setResponse] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -112,14 +118,14 @@ const CompleteBookingComponent = () => {
       reservationId
         ? router.push(
             `${
-              companyInfo.webUrl
+              window.location.origin || companyInfo.webUrl
             }/reservation/select-reservation/complete-booking/success?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
           )
         : router.push(
             `${
-              companyInfo.webUrl
+              window.location.origin || companyInfo.webUrl
             }/reservation/select-reservation/complete-booking/success?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}`
@@ -154,7 +160,7 @@ const CompleteBookingComponent = () => {
           <BackButton
             color="text-black"
             url={`${
-              companyInfo.webUrl
+              window.location.origin || companyInfo.webUrl
             }/reservation/select-reservation/single-reservation?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}`}
@@ -278,7 +284,8 @@ const CompleteBookingComponent = () => {
                 I accept the{" "}
                 <span
                   onClick={onOpen}
-                  className={"text-primaryColor cursor-pointer"}
+                  style={textColorStyle}
+                  className="cursor-pointer"
                 >
                   terms and condition
                 </span>
@@ -300,10 +307,10 @@ const CompleteBookingComponent = () => {
         </CustomButton>
       </form>
 
-      <Modal 
+      <Modal
         size="5xl"
         isDismissable={false}
-        isOpen={isOpen} 
+        isOpen={isOpen}
         onOpenChange={onOpenChange}
       >
         <ModalContent>

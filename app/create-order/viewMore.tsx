@@ -1,19 +1,18 @@
-import { CustomButton } from '@/components/customButton';
-import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
-import { cn, formatPrice } from '@/lib/utils';
+"use client";
+import { CustomButton } from "@/components/customButton";
+import { CheckIcon } from "@/components/ui/dashboard/orders/place-order/data";
+import { cn, formatPrice } from "@/lib/utils";
 import {
   Button,
   Checkbox,
-  Chip,
   Modal,
   ModalBody,
   ModalContent,
-  Spacer,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import { FaMinus, FaPlus } from 'react-icons/fa6';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import noImage from '../../public/assets/images/no-image.svg';
+} from "@nextui-org/react";
+import Image from "next/image";
+import { FaMinus, FaPlus } from "react-icons/fa6";
+import { IoAddCircleOutline, IoClose } from "react-icons/io5";
+import noMenu from "../../public/assets/images/no-menu-1.jpg";
 
 const ViewModal = ({
   selectedItems,
@@ -26,7 +25,13 @@ const ViewModal = ({
   totalPrice,
   handlePackingCost,
   handleCheckoutOpen,
+  menuConfig,
 }: any) => {
+  // Dynamic color from menu config
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+
   const getItemCount = (itemId: string) => {
     const item = selectedItems.find((item: any) => item.id === itemId);
     return item ? item.count : 0;
@@ -42,264 +47,250 @@ const ViewModal = ({
   return (
     <Modal
       classNames={{
-        base: 'max-h-full',
-        wrapper: 'overflow-hidden',
+        base: "max-h-full",
+        wrapper: "overflow-hidden",
       }}
+      size="xl"
       isOpen={isOpenVariety}
       onOpenChange={toggleVarietyModal}
     >
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalBody className='overflow-y-auto max-h-full'>
-              <Spacer y={5} />
-              <Image
-                src={
-                  selectedMenu.image
-                    ? `data:image/jpeg;base64,${selectedMenu.image}`
-                    : noImage
-                }
-                width={200}
-                height={200}
-                style={{ objectFit: 'cover' }}
-                className='bg-cover h-[200px] rounded-lg w-full'
-                aria-label='uploaded image'
-                alt='uploaded image(s)'
-              />
-              <div className='text-black'>
-                <h1 className='text-[28px] font-semibold'>
-                  {selectedMenu?.menuName}
+            <ModalBody className="overflow-y-auto max-h-full p-0 relative">
+              {/* Close Button - Top Right */}
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 z-20 bg-white/90 hover:bg-white rounded-full p-2 shadow-lg transition-colors"
+                aria-label="Close modal"
+              >
+                <IoClose className="w-6 h-6 text-gray-700" />
+              </button>
+
+              {/* Image Section */}
+              <div className="relative h-[280px] w-full">
+                <Image
+                  src={
+                    selectedMenu.image
+                      ? `data:image/jpeg;base64,${selectedMenu.image}`
+                      : noMenu
+                  }
+                  fill
+                  style={{ objectFit: "cover" }}
+                  className="rounded-t-2xl"
+                  aria-label="uploaded image"
+                  alt="uploaded image(s)"
+                />
+              </div>
+
+              {/* Content Section */}
+              <div className="p-6 text-black">
+                <h1 className="text-2xl font-bold mb-2">
+                  {selectedMenu?.itemName}
                 </h1>
-                <Spacer y={2} />
-                <p className='text-sm font-sm text-grey600 xl:w-[360px] w-full'>
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">
                   {selectedMenu?.itemDescription}
                 </p>
-                <Spacer y={2} />
-                <div className='flex text-sm justify-between'>
-                  <div>
-                    <p className='font-[700]'>
-                      {formatPrice(selectedMenu?.price)}
-                    </p>
-                    <Spacer y={1} />
-                    <p className='text-grey600 text-sm'>
-                      {selectedMenu?.itemName}
-                    </p>
-                    <Spacer y={3} />
-                    {isItemSelected(selectedMenu.id) && (
-                      <>
-                        <div className='flex gap-2'>
-                          <Checkbox
-                            size='sm'
-                            classNames={{
-                              base: cn('items-start'),
-                              label: 'w-full',
-                            }}
-                            isSelected={itemIsPacked(selectedMenu.id)}
-                            onValueChange={(isSelected) =>
-                              handlePackingCost(selectedMenu.id, isSelected)
-                            }
-                          >
-                            <div className='flex flex-col'>
-                              <span className='text-grey600 text-sm'>
-                                Pack In
-                              </span>
-                              <span
-                                className={cn(
-                                  'text-xs text-gray-200',
-                                  itemIsPacked(selectedMenu.id) &&
-                                    'font-bold text-black'
-                                )}
-                              >
-                                {formatPrice(selectedMenu.packingCost)}
-                              </span>
-                            </div>
-                          </Checkbox>
+
+                {/* Section Name & Waiting Time */}
+                <div className="flex flex-col gap-2 mb-4 text-sm">
+                  <p className="text-gray-700 font-medium">
+                    {selectedMenu?.menuName}
+                  </p>
+                </div>
+
+                {/* Price */}
+                <div className="mb-6">
+                  <p className="text-3xl font-bold" style={textColorStyle}>
+                    {formatPrice(selectedMenu?.price)}
+                  </p>
+                </div>
+
+                {/* Packing Cost Option */}
+                {isItemSelected(selectedMenu.id) &&
+                  selectedMenu?.packingCost > 0 &&
+                  !selectedMenu?.varieties && (
+                    <div className="mb-6 border border-gray-200 rounded-lg p-4">
+                      <Checkbox
+                        size="sm"
+                        isSelected={itemIsPacked(selectedMenu.id)}
+                        onValueChange={(isSelected) =>
+                          handlePackingCost(selectedMenu.id, isSelected)
+                        }
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-black">
+                            Pack this item
+                          </span>
+                          <span className="text-xs text-gray-600">
+                            Additional {formatPrice(selectedMenu.packingCost)}
+                          </span>
                         </div>
-                        <Spacer y={3} />
-                      </>
-                    )}
-                  </div>
-                  {isItemSelected(selectedMenu.id) && (
-                    <div className='flex'>
-                      <Button
-                        onClick={() => handleDecrement(selectedMenu.id)}
-                        isIconOnly
-                        radius='sm'
-                        variant='faded'
-                        className='border h-[35px] w-[35px] border-primaryGrey bg-white'
-                        aria-label='minus'
-                      >
-                        <FaMinus />
-                      </Button>
-                      <span className='font-bold text-black py-2 px-3'>
-                        {getItemCount(selectedMenu.id)}
-                      </span>
-                      <Button
-                        onClick={() => handleIncrement(selectedMenu.id)}
-                        isIconOnly
-                        radius='sm'
-                        variant='faded'
-                        className='border border-primaryGrey h-[35px] w-[35px] bg-white'
-                        aria-label='plus'
-                      >
-                        <FaPlus />
-                      </Button>
+                      </Checkbox>
                     </div>
                   )}
-                  {selectedMenu?.varieties ? (
-                    <div className='flex'>
-                      {isItemSelected(selectedMenu.id) ? (
-                        <Chip
-                          title='remove'
-                          onClick={() =>
-                            handleCardClick(
-                              {
-                                ...selectedMenu,
-                                isVariety: false,
-                              },
-                              itemIsPacked(selectedMenu.id)
-                            )
-                          }
-                          startContent={<CheckIcon size={18} />}
-                          variant='flat'
-                          classNames={{
-                            base: 'bg-primaryColor cursor-pointer text-white text-[12px]',
-                          }}
-                        >
-                          Selected
-                        </Chip>
-                      ) : (
-                        <CustomButton
-                          onClick={() =>
-                            handleCardClick(
-                              {
-                                ...selectedMenu,
-                                isVariety: false,
-                              },
-                              false
-                            )
-                          }
-                          className='h-8 w-8 text-black bg-primaryGrey border border-primaryGrey'
-                        >
-                          Select
-                        </CustomButton>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
               </div>
-              <div>
-                {selectedMenu?.varieties ? (
-                  <>
+
+              {/* Varieties Section (if applicable) */}
+              {selectedMenu?.varieties &&
+                selectedMenu?.varieties?.length > 0 && (
+                  <div className="px-6 pb-4">
+                    <h3 className="font-semibold mb-3 text-black">
+                      Choose Size
+                    </h3>
+
+                    {/* Base Item Option */}
+                    <div
+                      className={`flex justify-between items-start py-3 border-b border-gray-100  rounded-lg mb-2`}
+                    >
+                      <div className="flex-1">
+                        <p className="font-medium text-black">
+                          Regular (Base Item)
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {formatPrice(selectedMenu?.price)}
+                        </p>
+                        {/* Packing Cost for Base Item */}
+                        {isItemSelected(selectedMenu.id) &&
+                          selectedMenu.packingCost > 0 && (
+                            <div className="mt-2">
+                              <Checkbox
+                                size="sm"
+                                isSelected={itemIsPacked(selectedMenu.id)}
+                                onValueChange={(isSelected) =>
+                                  handlePackingCost(selectedMenu.id, isSelected)
+                                }
+                              >
+                                <div className="flex flex-col">
+                                  <span className="text-xs text-gray-600">
+                                    Pack this item
+                                  </span>
+                                  <span className="text-xs font-medium text-black">
+                                    +{formatPrice(selectedMenu.packingCost)}
+                                  </span>
+                                </div>
+                              </Checkbox>
+                            </div>
+                          )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {isItemSelected(selectedMenu.id) && (
+                          <div className="flex items-center gap-2">
+                            <Button
+                              onClick={() => handleDecrement(selectedMenu.id)}
+                              isIconOnly
+                              radius="sm"
+                              size="sm"
+                              variant="bordered"
+                              className="border-gray-300 min-w-8 w-8 h-8"
+                            >
+                              <FaMinus className="text-xs" />
+                            </Button>
+                            <span className="font-bold text-black min-w-[20px] text-center">
+                              {getItemCount(selectedMenu.id)}
+                            </span>
+                            <Button
+                              onClick={() => handleIncrement(selectedMenu.id)}
+                              isIconOnly
+                              radius="sm"
+                              size="sm"
+                              variant="bordered"
+                              className="border-gray-300 min-w-8 w-8 h-8"
+                            >
+                              <FaPlus className="text-xs" />
+                            </Button>
+                          </div>
+                        )}
+                        {!isItemSelected(selectedMenu.id) && (
+                          <Button
+                            onClick={() => {
+                              handleCardClick(
+                                {
+                                  ...selectedMenu,
+                                  isVariety: false,
+                                },
+                                false
+                              );
+                            }}
+                            size="sm"
+                            style={primaryColorStyle}
+                            className="text-white hover:opacity-90"
+                          >
+                            Add
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Variety Options */}
                     {selectedMenu?.varieties?.map((item: any) => {
                       const isVarietySelected = isItemSelected(item.id);
-
                       return (
                         <div
                           key={item.id}
-                          className='flex justify-between gap-3 items-center text-sm cursor-pointer'
+                          className="flex justify-between items-start py-3 border-b border-gray-100 last:border-0"
                         >
-                          <div className='pb-3 rounded-lg text-black flex'>
-                            <div className='flex flex-col text-sm justify-center'>
-                              <span className='font-[600]'>
-                                {selectedMenu.menuName}
-                              </span>
-                              <span className='text-grey600'>
-                                {selectedMenu.itemName}{' '}
-                                <span className='text-black'>
-                                  {item.unit && `(${item.unit})`}
-                                </span>
-                              </span>
-
-                              <span className='font-[600] text-black'>
-                                {formatPrice(item?.price)}
-                              </span>
-
-                              {isItemSelected(item.id) && (
-                                <Checkbox
-                                  size='sm'
-                                  classNames={{
-                                    base: cn('items-start'),
-                                    label: 'w-full',
-                                  }}
-                                  isSelected={itemIsPacked(item.id)}
-                                  onValueChange={(isSelected) =>
-                                    handlePackingCost(item.id, isSelected)
-                                  }
-                                >
-                                  <div className='flex flex-col'>
-                                    <span className='text-grey600 text-sm'>
-                                      Pack In
-                                    </span>
-                                    <span
-                                      className={cn(
-                                        'text-xs text-gray-200',
-                                        itemIsPacked(item.id) &&
-                                          'font-bold text-black'
-                                      )}
-                                    >
-                                      {formatPrice(selectedMenu.packingCost)}
-                                    </span>
-                                  </div>
-                                </Checkbox>
+                          <div className="flex-1">
+                            <p className="font-medium text-black">
+                              {item.unit && `${item.unit}`}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              {formatPrice(item?.price)}
+                            </p>
+                            {/* Packing Cost for Variety */}
+                            {isVarietySelected &&
+                              selectedMenu.packingCost > 0 && (
+                                <div className="mt-2">
+                                  <Checkbox
+                                    size="sm"
+                                    isSelected={itemIsPacked(item.id)}
+                                    onValueChange={(isSelected) =>
+                                      handlePackingCost(item.id, isSelected)
+                                    }
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className="text-xs text-gray-600">
+                                        Pack this item
+                                      </span>
+                                      <span className="text-xs font-medium text-black">
+                                        +{formatPrice(selectedMenu.packingCost)}
+                                      </span>
+                                    </div>
+                                  </Checkbox>
+                                </div>
                               )}
-                            </div>
                           </div>
-                          {isVarietySelected && (
-                            <div className='flex items-center'>
+                          <div className="flex items-center gap-2">
+                            {isVarietySelected && (
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  onClick={() => handleDecrement(item.id)}
+                                  isIconOnly
+                                  radius="sm"
+                                  size="sm"
+                                  variant="bordered"
+                                  className="border-gray-300 min-w-8 w-8 h-8"
+                                >
+                                  <FaMinus className="text-xs" />
+                                </Button>
+                                <span className="font-bold text-black min-w-[20px] text-center">
+                                  {getItemCount(item.id)}
+                                </span>
+                                <Button
+                                  onClick={() => handleIncrement(item.id)}
+                                  isIconOnly
+                                  radius="sm"
+                                  size="sm"
+                                  variant="bordered"
+                                  className="border-gray-300 min-w-8 w-8 h-8"
+                                >
+                                  <FaPlus className="text-xs" />
+                                </Button>
+                              </div>
+                            )}
+                            {!isVarietySelected && (
                               <Button
-                                onClick={() => handleDecrement(item.id)}
-                                isIconOnly
-                                radius='sm'
-                                variant='faded'
-                                className='border h-[35px] w-[35px] border-primaryGrey bg-white'
-                                aria-label='minus'
-                              >
-                                <FaMinus />
-                              </Button>
-                              <span className='font-bold text-black py-2 px-3'>
-                                {getItemCount(item.id)}
-                              </span>
-                              <Button
-                                onClick={() => handleIncrement(item.id)}
-                                isIconOnly
-                                radius='sm'
-                                variant='faded'
-                                className='border h-[35px] w-[35px] border-primaryGrey bg-white'
-                                aria-label='plus'
-                              >
-                                <FaPlus />
-                              </Button>
-                            </div>
-                          )}
-                          <div className='flex flex-col'>
-                            {isVarietySelected ? (
-                              <Chip
-                                title='remove'
-                                onClick={() =>
-                                  handleCardClick(
-                                    {
-                                      ...item,
-                                      isVariety: false,
-                                      itemName: selectedMenu.itemName,
-                                      menuName: selectedMenu.menuName,
-                                      image: selectedMenu.image,
-                                      packingCost: selectedMenu.packingCost,
-                                    },
-                                    itemIsPacked(item.id)
-                                  )
-                                }
-                                startContent={<CheckIcon size={18} />}
-                                variant='flat'
-                                classNames={{
-                                  base: 'bg-primaryColor text-white text-[12px]',
-                                }}
-                              >
-                                Selected
-                              </Chip>
-                            ) : (
-                              <CustomButton
-                                onClick={() =>
+                                onClick={() => {
                                   handleCardClick(
                                     {
                                       ...item,
@@ -310,79 +301,73 @@ const ViewModal = ({
                                       packingCost: selectedMenu.packingCost,
                                     },
                                     false
-                                  )
-                                }
-                                className='h-8 text-sm w-4 text-black bg-primaryGrey border border-primaryGrey'
+                                  );
+                                }}
+                                size="sm"
+                                className="bg-gray-100 text-black hover:bg-gray-200"
                               >
-                                Select
-                              </CustomButton>
+                                Add
+                              </Button>
                             )}
                           </div>
                         </div>
                       );
                     })}
-                  </>
-                ) : (
-                  <div>
-                    {isItemSelected(selectedMenu.id) ? (
-                      <CustomButton
-                        onClick={() => {
-                          handleCardClick(
-                            {
-                              ...selectedMenu,
-                              isVariety: false,
-                            },
-                            itemIsPacked(selectedMenu.id)
-                          );
-                          toggleVarietyModal();
-                        }}
-                        title='remove this item'
-                        className='bg-white h-10 w-full text-danger-500 border border-danger-500'
-                      >
-                        Remove item
-                      </CustomButton>
-                    ) : (
-                      <CustomButton
-                        onClick={() => {
-                          handleCardClick(
-                            {
-                              ...selectedMenu,
-                              isVariety: false,
-                            },
-                            false
-                          );
-                        }}
-                        className='md:bg-white bg-primaryGrey h-10 w-full text-black border border-primaryGrey'
-                      >
-                        Select
-                      </CustomButton>
-                    )}
                   </div>
                 )}
+
+              {/* Action Button */}
+              <div className="px-6 pb-6">
+                {!selectedMenu?.varieties &&
+                  !isItemSelected(selectedMenu.id) && (
+                    <CustomButton
+                      onClick={() => {
+                        handleCardClick(
+                          {
+                            ...selectedMenu,
+                            isVariety: false,
+                          },
+                          false
+                        );
+                        onClose(); // Close modal after adding
+                      }}
+                      style={primaryColorStyle}
+                      className="w-full h-12 text-white font-semibold flex items-center justify-center gap-2"
+                    >
+                      <IoAddCircleOutline className="w-5 h-5" />
+                      Add Items
+                    </CustomButton>
+                  )}
+
+                {!selectedMenu?.varieties &&
+                  isItemSelected(selectedMenu.id) && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-center gap-4 bg-gray-50 rounded-lg p-3">
+                        <Button
+                          onClick={() => handleDecrement(selectedMenu.id)}
+                          isIconOnly
+                          radius="sm"
+                          variant="bordered"
+                          className="border-gray-300 min-w-10 w-10 h-10"
+                        >
+                          <FaMinus className="text-sm" />
+                        </Button>
+                        <span className="font-bold text-xl text-black min-w-[30px] text-center">
+                          {getItemCount(selectedMenu.id)}
+                        </span>
+                        <Button
+                          onClick={() => handleIncrement(selectedMenu.id)}
+                          isIconOnly
+                          radius="sm"
+                          variant="bordered"
+                          className="border-gray-300 min-w-10 w-10 h-10"
+                        >
+                          <FaPlus className="text-sm" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
               </div>
-              {selectedItems.length > 0 && (
-                <>
-                  {/* <div className='flex gap-2 text-black text-sm bg-primaryGrey rounded-md p-3 w-full items-center mb-2 justify-between'>
-                    <p className='text-grey500'>Total Amount</p>
-                    <div className='flex gap-2 font-bold items-center'>
-                      {formatPrice(totalPrice)}{' '}
-                    </div>
-                  </div> */}
-                  <CustomButton
-                    onClick={handleCheckoutOpen}
-                    className='py-6 px-4 mb-2 flex justify-between text-white'
-                    backgroundColor='bg-primaryColor'
-                  >
-                    <div className='flex gap-2 font-bold items-center'>
-                      {formatPrice(totalPrice)}{' '}
-                    </div>
-                    <div className='flex gap-2 items-center justify-center'>
-                      <p>{'Proceed'} </p>
-                      <HiArrowLongLeft className='text-[22px] rotate-180' />
-                    </div>
-                  </CustomButton>
-                </>
-              )}
             </ModalBody>
           </>
         )}

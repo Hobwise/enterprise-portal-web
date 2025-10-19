@@ -23,7 +23,7 @@ import { saveAs } from "file-saver";
 
 import LoadingAvatar from "../public/assets/images/loadingAvatar.svg";
 import { companyInfo } from "./companyInfo";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
 import { RefObject } from "react";
 
@@ -138,10 +138,10 @@ export const notify = ({ title, text, type }: notifyType) => {
   type === "warning" &&
     toast(<Msg title={title} text={text} />, {
       ...toastData,
-      icon: '⚠️',
+      icon: "⚠️",
       style: {
-        background: '#F59E0B',
-        color: '#fff',
+        background: "#F59E0B",
+        color: "#fff",
       },
     });
   type === "success" &&
@@ -212,7 +212,7 @@ export const CustomLoading = () => {
   );
 };
 
-export const formatPrice = (price: any, currency?: any) => {
+export const formatPrice = (price: any) => {
   const formatter = new Intl.NumberFormat("en-NG", {
     style: "currency",
     currency: "NGN",
@@ -270,7 +270,10 @@ export const SmallLoader = () => {
 };
 
 export const tableTotalCount = (data: any) => {
-  return data?.reduce((sum: number, category: any) => sum + category.totalCount, 0);
+  return data?.reduce(
+    (sum: number, category: any) => sum + category.totalCount,
+    0
+  );
 };
 
 export const formatDateTime = (dateData: any) => {
@@ -592,24 +595,24 @@ export function resetLoginInfo() {
     // Clear all storage
     sessionStorage.clear();
     localStorage.clear();
-    
+
     // Remove specific cookies that might persist
     removeCookie("token");
     removeCookie("planCapabilities");
     removeCookie("username");
     removeCookie("jwt");
-    
+
     // Clear any React Query cache if available globally
-    if (typeof window !== 'undefined' && (window as any).queryClient) {
+    if (typeof window !== "undefined" && (window as any).queryClient) {
       (window as any).queryClient.clear();
     }
-    
+
     // Add a small delay to ensure cleanup completes before redirect
     setTimeout(() => {
       window.location.href = "/auth/login";
     }, 100);
   } catch (error) {
-    console.error('Error during logout cleanup:', error);
+    console.error("Error during logout cleanup:", error);
     // Force redirect even if cleanup fails
     window.location.href = "/auth/login";
   }
@@ -848,5 +851,3 @@ export const reservationDuration = [
     value: 12,
   },
 ];
-
-

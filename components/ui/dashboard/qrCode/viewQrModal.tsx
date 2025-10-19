@@ -1,11 +1,12 @@
-'use client';
-import { CustomButton } from '@/components/customButton';
-import { companyInfo } from '@/lib/companyInfo';
-import { downloadQRImage, getJsonItemFromLocalStorage } from '@/lib/utils';
-import { Modal, ModalBody, ModalContent, Spacer } from '@nextui-org/react';
-import { useRef } from 'react';
-import { MdOutlineFileDownload } from 'react-icons/md';
-import QRCode from 'react-qr-code';
+"use client";
+import { CustomButton } from "@/components/customButton";
+import { companyInfo } from "@/lib/companyInfo";
+import { downloadQRImage, getJsonItemFromLocalStorage } from "@/lib/utils";
+import { Modal, ModalBody, ModalContent, Spacer } from "@nextui-org/react";
+import { useRef, useMemo } from "react";
+import { MdOutlineFileDownload } from "react-icons/md";
+import QRCode from "react-qr-code";
+import { generateShortMenuUrlBrowser } from "@/lib/urlShortener";
 
 interface ViewQrModalProps {
   isOpenView: boolean;
@@ -17,18 +18,21 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
   toggleQRmodalView,
 }) => {
   const qrRef = useRef<HTMLDivElement>(null);
-  const qrObject = getJsonItemFromLocalStorage('qr');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const business = getJsonItemFromLocalStorage('business');
+  const qrObject = getJsonItemFromLocalStorage("qr");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const business = getJsonItemFromLocalStorage("business");
 
-  // const params = {
-  //   businessID: business[0]?.businessId,
-  //   cooperateID: userInformation?.cooperateID,
-  //   id: qrObject?.id,
-  // };
-  // const encrypted = encrypt(JSON.stringify(params));
-  // console.log(encrypted, 'encedyigk');
-  // const shortIdentifier = encrypted.content.substring(0, 10);
+  // Generate shortened URL using base64 encoding
+  const shortQrUrl = useMemo(() => {
+    if (!business?.[0]?.businessId) return "";
+
+    return generateShortMenuUrlBrowser(window.location.origin, {
+      businessID: business[0]?.businessId,
+      cooperateID: userInformation?.cooperateID,
+      id: qrObject?.id,
+      businessName: business[0]?.businessName,
+    });
+  }, [business, userInformation, qrObject]);
 
   return (
     <Modal
@@ -57,13 +61,7 @@ const ViewQrModal: React.FC<ViewQrModalProps> = ({
                     maxWidth: "100%",
                     maxHeight: "100%",
                   }}
-                  value={`${companyInfo.webUrl}/create-order?businessID=${
-                    business[0]?.businessId || ''
-                  }&cooperateID=${userInformation?.cooperateID || ''}&id=${
-                    qrObject?.id || ''
-                  }&businessName=${encodeURIComponent(
-                    business[0]?.businessName || ''
-                  )}`}
+                  value={shortQrUrl}
                   viewBox={`0 0 256 256`}
                 />
               </div>

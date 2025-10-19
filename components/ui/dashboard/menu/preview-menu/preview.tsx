@@ -1,13 +1,20 @@
 "use client";
 import * as React from "react";
-import { Divider } from "@nextui-org/react";
 import Image from "next/image";
 
 import { useGlobalContext } from "@/hooks/globalProvider";
-import NoMenu from "../../../../../public/assets/images/no-menu.png";
+import NoMenu from "../../../../../public/assets/images/no-menu-1.jpg";
 import { togglePreview } from "./data";
-import useMenu from "@/hooks/cachedEndpoints/useMenu";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice, getJsonItemFromLocalStorage } from "@/lib/utils";
+import useCustomerMenuCategories from "@/hooks/cachedEndpoints/useCustomerMenuCategories";
+import useCustomerMenuItems from "@/hooks/cachedEndpoints/useCustomerMenuItems";
+import {
+  IoChevronBack,
+  IoChevronForward,
+  IoSearchOutline,
+} from "react-icons/io5";
+import { HiOutlineMicrophone } from "react-icons/hi";
+import RestaurantBanner from "@/app/create-order/RestaurantBanner";
 
 const Preview = () => {
   const {
@@ -16,226 +23,314 @@ const Preview = () => {
     selectedImage,
     backgroundColor,
     selectedTextColor,
-    currentMenuItems,
-    currentCategory,
-    currentSection,
-    currentSearchQuery,
   } = useGlobalContext();
 
-  const { data } = useMenu();
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const businessId = businessInformation?.[0]?.businessId;
+  const businessName = businessInformation?.[0]?.businessName || "";
+  const cooperateId = userInformation?.cooperateID;
 
-  // Use currentMenuItems from context if available, otherwise fall back to all items
-  const [items, setItems] = React.useState<any[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] =
+    React.useState<string>("");
+  const [categoryScrollRef, setCategoryScrollRef] =
+    React.useState<HTMLDivElement | null>(null);
+  const [showLeftArrow, setShowLeftArrow] = React.useState(false);
+  const [showRightArrow, setShowRightArrow] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  // Handle image URL properly - blob URLs and base64 strings
+  const isBlobUrl = selectedImage?.startsWith("blob:");
+
+  const menuConfig = {
+    image: isBlobUrl
+      ? selectedImage
+      : selectedImage?.replace("data:image/jpeg;base64,", ""),
+    backgroundColour: backgroundColor,
+    textColour: selectedTextColor,
+    useBackground: isSelectedPreview,
+  };
+
+  const baseString = isBlobUrl ? "" : "data:image/jpeg;base64,";
+
+  // Dynamic color from menu config (fallback to primary color)
+  const primaryColor = backgroundColor || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
+
+  const { data: categories, isLoading: categoriesLoading } =
+    useCustomerMenuCategories(businessId, cooperateId);
+  const { data: menuItems, isLoading: itemsLoading } = useCustomerMenuItems(
+    selectedCategoryId,
+    "",
+    100
+  );
+
+  // Filter menu items by search query
+  const filteredMenuItems = React.useMemo(() => {
+    if (!menuItems) return [];
+    if (!searchQuery.trim()) return menuItems;
+
+    return menuItems.filter(
+      (item) =>
+        item.itemName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.itemDescription?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [menuItems, searchQuery]);
+
+  const checkScrollPosition = () => {
+    if (categoryScrollRef) {
+      const { scrollLeft, scrollWidth, clientWidth } = categoryScrollRef;
+      setShowLeftArrow(scrollLeft > 10);
+      setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const scrollCategories = (direction: "left" | "right") => {
+    if (categoryScrollRef) {
+      const scrollAmount = 200;
+      categoryScrollRef.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
 
   React.useEffect(() => {
-    // First priority: Use items from global context
-    if (currentMenuItems && currentMenuItems.length > 0) {
-      setItems(currentMenuItems);
+    if (categories && categories.length > 0 && !selectedCategoryId) {
+      setSelectedCategoryId(categories[0].id);
     }
-    // Second priority: Check sessionStorage for persisted state
-    else if (typeof window !== "undefined") {
-      const savedState = sessionStorage.getItem("previewMenuState");
-      if (savedState) {
-        const parsedState = JSON.parse(savedState);
-        setItems(parsedState.items || []);
-      } else if (data) {
-        // Fall back to all items from API if no context or saved state
-        setItems(data.flatMap((obj) => obj.items));
-      }
-    }
-    // Last resort: Use data from API
-    else if (data) {
-      setItems(data.flatMap((obj) => obj.items));
-    }
-  }, [currentMenuItems, data]);
+  }, [categories, selectedCategoryId]);
 
-  const styles = togglePreview(activeTile);
+  React.useEffect(() => {
+    checkScrollPosition();
+  }, [categoryScrollRef]);
+
+  const styles = togglePreview(activeTile, true);
 
   return (
     <article
-      // style={{
-      //   backgroundColor: backgroundColor || "white",
-      // }}
-style={{
-  ...(selectedImage && selectedImage.trim() !== "" 
-    ? {
-        backgroundImage: `url(${
-          selectedImage.startsWith("blob:") ||
-          selectedImage.startsWith("http") ||
-          selectedImage.startsWith("data:")
-            ? selectedImage
-            : `data:image/jpeg;base64,${selectedImage}`
-        })`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }
-    : { backgroundColor: backgroundColor || "white" }
-  ),
-}}
-aria-label="background"
-className={`xl:block relative hidden w-[320px] border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px]`}
+      className={`relative w-full max-w-[320px] mx-auto border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px] bg-white`}
     >
-      {/* {selectedImage && selectedImage.trim() !== "" && (
-        <div
-          className="absolute top-0 h-screen object-cover opacity-40 -z-5"
-          style={{
-            backgroundImage: `url(${
-              selectedImage.startsWith("blob:") ||
-              selectedImage.startsWith("http") ||
-              selectedImage.startsWith("data:")
-                ? selectedImage
-                : `data:image/jpeg;base64,${selectedImage}`
-            })`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            width: "100%",
-          }}
-          aria-label="background"
-        />
-      )} */}
+      {/* Restaurant Banner */}
+      <RestaurantBanner
+        businessName={businessName || ""}
+        menuConfig={menuConfig}
+        showMenuButton={false}
+        baseString={baseString}
+      />
 
-      {/* Menu header */}
-      <header className="sticky bg-inherit top-0 z-10  pt-4 px-4">
-        <h1
-          style={{ color: selectedTextColor }}
-          className="text-[28px] font-bold"
-        >
-          Menu
-        </h1>
-        {(currentCategory || currentSection || currentSearchQuery) && (
-          <div className="mt-1">
-            {currentCategory && (
-              <p
-                style={{ color: selectedTextColor }}
-                className="text-sm opacity-80"
-              >
-                {currentCategory}
-                {currentSection && ` / ${currentSection}`}
-              </p>
-            )}
-            {currentSearchQuery && (
-              <p
-                style={{ color: selectedTextColor }}
-                className="text-xs opacity-70 mt-1"
-              >
-                Showing results for: "{currentSearchQuery}"
-              </p>
-            )}
+      {/* Search Bar */}
+      <div className="px-4 py-4 bg-white">
+        <div className="relative w-full">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <IoSearchOutline className="h-5 w-5 text-gray-400" />
           </div>
-        )}
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search"
+            className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primaryColor focus:border-transparent outline-none bg-gray-50"
+          />
+          <div className="absolute inset-y-0 right-3 flex items-center">
+            <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
+          </div>
+        </div>
+      </div>
 
-        {/* Optional tabs - currently commented out */}
-        {/* <div className="overflow-x-auto w-full">
-          <Tabs
-            classNames={{
-              tabList:
-                "gap-3 w-full relative rounded-none p-0 border-b border-divider",
-              cursor: "w-full bg-primaryColor",
-              tab: "max-w-fit px-0 h-10",
-              tabContent: "group-data-[selected=true]:text-primaryColor",
-            }}
-            variant={"underlined"}
-            aria-label="menu filter"
-            disabledKeys={["Drinks", "Dessert", "Breakfast"]}
-          >
-            {menus.map((menu) => (
-              <Tab
-                key={menu.name}
-                title={
-                  <div className="flex items-center space-x-2">
-                    <span>{menu.name}</span>
-                    <Chip
-                      classNames={{
-                        base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
-                      }}
-                    >
-                      {menu.chip}
-                    </Chip>
-                  </div>
-                }
-              />
-            ))}
-          </Tabs>
-        </div> */}
-      </header>
-
-      <main className={`${styles.main} relative px-4 pb-4`}>
-        {items?.length ? (
-          items.map((item) => (
-            <React.Fragment
-              key={`${item.id || item.menuID}-${item.name || item.itemName}`}
+      {/* Category Pills Filter with Arrows */}
+      {categories && categories.length > 0 && (
+        <div className="relative px-4 py-3 bg-white">
+          {/* Left Arrow */}
+          {showLeftArrow && (
+            <button
+              aria-label="Scroll left"
+              onClick={() => scrollCategories("left")}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
             >
-              <div
-                className={`${styles.container} ${
-                  activeTile === "List Right" &&
-                  isSelectedPreview &&
-                  "flex-row-reverse"
-                } flex my-4 gap-3`}
-              >
-                {isSelectedPreview && (
-                  <div className={`${styles.imageContainer} shrink-0`}>
-                    <Image
-                      className={`bg-cover rounded-lg ${styles.imageClass} object-cover`}
-                      width={activeTile.includes("Single column") ? 300 : 60}
-                      height={activeTile.includes("Single column") ? 200 : 60}
-                      src={
-                        item?.image
-                          ? item.image.startsWith("data:") ||
-                            item.image.startsWith("http")
-                            ? item.image
-                            : `data:image/jpeg;base64,${item.image}`
-                          : NoMenu
-                      }
-                      alt={item.name || item.itemName || "Menu item"}
-                    />
-                  </div>
-                )}
-                <div
-                  style={{ color: selectedTextColor }}
-                  className={`text-[14px] ${styles.textContainer} flex flex-col justify-center`}
+              <IoChevronBack className="w-5 h-5 text-gray-700" />
+            </button>
+          )}
+
+          {/* Category Pills */}
+          <div
+            ref={(el) => {
+              if (el && el !== categoryScrollRef) {
+                setCategoryScrollRef(el);
+                setTimeout(() => checkScrollPosition(), 100);
+              }
+            }}
+            onScroll={checkScrollPosition}
+            className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {categories.map((category: any) => {
+              const isSelected = selectedCategoryId === category.id;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => setSelectedCategoryId(category.id)}
+                  style={isSelected ? primaryColorStyle : {}}
+                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    isSelected
+                      ? "text-white"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
                 >
-                  {(item.category || item.menuName) && (
-                    <span className="text-xs opacity-80">
-                      {item.category || item.menuName}
-                    </span>
-                  )}
-                  <h3 className="font-bold">{item.name || item.itemName}</h3>
-                  <p className="text-[13px] font-semibold">
-                    {formatPrice(item.price)}
-                  </p>
-                  {activeTile &&
-                    activeTile !== "Single column 1" &&
-                    (item.description || item.itemDescription) && (
-                      <p className="text-[13px] mt-1 opacity-90">
-                        {item.description || item.itemDescription}
-                      </p>
-                    )}
+                  {category.name}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right Arrow */}
+          {showRightArrow && (
+            <button
+              aria-label="Scroll right"
+              onClick={() => scrollCategories("right")}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
+            >
+              <IoChevronForward className="w-5 h-5 text-gray-700" />
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Menu Items - Dynamic Layout */}
+      <div className="pb-20">
+        {categoriesLoading || itemsLoading ? (
+          <div className="px-4">
+            {/* Skeleton for grid/list layouts */}
+            <div className="grid grid-cols-1 gap-4">
+              {[...Array(6)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse"
+                >
+                  {/* Image Skeleton */}
+                  <div className="h-36 bg-gray-200"></div>
+
+                  {/* Content Skeleton */}
+                  <div className="p-4 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="flex justify-between items-center mt-4">
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              {styles.divider && <Divider className=" h-[1px]" />}
-            </React.Fragment>
-          ))
+              ))}
+            </div>
+          </div>
+        ) : filteredMenuItems && filteredMenuItems.length > 0 ? (
+          <div className={`${styles.main}`}>
+            {filteredMenuItems.map((item) => {
+              const isListLayout = activeTile?.includes("List");
+              const isCompactGrid = activeTile === "Single column 2";
+              const layoutName = activeTile;
+
+              return (
+                <div
+                  key={`${item.id || item.menuID}-${
+                    item.name || item.itemName
+                  }`}
+                  className={`${
+                    isListLayout ? "flex items-center gap-3" : ""
+                  } my-3 relative`}
+                >
+                  <div
+                    className={`${styles.container} ${
+                      layoutName === "List Right" && "flex-row-reverse"
+                    } ${
+                      isListLayout ? "flex flex-1" : ""
+                    } text-black relative transition-all shadow-md`}
+                  >
+                    {/* Image Container */}
+                    {isSelectedPreview && (
+                      <div
+                        className={`${styles.imageContainer || ""} relative`}
+                      >
+                        <div
+                          className={`relative bg-gradient-to-br from-primaryColor/10 via-primaryColor/5 to-purple-100 flex items-center justify-center overflow-hidden ${
+                            styles.imageClass || "h-32"
+                          }`}
+                        >
+                          {item?.image &&
+                          item.image.length > baseString.length ? (
+                            <Image
+                              className="object-cover w-full h-full"
+                              width={300}
+                              height={200}
+                              src={baseString + item.image}
+                              alt={item.itemName || "Menu item"}
+                            />
+                          ) : (
+                            <Image
+                              src={NoMenu}
+                              alt="No image"
+                              width={60}
+                              height={60}
+                              className="opacity-30"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Content Container */}
+                    <div
+                      className={`${styles.textContainer} flex flex-col ${
+                        isListLayout ? "justify-center" : "justify-start"
+                      }`}
+                    >
+                      <p
+                        className={`font-bold ${
+                          isCompactGrid ? "text-xs" : "text-sm"
+                        } line-clamp-1`}
+                      >
+                        {item.itemName}
+                      </p>
+                      <p
+                        className={`text-gray-500 ${
+                          isCompactGrid ? "text-[10px]" : "text-xs"
+                        } line-clamp-2 mt-0.5`}
+                      >
+                        {item.itemDescription || ""}
+                      </p>
+                      <p
+                        style={textColorStyle}
+                        className={`font-semibold ${
+                          isCompactGrid ? "text-xs" : "text-sm"
+                        } mt-1`}
+                      >
+                        {formatPrice(item.price)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-[500px] text-center">
+          <div className="flex flex-col items-center justify-center py-20 px-4">
             <Image
               src={NoMenu}
               alt="No menu items"
-              width={120}
-              height={120}
+              width={80}
+              height={80}
               className="opacity-50 mb-4"
             />
-            <p style={{ color: selectedTextColor }}>
-              {currentSearchQuery
-                ? `No items found for "${currentSearchQuery}"`
-                : currentSection
-                ? `No items in ${currentSection}`
+            <p className="text-gray-500 text-sm">
+              {searchQuery
+                ? `No items found for "${searchQuery}"`
                 : "No menu items to display"}
             </p>
           </div>
         )}
-      </main>
+      </div>
     </article>
   );
 };

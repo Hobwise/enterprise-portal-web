@@ -10,6 +10,7 @@ import { Modal, ModalBody, ModalContent, Select, SelectItem, Selection,Tooltip }
 import CheckImage from '@/public/assets/images/success-image.png';
 import { useRouter } from 'next/navigation';
 import { RESERVATIONS_URL } from '@/utilities/routes';
+import RestaurantBanner from '@/app/create-order/RestaurantBanner';
 
 import {
   cn,
@@ -59,9 +60,15 @@ interface IBookReservationPage {
     reservationFee: number;
   };
   className?: string;
+  menuConfig?: {
+    image?: string;
+    backgroundColour?: string;
+    textColour?: string;
+  };
+  baseString?: string;
 }
 
-export default function BookReservationPage({ reservation, className }: IBookReservationPage) {
+export default function BookReservationPage({ reservation, className, menuConfig, baseString }: IBookReservationPage) {
   const [quantity, setQuantity] = useState<number>(1);
   const [noOfGuests, setNoOfGuests] = useState<number>(1);
   const [selectedTime, setSelectedTime] = useState<Selection>(new Set([]));
@@ -71,8 +78,15 @@ export default function BookReservationPage({ reservation, className }: IBookRes
   const [error, setError] = useState<IDetails>(defaultValues);
   const router = useRouter();
   const [open, setOpen] = useState<boolean>(false);
+
+  // Use menuConfig color if provided (customer mode), otherwise use default primaryColor
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const textColorStyle = { color: primaryColor };
+  const borderColorStyle = { borderColor: primaryColor };
+  const bgColorStyle = { backgroundColor: primaryColor };
+
   const btnClassName =
-    'before:ease relative h-[40px] w-full overflow-hidden border border-[#FFFFFF26] px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white bg-primaryColor text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:shadow-primaryColor-500 hover:before:-translate-x-40';
+    'before:ease relative h-[40px] w-full overflow-hidden border border-[#FFFFFF26] px-8 shadow-[inset_0_7.4px_18.5px_0px_rgba(255,255,255,0.11)] border-white text-white shadow-2xl transition-all before:absolute before:right-0 before:top-0 before:h-[40px] before:w-6 before:translate-x-12 before:rotate-6 before:bg-white before:opacity-10 before:duration-700 hover:before:-translate-x-40';
 
   const {
     data: availableTimes,
@@ -198,14 +212,17 @@ export default function BookReservationPage({ reservation, className }: IBookRes
   }, [selectedTime]);
 
   return (
-    <div className={cn('font-satoshi px-6 lg:px-24 space-y-4 mt-12', className)}>
-      <section className="space-y-10">
-        <div className="space-y-2 text-[#161618]">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-[32px] font-bricolage_grotesque">Book Reservation</h1>
+    <div className={cn('font-satoshi', className)}>
+
+
+      <div className="px-6 lg:px-24 space-y-4 mt-8">
+        <section className="space-y-10">
+          <div className="space-y-2 text-[#161618]">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-[32px] font-bricolage_grotesque">Book Reservation</h1>
+            </div>
+            <p className="text-sm">Please provide your details below to book this reservation</p>
           </div>
-          <p className="text-sm">Please provide your details below to book this reservation</p>
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
           <div className="space-y-8">
@@ -312,9 +329,10 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                               color="default"
                             >
                               <div
+                                style={currentSelection === each.timeSlot ? bgColorStyle : { ...textColorStyle, ...borderColorStyle }}
                                 className={cn(
-                                  'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
-                                  currentSelection === each.timeSlot && 'bg-primaryColor text-white',
+                                  'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border bg-white',
+                                  currentSelection === each.timeSlot && 'text-white',
                                   each.quantity > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'
                                 )}
                                 key={each.timeSlot}
@@ -341,9 +359,10 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                               {checkAvailability().map((each: any) => (
                                 <Tooltip content={<p className="text-[#000]">{each.quantity > 0 ? `${each.quantity} Quantity Available` : 'Not available'}</p>}>
                                   <div
+                                    style={currentSelection === each.timeSlot ? bgColorStyle : { ...textColorStyle, ...borderColorStyle }}
                                     className={cn(
-                                      'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border border-primaryColor bg-white text-primaryColor',
-                                      currentSelection === each.timeSlot && 'bg-primaryColor text-white',
+                                      'rounded-md py-2 px-3 flex space-x-2 items-center text-xs lg:text-sm border bg-white',
+                                      currentSelection === each.timeSlot && 'text-white',
                                       each.quantity > 0 ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'
                                     )}
                                     key={each.timeSlot}
@@ -409,7 +428,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
 
             <div className="space-y-10">
               <div className="bg-[#F0F2F4] p-4 text-[#5A5A63] space-y-2 rounded-lg">
-                <p className="text-primaryColor font-semibold text-lg">Important Note</p>
+                <p className="font-semibold text-lg" style={textColorStyle}>Important Note</p>
                 <p className="text-sm">
                   We offer a 15-minute grace period. If you anticipate arriving more than 15 minutes past your reservation time, kindly give us a call in
                   advance.
@@ -435,7 +454,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                         height={150}
                       />
                     ) : (
-                      <div className="w-full h-[75px] lg:h-[150px] rounded-md bg-[#DDDCFE] text-primaryColor font-medium text-[40px] lg:text-[80px] font-bricolage_grotesque flex items-center justify-center">
+                      <div className="w-full h-[75px] lg:h-[150px] rounded-md bg-[#DDDCFE] font-medium text-[40px] lg:text-[80px] font-bricolage_grotesque flex items-center justify-center" style={textColorStyle}>
                         <p>{getInitials2(reservation?.businessName)}</p>
                       </div>
                     )}
@@ -539,7 +558,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
                 </div>
 
                 <div>
-                  <CustomButton className={btnClassName} onClick={handleBookReservation} loading={isLoading}>
+                  <CustomButton className={btnClassName} style={bgColorStyle} onClick={handleBookReservation} loading={isLoading}>
                     Book Reservation
                   </CustomButton>
                 </div>
@@ -566,6 +585,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
           </div>
         </div>
       </section>
+      </div>
       {/* <Footer /> */}
 
       <Modal isOpen={open} onOpenChange={setOpen}>
@@ -574,7 +594,7 @@ export default function BookReservationPage({ reservation, className }: IBookRes
             <Image src={CheckImage} alt="Success" width={90} height={90} className="mx-auto" />
             <h1 className="text-[#000] text-xl font-bricolage_grotesque">Reservation has been booked!</h1>
             <p className="text-[#475367] font-satoshi">You’ll get an email after details of your reservation has been confirmed.</p>
-            <CustomButton className={btnClassName} onClick={() => router.push(`/${RESERVATIONS_URL}`)}>
+            <CustomButton className={btnClassName} style={bgColorStyle} onClick={() => router.push(`/${RESERVATIONS_URL}`)}>
               Done
             </CustomButton>
           </ModalBody>

@@ -32,55 +32,66 @@ interface PreviewStyles {
   chipPosition?: string;
 }
 
-export const togglePreview = (activeTile: string): PreviewStyles => {
+export const togglePreview = (activeTile: string, isMobilePreview: boolean = false): PreviewStyles => {
   const previewStyles: {
     [key: string]: PreviewStyles;
   } = {
     "List left": {
-      container: "flex justify-between w-full",
-      imageContainer: "w-[25%] flex-shrink-0",
-      textContainer: "w-[73%] ml-3",
-      imageClass: "h-[60px] w-[60px]",
-      divider: true,
-      text3: "Founded in 1743, in italy...",
-      chipPosition: "bottom-0 right-2",
+      container: "flex items-start gap-3 w-full bg-white rounded-xl p-3 shadow-sm",
+      // desktop: 3 columns, mobile: 1 column
+      main: isMobilePreview ? "relative px-4 grid grid-cols-1 gap-3" : "relative px-4 grid grid-cols-1 md:grid-cols-3 gap-3",
+      imageContainer:
+        "w-[60px] h-[60px] flex-shrink-0 rounded-lg overflow-hidden",
+      textContainer: "flex-1 min-w-0",
+      imageClass: "h-[60px] w-[60px] rounded-lg",
+      divider: false,
+      text3: "Chinese fried rice served with fresh vegetable salad",
+      chipPosition: "top-3 right-3",
     },
     "List Right": {
-      container: "flex justify-between w-full",
-      imageContainer: "w-[25%] flex-shrink-0",
-      textContainer: "w-[73%] ml-3",
-      imageClass: "h-[60px] w-[60px]",
-      divider: true,
-      text3: "Founded in 1743, in italy...",
+      container:
+        "flex flex-row-reverse items-start gap-3 w-full bg-white rounded-xl p-3 shadow-sm",
+      // desktop: 3 columns, mobile: 1 column
+      main: isMobilePreview ? "relative px-4 grid grid-cols-1 gap-3" : "relative px-4 grid grid-cols-1 md:grid-cols-3 gap-3",
+      imageContainer:
+        "w-[60px] h-[60px] flex-shrink-0 rounded-lg overflow-hidden",
+      textContainer: "flex-1 min-w-0",
+      imageClass: "h-[60px] w-[60px] rounded-lg",
+      divider: false,
+      text3: "Chinese fried rice served with fresh vegetable salad",
       chipPosition: "top-2 right-2",
     },
     "Single column 1": {
-      container: "flex-col",
-      textContainer: "m-0",
-      imageClass: "w-full h-[200px] mb-3",
+      container: "flex-col bg-white rounded-2xl overflow-hidden shadow-sm pb-14 h-full",
+      textContainer: "p-4 flex-grow",
+      // desktop: 2 columns, mobile: 1 column
+      main: isMobilePreview ? "grid grid-cols-1 gap-6 px-4" : "grid grid-cols-1 md:grid-cols-2 gap-6 px-4",
+      imageClass: "w-full h-[220px]",
+      imageContainer: "w-full",
       divider: false,
-      text3:
-        "Founded in 1743, Moët & Chandon celebrates life's memorable moments with a range of unique champagnes for every occasion.",
-      chipPosition: "top-2 left-2",
+      text3: "Chinese fried rice served with fresh vegetable salad",
+      chipPosition: "top-4 left-4",
     },
     "Single column 2": {
-      container: "flex-col justify-center items-center",
-      textContainer: "m-0 text-center",
-      imageClass: "w-[150px] h-[150px] mb-3",
-      imageContainer: "w-full flex items-center justify-center",
+      container: "flex-col bg-white rounded-xl overflow-hidden shadow-sm h-full",
+      textContainer: "p-3 text-left flex-grow",
+      imageClass: "w-full h-[120px] rounded-t-xl",
+      imageContainer: "w-full",
+      // desktop: 3 columns, mobile: 2 columns
+      main: isMobilePreview ? "grid grid-cols-2 gap-3 px-4" : "grid grid-cols-2 md:grid-cols-3 gap-3 px-4",
       divider: false,
-      text3:
-        "Founded in 1743, Moët & Chandon celebrates life's memorable moments with a range of unique champagnes for every occasion.",
-      main: "w-full",
+      text3: "Chinese fried rice served with fresh vegetable salad",
       chipPosition: "top-2 left-2",
     },
     "Double column": {
-      container: "flex-col w-[calc(50%-10px)]",
-      main: "flex flex-wrap gap-5",
-      textContainer: "m-0",
-      imageClass: "w-full h-[150px] mb-3",
+      container: "flex-col bg-white rounded-xl overflow-hidden shadow-sm h-full",
+      // desktop: 6 columns, mobile: 3 columns
+      main: isMobilePreview ? "grid grid-cols-3 gap-4 px-4" : "grid grid-cols-3 md:grid-cols-6 gap-4 px-4",
+      textContainer: "p-3 flex-grow",
+      imageClass: "w-full h-[160px] rounded-t-xl",
+      imageContainer: "w-full",
       divider: false,
-      text3: "",
+      text3: "Chinese fried rice served with fresh vegetable salad",
       chipPosition: "top-2 right-2",
     },
   };
