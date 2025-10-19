@@ -251,7 +251,13 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     // Type 2: Has items array (menu)
     if (Array.isArray(arrayToMap.items)) return arrayToMap.items;
 
-    // Type 3: Is itself an array
+    // Type 3: Has reservations array (reservation)
+    if (Array.isArray(arrayToMap.reservations)) return arrayToMap.reservations;
+
+    // Type 4: Has quickResponses array (QR codes)
+    if (Array.isArray(arrayToMap.quickResponses)) return arrayToMap.quickResponses;
+
+    // Type 5: Is itself an array
     if (Array.isArray(arrayToMap)) return arrayToMap;
 
     return [];

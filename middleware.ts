@@ -52,13 +52,19 @@ export function middleware(request: NextRequest) {
   const matchedBaseRoute = Object.keys(routePermissions).find((route) =>
     pathname.startsWith(route)
   );
-  if (matchedBaseRoute && token && planCapabilities !== "undefined") {
+  if (matchedBaseRoute && token) {
+    // Allow navigation if planCapabilities is not yet set (initial load/race condition)
+    // The client-side components will handle fetching and redirecting if needed
+    if (!planCapabilities || planCapabilities === "undefined") {
+      // Let the request through - client-side will handle subscription check
+      return NextResponse.next();
+    }
+
     try {
       // Validate planCapabilities before parsing
-      if (!planCapabilities || planCapabilities.trim() === "") {
-        return NextResponse.rewrite(
-          new URL("/dashboard/subscription-error", request.url)
-        );
+      if (planCapabilities.trim() === "") {
+        // Allow through - client will handle the error
+        return NextResponse.next();
       }
 
       const requiredPermission = routePermissions[matchedBaseRoute];
@@ -70,17 +76,10 @@ export function middleware(request: NextRequest) {
         );
       }
     } catch (error) {
-      // If JSON parsing fails, treat as subscription error
+      // If JSON parsing fails, allow through and let client handle it
       console.error("Failed to parse planCapabilities:", error);
-      return NextResponse.rewrite(
-        new URL("/dashboard/subscription-error", request.url)
-      );
+      return NextResponse.next();
     }
-  }
-  if (matchedBaseRoute && planCapabilities === "undefined" && token) {
-    return NextResponse.rewrite(
-      new URL("/dashboard/subscription-error", request.url)
-    );
   }
 
   // Only redirect to login if not already on an auth route or POS route

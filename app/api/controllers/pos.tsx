@@ -38,6 +38,8 @@ export interface POSSection {
   id: string;
   totalCount: number;
   menus: POSMenu[];
+  isVatEnabled: boolean;
+  vatRate: number;
 }
 
 export interface POSMenuResponse {

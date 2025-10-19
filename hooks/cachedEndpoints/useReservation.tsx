@@ -8,6 +8,17 @@ import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
+// TypeScript interface for reservation response structure
+export interface ReservationData {
+  reservations: payloadReservationItem[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const { page, rowsPerPage } = useGlobalContext();
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -22,9 +33,26 @@ const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
         rowsPerPage,
         cooperateID
       );
-      return (responseData?.data?.data as payloadReservationItem[]) ?? [];
+      // Return the complete data object with reservations, totalCount, etc.
+      return (responseData?.data?.data as ReservationData) ?? {
+        reservations: [],
+        totalCount: 0,
+        pageSize: rowsPerPage || 10,
+        currentPage: page || 1,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false
+      };
     } catch (error) {
-      return [];
+      return {
+        reservations: [],
+        totalCount: 0,
+        pageSize: rowsPerPage || 10,
+        currentPage: page || 1,
+        totalPages: 0,
+        hasNext: false,
+        hasPrevious: false
+      };
     }
   };
 

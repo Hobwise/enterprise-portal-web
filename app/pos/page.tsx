@@ -88,6 +88,13 @@ const POSContent = () => {
     return orderItems.some((orderItem) => orderItem.id === itemKey);
   };
 
+  // Helper function to get item count from cart
+  const getItemCount = (item: MenuItem): number => {
+    const itemKey = item.uniqueKey || item.id;
+    const cartItem = orderItems.find((orderItem) => orderItem.id === itemKey);
+    return cartItem ? cartItem.count : 0;
+  };
+
   // Handle search input change
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -282,7 +289,7 @@ const POSContent = () => {
               <div className="hidden lg:block w-48 bg-[#391D84] text-white overflow-y-auto">
                 <div className="py-1">
                   <div className="space-y-1">
-                    {categories.filter((category) => category.toLowerCase() !== "all menu").map((category) => (
+                    {categories.map((category) => (
                       <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
@@ -304,7 +311,7 @@ const POSContent = () => {
                 {/* Top Navigation */}
                 <div className="bg-[#5F35D2]">
                   <div className="flex overflow-x-auto scrollbar-hide">
-                    {mainTabs.filter((tab) => tab.toLowerCase() !== "all menu").map((tab) => (
+                    {mainTabs.map((tab) => (
                       <button
                         key={tab}
                         onClick={() => setSelectedSection(tab)}
@@ -322,7 +329,7 @@ const POSContent = () => {
 
                      <div className="lg:hidden bg-[#391D84]">
             <div className="flex overflow-x-auto scrollbar-hide">
-              {categories.filter((category) => category.toLowerCase() !== "all menu").map((category) => (
+              {categories.map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
@@ -371,6 +378,7 @@ const POSContent = () => {
                           onQuickAdd={handleQuickAdd}
                           onViewDetails={openItemModal}
                           isInCart={isItemInCart(item)}
+                          count={getItemCount(item)}
                         />
                       ))}
                     </div>
@@ -473,7 +481,7 @@ const POSContent = () => {
                       <span>{formatPrice(orderSummary.subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span>VAT (7.5%)</span>
+                      <span>VAT</span>
                       <span>{formatPrice(orderSummary.vatAmount)}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">

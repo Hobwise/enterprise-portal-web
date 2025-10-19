@@ -19,7 +19,7 @@ import Error from "@/components/error";
 import CreateReservation from "@/components/ui/dashboard/reservations/createReservations";
 import ReservationList from "@/components/ui/dashboard/reservations/reservation";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
-import useReservation from "@/hooks/cachedEndpoints/useReservation";
+import useReservation, { ReservationData } from "@/hooks/cachedEndpoints/useReservation";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useTextCopy from "@/hooks/useTextCopy";
 import { companyInfo } from "@/lib/companyInfo";

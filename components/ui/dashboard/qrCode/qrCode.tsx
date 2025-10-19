@@ -34,7 +34,6 @@ const INITIAL_VISIBLE_COLUMNS = [
   'name',
   'allOrdersCount',
   'openOrdersCount',
-
   'dateCreated',
   'actions',
 ];

@@ -368,17 +368,6 @@ const Header = ({ ispos }: any) => {
                         </div>
                       </div>
                     </DropdownItem>
-                    <DropdownItem key="lastLogin" isReadOnly className="cursor-default opacity-100">
-                      <div className="flex items-center gap-2 px-2 py-1">
-                        <IoTimeOutline className="text-primaryColor text-[22px]" />
-                        <div className="flex flex-col">
-                          <span className="text-xs text-primaryColor">Clock Out</span>
-                          <span className="text-xs text-primaryColor font-medium">
-                            {userInfo?.lastLogin ? formatLoginTime(userInfo.lastLogin) : "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    </DropdownItem>
                     <DropdownItem key="Profile Management">
                       <Link
                         prefetch={true}

@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { getOrder } from "@/app/api/controllers/dashboard/orders";
 import { confirmPayment } from "@/app/api/controllers/dashboard/payment";
 import { CustomInput } from "@/components/CustomInput";
@@ -14,13 +15,12 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import noImage from "../../../../public/assets/images/no-image.svg";
-import Success from "../../../../public/assets/images/success.png";
 import { paymentMethodMap } from "./data";
 import { useQueryClient } from "@tanstack/react-query";
 import { paymentsCacheUtils } from "@/hooks/cachedEndpoints/usePayment";
+import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
 
 const ApprovePayment = ({
   singlePayment,
@@ -36,11 +36,6 @@ const ApprovePayment = ({
   const [order, setOrder] = useState([]);
   const userData = getJsonItemFromLocalStorage("userInformation");
   const businessInformation = getJsonItemFromLocalStorage("business");
-  const [isOpenSuccess, setIsOpenSuccess] = useState(false);
-
-  const toggleSuccessModal = () => {
-    setIsOpenSuccess(!isOpenSuccess);
-  };
 
   const finalizeOrder = async () => {
     setIsLoading(true);
@@ -58,19 +53,78 @@ const ApprovePayment = ({
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
-      // Clear all payment caches for immediate data refresh
-      paymentsCacheUtils.clearAll();
+      // Show success notification
+      notify({
+        title: "Payment Confirmed!",
+        text: "Payment has been successfully confirmed",
+        type: "success",
+      });
 
-      // Invalidate all payment-related React Query caches
-      queryClient.invalidateQueries({ queryKey: ['payments'] });
-      queryClient.invalidateQueries({ queryKey: ['paymentCategories'] });
-      queryClient.invalidateQueries({ queryKey: ['paymentDetails'] });
+      // Clear all payment AND order caches to prevent stale data
+      paymentsCacheUtils.clearAll(queryClient);
+      ordersCacheUtils.clearAll(); // Clear globalOrdersCache Map
 
-      // Refetch current data
-      refetch();
+      // Invalidate all payment and order-related React Query caches with aggressive refetch
+      await Promise.all([
+        // Payment queries
+        queryClient.invalidateQueries({
+          queryKey: ['payments'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['paymentCategories'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['paymentDetails'],
+          refetchType: 'active'
+        }),
+        // Order queries - payment confirmation affects order status
+        queryClient.invalidateQueries({
+          queryKey: ['orders'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['orderCategories'],
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['orderDetails'],
+          refetchType: 'active'
+        })
+      ]);
 
+      // Force immediate refetch of all active queries
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ['payments'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['paymentCategories'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['paymentDetails'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['orders'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['orderCategories'],
+          type: 'active'
+        }),
+        queryClient.refetchQueries({
+          queryKey: ['orderDetails'],
+          type: 'active'
+        })
+      ]);
+
+      // Close modal and refetch current page data
       toggleApproveModal();
-      toggleSuccessModal();
+      refetch();
     } else if (data?.data?.error) {
       notify({
         title: "Error!",
@@ -168,9 +222,8 @@ const ApprovePayment = ({
                         <>
                           {order?.orderDetails?.map((item, index) => {
                             return (
-                              <>
+                              <React.Fragment key={item.id}>
                                 <div
-                                  key={item.id}
                                   className="flex justify-between"
                                 >
                                   <div className="w-[250px] rounded-lg text-black  flex">
@@ -234,7 +287,7 @@ const ApprovePayment = ({
                                 {index !== order?.orderDetails?.length - 1 && (
                                   <Divider className="bg-primaryGrey" />
                                 )}
-                              </>
+                              </React.Fragment>
                             );
                           })}
                         </>
@@ -290,38 +343,6 @@ const ApprovePayment = ({
                     </div>
                   </div>
                 </div>
-              </ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-      <Modal isOpen={isOpenSuccess} onOpenChange={toggleSuccessModal}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalBody>
-                <div className="grid place-content-center mt-8">
-                  <Image src={Success} alt="success" />
-                </div>
-
-                <h2 className="text-[16px] text-center leading-3 mt-3 text-black font-semibold">
-                  Awesome!
-                </h2>
-                <h3 className="text-sm text-center text-grey600     mb-4">
-                  Your payment has been confirmed
-                </h3>
-
-                <CustomButton
-                  className="text-white h-[49px]  flex-grow w-full"
-                  onClick={() => {
-                    toggleSuccessModal();
-                  }}
-                  type="submit"
-                >
-                  Go to payments
-                </CustomButton>
-
-                <Spacer y={4} />
               </ModalBody>
             </>
           )}
