@@ -12,69 +12,147 @@ import {
   saveJsonItemToLocalStorage,
   setTokenCookie,
   getJsonItemFromLocalStorage,
+  clearItemLocalStorage,
 } from "@/lib/utils";
 import { Avatar, ScrollShadow } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+
+// TypeScript interfaces for better type safety
+interface Business {
+  id: string;
+  name: string;
+  city?: string;
+  state?: string;
+  logoImage?: string;
+  cooperateID: string;
+}
+
+interface LoginDetails {
+  email: string;
+  password: string;
+}
+
+interface DecryptedData {
+  isSuccessful?: boolean;
+  data?: {
+    token: string;
+    id: string;
+    email: string;
+    [key: string]: any;
+  };
+  error?: {
+    code?: string;
+    message?: string;
+    responseCode?: string;
+    responseDescription?: string;
+  };
+}
 
 const SelectBusinessForm = () => {
   const router = useRouter();
   const { loginDetails, setLoginDetails } = useGlobalContext();
-  const [business, setBusiness] = useState<any>(null);
+  const [business, setBusiness] = useState<Business | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { data, isLoading: loading } = useGetBusinessByCooperate();
+  const { data, isLoading: loading, isError } = useGetBusinessByCooperate();
   const lastClickTime = useRef<number>(0);
-  const [currentLoginDetails, setCurrentLoginDetails] = useState(loginDetails);
+  const [currentLoginDetails, setCurrentLoginDetails] = useState<LoginDetails | null>(null);
   const retryCountRef = useRef<number>(0);
+  const navigationTimeoutRef = useRef<NodeJS.Timeout>();
+  const isMountedRef = useRef(true);
 
   // Prefetch dashboard route on component mount for faster navigation
   useEffect(() => {
     router.prefetch('/dashboard');
   }, [router]);
 
-  // Restore loginDetails from localStorage if React state is null (page refresh/navigation)
-  // Check localStorage FIRST before checking React state
+  // Validate loginDetails structure
+  const validateLoginDetails = useCallback((details: any): details is LoginDetails => {
+    return (
+      details &&
+      typeof details === 'object' &&
+      typeof details.email === 'string' &&
+      details.email.length > 0 &&
+      typeof details.password === 'string' &&
+      details.password.length > 0
+    );
+  }, []);
+
+  // Centralized error handler for consistency
+  const handleErrorDisplay = useCallback((message: string, shouldThrow = false) => {
+    if (!isMountedRef.current) return;
+
+    setError(message);
+    notify({
+      title: "Error",
+      text: message,
+      type: "error",
+    });
+
+    if (shouldThrow) {
+      throw new Error(message);
+    }
+  }, []);
+
+  // FIXED: Restore loginDetails from localStorage with proper validation
   useEffect(() => {
     const storedLoginDetails = getJsonItemFromLocalStorage("loginDetails");
 
     console.log('[SelectBusiness] Page Load Check:', {
       hasStoredDetails: !!storedLoginDetails,
       hasLoginDetails: !!loginDetails,
-      hasCurrentDetails: !!currentLoginDetails,
       timestamp: new Date().toISOString()
     });
 
+    // Prioritize localStorage over context state
     if (storedLoginDetails) {
-      // Restore from localStorage immediately
-      if (!currentLoginDetails) {
-        console.log('[SelectBusiness] Restoring loginDetails from localStorage');
-        setLoginDetails(storedLoginDetails);
+      // Validate structure before using
+      if (validateLoginDetails(storedLoginDetails)) {
         setCurrentLoginDetails(storedLoginDetails);
+        // Sync to context if needed
+        if (!loginDetails) {
+          setLoginDetails(storedLoginDetails);
+        }
+      } else {
+        // Invalid data - clear it
+        console.error('[ERROR] Invalid loginDetails structure in localStorage');
+        clearItemLocalStorage("loginDetails");
+        handleErrorDisplay("Invalid session data. Please go back and login again.");
       }
-    } else if (!loginDetails && !currentLoginDetails) {
-      // Show error instead of redirecting
-      console.error('[ERROR] Missing loginDetails', {
-        reason: 'No credentials found in localStorage or React state',
-        location: 'useEffect - line 55',
-        timestamp: new Date().toISOString()
-      });
+    } else if (loginDetails) {
+      // Use context as fallback
+      if (validateLoginDetails(loginDetails)) {
+        setCurrentLoginDetails(loginDetails);
+      } else {
+        handleErrorDisplay("Invalid login credentials. Please login again.");
+      }
+    } else {
+      // Only show error if both sources are empty
+      handleErrorDisplay("No login credentials found. Please go back and login again.");
+    }
+  }, []); // Intentionally empty - only run once on mount
 
-      setError("No login credentials found. Please go back and login again.");
-      notify({
-        title: "Missing Credentials",
-        text: "No login credentials found. Please go back and login again.",
-        type: "error"
-      });
-    } else if (loginDetails && !currentLoginDetails) {
-      // Use the existing React state
-      console.log('[SelectBusiness] Using React state loginDetails');
+  // FIXED: Sync loginDetails changes from context (if user navigates back)
+  useEffect(() => {
+    if (loginDetails && !currentLoginDetails && validateLoginDetails(loginDetails)) {
       setCurrentLoginDetails(loginDetails);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loginDetails, currentLoginDetails, validateLoginDetails]);
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+      }
+    };
   }, []);
 
-  const handleAuthenticationError = async (error: any) => {
+  const handleAuthenticationError = useCallback(async (error: any): Promise<boolean> => {
     // Check for authentication-related errors
     const authErrorCodes = ['AUTH001', 'AUTH002', 'TOKEN_EXPIRED', 'UNAUTHORIZED'];
     const errorCode = error?.code || error?.responseCode;
@@ -93,23 +171,20 @@ const SelectBusinessForm = () => {
         fullError: error
       });
 
-      notify({
-        title: "Authentication Error",
-        text: errorMessage || "Authentication failed. Please try selecting your business again or logout and login.",
-        type: "error",
-      });
+      if (!isMountedRef.current) return true;
 
-      // Set error state instead of auto-redirecting
-      setError(errorMessage || "Authentication failed");
+      handleErrorDisplay(
+        errorMessage || "Authentication failed. Please try selecting your business again or logout and login."
+      );
 
       return true; // Indicates auth error was handled
     }
 
     return false; // Not an auth error
-  };
+  }, [handleErrorDisplay]);
 
-  const callLogin = async (businessId: string) => {
-    // Use currentLoginDetails which is restored from localStorage if needed
+  const callLogin = useCallback(async (businessId: string): Promise<void> => {
+    // FIXED: Re-fetch credentials to avoid stale closure
     const loginCreds = currentLoginDetails || getJsonItemFromLocalStorage("loginDetails");
 
     console.log('[callLogin] Starting business login', {
@@ -119,22 +194,17 @@ const SelectBusinessForm = () => {
       timestamp: new Date().toISOString()
     });
 
-    if (!loginCreds) {
-      console.error('[ERROR] No login credentials available', {
-        reason: 'loginCreds is null/undefined',
+    // Validate credentials
+    if (!loginCreds || !validateLoginDetails(loginCreds)) {
+      console.error('[ERROR] No valid login credentials available', {
+        reason: 'loginCreds is null/undefined or invalid',
         location: 'callLogin',
         businessId,
         timestamp: new Date().toISOString()
       });
 
-      const errorMsg = "Login credentials lost. Please go back and login again.";
-      setError(errorMsg);
-      notify({
-        title: "Missing Credentials",
-        text: errorMsg,
-        type: "error"
-      });
-      throw new Error(errorMsg); // Throw so caller can handle
+      handleErrorDisplay("Login credentials lost or invalid. Please go back and login again.", true);
+      return;
     }
 
     try {
@@ -157,35 +227,32 @@ const SelectBusinessForm = () => {
         });
 
         const errorMsg = (data as any)?.errors?.general?.[0] || "Server requires re-authentication. Please go back and login again.";
-        setError(errorMsg);
-        notify({
-          title: "Re-authentication Required",
-          text: errorMsg,
-          type: "error"
-        });
-        throw new Error(errorMsg); // Throw so caller can handle
+        handleErrorDisplay(errorMsg, true);
+        return;
       }
 
       if (data && 'data' in data && data.data?.response) {
-        const decryptedData = decryptPayload(data.data.response);
+        const decryptedData: DecryptedData = decryptPayload(data.data.response);
 
         console.log('[callLogin] Decrypted data received', {
           hasData: !!decryptedData?.data,
           hasToken: !!decryptedData?.data?.token,
-          token: decryptedData?.data?.token,
           tokenType: typeof decryptedData?.data?.token,
           isSuccessful: decryptedData?.isSuccessful,
           timestamp: new Date().toISOString()
         });
 
         if (decryptedData?.data) {
-          // Validate token before proceeding
           const receivedToken = decryptedData?.data.token;
 
-          if (!receivedToken || receivedToken === 'null' || receivedToken.trim() === '') {
-            // Backend returned null/invalid token - check if we can retry
-            console.error('[ERROR] Backend returned NULL token', {
-              reason: 'Token is null, "null", or empty string',
+          // FIXED: Validate token FIRST before any operations
+          if (!receivedToken ||
+              receivedToken === 'null' ||
+              receivedToken === 'undefined' ||
+              receivedToken.trim() === '') {
+
+            console.error('[ERROR] Backend returned NULL/invalid token', {
+              reason: 'Token is null, "null", "undefined", or empty string',
               location: 'callLogin - token validation',
               retryCount: retryCountRef.current,
               userId: decryptedData?.data.id,
@@ -193,40 +260,45 @@ const SelectBusinessForm = () => {
               businessId: businessId,
               isSuccessful: decryptedData?.isSuccessful,
               receivedToken: receivedToken,
-              timestamp: new Date().toISOString(),
-              fullResponse: decryptedData
+              timestamp: new Date().toISOString()
             });
 
-            // Retry once if this is the first failure
-            if (retryCountRef.current === 0 && loginCreds) {
+            // FIXED: Retry once with fresh credentials
+            if (retryCountRef.current === 0) {
               retryCountRef.current = 1;
               console.log('[RETRY] Attempting to retry business selection once...');
 
-              notify({
-                title: "Retrying...",
-                text: "Token was invalid, retrying authentication...",
-                type: "warning",
-              });
+              if (isMountedRef.current) {
+                notify({
+                  title: "Retrying...",
+                  text: "Token was invalid, retrying authentication...",
+                  type: "warning",
+                });
+              }
 
               // Wait 1 second and retry
               await new Promise(resolve => setTimeout(resolve, 1000));
+
+              // Re-fetch fresh credentials to avoid stale closure
+              const freshCreds = getJsonItemFromLocalStorage("loginDetails");
+              if (!freshCreds || !validateLoginDetails(freshCreds)) {
+                handleErrorDisplay("Credentials lost during retry. Please login again.", true);
+                return;
+              }
+
               return await callLogin(businessId);
             }
 
-            // Max retries reached - show error instead of redirecting
-            retryCountRef.current = 0; // Reset for next attempt
-            const errorMsg = "Server returned invalid token after retry. Please try selecting your business again or go back and login.";
-            setError(errorMsg);
-            notify({
-              title: "Authentication Failed",
-              text: errorMsg,
-              type: "error",
-            });
-
-            throw new Error(errorMsg); // Throw so caller can handle
+            // Max retries reached
+            retryCountRef.current = 0;
+            handleErrorDisplay(
+              "Server returned invalid token after retry. Please try selecting your business again or go back and login.",
+              true
+            );
+            return;
           }
 
-          // Reset retry count on success
+          // Token is valid - proceed
           retryCountRef.current = 0;
 
           console.log('[callLogin] Token is valid, setting cookie', {
@@ -234,7 +306,7 @@ const SelectBusinessForm = () => {
             timestamp: new Date().toISOString()
           });
 
-          // Token is valid - proceed with setting cookie
+          // FIXED: Only set cookie after validation passes
           setTokenCookie("token", receivedToken, {
             expires: 7, // 7 days
             path: '/',
@@ -252,8 +324,12 @@ const SelectBusinessForm = () => {
           // Navigate immediately with replace to prevent back navigation issues
           router.replace("/dashboard");
 
-          // Fallback to hard navigation if router.replace fails
-          setTimeout(() => {
+          // FIXED: Cleanup timeout properly
+          if (navigationTimeoutRef.current) {
+            clearTimeout(navigationTimeoutRef.current);
+          }
+
+          navigationTimeoutRef.current = setTimeout(() => {
             if (window.location.pathname === "/auth/select-business") {
               window.location.href = "/dashboard";
             }
@@ -266,7 +342,7 @@ const SelectBusinessForm = () => {
         }
       } else if (data && 'response' in data && (data as any).response?.data?.response) {
         // Handle error response format
-        const decryptedData = decryptPayload((data as any).response.data.response);
+        const decryptedData: DecryptedData = decryptPayload((data as any).response.data.response);
         if (decryptedData?.error) {
           const wasAuthError = await handleAuthenticationError(decryptedData.error);
           if (!wasAuthError) {
@@ -280,32 +356,22 @@ const SelectBusinessForm = () => {
       const wasAuthError = await handleAuthenticationError(error);
       if (!wasAuthError) {
         console.error("Business login error:", error);
-        
+
+        if (!isMountedRef.current) return;
+
         if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-          notify({
-            title: "Connection Timeout",
-            text: "The request took too long. Please try again.",
-            type: "error",
-          });
+          handleErrorDisplay("The request took too long. Please try again.");
         } else if (error.message?.includes('Network')) {
-          notify({
-            title: "Network Error",
-            text: "Unable to connect to the server. Please check your internet connection.",
-            type: "error",
-          });
+          handleErrorDisplay("Unable to connect to the server. Please check your internet connection.");
         } else {
-          notify({
-            title: "Selection Failed",
-            text: error.message || "Failed to select business. Please try again.",
-            type: "error",
-          });
+          handleErrorDisplay(error.message || "Failed to select business. Please try again.");
         }
       }
       throw error; // Re-throw for caller to handle
     }
-  };
+  }, [currentLoginDetails, router, validateLoginDetails, handleErrorDisplay, handleAuthenticationError]);
 
-  const handleSelectedBusiness = async (item: any) => {
+  const handleSelectedBusiness = async (item: Business) => {
     // Prevent multiple clicks with debounce (500ms minimum between clicks)
     const now = Date.now();
     if (isLoading || (now - lastClickTime.current < 500)) {
@@ -317,8 +383,6 @@ const SelectBusinessForm = () => {
     setError(null);
     setBusiness(item);
 
-    // Remove loading notification for faster perceived performance
-
     try {
       const data = await getBusinessDetails(item);
 
@@ -329,48 +393,32 @@ const SelectBusinessForm = () => {
         const wasAuthError = await handleAuthenticationError(data?.data);
         if (!wasAuthError) {
           const errorMessage = data?.data?.error || "Failed to get business details";
-          setError(errorMessage);
-          notify({
-            title: "Business Selection Failed",
-            text: errorMessage,
-            type: "error",
-          });
+          handleErrorDisplay(errorMessage);
         }
       } else {
         throw new Error("Invalid response from business details API");
       }
     } catch (error: any) {
       console.error("Business selection error:", error);
-      
+
       const wasAuthError = await handleAuthenticationError(error);
-      if (!wasAuthError) {
-        const errorMessage = error.message || "An unexpected error occurred";
-        setError(errorMessage);
-        
+      if (!wasAuthError && isMountedRef.current) {
         if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-          notify({
-            title: "Connection Timeout",
-            text: "The request took too long. Please try again.",
-            type: "error",
-          });
+          handleErrorDisplay("The request took too long. Please try again.");
         } else if (error.message?.includes('Network')) {
-          notify({
-            title: "Network Error",
-            text: "Unable to connect to the server. Please check your internet connection.",
-            type: "error",
-          });
+          handleErrorDisplay("Unable to connect to the server. Please check your internet connection.");
         } else {
-          notify({
-            title: "Selection Error",
-            text: errorMessage,
-            type: "error",
-          });
+          handleErrorDisplay(error.message || "An unexpected error occurred");
         }
       }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
+
+  // Loading state
   if (loading) {
     return (
       <div className="grid place-content-center py-8">
@@ -382,15 +430,21 @@ const SelectBusinessForm = () => {
     );
   }
 
-  if (error && !data?.length) {
+  // FIXED: Better error handling for hook errors
+  if (isError) {
     return (
       <div className="grid place-content-center py-8">
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="text-red-500 text-lg">⚠️</div>
-          <p className="text-sm text-gray-600">Failed to load businesses</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="text-sm text-blue-600 hover:underline"
+          <p className="text-sm text-gray-600">
+            Failed to load businesses
+          </p>
+          <p className="text-xs text-gray-500">
+            An error occurred while fetching your businesses
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
           >
             Try again
           </button>
@@ -399,9 +453,44 @@ const SelectBusinessForm = () => {
     );
   }
 
+  // Error state without data
+  if (error && !data?.length) {
+    return (
+      <div className="grid place-content-center py-8">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="text-red-500 text-lg">⚠️</div>
+          <p className="text-sm text-gray-600">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No businesses found
+  if (!data || data.length === 0) {
+    return (
+      <div className="grid place-content-center py-8">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="text-gray-400 text-lg">📋</div>
+          <p className="text-sm text-gray-600">No businesses found</p>
+          <p className="text-xs text-gray-500">
+            Please contact support if you believe this is an error
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className={`flex flex-col gap-3 w-full`}>
-      {data?.map((item: any) => {
+    <div className="flex flex-col gap-3 w-full">
+      {data.map((item: Business) => {
+        const isCurrentlyLoading = isLoading && item.name === business?.name;
+
         return (
           <ScrollShadow
             key={item.id}
@@ -409,34 +498,51 @@ const SelectBusinessForm = () => {
             className="w-full max-h-[350px]"
           >
             <article
+              role="button"
+              tabIndex={isLoading ? -1 : 0}
+              aria-label={`Select ${item.name} business in ${item.city || ''} ${item.state || ''}`}
+              aria-disabled={isLoading}
+              aria-busy={isCurrentlyLoading}
               className={`bg-[#F1F2F480] rounded-xl p-3 transition-all ${
                 isLoading
-                  ? item.name === business?.name
+                  ? isCurrentlyLoading
                     ? "border-grey500 border opacity-70"
                     : "opacity-50 cursor-not-allowed"
-                  : "cursor-pointer hover:bg-[#F1F2F4] active:scale-[0.98]"
+                  : "cursor-pointer hover:bg-[#F1F2F4] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               } ${isLoading ? "pointer-events-none" : ""}`}
               onClick={() => !isLoading && handleSelectedBusiness(item)}
-              key={item.name}
+              onKeyDown={(e) => {
+                if ((e.key === 'Enter' || e.key === ' ') && !isLoading) {
+                  e.preventDefault();
+                  handleSelectedBusiness(item);
+                }
+              }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar
                     showFallback={true}
                     size="lg"
-                    src={`data:image/jpeg;base64,${item?.logoImage}`}
+                    src={item?.logoImage ? `data:image/jpeg;base64,${item.logoImage}` : undefined}
                     name={item?.name}
+                    alt={`${item?.name} logo`}
                   />
                   <div className="flex flex-col">
                     <span className="font-[600] text-[14px]">{item?.name}</span>
-
-                    <span className="text-[12px] font-[400]">
-                      {item?.city}
-                      {item?.city && ","} {item?.state}
-                    </span>
+                    {(item?.city || item?.state) && (
+                      <span className="text-[12px] font-[400] text-gray-600">
+                        {item?.city}
+                        {item?.city && item?.state && ", "}
+                        {item?.state}
+                      </span>
+                    )}
                   </div>
                 </div>
-                {isLoading && item.name === business?.name && <SmallLoader />}
+                {isCurrentlyLoading && (
+                  <div aria-label="Loading">
+                    <SmallLoader />
+                  </div>
+                )}
               </div>
             </article>
           </ScrollShadow>

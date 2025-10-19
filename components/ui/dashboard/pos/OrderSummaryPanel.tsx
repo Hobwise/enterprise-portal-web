@@ -128,7 +128,7 @@ export const OrderSummaryPanel: React.FC<OrderSummaryPanelProps> = ({
                 <span>{formatPrice(orderSummary.subtotal, orderItems[0]?.currency)}</span>
               </div>
               <div className="flex justify-between">
-                <span>VAT (7.5%)</span>
+                <span>VAT</span>
                 <span>{formatPrice(orderSummary.vatAmount)}</span>
               </div>
               <Divider className="my-2" />

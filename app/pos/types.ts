@@ -1,3 +1,5 @@
+import { ReactNode } from 'react';
+
 // POS Types
 export type Item = {
   id: string;
@@ -15,6 +17,8 @@ export type Item = {
   count: number;
   packingCost: number;
   isPacked?: boolean;
+  isVatEnabled?: boolean;
+  vatRate?: number;
 };
 
 export type Variety = {
@@ -30,7 +34,6 @@ export type Variety = {
 };
 
 export type MenuItem = {
-  [x: string]: ReactNode;
   id: string;
   itemName: string;
   itemDescription?: string;
@@ -48,6 +51,10 @@ export type MenuItem = {
   waitingTimeMinutes?: number;
   sectionName: string;
   sectionId: string;
+  isVatEnabled?: boolean;
+  vatRate?: number;
+  isPacked?: boolean;
+  [x: string]: any;
 };
 
 export type OrderSummary = {

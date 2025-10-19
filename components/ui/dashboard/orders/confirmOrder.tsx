@@ -154,6 +154,10 @@ const ConfirmOrderModal = ({
   useEffect(() => {
     if (singleOrder?.id) {
       getOrderDetails();
+      // Prefill payment reference if order already has one
+      if (singleOrder.paymentReference) {
+        setReference(singleOrder.paymentReference);
+      }
     }
   }, [singleOrder?.id]);
   return (
@@ -385,8 +389,8 @@ const ConfirmOrderModal = ({
                     value={reference}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReference(e.target.value)}
                     name="itemName"
-                    label="Enter ref"
-                    placeholder="Provide payment reference"
+                    label="Enter ref (optional)"
+                    placeholder="Optional payment reference"
                   />
                   <Spacer y={5} />
                   <div className="flex gap-5">

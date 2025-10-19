@@ -20,6 +20,8 @@ import { useRef, useState } from 'react';
 import { FaPlus } from 'react-icons/fa6';
 import { MdOutlineFileDownload } from 'react-icons/md';
 import QRCode from 'react-qr-code';
+import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 
 interface Table {
   name: string;
@@ -31,6 +33,8 @@ interface Table {
 const QRform = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { refetch } = useQR();
+  const queryClient = useQueryClient();
+  const router = useRouter();
   const businessInformation = getJsonItemFromLocalStorage('business');
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState('');
@@ -43,9 +47,20 @@ const QRform = () => {
     const data = await createQr(businessInformation[0]?.businessId, { name });
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
-      refetch();
-      onOpenChange();
+      // Invalidate QR queries to force immediate refresh
+      await queryClient.invalidateQueries({
+        queryKey: ['qr'],
+        refetchType: 'active'
+      });
+
+      // Set the QR data for display in success modal
       setQrURL(data.data.data);
+
+      // Open the success modal to show QR code
+      onOpen();
+
+      // Trigger refetch to update the list
+      refetch();
     } else if (data?.data?.error) {
       notify({
         title: 'Error!',
@@ -84,8 +99,13 @@ const QRform = () => {
       <Modal
         isDismissable={false}
         isOpen={isOpen}
-        onOpenChange={() => {
-          setName('');
+        onOpenChange={(open) => {
+          if (!open) {
+            // Modal is closing - navigate back to QR list
+            setName('');
+            setQrURL(null);
+            router.push('/dashboard/quick-response');
+          }
           onOpenChange();
         }}
       >
@@ -131,6 +151,7 @@ const QRform = () => {
                   <CustomButton
                     onClick={() => {
                       setName('');
+                      setQrURL(null);
                       onOpenChange();
                     }}
                     className='bg-transparent border-none w-full text-primaryColor'

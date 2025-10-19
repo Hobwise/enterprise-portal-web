@@ -58,7 +58,9 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
             varieties: menuItem.varieties || null,
             count: 1,
             isPacked: false,
-            packingCost: menuItem.packingCost || 0
+            packingCost: menuItem.packingCost || 0,
+            isVatEnabled: menuItem.isVatEnabled,
+            vatRate: menuItem.vatRate,
           };
           setTimeout(() => setIsUpdating(false), 100);
           return [...prevItems, newItem];
@@ -110,6 +112,8 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
         count: 1,
         packingCost: item.packingCost || 0,
         isPacked: item.isPacked || false,
+        isVatEnabled: item.isVatEnabled,
+        vatRate: item.vatRate,
       };
       setOrderItems((prev) => [...prev, newItem]);
     }
@@ -120,15 +124,24 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
   }, []);
 
   const calculateOrderSummary = useCallback((): OrderSummary => {
-    const subtotal = orderItems.reduce((acc, item) => {
+    let subtotal = 0;
+    let vatAmount = 0;
+
+    orderItems.forEach((item) => {
       const itemTotal = item.price * item.count;
       const packingTotal = item.isPacked
         ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
         : 0;
-      return acc + itemTotal + packingTotal;
-    }, 0);
+      const itemSubtotal = itemTotal + packingTotal;
 
-    const vatAmount = subtotal * VAT_RATE;
+      subtotal += itemSubtotal;
+
+      // Apply VAT only if enabled for this item's section
+      if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
+        vatAmount += itemSubtotal * item.vatRate;
+      }
+    });
+
     const total = subtotal + vatAmount;
     const itemCount = orderItems.reduce((sum, item) => sum + item.count, 0);
 

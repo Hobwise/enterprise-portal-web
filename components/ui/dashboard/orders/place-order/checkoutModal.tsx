@@ -425,6 +425,7 @@ const CheckoutModal = ({
   const calculateDetailedTotalPrice = () => {
     let itemsSubtotal = 0;
     let packingSubtotal = 0;
+    let vatAmount = 0;
 
     selectedItems.forEach((item: any) => {
       // Round each item calculation to prevent floating point errors
@@ -435,23 +436,31 @@ const CheckoutModal = ({
       itemsSubtotal += itemTotal;
 
       // Add packing cost only if item is packed
+      let itemPackingCost = 0;
       if (item.isPacked && item.packingCost > 0) {
         const packingCostPerItem = Number(item.packingCost) || 0;
         const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
         packingSubtotal += packingTotal;
+        itemPackingCost = packingTotal;
+      }
+
+      // Calculate VAT per item if enabled for this item's section
+      if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
+        const itemSubtotal = itemTotal + itemPackingCost;
+        vatAmount += Math.round(itemSubtotal * item.vatRate * 100) / 100;
       }
     });
 
     // Round subtotals
     itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
     packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+    vatAmount = Math.round(vatAmount * 100) / 100;
 
-    return itemsSubtotal + packingSubtotal;
+    return { itemsSubtotal, packingSubtotal, vatAmount };
   };
 
-  const subtotal = calculateDetailedTotalPrice();
-  // Round VAT calculation to 2 decimal places
-  const vatAmount = Math.round(subtotal * 7.5) / 100;
+  const { itemsSubtotal, packingSubtotal, vatAmount } = calculateDetailedTotalPrice();
+  const subtotal = itemsSubtotal + packingSubtotal;
   // Round final total to 2 decimal places
   const finalTotalPrice = Math.round((subtotal + vatAmount + (Number(additionalCost) || 0)) * 100) / 100;
 
@@ -492,6 +501,7 @@ const CheckoutModal = ({
     const errors: string[] = [];
     let itemsSubtotal = 0;
     let packingSubtotal = 0;
+    let vatCalc = 0;
 
     try {
       items.forEach((item, index) => {
@@ -508,10 +518,18 @@ const CheckoutModal = ({
         itemsSubtotal += itemTotal;
 
         // Add packing cost only if item is packed
+        let itemPackingCost = 0;
         if (item.isPacked && item.packingCost > 0) {
           const packingCostPerItem = Number(item.packingCost) || 0;
           const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
           packingSubtotal += packingTotal;
+          itemPackingCost = packingTotal;
+        }
+
+        // Calculate VAT per item if enabled
+        if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
+          const itemSubtotal = itemTotal + itemPackingCost;
+          vatCalc += Math.round(itemSubtotal * item.vatRate * 100) / 100;
         }
 
         // Log each item calculation
@@ -521,17 +539,19 @@ const CheckoutModal = ({
           itemTotal,
           isPacked: item.isPacked,
           packingCost: item.packingCost,
-          packingTotal: item.isPacked ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) / 100 : 0
+          packingTotal: item.isPacked ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) / 100 : 0,
+          isVatEnabled: item.isVatEnabled,
+          vatRate: item.vatRate,
+          itemVat: item.isVatEnabled && item.vatRate ? Math.round((itemTotal + itemPackingCost) * item.vatRate * 100) / 100 : 0
         });
       });
 
       // Round subtotals
       itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
       packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+      vatCalc = Math.round(vatCalc * 100) / 100;
 
       const baseSubtotal = itemsSubtotal + packingSubtotal;
-      // Use same VAT calculation as main function
-      const vatCalc = Math.round(baseSubtotal * 7.5) / 100;
       const additionalCostRounded = Math.round((Number(addCost) || 0) * 100) / 100;
       const finalCalc = Math.round((baseSubtotal + vatCalc + additionalCostRounded) * 100) / 100;
 
@@ -1499,7 +1519,7 @@ const CheckoutModal = ({
                             </div>
                             <div className="flex justify-between">
                               <p className="text-black font-bold">
-                                Vat (7.5%):{" "}
+                                VAT:{" "}
                               </p>
                               <p className="text-black">
                                 {formatPrice(vatAmount)}
@@ -1723,7 +1743,7 @@ const CheckoutModal = ({
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-sm text-grey600">VAT (7.5%)</span>
+                                <span className="text-sm text-grey600">VAT</span>
                                 <span className="font-semibold text-sm text-black">
                                   {formatPrice(vatAmount)}
                                 </span>
@@ -1886,7 +1906,7 @@ const CheckoutModal = ({
                                 <span className="font-semibold text-black">{formatPrice(subtotal)}</span>
                               </div>
                               <div className="flex justify-between items-center text-sm">
-                                <span className="text-grey600">VAT (7.5%)</span>
+                                <span className="text-grey600">VAT</span>
                                 <span className="font-semibold text-black">{formatPrice(vatAmount)}</span>
                               </div>
                               <Divider className="my-2" />
@@ -1920,52 +1940,115 @@ const CheckoutModal = ({
                 </>
               )}
               {screen === 2 && (
-                <div className="p-5">
-                  <div className="flex justify-between mt-3">
-                    <div>
-                      <div className=" text-[18px] leading-8 font-semibold">
-                        <span className="text-black">
-                          Select payment method
-                        </span>
+                <>
+                  {/* Desktop Layout */}
+                  <div className="hidden md:block p-5">
+                    <div className="flex justify-between mt-3">
+                      <div>
+                        <div className=" text-[18px] leading-8 font-semibold">
+                          <span className="text-black">
+                            Select payment method
+                          </span>
+                        </div>
+                        <p className="text-sm  text-primaryColor xl:mb-8 w-full mb-4">
+                          {formatPrice(finalTotalPrice)}
+                        </p>
                       </div>
-                      <p className="text-sm  text-primaryColor xl:mb-8 w-full mb-4">
-                        {formatPrice(finalTotalPrice)}
-                      </p>
+                    </div>
+                    <div className="flex flex-col gap-1 text-black">
+                      {paymentMethods.map((item) => (
+                        <div
+                          key={item.id}
+                          onClick={() => !isPayLaterLoading && handleClick(item.id)}
+                          className={`flex items-center gap-2 p-4 rounded-lg justify-between ${
+                            selectedPaymentMethod === item.id
+                              ? "bg-[#EAE5FF80]"
+                              : ""
+                          } ${
+                            isPayLaterLoading
+                              ? "cursor-not-allowed opacity-50"
+                              : "cursor-pointer"
+                          }`}
+                        >
+                          <div>
+                            <p className="font-semibold">
+                              {item.text}
+                              {item.id === 3 && isPayLaterLoading && (
+                                <span className="ml-2 text-sm">Processing...</span>
+                              )}
+                            </p>
+                            <p className="text-sm text-grey500">{item.subText}</p>
+                          </div>
+                          {item.id === 3 && isPayLaterLoading ? (
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primaryColor"></div>
+                          ) : (
+                            <MdKeyboardArrowRight />
+                          )}
+                        </div>
+                      ))}
                     </div>
                   </div>
-                  <div className="flex flex-col gap-1 text-black">
-                    {paymentMethods.map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => !isPayLaterLoading && handleClick(item.id)}
-                        className={`flex items-center gap-2 p-4 rounded-lg justify-between ${
-                          selectedPaymentMethod === item.id
-                            ? "bg-[#EAE5FF80]"
-                            : ""
-                        } ${
-                          isPayLaterLoading
-                            ? "cursor-not-allowed opacity-50"
-                            : "cursor-pointer"
-                        }`}
-                      >
+
+                  {/* Mobile Layout */}
+                  <div className="block md:hidden">
+                    <ModalHeader className="flex flex-col gap-3 bg-white border-b border-gray-200 sticky top-0 z-10">
+                      <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-semibold">
-                            {item.text}
-                            {item.id === 3 && isPayLaterLoading && (
-                              <span className="ml-2 text-sm">Processing...</span>
-                            )}
+                          <div className="text-xl font-semibold text-black">
+                            Select Payment Method
+                          </div>
+                          <p className="text-sm text-primaryColor mt-1 font-semibold">
+                            {formatPrice(finalTotalPrice)}
                           </p>
-                          <p className="text-sm text-grey500">{item.subText}</p>
                         </div>
-                        {item.id === 3 && isPayLaterLoading ? (
-                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primaryColor"></div>
-                        ) : (
-                          <MdKeyboardArrowRight />
-                        )}
+                        <CustomButton
+                          onClick={() => {
+                            setScreen(1);
+                            setMobileSubStep('1C');
+                          }}
+                          className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
+                        >
+                          Back
+                        </CustomButton>
                       </div>
-                    ))}
+                    </ModalHeader>
+
+                    <ModalBody className="flex-1 overflow-y-auto pb-safe" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
+                      <div className="space-y-3 py-4">
+                        {paymentMethods.map((item) => (
+                          <div
+                            key={item.id}
+                            onClick={() => !isPayLaterLoading && handleClick(item.id)}
+                            className={`flex items-center gap-3 p-5 rounded-lg border justify-between transition-all ${
+                              selectedPaymentMethod === item.id
+                                ? "bg-[#EAE5FF80] border-primaryColor"
+                                : "border-gray-200"
+                            } ${
+                              isPayLaterLoading
+                                ? "cursor-not-allowed opacity-50"
+                                : "cursor-pointer active:scale-95"
+                            }`}
+                          >
+                            <div className="flex-1">
+                              <p className="font-semibold text-base text-black">
+                                {item.text}
+                                {item.id === 3 && isPayLaterLoading && (
+                                  <span className="ml-2 text-sm font-normal">Processing...</span>
+                                )}
+                              </p>
+                              <p className="text-sm text-grey500 mt-1">{item.subText}</p>
+                            </div>
+                            {item.id === 3 && isPayLaterLoading ? (
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primaryColor"></div>
+                            ) : (
+                              <MdKeyboardArrowRight className="text-2xl text-gray-400" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </ModalBody>
                   </div>
-                </div>
+                </>
               )}
               {screen === 3 && (
                 <>

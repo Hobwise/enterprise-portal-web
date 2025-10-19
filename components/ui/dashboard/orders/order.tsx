@@ -306,7 +306,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setSingleOrder(order);
     setIsOpenPaymentModal(!isOpenPaymentModal);
     setPaymentScreen(2);
-    setPaymentReference('');
+    // Prefill payment reference if order already has one
+    setPaymentReference(order.paymentReference || '');
     setSelectedPaymentMethod(0);
   };
 
@@ -969,8 +970,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
                   value={paymentReference}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPaymentReference(e.target.value)}
                   name="paymentRef"
-                  label="Enter ref"
-                  placeholder="Provide payment reference"
+                  label="Enter ref (optional)"
+                  placeholder="Optional payment reference"
                 />
                 <Spacer y={5} />
                 <div className="flex md:flex-row flex-col gap-5">
