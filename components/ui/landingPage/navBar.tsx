@@ -149,7 +149,7 @@ export default function Navbar({ type = "non-colored", className }: INavbar) {
                       type === "default" && "border border-primaryColor"
                     )}
                   >
-                    Login
+                    Login 
                   </CustomButton>
                 </Link>
                 <Link href={SIGN_UP_URL} target="_blank">

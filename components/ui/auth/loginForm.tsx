@@ -238,14 +238,14 @@ const LoginForm = () => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Use replace to prevent back button issues
-      router.replace(redirectPath);
+      window.location.href  = redirectPath;
 
-      // Fallback to hard navigation if router.replace fails
-      setTimeout(() => {
-        if (window.location.pathname === "/auth/login") {
-          window.location.href = redirectPath;
-        }
-      }, 200);
+      // // Fallback to hard navigation if router.replace fails
+      // setTimeout(() => {
+      //   if (window.location.pathname === "/auth/login") {
+      //     window.location.href = redirectPath;
+      //   }
+      // }, 200);
 
     } catch (error) {
       if (process.env.NODE_ENV !== 'production') {
