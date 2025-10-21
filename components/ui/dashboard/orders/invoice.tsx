@@ -163,10 +163,12 @@ const InvoiceModal = ({
                       <p>Subtotal</p>
                       <p>{formatPrice(order.subTotalAmount)}</p>
                     </div>
-                    <div className="flex justify-between text-sm text-black font-bold gap-3">
-                      <p>VAT (7.5%) </p>
-                      <p>{formatPrice(order.vatAmount)}</p>
-                    </div>
+                    {order.isVatApplied && (
+                      <div className="flex justify-between text-sm text-black font-bold gap-3">
+                        <p>VAT</p>
+                        <p>{formatPrice(order.vatAmount)}</p>
+                      </div>
+                    )}
 
                     <div
                       className={`${

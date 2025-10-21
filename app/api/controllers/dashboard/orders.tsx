@@ -43,6 +43,77 @@ export const orderSchemaUser = z.object({
     }),
 });
 
+// Function to get category order counts for business-activities
+export async function getCategoryOrders(
+  categoryId: string,
+  startDate?: string,
+  endDate?: string,
+  filterType: number = 0
+) {
+  try {
+    // Only include dates in payload if they are defined
+    const payload: any = {
+      filterType,
+    };
+
+    if (startDate) {
+      payload.startDate = startDate;
+    }
+    if (endDate) {
+      payload.endDate = endDate;
+    }
+
+    const response = await api.post(
+      `/api/v1/Order/categories/${categoryId}`,
+      payload
+    );
+
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+// Function to get detailed order list for category
+export async function getCategoryOrderDetails(
+  categoryId: string,
+  page: number = 1,
+  pageSize: number = 10,
+  startDate?: string,
+  endDate?: string,
+  filterType: number = 0,
+  orderStatus?: string
+) {
+  try {
+    // Build payload conditionally to avoid sending undefined values
+    const payload: any = {
+      filterType,
+    };
+
+    // Only add dates if they are defined
+    if (startDate) {
+      payload.startDate = startDate;
+    }
+    if (endDate) {
+      payload.endDate = endDate;
+    }
+
+    // Only add orderStatus if it's defined and not empty
+    if (orderStatus) {
+      payload.orderStatus = orderStatus;
+    }
+
+    const response = await api.post(
+      `/api/v1/Order/details/${categoryId}?page=${page}&pageSize=${pageSize}`,
+      payload
+    );
+
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
 // New function to get order categories
 export async function getOrderCategories(
   businessId: string,

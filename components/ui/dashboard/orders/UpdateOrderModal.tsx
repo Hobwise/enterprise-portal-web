@@ -56,6 +56,9 @@ interface OrderData {
   status: 0 | 1 | 2 | 3;
   dateCreated: string;
   comment?: string;
+  subTotalAmount?: number;
+  vatAmount?: number;
+  isVatApplied?: boolean;
   orderDetails?: {
     itemID: string;
     itemName: string;
@@ -98,6 +101,8 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   const [isDataProcessingComplete, setIsDataProcessingComplete] = useState<boolean>(false);
   const [additionalCost, setAdditionalCost] = useState<number>(0);
   const [additionalCostName, setAdditionalCostName] = useState<string>("");
+  const [vatAmount, setVatAmount] = useState<number>(0);
+  const [isVatApplied, setIsVatApplied] = useState<boolean>(true);
 
   // Timer ref for cleanup
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -205,6 +210,10 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       // Extract additional cost from order details
       setAdditionalCost(fullOrderData.additionalCost || 0);
       setAdditionalCostName(fullOrderData.additionalCostName || "");
+
+      // Extract VAT information from order details
+      setVatAmount(fullOrderData.vatAmount || 0);
+      setIsVatApplied(fullOrderData.isVatApplied ?? true);
 
       setIsDataProcessingComplete(true);
     }
@@ -319,6 +328,10 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       setIsDataProcessingComplete(false);
       setIsUpdating(false);
       setIsSaving(false);
+      setAdditionalCost(0);
+      setAdditionalCostName("");
+      setVatAmount(0);
+      setIsVatApplied(true);
       // Clear any pending timer
       if (updateTimerRef.current) {
         clearTimeout(updateTimerRef.current);
@@ -476,14 +489,16 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         {formatPrice(calculateTotalPrice())}
                       </p>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <h4 className="text-[14px] font-[400] text-textGrey">
-                        VAT (7.5%)
-                      </h4>
-                      <p className="text-[14px] font-[500] text-textGrey">
-                        {formatPrice(calculateTotalPrice() * 0.075)}
-                      </p>
-                    </div>
+                    {isVatApplied && (
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-[14px] font-[400] text-textGrey">
+                          VAT
+                        </h4>
+                        <p className="text-[14px] font-[500] text-textGrey">
+                          {formatPrice(vatAmount)}
+                        </p>
+                      </div>
+                    )}
                     {additionalCost > 0 && (
                       <div className="flex justify-between items-center">
                         <h4 className="text-[14px] font-[400] text-textGrey">
@@ -500,7 +515,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         Grand Total
                       </h4>
                       <p className="text-[18px] font-[700] text-primaryColor">
-                        {formatPrice((calculateTotalPrice() * 1.075) + additionalCost)}
+                        {formatPrice(calculateTotalPrice() + vatAmount + additionalCost)}
                       </p>
                     </div>
 

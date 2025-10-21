@@ -255,7 +255,7 @@ const CheckoutModal = ({
   };
 
   // Handle checkout button click - validate first, then proceed
-  const handleCheckoutClick = () => {
+  const handleCheckoutClick = async () => {
     // Validate form before proceeding
     const validation = validateCheckoutForm();
 
@@ -269,14 +269,32 @@ const CheckoutModal = ({
       return; // Stop here if validation fails
     }
 
-    // If validation passes, show payment screen
-    setScreen(2);
+    // Set loading state before processing order
+    setLoading(true);
 
-    // Then process the order in background (no await - let it run async)
-    if (id) {
-      updateOrder();
-    } else {
-      placeOrder();
+    // Process the order and wait for completion
+    try {
+      if (id) {
+        await updateOrder();
+      } else {
+        await placeOrder();
+      }
+
+      // Only transition to payment screen after successful order placement
+      // Check if order was successful (orderId should be set by placeOrder/updateOrder)
+      // We use a small delay to ensure state updates have propagated
+      setTimeout(() => {
+        setScreen(2);
+        setLoading(false);
+      }, 100);
+    } catch (error) {
+      console.error('Error during checkout:', error);
+      setLoading(false);
+      notify({
+        title: "Error",
+        text: "Failed to process checkout. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -637,8 +655,7 @@ const CheckoutModal = ({
         text: "No items selected for checkout",
         type: "error",
       });
-      setLoading(false);
-      return;
+      throw new Error("No items selected for checkout");
     }
 
     if (!order.placedByName || !order.placedByPhoneNumber || !order.quickResponseID) {
@@ -647,11 +664,8 @@ const CheckoutModal = ({
         text: "Please fill in all required fields",
         type: "error",
       });
-      setLoading(false);
-      return;
+      throw new Error("Please fill in all required fields");
     }
-
-    setLoading(true);
 
     let payload: any = {};
     try {
@@ -686,20 +700,18 @@ const CheckoutModal = ({
         text: "Failed to prepare order data",
         type: "error",
       });
-      setLoading(false);
-      return;
+      throw new Error("Failed to prepare order data");
     }
 
     // Verify calculations
     const calculationVerification = verifyCalculation(selectedItems, additionalCost);
     if (!calculationVerification.isValid) {
-      setLoading(false);
       notify({
         title: "Calculation Error",
         text: calculationVerification.errors.join(', '),
         type: "error",
       });
-      return;
+      throw new Error(calculationVerification.errors.join(', '));
     }
 
     // Check if calculated total matches our frontend total
@@ -716,13 +728,12 @@ const CheckoutModal = ({
     // Validate payload before sending
     const validation = validateOrderPayload(payload);
     if (!validation.isValid) {
-      setLoading(false);
       notify({
         title: "Validation Error",
         text: validation.errors.join(', '),
         type: "error",
       });
-      return;
+      throw new Error(validation.errors.join(', '));
     }
 
     // Log payload for debugging
@@ -757,12 +768,10 @@ const CheckoutModal = ({
         text: "Failed to create order. Please check your connection and try again.",
         type: "error",
       });
-      setLoading(false);
-      return;
+      throw new Error('Failed to create order');
     }
 
     setResponse(data as ApiResponse);
-    setLoading(false);
 
     if (hasDataProperty(data)) {
       const apiData = data as ApiResponse;
@@ -822,6 +831,7 @@ const CheckoutModal = ({
           text: apiData.data?.error || "Unknown error",
           type: "error",
         });
+        throw new Error(apiData.data?.error || "Order creation failed");
       }
     } else if (data && 'errors' in data) {
       // Handle validation errors
@@ -836,6 +846,7 @@ const CheckoutModal = ({
         text: validationErrors,
         type: "error",
       });
+      throw new Error('Validation failed');
     } else {
       console.error('Unexpected response format:', data);
       console.error('Failed payload:', payload);
@@ -844,6 +855,7 @@ const CheckoutModal = ({
         text: "Unexpected error occurred. Please check the console for details.",
         type: "error",
       });
+      throw new Error('Unexpected error occurred');
     }
   };
   const updateOrder = async () => {
@@ -854,7 +866,7 @@ const CheckoutModal = ({
         text: "No items selected for checkout",
         type: "error",
       });
-      return;
+      throw new Error("No items selected for checkout");
     }
 
     if (!order.placedByName || !order.placedByPhoneNumber || !order.quickResponseID) {
@@ -863,10 +875,8 @@ const CheckoutModal = ({
         text: "Please fill in all required fields",
         type: "error",
       });
-      return;
+      throw new Error("Please fill in all required fields");
     }
-
-    setLoading(true);
     const transformedArray = selectedItems.map((item: any) => {
       const finalItemID = item.itemID || item.id;
       // console.log(`Update Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
@@ -895,13 +905,12 @@ const CheckoutModal = ({
     // Verify calculations
     const calculationVerification = verifyCalculation(selectedItems, additionalCost);
     if (!calculationVerification.isValid) {
-      setLoading(false);
       notify({
         title: "Calculation Error",
         text: calculationVerification.errors.join(', '),
         type: "error",
       });
-      return;
+      throw new Error(calculationVerification.errors.join(', '));
     }
 
     // Check if calculated total matches our frontend total
@@ -918,13 +927,12 @@ const CheckoutModal = ({
     // Validate payload before sending
     const validation = validateOrderPayload(payload);
     if (!validation.isValid) {
-      setLoading(false);
       notify({
         title: "Validation Error",
         text: validation.errors.join(', '),
         type: "error",
       });
-      return;
+      throw new Error(validation.errors.join(', '));
     }
 
     // Log payload for debugging
@@ -944,8 +952,7 @@ const CheckoutModal = ({
         text: "Cannot update order: Order ID is missing",
         type: "error",
       });
-      setLoading(false);
-      return;
+      throw new Error("Cannot update order: Order ID is missing");
     }
 
     let data;
@@ -961,16 +968,13 @@ const CheckoutModal = ({
     } catch (error) {
       console.error('editOrder API call failed:', error);
       console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
-      setLoading(false);
       notify({
         title: "Error!",
         text: "Failed to update order. Please try again.",
         type: "error",
       });
-      return;
+      throw new Error("Failed to update order");
     }
-
-    setLoading(false);
 
     if (hasDataProperty(data) && data.data?.isSuccessful) {
       setOrderId(data.data.data?.id || "");
@@ -1028,6 +1032,7 @@ const CheckoutModal = ({
         text: data.data.error,
         type: "error",
       });
+      throw new Error(data.data.error || "Order update failed");
     } else if (data && 'errors' in data) {
       // Handle validation errors
       const errorData = data as ApiResponse;
@@ -1041,6 +1046,7 @@ const CheckoutModal = ({
         text: validationErrors,
         type: "error",
       });
+      throw new Error('Validation failed');
     } else {
       console.error('Unexpected response format:', data);
       console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
@@ -1049,6 +1055,7 @@ const CheckoutModal = ({
         text: "Unexpected error occurred. Please check the console for details.",
         type: "error",
       });
+      throw new Error('Unexpected error occurred');
     }
   };
 
