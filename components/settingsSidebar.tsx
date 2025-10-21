@@ -4,7 +4,7 @@ import Link from "next/link";
 import { cn, getJsonItemFromLocalStorage } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import { EXCLUDE_SETTINGS_PATHS } from "@/lib/routePermissions";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const lists = [
   {
@@ -39,17 +39,28 @@ const SettingsSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const userInfo = getJsonItemFromLocalStorage("userInformation");
-  const filteredLists =
-    userInfo.role === 0
-      ? lists
-      : lists.filter((item) => !EXCLUDE_SETTINGS_PATHS.includes(item.href));
+  // Initialize with all lists to match server render
+  const [filteredLists, setFilteredLists] = useState(lists);
 
   useEffect(() => {
-    if (userInfo.role === 1 && EXCLUDE_SETTINGS_PATHS.includes(pathname)) {
-      router.push("/dashboard/settings/personal-information");
+    // Access localStorage only on client side after hydration
+    const userInfo = getJsonItemFromLocalStorage("userInformation");
+
+    if (userInfo) {
+      // Filter lists based on user role
+      const filtered =
+        userInfo.role === 0
+          ? lists
+          : lists.filter((item) => !EXCLUDE_SETTINGS_PATHS.includes(item.href));
+
+      setFilteredLists(filtered);
+
+      // Redirect staff users away from restricted paths
+      if (userInfo.role === 1 && EXCLUDE_SETTINGS_PATHS.includes(pathname)) {
+        router.push("/dashboard/settings/personal-information");
+      }
     }
-  }, [pathname]);
+  }, [pathname, router]);
 
   return (
     <ul className="col-span-1 lg:col-span-3 border flex flex-col border-secondaryGrey p-3 rounded-lg h-fit">

@@ -3,7 +3,6 @@ import { loginUser } from "@/app/api/controllers/auth";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { useGlobalContext } from "@/hooks/globalProvider";
-import { setJsonCookie } from "@/lib/cookies";
 import {
   notify,
   saveJsonItemToLocalStorage,
@@ -17,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { FaRegEnvelope } from "react-icons/fa6";
 import { useQueryClient } from "@tanstack/react-query";
-import { encryptPayload, decryptPayload } from "@/lib/encrypt-decrypt";
+import { decryptPayload } from "@/lib/encrypt-decrypt";
 
 interface LoginFormData {
   email: string;
@@ -27,6 +26,21 @@ interface LoginFormData {
 interface FormErrors {
   email?: string[];
   password?: string[];
+}
+
+interface ApiResponse {
+  data?: {
+    response?: string;
+  };
+  response?: {
+    data?: {
+      response?: string;
+      message?: string;
+      error?: string;
+    };
+  };
+  errors?: FormErrors;
+  message?: string;
 }
 
 const LoginForm = () => {
@@ -40,7 +54,6 @@ const LoginForm = () => {
     password: "",
   });
   const abortControllerRef = useRef<AbortController | null>(null);
-  const lastSubmitTime = useRef<number>(0);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -120,17 +133,19 @@ const LoginForm = () => {
       saveJsonItemToLocalStorage("loginDetails", loginFormData);
       setLoginDetails(loginFormData);
 
-      console.log('[LoginForm] Saved loginDetails to localStorage', {
-        email: loginFormData.email,
-        hasPassword: !!loginFormData.password,
-        timestamp: new Date().toISOString()
-      });
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[LoginForm] Saved loginDetails to localStorage', {
+          email: loginFormData.email,
+          hasPassword: !!loginFormData.password,
+          timestamp: new Date().toISOString()
+        });
+      }
 
       // Verify loginDetails persistence
       const verifyLoginDetails = getJsonItemFromLocalStorage("loginDetails");
-      if (!verifyLoginDetails) {
+      if (!verifyLoginDetails && process.env.NODE_ENV !== 'production') {
         console.error("[LoginForm] WARNING: loginDetails not found in localStorage after saving!");
-      } else {
+      } else if (process.env.NODE_ENV !== 'production') {
         console.log('[LoginForm] Verified loginDetails in localStorage:', {
           email: verifyLoginDetails.email,
           hasPassword: !!verifyLoginDetails.password
@@ -154,25 +169,57 @@ const LoginForm = () => {
       // Determine redirect path based on user assignment, business count and password status
       let redirectPath: string;
 
-      // Check if user is a Point of Sales user
-      const isPOSUser = decryptedData.data.primaryAssignment === "Point of Sales";
-      console.log('isPOSUser:', isPOSUser, 'primaryAssignment:', decryptedData.data.primaryAssignment);
+      // Extract user properties for classification
+      const { role, staffType, primaryAssignment, assignedCategoryId } = decryptedData.data;
 
+      // User classification checks - POS Operator uses OR condition
+      const isPOSUser = primaryAssignment === "POS Operator" ||
+                        primaryAssignment === "Point of Sales" ||
+                        (assignedCategoryId && assignedCategoryId === "POS");
+
+      const isCategoryUser = role === 1 &&
+                             staffType === 2 &&
+                             assignedCategoryId &&
+                             assignedCategoryId !== "";
+
+      const isGeneralStaff = role === 1 && primaryAssignment === "General Staff";
+
+      const isManager = role === 0;
+
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('User Classification:', {
+          role,
+          staffType,
+          primaryAssignment,
+          assignedCategoryId,
+          isPOSUser,
+          isCategoryUser,
+          isGeneralStaff,
+          isManager,
+          hasBusinesses: businesses?.length > 0
+        });
+      }
+
+      // Route determination (priority order matters!)
       if (needsPasswordChange) {
-        // User needs to change password - redirect to password management
+        // 1. User needs to change password - redirect to password management
         redirectPath = "/dashboard/settings/password-management";
       } else if (isPOSUser) {
-        // Point of Sales user - redirect to POS page
+        // 2. POS Operator user - redirect to POS page
         redirectPath = "/pos";
-      } else if (!businesses || businesses.length === 0) {
-        // No businesses - go to business information setup
-        redirectPath = "/auth/business-information";
-      } else if (businesses.length === 1) {
-        // Single business - go directly to dashboard
-        redirectPath = "/dashboard";
+      } else if (isCategoryUser) {
+        // 3. Category User (role=1, staffType=2, has assignedCategoryId) - redirect to business activities
+        redirectPath = "/business-activities";
+      } else if (isGeneralStaff || isManager) {
+        // 4. General Staff and Manager - redirect based on business availability
+        if (!businesses || businesses.length === 0) {
+          redirectPath = "/dashboard";
+        } else {
+          redirectPath = "/auth/select-business";
+        }
       } else {
-        // Multiple businesses - go to business selection
-        redirectPath = "/auth/select-business";
+        // Fallback for any other user types
+        redirectPath = "/dashboard";
       }
 
       // Clear loading state first
@@ -201,7 +248,9 @@ const LoginForm = () => {
       }, 200);
 
     } catch (error) {
-      console.error("Error handling login success:", error);
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Error handling login success:", error);
+      }
       setLoading(false);
       notify({
         title: "Login Error",
@@ -212,8 +261,10 @@ const LoginForm = () => {
   };
 
   const handleLoginError = (error: any) => {
-    console.error("Login error:", error);
-    
+    if (process.env.NODE_ENV !== 'production') {
+      console.error("Login error:", error);
+    }
+
     // Handle specific error codes
     if (error?.error?.responseCode === "HB016") {
       notify({
@@ -277,7 +328,7 @@ const LoginForm = () => {
       abortControllerRef.current = new AbortController();
 
       // Call API with abort signal support (DON'T clear storage yet)
-      const response = await loginUser(loginFormData);
+      const response = await loginUser(loginFormData) as ApiResponse;
 
       // Log the response structure for debugging
       // Handle validation errors from server
@@ -301,7 +352,11 @@ const LoginForm = () => {
       // Handle successful response from axios
       if (response?.data?.response) {
         const decryptedData = decryptPayload(response.data.response);
-        console.log('Login decryptedData:', decryptedData);
+
+        if (process.env.NODE_ENV !== 'production') {
+          console.log('Login decryptedData:', decryptedData);
+        }
+
         if (decryptedData?.data) {
          handleLoginSuccess(decryptedData);
         
@@ -351,7 +406,9 @@ const LoginForm = () => {
       }
       // Handle unexpected response format
       else {
-        console.error("Unexpected response structure:", response);
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Unexpected response structure:", response);
+        }
         notify({
           title: "Login Failed",
           text: "Unable to process server response. Please try again.",
@@ -360,8 +417,10 @@ const LoginForm = () => {
         setLoading(false);
       }
     } catch (error: any) {
-      console.error("Login error:", error);
-      
+      if (process.env.NODE_ENV !== 'production') {
+        console.error("Login error:", error);
+      }
+
       // Handle network errors
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         notify({
@@ -396,6 +455,7 @@ const LoginForm = () => {
     router.prefetch('/auth/business-information');
     router.prefetch('/auth/forget-password');
     router.prefetch('/dashboard/settings/password-management');
+    router.prefetch('/business-activities');
 
     return () => {
       // Cancel any pending requests when component unmounts

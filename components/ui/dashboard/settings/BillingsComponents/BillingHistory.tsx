@@ -54,14 +54,6 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
     }
   }, [searchQuery, subscriptions]);
 
-  // Use displayData from hook on mobile for infinite scroll, or manual pagination on desktop
-  const paginatedData = isMobile && displayData
-    ? displayData
-    : filteredData?.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-      );
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -103,6 +95,14 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
     displayData,
     isMobile,
   } = usePagination(subscriptions, columns, INITIAL_VISIBLE_COLUMNS);
+
+  // Use displayData from hook on mobile for infinite scroll, or manual pagination on desktop
+  const paginatedData = isMobile && displayData
+    ? displayData
+    : filteredData?.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+      );
 
   const mapPlan = (plan: number) => {
     return ["Unknown", "Basic", "Professional", "Premium"][plan] || "Unknown";

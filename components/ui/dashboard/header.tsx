@@ -291,7 +291,7 @@ const Header = ({ ispos }: any) => {
              )}
 
               {/* Active Hours Display */}
-              {isMounted && userInfo?.activeHours !== undefined && (
+              {/* {isMounted && userInfo?.activeHours !== undefined && (
                 <div className="flex items-center space-x-2 px-3 py-1 bg-purple-50 rounded-full border border-purple-200">
                   <svg
                     className="w-4 h-4 text-purple-600"
@@ -310,7 +310,7 @@ const Header = ({ ispos }: any) => {
                     {formatActiveHours(userInfo.activeHours)}
                   </span>
                 </div>
-              )}
+              )} */}
 
               {!isMounted ? (
                 <div className=" flex items-center gap-2 border border-gray-200 rounded-full py-1 px-2">

@@ -96,5 +96,6 @@ export const config = {
     "/pos/:path*",
     "/auth/business-information",
     "/auth/select-business",
+    "/business-activities",
   ],
 };

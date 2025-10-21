@@ -201,7 +201,7 @@ const OrderItemsGrid = ({
               isIconOnly
               size="sm"
               radius="full"
-              className="absolute bottom-2 border bg-white right-2 border-primaryColor w-[2px] h-[24px] z-20"
+              className="absolute bottom-2 min-w-0 border bg-white right-2 border-primaryColor w-[24px] h-[24px] z-20"
               aria-label="Add item"
             >
               <FaPlus size={14} color='#5f35d2' />
