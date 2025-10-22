@@ -45,55 +45,85 @@ const INITIAL_VISIBLE_COLUMNS1 = [
   'dateCreated',
 ];
 const INITIAL_VISIBLE_COLUMNS2 = [
-  'lastOrderDateTime',
   'orderCount',
   'placedByName',
   'placedByPhoneNumber',
   'totalOrderValue',
 ];
-const INITIAL_VISIBLE_COLUMNS3 = [
-  'confirmedAmount',
-  'dateUpdated',
-  'emailAddress',
-  'firstName',
-  'numberOfOrders',
-  'pendingAmount',
-  'totalAmount',
-];
+  const INITIAL_VISIBLE_COLUMNS3 = [
+    'confirmedAmount',
+    'dateUpdated',
+    'emailAddress',
+    'firstName',
+    'numberOfOrders',
+    'pendingAmount',
+    'totalAmount',
+  ];
 
-const columns0 = [
-  { name: 'Name', uid: 'name', sortable: true },
-  { name: 'Amount', uid: 'amount', sortable: true },
-  { name: 'Order ID', uid: 'orderID', sortable: true },
-  { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
-  { name: 'Place By', uid: 'placedByName', sortable: true },
-  { name: 'Payment Method', uid: 'paymentMethod', sortable: true },
-  { name: 'Status', uid: 'orderStatus', sortable: true },
-];
-const columns1 = [
-  { name: 'Item Name', uid: 'itemName', sortable: true },
-  { name: 'Menu Name', uid: 'menuName', sortable: true },
-  { name: 'Amount Sold', uid: 'totalAmountSold', sortable: true },
-  { name: 'Quantity', uid: 'totalQuantitySold', sortable: true },
-  { name: 'Current Price', uid: 'currentPrice', sortable: true },
-  { name: 'Availability', uid: 'isCurrentlyAvailable', sortable: true },
-];
-const columns2 = [
-  { name: 'Place By', uid: 'placedByName', sortable: true },
-  { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
-  { name: 'Order Count', uid: 'orderCount', sortable: true },
-  { name: 'Total Order Count', uid: 'totalOrderValue', sortable: true },
-  { name: 'Date Created/Updated', uid: 'lastOrderDateTime', sortable: true },
-];
-const columns3 = [
-  { name: 'Name', uid: 'firstName', sortable: true },
-  { name: 'Email Address', uid: 'emailAddress', sortable: true },
-  { name: 'Order Count', uid: 'numberOfOrder', sortable: true },
-  { name: 'Pending Payment', uid: 'pendingAmount', sortable: true },
-  { name: 'Confirmed Payment', uid: 'confirmedAmount' },
-  { name: 'Total Payment', uid: 'totalAmount', sortable: true },
-  { name: 'Order count', uid: 'numberOfOrders', sortable: true },
-];
+  const INITIAL_VISIBLE_COLUMNS13 = [
+    'orderStatus',
+    'numberOfOrders',
+    'totalAmount',
+  ];
+
+  const INITIAL_VISIBLE_COLUMNS14 = [
+    'categoryName',
+    'totalOrders',
+    'totalItemsSold',
+    'totalAmount',
+    'percentageOfTotalSales',
+  ];
+  
+  // Table column definitions per report type
+  const columns0 = [
+    { name: 'Name', uid: 'name', sortable: true },
+    { name: 'Amount', uid: 'amount', sortable: true },
+    { name: 'Order ID', uid: 'orderID', sortable: true },
+    { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
+    { name: 'Place By', uid: 'placedByName', sortable: true },
+    { name: 'Payment Method', uid: 'paymentMethod', sortable: true },
+    { name: 'Status', uid: 'orderStatus', sortable: true },
+  ];
+
+  const columns1 = [
+    { name: 'Item Name', uid: 'itemName', sortable: true },
+    { name: 'Menu Name', uid: 'menuName', sortable: true },
+    { name: 'Amount Sold', uid: 'totalAmountSold', sortable: true },
+    { name: 'Quantity', uid: 'totalQuantitySold', sortable: true },
+    { name: 'Current Price', uid: 'currentPrice', sortable: true },
+    { name: 'Availability', uid: 'isCurrentlyAvailable', sortable: true },
+  ];
+
+  const columns2 = [
+    { name: 'Place By', uid: 'placedByName', sortable: true },
+    { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
+    { name: 'Order Count', uid: 'orderCount', sortable: true },
+    { name: 'Total Order Value', uid: 'totalOrderValue', sortable: true },
+    { name: 'Date Created/Updated', uid: 'lastOrderDateTime', sortable: true },
+  ];
+
+  const columns3 = [
+    { name: 'Name', uid: 'firstName', sortable: true },
+    { name: 'Email Address', uid: 'emailAddress', sortable: true },
+    { name: 'Number of Orders', uid: 'numberOfOrders', sortable: true },
+    { name: 'Pending Payment', uid: 'pendingAmount', sortable: true },
+    { name: 'Confirmed Payment', uid: 'confirmedAmount', sortable: true },
+    { name: 'Total Payment', uid: 'totalAmount', sortable: true },
+  ];
+
+  const columns13 = [
+    { name: 'Total Amount', uid: 'totalAmount', sortable: true },
+    { name: 'Number of Orders', uid: 'numberOfOrders', sortable: true },
+    { name: 'Order Status', uid: 'orderStatus', sortable: true },
+  ];
+
+  const columns14 = [
+    { name: 'Category', uid: 'categoryName', sortable: true },
+    { name: 'Total Orders', uid: 'totalOrders', sortable: true },
+    { name: 'Items Sold', uid: 'totalItemsSold', sortable: true },
+    { name: 'Total Amount', uid: 'totalAmount', sortable: true },
+    { name: 'Sales %', uid: 'percentageOfTotalSales', sortable: true },
+  ];
 
 const ActivityTableOrder = ({
   reportName,
@@ -135,6 +165,20 @@ const ActivityTableOrder = ({
         visibleColumn: INITIAL_VISIBLE_COLUMNS3,
       };
     }
+    if (reportType === 13) {
+      return {
+        data: data?.orders || [],
+        column: columns13,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS13,
+      };
+    }
+    if (reportType === 14) {
+      return {
+        data: data?.categories || [],
+        column: columns14,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS14,
+      };
+    }
   }, [reportType, data]);
 
   const {
@@ -174,6 +218,20 @@ const ActivityTableOrder = ({
         direction: 'descending',
       };
     }
+    // For Order Status Sales (reportType === 13), sort by numberOfOrders desc
+    if (reportType === 13) {
+      return {
+        column: 'numberOfOrders',
+        direction: 'descending',
+      };
+    }
+    // For Category Performance (reportType === 14), sort by rawTotalAmount desc if present, else totalOrders desc
+    if (reportType === 14) {
+      return {
+        column: 'rawTotalAmount',
+        direction: 'descending',
+      } as any;
+    }
     // Default sorting for other reports
     return {
       column: 'dateCreated',
@@ -210,7 +268,17 @@ const ActivityTableOrder = ({
         item?.orderID?.toLowerCase().includes(searchQuery) ||
         item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
         item?.placedByName?.toLowerCase().includes(searchQuery) ||
-        item?.emailAddress?.toLowerCase().includes(searchQuery)
+        item?.emailAddress?.toLowerCase().includes(searchQuery) ||
+        // New fields for reportType 13
+        item?.orderStatus?.toLowerCase().includes(searchQuery) ||
+        String(item?.numberOfOrders)?.toLowerCase().includes(searchQuery) ||
+        item?.totalAmount?.toLowerCase().includes(searchQuery) ||
+        // New fields for reportType 14
+        item?.categoryName?.toLowerCase().includes(searchQuery) ||
+        String(item?.totalOrders)?.toLowerCase().includes(searchQuery) ||
+        String(item?.totalItemsSold)?.toLowerCase().includes(searchQuery) ||
+        item?.percentageOfTotalSales?.toLowerCase().includes(searchQuery) ||
+        String(item?.rawTotalAmount)?.toLowerCase().includes(searchQuery)
     );
 
     return filteredData;
