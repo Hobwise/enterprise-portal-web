@@ -76,11 +76,11 @@ const INITIAL_VISIBLE_COLUMNS2 = [
   
   // Table column definitions per report type
   const columns0 = [
-    { name: 'Name', uid: 'name', sortable: true },
-    { name: 'Amount', uid: 'amount', sortable: true },
+    { name: 'Customer Name', uid: 'name', sortable: true },
+    { name: 'Customer Phone Number', uid: 'placedByPhoneNumber', sortable: true },
     { name: 'Order ID', uid: 'orderID', sortable: true },
-    { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
-    { name: 'Place By', uid: 'placedByName', sortable: true },
+    { name: 'Amount', uid: 'amount', sortable: true },
+    { name: 'Treated By', uid: 'treatedBy', sortable: true },
     { name: 'Payment Method', uid: 'paymentMethod', sortable: true },
     { name: 'Status', uid: 'orderStatus', sortable: true },
   ];
@@ -95,20 +95,20 @@ const INITIAL_VISIBLE_COLUMNS2 = [
   ];
 
   const columns2 = [
-    { name: 'Place By', uid: 'placedByName', sortable: true },
-    { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
-    { name: 'Order Count', uid: 'orderCount', sortable: true },
-    { name: 'Total Order Value', uid: 'totalOrderValue', sortable: true },
-    { name: 'Date Created/Updated', uid: 'lastOrderDateTime', sortable: true },
+    { name: 'Customer Name', uid: 'placedByName', sortable: true },
+    { name: 'Customer Phone Number', uid: 'placedByPhoneNumber', sortable: true },
+    { name: 'Number of orders', uid: 'orderCount', sortable: true },
+    { name: 'Total purchase amount', uid: 'totalOrderValue', sortable: true },
+    { name: 'Date of last order', uid: 'lastOrderDateTime', sortable: true },
   ];
 
   const columns3 = [
     { name: 'Name', uid: 'firstName', sortable: true },
     { name: 'Email Address', uid: 'emailAddress', sortable: true },
     { name: 'Number of Orders', uid: 'numberOfOrders', sortable: true },
-    { name: 'Pending Payment', uid: 'pendingAmount', sortable: true },
-    { name: 'Confirmed Payment', uid: 'confirmedAmount', sortable: true },
-    { name: 'Total Payment', uid: 'totalAmount', sortable: true },
+    { name: 'Pending Sales', uid: 'pendingAmount', sortable: true },
+    { name: 'Confirmed Sales', uid: 'confirmedAmount', sortable: true },
+    { name: 'Total Sales', uid: 'totalAmount', sortable: true },
   ];
 
   const columns13 = [

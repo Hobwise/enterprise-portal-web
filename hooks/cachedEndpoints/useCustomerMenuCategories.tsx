@@ -8,6 +8,8 @@ interface MenuCategory {
   packingCost: number;
   waitingTimeMinutes: number;
   totalCount?: number;
+  isVatEnabled?: boolean;
+  vatRate?: number;
 }
 
 const useCustomerMenuCategories = (businessId?: string, cooperateId?: string) => {
@@ -28,6 +30,9 @@ const responseData = await getCustomerMenuCategories(businessId, cooperateId);
             packingCost: section.packingCost,
             waitingTimeMinutes: section.waitingTimeMinutes,
             totalCount: section.totalCount,
+            // Propagate VAT settings from parent category to each section
+            isVatEnabled: category.isVatEnabled,
+            vatRate: category.vatRate,
           });
         });
       });
