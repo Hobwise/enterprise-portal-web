@@ -118,11 +118,11 @@ const INITIAL_VISIBLE_COLUMNS2 = [
   ];
 
   const columns14 = [
-    { name: 'Category', uid: 'categoryName', sortable: true },
+    { name: 'Category Name', uid: 'categoryName', sortable: true },
     { name: 'Total Orders', uid: 'totalOrders', sortable: true },
-    { name: 'Items Sold', uid: 'totalItemsSold', sortable: true },
+    { name: 'Total Items Sold', uid: 'totalItemsSold', sortable: true },
     { name: 'Total Amount', uid: 'totalAmount', sortable: true },
-    { name: 'Sales %', uid: 'percentageOfTotalSales', sortable: true },
+    { name: 'Total Sales %', uid: 'percentageOfTotalSales', sortable: true },
   ];
 
 const ActivityTableOrder = ({
