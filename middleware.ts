@@ -26,6 +26,20 @@ export function middleware(request: NextRequest) {
   const isAuthRoute = pathname.startsWith('/auth/');
   const isPOSRoute = pathname.startsWith('/pos');
 
+  if (token && !isAuthRoute) {
+    const jwtPayload = decodeJWTPayload(token);
+    const expSeconds = jwtPayload?.exp;
+    if (typeof expSeconds === 'number') {
+      const isExpired = Date.now() >= expSeconds * 1000;
+      if (isExpired) {
+        const response = NextResponse.redirect(new URL("/auth/login", request.url));
+        response.cookies.delete("token");
+        response.cookies.delete("planCapabilities");
+        return response;
+      }
+    }
+  }
+
   // Handle POS user access restrictions
   if (token && (isPOSRoute || pathname.startsWith('/dashboard'))) {
     // Try to get user info from token or localStorage simulation
