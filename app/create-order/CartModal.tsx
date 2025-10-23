@@ -74,8 +74,27 @@ const CartModal = ({
 
   const subtotal = calculateSubtotal();
   const packingCost = calculatePackingCost();
-  const vat = (subtotal + packingCost) * 0.075;
-  const total = subtotal + packingCost + vat;
+  // Compute dynamic VAT using per-item settings
+  let vat = 0;
+  const enabledRates = Array.from(
+    new Set(
+      selectedItems
+        .filter((i: any) => i.isVatEnabled && i.vatRate && i.vatRate > 0)
+        .map((i: any) => Number(i.vatRate))
+    )
+  );
+  selectedItems.forEach((item: any) => {
+    const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
+    const itemPacking = item.isPacked && item.packingCost
+      ? (Number(item.packingCost) || 0) * (Number(item.count) || 0)
+      : 0;
+    const itemSubtotal = itemTotal + itemPacking;
+    if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
+      vat += itemSubtotal * item.vatRate;
+    }
+  });
+  vat = Math.round(vat * 100) / 100;
+  const total = Math.round((subtotal + packingCost + vat) * 100) / 100;
 
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-hidden flex flex-col">
@@ -104,7 +123,7 @@ const CartModal = ({
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 max-w-4xl flex flex-col mx-auto w-full  overflow-y-auto px-4 py-4 pb-24">
+      <div className="flex-1 max-w-4xl flex flex-col mx-auto w-full overflow-y-auto px-4 py-4 pb-28">
         {/* Cart Items List */}
         <div className="space-y-4 mb-4">
           {selectedItems.map((item) => (
@@ -212,7 +231,11 @@ const CartModal = ({
             </div>
           )}
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">VAT 7.5%</span>
+            <span className="text-gray-600">
+              {enabledRates.length > 1
+                ? `VAT (${enabledRates.map((r) => `${Math.round(r * 100)}%`).join(', ')})`
+                : `VAT ${enabledRates[0] ? Math.round(enabledRates[0] * 100) : 0}%`}
+            </span>
             <span className="font-semibold text-black">{formatPrice(vat)}</span>
           </div>
           <div className="flex justify-between text-base font-bold border-t pt-2">
@@ -233,10 +256,10 @@ const CartModal = ({
         >
           Clear Cart
         </button>
-      </div>
 
-      {/* Fixed Bottom Section */}
-      <div className="border-t max-w-4xl flex flex-col mx-auto w-full  border-gray-200 bg-white px-4 py-4 pb-safe">
+        <div 
+      className={`border-t max-w-4xl flex flex-col mx-auto w-full  border-gray-200 bg-white  py-4`}
+      >
         {/* Action Buttons */}
         <div className="flex gap-3">
           <CustomButton
@@ -263,6 +286,7 @@ const CartModal = ({
           </CustomButton>
         </div>
       </div>
+      </div>  
     </div>
   );
 };

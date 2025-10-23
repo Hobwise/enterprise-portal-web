@@ -22,6 +22,7 @@ import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import { CustomButton } from "@/components/customButton";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 import CustomPagination from "@/components/ui/dashboard/settings/BillingsComponents/CustomPagination";
+import PaymentCard from "@/components/ui/dashboard/payments/paymentCard";
 
 const Payments: React.FC = () => {
   const {
@@ -71,18 +72,21 @@ const Payments: React.FC = () => {
   };
 
   // Use display data to prevent flashing, fall back to current data
-  const data = displayData.categories && displayData.details ? displayData : { categories, details };
+  const data =
+    displayData.categories && displayData.details
+      ? displayData
+      : { categories, details };
 
   // Extract pagination info from details response
   const paginationData = React.useMemo(() => {
-    if (details?.data && typeof details.data === 'object') {
+    if (details?.data && typeof details.data === "object") {
       return {
         currentPage: details.data.currentPage || page,
         totalPages: details.data.totalPages || 1,
         hasNext: details.data.hasNext || false,
         hasPrevious: details.data.hasPrevious || false,
         totalCount: details.data.totalCount || 0,
-        payments: details.data.payments || details.data.data || []
+        payments: details.data.payments || details.data.data || [],
       };
     }
     return {
@@ -91,7 +95,7 @@ const Payments: React.FC = () => {
       hasNext: false,
       hasPrevious: false,
       totalCount: 0,
-      payments: []
+      payments: [],
     };
   }, [details, page, tableStatus]);
 
@@ -136,7 +140,6 @@ const Payments: React.FC = () => {
   if (isError) return <Error onClick={() => refetch()} />;
 
   // Payment summary values (adjust keys if needed)
-
 
   return (
     <>
@@ -201,22 +204,11 @@ const Payments: React.FC = () => {
           )}
         </div>
       </div>
-          <div className=" rounded-md bg-[#F7F6FA] p-6 mb-6 flex flex-row gap-12 items-center">
-            {
-              data?.categories?.data?.paymentCategories?.map((item:any, idx:any) => (
-            <div className="flex-1" key={idx}>
-              <div className="text-grey600 text-base mb-1">{item.name}</div>
-              <div className="text-xl font-bold text-black">
-                ₦{item.totalAmount.toLocaleString()}
-              </div>
-            </div>
+      <div className="mb-8">
+        <PaymentCard data={data?.categories?.data?.paymentCategories} />
+      </div>
 
-              ))
-            }
-        
-          </div>
-
-      <DateRangeDisplay 
+      <DateRangeDisplay
         startDate={startDate}
         endDate={endDate}
         filterType={filterType}
@@ -242,17 +234,18 @@ const Payments: React.FC = () => {
           />
 
           {/* Pagination at page level */}
-          {paginationData.totalPages > 1 && paginationData.payments.length > 0 && (
-            <div className="mt-4">
-              <CustomPagination
-                currentPage={paginationData.currentPage}
-                totalPages={paginationData.totalPages}
-                onPageChange={handlePageChange}
-                onNext={handleNext}
-                onPrevious={handlePrevious}
-              />
-            </div>
-          )}
+          {paginationData.totalPages > 1 &&
+            paginationData.payments.length > 0 && (
+              <div className="mt-4">
+                <CustomPagination
+                  currentPage={paginationData.currentPage}
+                  totalPages={paginationData.totalPages}
+                  onPageChange={handlePageChange}
+                  onNext={handleNext}
+                  onPrevious={handlePrevious}
+                />
+              </div>
+            )}
         </>
       ) : (
         <NoPaymentsScreen />

@@ -176,6 +176,9 @@ const CreateOrder = () => {
     return menuItemsData.map((item: any) => ({
       ...item,
       waitingTimeMinutes: selectedCategory?.waitingTimeMinutes || 0,
+      // Propagate VAT config from the selected category/section to each item
+      isVatEnabled: (selectedCategory as any)?.isVatEnabled ?? false,
+      vatRate: (selectedCategory as any)?.vatRate ?? 0,
     }));
   }, [menuItemsData, categories, selectedCategoryId]);
 
@@ -468,18 +471,28 @@ const CreateOrder = () => {
         toast.info("No changes detected. Returning to order tracking.");
         return;
       }
-      const subtotal = selectedItems.reduce(
-        (acc, item) => acc + item.price * item.count,
-        0
-      );
-      const packingCost = selectedItems.reduce((acc, item) => {
+      // Compute totals with dynamic per-item VAT
+      let subtotal = 0;
+      let packingCost = 0;
+      let vat = 0;
+      selectedItems.forEach((item: any) => {
+        const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
+        subtotal += itemTotal;
+        let itemPackingTotal = 0;
         if (item.isPacked && item.packingCost) {
-          return acc + item.packingCost * item.count;
+          itemPackingTotal = (Number(item.packingCost) || 0) * (Number(item.count) || 0);
+          packingCost += itemPackingTotal;
         }
-        return acc;
-      }, 0);
-      const vat = (subtotal + packingCost) * 0.075;
-      const total = subtotal + packingCost + vat;
+        if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
+          const itemSubtotal = itemTotal + itemPackingTotal;
+          vat += itemSubtotal * item.vatRate;
+        }
+      });
+      // Round to 2dp
+      subtotal = Math.round(subtotal * 100) / 100;
+      packingCost = Math.round(packingCost * 100) / 100;
+      vat = Math.round(vat * 100) / 100;
+      const total = Math.round((subtotal + packingCost + vat) * 100) / 100;
 
       const orderDetails = selectedItems.map((item) => ({
         itemId: item.id,
@@ -522,6 +535,23 @@ const CreateOrder = () => {
           if (orderID && !response.data.reference) {
             orderDataToStore = { ...response.data, reference: orderID };
           }
+        }
+
+        // Attach VAT metadata for display in tracking modal immediately after placing
+        const enabledRates = Array.from(
+          new Set(
+            selectedItems
+              .filter((i: any) => i.isVatEnabled && i.vatRate && i.vatRate > 0)
+              .map((i: any) => Number(i.vatRate))
+          )
+        );
+        if (enabledRates.length > 0) {
+          (orderDataToStore as any).isVatEnabled = true;
+          // If multiple rates, store the first; UI can handle plural if needed
+          (orderDataToStore as any).vatRate = enabledRates[0];
+        } else {
+          (orderDataToStore as any).isVatEnabled = false;
+          (orderDataToStore as any).vatRate = 0;
         }
 
         setOrderData(orderDataToStore);

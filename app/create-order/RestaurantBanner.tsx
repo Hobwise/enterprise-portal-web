@@ -21,12 +21,7 @@ const RestaurantBanner = ({
   onMenuClick,
   baseString,
 }: RestaurantBannerProps) => {
-  // Debug logging
-  console.log("RestaurantBanner - menuConfig:", menuConfig);
-  console.log("RestaurantBanner - menuConfig.image:", menuConfig?.image);
-  console.log("RestaurantBanner - baseString:", baseString);
 
-  // Construct image source properly - handle blob URLs and base64
   const imageSrc = menuConfig?.image
     ? (menuConfig.image.startsWith('blob:')
         ? menuConfig.image // Use blob URL directly
@@ -34,8 +29,6 @@ const RestaurantBanner = ({
           ? `${baseString}${menuConfig.image}`
           : `data:image/jpeg;base64,${menuConfig.image}`)
     : null;
-
-  console.log("RestaurantBanner - imageSrc:", imageSrc);
 
   return (
     <div className="relative w-full">

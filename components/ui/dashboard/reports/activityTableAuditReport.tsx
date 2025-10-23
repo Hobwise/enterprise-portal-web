@@ -1,10 +1,12 @@
-import { CustomInput } from '@/components/CustomInput';
-import usePagination from '@/hooks/usePagination';
 import {
   SmallLoader,
   formatDateTimeForPayload3,
   getJsonItemFromLocalStorage,
 } from '@/lib/utils';
+import moment from 'moment';
+import Image from 'next/image';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { IoIosArrowForward } from 'react-icons/io';
 import {
   Chip,
   Modal,
@@ -18,35 +20,51 @@ import {
   TableHeader,
   TableRow,
 } from '@nextui-org/react';
-import moment from 'moment';
-import Image from 'next/image';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { IoIosArrowForward } from 'react-icons/io';
 import { IoSearchOutline } from 'react-icons/io5';
 import { MdOutlineFileDownload } from 'react-icons/md';
-import CSV from '../../../../public/assets/icons/csv-icon.png';
-import PDF from '../../../../public/assets/icons/pdf-icon.png';
-import { PaginationComponent } from './data';
+  import CSV from '../../../../public/assets/icons/csv-icon.png';
+  import PDF from '../../../../public/assets/icons/pdf-icon.png';
+  import { PaginationComponent } from './data';
+import usePagination from '@/hooks/usePagination';
+import { CustomInput } from '@/components/CustomInput';
 
-const INITIAL_VISIBLE_COLUMNS = [
-  'userName',
-  'emailAddress',
-  'activity',
-  'ipAddress',
-
-  'isSuccessful',
-  'dateCreated',
-];
-
-const column = [
-  { name: 'Username', uid: 'userName', sortable: true },
-  { name: 'Email Address', uid: 'emailAddress', sortable: true },
-  { name: 'IP Address', uid: 'ipAddress', sortable: true },
-
-  { name: 'Activity', uid: 'activity', sortable: true },
-  { name: 'Date', uid: 'dateCreated', sortable: true },
-  { name: 'Status', uid: 'isSuccessful', sortable: true },
-];
+  const INITIAL_VISIBLE_COLUMNS = [
+    'userName',
+    'emailAddress',
+    'activity',
+    'ipAddress',
+  
+    'isSuccessful',
+    'dateCreated',
+  ];
+  
+  const DAILY_VISIBLE_COLUMNS = [
+    'fullName',
+    'emailAddress',
+    'firstLoginTime',
+    'lastSeenTime',
+    'activePeriod',
+    'date',
+  ];
+  
+  const column = [
+    { name: 'Username', uid: 'userName', sortable: true },
+    { name: 'Email Address', uid: 'emailAddress', sortable: true },
+    { name: 'IP Address', uid: 'ipAddress', sortable: true },
+  
+    { name: 'Activity', uid: 'activity', sortable: true },
+    { name: 'Date', uid: 'dateCreated', sortable: true },
+    { name: 'Status', uid: 'isSuccessful', sortable: true },
+  ];
+  
+  const DAILY_COLUMNS = [
+    { name: 'Full Name', uid: 'fullName', sortable: true },
+    { name: 'Email Address', uid: 'emailAddress', sortable: true },
+    { name: 'First Login', uid: 'firstLoginTime', sortable: true },
+    { name: 'Last Seen', uid: 'lastSeenTime', sortable: true },
+    { name: 'Active Period', uid: 'activePeriod', sortable: true },
+    { name: 'Date', uid: 'date', sortable: true },
+  ];
 
 const ActivityTableAudit = ({
   reportName,
@@ -68,6 +86,18 @@ const ActivityTableAudit = ({
         visibleColumn: INITIAL_VISIBLE_COLUMNS,
       };
     }
+    if (reportType === 12) {
+      return {
+        data: data?.userDailyActivePeriods || [],
+        column: DAILY_COLUMNS,
+        visibleColumn: DAILY_VISIBLE_COLUMNS,
+      };
+    }
+    return {
+      data: [],
+      column: [],
+      visibleColumn: [],
+    };
   }, [reportType, data]);
 
   const [showMore, setShowMore] = useState(false);
@@ -86,7 +116,7 @@ const ActivityTableAudit = ({
     setShowMore(!showMore);
   };
 
-  const renderCell = useCallback((audit, columnKey) => {
+  const renderCell = useCallback((audit: any, columnKey: any) => {
     const cellValue = audit[columnKey];
 
     switch (columnKey) {
@@ -104,6 +134,24 @@ const ActivityTableAudit = ({
             {moment(audit.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
           </div>
         );
+      case 'firstLoginTime':
+        return (
+          <div className='text-textGrey text-sm'>
+            {audit.firstLoginTime
+              ? moment(audit.firstLoginTime).format('MMMM Do YYYY, h:mm:ss a')
+              : '-'}
+          </div>
+        );
+      case 'lastSeenTime':
+        return (
+          <div className='text-textGrey text-sm'>
+            {audit.lastSeenTime
+              ? moment(audit.lastSeenTime).format('MMMM Do YYYY, h:mm:ss a')
+              : '-'}
+          </div>
+        );
+      case 'date':
+        return <div className='text-textGrey text-sm'>{audit.date || '-'}</div>;
       case 'isSuccessful':
         return (
           <Chip
@@ -128,17 +176,29 @@ const ActivityTableAudit = ({
   const filteredItems = useMemo(() => {
     let filteredData = [...columns?.data];
 
-    filteredData = filteredData.filter(
-      (item) =>
-        item.activity.toLowerCase().includes(searchQuery) ||
-        item.emailAddress.toLowerCase().includes(searchQuery) ||
-        item.ipAddress.toLowerCase().includes(searchQuery) ||
-        item.userName.toLowerCase().includes(searchQuery) ||
-        item.dateCreated.toLowerCase().includes(searchQuery)
-    );
+    if (reportType === 11) {
+      filteredData = filteredData.filter(
+        (item) =>
+          item.activity?.toLowerCase().includes(searchQuery) ||
+          item.emailAddress?.toLowerCase().includes(searchQuery) ||
+          item.ipAddress?.toLowerCase().includes(searchQuery) ||
+          item.userName?.toLowerCase().includes(searchQuery) ||
+          String(item.dateCreated)?.toLowerCase().includes(searchQuery)
+      );
+    } else if (reportType === 12) {
+      filteredData = filteredData.filter(
+        (item) =>
+          item.fullName?.toLowerCase().includes(searchQuery) ||
+          item.emailAddress?.toLowerCase().includes(searchQuery) ||
+          item.activePeriod?.toLowerCase().includes(searchQuery) ||
+          String(item.firstLoginTime)?.toLowerCase().includes(searchQuery) ||
+          String(item.lastSeenTime)?.toLowerCase().includes(searchQuery) ||
+          item.date?.toLowerCase().includes(searchQuery)
+      );
+    }
 
     return filteredData;
-  }, [columns?.data, searchQuery]);
+  }, [columns?.data, searchQuery, reportType]);
   const [page, setPage] = useState(1);
   const rowsPerPage = 10;
 

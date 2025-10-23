@@ -851,3 +851,4 @@ export const reservationDuration = [
     value: 12,
   },
 ];
+export const isLandscape = window.matchMedia("(orientation: landscape)").matches;
