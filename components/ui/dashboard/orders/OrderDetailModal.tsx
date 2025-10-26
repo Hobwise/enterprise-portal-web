@@ -19,6 +19,7 @@ interface OrderDetailItem {
   quantity: number;
   unitPrice: number;
   totalPrice: number;
+  packingCost?: number;
 }
 
 export interface OrderDetailData {
@@ -66,8 +67,8 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1 px-6 pt-6 pb-4">
-              <div className="flex justify-center items-center">
-                <div className="flex-1 flex justify-center items-center flex-col">
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">
                     {orderData.restaurantName || 'Cubana Restaurant and Grills'}
                   </h3>
@@ -75,7 +76,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     {orderData.restaurantLocation || 'Tafawa Balewa Way, Ikeja, Lagos'}
                   </p>
                 </div>
-             
               </div>
             </ModalHeader>
 
@@ -98,12 +98,12 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 </div>
               </div>
 
-            
+              <Divider className="my-4" />
 
               {/* Order Items */}
               <div className="space-y-4">
                 {orderData.items.map((item) => (
-                  <div key={item.id} className="flex justify-between items-start border-b pb-1">
+                  <div key={item.id} className="flex justify-between items-start">
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-900">{item.itemName}</h4>
                       <p className="text-xs text-gray-500">{item.category}</p>
@@ -111,37 +111,38 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     <div className="flex items-center gap-4 ml-4">
                       <span className="text-sm text-gray-600">{item.quantity}</span>
                       <span className="text-sm font-semibold text-gray-900 min-w-[80px] text-right">
-                        {formatPrice(item.totalPrice)}
+                        {formatPrice(item.totalPrice, 'NGN')}
                       </span>
                     </div>
                   </div>
                 ))}
               </div>
 
+              <Divider className="my-4" />
 
               {/* Summary */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Total</span>
-                  <span className="text-sm text-gray-900">{formatPrice(orderData.subtotal)}</span>
+                  <span className="text-sm text-gray-900">{formatPrice(orderData.subtotal, 'NGN')}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Packing Cost</span>
-                  <span className="text-sm text-gray-900">{formatPrice(orderData.packingCost)}</span>
+                  <span className="text-sm text-gray-900">{formatPrice(orderData.packingCost, 'NGN')}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Tax</span>
-                  <span className="text-sm text-gray-900">{formatPrice(orderData.tax)}</span>
+                  <span className="text-sm text-gray-900">{formatPrice(orderData.tax, 'NGN')}</span>
                 </div>
 
-                <Divider className="" />
+                <Divider className="my-2" />
 
-                <div className="flex justify-center flex-col items-center pt-2">
+                <div className="flex justify-between items-center pt-2">
                   <span className="text-sm font-semibold text-gray-700">Grand Total</span>
                   <span className="text-lg font-bold text-gray-900">
-                    {formatPrice(orderData.grandTotal)}
+                    {formatPrice(orderData.grandTotal, 'NGN')}
                   </span>
                 </div>
               </div>

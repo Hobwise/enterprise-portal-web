@@ -1,6 +1,5 @@
 "use client";
 import {
-  getBusinessDetails,
   loginUserSelectedBusiness,
 } from "@/app/api/controllers/auth";
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
@@ -219,18 +218,22 @@ const SelectBusinessForm = () => {
     setError(null);
 
     try {
-      const data = await getBusinessDetails(item);
+      // Use the clicked item directly - it already has all the data we need
+      // This ensures we always use the correct business ID that was clicked
+      const businessData = {
+        businessId: item.id,
+        businessName: item.name,
+        cooperateID: item.cooperateID,
+        city: item.city,
+        state: item.state,
+        logoImage: item.logoImage
+      };
 
-      if (data?.data?.isSuccessful) {
-        saveJsonItemToLocalStorage("business", [data?.data?.data]);
-        await callLogin(data?.data?.data.businessId);
-      } else if (data?.data?.error) {
-        if (!handleAuthenticationError(data?.data)) {
-          handleErrorDisplay(data?.data?.error || "Failed to get business details");
-        }
-      } else {
-        throw new Error("Invalid response from business details API");
-      }
+      // Save the selected business to localStorage
+      saveJsonItemToLocalStorage("business", [businessData]);
+
+      // Login with the selected business ID (from the clicked item, not from API response)
+      await callLogin(item.id);
     } catch (error: any) {
       if (!handleAuthenticationError(error) && isMountedRef.current) {
         if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {

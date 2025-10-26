@@ -3,7 +3,7 @@ import Error from '@/components/error';
 import OrdersOverview from '@/components/ui/dashboard/home/OrdersOverview';
 import ModulesOverview from '@/components/ui/dashboard/home/modulesOverview';
 import useDashboardReport from '@/hooks/cachedEndpoints/useDashboard';
-import { formatDateTimeForPayload2 } from '@/lib/utils';
+import { formatDateTimeForPayload2, getJsonItemFromLocalStorage } from '@/lib/utils';
 import { getLocalTimeZone, today, DateValue } from '@internationalized/date';
 import {
   DateRangePicker,
@@ -13,8 +13,10 @@ import {
   useDisclosure,
 } from '@nextui-org/react';
 import React, { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const Dashboard: React.FC = () => {
+  const router = useRouter();
   const [selectedKeys, setSelectedKeys] = useState(new Set(['This week']));
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
 
@@ -28,6 +30,33 @@ const Dashboard: React.FC = () => {
     [selectedKeys]
   );
   const [previousSelectedValue, setPreviousSelectedValue] = useState('Today');
+
+  // Client-side protection: Redirect POS and category users
+  useEffect(() => {
+    const userInformation = getJsonItemFromLocalStorage('userInformation');
+
+    if (userInformation) {
+      const { role, staffType, primaryAssignment, assignedCategoryId } = userInformation;
+
+      // Check if user is POS user
+      const isPOSUser = primaryAssignment === "Point of Sales" ||
+                        primaryAssignment === "POS Operator" ||
+                        (assignedCategoryId && assignedCategoryId === "POS");
+
+      // Check if user is category user
+      const isCategoryUser = role === 1 &&
+                            staffType === 2 &&
+                            assignedCategoryId &&
+                            assignedCategoryId !== "" &&
+                            assignedCategoryId !== "POS";
+
+      if (isPOSUser) {
+        router.replace('/pos');
+      } else if (isCategoryUser) {
+        router.replace('/business-activities');
+      }
+    }
+  }, [router]);
 
   const logIndexForSelectedKey = (key: string) => {
     switch (key) {

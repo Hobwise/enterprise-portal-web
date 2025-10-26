@@ -4,50 +4,43 @@ import { MenuItem } from '@/app/pos/types';
 
 export const usePOSNavigation = (posData: POSSection[]) => {
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [selectedSection, setSelectedSection] = useState("All");
+  const [selectedMenu, setSelectedMenu] = useState("All Menu");
 
-  // Extract main tabs (sections) from API data
+  // Extract categories (sections) from API data for SIDEBAR
   const mainTabs = useMemo(() => {
-    if (!posData || posData.length === 0) return ['All'];
-
-    // Get all section names from the API
-    const sections = posData
-      .map(section => section.name)
-      .filter(name => name && name.trim() !== ''); // Filter out empty names
-
-    // Always include "All" as the first option if not already present
-    const hasAll = sections.some(s => s.toLowerCase() === 'all');
-    return hasAll ? sections : ['All', ...sections];
-  }, [posData]);
-
-  // Extract categories from API data - filtered by selected section
-  const categories = useMemo(() => {
     if (!posData || posData.length === 0) return [];
 
-    const allCategories = new Set<string>();
+    // Get all section names (Canteen, Bar, Kitchen)
+    const categories = posData
+      .map(section => section.name)
+      .filter(name => name && name.trim() !== '');
 
-    // Determine which sections to process based on selected section
-    const sectionsToProcess = selectedSection === "All"
-      ? posData
-      : posData.filter(section => section.name === selectedSection);
+    return Array.from(new Set(categories)).sort();
+  }, [posData]);
 
-    // Extract unique menu names from all selected sections
-    sectionsToProcess.forEach((section) => {
-      if (section.menus && Array.isArray(section.menus)) {
-        section.menus.forEach((menu) => {
-          if (menu.name && menu.name.trim()) {
-            allCategories.add(menu.name);
-          }
-        });
-      }
-    });
+  // Extract menus from the selected category for TOP TABS
+  const categories = useMemo(() => {
+    if (!posData || posData.length === 0) return ['All Menu'];
+    if (!selectedCategory) return ['All Menu'];
 
-    // Return sorted categories without "All Menu"
-    const categoryList = Array.from(allCategories).sort();
-    return categoryList;
-  }, [posData, selectedSection]);
+    const allMenus = new Set<string>();
 
-  // Get menu items based on selected section and category
+    // Find the selected category (section) and get its menus
+    const selectedSection = posData.find(section => section.name === selectedCategory);
+
+    if (selectedSection && selectedSection.menus && Array.isArray(selectedSection.menus)) {
+      selectedSection.menus.forEach((menu) => {
+        if (menu.name && menu.name.trim()) {
+          allMenus.add(menu.name);
+        }
+      });
+    }
+
+    // Return "All Menu" first, then sorted menu names
+    return ['All Menu', ...Array.from(allMenus).sort()];
+  }, [posData, selectedCategory]);
+
+  // Get menu items based on selected category and menu
   const menuItems = useMemo((): MenuItem[] => {
     const items: MenuItem[] = [];
     const seenItemIds = new Set<string>();
@@ -56,33 +49,36 @@ export const usePOSNavigation = (posData: POSSection[]) => {
       return items;
     }
 
-    // Determine which sections to process based on selected section
-    const sectionsToProcess = selectedSection === "All"
-      ? posData
-      : posData.filter(section => section.name === selectedSection);
+    // Find the selected category (section)
+    const selectedSection = posData.find(section => section.name === selectedCategory);
 
-    // Show items from the selected category across all applicable sections
-    sectionsToProcess.forEach((section) => {
-      if (section.menus && Array.isArray(section.menus)) {
-        section.menus.forEach((menu) => {
-          if (menu.name === selectedCategory && menu.items && Array.isArray(menu.items)) {
-            menu.items.forEach((item) => {
-              const uniqueKey = `${section.id}-${menu.id}-${item.id}`;
-              if (!seenItemIds.has(uniqueKey)) {
-                seenItemIds.add(uniqueKey);
-                items.push({
-                  ...item,
-                  uniqueKey: uniqueKey,
-                  menuName: menu.name,
-                  menuId: menu.id,
-                  packingCost: menu.packingCost,
-                  waitingTimeMinutes: menu.waitingTimeMinutes,
-                  sectionName: section.name,
-                  sectionId: section.id,
-                  isVatEnabled: section.isVatEnabled,
-                  vatRate: section.vatRate,
-                });
-              }
+    if (!selectedSection) {
+      return items;
+    }
+
+    // Determine which menus to process based on selected menu
+    const menusToProcess = selectedMenu === "All Menu"
+      ? selectedSection.menus || []
+      : (selectedSection.menus || []).filter(menu => menu.name === selectedMenu);
+
+    // Show items from the selected menus
+    menusToProcess.forEach((menu) => {
+      if (menu.items && Array.isArray(menu.items)) {
+        menu.items.forEach((item) => {
+          const uniqueKey = `${selectedSection.id}-${menu.id}-${item.id}`;
+          if (!seenItemIds.has(uniqueKey)) {
+            seenItemIds.add(uniqueKey);
+            items.push({
+              ...item,
+              uniqueKey: uniqueKey,
+              menuName: menu.name,
+              menuId: menu.id,
+              packingCost: menu.packingCost,
+              waitingTimeMinutes: menu.waitingTimeMinutes,
+              sectionName: selectedSection.name,
+              sectionId: selectedSection.id,
+              isVatEnabled: selectedSection.isVatEnabled,
+              vatRate: selectedSection.vatRate,
             });
           }
         });
@@ -90,20 +86,27 @@ export const usePOSNavigation = (posData: POSSection[]) => {
     });
 
     return items;
-  }, [posData, selectedSection, selectedCategory]);
+  }, [posData, selectedCategory, selectedMenu]);
 
-  // Set initial category when categories are loaded
+  // Set initial category when mainTabs (categories) are loaded
   useEffect(() => {
-    if (categories.length > 0 && !selectedCategory) {
-      setSelectedCategory(categories[0]);
+    if (mainTabs.length > 0 && !selectedCategory) {
+      setSelectedCategory(mainTabs[0]);
     }
-  }, [categories, selectedCategory]);
+  }, [mainTabs, selectedCategory]);
+
+  // Reset to "All Menu" when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      setSelectedMenu("All Menu");
+    }
+  }, [selectedCategory]);
 
   return {
     selectedCategory,
     setSelectedCategory,
-    selectedSection,
-    setSelectedSection,
+    selectedMenu,
+    setSelectedMenu,
     categories,
     mainTabs,
     menuItems,

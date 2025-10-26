@@ -280,13 +280,10 @@ const CheckoutModal = ({
         await placeOrder();
       }
 
-      // Only transition to payment screen after successful order placement
-      // Check if order was successful (orderId should be set by placeOrder/updateOrder)
-      // We use a small delay to ensure state updates have propagated
-      setTimeout(() => {
-        setScreen(2);
-        setLoading(false);
-      }, 100);
+      // Transition to payment screen immediately after successful order placement
+      // Cache operations are now non-blocking, so no delay needed
+      setScreen(2);
+      setLoading(false);
     } catch (error) {
       console.error('Error during checkout:', error);
       setLoading(false);
@@ -783,46 +780,48 @@ const CheckoutModal = ({
           type: "success",
         });
 
-        // Clear cache and invalidate queries - be more aggressive to ensure fresh data
+        // Clear cache synchronously (fast operation)
         ordersCacheUtils.clearAll();
 
-        // Invalidate all order-related queries to force refetch from backend
-        await queryClient.invalidateQueries({
-          queryKey: ['orderCategories'],
-          refetchType: 'active'
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ['orderDetails'],
-          refetchType: 'active'
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ['orders'],
-          refetchType: 'active'
-        });
-
-        // Force immediate refetch of all active queries
-        if (pathname === '/dashboard/orders') {
-          await queryClient.refetchQueries({
+        // Run cache/query operations in background without blocking screen transition
+        Promise.all([
+          queryClient.invalidateQueries({
             queryKey: ['orderCategories'],
-            type: 'active'
-          });
-          await queryClient.refetchQueries({
+            refetchType: 'active'
+          }),
+          queryClient.invalidateQueries({
             queryKey: ['orderDetails'],
-            type: 'active'
-          });
-          await queryClient.refetchQueries({
+            refetchType: 'active'
+          }),
+          queryClient.invalidateQueries({
             queryKey: ['orders'],
-            type: 'active'
-          });
-
-          // Call the refetch function to update the table immediately
-          if (onOrderSuccess) {
-            onOrderSuccess();
+            refetchType: 'active'
+          })
+        ]).then(() => {
+          // Only refetch if on orders page
+          if (pathname === '/dashboard/orders') {
+            return Promise.all([
+              queryClient.refetchQueries({
+                queryKey: ['orderCategories'],
+                type: 'active'
+              }),
+              queryClient.refetchQueries({
+                queryKey: ['orderDetails'],
+                type: 'active'
+              }),
+              queryClient.refetchQueries({
+                queryKey: ['orders'],
+                type: 'active'
+              })
+            ]);
           }
-        }
+        }).catch(error => {
+          console.error('Background refresh error:', error);
+        });
 
-        // Stay on screen 2 (payment selection) - user needs to choose payment method
-        // Screen is already set to 2 by handleCheckoutClick
+        // Screen transition will happen in handleCheckoutClick immediately
+        // Note: onOrderSuccess is NOT called here to preserve cart items during payment flow
+        // It will be called after successful payment completion in finalizeOrder
       } else if (apiData.data?.error) {
         console.error('Order creation failed:', apiData.data?.error);
         console.error('Failed payload:', payload);
@@ -984,43 +983,48 @@ const CheckoutModal = ({
         type: "success",
       });
 
-      // Clear cache and invalidate queries - be more aggressive to ensure fresh data
+      // Clear cache synchronously (fast operation)
       ordersCacheUtils.clearAll();
 
-      // Invalidate all order-related queries to force refetch from backend
-      await queryClient.invalidateQueries({
-        queryKey: ['orderCategories'],
-        refetchType: 'active'
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ['orderDetails'],
-        refetchType: 'active'
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ['orders'],
-        refetchType: 'active'
-      });
-
-      // Force immediate refetch of all active queries
-      if (pathname === '/dashboard/orders') {
-        await queryClient.refetchQueries({
+      // Run cache/query operations in background without blocking screen transition
+      Promise.all([
+        queryClient.invalidateQueries({
           queryKey: ['orderCategories'],
-          type: 'active'
-        });
-        await queryClient.refetchQueries({
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
           queryKey: ['orderDetails'],
-          type: 'active'
-        });
-        await queryClient.refetchQueries({
+          refetchType: 'active'
+        }),
+        queryClient.invalidateQueries({
           queryKey: ['orders'],
-          type: 'active'
-        });
-
-        // Call the refetch function to update the table immediately
-        if (onOrderSuccess) {
-          onOrderSuccess();
+          refetchType: 'active'
+        })
+      ]).then(() => {
+        // Only refetch if on orders page
+        if (pathname === '/dashboard/orders') {
+          return Promise.all([
+            queryClient.refetchQueries({
+              queryKey: ['orderCategories'],
+              type: 'active'
+            }),
+            queryClient.refetchQueries({
+              queryKey: ['orderDetails'],
+              type: 'active'
+            }),
+            queryClient.refetchQueries({
+              queryKey: ['orders'],
+              type: 'active'
+            })
+          ]);
         }
-      }
+      }).catch(error => {
+        console.error('Background refresh error:', error);
+      });
+
+      // Screen transition will happen in handleCheckoutClick immediately
+      // Note: onOrderSuccess is NOT called here to preserve cart items during payment flow
+      // It will be called after successful payment completion in finalizeOrder
 
       // Stay on screen 2 (payment selection) - user needs to choose payment method
       // Screen is already set to 2 by handleCheckoutClick
@@ -1110,6 +1114,7 @@ const CheckoutModal = ({
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
         status: 1,
+        totalAmount: finalTotalPrice,  // Include the calculated total amount for payment
       };
 
       const data = await completeOrder(payload, orderId);
@@ -1129,6 +1134,12 @@ const CheckoutModal = ({
         setOrderId("");
         setReference("");
         setSelectedPaymentMethod(0);
+
+        // Call onOrderSuccess to clear cart (on POS page) BEFORE closing modal
+        // This ensures cart is cleared after payment is confirmed
+        if (onOrderSuccess) {
+          onOrderSuccess();
+        }
 
         // Close modal or navigate
         if (pathname === '/dashboard/orders') {
@@ -1171,10 +1182,8 @@ const CheckoutModal = ({
           type: 'active'
         });
 
-        // Call the refetch function to update the table immediately
-        if (onOrderSuccess) {
-          onOrderSuccess();
-        }
+        // Note: onOrderSuccess was already called above (before closing modal)
+        // to ensure cart is cleared at the right time
 
       } else if (hasDataProperty(data) && data.data?.error) {
         notify({
@@ -1328,7 +1337,7 @@ const CheckoutModal = ({
                             backgroundColor="bg-primaryColor"
                           >
                             <div className="flex gap-2 items-center justify-center">
-                              <p>Checkout {formatPrice(finalTotalPrice)} </p>
+                              <p>Checkout {formatPrice(finalTotalPrice, 'NGN')} </p>
                               <HiArrowLongLeft className="text-[22px] rotate-180" />
                             </div>
                           </CustomButton>
@@ -1460,7 +1469,7 @@ const CheckoutModal = ({
                                     <Spacer y={2} />
                                     <div className="text-black md:w-[150px] md:hidden w-auto grid place-content-end">
                                       <h3 className="font-[600]">
-                                        {formatPrice(item?.price)}
+                                        {formatPrice(item?.price, 'NGN')}
                                       </h3>
                                     </div>
                                   </div>
@@ -1495,7 +1504,7 @@ const CheckoutModal = ({
                                 <div className=" md:w-[150px] hidden w-auto md:grid place-content-center">
                                   <div className="flex flex-col">
                                     <h3 className="font-semibold text-black">
-                                      {formatPrice(item?.price  * item.count)}
+                                      {formatPrice(item?.price  * item.count, 'NGN')}
                                     </h3>
                                     {item.packingCost > 0 && (
                                       <span
@@ -1504,7 +1513,7 @@ const CheckoutModal = ({
                                           item.isPacked && "font-bold text-black"
                                         )}
                                       >
-                                        {formatPrice(item.packingCost)}
+                                        {formatPrice(item.packingCost, 'NGN')}
                                       </span>
                                     )}
                                   </div>
@@ -1521,7 +1530,7 @@ const CheckoutModal = ({
                             <div className="flex justify-between">
                               <p className="text-black font-bold">Subtotal: </p>
                               <p className="text-black">
-                                {formatPrice(subtotal)}
+                                {formatPrice(subtotal, 'NGN')}
                               </p>
                             </div>
                             <div className="flex justify-between">
@@ -1529,7 +1538,7 @@ const CheckoutModal = ({
                                 VAT:{" "}
                               </p>
                               <p className="text-black">
-                                {formatPrice(vatAmount)}
+                                {formatPrice(vatAmount, 'NGN')}
                               </p>
                             </div>
                             <div className="flex items-center justify-between gap-2">
@@ -1581,7 +1590,7 @@ const CheckoutModal = ({
                             <div className="flex justify-between">
                               <p className="text-black font-bold">Total: </p>
                               <p className="text-black">
-                                {formatPrice(finalTotalPrice)}
+                                {formatPrice(finalTotalPrice, 'NGN')}
                               </p>
                             </div>
                             {/* <div className="flex gap-2">
@@ -1682,7 +1691,7 @@ const CheckoutModal = ({
                                     </div>
                                     <div className="text-right">
                                       <p className="font-semibold text-sm text-black">
-                                        {formatPrice(item?.price * item.count)}
+                                        {formatPrice(item?.price * item.count, 'NGN')}
                                       </p>
                                     </div>
                                   </div>
@@ -1724,7 +1733,7 @@ const CheckoutModal = ({
                                         className="text-sm"
                                       >
                                         <span className="text-sm">
-                                           Packing ({formatPrice(item.packingCost)})
+                                           Packing ({formatPrice(item.packingCost, 'NGN')})
                                         </span>
                                       </Checkbox>
                                     )}
@@ -1746,20 +1755,20 @@ const CheckoutModal = ({
                               <div className="flex justify-between items-center">
                                 <span className="text-sm text-grey600">Subtotal</span>
                                 <span className="font-semibold text-sm text-black">
-                                  {formatPrice(subtotal)}
+                                  {formatPrice(subtotal, 'NGN')}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-sm text-grey600">VAT</span>
                                 <span className="font-semibold text-sm text-black">
-                                  {formatPrice(vatAmount)}
+                                  {formatPrice(vatAmount, 'NGN')}
                                 </span>
                               </div>
                               <Divider className="my-2" />
                               <div className="flex justify-between items-center">
                                 <span className="font-semibold text-base text-black">Total</span>
                                 <span className="font-bold text-lg text-primaryColor">
-                                  {formatPrice(finalTotalPrice)}
+                                  {formatPrice(finalTotalPrice, 'NGN')}
                                 </span>
                               </div>
                             </div>
@@ -1892,12 +1901,12 @@ const CheckoutModal = ({
                                   <div className="flex-1">
                                     <p className="text-sm font-medium text-black">{item.itemName}</p>
                                     <p className="text-xs text-grey600">
-                                      Qty: {item.count} × {formatPrice(item.price)}
-                                      {item.isPacked && ` + Packing (${formatPrice(item.packingCost)})`}
+                                      Qty: {item.count} × {formatPrice(item.price, 'NGN')}
+                                      {item.isPacked && ` + Packing (${formatPrice(item.packingCost, 'NGN')})`}
                                     </p>
                                   </div>
                                   <p className="text-sm font-semibold text-black">
-                                    {formatPrice(item.price * item.count + (item.isPacked ? item.packingCost * item.count : 0))}
+                                    {formatPrice(item.price * item.count + (item.isPacked ? item.packingCost * item.count : 0), 'NGN')}
                                   </p>
                                 </div>
                               ))}
@@ -1910,17 +1919,17 @@ const CheckoutModal = ({
                             <div className="space-y-2">
                               <div className="flex justify-between items-center text-sm">
                                 <span className="text-grey600">Subtotal</span>
-                                <span className="font-semibold text-black">{formatPrice(subtotal)}</span>
+                                <span className="font-semibold text-black">{formatPrice(subtotal, 'NGN')}</span>
                               </div>
                               <div className="flex justify-between items-center text-sm">
                                 <span className="text-grey600">VAT</span>
-                                <span className="font-semibold text-black">{formatPrice(vatAmount)}</span>
+                                <span className="font-semibold text-black">{formatPrice(vatAmount, 'NGN')}</span>
                               </div>
                               <Divider className="my-2" />
                               <div className="flex justify-between items-center">
                                 <span className="font-bold text-lg text-black">Total</span>
                                 <span className="font-bold text-xl text-primaryColor">
-                                  {formatPrice(finalTotalPrice)}
+                                  {formatPrice(finalTotalPrice, 'NGN')}
                                 </span>
                               </div>
                             </div>
@@ -1958,7 +1967,7 @@ const CheckoutModal = ({
                           </span>
                         </div>
                         <p className="text-sm  text-primaryColor xl:mb-8 w-full mb-4">
-                          {formatPrice(finalTotalPrice)}
+                          {formatPrice(finalTotalPrice, 'NGN')}
                         </p>
                       </div>
                     </div>
@@ -2005,7 +2014,7 @@ const CheckoutModal = ({
                             Select Payment Method
                           </div>
                           <p className="text-sm text-primaryColor mt-1 font-semibold">
-                            {formatPrice(finalTotalPrice)}
+                            {formatPrice(finalTotalPrice, 'NGN')}
                           </p>
                         </div>
                         <CustomButton
@@ -2082,7 +2091,7 @@ const CheckoutModal = ({
                         <p className="text-sm text-grey500">TOTAL ORDER</p>
                         <p className="font-bold text-black text-[20px]">
                           {" "}
-                          {formatPrice(finalTotalPrice)}
+                          {formatPrice(finalTotalPrice, 'NGN')}
                         </p>
                       </div>
                       <MdKeyboardArrowRight />

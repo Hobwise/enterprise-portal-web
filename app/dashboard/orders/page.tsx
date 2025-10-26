@@ -17,6 +17,7 @@ import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 import CustomPagination from "@/components/ui/dashboard/settings/BillingsComponents/CustomPagination";
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
 
 // Type definitions are handled in the component files
 
@@ -51,8 +52,11 @@ const OrdersContent: React.FC = () => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  // Detect if user is POS user (staff role)
-  const isPOSUser = role === 1;
+  // Detect if user is POS user using primaryAssignment
+  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const isPOSUser = userInformation?.primaryAssignment === "POS Operator" ||
+                    userInformation?.primaryAssignment === "Point of Sales" ||
+                    (userInformation?.assignedCategoryId && userInformation?.assignedCategoryId === "POS");
 
   // Handle create order click with conditional routing
   const handleCreateOrderClick = () => {
@@ -155,7 +159,7 @@ const OrdersContent: React.FC = () => {
             
             </>
           )}
-          {(role === 0 || userRolePermissions?.canCreateOrder === true) && (
+          {(role === 0 || isPOSUser || userRolePermissions?.canCreateOrder === true) && (
             <CustomButton
               onClick={handleCreateOrderClick}
               className="py-2 px-4 mb-0 text-white w-full sm:w-auto"

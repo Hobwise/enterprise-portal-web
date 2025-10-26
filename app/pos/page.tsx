@@ -51,8 +51,8 @@ const POSContent = () => {
   const {
     selectedCategory,
     setSelectedCategory,
-    selectedSection,
-    setSelectedSection,
+    selectedMenu,
+    setSelectedMenu,
     categories,
     mainTabs,
     menuItems,
@@ -289,7 +289,7 @@ const POSContent = () => {
               <div className="hidden lg:block w-48 bg-[#391D84] text-white overflow-y-auto">
                 <div className="py-1">
                   <div className="space-y-1">
-                    {categories.map((category) => (
+                    {mainTabs.map((category) => (
                       <button
                         key={category}
                         onClick={() => setSelectedCategory(category)}
@@ -311,17 +311,17 @@ const POSContent = () => {
                 {/* Top Navigation */}
                 <div className="bg-[#5F35D2]">
                   <div className="flex overflow-x-auto scrollbar-hide">
-                    {mainTabs.map((tab) => (
+                    {categories.map((menu) => (
                       <button
-                        key={tab}
-                        onClick={() => setSelectedSection(tab)}
+                        key={menu}
+                        onClick={() => setSelectedMenu(menu)}
                         className={`flex-shrink-0 px-4 sm:px-6 py-3 text-sm font-medium border-b-2 ${
-                          selectedSection === tab
+                          selectedMenu === menu
                             ? "text-white bg-[#A07EFF]"
                             : "text-white"
                         }`}
                       >
-                        {tab}
+                        {menu}
                       </button>
                     ))}
                   </div>
@@ -329,7 +329,7 @@ const POSContent = () => {
 
                      <div className="lg:hidden bg-[#391D84]">
             <div className="flex overflow-x-auto scrollbar-hide">
-              {categories.map((category) => (
+              {mainTabs.map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
@@ -478,15 +478,15 @@ const POSContent = () => {
                   <div className="space-y-2 text-sm mb-4">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>{formatPrice(orderSummary.subtotal)}</span>
+                      <span>{formatPrice(orderSummary.subtotal, orderItems?.[0]?.currency || 'NGN')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>VAT</span>
-                      <span>{formatPrice(orderSummary.vatAmount)}</span>
+                      <span>{formatPrice(orderSummary.vatAmount, orderItems?.[0]?.currency || 'NGN')}</span>
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Total</span>
-                      <span className="text-primaryColor">{formatPrice(orderSummary.total)}</span>
+                      <span className="text-primaryColor">{formatPrice(orderSummary.total, orderItems?.[0]?.currency || 'NGN')}</span>
                     </div>
                   </div>
 

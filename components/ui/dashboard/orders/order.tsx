@@ -788,7 +788,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
           <TableBody
             emptyContent={
               orderDetails.length === 0
-                ? `No results found for "${searchQuery.trim()}"`
+                ? `No results found `
                 : !shouldShowLoading && isCategoryEmpty
                   ? 'No orders found'
                   : <SpinnerLoader size="md" />
