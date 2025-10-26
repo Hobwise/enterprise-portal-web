@@ -30,8 +30,7 @@ const useReportFilter = (
         filterType,
         startDate,
         endDate,
-        reportType,
-        emailAddress
+        reportType
       );
     } else if (reportFilter === 'payment') {
       return getReportPayment(
@@ -39,8 +38,7 @@ const useReportFilter = (
         filterType,
         startDate,
         endDate,
-        reportType,
-        emailAddress
+        reportType
       );
     } else if (reportFilter === 'booking') {
       return getReportBooking(
@@ -48,8 +46,7 @@ const useReportFilter = (
         filterType,
         startDate,
         endDate,
-        reportType,
-        emailAddress
+        reportType
       );
     } else if (reportFilter === 'audit-logs') {
       return getReportAuditLog(
@@ -57,8 +54,7 @@ const useReportFilter = (
         filterType,
         startDate,
         endDate,
-        reportType,
-        emailAddress
+        reportType
       );
     }
   };

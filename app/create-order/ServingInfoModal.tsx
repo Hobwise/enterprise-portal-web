@@ -130,9 +130,9 @@ const ServingInfoModal = ({
       />
 
       {/* Header */}
-      <div className="flex px-4 py-4 border-b border-gray-200">
+      <div className="px-4 max-w-4xl flex flex-col mx-auto w-full border-b py-4  border-gray-200">
         <div>
-          <h2 className="text-xl font-bold text-black">Serving Info</h2>
+          <h2 className="text-xl font-bold text-black mb-2">Serving Info</h2>
           <p className="text-sm font-normal text-gray-600">
             Enter your details to place order
           </p>
@@ -140,7 +140,7 @@ const ServingInfoModal = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 py-6 pb-28">
+      <div className="flex-1 px-4 max-w-4xl flex flex-col mx-auto w-full py-6 pb-28">
         {/* Error Banner */}
         {errors && Object.keys(errors).length > 0 && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -216,33 +216,33 @@ const ServingInfoModal = ({
             />
           </div>
         </div>
-        <div className=" border-t border-gray-200 px-4 py-4 pb-safe z-20">
-        <div className="space-y-3">
-          <CustomButton
-            onClick={handleSubmit}
-            disabled={!isFormValid || loading}
-            loading={loading}
-            style={primaryColorStyle}
-            className="w-full h-12 text-white font-semibold flex items-center justify-center gap-2"
-          >
-            <span>Confirm Order</span>
-            <HiArrowLongLeft className="w-5 h-5 rotate-180" />
-          </CustomButton>
-          <button
-            onClick={() => {
-              if (onBack) {
-                onBack();
-              } else {
-                onOpenChange();
-              }
-            }}
-            disabled={loading}
-            className="w-full text-center text-sm text-gray-600 hover:text-gray-800 py-2 disabled:opacity-50"
-          >
-            Go Back
-          </button>
+        <div className=" border-t border-gray-200 py-4 pb-safe z-20">
+          <div className="space-y-3">
+            <CustomButton
+              onClick={handleSubmit}
+              disabled={!isFormValid || loading}
+              loading={loading}
+              style={primaryColorStyle}
+              className="w-full h-12 text-white font-semibold flex items-center justify-center gap-2"
+            >
+              <span>Confirm Order</span>
+              <HiArrowLongLeft className="w-5 h-5 rotate-180" />
+            </CustomButton>
+            <button
+              onClick={() => {
+                if (onBack) {
+                  onBack();
+                } else {
+                  onOpenChange();
+                }
+              }}
+              disabled={loading}
+              className="w-full text-center text-sm text-gray-600 hover:text-gray-800 py-2 disabled:opacity-50"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );

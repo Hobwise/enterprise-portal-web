@@ -13,6 +13,7 @@ const SingleReservationComponent = () => {
   const reservationId: string = searchParams.get('reservationId') || '';
   const businessId = searchParams.get('businessID');
   const cooperateID = searchParams.get('cooperateID');
+  const businessName = searchParams.get("businessName");
 
   // Fetch menu config for customer pages
   const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
@@ -31,11 +32,19 @@ const SingleReservationComponent = () => {
   }
 
   if (isError) {
-    throw new Error('Error occured while trying to access the server');
+    throw new Error("Error occured while trying to access the server");
   }
-  const getSingleReservation = reservationId ? data?.data?.data : singleReservation;
+  const getSingleReservation = reservationId
+    ? data?.data?.data
+    : singleReservation;
 
   const baseString = "data:image/jpeg;base64,";
+
+  const businessDetails = {
+    businessId: businessId,
+    cooperateID: cooperateID,
+    businessName: businessName,
+  };
 
   return (
     <div className="bg-white h-screen overflow-y-auto pb-8">
@@ -43,6 +52,7 @@ const SingleReservationComponent = () => {
         reservation={getSingleReservation}
         menuConfig={menuConfig}
         baseString={baseString}
+        businessDetails={businessDetails}
       />
       {/* <div className='flex justify-between items-center'>
         <h1 className='text-2xl  text-black'>{businessName}</h1>

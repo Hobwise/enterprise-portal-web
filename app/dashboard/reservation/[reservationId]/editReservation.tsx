@@ -233,9 +233,11 @@ const EditReservation = ({
         toggleModalEdit();
       }}
     >
-      <ModalContent   classNames={{
-        wrapper: " z-[9999]",
-      }}>
+      <ModalContent
+        classNames={{
+          wrapper: " z-[9999]",
+        }}
+      >
         {(onClose) => (
           <>
             <ModalBody>
@@ -324,7 +326,7 @@ const EditReservation = ({
                     onChange={handleInputChange}
                     name="reservationName"
                     label="Name of reservation"
-                    placeholder="name of reservation"
+                    placeholder="Name of reservation"
                   />
                   <Spacer y={6} />
                   <CustomTextArea

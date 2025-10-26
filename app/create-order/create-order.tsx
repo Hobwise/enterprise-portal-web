@@ -515,8 +515,8 @@ const CreateOrder = () => {
       let response;
 
       // Check if we're updating an existing order or creating a new one
-      if (isUpdatingOrder && orderData?.id) {
-        response = await updateCustomerOrder(orderData.id, payload);
+      if (isUpdatingOrder && orderData?.reference) {
+        response = await updateCustomerOrder(orderData.reference, payload);
       } else {
         response = await placeCustomerOrder(
           payload,

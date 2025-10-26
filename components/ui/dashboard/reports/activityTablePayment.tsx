@@ -62,17 +62,17 @@ const columns4 = [
 ];
 
 const columns5 = [
-  { name: 'Payment Method', uid: 'paymentMethod' },
-  { name: 'Number of payments', uid: 'paymentCount' },
-  { name: 'Total Amount Processed', uid: 'totalAmount' },
-  { name: 'Date Updated', uid: 'lastRecordDateTime' },
+  { name: "Payment Method", uid: "paymentMethod" },
+  { name: "Number Of Payments", uid: "numberOfPayments" },
+  { name: "Total Amount Processed", uid: "totalAmountProcessed" },
+  { name: "Date Updated", uid: "lastRecordDateTime" },
 ];
 const columns6 = [
-  { name: 'Quick Response Name', uid: 'quickResponseName' },
-  { name: 'Number of orders', uid: 'numberOfOrders' },
-  { name: 'Pending Sales Amount', uid: 'pendingAmount' },
-  { name: 'Total Sales Amount', uid: 'totalAmount' },
-  { name: 'Confirmed Sales Amount', uid: 'confirmedAmount' },
+  { name: "Quick Response Name", uid: "quickResponseName" },
+  { name: "Number Of Orders", uid: "numberOfOrders" },
+  { name: "Pending Sales Amount", uid: "pendingSalesAmount" },
+  { name: "Total Sales Amount", uid: "totalSalesAmount" },
+  { name: "Confirmed Sales Amount", uid: "confirmedSalesAmount" },
 ];
 
 const ActivityTablePayment = ({
@@ -85,7 +85,7 @@ const ActivityTablePayment = ({
   isLoadingExport,
   exportFile,
 }: any) => {
-  const business = getJsonItemFromLocalStorage('business');
+  const business = getJsonItemFromLocalStorage("business");
 
   const columns = useMemo(() => {
     if (reportType === 4) {
@@ -130,18 +130,18 @@ const ActivityTablePayment = ({
   };
   const statusColorMap: Record<
     string,
-    'warning' | 'success' | 'danger' | 'secondary'
+    "warning" | "success" | "danger" | "secondary"
   > = {
-    Pending: 'warning',
-    Confirmed: 'success',
-    Cancelled: 'danger',
-    AwaitingConfirmation: 'secondary',
+    Pending: "warning",
+    Confirmed: "success",
+    Cancelled: "danger",
+    AwaitingConfirmation: "secondary",
   };
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortDescriptor, setSortDescriptor] = useState({
-    column: 'dateCreated',
-    direction: 'ascending',
+    column: "dateCreated",
+    direction: "ascending",
   });
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,7 +171,12 @@ const ActivityTablePayment = ({
         item?.paymentMethod?.toLowerCase().includes(searchQuery) ||
         item?.status?.toLowerCase().includes(searchQuery) ||
         String(item?.numberOfOrders)?.toLowerCase().includes(searchQuery) ||
-        item?.dateCreated?.toLowerCase().includes(searchQuery)
+        String(item?.numberOfPayments)?.toLowerCase().includes(searchQuery) ||
+        item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+        item?.confirmedSalesAmount?.toLowerCase().includes(searchQuery) ||
+        item?.confirmedSalesAmount?.toLowerCase().includes(searchQuery) ||
+        item?.totalSalesAmount?.toLowerCase().includes(searchQuery) ||
+        item?.pendingSalesAmount?.toLowerCase().includes(searchQuery)
     );
 
     return filteredData;
@@ -194,15 +199,15 @@ const ActivityTablePayment = ({
       const second = b[sortDescriptor.column];
       let cmp = 0;
 
-      if (typeof first === 'string' && typeof second === 'string') {
+      if (typeof first === "string" && typeof second === "string") {
         cmp = first.localeCompare(second);
-      } else if (typeof first === 'number' && typeof second === 'number') {
+      } else if (typeof first === "number" && typeof second === "number") {
         cmp = first - second;
       } else if (first instanceof Date && second instanceof Date) {
         cmp = first.getTime() - second.getTime();
       }
 
-      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
 
@@ -210,82 +215,82 @@ const ActivityTablePayment = ({
     const cellValue = payment[columnKey];
 
     switch (columnKey) {
-      case 'name':
+      case "name":
         return (
-          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
+          <div className="flex font-medium text-black items-center gap-2 text-sm cursor-pointer">
             <span>{payment.placedByName}</span>
           </div>
         );
-      case 'quickResponseName':
+      case "quickResponseName":
         return (
-          <div className='flex text-black font-medium items-center gap-2 text-sm'>
+          <div className="flex text-black font-medium items-center gap-2 text-sm">
             <span> {payment.quickResponseName}</span>
           </div>
         );
 
-      case 'amount':
+      case "amount":
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             <p>{payment.totalAmount}</p>
           </div>
         );
-      case 'customer':
+      case "customer":
         return (
-          <div className='font-medium text-black text-sm'>
+          <div className="font-medium text-black text-sm">
             <p>{payment.customer}</p>
           </div>
         );
-      case 'dateCreated':
+      case "dateCreated":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(payment.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(payment.dateCreated).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
-      case 'lastRecordDateTime':
+      case "lastRecordDateTime":
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             {moment(payment.lastRecordDateTime).format(
-              'MMMM Do YYYY, h:mm:ss a'
+              "MMMM Do YYYY, h:mm:ss a"
             )}
           </div>
         );
-      case 'lastOrderDateTime':
+      case "lastOrderDateTime":
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             {moment(payment.lastOrderDateTime).format(
-              'MMMM Do YYYY, h:mm:ss a'
+              "MMMM Do YYYY, h:mm:ss a"
             )}
           </div>
         );
-      case 'dateUpdated':
+      case "dateUpdated":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(payment.dateUpdated).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(payment.dateUpdated).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
 
-      case 'pendingAmount':
+      case "pendingAmount":
         return (
-          <div className='text-textGrey text-sm'>{payment.pendingAmount}</div>
+          <div className="text-textGrey text-sm">{payment.pendingAmount}</div>
         );
-      case 'totalAmount':
+      case "totalAmount":
         return (
-          <div className='text-textGrey text-sm'>{payment.totalAmount}</div>
+          <div className="text-textGrey text-sm">{payment.totalAmount}</div>
         );
-      case 'confirmedAmount':
+      case "confirmedAmount":
         return (
-          <div className='text-textGrey text-sm'>{payment.confirmedAmount}</div>
+          <div className="text-textGrey text-sm">{payment.confirmedAmount}</div>
         );
-      case 'orderID':
-        return <div className='text-textGrey text-sm'>{payment.reference}</div>;
+      case "orderID":
+        return <div className="text-textGrey text-sm">{payment.reference}</div>;
 
-      case 'status':
+      case "status":
         return (
           <Chip
-            className='capitalize'
+            className="capitalize"
             color={statusColorMap[payment.status]}
-            size='sm'
-            variant='bordered'
+            size="sm"
+            variant="bordered"
           >
             {cellValue}
           </Chip>
@@ -300,28 +305,28 @@ const ActivityTablePayment = ({
 
   return (
     <>
-      <div className='w-full mt-4 flex justify-between  gap-3'>
+      <div className="w-full mt-4 flex justify-between  gap-3">
         <CustomInput
-          classnames={'w-[242px]'}
-          label=''
-          size='md'
+          classnames={"w-[242px]"}
+          label=""
+          size="md"
           value={searchQuery}
           onChange={handleSearchChange}
           isRequired={false}
           startContent={<IoSearchOutline />}
-          type='text'
-          placeholder='Search here...'
+          type="text"
+          placeholder="Search here..."
         />
 
-        <div className='flex gap-3'>
-          <div className='flex items-center'>
+        <div className="flex gap-3">
+          <div className="flex items-center">
             {isLoadingExport && <SmallLoader />}
             <div
               onClick={() => toggleDownloadReport()}
-              className='py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 '
+              className="py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 "
             >
-              <div className='flex gap-2 items-center justify-center'>
-                <MdOutlineFileDownload className='text-[22px]' />
+              <div className="flex gap-2 items-center justify-center">
+                <MdOutlineFileDownload className="text-[22px]" />
                 <p>Export</p>
               </div>
             </div>
@@ -343,40 +348,40 @@ const ActivityTablePayment = ({
       </div>
       <section
         ref={reportRef}
-        className='border border-primaryGrey rounded-md mt-2 p-3'
+        className="border border-primaryGrey rounded-md mt-2 p-3"
       >
-        <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>{reportName}s</p>
-          <p className='text-base font-semibold'>
-            {business[0]?.businessName}, {business[0]?.city}{' '}
+        <div className=" flex flex-col items-center mb-4">
+          <p className="text-xl font-bold capitalize">{reportName}s</p>
+          <p className="text-base font-semibold">
+            {business[0]?.businessName}, {business[0]?.city}{" "}
             {business[0]?.state}
           </p>
-          <p className='text-sm text-grey600'>
-            {selectedValue === 'Custom date' && (
-              <p className='text-default-500 text-sm'>
+          <p className="text-sm text-grey600">
+            {selectedValue === "Custom date" && (
+              <p className="text-default-500 text-sm">
                 {value.start &&
                   moment(formatDateTimeForPayload3(value?.start)).format(
-                    'MMMM Do YYYY'
+                    "MMMM Do YYYY"
                   )}
-                {' - '}
+                {" - "}
                 {value.end &&
                   moment(formatDateTimeForPayload3(value?.end)).format(
-                    'MMMM Do YYYY'
+                    "MMMM Do YYYY"
                   )}
               </p>
             )}
           </p>
-          <p className='text-xs text-danger-500'>{data?.message}</p>
+          <p className="text-xs text-danger-500">{data?.message}</p>
         </div>
         <Table
-          radius='lg'
+          radius="lg"
           isCompact
           removeWrapper
           allowsSorting
-          aria-label='list of orders'
+          aria-label="list of orders"
           bottomContent={
             isLoading || items?.length === 0 ? (
-              ''
+              ""
             ) : (
               <PaginationComponent
                 data={items}
@@ -386,13 +391,13 @@ const ActivityTablePayment = ({
               />
             )
           }
-          bottomContentPlacement='outside'
+          bottomContentPlacement="outside"
           classNames={classNames}
           selectedKeys={selectedKeys}
           // selectionMode='multiple'
           sortDescriptor={sortDescriptor}
           // topContent={topContent}
-          topContentPlacement='outside'
+          topContentPlacement="outside"
           onSelectionChange={setSelectedKeys}
           onSortChange={setSortDescriptor}
         >
@@ -400,7 +405,7 @@ const ActivityTablePayment = ({
             {(column) => (
               <TableColumn
                 key={column.uid}
-                align={column.uid === 'actions' ? 'center' : 'start'}
+                align={column.uid === "actions" ? "center" : "start"}
                 allowsSorting={column.sortable}
               >
                 {column.name}
@@ -409,9 +414,9 @@ const ActivityTablePayment = ({
           </TableHeader>
           <TableBody
             style={{
-              textAlign: 'center',
+              textAlign: "center",
             }}
-            emptyContent={'No items found'}
+            emptyContent={"No items found"}
             items={sortedItems || []}
             isLoading={isLoading}
             loadingContent={<SmallLoader />}
@@ -428,42 +433,42 @@ const ActivityTablePayment = ({
       </section>
 
       <Modal
-        className='text-black'
+        className="text-black"
         isOpen={isOpenDownload}
         onOpenChange={toggleDownloadReport}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className='flex flex-col gap-1'>
+              <ModalHeader className="flex flex-col gap-1">
                 Choose a method to export
               </ModalHeader>
-              <ModalBody className='mb-6'>
+              <ModalBody className="mb-6">
                 <div
                   onClick={() => {
                     exportFile(0);
                     toggleDownloadReport();
                   }}
-                  className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
+                  className="flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md"
                 >
-                  <div className='flex gap-2'>
-                    <Image src={PDF} alt='pdf icon' />
+                  <div className="flex gap-2">
+                    <Image src={PDF} alt="pdf icon" />
                     <p>Export as PDF</p>
                   </div>
-                  <IoIosArrowForward className='text-grey600' />
+                  <IoIosArrowForward className="text-grey600" />
                 </div>
                 <div
                   onClick={() => {
                     toggleDownloadReport();
                     exportFile(1);
                   }}
-                  className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
+                  className="flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md"
                 >
-                  <div className='flex gap-2'>
-                    <Image src={CSV} alt='pdf icon' />
+                  <div className="flex gap-2">
+                    <Image src={CSV} alt="pdf icon" />
                     <p>Export as CSV</p>
                   </div>
-                  <IoIosArrowForward className='text-grey600' />
+                  <IoIosArrowForward className="text-grey600" />
                 </div>
               </ModalBody>
             </>
