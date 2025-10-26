@@ -105,7 +105,7 @@ const ServingInfoModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen overflow-y-auto">
       {/* Back Button */}
       <button
         onClick={() => {
@@ -139,8 +139,8 @@ const ServingInfoModal = ({
         </div>
       </div>
 
-      {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
+      {/* Content */}
+      <div className="flex-1 px-4 py-6 pb-28">
         {/* Error Banner */}
         {errors && Object.keys(errors).length > 0 && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -216,10 +216,7 @@ const ServingInfoModal = ({
             />
           </div>
         </div>
-      </div>
-
-      {/* Fixed Bottom Section */}
-      <div className="border-t border-gray-200 bg-white px-4 py-4">
+        <div className=" border-t border-gray-200 px-4 py-4 pb-safe z-20">
         <div className="space-y-3">
           <CustomButton
             onClick={handleSubmit}
@@ -245,6 +242,7 @@ const ServingInfoModal = ({
             Go Back
           </button>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   getJsonItemFromLocalStorage,
 } from '@/lib/utils';
 import {
+  Chip,
   Modal,
   ModalBody,
   ModalContent,
@@ -27,15 +28,63 @@ import CSV from '../../../../public/assets/icons/csv-icon.png';
 import PDF from '../../../../public/assets/icons/pdf-icon.png';
 import { PaginationComponent } from './data';
 
-// export const statusBookingMap: Record<
-//   number,
-//   'warning' | 'success' | 'danger' | 'secondary'
-// > = {
-//   0: 'warning',
-//   1: 'success',
-//   2: 'danger',
-//   3: 'secondary',
-// };
+
+
+
+export const statusBookingMap: Record<
+  number,
+  'warning' | 'success' | 'danger' | 'secondary'
+> = {
+  0: 'warning',
+  1: 'success',
+  2: 'danger',
+  3: 'secondary',
+};
+
+// Local color mapping for booking statuses coming as strings from reports API
+const bookingStatusColorMap: Record<
+  string,
+  'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
+> = {
+  pending: 'warning',
+  confirmed: 'success',
+  admitted: 'default',
+  cancelled: 'danger',
+  completed: 'success',
+  failed: 'danger',
+  expired: 'secondary',
+};
+
+const getBookingStatusColor = (
+  status: string | number
+): 'default' | 'primary' | 'secondary' | 'success' | 'warning' | 'danger' => {
+  if (typeof status === 'number') {
+    // Align with reservation status color mapping
+    switch (status) {
+      case 0:
+        return 'warning'; // pending
+      case 1:
+        return 'success'; // confirmed
+      case 2:
+        return 'default'; // admitted
+      case 3:
+        return 'danger'; // cancelled
+      case 4:
+        return 'success'; // completed
+      case 5:
+        return 'danger'; // failed
+      case 6:
+        return 'secondary'; // expired
+      default:
+        return 'default';
+    }
+  }
+  if (typeof status === 'string') {
+    const key = status.trim().toLowerCase();
+    return bookingStatusColorMap[key] || 'default';
+  }
+  return 'default';
+};
 
 const INITIAL_VISIBLE_COLUMNS8 = [
   'dateUpdated',
@@ -60,21 +109,18 @@ const INITIAL_VISIBLE_COLUMNS7 = [
   'firstName',
   'bookingDateTime',
   'checkInDateTime',
-  'checkOutDateTime',
   'emailAddress',
   'minimumSpend',
   'bookingStatus',
   'bookingFee',
 ];
 const columns7 = [
-  { name: 'Name', uid: 'firstName' },
-  //   { name: 'Minimum Spend', uid: 'minimumSpend' },
-  //   { name: 'Booking Fee', uid: 'bookingFee' },
+  { name: 'Customer name', uid: 'firstName' },
+  { name: 'Customer Phone Number ', uid: 'phoneNumber' },
+  { name: 'Customer Email Address', uid: 'emailAddress' },
+    { name: 'Booking Fee', uid: 'bookingFee' },
   { name: 'Booking date', uid: 'bookingDateTime' },
-  { name: 'Email Address', uid: 'emailAddress' },
-  { name: 'CheckOut Date', uid: 'checkOutDateTime' },
-  { name: 'CheckIn Date', uid: 'checkInDateTime' },
-  //   { name: 'Status', uid: 'bookingStatus' },
+    { name: 'Status', uid: 'bookingStatus' },
 ];
 
 const columns8 = [
@@ -82,16 +128,14 @@ const columns8 = [
   { name: 'Total Booking Amount', uid: 'totalBookingFee' },
   { name: 'Total Bookings', uid: 'totalBookings' },
   { name: 'Date Updated', uid: 'dateUpdated' },
-  { name: 'Total Minimum Spend', uid: 'totalMinimumSpendValue' },
 ];
 
 const columns9 = [
-  { name: 'Name', uid: 'firstName' },
-  { name: 'Phone Number', uid: 'phoneNumber' },
-  { name: 'Email Address', uid: 'emailAddress' },
+  { name: 'Customer name', uid: 'firstName' },
+  { name: 'Customer Phone Number', uid: 'phoneNumber' },
+  { name: 'Customer Email Address', uid: 'emailAddress' },
   { name: 'Total Booking Fee', uid: 'totalBookingFee' },
   { name: 'Total Bookings', uid: 'totalBookings' },
-  { name: 'Total Minimum Spend', uid: 'totalMinimumSpendValue' },
 ];
 
 const INITIAL_VISIBLE_COLUMNS10 = [
@@ -260,6 +304,19 @@ const ActivityTableBooking = ({
             <p>{booking.totalBookingFee}</p>
           </div>
         );
+      case 'bookingStatus':
+        return (
+          <Chip
+            className='capitalize'
+            color={getBookingStatusColor(booking.bookingStatus)}
+            size='sm'
+            variant='bordered'
+          >
+            {cellValue}
+          </Chip>
+        );
+
+        
 
       case 'bookingFee':
         return (
@@ -267,12 +324,7 @@ const ActivityTableBooking = ({
             <p>{booking.bookingFee}</p>
           </div>
         );
-      case 'checkOutDateTime':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.checkOutDateTime).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
+
       case 'endDate':
         return (
           <div className='text-textGrey text-sm'>
