@@ -897,298 +897,281 @@ const CreateOrder = () => {
                     );
                   const isListLayout = layoutName?.includes("List");
                   const isCompactGrid = layoutName === "Single column 2";
+console.log(item?.varieties, "item");
+return (
+  <div key={item.id || item.menuID} className={`my-3 relative`}>
+    <div
+      className={`${
+        isListLayout
+          ? "flex flex-1 min-h-[120px] items-center gap-3 w-full bg-white rounded-xl p-3 shadow-sm"
+          : `${preview?.container} flex flex-col h-full`
+      } ${
+        !isListLayout && item?.isAvailable && !isViewOnlyMode
+          ? "pb-10"
+          : !isListLayout && !item?.isAvailable
+          ? ""
+          : ""
+      } text-black relative transition-all ${
+        item?.isAvailable && !isViewOnlyMode
+          ? "cursor-pointer"
+          : item?.isAvailable
+          ? ""
+          : "bg-gray-100 cursor-not-allowed"
+      }`}
+    >
+      {item?.isAvailable === false && (
+        <Chip
+          className={`capitalize absolute ${
+            menuConfig?.useBackground === false &&
+            (layoutName === "Single column 1" ||
+              layoutName === "Single column 2" ||
+              layoutName === "Double column")
+              ? "bottom-2 right-2"
+              : preview?.chipPosition
+          }  z-20`}
+          color={"danger"}
+          size="sm"
+          variant="flat"
+        >
+          Out of stock
+        </Chip>
+      )}
 
-                  return (
-                    <div
-                      key={item.id || item.menuID}
-                      className={`my-3 relative`}
-                    >
-                      <div
-                        className={`${
-                          isListLayout
-                            ? "flex flex-1 min-h-[120px] items-center gap-3 w-full bg-white rounded-xl p-3 shadow-sm"
-                            : `${preview?.container} flex flex-col h-full`
-                        } ${
-                          !isListLayout && item?.isAvailable && !isViewOnlyMode
-                            ? "pb-10"
-                            : !isListLayout && !item?.isAvailable
-                            ? ""
-                            : ""
-                        } text-black relative transition-all ${
-                          item?.isAvailable && !isViewOnlyMode
-                            ? "cursor-pointer"
-                            : item?.isAvailable
-                            ? ""
-                            : "bg-gray-100 cursor-not-allowed"
-                        }`}
-                      >
-                        {item?.isAvailable === false && (
-                          <Chip
-                            className={`capitalize absolute ${
-                              menuConfig?.useBackground === false &&
-                              (layoutName === "Single column 1" ||
-                                layoutName === "Single column 2" ||
-                                layoutName === "Double column")
-                                ? "bottom-2 right-2"
-                                : preview?.chipPosition
-                            }  z-20`}
-                            color={"danger"}
-                            size="sm"
-                            variant="flat"
-                          >
-                            Out of stock
-                          </Chip>
-                        )}
+      {/* Image for Grid Layouts */}
+      {(layoutName === "Single column 1" ||
+        layoutName === "Single column 2" ||
+        layoutName === "Double column") &&
+        menuConfig?.useBackground !== false && (
+          <div
+            className={`${
+              preview?.imageContainer || ""
+            } relative flex items-center justify-center`}
+            onClick={() => {
+              if (item?.isAvailable && !isViewOnlyMode) {
+                toggleVarietyModal(item);
+              }
+            }}
+          >
+            <div
+              style={{
+                background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+              }}
+              className={`relative flex items-center justify-center overflow-hidden ${
+                preview?.imageClass || "h-48"
+              }`}
+            >
+              {item.image && item.image.length > baseString.length ? (
+                <Image
+                  fill
+                  className={`object-cover ${
+                    !item?.isAvailable ? "opacity-40 grayscale" : ""
+                  }`}
+                  src={`${baseString}${item.image}`}
+                  alt={item.itemName}
+                />
+              ) : (
+                <Image
+                  fill
+                  className={`object-cover ${
+                    !item?.isAvailable ? "opacity-40 grayscale" : ""
+                  }`}
+                  src={noMenu}
+                  alt="No image available"
+                />
+              )}
+            </div>
+          </div>
+        )}
 
-                        {/* Image for Grid Layouts */}
-                        {(layoutName === "Single column 1" ||
-                          layoutName === "Single column 2" ||
-                          layoutName === "Double column") &&
-                          menuConfig?.useBackground !== false && (
-                            <div
-                              className={`${
-                                preview?.imageContainer || ""
-                              } relative flex items-center justify-center`}
-                            >
-                              <div
-                                style={{
-                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
-                                }}
-                                className={`relative flex items-center justify-center overflow-hidden ${
-                                  preview?.imageClass || "h-48"
-                                }`}
-                              >
-                                {item.image &&
-                                item.image.length > baseString.length ? (
-                                  <Image
-                                    fill
-                                    className={`object-cover ${
-                                      !item?.isAvailable
-                                        ? "opacity-40 grayscale"
-                                        : ""
-                                    }`}
-                                    src={`${baseString}${item.image}`}
-                                    alt={item.itemName}
-                                  />
-                                ) : (
-                                  <Image
-                                    fill
-                                    className={`object-cover ${
-                                      !item?.isAvailable
-                                        ? "opacity-40 grayscale"
-                                        : ""
-                                    }`}
-                                    src={noMenu}
-                                    alt="No image available"
-                                  />
-                                )}
-                              </div>
-                            </div>
-                          )}
+      {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
+      {item?.isAvailable && !isViewOnlyMode && (
+        <>
+          {/* All grid layouts: Full-width button at bottom */}
+          {(layoutName === "Single column 1" ||
+            layoutName === "Single column 2" ||
+            layoutName === "Double column") && (
+            <button
+              onClick={(e) => handleQuickAdd(item, e)}
+              style={primaryColorStyle}
+              className="absolute bottom-0 left-0 right-0 text-white py-2.5 px-3 rounded-b-xl font-medium text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 z-20"
+            >
+              <IoAddCircleOutline className="w-4 h-4" />
+              Add
+            </button>
+          )}
+        </>
+      )}
 
-                        {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
-                        {item?.isAvailable && !isViewOnlyMode && (
-                          <>
-                            {/* All grid layouts: Full-width button at bottom */}
-                            {(layoutName === "Single column 1" ||
-                              layoutName === "Single column 2" ||
-                              layoutName === "Double column") && (
-                              <button
-                                onClick={(e) => handleQuickAdd(item, e)}
-                                style={primaryColorStyle}
-                                className="absolute bottom-0 left-0 right-0 text-white py-2.5 px-3 rounded-b-xl font-medium text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 z-20"
-                              >
-                                <IoAddCircleOutline className="w-4 h-4" />
-                                Add
-                              </button>
-                            )}
-                          </>
-                        )}
+      {/* For List Left: Image on left */}
+      {layoutName === "List left" && menuConfig?.useBackground !== false && (
+        <div
+          className={`${
+            preview?.imageContainer || ""
+          } relative flex-shrink-0 flex items-center justify-center`}
+        >
+          <div
+            style={{
+              background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+            }}
+            className={`relative flex items-center justify-center overflow-hidden ${
+              preview?.imageClass || "h-32"
+            }`}
+          >
+            {item.image && item.image.length > baseString.length ? (
+              <Image
+                fill
+                className={`object-cover ${
+                  !item?.isAvailable ? "opacity-40 grayscale" : ""
+                }`}
+                src={`${baseString}${item.image}`}
+                alt={item.itemName}
+              />
+            ) : (
+              <Image
+                fill
+                className={`object-cover ${
+                  !item?.isAvailable ? "opacity-40 grayscale" : ""
+                }`}
+                src={noMenu}
+                alt="No image available"
+              />
+            )}
+          </div>
+        </div>
+      )}
 
-                        {/* For List Left: Image on left */}
-                        {layoutName === "List left" &&
-                          menuConfig?.useBackground !== false && (
-                            <div
-                              className={`${
-                                preview?.imageContainer || ""
-                              } relative flex-shrink-0 flex items-center justify-center`}
-                            >
-                              <div
-                                style={{
-                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
-                                }}
-                                className={`relative flex items-center justify-center overflow-hidden ${
-                                  preview?.imageClass || "h-32"
-                                }`}
-                              >
-                                {item.image &&
-                                item.image.length > baseString.length ? (
-                                  <Image
-                                    fill
-                                    className={`object-cover ${
-                                      !item?.isAvailable
-                                        ? "opacity-40 grayscale"
-                                        : ""
-                                    }`}
-                                    src={`${baseString}${item.image}`}
-                                    alt={item.itemName}
-                                  />
-                                ) : (
-                                  <Image
-                                    fill
-                                    className={`object-cover ${
-                                      !item?.isAvailable
-                                        ? "opacity-40 grayscale"
-                                        : ""
-                                    }`}
-                                    src={noMenu}
-                                    alt="No image available"
-                                  />
-                                )}
-                              </div>
-                            </div>
-                          )}
+      {/* Text Content */}
+      <div
+        onClick={() => {
+          if (item?.isAvailable && !isViewOnlyMode) {
+            toggleVarietyModal(item);
+          }
+        }}
+        className={`${preview?.textContainer} flex flex-col ${
+          isListLayout ? "justify-center flex-1" : "justify-start"
+        }`}
+      >
+        <p
+          className={`font-bold ${
+            isCompactGrid ? "text-xs" : "text-sm"
+          } line-clamp-1`}
+        >
+          {item.itemName}
+        </p>
+        <p
+          className={`text-gray-500 ${
+            isCompactGrid ? "text-[10px]" : "text-xs"
+          } line-clamp-2 mt-0.5`}
+        >
+          {item.itemDescription || "No description available."}
+        </p>
+        <p
+          style={textColorStyle}
+          className={`font-semibold ${
+            isCompactGrid ? "text-xs" : "text-sm"
+          } mt-1`}
+        >
+          {formatPrice(item.price)}
+        </p>
+        {isSelected && (
+          <div className="absolute top-2 left-2">
+            <Chip
+              startContent={<CheckIcon size={14} />}
+              variant="flat"
+              size="sm"
+              style={primaryColorStyle}
+              classNames={{
+                base: "text-white text-[10px] mt-1.5 h-5",
+              }}
+            >
+              {selectedItems.find((selected) => selected.id === item.id)
+                ?.count || 0}
+            </Chip>
+          </div>
+        )}
+      </div>
 
-                        {/* Text Content */}
-                        <div
-                          onClick={() => {
-                            if (item?.isAvailable && !isViewOnlyMode) {
-                              toggleVarietyModal(item);
-                            }
-                          }}
-                          className={`${preview?.textContainer} flex flex-col ${
-                            isListLayout
-                              ? "justify-center flex-1"
-                              : "justify-start"
-                          }`}
-                        >
-                          <p
-                            className={`font-bold ${
-                              isCompactGrid ? "text-xs" : "text-sm"
-                            } line-clamp-1`}
-                          >
-                            {item.itemName}
-                          </p>
-                          <p
-                            className={`text-gray-500 ${
-                              isCompactGrid ? "text-[10px]" : "text-xs"
-                            } line-clamp-2 mt-0.5`}
-                          >
-                            {item.itemDescription || preview?.text3}
-                          </p>
-                          <p
-                            style={textColorStyle}
-                            className={`font-semibold ${
-                              isCompactGrid ? "text-xs" : "text-sm"
-                            } mt-1`}
-                          >
-                            {formatPrice(item.price)}
-                          </p>
-                          {isSelected && (
-                            <div className="absolute top-2 left-2">
-                              <Chip
-                                startContent={<CheckIcon size={14} />}
-                                variant="flat"
-                                size="sm"
-                                style={primaryColorStyle}
-                                classNames={{
-                                  base: "text-white text-[10px] mt-1.5 h-5",
-                                }}
-                              >
-                                {selectedItems.find(
-                                  (selected) => selected.id === item.id
-                                )?.count || 0}
-                              </Chip>
-                            </div>
-                          )}
-                        </div>
+      {/* For List Right: Image and button grouped on the right */}
+      {layoutName === "List Right" && (
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Image */}
+          {menuConfig?.useBackground !== false && (
+            <div
+              className={`${
+                preview?.imageContainer || ""
+              } relative flex items-center justify-center`}
+            >
+              <div
+                style={{
+                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                }}
+                className={`relative flex items-center justify-center overflow-hidden ${
+                  preview?.imageClass || "h-32"
+                }`}
+              >
+                {item.image && item.image.length > baseString.length ? (
+                  <Image
+                    fill
+                    className={`object-cover ${
+                      !item?.isAvailable ? "opacity-40 grayscale" : ""
+                    }`}
+                    src={`${baseString}${item.image}`}
+                    alt={item.itemName}
+                  />
+                ) : (
+                  <Image
+                    fill
+                    className={`object-cover ${
+                      !item?.isAvailable ? "opacity-40 grayscale" : ""
+                    }`}
+                    src={noMenu}
+                    alt="No image available"
+                  />
+                )}
+              </div>
+            </div>
+          )}
 
-                        {/* For List Right: Image and button grouped on the right */}
-                        {layoutName === "List Right" && (
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            {/* Image */}
-                            {menuConfig?.useBackground !== false && (
-                              <div
-                                className={`${
-                                  preview?.imageContainer || ""
-                                } relative flex items-center justify-center`}
-                              >
-                                <div
-                                  style={{
-                                    background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
-                                  }}
-                                  className={`relative flex items-center justify-center overflow-hidden ${
-                                    preview?.imageClass || "h-32"
-                                  }`}
-                                >
-                                  {item.image &&
-                                  item.image.length > baseString.length ? (
-                                    <Image
-                                      fill
-                                      className={`object-cover ${
-                                        !item?.isAvailable
-                                          ? "opacity-40 grayscale"
-                                          : ""
-                                      }`}
-                                      src={`${baseString}${item.image}`}
-                                      alt={item.itemName}
-                                    />
-                                  ) : (
-                                    <Image
-                                      fill
-                                      className={`object-cover ${
-                                        !item?.isAvailable
-                                          ? "opacity-40 grayscale"
-                                          : ""
-                                      }`}
-                                      src={noMenu}
-                                      alt="No image available"
-                                    />
-                                  )}
-                                </div>
-                              </div>
-                            )}
+          {/* Button - Always reserve space for alignment */}
+          <div className="flex items-center justify-center w-[48px]">
+            {item?.isAvailable && !isViewOnlyMode && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleQuickAdd(item, e);
+                }}
+                style={primaryColorStyle}
+                className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+                aria-label="Add to cart"
+              >
+                <IoAddCircleOutline className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
-                            {/* Button - Always reserve space for alignment */}
-                            <div className="flex items-center justify-center w-[48px]">
-                              {item?.isAvailable && !isViewOnlyMode && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleQuickAdd(item, e);
-                                  }}
-                                  style={primaryColorStyle}
-                                  className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
-                                  aria-label="Add to cart"
-                                >
-                                  <IoAddCircleOutline className="w-5 h-5" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* List Left Button - on the right side after text */}
-                        {layoutName === "List left" && (
-                          <div className="flex-shrink-0 flex items-center justify-center w-[48px]">
-                            {item?.isAvailable && !isViewOnlyMode && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleQuickAdd(item, e);
-                                }}
-                                style={primaryColorStyle}
-                                className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
-                                aria-label="Add to cart"
-                              >
-                                <IoAddCircleOutline className="w-5 h-5" />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
+      {/* List Left Button - on the right side after text */}
+      {layoutName === "List left" && (
+        <div className="flex-shrink-0 flex items-center justify-center w-[48px]">
+          {item?.isAvailable && !isViewOnlyMode && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleQuickAdd(item, e);
+              }}
+              style={primaryColorStyle}
+              className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+              aria-label="Add to cart"
+            >
+              <IoAddCircleOutline className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  </div>
+);
                 })}
 
                 {/* Empty State - No Results */}
