@@ -1276,7 +1276,7 @@ const CheckoutModal = ({
             : "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto mb-safe",
           body: "px-4 py-2 md:px-6 flex-1 overflow-y-auto",
           header: "px-4 py-3 md:px-6 flex-shrink-0",
-          wrapper: "items-end md:items-center pb-4",
+          wrapper: "items-center pb-4",
         }}
         isDismissable={false}
         hideCloseButton={true}
@@ -1786,9 +1786,9 @@ const CheckoutModal = ({
                     )}
 
                     {mobileSubStep === '1B' && (
-                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: 'calc(100vh - 12rem)' }}>
+                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', height: '70vh', maxHeight: '600px' }}>
                         {/* Mobile Step 1B: Customer Information */}
-                        <div className="space-y-6 pb-6">
+                        <div className="space-y-6 pb-[400px]">
                           <CustomInput
                             type="text"
                             value={order.placedByName}
