@@ -1070,17 +1070,11 @@ const MenuList = () => {
                         {formatPrice(calculateTotalPrice())}
                       </p>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-[13px] font-[500] text-gray-600">VAT (7.5%)</h3>
-                      <p className="text-[14px] font-[500] text-gray-600">
-                        {formatPrice(calculateTotalPrice() * 0.075)}
-                      </p>
-                    </div>
                     <Divider className="my-2" />
                     <div className="flex justify-between flex-col items-center">
                       <h3 className="text-[14px] font-[600]">Total</h3>
                       <p className="text-[16px] font-[700] text-primaryColor">
-                        {formatPrice(calculateTotalPrice() * 1.075)}
+                        {formatPrice(calculateTotalPrice())}
                       </p>
                     </div>
                   </div>
