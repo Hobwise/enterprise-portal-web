@@ -134,8 +134,8 @@ const Reports: React.FC = () => {
       content: <BookingReportDetails report={data?.bookingDetails} />,
     },
     {
-      id: "audits",
-      label: "Audits",
+      id: "users",
+      label: "Users",
       content: <AuditReportDetails report={data?.auditDetails} />,
     },
   ];

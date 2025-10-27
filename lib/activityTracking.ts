@@ -16,7 +16,7 @@ export const initializeUserActivityTracking = (): void => {
 };
 
 export const startUserActivityTracking = (): void => {
-  const INACTIVE_THRESHOLD_MINUTES = 10; // 10 minutes
+  const INACTIVE_THRESHOLD_MINUTES = 30; // 30 minutes
   const CHECK_INTERVAL_MS = 1000; // 1 second
 
   const timeInterval = setInterval(() => {

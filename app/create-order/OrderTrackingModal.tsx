@@ -57,13 +57,7 @@ const OrderTrackingPage = ({
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [previousStatus, setPreviousStatus] = useState<number | null>(null);
 
-  // Log the trackingId when component mounts or when it changes
-  useEffect(() => {
-    console.log("OrderTrackingModal - trackingId prop:", trackingId);
-    console.log("OrderTrackingModal - initialOrderData:", initialOrderData);
-  }, [trackingId, initialOrderData]);
 
-  // Request notification permission on mount
   useEffect(() => {
     if (
       isOpen &&
@@ -74,7 +68,6 @@ const OrderTrackingPage = ({
     }
   }, [isOpen]);
 
-  // Function to show browser notification
   const showBrowserNotification = (title: string, message: string) => {
     if ("Notification" in window && Notification.permission === "granted") {
       const notification = new Notification(title, {
@@ -128,12 +121,8 @@ const OrderTrackingPage = ({
             const orderID = newOrderData.orderDetails[0]?.orderID;
             if (orderID && !newOrderData.reference) {
               newOrderData = { ...newOrderData, reference: orderID };
-              console.log("Added reference field to polled orderData:", orderID);
             }
           }
-
-          console.log("Polled order data:", newOrderData);
-          console.log("Polled order data keys:", Object.keys(newOrderData));
           const newStatus = newOrderData.status;
 
           // Check if status has changed and show notification
@@ -361,9 +350,8 @@ const OrderTrackingPage = ({
   const currentStepIndex = getCurrentStepIndex();
 
   if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-auto">
+    <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen overflow-y-auto">
       {/* Hamburger Menu Button */}
       <button
         onClick={handleMenuClick}
@@ -382,14 +370,14 @@ const OrderTrackingPage = ({
       />
 
       {/* Header with Timer */}
-      <div className="mt-4 mb-6 px-4 max-w-4xl flex flex-col mx-auto">
-        <div className="sticky top-0 z-10 bg-white border-b shadow-sm">
-          <div className="max-w-4xl mx-auto px-4 py-4">
+      <div className="mt-2 mb-1 px-4 max-w-4xl w-full flex flex-col mx-auto">
+        <div className="z-10 bg-white border-b shadow-sm">
+          <div className="max-w-4xl mx-auto px-4 py-2">
             {/* Only show timer for open orders (status 0 or 3) */}
             {orderData?.status !== 1 && orderData?.status !== 2 && (
               <div className="w-full flex justify-end">
                 {timeLeft && timeLeft !== "00:00" && (
-                  <div className="text-3xl font-bold text-green-500">
+                  <div className="text-xl sm:text-2xl md:text-3xl font-bold text-green-500">
                     {timeLeft}
                   </div>
                 )}
@@ -477,10 +465,11 @@ const OrderTrackingPage = ({
       </div>
 
       {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex-1">
+        <div className="max-w-4xl mx-auto px-4 py-6 pb-28">
         {/* Order Details Section */}
         {showOrderDetails && orderData && (
-          <div className="mb-8 bg-gray-50 rounded-lg p-6">
+          <div className="mb-6 bg-gray-50 rounded-lg p-4 md:p-6">
             <h3 className="text-lg font-bold text-black mb-4">Order Items</h3>
             <div className="space-y-3">
               {orderData.orderDetails?.map((item: any, index: number) => (
@@ -529,20 +518,22 @@ const OrderTrackingPage = ({
                 </span>
               </div>
               {orderData.placedByName && (
-                <div className="mt-3 text-sm text-gray-600">
-                  <p>Placed by: {orderData.placedByName}</p>
-                  {orderData.placedByPhoneNumber && (
-                    <p>Phone: {orderData.placedByPhoneNumber}</p>
-                  )}
-                  {orderData.comment && <p>Note: {orderData.comment}</p>}
-                </div>
+            <div className="mt-3 text-sm text-gray-600">
+              <p>Placed by: {orderData.placedByName}</p>
+              {orderData.placedByPhoneNumber && (
+                <p>Phone: {orderData.placedByPhoneNumber}</p>
               )}
+              {orderData.comment && <p>Note: {orderData.comment}</p>}
+              {typeof orderData.vatRate !== 'undefined' && orderData.vatRate !== null && (
+                <p>
+                  VAT Rate: {Math.round(Number(orderData.vatRate || 0) * 100)}%
+                </p>
+              )}
+            </div>)}
             </div>
           </div>
         )}
-
-        {/* Order Status Timeline */}
-        <div className="space-y-8 mb-8">
+        <div className="space-y-6 mb-6">
           {steps.map((step, index) => {
             const isCompleted = index < currentStepIndex;
             const isCurrent = index === currentStepIndex;
@@ -637,9 +628,8 @@ const OrderTrackingPage = ({
               </div>
             </div>
           )}
-
-        {/* Action Buttons - Disable for cancelled (2) or closed (1) orders */}
-        <div className="flex gap-4 mt-8">
+        </div>
+        <div className="flex gap-5 border-t border-gray-200 px-4 py-4 pb-safe z-20">
           <CustomButton
             onClick={onAddMoreItems}
             disabled={orderData?.status === 1 || orderData?.status === 2}
@@ -658,7 +648,7 @@ const OrderTrackingPage = ({
                     borderWidth: "2px",
                   }
             }
-            className={`flex-1 h-14 ${
+            className={`flex-1 h-12 md:h-14 ${
               orderData?.status === 1 || orderData?.status === 2
                 ? "cursor-not-allowed"
                 : ""
@@ -678,7 +668,7 @@ const OrderTrackingPage = ({
                 ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
                 : primaryColorStyle
             }
-            className={`flex-1 h-14 ${
+            className={`flex-1 h-12 md:h-14 ${
               orderData?.status === 1 || orderData?.status === 1
                 ? "cursor-not-allowed"
                 : "text-white"

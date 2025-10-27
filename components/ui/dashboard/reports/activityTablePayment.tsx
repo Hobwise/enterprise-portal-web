@@ -56,23 +56,23 @@ const columns4 = [
   { name: 'Customer Name', uid: 'customer' },
   { name: 'Treated By', uid: 'treatedBy' },
   { name: 'Total Amount', uid: 'totalAmount' },
-  { name: 'Reference', uid: 'reference' },
+  { name: 'Order Id', uid: 'reference' },
   { name: 'Payment Method', uid: 'paymentMethod' },
   { name: 'Status', uid: 'status' },
 ];
 
 const columns5 = [
   { name: 'Payment Method', uid: 'paymentMethod' },
-  { name: 'Payment Count', uid: 'paymentCount' },
-  { name: 'Amount', uid: 'totalAmount' },
+  { name: 'Number of payments', uid: 'paymentCount' },
+  { name: 'Total Amount Processed', uid: 'totalAmount' },
   { name: 'Date Updated', uid: 'lastRecordDateTime' },
 ];
 const columns6 = [
-  { name: 'QR', uid: 'quickResponseName' },
-  { name: 'Pending Payment', uid: 'pendingAmount' },
-  { name: 'Total Payment', uid: 'totalAmount' },
-  { name: 'Total Order Count', uid: 'numberOfOrders' },
-  { name: 'Confirmed Payment', uid: 'confirmedAmount' },
+  { name: 'Quick Response Name', uid: 'quickResponseName' },
+  { name: 'Number of orders', uid: 'numberOfOrders' },
+  { name: 'Pending Sales Amount', uid: 'pendingAmount' },
+  { name: 'Total Sales Amount', uid: 'totalAmount' },
+  { name: 'Confirmed Sales Amount', uid: 'confirmedAmount' },
 ];
 
 const ActivityTablePayment = ({

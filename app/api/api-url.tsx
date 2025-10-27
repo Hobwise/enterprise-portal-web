@@ -56,7 +56,7 @@ export const DASHBOARD = {
   menuPos: "api/v1/Menu/pos",
   // orders
   orderByBusiness: "api/v1/Order/by-business",
-  orderByCategories:"/api/v1/Order/categories",
+  orderByCategories: "/api/v1/Order/categories",
   orderItems: "api/v1/Order/details",
   orderByPaged: "api/v1/Order/paged",
   orderByReference: "api/v1/Order/by-reference",
@@ -87,8 +87,8 @@ export const DASHBOARD = {
   updateStatus: "api/v1/Booking/update-status",
   //Campaigns
   // campaignsByBusiness: "api/v1/Campaign/by-business",
-  campaignsByCategories:"api/v1/Campaign/categories",
-  campaignByCategory:"api/v1/Campaign/details",
+  campaignsByCategories: "api/v1/Campaign/categories",
+  campaignByCategory: "api/v1/Campaign/details",
   campaigns: "api/v1/Campaign",
   repeatCampaigns: "api/v1/Campaign/restart",
   //Dashboard
@@ -98,12 +98,12 @@ export const DASHBOARD = {
   reportOrder: "api/v1/ReportManager/order",
   reportOrderExport: "api/v1/ReportManager/order/export",
   reportBookingExport: "api/v1/ReportManager/booking/export",
-  reportAuditLogExport: "api/v1/ReportManager/audit-log/export",
+  reportAuditLogExport: "api/v1/ReportManager/user/export",
   reportPaymentExport: "api/v1/ReportManager/payment/export",
   reportGridExport: "api/v1/ReportManager/grid/export",
   reportPayment: "api/v1/ReportManager/payment",
   reportBooking: "api/v1/ReportManager/booking",
-  reportAuditLog: "api/v1/ReportManager/audit-log",
+  reportAuditLog: "api/v1/ReportManager/user",
   //Billings and Subscriptions
   subscription: "api/v1/Subscription",
   userSubscription: "api/v1/Subscription/User",

@@ -102,7 +102,7 @@ const ReportDetails = ({ report }: any) => {
             </div>
           </div>
         </Card>
-        <Card className="bg-[#FDF5E1] lg:h-[348px] h-full">
+        {/* <Card className="bg-[#FDF5E1] lg:h-[348px] h-full">
           <CardBody className=" p-4">
             <div className="mb-4">
               <Image src={Star} alt="star" />
@@ -113,7 +113,7 @@ const ReportDetails = ({ report }: any) => {
               {report?.mostActiveUser?.activityCount}
             </p>
           </CardBody>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );
