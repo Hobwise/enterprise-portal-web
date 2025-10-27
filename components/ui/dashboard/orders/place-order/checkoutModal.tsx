@@ -1615,7 +1615,7 @@ const CheckoutModal = ({
                         />
                         <Spacer y={2} />
                         <CustomInput
-                          type="text"
+                          type="tel"
                           errorMessage={
                             !id && response?.errors?.placedByPhoneNumber?.[0]
                           }
@@ -1788,7 +1788,7 @@ const CheckoutModal = ({
                     {mobileSubStep === '1B' && (
                       <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: 'calc(100vh - 12rem)' }}>
                         {/* Mobile Step 1B: Customer Information */}
-                        <div className="space-y-6 pb-32">
+                        <div className="space-y-6 pb-6">
                           <CustomInput
                             type="text"
                             value={order.placedByName}
@@ -1803,7 +1803,7 @@ const CheckoutModal = ({
                           />
 
                           <CustomInput
-                            type="text"
+                            type="tel"
                             value={order.placedByPhoneNumber}
                             name="placedByPhoneNumber"
                             onChange={handleInputChange}
