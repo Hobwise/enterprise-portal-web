@@ -1273,10 +1273,10 @@ const CheckoutModal = ({
         classNames={{
           base: screen === 1
             ? "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] m-0 md:m-auto mb-safe"
-            : "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto mb-safe",
+            : "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto",
           body: "px-4 py-2 md:px-6 flex-1 overflow-y-auto",
           header: "px-4 py-3 md:px-6 flex-shrink-0",
-          wrapper: "items-center pb-4",
+          wrapper: "!fixed !inset-0 items-center justify-center",
         }}
         isDismissable={false}
         hideCloseButton={true}
@@ -1786,7 +1786,7 @@ const CheckoutModal = ({
                     )}
 
                     {mobileSubStep === '1B' && (
-                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', height: '70vh', maxHeight: '600px' }}>
+                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: '500px' }}>
                         {/* Mobile Step 1B: Customer Information */}
                         <div className="space-y-6 pb-[400px]">
                           <CustomInput
