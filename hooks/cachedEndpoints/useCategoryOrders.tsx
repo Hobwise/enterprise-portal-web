@@ -2,7 +2,9 @@
 import { getCategoryOrders, getCategoryOrderDetails } from '@/app/api/controllers/dashboard/orders';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
+import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
+import { useEffect, useRef } from 'react';
 
 type OrderItem = {
   orderId: string;
@@ -23,23 +25,57 @@ type CategoryCount = {
   totalAmount: number;
 };
 
+// Global cache for category orders
+const globalCategoryOrdersCache = new Map<string, {
+  items: any,
+  timestamp: number,
+  totalPages: number,
+  totalItems: number,
+  currentPage: number
+}>();
+const CACHE_EXPIRY_TIME = 10 * 60 * 1000; // 10 minutes
+
 const useCategoryOrders = (
   filterType: number,
   startDate?: string,
   endDate?: string,
-  orderStatus?: string,
-  page?: number,
-  pageSize?: number,
   options?: { enabled: boolean }
 ) => {
+  const { page, rowsPerPage, tableStatus } = useGlobalContext();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const categoryId = userInformation?.assignedCategoryId;
+  const previousPage = useRef(page);
+
+  // Clear cache when page changes to force fresh data
+  useEffect(() => {
+    if (previousPage.current !== page) {
+      const keysToDelete: string[] = [];
+      globalCategoryOrdersCache.forEach((_, key) => {
+        if (key.includes(`categoryOrders_${tableStatus}_${filterType}`)) {
+          keysToDelete.push(key);
+        }
+      });
+      keysToDelete.forEach(key => globalCategoryOrdersCache.delete(key));
+      previousPage.current = page;
+    }
+  }, [page, tableStatus, filterType]);
 
   const getAllCategoryOrders = async ({ queryKey }: { queryKey: any }) => {
-    const [_key, { categoryId, filterType, startDate, endDate, orderStatus, page, pageSize }] = queryKey;
+    const [_key, { categoryId, filterType, startDate, endDate, tableStatus, page, rowsPerPage }] = queryKey;
 
     if (!categoryId) {
       return { categories: [], details: null };
+    }
+
+    // Create cache key
+    const cacheKey = `categoryOrders_${tableStatus}_${filterType}_${startDate}_${endDate}_page_${page}`;
+
+    // Check cache first
+    const cached = globalCategoryOrdersCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_EXPIRY_TIME) {
+      if (cached.currentPage === page) {
+        return cached.items;
+      }
     }
 
     try {
@@ -61,21 +97,37 @@ const useCategoryOrders = (
         return { categories: [], details: null };
       }
 
-      // Fetch order details
+      // Fetch order details for the selected category
+      const targetCategory = tableStatus || categories[0]?.name;
+
       const detailsResponse = await getCategoryOrderDetails(
         categoryId,
         page || 1,
-        pageSize || 10,
+        rowsPerPage || 10,
         startDate,
         endDate,
         filterType,
-        orderStatus
+        targetCategory
       );
 
-      return {
+      const result = {
         categories,
         details: detailsResponse,
       };
+
+      // Calculate pagination info and cache
+      const totalCount = detailsResponse?.data?.totalCount || 0;
+      const totalPages = detailsResponse?.data?.totalPages || 1;
+
+      globalCategoryOrdersCache.set(cacheKey, {
+        items: result,
+        timestamp: Date.now(),
+        totalPages,
+        totalItems: totalCount,
+        currentPage: page
+      });
+
+      return result;
 
     } catch (error) {
       console.error('Error loading category orders:', error);
@@ -83,10 +135,10 @@ const useCategoryOrders = (
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>({
+  const { data, isLoading, isError, refetch, isFetching } = useQuery<any>({
     queryKey: [
       "categoryOrders",
-      { categoryId, filterType, startDate, endDate, orderStatus, page, pageSize },
+      { categoryId, filterType, startDate, endDate, tableStatus, page, rowsPerPage },
     ],
     queryFn: getAllCategoryOrders,
     ...fetchQueryConfig(options),
@@ -94,7 +146,30 @@ const useCategoryOrders = (
     staleTime: 0,
     gcTime: 5 * 60 * 1000,
     enabled: options?.enabled !== false && !!categoryId,
+    refetchOnMount: true,
   });
+
+  // Function to clear cache for current filters
+  const clearCache = () => {
+    const keysToDelete: string[] = [];
+    globalCategoryOrdersCache.forEach((_, key) => {
+      if (key.includes(`categoryOrders_${tableStatus}_${filterType}`)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalCategoryOrdersCache.delete(key));
+  };
+
+  // Function to clear all category orders cache
+  const clearAllCache = () => {
+    const keysToDelete: string[] = [];
+    globalCategoryOrdersCache.forEach((_, key) => {
+      if (key.startsWith('categoryOrders_')) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalCategoryOrdersCache.delete(key));
+  };
 
   return {
     categories: data?.categories || [],
@@ -102,7 +177,32 @@ const useCategoryOrders = (
     isLoading,
     isError,
     refetch,
+    isFetching,
+    clearCache,
+    clearAllCache,
   };
+};
+
+// Export cache utilities for external use
+export const categoryOrdersCacheUtils = {
+  clearAll: () => {
+    const keysToDelete: string[] = [];
+    globalCategoryOrdersCache.forEach((_, key) => {
+      if (key.startsWith('categoryOrders_')) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalCategoryOrdersCache.delete(key));
+  },
+  invalidateStatus: (status: string) => {
+    const keysToDelete: string[] = [];
+    globalCategoryOrdersCache.forEach((_, key) => {
+      if (key.includes(`categoryOrders_${status}_`)) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(key => globalCategoryOrdersCache.delete(key));
+  }
 };
 
 export default useCategoryOrders;

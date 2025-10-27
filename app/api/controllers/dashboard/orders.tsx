@@ -246,11 +246,14 @@ export async function getOrderByRef(
     handleError(error, false);
   }
 }
-export async function completeOrder(payload: any, orderId: string) {
-  const headers = { orderId };
+export async function completeOrder(categoryId: string, orderId: string) {
+  const url = `${DASHBOARD.completeOrder}?categoryId=${categoryId}`;
+  const headers = {
+    orderId
+  };
 
   try {
-    const data = await api.post(DASHBOARD.completeOrder, payload, {
+    const data = await api.post(url, {}, {
       headers,
     });
 
@@ -361,5 +364,57 @@ export async function editUserOrder(orderId: string, payload: Order) {
     return data;
   } catch (error) {
     handleError(error);
+  }
+}
+
+// Function to get active orders for a category
+export async function getActiveOrdersByCategory(categoryId: string) {
+  try {
+    const response = await api.get(
+      `/api/v1/Order/categories/${categoryId}/active-orders`
+    );
+
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+// Function to get individual order details by category
+export async function getOrderDetailsByCategory(categoryId: string, orderId: string) {
+  try {
+    const response = await api.get(
+      `/api/v1/Order/categories/${categoryId}/orders/${orderId}`
+    );
+
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+// Function to update estimated preparation time
+export async function updateEstimatedPreparationTime(
+  orderId: string,
+  businessId: string,
+  additionalTimeInMins: number
+) {
+  const headers = { businessId };
+  const payload = {
+    orderId,
+    businessId,
+    additionalTimeInMins,
+  };
+
+  try {
+    const response = await api.put(
+      `/api/v1/Order/estimated-preparation-time`,
+      payload,
+      { headers }
+    );
+
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
   }
 }
