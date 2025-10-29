@@ -9,6 +9,7 @@ import RestaurantBanner from "./RestaurantBanner";
 import { getCustomerOrderByReference } from "../api/controllers/customerOrder";
 import { HiMenuAlt3 } from "react-icons/hi";
 import { MdOutlineWarning } from "react-icons/md";
+import { formatPrice } from "@/lib/utils";
 
 interface OrderTrackingPageProps {
   isOpen: boolean;
@@ -121,7 +122,7 @@ const OrderTrackingPage = ({
             newOrderData.orderDetails &&
             newOrderData.orderDetails.length > 0
           ) {
-            const orderID = newOrderData.orderDetails[0]?.orderID;
+            const orderID = newOrderData.orderDetails[0]?.reference;
             if (orderID && !newOrderData.reference) {
               newOrderData = { ...newOrderData, reference: orderID };
             }
@@ -480,17 +481,35 @@ const OrderTrackingPage = ({
                     className="flex items-start justify-between bg-white p-4 rounded-lg"
                   >
                     <div className="flex-1">
+                      <div className="flex justify-between">
+
                       <h4 className="font-semibold text-black">
                         {item.itemName}
                       </h4>
+                       <p className="font-bold text-black">
+                        ₦{(item.unitPrice * item.quantity).toLocaleString()}
+                      </p>
+                      </div>
                       <p className="text-sm text-gray-600">{item.menuName}</p>
+                      <div className="flex justify-between  text-sm">
+                        <span className="text-gray-600">Unit Price</span>
+                        <span className="font-semibold text-black">
+                          {formatPrice(item.unitPrice)}
+                        </span>
+                      </div>
+                      {item.packingCost > 0 && (
+                        <div className="flex justify-between  text-sm">
+                          <span className="text-gray-600">Packing Cost</span>
+                          <span className="font-semibold text-black">
+                            {formatPrice(item.packingCost)}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-4 mt-2 text-sm">
                         <span className="text-gray-600">
                           Qty: {item.quantity}
                         </span>
-                        <span className="text-gray-600">
-                          ₦{item.unitPrice.toLocaleString()}
-                        </span>
+
                         {item.isPacked && (
                           <span
                             className="text-xs px-2 py-1 rounded"
@@ -504,11 +523,11 @@ const OrderTrackingPage = ({
                         )}
                       </div>
                     </div>
-                    <div className="text-right">
+                    {/* <div className="text-right">
                       <p className="font-bold text-black">
-                        ₦{item.totalPrice.toLocaleString()}
+                        ₦{(item.unitPrice * item.quantity).toLocaleString()}
                       </p>
-                    </div>
+                    </div> */}
                   </div>
                 ))}
               </div>

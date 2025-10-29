@@ -1,7 +1,7 @@
 'use client';
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
@@ -131,6 +131,10 @@ const CreateOrder = () => {
   const [isUpdatingOrder, setIsUpdatingOrder] = useState(false); // Track if updating existing order
   const [originalOrderItems, setOriginalOrderItems] = useState<Item[]>([]); // Store original order items for comparison
   const [servingInfo, setServingInfo] = useState<ServingInfoData | null>(null); // Store serving info for prefilling
+  const [orderReference, setOrderReference] = useState<string>("");
+
+  // Track the order ID separately - this is what we use for updates
+  const [orderId, setOrderId] = useState<string>("");
 
   // Menu state - using React Query hooks
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
@@ -457,10 +461,11 @@ const CreateOrder = () => {
     setOrderErrors(null);
 
     try {
-      // Store serving info for prefilling on future updates
       setServingInfo(servingInfoData);
 
-      // If updating an existing order and nothing changed, just go back to tracking
+      console.log("🔄 Order submission - isUpdatingOrder:", isUpdatingOrder);
+      console.log("🔄 Order submission - orderId:", orderId);
+
       if (
         isUpdatingOrder &&
         !hasOrderChanged(originalOrderItems, selectedItems)
@@ -471,6 +476,7 @@ const CreateOrder = () => {
         toast.info("No changes detected. Returning to order tracking.");
         return;
       }
+
       // Compute totals with dynamic per-item VAT
       let subtotal = 0;
       let packingCost = 0;
@@ -480,7 +486,8 @@ const CreateOrder = () => {
         subtotal += itemTotal;
         let itemPackingTotal = 0;
         if (item.isPacked && item.packingCost) {
-          itemPackingTotal = (Number(item.packingCost) || 0) * (Number(item.count) || 0);
+          itemPackingTotal =
+            (Number(item.packingCost) || 0) * (Number(item.count) || 0);
           packingCost += itemPackingTotal;
         }
         if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
@@ -488,7 +495,7 @@ const CreateOrder = () => {
           vat += itemSubtotal * item.vatRate;
         }
       });
-      // Round to 2dp
+
       subtotal = Math.round(subtotal * 100) / 100;
       packingCost = Math.round(packingCost * 100) / 100;
       vat = Math.round(vat * 100) / 100;
@@ -514,10 +521,12 @@ const CreateOrder = () => {
 
       let response;
 
-      // Check if we're updating an existing order or creating a new one
-      if (isUpdatingOrder && orderData?.reference) {
-        response = await updateCustomerOrder(orderData.reference, payload);
+      if (isUpdatingOrder && orderId) {
+        console.log("📝 CALLING UPDATE ORDER ENDPOINT with orderId:", orderId);
+        // ✅ Pass orderId to updateCustomerOrder
+        response = await updateCustomerOrder(orderId, payload);
       } else {
+        console.log("🆕 CALLING PLACE ORDER ENDPOINT");
         response = await placeCustomerOrder(
           payload,
           businessId || "",
@@ -527,17 +536,57 @@ const CreateOrder = () => {
 
       if (response?.isSuccessful && response?.data) {
         let orderDataToStore = response.data;
-        if (
-          response.data.orderDetails &&
-          response.data.orderDetails.length > 0
-        ) {
-          const orderID = response.data.orderDetails[0]?.orderID;
-          if (orderID && !response.data.reference) {
-            orderDataToStore = { ...response.data, reference: orderID };
+
+        console.log("✅ Response data:", response.data);
+
+        // For NEW orders: Extract and store BOTH orderId and reference
+        if (!isUpdatingOrder) {
+          let newOrderId = "";
+          let newReference = "";
+
+          // Extract orderId from orderDetails
+          if (response.data.orderDetails?.[0]?.orderID) {
+            newOrderId = response.data.orderDetails[0].orderID;
+            console.log("🆕 Extracted orderId from orderDetails:", newOrderId);
           }
+
+          // Extract reference (this is what we use for tracking)
+          if (response.data.reference) {
+            newReference = response.data.reference;
+            console.log("🆕 Extracted reference:", newReference);
+          }
+
+          // Set both IDs
+          if (newOrderId) {
+            setOrderId(newOrderId);
+            console.log("🆕 Set permanent orderId for updates:", newOrderId);
+          }
+
+          if (newReference) {
+            setOrderReference(newReference);
+            console.log("🆕 Set reference for tracking:", newReference);
+          }
+
+          setIsUpdatingOrder(true);
+          console.log("🔄 Set isUpdatingOrder to true for future updates");
         }
 
-        // Attach VAT metadata for display in tracking modal immediately after placing
+        // For UPDATE operations: Keep existing reference, update might return new orderId
+        if (isUpdatingOrder) {
+          // If response has a new orderId, update it
+          if (response.data.orderDetails?.[0]?.orderID) {
+            const updatedOrderId = response.data.orderDetails[0].orderID;
+            if (updatedOrderId !== orderId) {
+              setOrderId(updatedOrderId);
+              console.log("🔄 Updated orderId:", updatedOrderId);
+            }
+          }
+
+          // Reference should remain the same for updates
+          console.log("🔄 Keeping existing reference:", orderReference);
+        }
+
+        // Attach VAT metadata for display
         const enabledRates = Array.from(
           new Set(
             selectedItems
@@ -547,7 +596,6 @@ const CreateOrder = () => {
         );
         if (enabledRates.length > 0) {
           (orderDataToStore as any).isVatEnabled = true;
-          // If multiple rates, store the first; UI can handle plural if needed
           (orderDataToStore as any).vatRate = enabledRates[0];
         } else {
           (orderDataToStore as any).isVatEnabled = false;
@@ -557,14 +605,13 @@ const CreateOrder = () => {
         setOrderData(orderDataToStore);
         setIsServingInfoOpen(false);
         setIsOrderTrackingOpen(true);
-        setIsUpdatingOrder(false); // Reset update flag
+
         toast.success(
           isUpdatingOrder
             ? "Order updated successfully!"
             : "Order placed successfully!"
         );
       } else {
-        // Handle error response
         const errorMessage =
           response?.error?.responseDescription ||
           response?.error?.message ||
@@ -575,6 +622,7 @@ const CreateOrder = () => {
         toast.error(errorMessage);
       }
     } catch (error) {
+      console.error("Order submission error:", error);
       toast.error("Failed to place order. Please try again.");
     } finally {
       setOrderLoading(false);
@@ -584,7 +632,10 @@ const CreateOrder = () => {
   // Handle adding more items from order tracking
   const handleAddMoreItemsFromTracking = () => {
     if (orderData && orderData.orderDetails) {
-      // Transform order details into cart items format with all necessary fields
+      console.log("🔄 Adding more items from tracking");
+      console.log("📋 Current orderId:", orderId);
+      console.log("📋 Current reference:", orderReference);
+
       const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
         const basePrice = detail.unitPrice || 0;
 
@@ -610,10 +661,28 @@ const CreateOrder = () => {
       });
 
       setSelectedItems(cartItems);
-      setOriginalOrderItems(cartItems); // Store original items for comparison
-      setIsUpdatingOrder(true); // Set flag to update existing order
+      setOriginalOrderItems(cartItems);
 
-      // Extract and store serving info from order data for prefilling
+      if (!isUpdatingOrder) {
+        setIsUpdatingOrder(true);
+        console.log("🔄 Set isUpdatingOrder to true");
+      }
+
+      // Ensure we have the orderId from order data
+      if (!orderId && orderData.orderDetails?.[0]?.orderID) {
+        setOrderId(orderData.orderDetails[0].orderID);
+        console.log(
+          "📋 Set orderId from orderDetails:",
+          orderData.orderDetails[0].orderID
+        );
+      }
+
+      // Ensure we have the reference
+      if (!orderReference && orderData.reference) {
+        setOrderReference(orderData.reference);
+        console.log("📋 Set reference from orderData:", orderData.reference);
+      }
+
       if (orderData.placedByName || orderData.placedByPhoneNumber) {
         setServingInfo({
           name: orderData.placedByName || "",
@@ -623,29 +692,19 @@ const CreateOrder = () => {
       }
     }
     setIsOrderTrackingOpen(false);
-    // Scroll to top to show menu
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handle checkout from order tracking - go to confirmation page
   const handleCheckoutFromTracking = async (updatedOrderData?: any) => {
     const currentOrderData = updatedOrderData || orderData;
-    let orderReference =
-      currentOrderData?.reference ||
-      currentOrderData?.orderReference ||
-      currentOrderData?.Reference ||
-      currentOrderData?.OrderReference ||
-      currentOrderData?.trackingId ||
-      currentOrderData?.TrackingId;
 
-    // If no direct reference found, try to extract from orderDetails
-    if (
-      !orderReference &&
-      currentOrderData?.orderDetails &&
-      currentOrderData.orderDetails.length > 0
-    ) {
-      orderReference = currentOrderData.orderDetails[0]?.orderID;
-    }
+    console.log("🔄 Checkout from tracking - orderId:", orderId);
+    console.log(
+      "🔄 Checkout from tracking - currentOrderData:",
+      currentOrderData
+    );
+
     // Check if we already have complete order data
     if (
       currentOrderData?.orderDetails &&
@@ -684,7 +743,21 @@ const CreateOrder = () => {
       setSelectedItems(cartItems);
       setOriginalOrderItems(cartItems); // Store original items for comparison
       setOrderData(fullOrderData); // Update with full order data
-      setIsUpdatingOrder(true); // Set flag to update existing order
+
+      // Ensure we're in update mode and have the orderId
+      if (!isUpdatingOrder) {
+        setIsUpdatingOrder(true);
+        console.log("🔄 Set isUpdatingOrder to true from checkout");
+      }
+
+      // Make sure we have the orderId from the order data
+      if (!orderId && fullOrderData.orderDetails?.[0]?.orderID) {
+        setOrderId(fullOrderData.orderDetails[0].orderID);
+        console.log(
+          "📋 Set orderId from orderDetails in checkout:",
+          fullOrderData.orderDetails[0].orderID
+        );
+      }
 
       // Extract and store serving info from order data for prefilling
       if (fullOrderData.placedByName || fullOrderData.placedByPhoneNumber) {
@@ -710,6 +783,17 @@ const CreateOrder = () => {
     setOrderData(orderData);
     setIsTrackingDetailsOpen(false);
     setIsOrderTrackingOpen(true);
+  };
+
+  // Reset everything when starting fresh
+  const resetOrder = () => {
+    setSelectedItems([]);
+    setOriginalOrderItems([]);
+    setOrderData(null);
+    setIsUpdatingOrder(false);
+    setOrderId(""); // Clear orderId
+    setOrderReference(""); // Clear reference
+    setServingInfo(null);
   };
 
   return (
@@ -897,281 +981,304 @@ const CreateOrder = () => {
                     );
                   const isListLayout = layoutName?.includes("List");
                   const isCompactGrid = layoutName === "Single column 2";
-console.log(item?.varieties, "item");
-return (
-  <div key={item.id || item.menuID} className={`my-3 relative`}>
-    <div
-      className={`${
-        isListLayout
-          ? "flex flex-1 min-h-[120px] items-center gap-3 w-full bg-white rounded-xl p-3 shadow-sm"
-          : `${preview?.container} flex flex-col h-full`
-      } ${
-        !isListLayout && item?.isAvailable && !isViewOnlyMode
-          ? "pb-10"
-          : !isListLayout && !item?.isAvailable
-          ? ""
-          : ""
-      } text-black relative transition-all ${
-        item?.isAvailable && !isViewOnlyMode
-          ? "cursor-pointer"
-          : item?.isAvailable
-          ? ""
-          : "bg-gray-100 cursor-not-allowed"
-      }`}
-    >
-      {item?.isAvailable === false && (
-        <Chip
-          className={`capitalize absolute ${
-            menuConfig?.useBackground === false &&
-            (layoutName === "Single column 1" ||
-              layoutName === "Single column 2" ||
-              layoutName === "Double column")
-              ? "bottom-2 right-2"
-              : preview?.chipPosition
-          }  z-20`}
-          color={"danger"}
-          size="sm"
-          variant="flat"
-        >
-          Out of stock
-        </Chip>
-      )}
 
-      {/* Image for Grid Layouts */}
-      {(layoutName === "Single column 1" ||
-        layoutName === "Single column 2" ||
-        layoutName === "Double column") &&
-        menuConfig?.useBackground !== false && (
-          <div
-            className={`${
-              preview?.imageContainer || ""
-            } relative flex items-center justify-center`}
-            onClick={() => {
-              if (item?.isAvailable && !isViewOnlyMode) {
-                toggleVarietyModal(item);
-              }
-            }}
-          >
-            <div
-              style={{
-                background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
-              }}
-              className={`relative flex items-center justify-center overflow-hidden ${
-                preview?.imageClass || "h-48"
-              }`}
-            >
-              {item.image && item.image.length > baseString.length ? (
-                <Image
-                  fill
-                  className={`object-cover ${
-                    !item?.isAvailable ? "opacity-40 grayscale" : ""
-                  }`}
-                  src={`${baseString}${item.image}`}
-                  alt={item.itemName}
-                />
-              ) : (
-                <Image
-                  fill
-                  className={`object-cover ${
-                    !item?.isAvailable ? "opacity-40 grayscale" : ""
-                  }`}
-                  src={noMenu}
-                  alt="No image available"
-                />
-              )}
-            </div>
-          </div>
-        )}
+                  return (
+                    <div
+                      key={item.id || item.menuID}
+                      className={`my-3 relative`}
+                    >
+                      <div
+                        className={`${
+                          isListLayout
+                            ? "flex flex-1 min-h-[120px] items-center gap-3 w-full bg-white rounded-xl p-3 shadow-sm"
+                            : `${preview?.container} flex flex-col h-full`
+                        } ${
+                          !isListLayout && item?.isAvailable && !isViewOnlyMode
+                            ? "pb-10"
+                            : !isListLayout && !item?.isAvailable
+                            ? ""
+                            : ""
+                        } text-black relative transition-all ${
+                          item?.isAvailable && !isViewOnlyMode
+                            ? "cursor-pointer"
+                            : item?.isAvailable
+                            ? ""
+                            : "bg-gray-100 cursor-not-allowed"
+                        }`}
+                      >
+                        {item?.isAvailable === false && (
+                          <Chip
+                            className={`capitalize absolute ${
+                              menuConfig?.useBackground === false &&
+                              (layoutName === "Single column 1" ||
+                                layoutName === "Single column 2" ||
+                                layoutName === "Double column")
+                                ? "bottom-2 right-2"
+                                : preview?.chipPosition
+                            }  z-20`}
+                            color={"danger"}
+                            size="sm"
+                            variant="flat"
+                          >
+                            Out of stock
+                          </Chip>
+                        )}
 
-      {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
-      {item?.isAvailable && !isViewOnlyMode && (
-        <>
-          {/* All grid layouts: Full-width button at bottom */}
-          {(layoutName === "Single column 1" ||
-            layoutName === "Single column 2" ||
-            layoutName === "Double column") && (
-            <button
-              onClick={(e) => handleQuickAdd(item, e)}
-              style={primaryColorStyle}
-              className="absolute bottom-0 left-0 right-0 text-white py-2.5 px-3 rounded-b-xl font-medium text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 z-20"
-            >
-              <IoAddCircleOutline className="w-4 h-4" />
-              Add
-            </button>
-          )}
-        </>
-      )}
+                        {/* Image for Grid Layouts */}
+                        {(layoutName === "Single column 1" ||
+                          layoutName === "Single column 2" ||
+                          layoutName === "Double column") &&
+                          menuConfig?.useBackground !== false && (
+                            <div
+                              className={`${
+                                preview?.imageContainer || ""
+                              } relative flex items-center justify-center`}
+                              onClick={() => {
+                                if (item?.isAvailable && !isViewOnlyMode) {
+                                  toggleVarietyModal(item);
+                                }
+                              }}
+                            >
+                              <div
+                                style={{
+                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                }}
+                                className={`relative flex items-center justify-center overflow-hidden ${
+                                  preview?.imageClass || "h-48"
+                                }`}
+                              >
+                                {item.image &&
+                                item.image.length > baseString.length ? (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={`${baseString}${item.image}`}
+                                    alt={item.itemName}
+                                  />
+                                ) : (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={noMenu}
+                                    alt="No image available"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
 
-      {/* For List Left: Image on left */}
-      {layoutName === "List left" && menuConfig?.useBackground !== false && (
-        <div
-          className={`${
-            preview?.imageContainer || ""
-          } relative flex-shrink-0 flex items-center justify-center`}
-        >
-          <div
-            style={{
-              background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
-            }}
-            className={`relative flex items-center justify-center overflow-hidden ${
-              preview?.imageClass || "h-32"
-            }`}
-          >
-            {item.image && item.image.length > baseString.length ? (
-              <Image
-                fill
-                className={`object-cover ${
-                  !item?.isAvailable ? "opacity-40 grayscale" : ""
-                }`}
-                src={`${baseString}${item.image}`}
-                alt={item.itemName}
-              />
-            ) : (
-              <Image
-                fill
-                className={`object-cover ${
-                  !item?.isAvailable ? "opacity-40 grayscale" : ""
-                }`}
-                src={noMenu}
-                alt="No image available"
-              />
-            )}
-          </div>
-        </div>
-      )}
+                        {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
+                        {item?.isAvailable && !isViewOnlyMode && (
+                          <>
+                            {/* All grid layouts: Full-width button at bottom */}
+                            {(layoutName === "Single column 1" ||
+                              layoutName === "Single column 2" ||
+                              layoutName === "Double column") && (
+                              <button
+                                onClick={(e) => handleQuickAdd(item, e)}
+                                style={primaryColorStyle}
+                                className="absolute bottom-0 left-0 right-0 text-white py-2.5 px-3 rounded-b-xl font-medium text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 z-20"
+                              >
+                                <IoAddCircleOutline className="w-4 h-4" />
+                                Add
+                              </button>
+                            )}
+                          </>
+                        )}
 
-      {/* Text Content */}
-      <div
-        onClick={() => {
-          if (item?.isAvailable && !isViewOnlyMode) {
-            toggleVarietyModal(item);
-          }
-        }}
-        className={`${preview?.textContainer} flex flex-col ${
-          isListLayout ? "justify-center flex-1" : "justify-start"
-        }`}
-      >
-        <p
-          className={`font-bold ${
-            isCompactGrid ? "text-xs" : "text-sm"
-          } line-clamp-1`}
-        >
-          {item.itemName}
-        </p>
-        <p
-          className={`text-gray-500 ${
-            isCompactGrid ? "text-[10px]" : "text-xs"
-          } line-clamp-2 mt-0.5`}
-        >
-          {item.itemDescription || "No description available."}
-        </p>
-        <p
-          style={textColorStyle}
-          className={`font-semibold ${
-            isCompactGrid ? "text-xs" : "text-sm"
-          } mt-1`}
-        >
-          {formatPrice(item.price)}
-        </p>
-        {isSelected && (
-          <div className="absolute top-2 left-2">
-            <Chip
-              startContent={<CheckIcon size={14} />}
-              variant="flat"
-              size="sm"
-              style={primaryColorStyle}
-              classNames={{
-                base: "text-white text-[10px] mt-1.5 h-5",
-              }}
-            >
-              {selectedItems.find((selected) => selected.id === item.id)
-                ?.count || 0}
-            </Chip>
-          </div>
-        )}
-      </div>
+                        {/* For List Left: Image on left */}
+                        {layoutName === "List left" &&
+                          menuConfig?.useBackground !== false && (
+                            <div
+                              className={`${
+                                preview?.imageContainer || ""
+                              } relative flex-shrink-0 flex items-center justify-center`}
+                            >
+                              <div
+                                style={{
+                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                }}
+                                className={`relative flex items-center justify-center overflow-hidden ${
+                                  preview?.imageClass || "h-32"
+                                }`}
+                              >
+                                {item.image &&
+                                item.image.length > baseString.length ? (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={`${baseString}${item.image}`}
+                                    alt={item.itemName}
+                                  />
+                                ) : (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={noMenu}
+                                    alt="No image available"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
 
-      {/* For List Right: Image and button grouped on the right */}
-      {layoutName === "List Right" && (
-        <div className="flex items-center gap-3 flex-shrink-0">
-          {/* Image */}
-          {menuConfig?.useBackground !== false && (
-            <div
-              className={`${
-                preview?.imageContainer || ""
-              } relative flex items-center justify-center`}
-            >
-              <div
-                style={{
-                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
-                }}
-                className={`relative flex items-center justify-center overflow-hidden ${
-                  preview?.imageClass || "h-32"
-                }`}
-              >
-                {item.image && item.image.length > baseString.length ? (
-                  <Image
-                    fill
-                    className={`object-cover ${
-                      !item?.isAvailable ? "opacity-40 grayscale" : ""
-                    }`}
-                    src={`${baseString}${item.image}`}
-                    alt={item.itemName}
-                  />
-                ) : (
-                  <Image
-                    fill
-                    className={`object-cover ${
-                      !item?.isAvailable ? "opacity-40 grayscale" : ""
-                    }`}
-                    src={noMenu}
-                    alt="No image available"
-                  />
-                )}
-              </div>
-            </div>
-          )}
+                        {/* Text Content */}
+                        <div
+                          onClick={() => {
+                            if (item?.isAvailable && !isViewOnlyMode) {
+                              toggleVarietyModal(item);
+                            }
+                          }}
+                          className={`${preview?.textContainer} flex flex-col ${
+                            isListLayout
+                              ? "justify-center flex-1"
+                              : "justify-start"
+                          }`}
+                        >
+                          <p
+                            className={`font-bold ${
+                              isCompactGrid ? "text-xs" : "text-sm"
+                            } line-clamp-1`}
+                          >
+                            {item.itemName}
+                          </p>
+                          <p
+                            className={`text-gray-500 ${
+                              isCompactGrid ? "text-[10px]" : "text-xs"
+                            } line-clamp-2 mt-0.5`}
+                          >
+                            {item.itemDescription ||
+                              "No description available."}
+                          </p>
+                          <p
+                            style={textColorStyle}
+                            className={`font-semibold ${
+                              isCompactGrid ? "text-xs" : "text-sm"
+                            } mt-1`}
+                          >
+                            {formatPrice(item.price)}
+                          </p>
+                          {isSelected && (
+                            <div className="absolute top-2 left-2">
+                              <Chip
+                                startContent={<CheckIcon size={14} />}
+                                variant="flat"
+                                size="sm"
+                                style={primaryColorStyle}
+                                classNames={{
+                                  base: "text-white text-[10px] mt-1.5 h-5",
+                                }}
+                              >
+                                {selectedItems.find(
+                                  (selected) => selected.id === item.id
+                                )?.count || 0}
+                              </Chip>
+                            </div>
+                          )}
+                        </div>
 
-          {/* Button - Always reserve space for alignment */}
-          <div className="flex items-center justify-center w-[48px]">
-            {item?.isAvailable && !isViewOnlyMode && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleQuickAdd(item, e);
-                }}
-                style={primaryColorStyle}
-                className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
-                aria-label="Add to cart"
-              >
-                <IoAddCircleOutline className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+                        {/* For List Right: Image and button grouped on the right */}
+                        {layoutName === "List Right" && (
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            {/* Image */}
+                            {menuConfig?.useBackground !== false && (
+                              <div
+                                className={`${
+                                  preview?.imageContainer || ""
+                                } relative flex items-center justify-center`}
+                              >
+                                <div
+                                  style={{
+                                    background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                  }}
+                                  className={`relative flex items-center justify-center overflow-hidden ${
+                                    preview?.imageClass || "h-32"
+                                  }`}
+                                >
+                                  {item.image &&
+                                  item.image.length > baseString.length ? (
+                                    <Image
+                                      fill
+                                      className={`object-cover ${
+                                        !item?.isAvailable
+                                          ? "opacity-40 grayscale"
+                                          : ""
+                                      }`}
+                                      src={`${baseString}${item.image}`}
+                                      alt={item.itemName}
+                                    />
+                                  ) : (
+                                    <Image
+                                      fill
+                                      className={`object-cover ${
+                                        !item?.isAvailable
+                                          ? "opacity-40 grayscale"
+                                          : ""
+                                      }`}
+                                      src={noMenu}
+                                      alt="No image available"
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            )}
 
-      {/* List Left Button - on the right side after text */}
-      {layoutName === "List left" && (
-        <div className="flex-shrink-0 flex items-center justify-center w-[48px]">
-          {item?.isAvailable && !isViewOnlyMode && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleQuickAdd(item, e);
-              }}
-              style={primaryColorStyle}
-              className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
-              aria-label="Add to cart"
-            >
-              <IoAddCircleOutline className="w-5 h-5" />
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  </div>
-);
+                            {/* Button - Always reserve space for alignment */}
+                            <div className="flex items-center justify-center w-[48px]">
+                              {item?.isAvailable && !isViewOnlyMode && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuickAdd(item, e);
+                                  }}
+                                  style={primaryColorStyle}
+                                  className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+                                  aria-label="Add to cart"
+                                >
+                                  <IoAddCircleOutline className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* List Left Button - on the right side after text */}
+                        {layoutName === "List left" && (
+                          <div className="flex-shrink-0 flex items-center justify-center w-[48px]">
+                            {item?.isAvailable && !isViewOnlyMode && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickAdd(item, e);
+                                }}
+                                style={primaryColorStyle}
+                                className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+                                aria-label="Add to cart"
+                              >
+                                <IoAddCircleOutline className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
                 })}
 
                 {/* Empty State - No Results */}
@@ -1392,13 +1499,9 @@ return (
         isOpen={isOrderTrackingOpen}
         onClose={() => {
           setIsOrderTrackingOpen(false);
-          setSelectedItems([]); // Clear selected items when leaving
-          setOriginalOrderItems([]); // Clear original items
-          setOrderData(null); // Clear order data
-          setIsUpdatingOrder(false); // Reset update flag
-          setServingInfo(null); // Clear serving info for fresh orders
+          resetOrder();
         }}
-        trackingId={orderData?.reference || ""}
+        trackingId={orderReference || orderData?.reference || ""}
         orderStatus={
           orderData?.status === 0
             ? "placed"

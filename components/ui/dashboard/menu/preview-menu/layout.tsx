@@ -70,289 +70,254 @@ const Layout: React.FC = () => {
     return previewStyles[activeTile];
   };
 
-  const submitFormData = async (e: { preventDefault: () => void }) => {
-    e.preventDefault();
+const submitFormData = async (e: { preventDefault: () => void }) => {
+  e.preventDefault();
 
-    console.log("=== SUBMIT START ===");
-    console.log("Submit - activeTile:", activeTile);
-    console.log("Submit - backgroundColor:", backgroundColor);
-    console.log("Submit - selectedTextColor:", selectedTextColor);
-    console.log("Submit - isSelectedPreview:", isSelectedPreview);
-    console.log("Submit - selectedImage:", selectedImage);
-    console.log("Submit - imageReference:", imageReference);
-    console.log("Submit - savedConfig:", savedConfig);
+  setIsLoading(true);
 
-    setIsLoading(true);
+  // Check localStorage for all config values
+  const storageKey = `menuImageRef_${businessInformation[0]?.businessId}`;
+  const storedImageRef = localStorage.getItem(storageKey);
 
-    // Check localStorage for all config values
+  // IMPROVED: Build a comprehensive fallback chain for imageRef
+  // Priority: current imageReference → savedConfig → localStorage → empty
+  const finalImageRef =
+    imageReference || savedConfig?.imageRef || storedImageRef || "";
+
+  // Layout - use current state (user just selected) or fall back to savedConfig
+  const finalLayout = convertActiveTile();
+
+  // Background color - use current state or fall back to savedConfig
+  const finalBackgroundColor =
+    backgroundColor || savedConfig?.backgroundColour || "";
+
+  // Text color - use current state or fall back to savedConfig
+  const finalTextColor = selectedTextColor || savedConfig?.textColour || "#000";
+
+  // Use background - use current state or fall back to savedConfig
+  const finalUseBackground =
+    isSelectedPreview ?? savedConfig?.useBackground ?? false;
+
+  const payload = {
+    layout: finalLayout,
+    backgroudStyle: finalImageRef ? 0 : 1, // 0 if image exists, 1 for color
+    useBackground: finalUseBackground,
+    backgroundColour: finalBackgroundColor,
+    imageRef: finalImageRef, // CRITICAL: Always include imageRef
+    textColour: finalTextColor,
+  };
+
+  const data = await createMenuConfiguration(
+    businessInformation[0]?.businessId,
+    payload
+  );
+
+  setIsLoading(false);
+
+  if (data?.data?.isSuccessful) {
+    toast.success("Changes saved");
+
+    // CRITICAL: Always persist imageRef to localStorage if it exists
+    if (finalImageRef) {
+      localStorage.setItem(storageKey, finalImageRef);
+    }
+
+    // Update saved config with the new data
+    const updatedConfig = await getMenuConfiguration(
+      businessInformation[0]?.businessId
+    );
+
+    if (updatedConfig?.data?.isSuccessful) {
+      const newConfig = updatedConfig.data.data;
+
+      // CRITICAL: Preserve ALL fields, especially imageRef
+      // If API doesn't return imageRef, use what we just saved
+      const configToSave = {
+        ...newConfig,
+        layout: newConfig?.layout ?? finalLayout,
+        backgroundColour: newConfig?.backgroundColour || finalBackgroundColor,
+        textColour: newConfig?.textColour || finalTextColor,
+        useBackground: newConfig?.useBackground ?? finalUseBackground,
+        // IMPORTANT: Never lose imageRef - use API value or fall back to what we saved
+        imageRef: newConfig?.imageRef || finalImageRef,
+      };
+      setSavedConfig(configToSave);
+
+      // CRITICAL: Update global context with preserved values
+      // This ensures the next submit will have access to these values
+      if (finalImageRef) {
+        setImageReference(finalImageRef);
+      }
+      if (finalBackgroundColor) {
+        setBackgroundColor(finalBackgroundColor);
+      }
+      if (finalTextColor) {
+        setSelectedTextColor(finalTextColor);
+      }
+      setIsSelectedPreview(finalUseBackground);
+    }
+  } else if (data?.data?.error) {
+    notify({
+      title: "Error!",
+      text: data?.data?.error,
+      type: "error",
+    });
+  }
+};
+
+const menuFileUpload = async (formData: FormData, file: File) => {
+  setIsLoadingImage(true);
+
+  const data = await uploadFile(businessInformation[0]?.businessId, formData);
+  setIsLoadingImage(false);
+  setImageError("");
+
+  if (data?.data?.isSuccessful) {
+    // Create blob URL for immediate preview
+    const blobUrl = URL.createObjectURL(file);
+    const imageRef = data.data.data;
+
+    // CRITICAL: Update both selectedImage and imageReference immediately
+    setSelectedImage(blobUrl);
+    setImageReference(imageRef);
+
+    // CRITICAL: Store imageRef in localStorage for persistence
+    const storageKey = `menuImageRef_${businessInformation[0]?.businessId}`;
+    localStorage.setItem(storageKey, imageRef);
+
+    // CRITICAL: Update savedConfig to include the new imageRef
+    setSavedConfig((prev) => ({
+      ...prev,
+      imageRef: imageRef,
+    }));
+
+    // Show success message
+    toast.success("Image uploaded successfully");
+  } else if (data?.data?.error) {
+    setImageError(data?.data?.error);
+  }
+};
+
+const handleImageChange = async (event: any) => {
+  if (event.target.files) {
+    const file = event.target.files[0];
+    if (file.size > THREEMB) {
+      return setImageError("File too large");
+    }
+
+    // Clean up previous blob URL if it exists
+    if (selectedImage && selectedImage.startsWith("blob:")) {
+      URL.revokeObjectURL(selectedImage);
+    }
+
+    const compressedFile = await imageCompression(file, imageCompressOptions);
+    const formData = new FormData();
+    formData.append("file", compressedFile);
+    menuFileUpload(formData, file);
+  }
+};
+
+const handleClick = (textColor: string) => {
+  setSelectedTextColor(textColor);
+};
+
+const previewColumn: Column[] = [
+  {
+    name: "List left",
+    icon: (active) => (
+      <FaList
+        className={`text-[24px]  ${
+          activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
+        }`}
+      />
+    ),
+  },
+
+  {
+    name: "List Right",
+    icon: (active) => (
+      <FaList
+        className={`text-[24px] ${
+          activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
+        } rotate-180`}
+      />
+    ),
+  },
+  {
+    name: "Single column 1",
+    icon: (active) => (
+      <FaSquare
+        className={`text-[22px] ${
+          activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
+        }`}
+      />
+    ),
+  },
+  {
+    name: "Single column 2",
+    icon: (active) => (
+      <FaSquare
+        className={`text-[22px] ${
+          activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
+        }`}
+      />
+    ),
+  },
+  {
+    name: "Double column",
+    icon: (active) => (
+      <PiSquaresFourFill
+        className={`text-[28px] ${
+          activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
+        }`}
+      />
+    ),
+  },
+];
+useEffect(() => {
+  const loadConfig = async () => {
+    // Check localStorage for imageRef
     const storageKey = `menuImageRef_${businessInformation[0]?.businessId}`;
     const storedImageRef = localStorage.getItem(storageKey);
 
-    // Determine the final values for each field with proper fallbacks
-    // Priority: current state → savedConfig → localStorage → default
-
-    // Image reference
-    let finalImageRef = imageReference || savedConfig?.imageRef || storedImageRef || "";
-
-    // Layout - use current state (user just selected) or fall back to savedConfig
-    const finalLayout = convertActiveTile();
-
-    // Background color - use current state or fall back to savedConfig
-    const finalBackgroundColor = backgroundColor || savedConfig?.backgroundColour || "";
-
-    // Text color - use current state or fall back to savedConfig
-    const finalTextColor = selectedTextColor || savedConfig?.textColour || "#000";
-
-    // Use background - use current state or fall back to savedConfig
-    const finalUseBackground = isSelectedPreview;
-
-    console.log("Submit - final values:");
-    console.log("  - layout:", finalLayout);
-    console.log("  - backgroundColor:", finalBackgroundColor);
-    console.log("  - textColor:", finalTextColor);
-    console.log("  - useBackground:", finalUseBackground);
-    console.log("  - imageRef:", finalImageRef, "from:",
-      imageReference ? "imageReference" : savedConfig?.imageRef ? "savedConfig" : storedImageRef ? "localStorage" : "none");
-
-    const payload = {
-      layout: finalLayout,
-      backgroudStyle: finalImageRef ? 0 : 1,
-      useBackground: finalUseBackground,
-      backgroundColour: finalBackgroundColor,
-      imageRef: finalImageRef,
-      textColour: finalTextColor,
-    };
-
-    console.log("Submit - payload:", payload);
-
-    const data = await createMenuConfiguration(
-      businessInformation[0]?.businessId,
-      payload
+    // Fetch config data to store locally and set up initial state
+    const configData = await getMenuConfiguration(
+      businessInformation[0]?.businessId
     );
+    if (configData?.data?.isSuccessful) {
+      const apiConfig = configData.data.data;
 
-    setIsLoading(false);
+      // Merge with stored imageRef if available - prioritize localStorage for imageRef
+      const apiImageRef = apiConfig.imageRef || "";
+      const finalImageRef = storedImageRef || apiImageRef;
 
-    if (data?.data?.isSuccessful) {
-      toast.success("Changes saved");
-
-      // Ensure imageRef persists in localStorage
-      if (finalImageRef) {
-        localStorage.setItem(storageKey, finalImageRef);
-        console.log("After save - ensured imageRef in localStorage:", finalImageRef);
-      }
-
-      // Update saved config with the new data
-      const updatedConfig = await getMenuConfiguration(
-        businessInformation[0]?.businessId
-      );
-      if (updatedConfig?.data?.isSuccessful) {
-        const newConfig = updatedConfig.data.data;
-        console.log("=== AFTER SAVE - FETCHED CONFIG ===");
-        console.log("After save - fetched config:", newConfig);
-
-        // Ensure ALL fields are preserved - use what we just saved if API doesn't return it
-        const configToSave = {
-          ...newConfig,
-          layout: newConfig?.layout ?? finalLayout,
-          backgroundColour: newConfig?.backgroundColour || finalBackgroundColor,
-          textColour: newConfig?.textColour || finalTextColor,
-          useBackground: newConfig?.useBackground ?? finalUseBackground,
-          imageRef: newConfig?.imageRef || finalImageRef,
-        };
-
-        console.log("After save - config to save with all fields preserved:", configToSave);
-        setSavedConfig(configToSave);
-
-        // Preserve ALL values in global context
-        if (finalImageRef) {
-          setImageReference(finalImageRef);
-        }
-        if (finalBackgroundColor) {
-          setBackgroundColor(finalBackgroundColor);
-        }
-        if (finalTextColor) {
-          setSelectedTextColor(finalTextColor);
-        }
-        setIsSelectedPreview(finalUseBackground);
-
-        console.log("After save - all values preserved in global context");
-        console.log("After save - selectedImage should still be:", selectedImage);
-      }
-    } else if (data?.data?.error) {
-      notify({
-        title: "Error!",
-        text: data?.data?.error,
-        type: "error",
-      });
-    }
-  };
-  const menuFileUpload = async (formData: FormData, file) => {
-    console.log("=== IMAGE UPLOAD START ===");
-    setIsLoadingImage(true);
-    const data = await uploadFile(businessInformation[0]?.businessId, formData);
-    setIsLoadingImage(false);
-    setImageError("");
-    if (data?.data?.isSuccessful) {
-      // Create blob URL for immediate preview
-      const blobUrl = URL.createObjectURL(file);
-      console.log("Image upload - created blob URL:", blobUrl);
-      setSelectedImage(blobUrl);
-
-      const imageRef = data.data.data;
-      console.log("Image upload - received imageRef from API:", imageRef);
-      setImageReference(imageRef);
-
-      // Store imageRef in localStorage for persistence across page reloads
-      const storageKey = `menuImageRef_${businessInformation[0]?.businessId}`;
-      localStorage.setItem(storageKey, imageRef);
-      console.log("Image upload - stored imageRef in localStorage:", storageKey, imageRef);
-
-      // Update savedConfig with the new imageRef
-      const updatedConfig = {
-        ...savedConfig,
-        imageRef: imageRef,
+      const configToSave = {
+        ...apiConfig,
+        imageRef: finalImageRef,
       };
-      console.log("Image upload - updating savedConfig:", updatedConfig);
-      setSavedConfig(updatedConfig);
+      setSavedConfig(configToSave);
 
-      console.log("=== IMAGE UPLOAD COMPLETE ===");
-      console.log("Image upload - selectedImage is now:", blobUrl);
-      console.log("Image upload - imageReference is now:", imageRef);
-    } else if (data?.data?.error) {
-      setImageError(data?.data?.error);
-      console.log("Image upload - error:", data?.data?.error);
+      // Set imageReference in global context - prioritize localStorage
+      if (finalImageRef) {
+        setImageReference(finalImageRef);
+      }
+
+      // Initialize all other fields from the saved config if they're not already set
+      // This ensures that when the component loads, it has the full config available
+      if (apiConfig.backgroundColour && !backgroundColor) {
+        setBackgroundColor(apiConfig.backgroundColour);
+      }
+      if (apiConfig.textColour && !selectedTextColor) {
+        setSelectedTextColor(apiConfig.textColour);
+      }
+      // Note: useBackground and layout are set by fetchMenuConfig below
     }
+
+    // Also call the global fetch - this will set selectedImage, layout, and other fields from API
+    await fetchMenuConfig();
   };
-
-  const handleImageChange = async (event: any) => {
-    if (event.target.files) {
-      const file = event.target.files[0];
-      if (file.size > THREEMB) {
-        return setImageError("File too large");
-      }
-
-      // Clean up previous blob URL if it exists
-      if (selectedImage && selectedImage.startsWith("blob:")) {
-        URL.revokeObjectURL(selectedImage);
-      }
-
-      const compressedFile = await imageCompression(file, imageCompressOptions);
-      const formData = new FormData();
-      formData.append("file", compressedFile);
-      menuFileUpload(formData, file);
-    }
-  };
-
-  const handleClick = (textColor: string) => {
-    setSelectedTextColor(textColor);
-  };
-
-  const previewColumn: Column[] = [
-    {
-      name: "List left",
-      icon: (active) => (
-        <FaList
-          className={`text-[24px]  ${
-            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
-          }`}
-        />
-      ),
-    },
-
-    {
-      name: "List Right",
-      icon: (active) => (
-        <FaList
-          className={`text-[24px] ${
-            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
-          } rotate-180`}
-        />
-      ),
-    },
-    {
-      name: "Single column 1",
-      icon: (active) => (
-        <FaSquare
-          className={`text-[22px] ${
-            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
-          }`}
-        />
-      ),
-    },
-    {
-      name: "Single column 2",
-      icon: (active) => (
-        <FaSquare
-          className={`text-[22px] ${
-            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
-          }`}
-        />
-      ),
-    },
-    {
-      name: "Double column",
-      icon: (active) => (
-        <PiSquaresFourFill
-          className={`text-[28px] ${
-            activeTile === active ? "text-primaryColor" : "text-[#A299BB]"
-          }`}
-        />
-      ),
-    },
-  ];
-  useEffect(() => {
-    const loadConfig = async () => {
-      console.log("=== INITIAL LOAD ===");
-
-      // Check localStorage for imageRef
-      const storageKey = `menuImageRef_${businessInformation[0]?.businessId}`;
-      const storedImageRef = localStorage.getItem(storageKey);
-      console.log("Initial load - checking localStorage for imageRef:", storageKey, storedImageRef);
-
-      // Fetch config data to store locally and set up initial state
-      const configData = await getMenuConfiguration(
-        businessInformation[0]?.businessId
-      );
-      if (configData?.data?.isSuccessful) {
-        const apiConfig = configData.data.data;
-        console.log("Initial load - config data from API:", apiConfig);
-
-        // Merge with stored imageRef if available - prioritize localStorage for imageRef
-        const apiImageRef = apiConfig.imageRef || '';
-        const finalImageRef = storedImageRef || apiImageRef;
-
-        const configToSave = {
-          ...apiConfig,
-          imageRef: finalImageRef
-        };
-        console.log("Initial load - merged config with localStorage imageRef:", configToSave);
-        setSavedConfig(configToSave);
-
-        // Set imageReference in global context - prioritize localStorage
-        if (finalImageRef) {
-          setImageReference(finalImageRef);
-          console.log("Initial load - restored imageReference:", finalImageRef, "from:", storedImageRef ? "localStorage" : "API");
-        }
-
-        // Initialize all other fields from the saved config if they're not already set
-        // This ensures that when the component loads, it has the full config available
-        if (apiConfig.backgroundColour && !backgroundColor) {
-          setBackgroundColor(apiConfig.backgroundColour);
-          console.log("Initial load - set backgroundColor:", apiConfig.backgroundColour);
-        }
-        if (apiConfig.textColour && !selectedTextColor) {
-          setSelectedTextColor(apiConfig.textColour);
-          console.log("Initial load - set textColor:", apiConfig.textColour);
-        }
-        // Note: useBackground and layout are set by fetchMenuConfig below
-      }
-
-      // Also call the global fetch - this will set selectedImage, layout, and other fields from API
-      await fetchMenuConfig();
-      console.log("Initial load - after fetchMenuConfig");
-    };
-    loadConfig();
-  }, []);
+  loadConfig();
+}, []);
 
   // Cleanup blob URLs on unmount
   useEffect(() => {

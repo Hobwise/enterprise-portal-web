@@ -372,7 +372,8 @@ const ApprovePayment = ({
                           <>
                             <CustomInput
                               type="text"
-                              value={reference}
+                              disabled={singlePayment.reference ? true : false}
+                              value={singlePayment?.reference || reference}
                               onChange={(e) => setReference(e.target.value)}
                               name="itemName"
                               label="Enter ref"
