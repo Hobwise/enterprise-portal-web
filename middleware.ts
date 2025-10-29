@@ -44,12 +44,25 @@ export function middleware(request: NextRequest) {
   if (token && (isPOSRoute || pathname.startsWith('/dashboard'))) {
     // Try to get user info from token or localStorage simulation
     const jwtPayload = decodeJWTPayload(token);
-    const isPOSUser = jwtPayload?.primaryAssignment === "Point of Sales";
+    const isPOSUser = jwtPayload?.primaryAssignment === "Point of Sales" ||
+                      jwtPayload?.primaryAssignment === "POS Operator" ||
+                      (jwtPayload?.assignedCategoryId && jwtPayload?.assignedCategoryId === "POS");
+
+    const isCategoryUser = jwtPayload?.role === 1 &&
+                          jwtPayload?.staffType === 2 &&
+                          jwtPayload?.assignedCategoryId &&
+                          jwtPayload?.assignedCategoryId !== "" &&
+                          jwtPayload?.assignedCategoryId !== "POS";
 
     if (isPOSUser) {
-      // POS users can only access /pos and /dashboard/orders
-      const allowedPOSRoutes = ['/pos', '/dashboard/orders'];
+      // POS users can only access /pos and /dashboard/orders (and /dashboard/settings for personal settings)
+      const allowedPOSRoutes = ['/pos', '/dashboard/orders', '/dashboard/settings/personal-information', '/dashboard/settings/password-management'];
       const isAllowedRoute = allowedPOSRoutes.some(route => pathname.startsWith(route));
+
+      // POS users trying to access non-allowed /dashboard routes → 404
+      if (pathname.startsWith('/dashboard') && !isAllowedRoute) {
+        return NextResponse.rewrite(new URL("/not-found", request.url));
+      }
 
       if (!isAllowedRoute) {
         // Redirect POS users to /pos if they try to access other routes
@@ -57,9 +70,24 @@ export function middleware(request: NextRequest) {
       }
 
       // Allow POS users to access their allowed routes without further checks
-      if (isPOSRoute || pathname.startsWith('/dashboard/orders')) {
+      if (isPOSRoute || pathname.startsWith('/dashboard/orders') || pathname.startsWith('/dashboard/settings')) {
         return NextResponse.next();
       }
+    }
+
+    if (isCategoryUser) {
+      // Category users trying to access /dashboard → 404
+      if (pathname.startsWith('/dashboard')) {
+        return NextResponse.rewrite(new URL("/not-found", request.url));
+      }
+
+      // Category users should only access /business-activities
+      if (!pathname.startsWith('/business-activities')) {
+        return NextResponse.redirect(new URL("/business-activities", request.url));
+      }
+
+      // Allow category users to access business-activities
+      return NextResponse.next();
     }
   }
 
