@@ -31,7 +31,7 @@ interface OrderItem {
   estimatedCompletionTime: string;
   dateUpdated: string;
   totalPrice: number;
-  status: number; // 0 = Active, 1 = Served
+  status: number; // 0 = Active, 1 = Served, 2 = Cancelled
 }
 
 interface CategoryCount {
@@ -212,7 +212,20 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
     if (status === 1) {
       return 'border-gray-500 text-gray-700 bg-gray-50';
     }
+    if (status === 2) {
+      return 'border-red-500 text-red-700 bg-red-50';
+    }
     return 'border-green-500 text-green-700 bg-green-50';
+  };
+
+  const getStatusText = (status: number) => {
+    if (status === 1) {
+      return 'Served';
+    }
+    if (status === 2) {
+      return 'Cancelled';
+    }
+    return 'Active';
   };
 
   const handleOrderClick = async (order: OrderItem) => {
@@ -244,7 +257,8 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
         id: order.orderId,
         table: order.tableName,
         orderNumber: order.reference,
-        servedBy: order.treatedBy || 'Not assigned',
+        servedBy: order.placedByName,
+        customerPhone: order.placedByPhoneNumber,
         items: response.data.map((item: any, idx: number) => ({
           id: `${order.orderId}-${idx}`,
           itemName: item.itemName,
@@ -262,7 +276,7 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
 
       modalData.subtotal = modalData.items.reduce((sum, item) => sum + item.totalPrice, 0);
       modalData.packingCost = modalData.items.reduce((sum, item) => sum + (item.packingCost || 0), 0);
-      modalData.grandTotal = modalData.subtotal + modalData.packingCost + modalData.tax;
+      modalData.grandTotal = modalData.subtotal + modalData.packingCost;
 
       setSelectedOrder(modalData);
       setIsModalOpen(true);
@@ -308,7 +322,7 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
       case 'status':
         return (
           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusChipColor(order.status)}`}>
-            {order.status === 1 ? 'Served' : calculateTimeElapsed(order.dateUpdated)}
+            {getStatusText(order.status)}
           </span>
         );
       case 'actions':
@@ -331,6 +345,7 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
   const allOrdersCount = categories.find((c: CategoryCount) => c.name === 'All Orders')?.count || 0;
   const activeOrdersCount = categories.find((c: CategoryCount) => c.name === 'Active Orders')?.count || 0;
   const servedOrdersCount = categories.find((c: CategoryCount) => c.name === 'Served Orders')?.count || 0;
+  const cancelledOrdersCount = categories.find((c: CategoryCount) => c.name === 'Cancelled Orders')?.count || 0;
 
   const topContent = React.useMemo(() => {
     return (
@@ -380,9 +395,24 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
             {servedOrdersCount}
           </span>
         </button>
+        <button
+          onClick={() => handleTabClick('Cancelled Orders')}
+          className={`px-6 py-4 font-medium text-sm transition-colors relative ${
+            tableStatus === 'Cancelled Orders'
+              ? 'text-primaryColor border-b-2 border-primaryColor'
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Cancelled Orders
+          <span className={`ml-2 px-2 py-1 rounded-full text-xs ${
+            tableStatus === 'Cancelled Orders' ? 'bg-primaryColor text-white' : 'bg-gray-200 text-gray-600'
+          }`}>
+            {cancelledOrdersCount}
+          </span>
+        </button>
       </div>
     );
-  }, [categories, tableStatus, allOrdersCount, activeOrdersCount, servedOrdersCount]);
+  }, [categories, tableStatus, allOrdersCount, activeOrdersCount, servedOrdersCount, cancelledOrdersCount]);
 
   return (
     <section className='border border-primaryGrey rounded-lg overflow-hidden'>
@@ -448,7 +478,7 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
 
               <div className='flex items-center justify-between'>
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusChipColor(order.status)}`}>
-                  {order.status === 1 ? 'Served' : "Active"}
+                  {getStatusText(order.status)}
                 </span>
                 <div className='text-textGrey text-[12px]'>
                   {moment(order.dateUpdated).format('DD/MM/YYYY hh:mm A')}
@@ -496,7 +526,7 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
             <TableBody
               emptyContent={
                 orderDetails.length === 0
-                  ? `No results found for "${searchQuery.trim()}"`
+                  ? `No results found "for ${searchQuery.trim()}"`
                   : !shouldShowLoading && isCategoryEmpty
                     ? 'No orders found'
                     : <SpinnerLoader size="md" />
