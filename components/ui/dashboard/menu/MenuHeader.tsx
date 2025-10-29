@@ -44,13 +44,7 @@ const MenuHeader = ({
             {categories.length > 0 ? (
               <div className="flex items-center">
                 <span>Menu</span>
-                <Chip
-                  classNames={{
-                    base: `ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {categories.length}
-                </Chip>
+          
               </div>
             ) : (
               <span>Menu</span>

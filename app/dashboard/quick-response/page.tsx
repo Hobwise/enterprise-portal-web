@@ -83,13 +83,7 @@ const QRCode: React.FC = () => {
             {data?.quickResponses?.length > 0 ? (
               <div className="flex items-center">
                 <span>Quick response</span>
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data?.totalCount}
-                </Chip>
+                
               </div>
             ) : (
               <span>Quick response</span>

@@ -263,7 +263,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, c
   }, [isDragging, startY, swipeY, handleComplete]);
 
   return (
-    <div className="relative h-auto w-full md:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]">
+    <div className="relative h-auto  w-full md:w-[calc(20%-0.8rem)] md:flex-shrink-0">
       {/* Complete Action Background (Bottom) */}
       <div className="absolute inset-0 flex items-end rounded-lg overflow-hidden">
         <div className="w-full h-full bg-primaryColor flex flex-col items-center justify-center gap-2">
@@ -277,7 +277,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, c
       {/* Swipeable Card */}
       <div
         ref={containerRef}
-        className={`relative bg-white rounded-lg shadow-sm overflow-hidden ${
+        className={`relative bg-white  rounded-lg shadow-sm overflow-hidden ${
           isDragging ? 'cursor-grabbing' : 'cursor-grab'
         } transition-transform ${isDragging ? '' : 'duration-300 ease-out'}`}
         style={{ transform: `translateY(${swipeY}px)` }}
@@ -294,17 +294,33 @@ const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, c
           <span className="font-bold text-lg">{time}</span>
         </div>
 
-        <div className="p-4 space-y-3" onClick={onCardClick}>
-          {orders.map((order, idx) => (
-            <SwipeableOrderItem key={idx} order={order} idx={idx} />
-          ))}
+        <div className="p-4" onClick={onCardClick}>
+          <div className="min-h-[260px] max-h-[260px] overflow-hidden">
+            <div className="space-y-3">
+              {orders.slice(0, 5).map((order, idx) => (
+                <SwipeableOrderItem key={idx} order={order} idx={idx} />
+              ))}
 
-          {comment && (
-            <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-3">
-              <div className="text-xs font-semibold text-gray-700 mb-1">COMMENT</div>
-              <div className="text-sm text-blue-900">{comment}</div>
+              {orders.length > 5 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCardClick?.();
+                  }}
+                  className="w-full py-2 text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium rounded-md border border-primaryColor"
+                >
+                  +{orders.length - 5} more item{orders.length - 5 !== 1 ? 's' : ''}
+                </button>
+              )}
             </div>
-          )}
+          </div>
+
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-3 h-[70px] overflow-hidden">
+            <div className="text-xs font-semibold text-gray-700 mb-1">COMMENT</div>
+            <div className={`text-sm ${comment ? 'text-blue-900' : 'text-gray-400 italic'}`}>
+              {comment || 'No comment'}
+            </div>
+          </div>
         </div>
         
         <div className="flex border-t border-gray-200 time-buttons">
@@ -314,7 +330,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, c
               handleAddTime(5);
             }}
             disabled={isUpdatingTime}
-            className={`flex-1 py-3 text-center text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium ${
+            className={`flex-1 py-3 text-center bg-[#E6DDFF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium ${
               isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
@@ -326,7 +342,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, c
               handleAddTime(10);
             }}
             disabled={isUpdatingTime}
-            className={`flex-1 py-3 text-center text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium border-l border-r border-gray-200 ${
+            className={`flex-1 py-3 text-center bg-[#D6C7FF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium border-l border-r border-gray-200 ${
               isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
@@ -338,7 +354,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, c
               handleAddTime(15);
             }}
             disabled={isUpdatingTime}
-            className={`flex-1 py-3 text-center text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium ${
+            className={`flex-1 py-3 text-center bg-[#C8B4FF] text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium ${
               isUpdatingTime ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >
@@ -360,6 +376,7 @@ export default function RestaurantOrders() {
   const [categoryId, setCategoryId] = useState<string>('');
   const [businessId, setBusinessId] = useState<string>('');
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [primaryAssignment, setPrimaryAssignment] = useState<string>('');
 
   // Calculate time color based on estimated completion time
   const getTimeColor = (estimatedCompletionTime: string): string => {
@@ -368,12 +385,16 @@ export default function RestaurantOrders() {
     const completionTime = moment(estimatedCompletionTime);
     const minutesRemaining = completionTime.diff(now, 'minutes');
 
-    // Red if overdue (negative) or 10 minutes or less remaining
-    if (minutesRemaining < 0 || (minutesRemaining >= 0 && minutesRemaining <= 10)) {
-      return 'bg-red-400';
+    // Reddish if overdue (negative) or 5 minutes or less remaining
+    if (minutesRemaining <= 5) {
+      return 'bg-[#D17D7F]';
     }
-    // Green if more than 10 minutes remaining
-    return 'bg-green-400';
+    // Orange if between 5 and 10 minutes remaining
+    if (minutesRemaining > 5 && minutesRemaining <= 10) {
+      return 'bg-orange-400';
+    }
+    // Greenish if more than 10 minutes remaining
+    return 'bg-[#7DD183]';
   };
 
   // Calculate time display (countdown timer with seconds)
@@ -428,6 +449,7 @@ export default function RestaurantOrders() {
       }
 
       setCategoryId(userCategoryId);
+      setPrimaryAssignment(userInformation?.primaryAssignment || '');
       if (userBusinessId) {
         setBusinessId(userBusinessId);
       }
@@ -517,6 +539,7 @@ export default function RestaurantOrders() {
         table: order.tableName,
         orderNumber: order.reference,
         servedBy: order.placedByName,
+        customerPhone: order.placedByPhoneNumber,
         items: response.data.map((item: any, idx: number) => ({
           id: `${order.orderId}-${idx}`,
           itemName: item.itemName,
@@ -535,7 +558,7 @@ export default function RestaurantOrders() {
       // Calculate totals
       modalData.subtotal = modalData.items.reduce((sum, item) => sum + item.totalPrice, 0);
       modalData.packingCost = modalData.items.reduce((sum, item) => sum + (item.packingCost || 0), 0);
-      modalData.grandTotal = modalData.subtotal + modalData.packingCost + modalData.tax;
+      modalData.grandTotal = modalData.subtotal + modalData.packingCost;
 
       setSelectedOrder(modalData);
       setIsModalOpen(true);
@@ -578,7 +601,9 @@ export default function RestaurantOrders() {
       <div className="px-6 py-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Active Orders</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Active Orders {primaryAssignment && `(${primaryAssignment})`}
+            </h1>
             <p className="text-sm text-gray-500">Show all open orders at the bar</p>
           </div>
 
@@ -600,7 +625,7 @@ export default function RestaurantOrders() {
         </div>
 
         {/* Orders Container */}
-        <div className="flex flex-wrap items-start gap-4 pb-4">
+        <div className="flex flex-wrap md:flex-nowrap items-start gap-4 pb-4 overflow-x-auto scroll-smooth">
           {activeOrders.length === 0 ? (
             <div className="flex flex-col items-center justify-center w-full py-12">
               <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

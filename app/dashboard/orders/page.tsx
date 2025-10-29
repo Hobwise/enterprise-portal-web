@@ -123,13 +123,7 @@ const OrdersContent: React.FC = () => {
             {data?.categories.length > 0 ? (
               <div className="flex items-center">
                 <span>All orders</span>
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data?.categories.length}
-                </Chip>
+           
               </div>
             ) : (
               <span>Orders</span>
