@@ -1,34 +1,29 @@
 import { formatPrice } from '@/lib/utils';
-import { Card, CardBody } from '@nextui-org/react';
 
 const PaymentCard = ({ data }: any) => {
-  <div className=" rounded-md bg-[#F7F6FA] p-6 mb-6 flex flex-row gap-12 items-center">
-    {data?.categories?.data?.paymentCategories?.map((item: any, idx: any) => (
-      <div className="flex-1" key={idx}>
-        <div className="text-grey600 text-base mb-1">{item.name}</div>
-        <div className="text-xl font-bold text-black">
-          ₦{item.totalAmount.toLocaleString()}
-        </div>
-      </div>
-    ))}
-  </div>;
-
   return (
-    <article className="flex flex-wrap gap-5">
+    <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible lg:grid-cols-4 gap-3 lg:gap-4 mb-6 pb-2 snap-x snap-mandatory lg:snap-none">
       {data?.map((item: any, idx: any) => (
-        <Card className="p-4 lg:w-[300px] w-full">
-          <CardBody key={idx} className="flex-col items-start">
-            <p className="text-[14px] text-grey500 font-[600] pb-2">
+        <div
+          key={idx}
+          className="relative rounded-lg p-4 lg:p-6 cursor-pointer transition-all duration-300 min-w-[200px] lg:min-w-0 flex-shrink-0 lg:flex-shrink snap-center lg:snap-align-none bg-white border border-gray-200 text-gray-900 hover:shadow-md hover:scale-102"
+        >
+          <div className="space-y-1 lg:space-y-2">
+            <h3 className="text-xs lg:text-sm font-semibold uppercase tracking-wide text-gray-600">
               {item.name}
-            </p>
-
-            <h4 className="font-bold text-[20px] ">
-              ₦{item.totalAmount.toLocaleString()}
-            </h4>
-          </CardBody>
-        </Card>
+            </h3>
+            <div className="text-2xl lg:text-3xl font-bold text-gray-900">
+              {formatPrice(item.totalAmount, 'NGN')}
+            </div>
+            {item.count !== undefined && (
+              <p className="text-xs lg:text-sm text-gray-500">
+                {item.count} {item.count === 1 ? 'payment' : 'payments'}
+              </p>
+            )}
+          </div>
+        </div>
       ))}
-    </article>
+    </div>
   );
 };
 

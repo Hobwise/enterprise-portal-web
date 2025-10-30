@@ -1,6 +1,6 @@
 "use client";
 import {
-  completeOrder,
+  completeOrderWithPayment,
   createOrder,
   editOrder,
 } from "@/app/api/controllers/dashboard/orders";
@@ -1114,10 +1114,9 @@ const CheckoutModal = ({
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
         status: 1,
-        totalAmount: finalTotalPrice,  // Include the calculated total amount for payment
       };
 
-      const data = await completeOrder(payload, orderId);
+      const data = await completeOrderWithPayment(payload, orderId);
 
       if (hasDataProperty(data) && data.data?.isSuccessful) {
         // Clear loading state immediately
@@ -1513,7 +1512,7 @@ const CheckoutModal = ({
                                           item.isPacked && "font-bold text-black"
                                         )}
                                       >
-                                        {formatPrice(item.packingCost, 'NGN')}
+                                        {formatPrice(item.packingCost * item.count, 'NGN')} 
                                       </span>
                                     )}
                                   </div>

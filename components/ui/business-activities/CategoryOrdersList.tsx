@@ -22,6 +22,7 @@ import { getOrderDetailsByCategory } from '@/app/api/controllers/dashboard/order
 
 // Type definitions
 interface OrderItem {
+  detailStatus: number;
   orderId: string;
   reference: string;
   placedByPhoneNumber: string;
@@ -321,8 +322,8 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
         );
       case 'status':
         return (
-          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusChipColor(order.status)}`}>
-            {getStatusText(order.status)}
+          <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusChipColor(order.detailStatus)}`}>
+            {getStatusText(order.detailStatus)}
           </span>
         );
       case 'actions':
@@ -478,7 +479,7 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
 
               <div className='flex items-center justify-between'>
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getStatusChipColor(order.status)}`}>
-                  {getStatusText(order.status)}
+                  {getStatusText(order.detailStatus)}
                 </span>
                 <div className='text-textGrey text-[12px]'>
                   {moment(order.dateUpdated).format('DD/MM/YYYY hh:mm A')}
