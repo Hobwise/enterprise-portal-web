@@ -1,6 +1,6 @@
 "use client";
 import {
-  completeOrder,
+  completeOrderWithPayment,
   getOrder,
 } from "@/app/api/controllers/dashboard/orders";
 import { CustomInput } from "@/components/CustomInput";
@@ -91,7 +91,7 @@ const ConfirmOrderModal = ({
       status: 1,
     };
 
-    const data = await completeOrder(payload, singleOrder.id);
+    const data = await completeOrderWithPayment(payload, singleOrder.id);
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {

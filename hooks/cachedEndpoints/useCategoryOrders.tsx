@@ -16,7 +16,8 @@ type OrderItem = {
   estimatedCompletionTime: string;
   dateUpdated: string;
   totalPrice: number;
-  status: number;
+  status: number; // Backend returns this field
+  detailStatus?: number; // Mapped from status for UI compatibility (0 = Active, 1 = Served, 2 = Cancelled)
 };
 
 type CategoryCount = {
@@ -109,6 +110,21 @@ const useCategoryOrders = (
         filterType,
         targetCategory
       );
+
+      // Debug logging
+      console.log('Category Orders API Response:', {
+        targetCategory,
+        ordersCount: detailsResponse?.data?.orders?.length || 0,
+        firstOrderSample: detailsResponse?.data?.orders?.[0]
+      });
+
+      // Map 'status' field to 'detailStatus' for compatibility with CategoryOrdersList component
+      if (detailsResponse?.data?.orders) {
+        detailsResponse.data.orders = detailsResponse.data.orders.map((order: any) => ({
+          ...order,
+          detailStatus: order.detailStatus !== undefined ? order.detailStatus : order.status
+        }));
+      }
 
       const result = {
         categories,
