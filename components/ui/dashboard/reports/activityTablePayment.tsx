@@ -53,12 +53,12 @@ const INITIAL_VISIBLE_COLUMNS6 = [
 ];
 
 const columns4 = [
-  { name: 'Customer Name', uid: 'customer' },
-  { name: 'Treated By', uid: 'treatedBy' },
-  { name: 'Total Amount', uid: 'totalAmount' },
-  { name: 'Order Id', uid: 'reference' },
-  { name: 'Payment Method', uid: 'paymentMethod' },
-  { name: 'Status', uid: 'status' },
+  { name: "Customer Name", uid: "customer" },
+  { name: "Treated By", uid: "treatedBy" },
+  { name: "Total Amount", uid: "totalAmount" },
+  { name: "Payment Reference", uid: "paymentReference" },
+  { name: "Payment Method", uid: "paymentMethod" },
+  { name: "Status", uid: "status" },
 ];
 
 const columns5 = [
@@ -71,8 +71,8 @@ const columns6 = [
   { name: "Quick Response Name", uid: "quickResponseName" },
   { name: "Number Of Orders", uid: "numberOfOrders" },
   { name: "Pending Sales Amount", uid: "pendingSalesAmount" },
-  { name: "Total Sales Amount", uid: "totalSalesAmount" },
   { name: "Confirmed Sales Amount", uid: "confirmedSalesAmount" },
+  { name: "Total Sales Amount", uid: "totalSalesAmount" },
 ];
 
 const ActivityTablePayment = ({

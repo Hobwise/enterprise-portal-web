@@ -153,7 +153,6 @@ const columns10 = [
   { name: "Occupancy Rate", uid: "occupancyRate" },
   { name: "Total Bookings", uid: "totalBookings" },
   { name: "Average Daily Utilization", uid: "averageDailyUtilization" },
-  { name: "Last Record Date", uid: "lastRecordDateTime" },
 ];
 
 const ActivityTableBooking = ({
