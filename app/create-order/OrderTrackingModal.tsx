@@ -482,13 +482,12 @@ const OrderTrackingPage = ({
                   >
                     <div className="flex-1">
                       <div className="flex justify-between">
-
-                      <h4 className="font-semibold text-black">
-                        {item.itemName}
-                      </h4>
-                       <p className="font-bold text-black">
-                        ₦{(item.unitPrice * item.quantity).toLocaleString()}
-                      </p>
+                        <h4 className="font-semibold text-black">
+                          {item.itemName}
+                        </h4>
+                        <p className="font-bold text-black">
+                          ₦{(item.unitPrice * item.quantity).toLocaleString()}
+                        </p>
                       </div>
                       <p className="text-sm text-gray-600">{item.menuName}</p>
                       <div className="flex justify-between  text-sm">
@@ -655,7 +654,7 @@ const OrderTrackingPage = ({
               </div>
             )}
           <div className="flex gap-5 border-t border-gray-200 py-4 pb-safe z-20">
-            <CustomButton
+            {/* <CustomButton
               onClick={onAddMoreItems}
               disabled={orderData?.status === 1 || orderData?.status === 2}
               style={
@@ -681,7 +680,7 @@ const OrderTrackingPage = ({
             >
               <IoAddCircleOutline className="w-6 h-6" />
               Add items
-            </CustomButton>
+            </CustomButton> */}
             <CustomButton
               onClick={() => {
                 // Pass the updated order data (which includes reference) to parent
@@ -699,7 +698,7 @@ const OrderTrackingPage = ({
                   : "text-white"
               } font-semibold flex items-center justify-center gap-2 text-base`}
             >
-              <span>Checkout order</span>
+              <span>Update this order</span>
               <HiArrowLongLeft className="w-6 h-6 rotate-180" />
             </CustomButton>
           </div>

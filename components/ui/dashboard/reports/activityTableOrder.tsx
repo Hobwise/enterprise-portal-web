@@ -111,7 +111,6 @@ const INITIAL_VISIBLE_COLUMNS2 = [
       uid: "totalPurchaseAmount",
       sortable: true,
     },
-    { name: "Date Of Last Order", uid: "lastOrderDateTime", sortable: true },
   ];
 
   const columns3 = [
