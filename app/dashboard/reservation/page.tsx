@@ -146,15 +146,7 @@ const Reservation: React.FC = () => {
             <div className="flex items-center">
               <span>Reservation</span>
 
-              {hasReservations && (
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data.totalCount}
-                </Chip>
-              )}
+            
             </div>
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">

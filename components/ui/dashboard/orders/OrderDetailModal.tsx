@@ -27,6 +27,7 @@ export interface OrderDetailData {
   table: string;
   orderNumber: string;
   servedBy: string;
+  customerPhone?: string;
   restaurantName?: string;
   restaurantLocation?: string;
   items: OrderDetailItem[];
@@ -88,8 +89,13 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Served By</span>
-                  <span className="text-sm text-gray-900">{orderData.servedBy}</span>
+                  <span className="text-sm text-gray-600">Customer</span>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-900">{orderData.servedBy}</div>
+                    {orderData.customerPhone && (
+                      <div className="text-xs text-gray-500">{orderData.customerPhone}</div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -130,11 +136,6 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Packing Cost</span>
                   <span className="text-sm text-gray-900">{formatPrice(orderData.packingCost, 'NGN')}</span>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Tax</span>
-                  <span className="text-sm text-gray-900">{formatPrice(orderData.tax, 'NGN')}</span>
                 </div>
 
                 <Divider className="my-2" />

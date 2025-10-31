@@ -14,7 +14,7 @@ import { Chip } from '@nextui-org/react';
 import { IoSearchOutline } from 'react-icons/io5';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 import DateRangeDisplay from '@/components/ui/dashboard/DateRangeDisplay';
-import { convertBase64ToImageURL } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, formatPrice } from '@/lib/utils';
 
 const OrderListContent: React.FC = () => {
   const router = useRouter();
@@ -33,7 +33,10 @@ const OrderListContent: React.FC = () => {
   } = useDateFilter(useCategoryOrders);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const { setPage, setTableStatus, page } = useGlobalContext();
+  const { setPage, setTableStatus, page, tableStatus } = useGlobalContext();
+
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const primaryAssignment = userInformation?.primaryAssignment || '';
 
   useEffect(() => {
     refetch();
@@ -42,7 +45,7 @@ const OrderListContent: React.FC = () => {
   }, [filterType, startDate, endDate, refetch, setTableStatus, setPage]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value.toLowerCase());
+    setSearchQuery(event.target.value);
   };
 
   const data = { categories, details };
@@ -102,17 +105,10 @@ const OrderListContent: React.FC = () => {
             <div className="text-[24px] leading-8 font-semibold">
               {data?.categories.length > 0 ? (
                 <div className="flex items-center">
-                  <span>Order List</span>
-                  <Chip
-                    classNames={{
-                      base: `ml-2 text-xs h-7 font-[600] bg-[#EAE5FF] text-primaryColor`,
-                    }}
-                  >
-                    {paginationData.totalCount}
-                  </Chip>
+                  <span>Order List {primaryAssignment && `(${primaryAssignment})`}</span>
                 </div>
               ) : (
-                <span>Order List</span>
+                <span>Order List {primaryAssignment && `(${primaryAssignment})`}</span>
               )}
             </div>
             <p className="text-sm text-grey600 xl:w-[231px] w-full">View and manage all orders</p>
@@ -156,6 +152,47 @@ const OrderListContent: React.FC = () => {
           endDate={endDate}
           filterType={filterType}
         />
+
+        {/* Summary Cards */}
+        {data.categories && data.categories.length > 0 && (
+          <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible lg:grid-cols-4 gap-3 lg:gap-4 mb-6 pb-2 snap-x snap-mandatory lg:snap-none">
+            {data.categories.map((category: any) => {
+              const isActive = tableStatus === category.name || (!tableStatus && category.name === 'All Orders');
+              return (
+                <div
+                  key={category.name}
+                  onClick={() => {
+                    setTableStatus(category.name);
+                    setPage(1);
+                  }}
+                  className={`
+                    relative rounded-lg p-4 lg:p-6 cursor-pointer transition-all duration-300
+                    min-w-[200px] lg:min-w-0 flex-shrink-0 lg:flex-shrink snap-center lg:snap-align-none
+                    ${isActive
+                      ? 'bg-gradient-to-br from-primaryColor to-secondaryColor text-white shadow-lg scale-105'
+                      : 'bg-white border border-gray-200 text-gray-900 hover:shadow-md hover:scale-102'
+                    }
+                  `}
+                >
+                  <div className="space-y-1 lg:space-y-2">
+                    <h3 className={`text-xs lg:text-sm font-semibold uppercase tracking-wide ${isActive ? 'text-white/90' : 'text-gray-500'}`}>
+                      {category.name}
+                    </h3>
+                    <div className={`text-2xl lg:text-3xl font-bold ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                      {formatPrice(category.totalAmount, 'NGN')}
+                    </div>
+                    <p className={`text-xs lg:text-sm ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
+                      {category.count} {category.count === 1 ? 'order' : 'orders'}
+                    </p>
+                  </div>
+                  {isActive && (
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full"></div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {data.categories && data.categories.length > 0 ? (
           <CategoryOrdersList

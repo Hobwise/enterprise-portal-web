@@ -1,6 +1,6 @@
 "use client";
 import {
-  completeOrder,
+  completeOrderWithPayment,
   createOrder,
   editOrder,
 } from "@/app/api/controllers/dashboard/orders";
@@ -1114,10 +1114,9 @@ const CheckoutModal = ({
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
         status: 1,
-        totalAmount: finalTotalPrice,  // Include the calculated total amount for payment
       };
 
-      const data = await completeOrder(payload, orderId);
+      const data = await completeOrderWithPayment(payload, orderId);
 
       if (hasDataProperty(data) && data.data?.isSuccessful) {
         // Clear loading state immediately
@@ -1513,7 +1512,7 @@ const CheckoutModal = ({
                                           item.isPacked && "font-bold text-black"
                                         )}
                                       >
-                                        {formatPrice(item.packingCost, 'NGN')}
+                                        {formatPrice(item.packingCost * item.count, 'NGN')} 
                                       </span>
                                     )}
                                   </div>
@@ -1786,9 +1785,9 @@ const CheckoutModal = ({
                     )}
 
                     {mobileSubStep === '1B' && (
-                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: '500px' }}>
+                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: 'calc(100vh - 12rem)' }}>
                         {/* Mobile Step 1B: Customer Information */}
-                        <div className="space-y-6 pb-[400px]">
+                        <div className="space-y-6 pb-[300px]">
                           <CustomInput
                             type="text"
                             value={order.placedByName}

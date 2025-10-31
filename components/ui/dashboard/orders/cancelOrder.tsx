@@ -1,4 +1,4 @@
-import { completeOrder } from '@/app/api/controllers/dashboard/orders';
+import { completeOrderWithPayment } from '@/app/api/controllers/dashboard/orders';
 import { CustomButton } from '@/components/customButton';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
@@ -35,7 +35,7 @@ const CancelOrderModal = ({
       status: 2,
     };
 
-    const data = await completeOrder(payload, singleOrder.id);
+    const data = await completeOrderWithPayment(payload, singleOrder.id);
     setLoading(false);
 
     if (data?.data?.isSuccessful) {
