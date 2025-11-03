@@ -150,7 +150,7 @@ const InvoiceModal = ({
                                 item.packingCost ? "block" : "hidden"
                               } text-grey500 font-normal`}
                             >
-                              Pack cost: {formatPrice(item.packingCost)}
+                              Pack cost: {formatPrice(item.packingCost * item.quantity)}
                             </p>
                           </div>
                         </div>

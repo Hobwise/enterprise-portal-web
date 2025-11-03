@@ -15,6 +15,7 @@ import {
   saveJsonItemToLocalStorage,
   setTokenCookie,
 } from "@/lib/utils";
+import { isPOSUser as checkIsPOSUser } from "@/lib/userTypeUtils";
 import {
   Avatar,
   Divider,
@@ -40,16 +41,16 @@ import { SideNavItem } from "./types";
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
   const [isMounted, setIsMounted] = useState(false);
-  const [isPOSUser, setIsPOSUser] = useState(false);
+  const [isPOSUserState, setIsPOSUserState] = useState(false);
 
   const { data: businessDetails, isLoading } = useGetBusiness();
   const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
 
   useEffect(() => {
     setIsMounted(true);
-    // Check if user is POS user after component mounts
+    // Check if user is POS user after component mounts using centralized utility
     const userInfo = getJsonItemFromLocalStorage('userInformation');
-    setIsPOSUser(userInfo?.primaryAssignment === "Point of Sales");
+    setIsPOSUserState(checkIsPOSUser(userInfo));
   }, []);
 
   const {
@@ -142,7 +143,7 @@ const SideNav = () => {
     if (isPermissionsLoading || !isMounted) return [];
 
     // If POS user, show only POS and Orders navigation
-    if (isPOSUser) {
+    if (isPOSUserState) {
       return [
         {
           title: 'POS',
@@ -177,7 +178,7 @@ const SideNav = () => {
       const hasPermission = permissionMap[item.title];
       return hasPermission !== false; // Allow if permission is true or undefined
     });
-  }, [isPermissionsLoading, role, userRolePermissions, isMounted, isPOSUser]);
+  }, [isPermissionsLoading, role, userRolePermissions, isMounted, isPOSUserState]);
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
@@ -185,7 +186,7 @@ const SideNav = () => {
         <div className="flex-shrink-0">
           <Link
             prefetch={true}
-            href={isMounted && isPOSUser ? "/pos" : "/dashboard"}
+            href={isMounted && isPOSUserState ? "/pos" : "/dashboard"}
             className="flex flex-row items-center justify-center md:justify-start md:px-8 md:py-10 w-full"
           >
             <CompanyLogo

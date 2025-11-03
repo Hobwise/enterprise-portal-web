@@ -5,6 +5,7 @@ import { cn, getJsonItemFromLocalStorage } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import { EXCLUDE_SETTINGS_PATHS } from "@/lib/routePermissions";
 import { useEffect, useState } from "react";
+import { isPOSUser, getAllowedSettingsPaths, canAccessSettingsPath } from "@/lib/userTypeUtils";
 
 const lists = [
   {
@@ -47,16 +48,19 @@ const SettingsSidebar = () => {
     const userInfo = getJsonItemFromLocalStorage("userInformation");
 
     if (userInfo) {
-      // Filter lists based on user role
-      const filtered =
-        userInfo.role === 0
-          ? lists
-          : lists.filter((item) => !EXCLUDE_SETTINGS_PATHS.includes(item.href));
+      // Get allowed paths for this user type
+      const allowedPaths = getAllowedSettingsPaths(userInfo);
+
+      // Filter lists based on allowed paths
+      const filtered = lists.filter((item) =>
+        allowedPaths.includes(item.href)
+      );
 
       setFilteredLists(filtered);
 
-      // Redirect staff users away from restricted paths
-      if (userInfo.role === 1 && EXCLUDE_SETTINGS_PATHS.includes(pathname)) {
+      // Redirect users away from restricted paths
+      if (!canAccessSettingsPath(userInfo, pathname)) {
+        // Redirect to personal information as the default allowed page
         router.push("/dashboard/settings/personal-information");
       }
     }
