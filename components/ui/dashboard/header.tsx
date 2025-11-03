@@ -210,7 +210,7 @@ const Header = ({ ispos }: any) => {
         )}
         <div className={`flex h-[64px] bg-white text-black ${ispos ? "": "border-b"} border-primaryGrey items-center justify-between px-6`}>
           {ispos && (
-            <Link href="/pos" className="cursor-pointer">
+            <Link href={pathname.startsWith('/business-activities') ? "/business-activities" : "/pos"} className="cursor-pointer">
               <CompanyLogo
                 textColor="text-black font-lexend text-[28px] font-[600]"
                 containerClass="flex gap-2 items-center"

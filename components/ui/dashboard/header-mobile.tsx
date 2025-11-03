@@ -48,7 +48,8 @@ const HeaderMobile = () => {
   const { height } = useDimensions(containerRef);
   const [isOpenClass, toggleOpen] = useCycle(false, true);
 
-  // Hide mobile menu for POS users (role === 1)
+  // Hide mobile menu for staff users with role === 1 (includes POS users and regular staff)
+  // This prevents them from accessing unauthorized menu items
   if (role === 1) {
     return null;
   }

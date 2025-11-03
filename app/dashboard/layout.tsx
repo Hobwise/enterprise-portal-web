@@ -1,5 +1,6 @@
 'use client';
 
+import AdminPrivateRoute from "@/components/auth/AdminPrivateRoute";
 import BusinessSettingsDashboardPrompt from "@/components/businessSettingsDashboardPrompt";
 import Container from "@/components/dashboardContainer";
 import { SubscriptionNoticePopup } from "@/components/ui/dashboard/subscription-notification";
@@ -29,15 +30,17 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="font-satoshi">
-      <SubscriptionInitializer />
-      <Container>{children}</Container>
-      <Suspense fallback={null}>
-        <BusinessSettingsDashboardPrompt />
-      </Suspense>
-      <Suspense fallback={null}>
-        <SubscriptionNoticePopup />
-      </Suspense>
-    </div>
+    <AdminPrivateRoute>
+      <div className="font-satoshi">
+        <SubscriptionInitializer />
+        <Container>{children}</Container>
+        <Suspense fallback={null}>
+          <BusinessSettingsDashboardPrompt />
+        </Suspense>
+        <Suspense fallback={null}>
+          <SubscriptionNoticePopup />
+        </Suspense>
+      </div>
+    </AdminPrivateRoute>
   );
 }
