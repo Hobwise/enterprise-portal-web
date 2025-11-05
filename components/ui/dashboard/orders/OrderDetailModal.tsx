@@ -30,6 +30,7 @@ export interface OrderDetailData {
   customerPhone?: string;
   restaurantName?: string;
   restaurantLocation?: string;
+  comment?: string;
   items: OrderDetailItem[];
   subtotal: number;
   packingCost: number;
@@ -102,6 +103,15 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   <span className="text-sm text-gray-600">Order Number</span>
                   <span className="text-sm text-gray-900">{orderData.orderNumber}</span>
                 </div>
+
+                {orderData.comment && (
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm text-gray-600">Comment</span>
+                    <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded-lg">
+                      {orderData.comment}
+                    </p>
+                  </div>
+                )}
               </div>
 
               <Divider className="my-4" />
