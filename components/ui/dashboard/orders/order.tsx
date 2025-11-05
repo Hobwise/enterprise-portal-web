@@ -382,16 +382,10 @@ const OrdersList: React.FC<OrdersListProps> = ({
     }
   };
 
-  const [value, setValue] = useState('');
-
   // Category state management
   // const [currentCategory, setCurrentCategory] = useState<OrderCategory | undefined>();
   const [isCategoryEmpty, setIsCategoryEmpty] = useState<boolean>(false);
   const [shouldShowLoading, setShouldShowLoading] = useState<boolean>(false);
-
-  const handleTabChange = (index: string) => {
-    setValue(index);
-  };
 
   // useEffect to update category states
   useEffect(() => {
@@ -580,21 +574,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
     return (
       <Filters
         orders={categories}
-        handleTabChange={handleTabChange}
-        value={value}
         handleTabClick={handleTabClick}
+        selectedCategory={tableStatus || 'All Orders'}
       />
     );
   }, [
     categories,
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
-    hasSearchFilter,
-    handleTabChange,
-    value,
+    tableStatus,
     handleTabClick,
   ]);
 

@@ -9,7 +9,7 @@ interface PaymentCardProps {
 
 const PaymentCard = ({ data, tableStatus, onStatusChange, onPageReset }: PaymentCardProps) => {
   return (
-    <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible lg:grid-cols-4 gap-3 lg:gap-4 mb-6 pb-2 snap-x snap-mandatory lg:snap-none">
+    <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible lg:grid-cols-3 gap-3 lg:gap-4 mb-6 pb-2 snap-x snap-mandatory lg:snap-none">
       {data?.map((item: any, idx: any) => {
         const isActive = tableStatus === item.name || (!tableStatus && item.name === 'All');
         return (

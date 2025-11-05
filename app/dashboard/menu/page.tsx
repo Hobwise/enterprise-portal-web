@@ -65,7 +65,7 @@ const RestaurantMenu = () => {
   const [activeCategory, setActiveCategory] = useState<string>('');
   const [activeSubCategory, setActiveSubCategory] = useState<string>('');
   const [menuSections, setMenuSections] = useState<any[]>([]);
-  const [menuItems, setMenuItems] = useState<any[] | null>(null);
+  const [menuItems, setMenuItems] = useState<any[]>([]);
   const [loadingItems, setLoadingItems] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -546,8 +546,8 @@ const RestaurantMenu = () => {
             setTotalItems(cached.totalItems || 0);
             setCurrentPage(1);
           } else {
-            // Only set to null if we're actually going to load
-            setMenuItems(null);
+            // Set loading state before fetching
+            setLoadingItems(true);
             fetchMenuItems(firstSection.id, false, 1);
           }
         } else {
@@ -582,10 +582,10 @@ const RestaurantMenu = () => {
       setTotalPages(cached.totalPages || 1);
       setTotalItems(cached.totalItems || 0);
     } else {
-      // Only set to null and show loading if we need to fetch
+      // Set loading state and fetch if section has items
       const section = menuSections.find(s => s.id === sectionId);
       if (section && section.totalCount > 0) {
-        setMenuItems(null);
+        setLoadingItems(true);
         fetchMenuItems(sectionId, false, 1);
       } else {
         setMenuItems([]);
@@ -1688,7 +1688,7 @@ const RestaurantMenu = () => {
 
       <MenuItemsGrid
         loadingItems={loadingItems}
-        menuItems={filteredMenuItems}
+        menuItems={filteredMenuItems || []}
         menuSections={menuSections}
         onOpen={onOpen}
         setIsAddItemModalOpen={setIsAddItemModalOpen}
