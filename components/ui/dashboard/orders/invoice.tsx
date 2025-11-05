@@ -104,12 +104,12 @@ const InvoiceModal = ({
                       <span className="text-black">{singleOrder.placedByName}</span>
                     </div>
                     <div className="flex justify-between py-1">
-                      <span className="font-semibold text-black">Table {singleOrder.tableNumber || 'N/A'}</span>
+                      <span className="font-semibold text-black"> {singleOrder.qrReference || 'N/A'}</span>
                       <span className="text-black">{totalItems} items</span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="font-semibold text-black">Order Ref</span>
-                      <span className="text-black">{singleOrder.qrReference}</span>
+                      <span className="text-black">{singleOrder.quickResponseID}</span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="font-semibold text-black">Date & Time</span>
@@ -173,7 +173,7 @@ const InvoiceModal = ({
                   <div className="space-y-3">
                     {groupedItems.map((item: any, index: number) => {
                       return (
-                        <div key={index} className="flex gap-3 text-sm text-black">
+                        <div key={index} className="flex gap-3 border-b pb-1 text-sm text-black">
                           {/* Quantity Column */}
                           <div className="w-12 text-black">
                             {item.quantity}
@@ -183,16 +183,19 @@ const InvoiceModal = ({
                           <div className="flex-1">
                             <div className="text-black font-medium">
                               {item.itemName}
+                            
+                            </div>
+                            {item.isPacked && item.totalPackingCost > 0 && (
+                              <div className="text-xs text-grey500 mt-0.5">
+                                Packing {formatPrice(item.totalPackingCost, 'NGN')}
+                              </div>
+                            )}
+                          </div>
+                             <div className="text-black font-medium">
                               <span className="text-grey500 ml-1">
                                 ({formatPrice(item.unitPrice, 'NGN')})
                               </span>
                             </div>
-                            {item.isPacked && item.totalPackingCost > 0 && (
-                              <div className="text-xs text-grey500 mt-0.5">
-                                Packing #{formatPrice(item.totalPackingCost, 'NGN')}
-                              </div>
-                            )}
-                          </div>
 
                           {/* Amount Column */}
                           <div className="w-24 text-right font-semibold text-black">
@@ -202,32 +205,32 @@ const InvoiceModal = ({
                       );
                     })}
                   </div>
-                  <Divider className="my-3"/>
+                  
 
                   {/* Totals Section */}
-                  <div className="text-sm space-y-2">
+                  <div className="text-sm ">
                     {/* Additional Cost */}
-                    {order.additionalCost && order.additionalCost && (
+                    {order.additionalCostName !== "" && order.additionalCost && (
                       <div className="flex justify-between gap-3 text-black">
-                        <span className="font-medium">
-                          {order.additionalCostName || "Additional cost"}{" "}
+                        <span className="font-medium t">
+                            Additional cost
                           <span className="text-grey-600 text-xs">
                             ({order.additionalCostName ? order.additionalCostName.toLowerCase() : ''})
                           </span>
                         </span>
                         <span className="font-semibold text-gray-600">{formatPrice(order.additionalCost, 'NGN')}</span>
+                        <Divider className=""/>
                       </div>
                     )}
-
                     {/* Total (before VAT) */}
-                    <div className="flex justify-between gap-3 text-black font-semibold">
+                    <div className="flex justify-between gap-3 text-gray-600 font-semibold">
                       <span>Total</span>
                       <span>{formatPrice(order.subTotalAmount, 'NGN')}</span>
                     </div>
 
                     {/* VAT */}
                     {order.isVatApplied && (
-                      <div className="flex justify-between gap-3 text-black">
+                      <div className="flex justify-between gap-3 text-gray-600">
                         <span className="font-medium">
                           VAT at {order.vatPercentage || '7.5'}%{" "}
                           <span className="text-grey500 text-xs">
@@ -237,12 +240,12 @@ const InvoiceModal = ({
                         <span className="font-semibold">{formatPrice(order.vatAmount, 'NGN')}</span>
                       </div>
                     )}
-
+                  <Divider className=""/>
                     {/* Grand Total */}
                     <div className="flex justify-center mt-3 mb-2">
                       <div className="text-center">
                         <p className="text-grey500 text-xs mb-1">Grand Total</p>
-                        <p className="text-2xl font-bold text-black">
+                        <p className="text-xl font-bold text-gray-600">
                           {formatPrice(order.totalAmount, 'NGN')}
                         </p>
                       </div>

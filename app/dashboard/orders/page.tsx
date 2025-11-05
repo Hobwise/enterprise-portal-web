@@ -170,7 +170,7 @@ const OrdersContent: React.FC = () => {
       </div>
 
       {/* Sales Summary - Only for POS Users */}
-      {isPOSUser && salesSummary && (
+      {/* {isPOSUser && salesSummary && (
         <div className="rounded-md bg-[#F7F6FA] p-4 md:p-6 mb-6 grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-12">
           <div>
             <div className="text-grey600 text-sm md:text-base mb-1">Total Sales</div>
@@ -197,7 +197,7 @@ const OrdersContent: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       <DateRangeDisplay
         startDate={startDate}
@@ -206,8 +206,12 @@ const OrdersContent: React.FC = () => {
       />
 
       {/* Summary Cards */}
+      {
+        isPOSUser && (
+
+      <>
       {data.categories && data.categories.length > 0 && (
-        <div className="flex w-full overflow-x-auto p-3 gap-4 mb-6 pb-2 snap-x snap-mandatory ">
+        <div className="flex w-full md:grid grid-cols-5 overflow-x-auto p-3 gap-4 mb-6 pb-2 snap-x snap-mandatory ">
           {data.categories.map((category: any) => {
             const currentStatus = tableStatus || 'All Orders';
             const isActive = currentStatus === category.name || (!currentStatus && category.name === 'All');
@@ -246,6 +250,9 @@ const OrdersContent: React.FC = () => {
           })}
         </div>
       )}
+      </>
+        )
+      }
 
       {data.categories && data.categories.length > 0 ? (
         <>

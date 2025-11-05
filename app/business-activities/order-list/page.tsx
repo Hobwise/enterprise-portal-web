@@ -155,7 +155,7 @@ const OrderListContent: React.FC = () => {
 
         {/* Summary Cards */}
         {data.categories && data.categories.length > 0 && (
-          <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible lg:grid-cols-3 gap-3 lg:gap-4 mb-6 pb-2 snap-x snap-mandatory lg:snap-none">
+          <div className="flex lg:grid overflow-x-auto lg:overflow-x-visible lg:grid-cols-4 gap-3 lg:gap-4 mb-6 pb-2 snap-x snap-mandatory lg:snap-none">
             {data.categories.map((category: any) => {
               const isActive = tableStatus === category.name || (!tableStatus && category.name === 'All Orders');
               return (
