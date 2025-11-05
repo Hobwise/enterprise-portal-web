@@ -8,11 +8,13 @@ const formatCategoryName = (name: string) => {
     .replace(/\b\w/g, l => l.toUpperCase()); // Title case
 };
 
-const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
+const Filters = ({ orders, handleTabClick, selectedCategory }: any) => {
   return (
     <>
       <div className='flex relative w-full md:mb-4 top-4 px-3 border-b border-primaryGrey justify-between overflow-x-auto scrollbar-hide'>
         <Tabs
+          selectedKey={selectedCategory}
+          onSelectionChange={(key) => handleTabClick(String(key))}
           classNames={{
             tabList:
               'gap-4 relative rounded-none p-0 w-auto min-w-full text-[#344054] overflow-x-auto flex-nowrap scrollbar-hide',
@@ -23,17 +25,13 @@ const Filters = ({ orders, handleTabChange, handleTabClick }: any) => {
           }}
           variant={'underlined'}
           aria-label='order filter'
-          onChange={handleTabChange}
         >
           {orders?.map((order: any, index: number) => {
             return (
               <Tab
-                key={order.id || order.name || `order-filter-${index}`}
+                key={order.name}
                 title={
-                  <div
-                    onClick={() => handleTabClick(order.name)}
-                    className='flex items-center h-10 space-x-2 capitalize'
-                  >
+                  <div className='flex items-center h-10 space-x-2 capitalize'>
                     <span>{formatCategoryName(order.name)}</span>
 
                     <Chip

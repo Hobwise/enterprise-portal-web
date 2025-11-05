@@ -17,7 +17,7 @@ import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
 import CustomPagination from "@/components/ui/dashboard/settings/BillingsComponents/CustomPagination";
-import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import { getJsonItemFromLocalStorage, formatPrice } from "@/lib/utils";
 
 // Type definitions are handled in the component files
 
@@ -40,7 +40,7 @@ const OrdersContent: React.FC = () => {
   const { userRolePermissions, role } = usePermission();
 
   const [searchQuery, setSearchQuery] = useState("");
-  const { setPage, setTableStatus, page } = useGlobalContext();
+  const { setPage, setTableStatus, page, tableStatus } = useGlobalContext();
 
   useEffect(() => {
     refetch();
@@ -204,6 +204,48 @@ const OrdersContent: React.FC = () => {
         endDate={endDate}
         filterType={filterType}
       />
+
+      {/* Summary Cards */}
+      {data.categories && data.categories.length > 0 && (
+        <div className="flex w-full overflow-x-auto p-3 gap-4 mb-6 pb-2 snap-x snap-mandatory ">
+          {data.categories.map((category: any) => {
+            const currentStatus = tableStatus || 'All Orders';
+            const isActive = currentStatus === category.name || (!currentStatus && category.name === 'All');
+            return (
+              <div
+                key={category.name}
+                onClick={() => {
+                  setTableStatus(category.name);
+                  setPage(1);
+                }}
+                className={`
+                  relative rounded-lg p-4 w-auto lg:p-6 cursor-pointer transition-all duration-300
+                   lg:min-w-0 flex-shrink-0 lg:flex-shrink snap-center lg:snap-align-none
+                  ${isActive
+                    ? 'bg-gradient-to-br from-primaryColor to-secondaryColor text-white shadow-lg scale-105'
+                    : 'bg-white border border-gray-200 text-gray-900 hover:shadow-md hover:scale-102'
+                  }
+                `}
+              >
+                <div className="space-y-1 lg:space-y-2">
+                  <h3 className={`text-xs lg:text-sm font-semibold uppercase tracking-wide ${isActive ? 'text-white/90' : 'text-gray-500'}`}>
+                    {category.name}
+                  </h3>
+                  <div className={`text-2xl lg:text-3xl font-bold ${isActive ? 'text-white' : 'text-gray-900'}`}>
+                    {formatPrice(category.totalAmount, 'NGN')}
+                  </div>
+                  <p className={`text-xs lg:text-sm ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
+                    {category.count} {category.count === 1 ? 'order' : 'orders'}
+                  </p>
+                </div>
+                {isActive && (
+                  <div className="absolute top-2 right-2 w-2 h-2 bg-white rounded-full"></div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {data.categories && data.categories.length > 0 ? (
         <>
