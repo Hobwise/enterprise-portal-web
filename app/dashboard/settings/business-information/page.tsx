@@ -49,6 +49,9 @@ const BusinessInformation = () => {
   const [businessFormData, setBusinessFormData] = useState<BusinessData | null>(
     null
   );
+  const [originalBusinessData, setOriginalBusinessData] = useState<BusinessData | null>(
+    null
+  );
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const getStates = () => {
@@ -71,6 +74,24 @@ const BusinessInformation = () => {
     } else {
       return [];
     }
+  };
+
+  const getChangedFields = () => {
+    if (!originalBusinessData || !businessFormData) {
+      return businessFormData;
+    }
+
+    const changedFields: BusinessData = {
+      businessID: businessFormData.businessID,
+    };
+
+    Object.keys(businessFormData).forEach((key) => {
+      if (businessFormData[key] !== originalBusinessData[key]) {
+        changedFields[key] = businessFormData[key];
+      }
+    });
+
+    return changedFields;
   };
 
   const uploadFileMutation = useMutation({
@@ -107,12 +128,14 @@ const BusinessInformation = () => {
   });
 
   const updateBusinessMutation = useMutation({
-    mutationFn: () =>
-      api.put(AUTH.registerBusiness, businessFormData, {
+    mutationFn: () => {
+      const changedFields = getChangedFields();
+      return api.put(AUTH.registerBusiness, changedFields, {
         headers: {
           businessId: businessInformation[0]?.businessId,
         },
-      }),
+      });
+    },
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
         onOpen();
@@ -246,7 +269,10 @@ const BusinessInformation = () => {
               disableRipple
               className="flex border border-primaryColor rounded-[10px] text-primaryColor text-xs p-2 h-[30px]"
               backgroundColor="bg-transparent"
-              onClick={() => setIsEditing((prevState) => !prevState)}
+              onClick={() => {
+                setOriginalBusinessData(businessFormData);
+                setIsEditing((prevState) => !prevState);
+              }}
             >
               <BiEditAlt className="text-base" />
               Edit
@@ -266,7 +292,11 @@ const BusinessInformation = () => {
                 disableRipple
                 className="flex rounded-[10px] text-xs p-2 h-[30px] text-danger"
                 backgroundColor="bg-transparent"
-                onClick={() => setIsEditing(false)}
+                onClick={() => {
+                  setBusinessFormData(originalBusinessData);
+                  setOriginalBusinessData(null);
+                  setIsEditing(false);
+                }}
               >
                 <RxCross2 className="text-base" />
                 Cancel
