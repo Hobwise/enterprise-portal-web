@@ -42,9 +42,8 @@ interface ReportObject {
 
 const Activity = () => {
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
-  const [isOpenDownload, setIsOpenDownload] = useState(false);
-  const reportFilter = getJsonItemFromLocalStorage('reportFilter');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const reportFilter = getJsonItemFromLocalStorage("reportFilter");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
   const router = useRouter();
   // const toggleDownloadReport = () => {
   //   setIsOpenDownload(!isOpenDownload);
@@ -59,11 +58,11 @@ const Activity = () => {
     start: null,
     end: null,
   });
-  const [selectedKeys, setSelectedKeys] = useState(new Set(['This week']));
+  const [selectedKeys, setSelectedKeys] = useState(new Set(["This week"]));
   const [previousSelectedValue, setPreviousSelectedValue] =
-    useState('This week');
+    useState("This week");
   const selectedValue = useMemo(
-    () => Array.from(selectedKeys).join(', ').replaceAll('_', ' '),
+    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
     [selectedKeys]
   );
 
@@ -79,21 +78,21 @@ const Activity = () => {
   const toggleMoreFilters = () => {
     setShowMore(!showMore);
   };
-  const status = ['All', 'upcoming'];
-  const channel = ['All'];
+  const status = ["All", "upcoming"];
+  const channel = ["All"];
 
   const logIndexForSelectedKey = (key: string) => {
     switch (key) {
-      case 'Today':
+      case "Today":
         return 0;
-      case 'This week':
+      case "This week":
         return 1;
-      case 'This year':
+      case "This year":
         return 2;
-      case 'Custom date':
+      case "Custom date":
         return 3;
       default:
-        console.log('Unknown key');
+        console.log("Unknown key");
         return -1;
     }
   };
@@ -103,8 +102,8 @@ const Activity = () => {
   };
 
   const shouldFetchReport =
-    selectedValue !== 'Custom date' ||
-    (selectedValue === 'Custom date' && checkValue());
+    selectedValue !== "Custom date" ||
+    (selectedValue === "Custom date" && checkValue());
 
   const effectiveSelectedValue = shouldFetchReport
     ? selectedValue
@@ -129,48 +128,44 @@ const Activity = () => {
 
   const [isLoadingExport, setIsLoadingExport] = useState(false);
   const exportFile = async (exportType: number) => {
-    const business = getJsonItemFromLocalStorage('business');
+    const business = getJsonItemFromLocalStorage("business");
     setIsLoadingExport(true);
     let response;
-    if (reportFilter?.route === 'orders') {
+    if (reportFilter?.route === "orders") {
       response = await getReportOrderExport(
         business[0].businessId,
         logIndexForSelectedKey(effectiveSelectedValue),
         startDate,
         endDate,
         selectedReportObject.reportType,
-        exportType,
-        userInformation?.email
+        exportType
       );
-    } else if (reportFilter?.route === 'booking') {
+    } else if (reportFilter?.route === "booking") {
       response = await getReportBookingExport(
         business[0].businessId,
         logIndexForSelectedKey(effectiveSelectedValue),
         startDate,
         endDate,
         selectedReportObject.reportType,
-        exportType,
-        userInformation?.email
+        exportType
       );
-    } else if (reportFilter?.route === 'payment') {
+    } else if (reportFilter?.route === "payment") {
       response = await getReportPaymentExport(
         business[0].businessId,
         logIndexForSelectedKey(effectiveSelectedValue),
         startDate,
         endDate,
         selectedReportObject.reportType,
-        exportType,
-        userInformation?.email
+        exportType
       );
-    } else if (reportFilter?.route === 'audit-logs') {
+    } else if (reportFilter?.route === "audit-logs") {
       response = await getReportAuditLogExport(
         business[0].businessId,
         logIndexForSelectedKey(effectiveSelectedValue),
         startDate,
         endDate,
         selectedReportObject.reportType,
-        exportType,
-        userInformation?.email
+        exportType
       );
     }
     setIsLoadingExport(false);
@@ -178,9 +173,9 @@ const Activity = () => {
       dynamicExportConfig(response, selectedReportObject.reportName);
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
-        text: 'Failed to download the file',
-        type: 'error',
+        title: "Error!",
+        text: "Failed to download the file",
+        type: "error",
       });
     }
   };

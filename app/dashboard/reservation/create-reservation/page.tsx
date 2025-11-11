@@ -299,7 +299,7 @@ const AddNewReservation = () => {
             onChange={handleInputChange}
             name="reservationName"
             label="Name of reservation"
-            placeholder="name of reservation"
+            placeholder="Name of reservation"
           />
           <Spacer y={6} />
           <CustomTextArea

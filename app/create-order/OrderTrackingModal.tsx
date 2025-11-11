@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import RestaurantBanner from "./RestaurantBanner";
 import { getCustomerOrderByReference } from "../api/controllers/customerOrder";
 import { HiMenuAlt3 } from "react-icons/hi";
+import { MdOutlineWarning } from "react-icons/md";
+import { formatPrice } from "@/lib/utils";
 
 interface OrderTrackingPageProps {
   isOpen: boolean;
@@ -56,7 +58,6 @@ const OrderTrackingPage = ({
   const [orderData, setOrderData] = useState<any>(initialOrderData);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [previousStatus, setPreviousStatus] = useState<number | null>(null);
-
 
   useEffect(() => {
     if (
@@ -117,8 +118,11 @@ const OrderTrackingPage = ({
           let newOrderData = response.data;
 
           // Extract the reference from orderDetails if available and not already present
-          if (newOrderData.orderDetails && newOrderData.orderDetails.length > 0) {
-            const orderID = newOrderData.orderDetails[0]?.orderID;
+          if (
+            newOrderData.orderDetails &&
+            newOrderData.orderDetails.length > 0
+          ) {
+            const orderID = newOrderData.orderDetails[0]?.reference;
             if (orderID && !newOrderData.reference) {
               newOrderData = { ...newOrderData, reference: orderID };
             }
@@ -160,8 +164,7 @@ const OrderTrackingPage = ({
           setPreviousStatus(newStatus);
           setOrderData(newOrderData);
         }
-      } catch (error) {
-      }
+      } catch (error) {}
     };
 
     // Poll immediately when modal opens
@@ -467,216 +470,238 @@ const OrderTrackingPage = ({
       {/* Content */}
       <div className="flex-1">
         <div className="max-w-4xl mx-auto px-4 py-6 pb-28">
-        {/* Order Details Section */}
-        {showOrderDetails && orderData && (
-          <div className="mb-6 bg-gray-50 rounded-lg p-4 md:p-6">
-            <h3 className="text-lg font-bold text-black mb-4">Order Items</h3>
-            <div className="space-y-3">
-              {orderData.orderDetails?.map((item: any, index: number) => (
-                <div
-                  key={index}
-                  className="flex items-start justify-between bg-white p-4 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-black">
-                      {item.itemName}
-                    </h4>
-                    <p className="text-sm text-gray-600">{item.menuName}</p>
-                    <div className="flex items-center gap-4 mt-2 text-sm">
-                      <span className="text-gray-600">
-                        Qty: {item.quantity}
-                      </span>
-                      <span className="text-gray-600">
-                        ₦{item.unitPrice.toLocaleString()}
-                      </span>
-                      {item.isPacked && (
-                        <span
-                          className="text-xs px-2 py-1 rounded"
-                          style={{
-                            ...textColorStyle,
-                            backgroundColor: `${primaryColor}50`,
-                          }}
-                        >
-                          Packed
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-black">
-                      ₦{item.totalPrice.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-gray-200">
-              <div className="flex justify-between text-lg font-bold">
-                <span className="text-black">Total Amount:</span>
-                <span style={textColorStyle}>
-                  ₦{orderData.totalAmount?.toLocaleString()}
-                </span>
-              </div>
-              {orderData.placedByName && (
-            <div className="mt-3 text-sm text-gray-600">
-              <p>Placed by: {orderData.placedByName}</p>
-              {orderData.placedByPhoneNumber && (
-                <p>Phone: {orderData.placedByPhoneNumber}</p>
-              )}
-              {orderData.comment && <p>Note: {orderData.comment}</p>}
-              {typeof orderData.vatRate !== 'undefined' && orderData.vatRate !== null && (
-                <p>
-                  VAT Rate: {Math.round(Number(orderData.vatRate || 0) * 100)}%
-                </p>
-              )}
-            </div>)}
-            </div>
-          </div>
-        )}
-        <div className="space-y-6 mb-6">
-          {steps.map((step, index) => {
-            const isCompleted = index < currentStepIndex;
-            const isCurrent = index === currentStepIndex;
-
-            return (
-              <div key={step.key} className="flex gap-6">
-                {/* Timeline Indicator */}
-                <div className="flex flex-col items-center">
+          {/* Order Details Section */}
+          {showOrderDetails && orderData && (
+            <div className="mb-6 bg-gray-50 rounded-lg p-4 md:p-6">
+              <h3 className="text-lg font-bold text-black mb-4">Order Items</h3>
+              <div className="space-y-3">
+                {orderData.orderDetails?.map((item: any, index: number) => (
                   <div
-                    style={
-                      isCompleted
-                        ? primaryColorStyle
-                        : isCurrent
-                        ? {
-                            backgroundColor: `${primaryColor}33`,
-                            borderColor: primaryColor,
-                            borderWidth: "2px",
-                          }
-                        : { backgroundColor: "#E5E7EB" }
-                    }
-                    className={`w-12 h-12 rounded-full flex items-center justify-center`}
+                    key={index}
+                    className="flex items-start justify-between bg-white p-4 rounded-lg"
                   >
-                    {isCompleted && <FaCheck className="w-6 h-6 text-white" />}
-                    {isCurrent && (
-                      <div
-                        className="w-3 h-3 rounded-full animate-pulse"
-                        style={primaryColorStyle}
-                      />
-                    )}
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <h4 className="font-semibold text-black">
+                          {item.itemName}
+                        </h4>
+                        <p className="font-bold text-black">
+                          ₦{(item.unitPrice * item.quantity).toLocaleString()}
+                        </p>
+                      </div>
+                      <p className="text-sm text-gray-600">{item.menuName}</p>
+                      <div className="flex justify-between  text-sm">
+                        <span className="text-gray-600">Unit Price</span>
+                        <span className="font-semibold text-black">
+                          {formatPrice(item.unitPrice)}
+                        </span>
+                      </div>
+                      {item.packingCost > 0 && (
+                        <div className="flex justify-between  text-sm">
+                          <span className="text-gray-600">Packing Cost</span>
+                          <span className="font-semibold text-black">
+                            {formatPrice(item.packingCost)}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4 mt-2 text-sm">
+                        <span className="text-gray-600">
+                          Qty: {item.quantity}
+                        </span>
+
+                        {item.isPacked && (
+                          <span
+                            className="text-xs px-2 py-1 rounded"
+                            style={{
+                              ...textColorStyle,
+                              backgroundColor: `${primaryColor}50`,
+                            }}
+                          >
+                            Packed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* <div className="text-right">
+                      <p className="font-bold text-black">
+                        ₦{(item.unitPrice * item.quantity).toLocaleString()}
+                      </p>
+                    </div> */}
                   </div>
-                  {index < steps.length - 1 && (
+                ))}
+              </div>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex justify-between text-lg font-bold">
+                  <span className="text-black">Total Amount:</span>
+                  <span style={textColorStyle}>
+                    ₦{orderData.totalAmount?.toLocaleString()}
+                  </span>
+                </div>
+                {orderData.placedByName && (
+                  <div className="mt-3 text-sm text-gray-600">
+                    <p>Placed by: {orderData.placedByName}</p>
+                    {orderData.placedByPhoneNumber && (
+                      <p>Phone: {orderData.placedByPhoneNumber}</p>
+                    )}
+                    {orderData.comment && <p>Note: {orderData.comment}</p>}
+                    {typeof orderData.vatRate !== "undefined" &&
+                      orderData.vatRate !== null && (
+                        <p>
+                          VAT Rate:{" "}
+                          {Math.round(Number(orderData.vatRate || 0) * 100)}%
+                        </p>
+                      )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          <div className="space-y-6 mb-6">
+            {steps.map((step, index) => {
+              const isCompleted = index < currentStepIndex;
+              const isCurrent = index === currentStepIndex;
+
+              return (
+                <div key={step.key} className="flex gap-6">
+                  {/* Timeline Indicator */}
+                  <div className="flex flex-col items-center">
                     <div
                       style={
                         isCompleted
                           ? primaryColorStyle
+                          : isCurrent
+                          ? {
+                              backgroundColor: `${primaryColor}33`,
+                              borderColor: primaryColor,
+                              borderWidth: "2px",
+                            }
                           : { backgroundColor: "#E5E7EB" }
                       }
-                      className={`w-1 h-16`}
-                    />
-                  )}
-                </div>
+                      className={`w-12 h-12 rounded-full flex items-center justify-center`}
+                    >
+                      {isCompleted && (
+                        <FaCheck className="w-6 h-6 text-white" />
+                      )}
+                      {isCurrent && (
+                        <div
+                          className="w-3 h-3 rounded-full animate-pulse"
+                          style={primaryColorStyle}
+                        />
+                      )}
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div
+                        style={
+                          isCompleted
+                            ? primaryColorStyle
+                            : { backgroundColor: "#E5E7EB" }
+                        }
+                        className={`w-1 h-16`}
+                      />
+                    )}
+                  </div>
 
-                {/* Step Content */}
-                <div className="flex-1 pb-4">
-                  <h3
-                    style={
-                      isCurrent || isCompleted
-                        ? textColorStyle
-                        : { color: "#9CA3AF" }
+                  {/* Step Content */}
+                  <div className="flex-1 pb-4">
+                    <h3
+                      style={
+                        isCurrent || isCompleted
+                          ? textColorStyle
+                          : { color: "#9CA3AF" }
+                      }
+                      className={`font-semibold text-lg`}
+                    >
+                      {step.label}
+                    </h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {step.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Time Elapsed Message - Only show for open orders (not cancelled or closed) */}
+          {timeLeft === "00:00" &&
+            orderData?.status !== 1 &&
+            orderData?.status !== 2 && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="w-6 h-6 text-orange-500"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-base font-semibold text-orange-800 mb-1">
+                      Your order is ready!
+                    </h4>
+                    <p className="text-sm text-orange-700">
+                      Your food is ready for pickup. Please contact staff to
+                      collect your order.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          <div className="flex gap-5 border-t border-gray-200 py-4 pb-safe z-20">
+            {/* <CustomButton
+              onClick={onAddMoreItems}
+              disabled={orderData?.status === 1 || orderData?.status === 2}
+              style={
+                orderData?.status === 1 || orderData?.status === 2
+                  ? {
+                      backgroundColor: "#F3F4F6",
+                      borderColor: "#D1D5DB",
+                      color: "#9CA3AF",
+                      borderWidth: "2px",
                     }
-                    className={`font-semibold text-lg`}
-                  >
-                    {step.label}
-                  </h3>
-                  <p className="text-sm text-gray-600 mt-1">
-                    {step.description}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Time Elapsed Message - Only show for open orders (not cancelled or closed) */}
-        {timeLeft === "00:00" &&
-          orderData?.status !== 1 &&
-          orderData?.status !== 2 && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg p-6 mb-8">
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0">
-                  <svg
-                    className="w-6 h-6 text-orange-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-base font-semibold text-orange-800 mb-1">
-                    Your order is ready!
-                  </h4>
-                  <p className="text-sm text-orange-700">
-                    Your food is ready for pickup. Please contact staff to
-                    collect your order.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="flex gap-5 border-t border-gray-200 px-4 py-4 pb-safe z-20">
-          <CustomButton
-            onClick={onAddMoreItems}
-            disabled={orderData?.status === 1 || orderData?.status === 2}
-            style={
-              orderData?.status === 1 || orderData?.status === 2
-                ? {
-                    backgroundColor: "#F3F4F6",
-                    borderColor: "#D1D5DB",
-                    color: "#9CA3AF",
-                    borderWidth: "2px",
-                  }
-                : {
-                    ...borderColorStyle,
-                    ...textColorStyle,
-                    backgroundColor: "white",
-                    borderWidth: "2px",
-                  }
-            }
-            className={`flex-1 h-12 md:h-14 ${
-              orderData?.status === 1 || orderData?.status === 2
-                ? "cursor-not-allowed"
-                : ""
-            } font-semibold flex items-center justify-center gap-2 text-base`}
-          >
-            <IoAddCircleOutline className="w-6 h-6" />
-            Add items
-          </CustomButton>
-          <CustomButton
-            onClick={() => {
-              // Pass the updated order data (which includes reference) to parent
-              onCheckout(orderData);
-            }}
-            disabled={orderData?.status === 2 || orderData?.status === 1}
-            style={
-              orderData?.status === 1 || orderData?.status === 1
-                ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
-                : primaryColorStyle
-            }
-            className={`flex-1 h-12 md:h-14 ${
-              orderData?.status === 1 || orderData?.status === 1
-                ? "cursor-not-allowed"
-                : "text-white"
-            } font-semibold flex items-center justify-center gap-2 text-base`}
-          >
-            <span>Checkout order</span>
-            <HiArrowLongLeft className="w-6 h-6 rotate-180" />
-          </CustomButton>
+                  : {
+                      ...borderColorStyle,
+                      ...textColorStyle,
+                      backgroundColor: "white",
+                      borderWidth: "2px",
+                    }
+              }
+              className={`flex-1 h-12 md:h-14 ${
+                orderData?.status === 1 || orderData?.status === 2
+                  ? "cursor-not-allowed"
+                  : ""
+              } font-semibold flex items-center justify-center gap-2 text-base`}
+            >
+              <IoAddCircleOutline className="w-6 h-6" />
+              Add items
+            </CustomButton> */}
+            <CustomButton
+              onClick={() => {
+                // Pass the updated order data (which includes reference) to parent
+                onCheckout(orderData);
+              }}
+              disabled={orderData?.status === 2 || orderData?.status === 1}
+              style={
+                orderData?.status === 1 || orderData?.status === 1
+                  ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
+                  : primaryColorStyle
+              }
+              className={`flex-1 h-12 md:h-14 ${
+                orderData?.status === 1 || orderData?.status === 1
+                  ? "cursor-not-allowed"
+                  : "text-white"
+              } font-semibold flex items-center justify-center gap-2 text-base`}
+            >
+              <span>Update this order</span>
+              <HiArrowLongLeft className="w-6 h-6 rotate-180" />
+            </CustomButton>
+          </div>
         </div>
       </div>
 
@@ -684,35 +709,55 @@ const OrderTrackingPage = ({
       {showLeaveModal && (
         <div className="fixed inset-0 z-[60] bg-black/50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-black mb-4">
-              Save Your Order ID
-            </h3>
+            {trackingId && (
+              <h3 className="text-xl font-bold text-black mb-4">
+                Save Your Order ID
+              </h3>
+            )}
 
             {/* Tracking ID Display */}
-            <div className="mb-6">
-              <p className="text-sm text-gray-600 mb-2">
-                Copy your order ID to track your order later:
-              </p>
-              <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
-                <div>
-                  <p className="text-xs text-gray-600">Order ID:</p>
-                  <p className="font-mono text-black font-bold text-base">
-                    {trackingId}
+            {trackingId ? (
+              <div className="mb-6">
+                {trackingId && (
+                  <p className="text-sm text-gray-600 my-2">
+                    Copy your order ID to track your order later:
                   </p>
+                )}
+                <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
+                  <div>
+                    <p className="text-xs text-gray-600">Order ID:</p>
+                    <p className="font-mono text-black font-bold text-base">
+                      {trackingId}
+                    </p>
+                  </div>
+                  <button
+                    onClick={copyTrackingId}
+                    className="p-3 hover:bg-gray-200 rounded-lg transition-colors"
+                    aria-label="Copy order ID"
+                  >
+                    {copied ? (
+                      <FaCheck className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <FaCopy className="w-5 h-5 text-gray-600" />
+                    )}
+                  </button>
                 </div>
-                <button
-                  onClick={copyTrackingId}
-                  className="p-3 hover:bg-gray-200 rounded-lg transition-colors"
-                  aria-label="Copy order ID"
-                >
-                  {copied ? (
-                    <FaCheck className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <FaCopy className="w-5 h-5 text-gray-600" />
-                  )}
-                </button>
               </div>
-            </div>
+            ) : (
+              <div className="mb-4 grid place-content-center">
+                <div className="mb-4 grid place-content-center">
+                  <MdOutlineWarning
+                    className="w-12 h-12"
+                    style={{
+                      color: primaryColor,
+                    }}
+                  />
+                </div>
+                <p className="font-bold text-center text-black">
+                  Are you sure you want to leave this page?
+                </p>
+              </div>
+            )}
 
             {/* Action Buttons */}
             <div className="flex gap-3">

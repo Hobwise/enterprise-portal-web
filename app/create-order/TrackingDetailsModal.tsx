@@ -103,9 +103,12 @@ const TrackingDetailsPage = ({
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-lg mx-auto px-6 py-8 pb-28 flex flex-col gap-8">
-          <h2 className="text-2xl font-bold text-black mb-3">Tracking Details</h2>
+          <h2 className="text-2xl font-bold text-black mb-3">
+            Tracking Details
+          </h2>
           <p className="text-base text-gray-600 mb-8">
-            Enter your tracking id to view the progress of your order preparation
+            Enter your tracking id to view the progress of your order
+            preparation
           </p>
           {/* Tracking ID Input */}
           <div className="mb-8">
@@ -113,19 +116,16 @@ const TrackingDetailsPage = ({
               type="text"
               name="trackingId"
               value={trackingId}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTrackingId(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setTrackingId(e.target.value)
+              }
               label="Tracking ID"
               isRequired
               autoComplete="off"
             />
           </div>
-
         </div>
-      </div>
-
-      {/* Floating Action Bar */}
-      <div className="fixed inset-x-3 bottom-3 md:inset-x-auto md:right-6 md:bottom-6 z-50 pointer-events-none">
-        <div className="pointer-events-auto max-w-lg mx-auto md:mx-0 px-3 py-3 flex gap-3 bg-white/90 supports-[backdrop-filter]:bg-white/70 backdrop-blur shadow-lg rounded-xl">
+        <div className="flex gap-5 border-t max-w-xl mx-auto border-gray-200 px-4 py-4 pb-safe z-20">
           <CustomButton
             onClick={onClose}
             className="flex-1 h-12 md:h-14 bg-white border-2 border-gray-300 text-black font-medium text-base"
@@ -146,5 +146,4 @@ const TrackingDetailsPage = ({
     </div>
   );
 };
-
 export default TrackingDetailsPage;

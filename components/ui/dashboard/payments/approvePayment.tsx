@@ -3,6 +3,7 @@ import { getOrder } from "@/app/api/controllers/dashboard/orders";
 import { confirmPayment } from "@/app/api/controllers/dashboard/payment";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { formatPrice, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import {
@@ -21,6 +22,7 @@ import { paymentMethodMap } from "./data";
 import { useQueryClient } from "@tanstack/react-query";
 import { paymentsCacheUtils } from "@/hooks/cachedEndpoints/usePayment";
 import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
+import { IoReload } from "react-icons/io5";
 
 const ApprovePayment = ({
   singlePayment,
@@ -34,6 +36,7 @@ const ApprovePayment = ({
   const [reference, setReference] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [order, setOrder] = useState([]);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const userData = getJsonItemFromLocalStorage("userInformation");
   const businessInformation = getJsonItemFromLocalStorage("business");
 
@@ -68,58 +71,58 @@ const ApprovePayment = ({
       await Promise.all([
         // Payment queries
         queryClient.invalidateQueries({
-          queryKey: ['payments'],
-          refetchType: 'active'
+          queryKey: ["payments"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['paymentCategories'],
-          refetchType: 'active'
+          queryKey: ["paymentCategories"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['paymentDetails'],
-          refetchType: 'active'
+          queryKey: ["paymentDetails"],
+          refetchType: "active",
         }),
         // Order queries - payment confirmation affects order status
         queryClient.invalidateQueries({
-          queryKey: ['orders'],
-          refetchType: 'active'
+          queryKey: ["orders"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['orderCategories'],
-          refetchType: 'active'
+          queryKey: ["orderCategories"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['orderDetails'],
-          refetchType: 'active'
-        })
+          queryKey: ["orderDetails"],
+          refetchType: "active",
+        }),
       ]);
 
       // Force immediate refetch of all active queries
       await Promise.all([
         queryClient.refetchQueries({
-          queryKey: ['payments'],
-          type: 'active'
+          queryKey: ["payments"],
+          type: "active",
         }),
         queryClient.refetchQueries({
-          queryKey: ['paymentCategories'],
-          type: 'active'
+          queryKey: ["paymentCategories"],
+          type: "active",
         }),
         queryClient.refetchQueries({
-          queryKey: ['paymentDetails'],
-          type: 'active'
+          queryKey: ["paymentDetails"],
+          type: "active",
         }),
         queryClient.refetchQueries({
-          queryKey: ['orders'],
-          type: 'active'
+          queryKey: ["orders"],
+          type: "active",
         }),
         queryClient.refetchQueries({
-          queryKey: ['orderCategories'],
-          type: 'active'
+          queryKey: ["orderCategories"],
+          type: "active",
         }),
         queryClient.refetchQueries({
-          queryKey: ['orderDetails'],
-          type: 'active'
-        })
+          queryKey: ["orderDetails"],
+          type: "active",
+        }),
       ]);
 
       // Close modal and refetch current page data
@@ -135,11 +138,27 @@ const ApprovePayment = ({
   };
 
   const getOrderDetails = async () => {
-    const data = await getOrder(singlePayment.orderID);
+    try {
+      setOrderError(null);
+      const data = await getOrder(singlePayment.orderID);
 
-    if (data?.data?.isSuccessful) {
-      setOrder(data?.data?.data);
-    } else if (data?.data?.error) {
+      if (data?.data?.isSuccessful) {
+        setOrder(data?.data?.data);
+        setOrderError(null);
+      } else if (data?.data?.error) {
+        const message = data?.data?.error || "Failed to fetch order details";
+        setOrder([]);
+        setOrderError(message);
+      } else {
+        setOrder([]);
+        setOrderError("Failed to fetch order details");
+      }
+    } catch (err: any) {
+      setOrder([]);
+      setOrderError(
+        err?.message ||
+          "An unexpected error occurred while fetching order details."
+      );
     }
   };
 
@@ -189,7 +208,15 @@ const ApprovePayment = ({
                         <h2>{formatPrice(order.subTotalAmount)}</h2>
                       </div>
                       <div className="flex item-center  text-xs text-black font-bold justify-between">
-                        <p>VAT (7.5%) </p>
+                        <p>
+                          VAT (
+                          {(
+                            (order.vatAmount /
+                              (order.totalAmount - order.vatAmount)) *
+                            100
+                          ).toFixed(2)}
+                          %)
+                        </p>
                         <h2>{formatPrice(order.vatAmount)}</h2>
                       </div>
 
@@ -210,8 +237,37 @@ const ApprovePayment = ({
 
                   <Spacer y={5} />
                   <div className="flex gap-6">
-                    <div className="overflow-y-scroll max-h-[305px] w-[60%] rounded-lg border border-[#E4E7EC80] p-2 ">
-                      {order?.length === 0 ? (
+                    <div className="overflow-y-scroll grid place-content-center max-h-[305px] w-[60%] rounded-lg border border-[#E4E7EC80] p-2 ">
+                      {orderError ? (
+                        <div className="flex flex-col  justify-center items-center text-black  max-w-md mx-auto">
+                          <Image
+                            src={noImage}
+                            width={20}
+                            height={20}
+                            className={`object-cover rounded-lg w-12  h-12`}
+                            aria-label="uploaded image"
+                            alt="uploaded image(s)"
+                          />
+                          <Spacer y={2} />
+                          <p className="font-[600] text-sm text-center">
+                            Something went wrong!
+                          </p>
+                          <Spacer y={2} />
+                          <p className="text-xs text-gray-600 text-center">
+                            {orderError}
+                          </p>
+                          <Spacer y={2} />
+                          <button
+                            onClick={getOrderDetails}
+                            className="bg-white border px-4 py-2 border-primaryColor rounded-full text-primaryColor"
+                          >
+                            <div className="flex text-xs items-center gap-2">
+                              <p>Retry</p>
+                              <IoReload />
+                            </div>
+                          </button>
+                        </div>
+                      ) : order?.length === 0 ? (
                         <div className={`grid h-full place-content-center`}>
                           <Spinner />
                           <p className="text-center mt-1 text-[14px] text-grey400">
@@ -223,9 +279,7 @@ const ApprovePayment = ({
                           {order?.orderDetails?.map((item, index) => {
                             return (
                               <React.Fragment key={item.id}>
-                                <div
-                                  className="flex justify-between"
-                                >
+                                <div className="flex justify-between">
                                   <div className="w-[250px] rounded-lg text-black  flex">
                                     <div
                                       className={`grid place-content-center`}
@@ -318,10 +372,11 @@ const ApprovePayment = ({
                           <>
                             <CustomInput
                               type="text"
-                              value={reference}
+                              disabled={true}
+                              value={singlePayment?.paymentReference}
                               onChange={(e) => setReference(e.target.value)}
                               name="itemName"
-                              label="Enter ref"
+                              label="Payment Reference"
                               placeholder="Provide payment reference"
                             />
 

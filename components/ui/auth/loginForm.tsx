@@ -214,6 +214,9 @@ const LoginForm = () => {
         // 4. General Staff and Manager - redirect based on business availability
         if (!businesses || businesses.length === 0) {
           redirectPath = "/dashboard";
+        } else if (businesses.length === 1) {
+          // When user has exactly one business, go directly to dashboard
+          redirectPath = "/dashboard";
         } else {
           redirectPath = "/auth/select-business";
         }

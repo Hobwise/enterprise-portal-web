@@ -71,7 +71,6 @@ const CartModal = ({
       return acc;
     }, 0);
   };
-
   const subtotal = calculateSubtotal();
   const packingCost = calculatePackingCost();
   // Compute dynamic VAT using per-item settings
@@ -85,9 +84,10 @@ const CartModal = ({
   );
   selectedItems.forEach((item: any) => {
     const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
-    const itemPacking = item.isPacked && item.packingCost
-      ? (Number(item.packingCost) || 0) * (Number(item.count) || 0)
-      : 0;
+    const itemPacking =
+      item.isPacked && item.packingCost
+        ? (Number(item.packingCost) || 0) * (Number(item.count) || 0)
+        : 0;
     const itemSubtotal = itemTotal + itemPacking;
     if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
       vat += itemSubtotal * item.vatRate;
@@ -213,7 +213,6 @@ const CartModal = ({
             </div>
           ))}
         </div>
-
         {/* Price Breakdown */}
         <div className="space-y-2 py-4 border-t border-gray-200">
           <div className="flex justify-between text-sm">
@@ -233,8 +232,12 @@ const CartModal = ({
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">
               {enabledRates.length > 1
-                ? `VAT (${enabledRates.map((r) => `${Math.round(r * 100)}%`).join(', ')})`
-                : `VAT ${enabledRates[0] ? Math.round(enabledRates[0] * 100) : 0}%`}
+                ? `VAT (${enabledRates
+                    .map((r) => `${Math.round(r * 100)}%`)
+                    .join(", ")})`
+                : `VAT ${
+                    enabledRates[0] ? Math.round(enabledRates[0] * 100) : 0
+                  }%`}
             </span>
             <span className="font-semibold text-black">{formatPrice(vat)}</span>
           </div>
@@ -257,36 +260,36 @@ const CartModal = ({
           Clear Cart
         </button>
 
-        <div 
-      className={`border-t max-w-4xl flex flex-col mx-auto w-full  border-gray-200 bg-white  py-4`}
-      >
-        {/* Action Buttons */}
-        <div className="flex gap-3">
-          <CustomButton
-            onClick={onOpenChange}
-            style={{
-              ...borderColorStyle,
-              ...textColorStyle,
-              borderWidth: "2px",
-            }}
-            className="flex-1 h-12 bg-white font-semibold touch-manipulation"
-          >
-            <IoAddCircleOutline className="w-5 h-5 mr-2" />
-            Add Items
-          </CustomButton>
-          <CustomButton
-            onClick={() => {
-              onOpenChange();
-              onProceedToServingInfo();
-            }}
-            style={primaryColorStyle}
-            className="flex-1 h-12 text-white font-semibold touch-manipulation"
-          >
-            <span>Checkout</span>
-          </CustomButton>
+        <div
+          className={`border-t max-w-4xl flex flex-col mx-auto w-full  border-gray-200 bg-white  py-4`}
+        >
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            <CustomButton
+              onClick={onOpenChange}
+              style={{
+                ...borderColorStyle,
+                ...textColorStyle,
+                borderWidth: "2px",
+              }}
+              className="flex-1 h-12 bg-white font-semibold touch-manipulation"
+            >
+              <IoAddCircleOutline className="w-5 h-5 mr-2" />
+              Add Items
+            </CustomButton>
+            <CustomButton
+              onClick={() => {
+                onOpenChange();
+                onProceedToServingInfo();
+              }}
+              style={primaryColorStyle}
+              className="flex-1 h-12 text-white font-semibold touch-manipulation"
+            >
+              <span>Checkout</span>
+            </CustomButton>
+          </div>
         </div>
       </div>
-      </div>  
     </div>
   );
 };

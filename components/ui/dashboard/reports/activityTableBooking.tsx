@@ -115,12 +115,12 @@ const INITIAL_VISIBLE_COLUMNS7 = [
   'bookingFee',
 ];
 const columns7 = [
-  { name: 'Customer name', uid: 'firstName' },
-  { name: 'Customer Phone Number ', uid: 'phoneNumber' },
-  { name: 'Customer Email Address', uid: 'emailAddress' },
-    { name: 'Booking Fee', uid: 'bookingFee' },
-  { name: 'Booking date', uid: 'bookingDateTime' },
-    { name: 'Status', uid: 'bookingStatus' },
+  { name: "Customer Name", uid: "firstName" },
+  { name: "Customer Phone Number ", uid: "phoneNumber" },
+  { name: "Customer Email Address", uid: "emailAddress" },
+  { name: "Booking Fee", uid: "bookingFee" },
+  { name: "Booking Date", uid: "bookingDateTime" },
+  { name: "Status", uid: "bookingStatus" },
 ];
 
 const columns8 = [
@@ -131,20 +131,20 @@ const columns8 = [
 ];
 
 const columns9 = [
-  { name: 'Customer name', uid: 'firstName' },
-  { name: 'Customer Phone Number', uid: 'phoneNumber' },
-  { name: 'Customer Email Address', uid: 'emailAddress' },
-  { name: 'Total Booking Fee', uid: 'totalBookingFee' },
-  { name: 'Total Bookings', uid: 'totalBookings' },
+  { name: "Customer Name", uid: "customerFirstName" },
+  { name: "Customer Phone Number", uid: "customerPhoneNumber" },
+  { name: "Customer Email Address", uid: "customerEmailAddress" },
+  { name: "Total Booking Fee", uid: "totalBookingFee" },
+  { name: "Total Bookings", uid: "totalBookings" },
 ];
 
 const INITIAL_VISIBLE_COLUMNS10 = [
-  'endDate',
-  'occupancyRate',
-  'reservationName',
-  'reservationQuantity',
-  'startDate',
-  'totalBookings',
+  "averageDailyUtilization",
+  "lastRecordDateTime",
+  "reservationName",
+  "reservationCapacity",
+  "occupancyRate",
+  "totalBookings",
 ];
 
 const columns10 = [
@@ -165,7 +165,7 @@ const ActivityTableBooking = ({
   isLoadingExport,
   exportFile,
 }: any) => {
-  const business = getJsonItemFromLocalStorage('business');
+  const business = getJsonItemFromLocalStorage("business");
 
   const columns = useMemo(() => {
     if (reportType === 7) {
@@ -218,10 +218,10 @@ const ActivityTableBooking = ({
     setShowMore(!showMore);
   };
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortDescriptor, setSortDescriptor] = useState({
-    column: 'dateCreated',
-    direction: 'ascending',
+    column: "dateCreated",
+    direction: "ascending",
   });
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -243,7 +243,20 @@ const ActivityTableBooking = ({
         item?.startDate?.toLowerCase().includes(searchQuery) ||
         item?.checkInDateTime?.toLowerCase().includes(searchQuery) ||
         item?.bookingDateTime?.toLowerCase().includes(searchQuery) ||
-        item?.dateUpdated?.toLowerCase().includes(searchQuery)
+        item?.dateUpdated?.toLowerCase().includes(searchQuery) ||
+        item?.reservationName?.toLowerCase().includes(searchQuery) ||
+        String(item?.averageDailyUtilization)
+          ?.toLowerCase()
+          .includes(searchQuery) ||
+        String(item?.reservationCapacity)
+          ?.toLowerCase()
+          .includes(searchQuery) ||
+        item?.occupancyRate?.toLowerCase().includes(searchQuery) ||
+        String(item?.totalBookings)?.toLowerCase().includes(searchQuery) ||
+        item?.customerPhoneNumber?.toLowerCase().includes(searchQuery) ||
+        item?.customerEmailAddress?.toLowerCase().includes(searchQuery) ||
+        item?.customerFirstName?.toLowerCase().includes(searchQuery) ||
+        item?.customerLastName?.toLowerCase().includes(searchQuery)
     );
 
     return filteredData;
@@ -266,15 +279,15 @@ const ActivityTableBooking = ({
       const second = b[sortDescriptor.column];
       let cmp = 0;
 
-      if (typeof first === 'string' && typeof second === 'string') {
+      if (typeof first === "string" && typeof second === "string") {
         cmp = first.localeCompare(second);
-      } else if (typeof first === 'number' && typeof second === 'number') {
+      } else if (typeof first === "number" && typeof second === "number") {
         cmp = first - second;
       } else if (first instanceof Date && second instanceof Date) {
         cmp = first.getTime() - second.getTime();
       }
 
-      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
 
@@ -282,77 +295,83 @@ const ActivityTableBooking = ({
     const cellValue = booking[columnKey];
 
     switch (columnKey) {
-      case 'firstName':
+      case "firstName":
         return (
-          <div className='flex text-black font-medium items-center gap-2 text-sm cursor-pointer'>
+          <div className="flex text-black font-medium items-center gap-2 text-sm cursor-pointer">
             <span>
               {booking.firstName} {booking.lastName}
             </span>
           </div>
         );
 
-      case 'minimumSpend':
+      case "minimumSpend":
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             <p>{booking.minimumSpend}</p>
           </div>
         );
-      case 'totalBookingFee':
+      case "totalBookingFee":
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             <p>{booking.totalBookingFee}</p>
           </div>
         );
-      case 'bookingStatus':
+      case "bookingStatus":
         return (
           <Chip
-            className='capitalize'
+            className="capitalize"
             color={getBookingStatusColor(booking.bookingStatus)}
-            size='sm'
-            variant='bordered'
+            size="sm"
+            variant="bordered"
           >
             {cellValue}
           </Chip>
         );
 
-        
-
-      case 'bookingFee':
+      case "bookingFee":
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             <p>{booking.bookingFee}</p>
           </div>
         );
 
-      case 'endDate':
+      case "endDate":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.endDate).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(booking.endDate).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
-      case 'startDate':
+      case "lastRecordDateTime":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.startDate).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(booking.lastRecordDateTime).format(
+              "MMMM Do YYYY, h:mm:ss a"
+            )}
           </div>
         );
-      case 'checkInDateTime':
+      case "startDate":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.checkInDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(booking.startDate).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
-      case 'bookingDateTime':
+      case "checkInDateTime":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.bookingDateTime).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(booking.checkInDateTime).format("MMMM Do YYYY, h:mm:ss a")}
+          </div>
+        );
+      case "bookingDateTime":
+        return (
+          <div className="text-textGrey text-sm">
+            {moment(booking.bookingDateTime).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
 
-      case 'dateUpdated':
+      case "dateUpdated":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(booking.dateUpdated).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(booking.dateUpdated).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
 
@@ -365,28 +384,28 @@ const ActivityTableBooking = ({
 
   return (
     <>
-      <div className='w-full mt-4 flex justify-between  gap-3'>
+      <div className="w-full mt-4 flex justify-between  gap-3">
         <CustomInput
-          classnames={'w-[242px]'}
-          label=''
-          size='md'
+          classnames={"w-[242px]"}
+          label=""
+          size="md"
           value={searchQuery}
           onChange={handleSearchChange}
           isRequired={false}
           startContent={<IoSearchOutline />}
-          type='text'
-          placeholder='Search here...'
+          type="text"
+          placeholder="Search here..."
         />
 
-        <div className='flex gap-3'>
-          <div className='flex items-center'>
+        <div className="flex gap-3">
+          <div className="flex items-center">
             {isLoadingExport && <SmallLoader />}
             <div
               onClick={() => toggleDownloadReport()}
-              className='py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 '
+              className="py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 "
             >
-              <div className='flex gap-2 items-center justify-center'>
-                <MdOutlineFileDownload className='text-[22px]' />
+              <div className="flex gap-2 items-center justify-center">
+                <MdOutlineFileDownload className="text-[22px]" />
                 <p>Export</p>
               </div>
             </div>
@@ -408,40 +427,40 @@ const ActivityTableBooking = ({
       </div>
       <section
         ref={reportRef}
-        className='border border-primaryGrey rounded-md mt-2 p-3'
+        className="border border-primaryGrey rounded-md mt-2 p-3"
       >
-        <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>{reportName}</p>
-          <p className='text-base font-semibold'>
-            {business[0]?.businessName}, {business[0]?.city}{' '}
+        <div className=" flex flex-col items-center mb-4">
+          <p className="text-xl font-bold capitalize">{reportName}</p>
+          <p className="text-base font-semibold">
+            {business[0]?.businessName}, {business[0]?.city}{" "}
             {business[0]?.state}
           </p>
-          <p className='text-sm text-grey600'>
-            {selectedValue === 'Custom date' && (
-              <p className='text-default-500 text-sm'>
+          <p className="text-sm text-grey600">
+            {selectedValue === "Custom date" && (
+              <p className="text-default-500 text-sm">
                 {value.start &&
                   moment(formatDateTimeForPayload3(value?.start)).format(
-                    'MMMM Do YYYY'
+                    "MMMM Do YYYY"
                   )}
-                {' - '}
+                {" - "}
                 {value.end &&
                   moment(formatDateTimeForPayload3(value?.end)).format(
-                    'MMMM Do YYYY'
+                    "MMMM Do YYYY"
                   )}
               </p>
             )}
           </p>
-          <p className='text-xs text-danger-500'>{data?.message}</p>
+          <p className="text-xs text-danger-500">{data?.message}</p>
         </div>
         <Table
-          radius='lg'
+          radius="lg"
           isCompact
           removeWrapper
           allowsSorting
-          aria-label='list of bookings'
+          aria-label="list of bookings"
           bottomContent={
             isLoading || items?.length === 0 ? (
-              ''
+              ""
             ) : (
               <PaginationComponent
                 data={items}
@@ -451,13 +470,13 @@ const ActivityTableBooking = ({
               />
             )
           }
-          bottomContentPlacement='outside'
+          bottomContentPlacement="outside"
           classNames={classNames}
           selectedKeys={selectedKeys}
           // selectionMode='multiple'
           sortDescriptor={sortDescriptor}
           // topContent={topContent}
-          topContentPlacement='outside'
+          topContentPlacement="outside"
           onSelectionChange={setSelectedKeys}
           onSortChange={setSortDescriptor}
         >
@@ -465,7 +484,7 @@ const ActivityTableBooking = ({
             {(column) => (
               <TableColumn
                 key={column.uid}
-                align={column.uid === 'actions' ? 'center' : 'start'}
+                align={column.uid === "actions" ? "center" : "start"}
                 allowsSorting={column.sortable}
               >
                 {column.name}
@@ -474,9 +493,9 @@ const ActivityTableBooking = ({
           </TableHeader>
           <TableBody
             style={{
-              textAlign: 'center',
+              textAlign: "center",
             }}
-            emptyContent={'No items found'}
+            emptyContent={"No items found"}
             items={sortedItems || []}
             isLoading={isLoading}
             loadingContent={<SmallLoader />}
@@ -493,42 +512,42 @@ const ActivityTableBooking = ({
       </section>
 
       <Modal
-        className='text-black'
+        className="text-black"
         isOpen={isOpenDownload}
         onOpenChange={toggleDownloadReport}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className='flex flex-col gap-1'>
+              <ModalHeader className="flex flex-col gap-1">
                 Choose a method to export
               </ModalHeader>
-              <ModalBody className='mb-6'>
+              <ModalBody className="mb-6">
                 <div
                   onClick={() => {
                     exportFile(0);
                     toggleDownloadReport();
                   }}
-                  className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
+                  className="flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md"
                 >
-                  <div className='flex gap-2'>
-                    <Image src={PDF} alt='pdf icon' />
+                  <div className="flex gap-2">
+                    <Image src={PDF} alt="pdf icon" />
                     <p>Export as PDF</p>
                   </div>
-                  <IoIosArrowForward className='text-grey600' />
+                  <IoIosArrowForward className="text-grey600" />
                 </div>
                 <div
                   onClick={() => {
                     toggleDownloadReport();
                     exportFile(1);
                   }}
-                  className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
+                  className="flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md"
                 >
-                  <div className='flex gap-2'>
-                    <Image src={CSV} alt='pdf icon' />
+                  <div className="flex gap-2">
+                    <Image src={CSV} alt="pdf icon" />
                     <p>Export as CSV</p>
                   </div>
-                  <IoIosArrowForward className='text-grey600' />
+                  <IoIosArrowForward className="text-grey600" />
                 </div>
               </ModalBody>
             </>
