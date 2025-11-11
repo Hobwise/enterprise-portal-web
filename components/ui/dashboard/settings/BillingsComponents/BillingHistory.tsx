@@ -76,11 +76,11 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
 
   const columns = [
     { name: "ID", uid: "id" },
-    { name: "Plan", uid: "plan" },
-    { name: "Bill Date", uid: "billDate" },
-    { name: "Amount", uid: "amount" },
-    { name: "Duration", uid: "duration" },
-    { name: "Invoice", uid: "invoice" },
+    { name: "PLAN", uid: "plan" },
+    { name: "BILL DATE", uid: "billDate" },
+    { name: "AMOUNT", uid: "amount" },
+    { name: "DURATION", uid: "duration" },
+    { name: "INVOICE", uid: "invoice" },
     // { name: '', uid: 'actions' },
   ];
 
@@ -213,13 +213,16 @@ const SubscriptionTable = ({ subscriptions, searchQuery }: any) => {
             emptyContent={"No subscriptions found"}
           >
             {(item) => (
-              <TableRow key={item.id}>
-                <TableCell className="text-left font-medium">
+              <TableRow
+                key={item.id}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                <TableCell className="text-left font-medium text-black text-sm">
                   {mapPlan(item.plan)}
                 </TableCell>
-                <TableCell>{renderCell(item, "subscriptionEndDate")}</TableCell>
-                <TableCell>{mapAmount(item.totalAmount)}</TableCell>
-                <TableCell>{mapPaymentPeriod(item.paymentPeriod)}</TableCell>
+                <TableCell className="text-textGrey text-sm">{renderCell(item, "subscriptionEndDate")}</TableCell>
+                <TableCell className="text-textGrey text-sm">{mapAmount(item.totalAmount)}</TableCell>
+                <TableCell className="text-textGrey text-sm">{mapPaymentPeriod(item.paymentPeriod)}</TableCell>
                 <TableCell className="text-center">
                   {renderCell(item, "invoice")}
                 </TableCell>

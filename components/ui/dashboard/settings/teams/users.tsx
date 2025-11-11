@@ -38,9 +38,9 @@ import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import { VscLoading } from "react-icons/vsc";
 export const columns = [
   { name: "ID", uid: "id" },
-  { name: "Name", uid: "firstName" },
-  { name: "Date added", uid: "dateCreated" },
-  { name: "Role", uid: "role" },
+  { name: "NAME", uid: "firstName" },
+  { name: "DATE ADDED", uid: "dateCreated" },
+  { name: "ROLE", uid: "role" },
   { name: "", uid: "actions" },
 ];
 const INITIAL_VISIBLE_COLUMNS = ["firstName", "dateCreated", "role", "actions"];
@@ -260,7 +260,10 @@ const Users = ({ data, refetch }: any) => {
         </TableHeader>
         <TableBody emptyContent={"No reservation found"} items={displayData || data}>
           {(item) => (
-            <TableRow key={item?.id}>
+            <TableRow
+              key={item?.id}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+            >
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey)}</TableCell>
               )}

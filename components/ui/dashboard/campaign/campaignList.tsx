@@ -173,13 +173,13 @@ const CampaignList = ({ searchQuery }: any) => {
       switch (columnKey) {
         case "campaignDescription":
           return (
-            <div className="md:w-[250px] text-textGrey w-[150px]">
+            <div className="md:w-[250px] text-textGrey text-sm w-[150px]">
               {campaign.campaignDescription}
             </div>
           );
         case "campaignName":
           return (
-            <div className="font-medium text-black">
+            <div className="font-medium text-black text-sm">
               {campaign.campaignName}
             </div>
           );
@@ -312,7 +312,7 @@ const CampaignList = ({ searchQuery }: any) => {
   // Show loading state
   if ((isLoadingInitial && (!categories || categories.length === 0)) || isLoadingCurrent) {
     return (
-      <section className="border border-primaryGrey rounded-lg p-8">
+      <section className="border border-primaryGrey rounded-lg overflow-hidden p-8">
         <div className="flex justify-center items-center">
           <CustomLoading />
         </div>
@@ -327,7 +327,7 @@ const CampaignList = ({ searchQuery }: any) => {
 
 
   return (
-    <section className="border border-primaryGrey rounded-lg">
+    <section className="border border-primaryGrey rounded-lg overflow-hidden">
       <Table
         radius="lg"
         isCompact
@@ -362,13 +362,16 @@ const CampaignList = ({ searchQuery }: any) => {
           items={campaignsToDisplay || []}
         >
           {(item: Campaign) => (
-            <TableRow key={item.id || JSON.stringify(item)}>
+            <TableRow
+              key={item.id || JSON.stringify(item)}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+            >
               {(columnKey) => (
                 <TableCell>{renderCell(item, columnKey as string)}</TableCell>
               )}
             </TableRow>
           )}
-        
+
 
         </TableBody>
       </Table>

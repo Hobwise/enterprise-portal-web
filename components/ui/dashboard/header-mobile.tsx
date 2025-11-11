@@ -6,13 +6,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from '@/lib/userTypeUtils';
 import { useDisclosure } from '@nextui-org/react';
 import { motion, useCycle } from 'framer-motion';
 import { FiLogOut } from 'react-icons/fi';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS } from './constants';
 import { SideNavItem } from './types';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
 
 type MenuItemWithSubMenuProps = {
   item: SideNavItem;
@@ -39,18 +39,19 @@ const sidebar = {
 };
 
 const HeaderMobile = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onOpenChange } = useDisclosure();
   const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const { role } = usePermission();
 
   const pathname = usePathname();
   const containerRef = useRef(null);
   const { height } = useDimensions(containerRef);
   const [isOpenClass, toggleOpen] = useCycle(false, true);
 
-  // Hide mobile menu for staff users with role === 1 (includes POS users and regular staff)
-  // This prevents them from accessing unauthorized menu items
-  if (role === 1) {
+  // Hide mobile menu for POS users and Category users only
+  const isPOSUser = checkIsPOSUser(userInformation);
+  const isCategoryUser = checkIsCategoryUser(userInformation);
+
+  if (isPOSUser || isCategoryUser) {
     return null;
   }
 

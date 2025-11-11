@@ -124,10 +124,10 @@ const columns7 = [
 ];
 
 const columns8 = [
-  { name: 'Reservation Name', uid: 'reservationName' },
-  { name: 'Total Booking Amount', uid: 'totalBookingFee' },
-  { name: 'Total Bookings', uid: 'totalBookings' },
-  { name: 'Date Updated', uid: 'dateUpdated' },
+  { name: "RESERVATION NAME", uid: "reservationName" },
+  { name: "Total Booking Amount", uid: "totalBookingFee" },
+  { name: "Total Bookings", uid: "totalBookings" },
+  { name: "Date Updated", uid: "dateUpdated" },
 ];
 
 const columns9 = [
@@ -148,12 +148,11 @@ const INITIAL_VISIBLE_COLUMNS10 = [
 ];
 
 const columns10 = [
-  { name: 'Reservation Name', uid: 'reservationName' },
-  { name: 'Quantity', uid: 'reservationQuantity' },
-  { name: 'Occupancy Rate', uid: 'occupancyRate' },
-  { name: 'Total Bookings', uid: 'totalBookings' },
-  { name: 'Start Date', uid: 'startDate' },
-  { name: 'End Date', uid: 'endDate' },
+  { name: "RESERVATION NAME", uid: "reservationName" },
+  { name: "Quantity", uid: "reservationCapacity" },
+  { name: "Occupancy Rate", uid: "occupancyRate" },
+  { name: "Total Bookings", uid: "totalBookings" },
+  { name: "Average Daily Utilization", uid: "averageDailyUtilization" },
 ];
 
 const ActivityTableBooking = ({

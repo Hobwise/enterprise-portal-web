@@ -30,6 +30,18 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
       };
     }
 
+    // Type 0: Object with data array and paginationMeta (Bookings with preserved API metadata)
+    if (arrayToMap.data && Array.isArray(arrayToMap.data) && arrayToMap.paginationMeta) {
+      const meta = arrayToMap.paginationMeta;
+      return {
+        totalPages: meta.totalPages || 1,
+        currentPage: meta.currentPage || 1,
+        hasNext: meta.hasNext || false,
+        hasPrevious: meta.hasPrevious || false,
+        totalCount: meta.totalCount || 0
+      };
+    }
+
     // Type 1: Already properly structured (Orders component)
     if (arrayToMap.totalPages && arrayToMap.currentPage !== undefined &&
         typeof arrayToMap.hasNext === 'boolean' && typeof arrayToMap.hasPrevious === 'boolean') {

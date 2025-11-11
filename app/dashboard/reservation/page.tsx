@@ -28,7 +28,7 @@ import {
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
 import { generateShortReservationUrlBrowser } from "@/lib/urlShortener";
-import { IoMdAdd } from "react-icons/io";
+import { IoAddCircleOutline } from "react-icons/io5";
 import { VscCopy, VscLoading } from "react-icons/vsc";
 import { MdOutlineFileDownload } from "react-icons/md";
 import toast from "react-hot-toast";
@@ -219,8 +219,7 @@ const Reservation: React.FC = () => {
                   backgroundColor="bg-primaryColor"
                 >
                   <div className="flex gap-2 items-center justify-center">
-                    <IoMdAdd className="text-[22px]" />
-
+                    <IoAddCircleOutline className="text-[22px]" />
                     <p>Add reservation</p>
                   </div>
                 </CustomButton>
@@ -234,6 +233,7 @@ const Reservation: React.FC = () => {
           data={data}
           reservation={filteredItems}
           searchQuery={searchQuery}
+          refetch={refetch}
         />
       ) : (
         <CreateReservation />

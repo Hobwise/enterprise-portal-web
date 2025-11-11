@@ -233,9 +233,7 @@ const EditReservation = ({
         toggleModalEdit();
       }}
     >
-      <ModalContent   classNames={{
-        wrapper: " z-[9999]",
-      }}>
+      <ModalContent>
         {(onClose) => (
           <>
             <ModalBody>

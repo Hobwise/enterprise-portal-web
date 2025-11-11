@@ -5,7 +5,7 @@ import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { Chip } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 
 import Error from "@/components/error";
 import CampaignList from "@/components/ui/dashboard/campaign/campaignList";
@@ -86,7 +86,7 @@ const Compaigns: React.FC = () => {
                   backgroundColor="bg-primaryColor"
                 >
                   <div className="flex gap-2 items-center justify-center">
-                    <IoMdAdd className="text-[22px]" />
+                     <IoAddCircleOutline className="text-[22px]" />
 
                     <p>Add campaign</p>
                   </div>

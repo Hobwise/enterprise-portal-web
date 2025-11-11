@@ -1,13 +1,13 @@
 const columns = [
   { name: "ID", uid: "menuID", sortable: true },
-  { name: "Name", uid: "name", sortable: true },
-  { name: "Amount", uid: "amount", sortable: true },
-  { name: "Table Name", uid: "qrReference", sortable: true },
-  { name: "Order ID", uid: "orderID", sortable: true },
-  { name: "Phone number", uid: "placedByPhoneNumber", sortable: true },
-  { name: "Payment", uid: "payment", sortable: true },
-  { name: "Status", uid: "status", sortable: true },
-  { name: "Date Updated", uid: "dateUpdated", sortable: true },
+  { name: "NAME", uid: "name", sortable: true },
+  { name: "AMOUNT", uid: "amount", sortable: true },
+  { name: "TABLE NAME", uid: "qrReference", sortable: true },
+  { name: "ORDER ID", uid: "orderID", sortable: true },
+  { name: "PHONE NUMBER", uid: "placedByPhoneNumber", sortable: true },
+  { name: "PAYMENT", uid: "payment", sortable: true },
+  { name: "STATUS", uid: "status", sortable: true },
+  { name: "DATE UPDATED", uid: "dateUpdated", sortable: true },
   { name: "", uid: "actions", sortable: false },
 ];
 export const statusColorMap: Record<

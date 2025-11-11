@@ -117,10 +117,19 @@ const getFilteredBookingDetails = (
   isPending: boolean,
   selectedCategory: string,
   searchQuery: string = ""
-): BookingItem[] => {
+): { bookings: BookingItem[]; paginationMeta: any } => {
+  // Default pagination meta structure
+  const defaultPaginationMeta = {
+    totalPages: 1,
+    currentPage: 1,
+    hasNext: false,
+    hasPrevious: false,
+    totalCount: 0,
+  };
+
   // Check if data is in pending state
   if (isLoading || isPending || !bookings) {
-    return [];
+    return { bookings: [], paginationMeta: defaultPaginationMeta };
   }
 
   // Check if categories array is empty
@@ -128,7 +137,7 @@ const getFilteredBookingDetails = (
     !categories?.bookingCategories ||
     categories?.bookingCategories?.length === 0
   ) {
-    return [];
+    return { bookings: [], paginationMeta: defaultPaginationMeta };
   }
 
   // Check if the selected category has totalCount of 0
@@ -136,11 +145,12 @@ const getFilteredBookingDetails = (
     (cat: BookingCategory) => cat.name === selectedCategory
   );
   if (selectedCategoryData && selectedCategoryData.totalCount === 0) {
-    return [];
+    return { bookings: [], paginationMeta: defaultPaginationMeta };
   }
 
-  // Extract bookings data - ensure it's always a valid array
+  // Extract bookings data and pagination metadata
   let allBookings: BookingItem[] = [];
+  let paginationMeta = { ...defaultPaginationMeta };
 
   if (Array.isArray(bookings)) {
     // If bookings is directly an array
@@ -148,9 +158,27 @@ const getFilteredBookingDetails = (
   } else if (bookings?.data?.bookings && Array.isArray(bookings.data.bookings)) {
     // If bookings has nested structure with data.bookings
     allBookings = bookings.data.bookings;
+    // Preserve API pagination metadata
+    paginationMeta = {
+      totalPages: bookings.data.totalPages || 1,
+      currentPage: bookings.data.currentPage || 1,
+      hasNext: bookings.data.hasNext || false,
+      hasPrevious: bookings.data.hasPrevious || false,
+      totalCount: bookings.data.totalCount || allBookings.length,
+    };
   } else if (bookings?.bookings && Array.isArray(bookings.bookings)) {
     // Alternative structure with direct bookings property
     allBookings = bookings.bookings;
+    // Check if pagination metadata exists at root level
+    if (bookings.totalPages !== undefined) {
+      paginationMeta = {
+        totalPages: bookings.totalPages || 1,
+        currentPage: bookings.currentPage || 1,
+        hasNext: bookings.hasNext || false,
+        hasPrevious: bookings.hasPrevious || false,
+        totalCount: bookings.totalCount || allBookings.length,
+      };
+    }
   } else {
     // Fallback to empty array if no valid data found
     allBookings = [];
@@ -158,7 +186,7 @@ const getFilteredBookingDetails = (
 
   // Safety check - ensure allBookings is valid array before filtering
   if (!Array.isArray(allBookings)) {
-    return [];
+    return { bookings: [], paginationMeta: defaultPaginationMeta };
   }
 
   // Get the status filter for the selected category
@@ -194,7 +222,7 @@ const getFilteredBookingDetails = (
     );
   }
 
-  return filteredByStatus;
+  return { bookings: filteredByStatus, paginationMeta };
 };
 
 const BookingsList: React.FC<BookingsListProps> = ({
@@ -251,7 +279,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
   );
 
   // Use the new filtered function that includes status filtering
-  const bookingDetails = getFilteredBookingDetails(
+  const filteredData = getFilteredBookingDetails(
     currentCategoryData || bookings,
     categories,
     isLoading || isLoadingInitial,
@@ -261,7 +289,8 @@ const BookingsList: React.FC<BookingsListProps> = ({
   );
 
   const matchingObject = {
-    data: bookingDetails,
+    data: filteredData.bookings,
+    paginationMeta: filteredData.paginationMeta,
   };
 
 
@@ -524,7 +553,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
   ]);
 
   // Determine if we should show loading spinner - only show for initial load
-  const shouldShowLoading = isLoadingInitial && bookingDetails.length === 0;
+  const shouldShowLoading = isLoadingInitial && filteredData.bookings.length === 0;
 
   // Check if data is in pending state
   const isDataPending =
@@ -532,7 +561,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
 
   if (isDataPending) {
     return (
-      <section className="border border-primaryGrey rounded-lg">
+      <section className="border border-primaryGrey rounded-lg overflow-hidden">
         <div className="flex justify-center items-center h-64">
           <SpinnerLoader size="md" />
         </div>
@@ -541,7 +570,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
   }
 
   return (
-    <section className="border border-primaryGrey rounded-lg">
+    <section className="border border-primaryGrey rounded-lg overflow-hidden">
       <Table
         radius="lg"
         isCompact
@@ -576,7 +605,10 @@ const BookingsList: React.FC<BookingsListProps> = ({
           loadingContent={<SpinnerLoader size="md" />}
         >
           {(booking: BookingItem) => (
-            <TableRow key={String(booking?.reference || booking?.id)}>
+            <TableRow
+              key={String(booking?.reference || booking?.id)}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+            >
               {(columnKey) => (
                 <TableCell>{renderCell(booking, String(columnKey))}</TableCell>
               )}
