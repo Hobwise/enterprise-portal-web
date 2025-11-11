@@ -1,7 +1,7 @@
 export const columns = [
   { name: 'ID', uid: 'id' },
-  { name: 'Campaign Title', uid: 'campaignName' },
-  { name: 'Description', uid: 'campaignDescription' },
-  { name: 'Launch date', uid: 'startDateTime' },
+  { name: 'CAMPAIGN TITLE', uid: 'campaignName' },
+  { name: 'DESCRIPTION', uid: 'campaignDescription' },
+  { name: 'LAUNCH DATE', uid: 'startDateTime' },
   { name: '', uid: 'actions' },
 ];

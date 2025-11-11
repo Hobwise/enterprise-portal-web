@@ -141,7 +141,9 @@ const Payments: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
+  if (isLoading && (!categories || categories.length === 0)) {
+    return <CustomLoading />;
+  }
   if (isError) return <Error onClick={() => refetch()} />;
 
   // Payment summary values (adjust keys if needed)

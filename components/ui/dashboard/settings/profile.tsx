@@ -54,6 +54,7 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [userFormData, setUserFormData] = useState<UserData | null>(null);
+  const [originalUserData, setOriginalUserData] = useState<UserData | null>(null);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const uploadFileMutation = useMutation({
@@ -90,15 +91,15 @@ const Profile = () => {
   });
 
   const updateUserMutation = useMutation({
-    mutationFn: () =>
-      updateUser(
-        { ...userFormData, gender: Number(userFormData?.gender) },
-        userInformation?.id
-      ),
+    mutationFn: () => {
+      const changedFields = getChangedFields();
+      return updateUser(changedFields, userInformation?.id);
+    },
     onSuccess: (data) => {
       if (data?.data.isSuccessful) {
         onOpen();
         queryClient.invalidateQueries({ queryKey: ["user"] });
+        setOriginalUserData(null); // Clear original data after successful update
       }
     },
   });
@@ -150,6 +151,32 @@ const Profile = () => {
       default:
         return "Unknown";
     }
+  };
+
+  const getChangedFields = () => {
+    if (!userFormData) {
+      return {};
+    }
+
+    const fieldsWithValues: Partial<UserData> = {};
+
+    // Send all fields that have values (not empty/null/undefined)
+    Object.keys(userFormData).forEach((key) => {
+      const value = userFormData[key];
+
+      // Include field if it has a value
+      // Allow 0 for gender, but exclude empty strings, null, and undefined
+      if (value !== null && value !== undefined && value !== '') {
+        fieldsWithValues[key] = value;
+      }
+    });
+
+    // Convert gender to number if it exists
+    if ('gender' in fieldsWithValues && fieldsWithValues.gender !== undefined) {
+      fieldsWithValues.gender = Number(fieldsWithValues.gender);
+    }
+
+    return fieldsWithValues;
   };
 
   return (
@@ -271,7 +298,10 @@ const Profile = () => {
               disableRipple
               className="flex border border-primaryColor rounded-[10px] text-primaryColor text-xs p-2 h-[30px]"
               backgroundColor="bg-transparent"
-              onClick={() => setIsEditing((prevState) => !prevState)}
+              onClick={() => {
+                setOriginalUserData(userFormData); // Store original data before editing
+                setIsEditing((prevState) => !prevState);
+              }}
             >
               <BiEditAlt className="text-base" />
               Edit
@@ -291,7 +321,13 @@ const Profile = () => {
                 disableRipple
                 className="flex rounded-[10px] text-xs p-2 h-[30px] text-danger"
                 backgroundColor="bg-transparent"
-                onClick={() => setIsEditing(false)}
+                onClick={() => {
+                  if (originalUserData) {
+                    setUserFormData(originalUserData); // Restore original data
+                  }
+                  setOriginalUserData(null); // Clear stored original
+                  setIsEditing(false);
+                }}
               >
                 <RxCross2 className="text-base" />
                 Cancel

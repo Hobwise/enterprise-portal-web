@@ -1,11 +1,11 @@
 export const columns = [
-  { name: "Name", uid: "firstName", sortable: true },
-  { name: "Reservation", uid: "reservationName", sortable: true },
-  { name: "Booking ID", uid: "reference", sortable: true },
-  { name: "Quantity", uid: "quantity", sortable: true },
-  { name: "Description", uid: "description", sortable: true },
-  { name: "Time", uid: "bookingDateTime", sortable: true },
-  { name: "Status", uid: "bookingStatus", sortable: true },
+  { name: "NAME", uid: "firstName", sortable: true },
+  { name: "RESERVATION", uid: "reservationName", sortable: true },
+  { name: "BOOKING ID", uid: "reference", sortable: true },
+  { name: "QUANTITY", uid: "quantity", sortable: true },
+  { name: "DESCRIPTION", uid: "description", sortable: true },
+  { name: "TIME", uid: "bookingDateTime", sortable: true },
+  { name: "STATUS", uid: "bookingStatus", sortable: true },
   { name: "", uid: "actions", sortable: false },
 ];
 

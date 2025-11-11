@@ -53,26 +53,26 @@ const INITIAL_VISIBLE_COLUMNS6 = [
 ];
 
 const columns4 = [
-  { name: "Customer Name", uid: "customer" },
-  { name: "Treated By", uid: "treatedBy" },
-  { name: "Total Amount", uid: "totalAmount" },
-  { name: "Payment Reference", uid: "paymentReference" },
-  { name: "Payment Method", uid: "paymentMethod" },
-  { name: "Status", uid: "status" },
+  { name: "CUSTOMER NAME", uid: "customer" },
+  { name: "TREATED BY", uid: "treatedBy" },
+  { name: "TOTAL AMOUNT", uid: "totalAmount" },
+  { name: "PAYMENT REFERENCE", uid: "paymentReference" },
+  { name: "PAYMENT METHOD", uid: "paymentMethod" },
+  { name: "STATUS", uid: "status" },
 ];
 
 const columns5 = [
-  { name: "Payment Method", uid: "paymentMethod" },
+  { name: "PAYMENT METHOD", uid: "paymentMethod" },
   { name: "Number Of Payments", uid: "numberOfPayments" },
-  { name: "Total Amount Processed", uid: "totalAmountProcessed" },
-  { name: "Date Updated", uid: "lastRecordDateTime" },
+  { name: "TOTAL AMOUNT PROCESSED", uid: "totalAmountProcessed" },
+  { name: "DATE UPDATED", uid: "lastRecordDateTime" },
 ];
 const columns6 = [
-  { name: "Quick Response Name", uid: "quickResponseName" },
-  { name: "Number Of Orders", uid: "numberOfOrders" },
-  { name: "Pending Sales Amount", uid: "pendingSalesAmount" },
-  { name: "Confirmed Sales Amount", uid: "confirmedSalesAmount" },
-  { name: "Total Sales Amount", uid: "totalSalesAmount" },
+  { name: "QUICK RESPONSE NAME", uid: "quickResponseName" },
+  { name: "NUMBER OF ORDERS", uid: "numberOfOrders" },
+  { name: "PENDING SALES AMOUNT", uid: "pendingSalesAmount" },
+  { name: "CONFIRMED SALES AMOUNT", uid: "confirmedSalesAmount" },
+  { name: "TOTAL SALES AMOUNT", uid: "totalSalesAmount" },
 ];
 
 const ActivityTablePayment = ({

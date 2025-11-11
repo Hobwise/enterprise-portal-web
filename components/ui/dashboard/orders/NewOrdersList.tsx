@@ -308,7 +308,7 @@ const NewOrdersList: React.FC<NewOrdersListProps> = ({
   );
 
   return (
-    <section className='border border-primaryGrey rounded-lg'>
+    <section className='border border-primaryGrey rounded-lg overflow-hidden'>
       <Table
         radius='lg'
         isCompact
@@ -356,7 +356,10 @@ const NewOrdersList: React.FC<NewOrdersListProps> = ({
           loadingContent={<SpinnerLoader size="md" />}
         >
           {(order: OrderItem) => (
-            <TableRow key={order.id}>
+            <TableRow
+              key={order.id}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+            >
               {(columnKey) => (
                 <TableCell>{renderCell(order, String(columnKey))}</TableCell>
               )}

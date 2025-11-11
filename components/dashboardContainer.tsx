@@ -1,8 +1,8 @@
 'use client';
 
 import { useActivityTracking } from '@/hooks/useActivityTracking';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { usePathname } from 'next/navigation';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from '@/lib/userTypeUtils';
 import Header from './ui/dashboard/header';
 import HeaderMobile from './ui/dashboard/header-mobile';
 import MarginWidthWrapper from './ui/dashboard/margin-width-wrapper';
@@ -11,14 +11,12 @@ import SideNav from './ui/dashboard/side-nav';
 
 function Container({ children }: any) {
   useActivityTracking();
-  const pathname = usePathname();
-  const { role } = usePermission();
 
-  // Hide sidebar for POS users (role === 1) on orders page and specific settings pages
-  const isPOSUser = role === 1;
-  const isPOSSettingsPage = pathname === '/dashboard/settings/personal-information' ||
-                            pathname === '/dashboard/settings/password-management';
-  const shouldHideSidebar = isPOSUser && (pathname === '/dashboard/orders' || isPOSSettingsPage);
+  // Hide sidebar for POS users and Category users
+  const userInfo = getJsonItemFromLocalStorage('userInformation');
+  const isPOSUser = checkIsPOSUser(userInfo);
+  const isCategoryUser = checkIsCategoryUser(userInfo);
+  const shouldHideSidebar = isPOSUser || isCategoryUser;
 
   return (
     <div className="flex h-screen overflow-hidden">

@@ -15,7 +15,7 @@ import {
   saveJsonItemToLocalStorage,
   setTokenCookie,
 } from "@/lib/utils";
-import { isPOSUser as checkIsPOSUser } from "@/lib/userTypeUtils";
+import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from "@/lib/userTypeUtils";
 import {
   Avatar,
   Divider,
@@ -42,15 +42,17 @@ const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
   const [isMounted, setIsMounted] = useState(false);
   const [isPOSUserState, setIsPOSUserState] = useState(false);
+  const [isCategoryUserState, setIsCategoryUserState] = useState(false);
 
   const { data: businessDetails, isLoading } = useGetBusiness();
   const { data: businessDetailsList, refetch } = useGetBusinessByCooperate();
 
   useEffect(() => {
     setIsMounted(true);
-    // Check if user is POS user after component mounts using centralized utility
+    // Check if user is POS user or Category user after component mounts using centralized utility
     const userInfo = getJsonItemFromLocalStorage('userInformation');
     setIsPOSUserState(checkIsPOSUser(userInfo));
+    setIsCategoryUserState(checkIsCategoryUser(userInfo));
   }, []);
 
   const {
@@ -142,6 +144,11 @@ const SideNav = () => {
   const filteredItems = useMemo(() => {
     if (isPermissionsLoading || !isMounted) return [];
 
+    // If Category user, don't show any sidebar items (sidebar should be hidden)
+    if (isCategoryUserState) {
+      return [];
+    }
+
     // If POS user, show only POS and Orders navigation
     if (isPOSUserState) {
       return [
@@ -158,7 +165,7 @@ const SideNav = () => {
       ];
     }
 
-    // Regular filtering for non-POS users
+    // Regular filtering for non-POS/non-Category users
     return SIDENAV_ITEMS.filter((item) => {
       // Early return if not role 1 (admin permissions)
       if (role !== 1) return true;
@@ -178,7 +185,7 @@ const SideNav = () => {
       const hasPermission = permissionMap[item.title];
       return hasPermission !== false; // Allow if permission is true or undefined
     });
-  }, [isPermissionsLoading, role, userRolePermissions, isMounted, isPOSUserState]);
+  }, [isPermissionsLoading, role, userRolePermissions, isMounted, isPOSUserState, isCategoryUserState]);
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
