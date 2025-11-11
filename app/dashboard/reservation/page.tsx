@@ -13,7 +13,7 @@ import {
   PopoverTrigger,
 } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 
 import Error from "@/components/error";
 import CreateReservation from "@/components/ui/dashboard/reservations/createReservations";
@@ -28,7 +28,6 @@ import {
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
 import { generateShortReservationUrlBrowser } from "@/lib/urlShortener";
-import { IoAddCircleOutline } from "react-icons/io5";
 import { VscCopy, VscLoading } from "react-icons/vsc";
 import { MdOutlineFileDownload } from "react-icons/md";
 import toast from "react-hot-toast";
@@ -219,7 +218,8 @@ const Reservation: React.FC = () => {
                   backgroundColor="bg-primaryColor"
                 >
                   <div className="flex gap-2 items-center justify-center">
-                    <IoAddCircleOutline className="text-[22px]" />
+                     <IoAddCircleOutline className="text-[22px]" />
+
                     <p>Add reservation</p>
                   </div>
                 </CustomButton>
