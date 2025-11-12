@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { CustomButton } from "@/components/customButton";
 import { BiEditAlt } from "react-icons/bi";
-import { Avatar, cn, Divider } from "@nextui-org/react";
+import { Avatar, Badge, Chip, cn, Divider, Switch } from "@nextui-org/react";
 import { MdLockOutline } from "react-icons/md";
 import { CustomInput } from "@/components/CustomInput";
 import { IoCheckmarkCircleOutline } from "react-icons/io5";
@@ -25,7 +25,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { deleteFile, uploadFile } from "@/app/api/controllers/dashboard/menu";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PiBuildingOffice } from "react-icons/pi";
 import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
 import api from "@/app/api/apiService";
@@ -255,7 +255,8 @@ const BusinessInformation = () => {
             <div className="flex">
               <CustomButton
                 disableRipple
-                loading={updateBusinessMutation.isLoading}
+                loading={updateBusinessMutation.isPending}
+                disabled={updateBusinessMutation.isPending}
                 className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
                 onClick={() => updateBusinessMutation.mutate()}
               >
@@ -266,7 +267,14 @@ const BusinessInformation = () => {
                 disableRipple
                 className="flex rounded-[10px] text-xs p-2 h-[30px] text-danger"
                 backgroundColor="bg-transparent"
-                onClick={() => setIsEditing(false)}
+                onClick={() => {
+                  // Reset form data to original business data when canceling
+                  setBusinessFormData({
+                    ...businessData,
+                    businessID: businessInformation[0]?.businessId,
+                  });
+                  setIsEditing(false);
+                }}
               >
                 <RxCross2 className="text-base" />
                 Cancel
@@ -597,6 +605,103 @@ const BusinessInformation = () => {
                       placeholder="Enter secondary brand color"
                     />
                   </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* VAT Section */}
+      <div className="border border-secondaryGrey rounded-[10px] p-4 space-y-8">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <PiBuildingOffice className="text-black" />
+            <span className="font-medium text-sm">VAT</span>
+          </div>
+          <Divider />
+        </div>
+
+        <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+          {!isEditing ? (
+            <>
+              <div className="col-span-1 flex gap-2">
+                <div className="h-4 w-4"></div>
+                <div className="flex flex-col">
+                  <span className="text-sm">Status</span>
+                  <Chip
+                    className={`${
+                      businessFormData?.isVatEnabled
+                        ? "bg-success-50 text-success-600  border border-green-500"
+                        : "bg-gray-50 text-gray-600 border border-gray-500"
+                    }`}
+                    size="sm"
+                    variant="flat"
+                  >
+                    {businessFormData?.isVatEnabled ? "Enabled" : "Disabled"}
+                  </Chip>
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2">
+                <div className="h-4 w-4"></div>
+                <div className="flex flex-col">
+                  <span className="text-sm">VAT Percentage</span>
+                  <span className="text-sm">
+                    {businessFormData?.vatRate || 0}%
+                  </span>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="col-span-1 flex gap-2">
+                <div className="flex flex-col w-full">
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <label className="text-black font-medium text-sm">
+                        VAT
+                      </label>
+                      <span className="text-xs text-gray-600">
+                        Activate and customize your VAT and charges on customer
+                        order
+                      </span>
+                    </div>
+                    <Switch
+                      size="sm"
+                      classNames={{
+                        wrapper: `m-0 ${
+                          businessFormData?.isVatEnabled
+                            ? "!bg-primaryColor"
+                            : "bg-[#E4E7EC]"
+                        } `,
+                      }}
+                      name="allowSystemAdvert"
+                      defaultChecked={businessFormData?.isVatEnabled}
+                      onChange={(e) =>
+                        setBusinessFormData((prevState: any) => ({
+                          ...prevState,
+                          isVatEnabled: e.target.checked,
+
+                          vatRate: e.target.checked ? prevState.vatRate : 7.5,
+                        }))
+                      }
+                      isSelected={businessFormData?.isVatEnabled}
+                      aria-label="VAT"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                <div className="flex flex-col w-full">
+                  <CustomInput
+                    type="number"
+                    name="vatRate"
+                    disabled={!businessFormData?.isVatEnabled}
+                    label="VAT Percentage"
+                    onChange={handleInputChange}
+                    value={businessFormData?.vatRate || 7.5}
+                    placeholder="Enter VAT percentage"
+                  />
                 </div>
               </div>
             </>

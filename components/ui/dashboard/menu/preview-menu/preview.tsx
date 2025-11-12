@@ -110,7 +110,7 @@ const Preview = () => {
 
   return (
     <article
-      className={`relative w-full max-w-[320px] mx-auto border-[8px] overflow-y-auto border-black rounded-[40px] h-[684px] bg-white`}
+      className={`relative w-full max-w-[300px] mx-auto border-[8px] overflow-y-auto border-black rounded-[40px] h-[600px] bg-white`}
     >
       {/* Restaurant Banner */}
       <RestaurantBanner

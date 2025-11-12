@@ -158,30 +158,8 @@ export async function createAdditionalUser(formData: any) {
     handleError(error);
   }
 }
+
 export async function updateUser(payload: any, userId: string) {
-  // const validatedFields = updateUserSchema.safeParse({
-  //   firstName: formData.firstName,
-  //   lastName: formData.lastName,
-  //   email: formData.email,
-  //   role: formData.role,
-  // });
-
-  // if (!validatedFields.success) {
-  //   return {
-  //     errors: validatedFields.error.flatten().fieldErrors,
-  //   };
-  // }
-  // const payload = {
-  //   firstName: formData.firstName,
-  //   lastName: formData.lastName,
-  //   email: formData.email,
-  //   role: +formData.role,
-  //   businessID: formData.businessID,
-  //   cooperateID: formData.cooperateID,
-  //   isActive: formData.isActive,
-  //   imageReference: formData.imageReference,
-  // };
-
   try {
     // const data = await api.put(`${AUTH.user}?userId=${formData.id}`, payload);
     const data = await api.put(`${AUTH.user}?userId=${userId}`, payload);

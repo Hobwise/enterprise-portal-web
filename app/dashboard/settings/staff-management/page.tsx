@@ -1,138 +1,51 @@
 'use client';
 
-import { CustomButton } from '@/components/customButton';
-import AssignPermission from '@/components/ui/dashboard/settings/rolesAndPrivileges/assignPermission';
-import useRoleCount from '@/hooks/cachedEndpoints/useRoleCount';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { SmallLoader, getJsonItemFromLocalStorage } from '@/lib/utils';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-  useDisclosure,
-} from '@nextui-org/react';
-import { useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { TbEdit } from 'react-icons/tb';
+import { useState } from "react";
+import { Tabs, Tab } from "@nextui-org/react";
+import TeamMembersTab from "@/components/ui/dashboard/settings/staff-management/TeamMembersTab";
+import CreateNewRoleTab from "@/components/ui/dashboard/settings/staff-management/CreateNewRoleTab";
+import RolesPermissionTab from "@/components/ui/dashboard/settings/staff-management/RolesPermissionTab";
 
-const RolesPage = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const { data, isLoading } = useRoleCount();
-  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
-  const router = useRouter();
-  const userInformation = getJsonItemFromLocalStorage('userInformation') || [];
-
-  const columns = [
-    { name: 'Role', uid: 'role' },
-    { name: 'Members', uid: 'count' },
-    { name: '', uid: 'actions' },
-  ];
-  const renderCell = useCallback((user, columnKey) => {
-    const cellValue = user[columnKey];
-
-    switch (columnKey) {
-      case 'actions':
-        return (
-          <div className="inline-flex p-0.5 gap-2 border border-primaryGrey rounded-md ">
-            {/* <Dropdown aria-label='drop down'> */}
-            {/* <DropdownTrigger aria-label='actions'> */}
-            <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-              <HiOutlineDotsVertical />
-            </span>
-            {/* </DropdownTrigger> */}
-            {/* <DropdownMenu className='text-black inline-flex'>
-                <DropdownItem aria-label='View role'>
-                  <div className={` flex gap-2  items-center text-grey500`}>
-                    <GrFormView className='text-[20px]' />
-                    <p>View </p>
-                  </div>
-                </DropdownItem>
-              </DropdownMenu> */}
-            {/* </Dropdown> */}
-          </div>
-        );
-      default:
-        return cellValue;
-    }
-  }, []);
-
-  // Check permissions before rendering
-  useEffect(() => {
-    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canViewUser) {
-      router.push('/dashboard/unauthorized');
-    }
-  }, [isPermissionsLoading, role, userRolePermissions, router]);
-
-  // Check if user has permission to view users/staff
-  if (role !== 0 && !userRolePermissions?.canViewUser) {
-    return null; // Will redirect via useEffect
-  }
+const StaffManagementPage = () => {
+  const [selectedTab, setSelectedTab] = useState("team-members");
 
   return (
     <section>
-      <div className="flex md:flex-row flex-col justify-between md:items-center items-start">
-        <div>
-          <h1 className="text-[16px] leading-8 font-semibold">Roles</h1>
-          <p className="text-sm  text-grey600  xl:w-[231px] xl:mb-8 w-full mb-4">
-            Update your roles and permission.
-          </p>
-        </div>
-        {userInformation.role === 0 && (
-          <CustomButton
-            onClick={onOpen}
-            className="py-2 px-4 md:mb-0 mb-4 text-white"
-            backgroundColor="bg-primaryColor"
-          >
-            <div className="flex gap-1 items-center justify-center">
-              <span>
-                <TbEdit className="text-[18px]" />
-              </span>
-              <span> Update permission</span>
-            </div>
-          </CustomButton>
-        )}
+      <div className="mb-6">
+        <h1 className="text-[24px] leading-8 font-semibold mb-2">
+          Staff Management
+        </h1>
+        <p className="text-sm text-grey600">
+          Manage your team members, roles, and permissions
+        </p>
       </div>
 
-      {isLoading && !data ? (
-        <div className="grid mt-3 place-content-center">
-          <SmallLoader />
-        </div>
-      ) : (
-        <div className="border border-primaryGrey flex flex-col gap-2 rounded-lg">
-          <Table removeWrapper={true} shadow="none" aria-label="Roles table">
-            <TableHeader columns={columns}>
-              {(column) => (
-                <TableColumn
-                  align={column.uid === 'actions' ? 'center' : 'start'}
-                  key={column.uid}
-                >
-                  {column.name}
-                </TableColumn>
-              )}
-            </TableHeader>
-            <TableBody
-              loadingContent={<SmallLoader />}
-              emptyContent={'No data to display.'}
-              items={data || []}
-            >
-              {(item) => (
-                <TableRow key={item?.role}>
-                  {(columnKey) => (
-                    <TableCell>{renderCell(item, columnKey)}</TableCell>
-                  )}
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-      <AssignPermission isOpen={isOpen} onOpenChange={onOpenChange} />
+      <Tabs
+        selectedKey={selectedTab}
+        onSelectionChange={setSelectedTab}
+        variant="light"
+        classNames={{
+          base: "w-full",
+          tabList: "gap-0 w-full relative rounded-lg p-0 bg-gray-100",
+          cursor: "w-full bg-primaryColor/10",
+          tab: "flex-1 h-12 rounded-lg data-[selected=true]:bg-primaryColor/10",
+          tabContent:
+            "group-data-[selected=true]:text-primaryColor font-semibold text-grey500",
+        }}
+        fullWidth
+      >
+        <Tab key="team-members" title="Team Members">
+          <TeamMembersTab />
+        </Tab>
+        <Tab key="create-role" title="Role Management">
+          <CreateNewRoleTab />
+        </Tab>
+        <Tab key="roles-permission" title="Permission Management">
+          <RolesPermissionTab />
+        </Tab>
+      </Tabs>
     </section>
   );
 };
 
-export default RolesPage;
+export default StaffManagementPage;

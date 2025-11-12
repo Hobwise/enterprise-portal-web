@@ -1,213 +1,283 @@
 'use client';
-import { createAdditionalUser } from '@/app/api/controllers/auth';
-import { CustomInput } from '@/components/CustomInput';
-import { CustomButton } from '@/components/customButton';
-import SelectInput from '@/components/selectInput';
-import useUserByBusiness from '@/hooks/cachedEndpoints/useUserByBusiness';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { updateUser } from "@/app/api/controllers/auth";
+import { CustomInput } from "@/components/CustomInput";
+import { CustomButton } from "@/components/customButton";
+import SelectInput from "@/components/selectInput";
+import useUserByBusiness from "@/hooks/cachedEndpoints/useUserByBusiness";
+import useStaffAssignment from "@/hooks/cachedEndpoints/useStaffAssignment";
+import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import {
   Modal,
   ModalBody,
   ModalContent,
   ModalHeader,
   Spacer,
-  Tooltip,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import React, { useState } from 'react';
-import { FaRegEnvelope } from 'react-icons/fa6';
-import follow from '../../../../../public/assets/images/follow.png';
+} from "@nextui-org/react";
+import Image from "next/image";
+import React, { useState, useEffect } from "react";
+import { FaRegEnvelope } from "react-icons/fa6";
+import toast from "react-hot-toast";
+import success from "../../../../../public/assets/images/success.png";
 
-const EditUser = ({ isOpenEdit, user, toggleEdit }: any) => {
-  const { refetch } = useUserByBusiness();
-  const [isOpenInviteMore, setIsOpenInviteMore] = useState(false);
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
-  const businessInformation = getJsonItemFromLocalStorage('business');
+const EditUser = ({ isOpenEdit, user, toggleEdit, refetch }: any) => {
+  const { data: staffAssignments } = useStaffAssignment();
+  const [isOpenSuccess, setIsOpenSuccess] = useState(false);
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState(null);
-  const [createFormData, setCreateFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    password: '',
+  const [response, setResponse] = useState<any>(null);
+  const [editFormData, setEditFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
     businessID: businessInformation[0]?.businessId,
     cooperateID: userInformation?.cooperateID,
     isActive: true,
-    role: '',
+    role: "",
+    assignmentId: "",
   });
 
-  const toggleInviteMoreModal = () => {
-    setIsOpenInviteMore(!isOpenInviteMore);
+  // Prefill form data when user prop changes
+  useEffect(() => {
+    if (user && isOpenEdit) {
+      let assignmentValue = "";
+
+      // Check assignedCategoryId first (though it appears to be empty)
+      if (user.assignedCategoryId && user.assignedCategoryId !== "") {
+        assignmentValue = user.assignedCategoryId.toString();
+      } else if (user.assignmentId) {
+        assignmentValue = user.assignmentId.toString();
+      } else if (user.primaryAssignmentId) {
+        assignmentValue = user.primaryAssignmentId.toString();
+      } else if (user.staffAssignmentId) {
+        assignmentValue = user.staffAssignmentId.toString();
+      } else if (user.staffAssignment?.id) {
+        assignmentValue = user.staffAssignment.id.toString();
+      } else if (user.primaryAssignmentID) {
+        assignmentValue = user.primaryAssignmentID.toString();
+      } else if (
+        user.primaryAssignment &&
+        user.primaryAssignment !== "NONE" &&
+        staffAssignments
+      ) {
+        // If we only have the assignment name, try exact match first
+        let matchingAssignment = staffAssignments.find(
+          (assignment) => assignment.name === user.primaryAssignment
+        );
+
+        // If no exact match, try partial matching (e.g., "Point of Sales" contains "POS")
+        if (!matchingAssignment) {
+          matchingAssignment = staffAssignments.find(
+            (assignment) =>
+              assignment.name
+                .toLowerCase()
+                .includes(user.primaryAssignment.toLowerCase()) ||
+              user.primaryAssignment
+                .toLowerCase()
+                .includes(assignment.name.toLowerCase()) ||
+              // Check for POS abbreviation
+              (user.primaryAssignment
+                .toLowerCase()
+                .includes("point of sales") &&
+                assignment.name.toLowerCase().includes("pos"))
+          );
+        }
+
+        if (matchingAssignment) {
+          assignmentValue = matchingAssignment.id.toString();
+        }
+      }
+
+      setEditFormData({
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
+        email: user.email || "",
+        businessID: businessInformation[0]?.businessId,
+        cooperateID: userInformation?.cooperateID,
+        isActive: user.isActive ?? true,
+        role: user.role?.toString() || "",
+        assignmentId: assignmentValue,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, isOpenEdit, staffAssignments]);
+
+  const toggleSuccessModal = () => {
+    setIsOpenSuccess(!isOpenSuccess);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: any) => {
     setResponse(null);
-    const { name, value } = e.target;
-    setCreateFormData((prevFormData) => ({
+
+    // Handle both regular inputs and NextUI Select components
+    const name = e.target.name;
+    const value = e.target.value;
+
+    setEditFormData((prevFormData) => ({
       ...prevFormData,
       [name]: value,
     }));
   };
 
-  const submitFormData = async (e) => {
+  const submitFormData = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...createFormData, role: +createFormData.role };
+
+    if (!user?.id) {
+      notify({
+        title: "Error!",
+        text: "User ID is required",
+        type: "error",
+      });
+      return;
+    }
+
+    const payload = {
+      firstName: editFormData.firstName,
+      lastName: editFormData.lastName,
+      email: editFormData.email,
+      role: +editFormData.role,
+      businessID: editFormData.businessID,
+      cooperateID: editFormData.cooperateID,
+      isActive: editFormData.isActive,
+      assignmentId: editFormData.assignmentId,
+    };
 
     setLoading(true);
-    const data = await createAdditionalUser(payload);
+    const data = await updateUser(payload, user.id);
     setLoading(false);
     setResponse(data);
 
+    if (data?.errors) {
+      // Handle validation errors - they're already set in response state
+      return;
+    }
+
     if (data?.data?.isSuccessful) {
       toggleEdit();
-      toggleInviteMoreModal();
-      setCreateFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        password: '',
-        businessID: businessInformation[0]?.businessId,
-        cooperateID: userInformation?.cooperateID,
-        isActive: true,
-        role: '',
-      });
+      toggleSuccessModal();
       refetch();
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
   const role = [
     {
-      label: 'Manager',
-      value: 0,
+      label: "Manager",
+      value: "0",
     },
     {
-      label: 'Staff',
-      value: 1,
+      label: "Staff",
+      value: "1",
     },
   ];
+
+  const assignmentOptions =
+    staffAssignments?.map((assignment) => ({
+      label: assignment.name,
+      value: assignment.id.toString(), // Ensure value is string to match selectedKeys
+    })) || [];
+
+  const handleClose = () => {
+    setResponse(null);
+    toggleEdit();
+  };
+
   return (
     <>
-      <Modal isOpen={isOpenEdit} onOpenChange={() => toggleEdit()}>
+      <Modal isOpen={isOpenEdit} onOpenChange={handleClose}>
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className='flex flex-col mt-2 text-black gap-1'>
-                <h1 className='text-[22px]  font-bold leading-4'>
+              <ModalHeader className="flex flex-col mt-2 text-black gap-1">
+                <h1 className="text-[22px] font-bold leading-6">
                   Update team member
                 </h1>
-                <p className='text-[14px] font-[500]  text-grey600'>
-                  Enter details to invite a team member
+                <p className="text-[14px] font-normal text-grey600">
+                  Update details for {user?.firstName} {user?.lastName}
                 </p>
               </ModalHeader>
-              <ModalBody className='text-black'>
-                <form onSubmit={submitFormData} autoComplete='off'>
-                  <div className='flex md:flex-row flex-col gap-5'>
+              <ModalBody className="text-black">
+                <form onSubmit={submitFormData} autoComplete="off">
+                  <div className="flex md:flex-row flex-col gap-5">
                     <CustomInput
-                      type='text'
-                      name='firstName'
-                      label='First name'
+                      type="text"
+                      name="firstName"
+                      label="First name"
                       errorMessage={response?.errors?.firstName?.[0]}
                       onChange={handleInputChange}
-                      value={createFormData.firstName}
-                      placeholder='First name'
+                      value={editFormData.firstName}
+                      placeholder="First name"
                     />
 
                     <CustomInput
-                      type='text'
-                      name='lastName'
+                      type="text"
+                      name="lastName"
                       errorMessage={response?.errors?.lastName?.[0]}
                       onChange={handleInputChange}
-                      value={createFormData.lastName}
-                      label='Last name'
-                      placeholder='Last name'
+                      value={editFormData.lastName}
+                      label="Last name"
+                      placeholder="Last name"
                     />
                   </div>
                   <Spacer y={6} />
                   <CustomInput
-                    type='text'
-                    name='email'
+                    type="text"
+                    name="email"
                     errorMessage={response?.errors?.email?.[0]}
                     onChange={handleInputChange}
-                    value={createFormData.email}
-                    label='Email Address'
-                    placeholder='Enter email'
+                    value={editFormData.email}
+                    label="Email Address"
+                    placeholder="Enter email"
                     endContent={
-                      <FaRegEnvelope className='text-foreground-500 text-l' />
+                      <FaRegEnvelope className="text-foreground-500 text-l" />
                     }
                   />
-
-                  <Spacer y={6} />
-                  <Tooltip
-                    showArrow
-                    placement='left'
-                    classNames={{
-                      base: [
-                        // arrow color
-                        'before:bg-neutral-400 dark:before:bg-white',
-                      ],
-                      content: [
-                        'py-2 px-4 shadow-xl bg-[#F2F8FF] rounded-md',
-                        'text-black bg-gradient-to-br from-white to-neutral-400',
-                      ],
-                    }}
-                    content={
-                      <div className='px-1 py-2 space-y-2'>
-                        <div className='text-small font-bold'>
-                          Password should include
-                        </div>
-                        <div className='text-tiny'>
-                          One uppercase character e.g A,B,C,etc
-                        </div>
-                        <div className='text-tiny'>
-                          One lowercase character e.g a,b,c,etc
-                        </div>
-                        <div className='text-tiny'>
-                          One special character e.g !,@,#,etc
-                        </div>
-                        <div className='text-tiny'>
-                          One number e.g 1,2,3,4 etc
-                        </div>
-                        <div className='text-tiny'>At least 8 characters </div>
-                      </div>
-                    }
-                  >
-                    <div>
-                      <CustomInput
-                        errorMessage={response?.errors?.password?.[0]}
-                        value={createFormData.password}
-                        onChange={handleInputChange}
-                        type='password'
-                        name='password'
-                        label='Password'
-                        placeholder='Enter password'
-                      />
-                    </div>
-                  </Tooltip>
 
                   <Spacer y={6} />
 
                   <SelectInput
                     errorMessage={response?.errors?.role?.[0]}
-                    label='Role'
-                    placeholder='Select a role'
-                    name='role'
-                    selectedKeys={[createFormData?.role]}
+                    label="Role"
+                    placeholder="Select a role"
+                    name="role"
+                    selectedKeys={editFormData?.role ? [editFormData.role] : []}
                     onChange={handleInputChange}
-                    value={createFormData?.role}
+                    value={editFormData?.role}
                     contents={role}
                   />
+
                   <Spacer y={6} />
+
+                  {editFormData.role === "1" && (
+                    <>
+                      <SelectInput
+                        errorMessage={response?.errors?.assignmentId?.[0]}
+                        label="Assignment"
+                        placeholder="Select a position"
+                        name="assignmentId"
+                        selectedKeys={
+                          editFormData?.assignmentId
+                            ? [editFormData.assignmentId]
+                            : []
+                        }
+                        onChange={handleInputChange}
+                        value={editFormData?.assignmentId}
+                        contents={assignmentOptions}
+                      />
+                      <Spacer y={6} />
+                    </>
+                  )}
+
                   <CustomButton
                     loading={loading}
                     disabled={loading}
-                    type='submit'
+                    type="submit"
                   >
-                    Send invite
+                    Update member
                   </CustomButton>
                   <Spacer y={6} />
                 </form>
@@ -217,47 +287,36 @@ const EditUser = ({ isOpenEdit, user, toggleEdit }: any) => {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={isOpenInviteMore} onOpenChange={toggleInviteMoreModal}>
+      <Modal isOpen={isOpenSuccess} onOpenChange={toggleSuccessModal}>
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalBody className='text-black flex flex-col justify-center items-center mt-4 text-center'>
+              <ModalBody className="text-black flex flex-col justify-center items-center mt-4 text-center">
                 <Image
-                  src={follow}
+                  src={success}
                   width={100}
                   height={100}
-                  className='object-cover rounded-lg'
-                  aria-label='booking icon'
-                  alt='booking icon'
+                  className="object-cover rounded-lg"
+                  aria-label="success icon"
+                  alt="success icon"
                 />
                 <Spacer y={1} />
-                <div className='md:w-[70%] w-full '>
-                  <h1 className='text-[16px]  font-semibold'>
-                    Team members invited
+                <div className="md:w-[70%] w-full">
+                  <h1 className="text-[16px] font-semibold">
+                    Team member updated
                   </h1>
-                  <p className='text-sm  text-grey600 '>
-                    Your team member has been sent an invitation via mail
+                  <p className="text-sm text-grey600">
+                    Team member details have been updated successfully
                   </p>
                 </div>
                 <Spacer y={1} />
-                <div className='flex flex-col gap-3 px-4 w-full'>
+                <div className="flex flex-col gap-3 px-4 w-full">
                   <CustomButton
-                    onClick={() => {
-                      toggleInviteMoreModal();
-                      onOpenChange();
-                    }}
-                    className='h-[50px] text-white'
-                    type='button'
+                    onClick={toggleSuccessModal}
+                    className="h-[50px] text-white"
+                    type="button"
                   >
-                    Add another team member
-                  </CustomButton>
-
-                  <CustomButton
-                    onClick={toggleInviteMoreModal}
-                    type='button'
-                    className='h-[50px] bg-white text-black border border-primaryGrey'
-                  >
-                    View team members
+                    Done
                   </CustomButton>
                 </div>
                 <Spacer y={4} />

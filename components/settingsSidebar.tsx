@@ -24,10 +24,13 @@ const lists = [
     title: "Billing & Subscription",
     href: "/dashboard/settings/subscriptions",
   },
-  { title: "Teams Management", href: "/dashboard/settings/teams" },
   {
-    title: "Roles and Permissions",
+    title: "Staff Management",
     href: "/dashboard/settings/staff-management",
+  },
+  {
+    title: "Customize Business Display",
+    href: "/dashboard/settings/customize-business-display",
   },
   {
     title: "Terms and Condition",
