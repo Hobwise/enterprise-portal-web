@@ -25,6 +25,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { TbFileInvoice } from 'react-icons/tb';
+import { Clock } from 'lucide-react';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import {
   availableOptions,
@@ -46,6 +47,7 @@ import ConfirmOrderModal from './confirmOrder';
 import InvoiceModal from './invoice';
 import UpdateOrderModal from './UpdateOrderModal';
 import CheckoutModal from './place-order/checkoutModal';
+import OrderProgressModal from './OrderProgressModal';
 import { completeOrder, getOrder } from '@/app/api/controllers/dashboard/orders';
 import useOrderDetails from '@/hooks/cachedEndpoints/useOrderDetails';
 import { CustomInput } from '@/components/CustomInput';
@@ -154,6 +156,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenUpdateOrder, setIsOpenUpdateOrder] = React.useState<boolean>(false);
   const [isOpenCheckoutModal, setIsOpenCheckoutModal] = React.useState<boolean>(false);
   const [checkoutSelectedItems, setCheckoutSelectedItems] = React.useState<any[]>([]);
+  const [isOpenProgress, setIsOpenProgress] = React.useState<boolean>(false);
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] = React.useState<boolean>(false);
@@ -185,6 +188,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setIsOpenComment(false);
     setIsOpenCheckoutModal(false);
     setIsOpenPaymentModal(false);
+    setIsOpenProgress(false);
     setSingleOrder(null);
 
     setTableStatus(categoryName);
@@ -299,6 +303,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const toggleUpdateOrderModal = (order: OrderItem) => {
     setSingleOrder(order);
     setIsOpenUpdateOrder(true);
+  };
+
+  const toggleProgressModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenProgress(!isOpenProgress);
   };
 
   // Payment modal functions
@@ -543,6 +552,19 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     </div>
                   </DropdownItem>
 
+                  {(order.status === 0 || order.status === 3) && (
+                    <DropdownItem
+                      key="progress"
+                      onClick={() => toggleProgressModal(order)}
+                      aria-label='View progress'
+                    >
+                      <div className={`flex gap-3 items-center text-grey500`}>
+                        <Clock className='w-[18px] h-[18px]' />
+                        <p>View Progress</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+
                   {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                     options &&
                     options.includes('Cancel Order') && (
@@ -652,6 +674,18 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             <p>Generate invoice</p>
                           </div>
                         </DropdownItem>
+                        {(order.status === 0 || order.status === 3) && (
+                          <DropdownItem
+                            key="progress"
+                            onClick={() => toggleProgressModal(order)}
+                            aria-label='View progress'
+                          >
+                            <div className='flex gap-3 items-center text-grey500'>
+                              <Clock className='w-[18px] h-[18px]' />
+                              <p>View Progress</p>
+                            </div>
+                          </DropdownItem>
+                        )}
                         {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                           availableOptions[statusDataMap[order.status]] &&
                           availableOptions[statusDataMap[order.status]].includes('Cancel Order') && (
@@ -821,6 +855,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
         isOpenInvoice={isOpenInvoice}
         toggleInvoiceModal={toggleInvoiceModal}
         onClose={() => setIsOpenInvoice(false)}
+      />
+      <OrderProgressModal
+        isOpen={isOpenProgress}
+        onOpenChange={() => setIsOpenProgress(!isOpenProgress)}
+        orderId={singleOrder?.id || ''}
+        orderReference={singleOrder?.reference}
+        qrReference={singleOrder?.qrReference}
       />
       <UpdateOrderModal
         isOpen={isOpenUpdateOrder}

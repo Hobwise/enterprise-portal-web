@@ -435,3 +435,13 @@ export async function updateEstimatedPreparationTime(
     handleError(error, false);
   }
 }
+
+// Function to get order progress/preparation status
+export async function getOrderProgress(orderId: string) {
+  try {
+    const response = await api.get(`/api/v1/Order/progress/${orderId}`);
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
