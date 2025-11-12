@@ -29,10 +29,11 @@ import moment from "moment";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import { MdOutlineFileDownload } from "react-icons/md";
+import { MdEdit, MdOutlineFileDownload } from "react-icons/md";
 import { RiDeleteBin6Line } from "react-icons/ri";
 import noImage from "../../../../../public/assets/images/no-image.svg";
 import CreateUser from "./createUser";
+import EditUser from "./editUser";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import { VscLoading } from "react-icons/vsc";
@@ -41,9 +42,16 @@ export const columns = [
   { name: "NAME", uid: "firstName" },
   { name: "DATE ADDED", uid: "dateCreated" },
   { name: "ROLE", uid: "role" },
+  { name: "CATEGORY", uid: "primaryAssignment" },
   { name: "", uid: "actions" },
 ];
-const INITIAL_VISIBLE_COLUMNS = ["firstName", "dateCreated", "role", "actions"];
+const INITIAL_VISIBLE_COLUMNS = [
+  "firstName",
+  "dateCreated",
+  "role",
+  "primaryAssignment",
+  "actions",
+];
 
 const Users = ({ data, refetch }: any) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -120,10 +128,11 @@ const Users = ({ data, refetch }: any) => {
 
       case "dateCreated":
         return (
-          <div className="text-textGrey text-sm">
+          <div className="text-gray-700  text-sm">
             {moment(user?.dateCreated).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
+
       case "role":
         return (
           <Chip
@@ -136,26 +145,22 @@ const Users = ({ data, refetch }: any) => {
           </Chip>
         );
 
+      case "primaryAssignment":
+        return (
+          <div className="text-gray-700 text-sm">{user?.primaryAssignment}</div>
+        );
+
       case "actions":
         return (
           <div className="relative flexjustify-center items-center gap-2">
             {user?.email !== userInformation.email && (
               <Dropdown aria-label="drop down" className="">
                 <DropdownTrigger aria-label="actions">
-                  <span className="text-lg border rounded-md p-1 border-primaryGrey text-default-400 cursor-pointer active:opacity-50">
+                  <span className="text-lg rounded-md p-1  text-default-400 cursor-pointer hover:bg-grey100 active:opacity-50">
                     <HiOutlineDotsVertical />
                   </span>
                 </DropdownTrigger>
                 <DropdownMenu className="text-black">
-                  {/* <DropdownItem
-                  aria-label='edit user'
-                  onClick={() => toggleEdit(user)}
-                >
-                  <div className={` flex gap-2  items-center text-grey500`}>
-                    <MdEdit className='text-[20px]' />
-                    <p>Edit user</p>
-                  </div>
-                </DropdownItem> */}
                   <DropdownSection>
                     {(role === 0 ||
                       userRolePermissions?.canDeleteUser === true) && (
@@ -166,6 +171,18 @@ const Users = ({ data, refetch }: any) => {
                         <div className={` flex gap-2  items-center`}>
                           <RiDeleteBin6Line className="text-[20px] text-danger-500" />
                           <p className=" text-grey500">Delete user</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+                    {(role === 0 ||
+                      userRolePermissions?.canEditUser === true) && (
+                      <DropdownItem
+                        onClick={() => toggleEdit(user)}
+                        aria-label="edit user"
+                      >
+                        <div className={` flex gap-2  items-center`}>
+                          <MdEdit className="text-[20px]" />
+                          <p className=" text-grey500">Edit user</p>
                         </div>
                       </DropdownItem>
                     )}
@@ -258,7 +275,10 @@ const Users = ({ data, refetch }: any) => {
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody emptyContent={"No reservation found"} items={displayData || data}>
+        <TableBody
+          emptyContent={"No reservation found"}
+          items={displayData || data}
+        >
           {(item) => (
             <TableRow
               key={item?.id}
@@ -271,8 +291,17 @@ const Users = ({ data, refetch }: any) => {
           )}
         </TableBody>
       </Table>
-      <CreateUser isOpen={isOpen} onOpenChange={onOpenChange} />
-      {/* <EditUser user={user} toggleEdit={toggleEdit} isOpenEdit={isOpenEdit} /> */}
+      <CreateUser
+        isOpen={isOpen}
+        onOpenChange={onOpenChange}
+        refetch={refetch}
+      />
+      <EditUser
+        user={user}
+        refetch={refetch}
+        toggleEdit={toggleEdit}
+        isOpenEdit={isOpenEdit}
+      />
       <CustomDelete
         title={
           <span>

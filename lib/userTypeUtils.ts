@@ -100,6 +100,7 @@ export const getAllowedSettingsPaths = (userInfo: UserInformation | null): strin
       "/dashboard/settings/teams",
       "/dashboard/settings/staff-management",
       "/dashboard/settings/business-settings",
+      "/dashboard/settings/customize-business-display",
     ];
   }
 

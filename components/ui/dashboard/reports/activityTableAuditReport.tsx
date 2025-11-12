@@ -105,8 +105,8 @@ const ActivityTableAudit = ({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortDescriptor, setSortDescriptor] = useState({
-    column: 'dateCreated',
-    direction: 'ascending',
+    column: "dateCreated",
+    direction: "descending",
   });
 
   const toggleDownloadReport = () => {

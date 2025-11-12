@@ -34,6 +34,23 @@ const SelectInput = ({
   defaultSelectedKeys,
   isMobile = false,
 }: any) => {
+  const handleSelectionChange = (keys: any) => {
+    if (onChange) {
+      // NextUI Select returns a Set of keys, convert to single value string
+      const selectedValue = Array.from(keys)[0] as string;
+
+      // Create a synthetic event object that matches the expected format
+      const syntheticEvent = {
+        target: {
+          name: name,
+          value: selectedValue || '',
+        },
+      };
+
+      onChange(syntheticEvent);
+    }
+  };
+
   return (
     <Select
       labelPlacement='outside'
@@ -48,7 +65,7 @@ const SelectInput = ({
       isDisabled={disabled}
       errorMessage={errorMessage}
       isInvalid={isInvalid || (errorMessage && true)}
-      onChange={onChange}
+      onSelectionChange={handleSelectionChange}
       radius={isMobile ? 'md' : 'lg'}
       placeholder={placeholder}
       classNames={isMobile ? mobileSelectClassNames : selectClassNames}
