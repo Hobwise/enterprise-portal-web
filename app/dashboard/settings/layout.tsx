@@ -13,6 +13,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
     const { role } = usePermission();
     const [backUrl, setBackUrl] = useState<string | null>(null);
     const [shouldShowBackButton, setShouldShowBackButton] = useState(false);
+    const [useHistoryNavigation, setUseHistoryNavigation] = useState(false);
 
     useEffect(() => {
       // Determine back button behavior based on user type
@@ -23,16 +24,18 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
         if (isPOSUser(userInfo)) {
           setBackUrl('/pos');
           setShouldShowBackButton(true);
+          setUseHistoryNavigation(false);
         }
         // Category users should go back to /business-activities
         else if (isCategoryUser(userInfo)) {
           setBackUrl('/business-activities');
           setShouldShowBackButton(true);
+          setUseHistoryNavigation(false);
         }
-        // Regular staff users (role === 1) should go back to /dashboard/orders
+        // Regular staff users (role === 1) should go back to previous page
         else if (userInfo.role === 1) {
-          setBackUrl('/dashboard/orders');
           setShouldShowBackButton(true);
+          setUseHistoryNavigation(true);
         }
         // Admin users (role === 0) don't need a back button
         else {
@@ -43,7 +46,7 @@ const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <>
-   {shouldShowBackButton && backUrl && <BackButton url={backUrl} />}
+   {shouldShowBackButton && <BackButton url={backUrl || undefined} useHistory={useHistoryNavigation} />}
 
       <h1 className="text-[28px] leading-8 font-bold">Settings</h1>
       <p className="text-sm  text-gray-600 mb-10">
