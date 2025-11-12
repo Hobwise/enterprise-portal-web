@@ -295,29 +295,29 @@ const OrderCard: React.FC<OrderCardProps> = ({ table, time, timeColor, orders, c
         </div>
 
         <div className="p-4" onClick={onCardClick}>
-          <div className="min-h-[260px] max-h-[260px] overflow-hidden">
-            <div className="space-y-3">
-              {orders.slice(0, 5).map((order, idx) => (
+          <div className="min-h-[280px] max-h-[280px] overflow-hidden">
+            <div className="space-y-1">
+              {orders.slice(0, 4).map((order, idx) => (
                 <SwipeableOrderItem key={idx} order={order} idx={idx} />
               ))}
 
-              {orders.length > 5 && (
+              {orders.length > 3 && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onCardClick?.();
                   }}
-                  className="w-full py-2 text-primaryColor hover:bg-pink200 transition-colors text-sm font-medium rounded-md border border-primaryColor"
+                  className=" p-2 text-primaryColor hover:bg-pink200 transition-colors text-xs font-medium rounded-md border border-primaryColor"
                 >
-                  +{orders.length - 5} more item{orders.length - 5 !== 1 ? 's' : ''}
+                  Show +{orders.length - 4} more item{orders.length - 3 !== 1 ? 's' : ''}
                 </button>
               )}
             </div>
           </div>
 
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-3 h-[70px] overflow-hidden">
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-3 mt-3 h-[70px] overflow-y-auto overflow-hidden">
             <div className="text-xs font-semibold text-gray-700 mb-1">COMMENT</div>
-            <div className={`text-sm ${comment ? 'text-blue-900' : 'text-gray-400 italic'}`}>
+            <div className={`text-xs ${comment ? 'text-blue-900' : 'text-gray-400 italic'}`}>
               {comment || 'No comment'}
             </div>
           </div>
@@ -613,7 +613,7 @@ export default function RestaurantOrders() {
               className="px-4 py-2 border border-primaryColor text-primaryColor rounded-lg hover:bg-pink200 transition-colors flex items-center gap-2"
             >
               <Menu className="w-4 h-4" />
-              Order list
+              Order List
             </button>
             {/* <button className="px-4 py-2 bg-primaryColor text-white rounded-lg hover:bg-secondaryColor transition-colors flex items-center gap-2">
               Active Orders
@@ -625,7 +625,7 @@ export default function RestaurantOrders() {
         </div>
 
         {/* Orders Container */}
-        <div className="flex flex-wrap md:flex-nowrap items-start gap-4 pb-4 overflow-x-auto scroll-smooth">
+        <div className="flex flex-wrap md:flex-wrap items-start gap-4 pb-4 overflow-x-auto scroll-smooth">
           {activeOrders.length === 0 ? (
             <div className="flex flex-col items-center justify-center w-full py-12">
               <svg className="w-12 h-12 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

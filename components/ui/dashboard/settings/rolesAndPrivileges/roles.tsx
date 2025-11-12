@@ -23,8 +23,8 @@ const Roles = () => {
   const userInformation = getJsonItemFromLocalStorage('userInformation') || [];
 
   const columns = [
-    { name: 'Role', uid: 'role' },
-    { name: 'Members', uid: 'count' },
+    { name: 'ROLE', uid: 'role' },
+    { name: 'MEMBERS', uid: 'count' },
     { name: '', uid: 'actions' },
   ];
   const renderCell = useCallback((user, columnKey) => {
@@ -85,7 +85,7 @@ const Roles = () => {
           <SmallLoader />
         </div>
       ) : (
-        <div className='border border-primaryGrey flex flex-col gap-2 rounded-lg'>
+        <div className='border border-primaryGrey flex flex-col gap-2 rounded-lg overflow-hidden'>
           <Table removeWrapper={true} shadow='none' aria-label='Roles table'>
             <TableHeader columns={columns}>
               {(column) => (
@@ -103,7 +103,10 @@ const Roles = () => {
               items={data || []}
             >
               {(item) => (
-                <TableRow key={item?.role}>
+                <TableRow
+                  key={item?.role}
+                  className="cursor-pointer hover:bg-gray-50 transition-colors"
+                >
                   {(columnKey) => (
                     <TableCell>{renderCell(item, columnKey)}</TableCell>
                   )}

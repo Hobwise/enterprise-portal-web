@@ -186,12 +186,6 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     setIsOpen(!isOpen);
   };
 
-  const [value, setValue] = useState('');
-
-  const handleTabChange = (index: string) => {
-    setValue(index);
-  };
-
   const handleTabClick = (categoryName: string) => {
     setTableStatus(categoryName);
     setPage(1);
@@ -269,12 +263,11 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     return (
       <Filters
         payments={categories}
-        handleTabChange={handleTabChange}
-        value={value}
+        tableStatus={tableStatus}
         handleTabClick={handleTabClick}
       />
     );
-  }, [categories, value]);
+  }, [categories, tableStatus]);
 
   // Determine if we should show loading spinner
   // Only show loading spinner on initial load when there's no data

@@ -60,6 +60,11 @@ const Payments: React.FC = () => {
     setPage(1);
   }, [filterType, startDate, endDate, refetch]);
 
+  // Refetch data when tableStatus changes (for payment card clicks)
+  useEffect(() => {
+    refetch();
+  }, [tableStatus, refetch]);
+
   // Reset page when switching tabs
   useEffect(() => {
     if (tableStatus && tableStatus !== "All") {
@@ -136,7 +141,9 @@ const Payments: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
+  if (isLoading && (!categories || categories.length === 0)) {
+    return <CustomLoading />;
+  }
   if (isError) return <Error onClick={() => refetch()} />;
 
   // Payment summary values (adjust keys if needed)
@@ -199,7 +206,12 @@ const Payments: React.FC = () => {
         </div>
       </div>
       <div className="mb-8">
-        <PaymentCard data={data?.categories?.data?.paymentCategories} />
+        <PaymentCard
+          data={data?.categories?.data?.paymentCategories}
+          tableStatus={tableStatus}
+          onStatusChange={setTableStatus}
+          onPageReset={() => setPage(1)}
+        />
       </div>
 
       <DateRangeDisplay

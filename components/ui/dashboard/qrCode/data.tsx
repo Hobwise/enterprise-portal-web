@@ -1,8 +1,8 @@
 export const columns = [
   { name: 'ID', uid: 'id' },
-  { name: 'Name', uid: 'name' },
-  { name: 'All order', uid: 'allOrdersCount' },
-  { name: 'Open order', uid: 'openOrdersCount' },
-  { name: 'Date Created', uid: 'dateCreated' },
+  { name: 'NAME', uid: 'name' },
+  { name: 'ALL ORDER', uid: 'allOrdersCount' },
+  { name: 'OPEN ORDER', uid: 'openOrdersCount' },
+  { name: 'DATE CREATED', uid: 'dateCreated' },
   { name: '', uid: 'actions' },
 ];

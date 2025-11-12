@@ -76,12 +76,24 @@ export function middleware(request: NextRequest) {
     }
 
     if (isCategoryUser) {
-      // Category users trying to access /dashboard → 404
+      // Category users can access their personal settings
+      const allowedCategorySettingsPaths = [
+        '/dashboard/settings/personal-information',
+        '/dashboard/settings/password-management'
+      ];
+      const isAllowedSettingsPath = allowedCategorySettingsPaths.some(route => pathname.startsWith(route));
+
+      // Allow access to personal settings
+      if (isAllowedSettingsPath) {
+        return NextResponse.next();
+      }
+
+      // Category users trying to access other /dashboard pages → 404
       if (pathname.startsWith('/dashboard')) {
         return NextResponse.rewrite(new URL("/not-found", request.url));
       }
 
-      // Category users should only access /business-activities
+      // Category users should only access /business-activities (or allowed settings)
       if (!pathname.startsWith('/business-activities')) {
         return NextResponse.redirect(new URL("/business-activities", request.url));
       }

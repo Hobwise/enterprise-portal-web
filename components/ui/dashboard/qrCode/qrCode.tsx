@@ -205,7 +205,7 @@ const QrList = ({ qr, searchQuery, data }: any) => {
   }, []);
 
   return (
-    <section className="border border-primaryGrey rounded-lg">
+    <section className="border border-primaryGrey rounded-lg overflow-hidden">
       <Table
         radius="lg"
         isCompact
