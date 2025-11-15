@@ -376,7 +376,7 @@ const Header = ({ ispos }: any) => {
                       >
                         <MdOutlinePerson className="text-[22px]" />
                         <span className="  text-sm font-md">
-                          Profile Management
+                          Settings
                         </span>
                       </Link>
                     </DropdownItem>

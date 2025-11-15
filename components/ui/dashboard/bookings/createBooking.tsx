@@ -165,7 +165,7 @@ const CreateBooking = ({
 
   return (
     <Modal
-      size="5xl"
+      size="xl"
       isDismissable={false}
       isOpen={openCreateBookingModal}
       onOpenChange={() => closeCreateBookingModal()}
@@ -179,7 +179,7 @@ const CreateBooking = ({
               </h2>
               <ScrollShadow size={5} className="w-full h-[500px]">
                 <form onSubmit={placeBooking}>
-                  <div className="flex gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <CustomInput
                       type="text"
                       value={bookings.firstName}
@@ -200,7 +200,7 @@ const CreateBooking = ({
                     />
                   </div>
                   <Spacer y={5} />
-                  <div className="flex gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <CustomInput
                       type="text"
                       value={bookings.email}

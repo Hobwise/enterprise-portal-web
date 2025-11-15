@@ -23,7 +23,7 @@ import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { downloadCSV } from "@/lib/downloadToExcel";
 import { Button, ButtonGroup, Chip, useDisclosure } from "@nextui-org/react";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { VscLoading } from "react-icons/vsc";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
@@ -31,13 +31,7 @@ import toast from "react-hot-toast";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Bookings: React.FC = () => {
-  const {
-    categories,
-    details,
-    isLoading,
-    isError,
-    refetch,
-  } = useBookings();
+  const { categories, details, isLoading, isError, refetch } = useBookings();
   const businessInformation = getJsonItemFromLocalStorage("business");
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -139,7 +133,6 @@ const Bookings: React.FC = () => {
             {data?.categories.bookingCategories.length > 0 ? (
               <div className="flex items-center">
                 <span> Bookings</span>
-                
               </div>
             ) : (
               <span>Bookings</span>
@@ -192,6 +185,8 @@ const Bookings: React.FC = () => {
               </ButtonGroup>
               {(role === 0 || userRolePermissions?.canEditOrder === true) && (
                 <CustomButton onClick={onOpen} className="flex text-white">
+                  <IoAddCircleOutline className="text-[22px]" />
+
                   <p>Admit booking</p>
                 </CustomButton>
               )}
@@ -199,7 +194,7 @@ const Bookings: React.FC = () => {
           )}
         </div>
       </div>
-      
+
       {data.categories.bookingCategories &&
       data.categories?.bookingCategories?.length > 0 ? (
         <BookingsList
