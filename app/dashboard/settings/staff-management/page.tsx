@@ -10,16 +10,7 @@ const StaffManagementPage = () => {
   const [selectedTab, setSelectedTab] = useState("team-members");
 
   return (
-    <section>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-8 font-semibold mb-2">
-          Staff Management
-        </h1>
-        <p className="text-sm text-grey600">
-          Manage your team members, roles, and permissions
-        </p>
-      </div>
-
+    <section className="mb-6  p-5">
       <Tabs
         selectedKey={selectedTab}
         onSelectionChange={setSelectedTab}
@@ -34,13 +25,17 @@ const StaffManagementPage = () => {
         }}
         fullWidth
       >
-        <Tab key="team-members" title="Team Members">
+        <Tab className="px-5" key="team-members" title="Team Members">
           <TeamMembersTab />
         </Tab>
-        <Tab key="create-role" title="Role Management">
+        <Tab className="px-5" key="create-role" title="Role Management">
           <CreateNewRoleTab />
         </Tab>
-        <Tab key="roles-permission" title="Permission Management">
+        <Tab
+          className="px-5"
+          key="roles-permission"
+          title="Permission Management"
+        >
           <RolesPermissionTab />
         </Tab>
       </Tabs>

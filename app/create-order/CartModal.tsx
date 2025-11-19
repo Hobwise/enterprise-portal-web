@@ -73,7 +73,7 @@ const CartModal = ({
   };
   const subtotal = calculateSubtotal();
   const packingCost = calculatePackingCost();
-  // Compute dynamic VAT using per-item settings
+  // Compute dynamic VAT - only apply if isVatEnabled is true
   let vat = 0;
   const enabledRates = Array.from(
     new Set(
@@ -82,6 +82,7 @@ const CartModal = ({
         .map((i: any) => Number(i.vatRate))
     )
   );
+
   selectedItems.forEach((item: any) => {
     const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
     const itemPacking =
@@ -89,8 +90,11 @@ const CartModal = ({
         ? (Number(item.packingCost) || 0) * (Number(item.count) || 0)
         : 0;
     const itemSubtotal = itemTotal + itemPacking;
+    // Only apply VAT if isVatEnabled is true and vatRate exists
     if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
-      vat += itemSubtotal * item.vatRate;
+      // Convert percentage to decimal (e.g., 7.5 -> 0.075)
+      const vatRateDecimal = item.vatRate / 100;
+      vat += itemSubtotal * vatRateDecimal;
     }
   });
   vat = Math.round(vat * 100) / 100;
@@ -229,18 +233,18 @@ const CartModal = ({
               </span>
             </div>
           )}
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">
-              {enabledRates.length > 1
-                ? `VAT (${enabledRates
-                    .map((r) => `${Math.round(r * 100)}%`)
-                    .join(", ")})`
-                : `VAT ${
-                    enabledRates[0] ? Math.round(enabledRates[0] * 100) : 0
-                  }%`}
-            </span>
-            <span className="font-semibold text-black">{formatPrice(vat)}</span>
-          </div>
+          {enabledRates.length > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">
+                {enabledRates.length > 1
+                  ? `VAT (${enabledRates
+                      .map((r) => `${r}%`)
+                      .join(", ")})`
+                  : `VAT ${enabledRates[0]}%`}
+              </span>
+              <span className="font-semibold text-black">{formatPrice(vat)}</span>
+            </div>
+          )}
           <div className="flex justify-between text-base font-bold border-t pt-2">
             <span className="text-black">Total</span>
             <span style={textColorStyle}>{formatPrice(total)}</span>

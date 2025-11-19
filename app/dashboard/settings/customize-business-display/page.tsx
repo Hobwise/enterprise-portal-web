@@ -10,16 +10,8 @@ const DynamicMetaTag = dynamic(() => import("@/components/dynamicMetaTag"), {
 
 const CustomizeBusinessDisplay = () => {
   return (
-    <>
-      <div className="mb-6">
-        <h1 className="text-[24px] leading-8 font-semibold mb-2">
-          Customize Business Display
-        </h1>
-        <p className="text-sm text-grey600">
-          Customize how your customers see your menus and place orders
-        </p>
-      </div>
-      <section className="flex justify-between gap-10 ">
+    <div className="mb-6  p-5">
+      <section className="flex justify-between gap-10">
         <Layout />
         <Preview />
       </section>
@@ -27,7 +19,7 @@ const CustomizeBusinessDisplay = () => {
         route="Customize Business Display"
         description="Customize how your menu appears to customers"
       />
-    </>
+    </div>
   );
 };
 

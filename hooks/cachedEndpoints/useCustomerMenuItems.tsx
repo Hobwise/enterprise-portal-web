@@ -77,6 +77,8 @@ const useCustomerMenuItems = (
     refetchOnWindowFocus: false,
     enabled: !!menuId,
     initialPageParam: 1,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   // Flatten all pages into a single array

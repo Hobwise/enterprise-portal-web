@@ -100,22 +100,48 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: <Image src={Accepted} alt="accepted" />,
+      icon: (
+        <Image
+          src={Accepted}
+          alt="accepted"
+          width={20}
+          height={20}
+          quality={100}
+        />
+      ),
       title: "CONFIRMED",
       desc: report?.confirmedBookingCount,
     },
     {
-      icon: <Image src={Decline} alt="pending" />,
+      icon: (
+        <Image
+          src={Decline}
+          alt="pending"
+          width={20}
+          height={20}
+          quality={100}
+        />
+      ),
       title: "COMPLETED",
       desc: report?.completedBookingCount,
     },
     {
-      icon: <Image src={Cancel} alt="faile" />,
+      icon: (
+        <Image src={Cancel} alt="failed" width={20} height={20} quality={100} />
+      ),
       title: "CANCELED",
       desc: report?.failedBookingCount,
     },
     {
-      icon: <Image src={Decline} alt="expired" />,
+      icon: (
+        <Image
+          src={Decline}
+          alt="expired"
+          width={20}
+          height={20}
+          quality={100}
+        />
+      ),
       title: "EXPIRED",
       desc: report?.expiredBookingCount,
     },

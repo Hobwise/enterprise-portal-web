@@ -46,6 +46,8 @@ const responseData = await getCustomerMenuCategories(businessId, cooperateId);
     queryFn: fetchCategories,
     refetchOnWindowFocus: false,
     enabled: !!businessId,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   return { data, isLoading, isError, refetch };

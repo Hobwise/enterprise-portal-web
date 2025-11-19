@@ -42,7 +42,7 @@ export const columns = [
   { name: "NAME", uid: "firstName" },
   { name: "DATE ADDED", uid: "dateCreated" },
   { name: "ROLE", uid: "role" },
-  { name: "CATEGORY", uid: "primaryAssignment" },
+  { name: "ASSIGNMENT", uid: "primaryAssignment" },
   { name: "", uid: "actions" },
 ];
 const INITIAL_VISIBLE_COLUMNS = [
@@ -170,7 +170,7 @@ const Users = ({ data, refetch }: any) => {
                       >
                         <div className={` flex gap-2  items-center`}>
                           <RiDeleteBin6Line className="text-[20px] text-danger-500" />
-                          <p className=" text-grey500">Delete user</p>
+                          <p className=" text-grey500 text-sm">Delete user</p>
                         </div>
                       </DropdownItem>
                     )}
@@ -182,7 +182,7 @@ const Users = ({ data, refetch }: any) => {
                       >
                         <div className={` flex gap-2  items-center`}>
                           <MdEdit className="text-[20px]" />
-                          <p className=" text-grey500">Edit user</p>
+                          <p className=" text-grey500 text-sm">Edit user</p>
                         </div>
                       </DropdownItem>
                     )}
@@ -251,7 +251,8 @@ const Users = ({ data, refetch }: any) => {
         isCompact
         removeWrapper
         allowsSorting
-        aria-label="list of reservations"
+        aria-label="list of team members"
+        bottomContent={bottomContent}
         bottomContentPlacement="outside"
         classNames={{
           td: "h-[70px]",
@@ -276,7 +277,7 @@ const Users = ({ data, refetch }: any) => {
           )}
         </TableHeader>
         <TableBody
-          emptyContent={"No reservation found"}
+          emptyContent={"No team members found"}
           items={displayData || data}
         >
           {(item) => (

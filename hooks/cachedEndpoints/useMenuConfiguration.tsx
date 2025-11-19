@@ -25,11 +25,11 @@ const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
   };
 
   const { data, isLoading, isError, refetch } = useQuery<DesignOptions>({
-    queryKey: ["menuConfig"],
+    queryKey: ["menuConfig", businessId, cooperateID],
     queryFn: getMenuConfig,
-    
-      refetchOnWindowFocus: false,
-    
+    enabled: !!businessId,
+    retry: 2,
+    refetchOnWindowFocus: false,
   });
 
   return {

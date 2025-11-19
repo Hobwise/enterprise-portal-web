@@ -11,12 +11,28 @@ import auditIllustration from "../../../../public/assets/images/auditlogIllustra
 const ReportDetails = ({ report }: any) => {
   const reportData = [
     {
-      icon: <Image src={Accepted} alt="accepted" />,
+      icon: (
+        <Image
+          src={Accepted}
+          alt="accepted"
+          width={20}
+          height={20}
+          quality={100}
+        />
+      ),
       title: "USERS",
       desc: report?.totalUsersCount,
     },
     {
-      icon: <Image src={Decline} alt="decline" />,
+      icon: (
+        <Image
+          src={Decline}
+          alt="decline"
+          width={20}
+          height={20}
+          quality={100}
+        />
+      ),
       title: "ACTIVITIES",
       desc: report?.totalActivitiesCount,
     },
