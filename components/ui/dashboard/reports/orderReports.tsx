@@ -99,22 +99,42 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: <Image src={Accepted} alt="accepted" />,
+      icon: (
+        <Image
+          src={Accepted}
+          alt="accepted"
+          width={20}
+          height={20}
+          quality={100}
+        />
+      ),
       title: "ACCEPTED",
       desc: report?.closedOrdersCount,
     },
     {
-      icon: <Image src={Decline} alt="decline" />,
+      icon: (
+        <Image
+          src={Decline}
+          alt="decline"
+          width={20}
+          height={20}
+          quality={100}
+        />
+      ),
       title: "PENDING",
       desc: report?.openOrdersCount,
     },
     {
-      icon: <Image src={Cancel} alt="cancel" />,
+      icon: (
+        <Image src={Cancel} alt="cancel" width={20} height={20} quality={100} />
+      ),
       title: "CANCELLED",
       desc: report?.cancelledOrdersCount,
     },
     {
-      icon: <Image src={Like} alt="like" />,
+      icon: (
+        <Image src={Like} alt="like" width={20} height={20} quality={100} />
+      ),
       title: "CLOSED",
       desc: report?.closedOrdersCount,
     },

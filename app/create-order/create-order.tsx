@@ -55,6 +55,22 @@ const CreateOrder = () => {
   let cooperateID = searchParams.get("cooperateID");
   let qrId = searchParams.get("id");
   const mode = searchParams.get("mode");
+
+  // Validate required parameters
+  if (!businessId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-50">
+        <Error
+          imageHeight="h-32"
+          imageWidth="w-32"
+          onClick={() => router.push("/")}
+          title="Invalid QR Code"
+          message="This QR code is missing required business information. Please scan a valid QR code or contact support."
+        />
+      </div>
+    );
+  }
+
   const viewOnlyStorageKey = `menuViewOnly_${businessId}_${
     cooperateID || "default"
   }`;
@@ -91,7 +107,7 @@ const CreateOrder = () => {
     }
   }, [mode, viewOnlyStorageKey]);
 
-  const { data: menuConfig, isLoading: menuConfigLoading } = useMenuConfig(
+  const { data: menuConfig, isLoading: menuConfigLoading, isError: menuConfigError } = useMenuConfig(
     businessId,
     cooperateID
   );
@@ -180,14 +196,14 @@ const CreateOrder = () => {
     return menuItemsData.map((item: any) => ({
       ...item,
       waitingTimeMinutes: selectedCategory?.waitingTimeMinutes || 0,
-      // Propagate VAT config from the selected category/section to each item
+      // Propagate VAT settings from the selected category/section to each item
       isVatEnabled: (selectedCategory as any)?.isVatEnabled ?? false,
       vatRate: (selectedCategory as any)?.vatRate ?? 0,
     }));
   }, [menuItemsData, categories, selectedCategoryId]);
 
-  const isLoading = categoriesLoading || itemsLoading;
-  const isError = categoriesError || itemsError;
+  const isLoading = categoriesLoading || itemsLoading || menuConfigLoading;
+  const isError = categoriesError || itemsError || menuConfigError;
 
   const [activeSubCategory, setActiveSubCategory] = useState<string>("");
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -481,6 +497,15 @@ const CreateOrder = () => {
       let subtotal = 0;
       let packingCost = 0;
       let vat = 0;
+
+      // Get all unique VAT rates from categories to use as fallback
+      const categoryVatRates = Array.from(
+        new Set(
+          categories?.map((cat: any) => cat.vatRate).filter((rate: number) => rate > 0) || []
+        )
+      );
+      const defaultVatRate = categoryVatRates.length > 0 ? categoryVatRates[0] : 0;
+
       selectedItems.forEach((item: any) => {
         const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
         subtotal += itemTotal;
@@ -490,9 +515,25 @@ const CreateOrder = () => {
             (Number(item.packingCost) || 0) * (Number(item.count) || 0);
           packingCost += itemPackingTotal;
         }
+
+        // Only apply VAT if isVatEnabled is true and vatRate exists
         if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
           const itemSubtotal = itemTotal + itemPackingTotal;
-          vat += itemSubtotal * item.vatRate;
+          // Convert percentage to decimal (e.g., 7.5 -> 0.075)
+          const vatRateDecimal = item.vatRate / 100;
+          const itemVat = itemSubtotal * vatRateDecimal;
+          vat += itemVat;
+
+          console.log(`📊 VAT calc for ${item.itemName}:`, {
+            itemTotal,
+            itemPackingTotal,
+            itemSubtotal,
+            isVatEnabled: item.isVatEnabled,
+            vatRate: item.vatRate,
+            vatRateDecimal,
+            itemVat,
+            runningVatTotal: vat,
+          });
         }
       });
 
@@ -501,12 +542,28 @@ const CreateOrder = () => {
       vat = Math.round(vat * 100) / 100;
       const total = Math.round((subtotal + packingCost + vat) * 100) / 100;
 
+      console.log("💰 Order calculation breakdown:", {
+        subtotal,
+        packingCost,
+        vat,
+        total,
+        items: selectedItems.map((item: any) => ({
+          name: item.itemName,
+          price: item.price,
+          count: item.count,
+          isPacked: item.isPacked,
+          packingCost: item.packingCost,
+          vatRate: item.vatRate,
+        })),
+      });
+
       const orderDetails = selectedItems.map((item) => ({
         itemId: item.id,
         quantity: item.count,
         unitPrice: item.price,
         isVariety: item.isVariety || false,
         isPacked: item.isPacked || false,
+        packingCost: item.isPacked ? (item.packingCost || 0) : 0,
       }));
 
       const payload = {
@@ -586,19 +643,17 @@ const CreateOrder = () => {
           console.log("🔄 Keeping existing reference:", orderReference);
         }
 
-        // Attach VAT metadata for display
+        // Attach VAT metadata for display - always use vatRate from items
         const enabledRates = Array.from(
           new Set(
             selectedItems
-              .filter((i: any) => i.isVatEnabled && i.vatRate && i.vatRate > 0)
+              .filter((i: any) => i.vatRate && i.vatRate > 0)
               .map((i: any) => Number(i.vatRate))
           )
         );
         if (enabledRates.length > 0) {
-          (orderDataToStore as any).isVatEnabled = true;
           (orderDataToStore as any).vatRate = enabledRates[0];
         } else {
-          (orderDataToStore as any).isVatEnabled = false;
           (orderDataToStore as any).vatRate = 0;
         }
 
@@ -639,6 +694,20 @@ const CreateOrder = () => {
       const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
         const basePrice = detail.unitPrice || 0;
 
+        // Look up category VAT settings using menuID
+        const itemCategory = categories?.find((cat: any) => cat.id === detail.menuID);
+        const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+        const vatRate = itemCategory?.vatRate ?? 0;
+
+        console.log(`📊 Item restore for ${detail.itemName}:`, {
+          menuID: detail.menuID,
+          foundCategory: !!itemCategory,
+          isVatEnabled,
+          vatRate,
+          isPacked: detail.isPacked,
+          packingCost: detail.packingCost,
+        });
+
         return {
           id: detail.itemID,
           itemID: detail.itemID,
@@ -648,15 +717,18 @@ const CreateOrder = () => {
           price: basePrice,
           currency: "NGN",
           isAvailable: true,
-          hasVariety: detail.isVariety || false,
+          hasVariety: detail.isVariety ?? false,
           image: detail.image || "",
-          isVariety: detail.isVariety || false,
+          isVariety: detail.isVariety ?? false,
           varieties: detail.varieties || null,
-          count: detail.quantity || 1,
-          packingCost: detail.packingCost || 0,
-          isPacked: detail.isPacked || false,
+          count: detail.quantity ?? 1,
+          packingCost: detail.packingCost ?? 0,
+          isPacked: detail.isPacked ?? false,
           menuID: detail.menuID || "",
-          waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+          waitingTimeMinutes: detail.waitingTimeMinutes ?? 0,
+          // Add VAT metadata from category
+          isVatEnabled,
+          vatRate,
         };
       });
 
@@ -718,6 +790,20 @@ const CreateOrder = () => {
         (detail: any) => {
           const basePrice = detail.unitPrice || 0;
 
+          // Look up category VAT settings using menuID
+          const itemCategory = categories?.find((cat: any) => cat.id === detail.menuID);
+          const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+          const vatRate = itemCategory?.vatRate ?? 0;
+
+          console.log(`📊 Item restore for ${detail.itemName}:`, {
+            menuID: detail.menuID,
+            foundCategory: !!itemCategory,
+            isVatEnabled,
+            vatRate,
+            isPacked: detail.isPacked,
+            packingCost: detail.packingCost,
+          });
+
           return {
             id: detail.itemID,
             itemID: detail.itemID,
@@ -727,15 +813,18 @@ const CreateOrder = () => {
             price: basePrice,
             currency: "NGN",
             isAvailable: true,
-            hasVariety: detail.isVariety || false,
+            hasVariety: detail.isVariety ?? false,
             image: detail.image || "",
-            isVariety: detail.isVariety || false,
+            isVariety: detail.isVariety ?? false,
             varieties: detail.varieties || null,
-            count: detail.quantity || 1,
-            packingCost: detail.packingCost || 0,
-            isPacked: detail.isPacked || false,
+            count: detail.quantity ?? 1,
+            packingCost: detail.packingCost ?? 0,
+            isPacked: detail.isPacked ?? false,
             menuID: detail.menuID || "",
-            waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+            waitingTimeMinutes: detail.waitingTimeMinutes ?? 0,
+            // Add VAT metadata from category
+            isVatEnabled,
+            vatRate,
           };
         }
       );

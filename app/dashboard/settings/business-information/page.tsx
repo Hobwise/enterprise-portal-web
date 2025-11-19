@@ -31,6 +31,8 @@ import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
 import api from "@/app/api/apiService";
 import { AUTH } from "@/app/api/api-url";
 import { TbCopy } from "react-icons/tb";
+import { FaInstagram, FaTiktok, FaGlobe } from "react-icons/fa";
+import { FaXTwitter } from "react-icons/fa6";
 import States from "@/lib/cities.json";
 import SelectInput from "@/components/selectInput";
 
@@ -76,21 +78,8 @@ const BusinessInformation = () => {
   };
 
   const getChangedFields = () => {
-    if (!originalBusinessData || !businessFormData) {
-      return businessFormData;
-    }
-
-    const changedFields: BusinessData = {
-      businessID: businessFormData.businessID,
-    };
-
-    Object.keys(businessFormData).forEach((key) => {
-      if (businessFormData[key] !== originalBusinessData[key]) {
-        changedFields[key] = businessFormData[key];
-      }
-    });
-
-    return changedFields;
+    // Return all form data instead of only changed fields
+    return businessFormData;
   };
 
   const uploadFileMutation = useMutation({
@@ -139,6 +128,10 @@ const BusinessInformation = () => {
       if (data?.data.isSuccessful) {
         onOpen();
         queryClient.invalidateQueries({ queryKey: ["getBusiness"] });
+      } else if (data?.data?.error) {
+        toast.error(data?.data?.error);
+      } else {
+        toast.error("Failed to update business information");
       }
     },
   });
@@ -187,102 +180,194 @@ const BusinessInformation = () => {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h2 className="font-semibold text-[#101928]">Business information</h2>
-        <p className="text-sm text-[#667185]">
-          See your full business information
-        </p>
-      </div>
-      <div className="border border-secondaryGrey rounded-[10px] p-4 space-y-8">
-        <div className="flex items-center justify-between w-full">
-          {businessFormData?.logoImage ? (
-            <div className="relative">
-              <Avatar
-                size="lg"
-                className="h-[120px] w-[120px]"
-                src={`data:image/jpeg;base64,${businessFormData.logoImage}`}
-              />
-              <div
-                className="absolute top-0 right-0 cursor-pointer"
-                onClick={() => removeFileMutation.mutate()}
-              >
-                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
-                  <RxCross2 />
+      {!isEditing ? (
+        // Card view when not editing
+        <div className="py-10 px-6 sm:px-8 lg:px-10 bg-[#5F35D214] rounded-md">
+          <div className="flex justify-center items-center">
+            <div className="bg-white rounded-[8px] p-8 sm:p-10 lg:p-12 w-full max-w-[420px] shadow-xl">
+              <div className="flex flex-col items-center space-y-5">
+                {/* Business Logo */}
+                <div className="relative">
+                  {businessFormData?.logoImage || previewUrl ? (
+                    <Avatar
+                      size="lg"
+                      className="h-[140px] w-[140px]"
+                      src={
+                        businessFormData?.logoImage
+                          ? `data:image/jpeg;base64,${businessFormData.logoImage}`
+                          : previewUrl!
+                      }
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-[140px] h-[140px] rounded-full bg-[#5F35D20A]">
+                      <Image
+                        src="/assets/icons/video-audio-icon.svg"
+                        width={40}
+                        height={40}
+                        alt="Business logo"
+                      />
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          ) : !previewUrl ? (
-            <div>
-              <div className="flex items-center justify-center w-[200px] h-[120px] rounded-[10px] bg-[#5F35D20A]">
-                <label
-                  htmlFor="logo-photo"
-                  className="flex flex-col items-center justify-center space-y-4"
+
+                {/* Business Name */}
+                <div className="text-center space-y-1">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {businessFormData?.name}
+                  </h3>
+                  <p className="text-sm text-gray-500 font-[400]">
+                    {businessFormData?.address}
+                  </p>
+                </div>
+
+                {/* Contact Information */}
+                <div className="w-full space-y-1 text-center">
+                  <p className="text-sm text-gray-500 font-[600]">
+                    {businessFormData?.contactPhoneNumber}
+                  </p>
+                  <p className="text-sm text-gray-500 font-[400]">
+                    {businessFormData?.contactEmailAddress}
+                  </p>
+                </div>
+
+                {/* Edit Business Button */}
+                <CustomButton
+                  disableRipple
+                  className="border-2 border-primaryColor text-primaryColor text-sm px-6 font-bold py-2 h-[36px] mt-2"
+                  backgroundColor="bg-white"
+                  onClick={() => {
+                    setOriginalBusinessData(businessFormData);
+                    setIsEditing(true);
+                  }}
                 >
-                  <Image
-                    src="/assets/icons/video-audio-icon.svg"
-                    width={24}
-                    height={24}
-                    alt="Video audio icon"
-                  />
+                  Edit profile
+                </CustomButton>
 
-                  <span className="font-semibold text-[8px] text-primaryColor">
-                    Upload Cover Photo
-                  </span>
-
-                  <input
-                    type="file"
-                    id="logo-photo"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </label>
-              </div>
-              <p className="text-[10px] mt-1 font-semibold text-center text-gray-500">
-                SVG, PNG, JPG or GIF (max. 3mb)
-              </p>
-            </div>
-          ) : (
-            <div className="relative">
-              <Image
-                src={previewUrl}
-                width={200}
-                height={120}
-                alt="Business profile"
-                objectFit="contain"
-                className="w-[200px] h-[120px] object-contain"
-              />
-              <div
-                className="absolute top-0 right-0 cursor-pointer"
-                onClick={() => removeFileMutation.mutate()}
-              >
-                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
-                  <RxCross2 />
+                {/* Social Media Links */}
+                <div className="flex gap-3 mt-4 justify-center">
+                  {businessFormData?.instagramPageUrl && (
+                    <a
+                      href={businessFormData.instagramPageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full bg-[#5F35D214] flex items-center justify-center hover:bg-[#5F35D228] transition-colors"
+                    >
+                      <FaInstagram className="text-[#E4405F] text-lg" />
+                    </a>
+                  )}
+                  {businessFormData?.tikTokPageUrl && (
+                    <a
+                      href={businessFormData.tikTokPageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full bg-[#5F35D214] flex items-center justify-center hover:bg-[#5F35D228] transition-colors"
+                    >
+                      <FaTiktok className="text-black text-lg" />
+                    </a>
+                  )}
+                  {businessFormData?.xPageUrl && (
+                    <a
+                      href={businessFormData.xPageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full bg-[#5F35D214] flex items-center justify-center hover:bg-[#5F35D228] transition-colors"
+                    >
+                      <FaXTwitter className="text-black text-lg" />
+                    </a>
+                  )}
+                  {businessFormData?.websiteUrl && (
+                    <a
+                      href={businessFormData.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 rounded-full bg-[#5F35D214] flex items-center justify-center hover:bg-[#5F35D228] transition-colors"
+                    >
+                      <FaGlobe className="text-[#5F35D2] text-lg" />
+                    </a>
+                  )}
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      ) : (
+        // Edit mode
+        <div className="p-4 space-y-8">
+          <div className="flex items-center justify-between w-full">
+            {businessFormData?.logoImage ? (
+              <div className="relative">
+                <Avatar
+                  size="lg"
+                  className="h-[120px] w-[120px]"
+                  src={`data:image/jpeg;base64,${businessFormData.logoImage}`}
+                />
+                <div
+                  className="absolute top-0 right-0 cursor-pointer"
+                  onClick={() => removeFileMutation.mutate()}
+                >
+                  <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
+                    <RxCross2 />
+                  </div>
+                </div>
+              </div>
+            ) : !previewUrl ? (
+              <div>
+                <div className="flex items-center justify-center w-[200px] h-[120px] rounded-[10px] bg-[#5F35D20A]">
+                  <label
+                    htmlFor="logo-photo"
+                    className="flex flex-col items-center justify-center space-y-4 cursor-pointer"
+                  >
+                    <Image
+                      src="/assets/icons/video-audio-icon.svg"
+                      width={24}
+                      height={24}
+                      alt="Video audio icon"
+                    />
 
-          {!isEditing ? (
-            <CustomButton
-              disableRipple
-              className="flex border border-primaryColor rounded-[10px] text-primaryColor text-xs p-2 h-[30px]"
-              backgroundColor="bg-transparent"
-              onClick={() => {
-                setOriginalBusinessData(businessFormData);
-                setIsEditing((prevState) => !prevState);
-              }}
-            >
-              <BiEditAlt className="text-base" />
-              Edit
-            </CustomButton>
-          ) : (
-            <div className="flex">
+                    <span className="font-semibold text-[8px] text-primaryColor">
+                      Upload Cover Photo
+                    </span>
+
+                    <input
+                      type="file"
+                      id="logo-photo"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                </div>
+                <p className="text-[10px] mt-1 font-semibold text-center text-gray-500">
+                  SVG, PNG, JPG or GIF (max. 3mb)
+                </p>
+              </div>
+            ) : (
+              <div className="relative">
+                <Image
+                  src={previewUrl}
+                  width={200}
+                  height={120}
+                  alt="Business profile"
+                  objectFit="contain"
+                  className="w-[200px] h-[120px] object-contain"
+                />
+                <div
+                  className="absolute top-0 right-0 cursor-pointer"
+                  onClick={() => removeFileMutation.mutate()}
+                >
+                  <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
+                    <RxCross2 />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-2">
               <CustomButton
                 disableRipple
                 loading={updateBusinessMutation.isPending}
                 disabled={updateBusinessMutation.isPending}
-                className="flex  rounded-[10px] text-xs p-2 h-[30px] text-white"
+                className="flex text-xs p-2 h-[30px] text-white"
                 onClick={() => updateBusinessMutation.mutate()}
               >
                 <IoCheckmarkCircleOutline className="text-base" />
@@ -290,14 +375,14 @@ const BusinessInformation = () => {
               </CustomButton>
               <CustomButton
                 disableRipple
-                className="flex rounded-[10px] text-xs p-2 h-[30px] text-danger"
+                className="flex border border-danger-500 text-xs p-2 h-[30px] text-danger"
                 backgroundColor="bg-transparent"
                 onClick={() => {
-                  // Reset form data to original business data when canceling
                   setBusinessFormData({
                     ...businessData,
                     businessID: businessInformation[0]?.businessId,
                   });
+                  setPreviewUrl(null);
                   setIsEditing(false);
                 }}
               >
@@ -305,263 +390,262 @@ const BusinessInformation = () => {
                 Cancel
               </CustomButton>
             </div>
-          )}
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <PiBuildingOffice className="text-black" />
-            <span className="font-medium text-sm">Business Details</span>
           </div>
-          <Divider />
-        </div>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-3 ">
-          {!isEditing ? (
-            <>
-              <div className="col-span-1 flex gap-2 ">
-                <MdLockOutline className="mt-1 text-[#AFAFAF]" />
-                <div className="flex flex-col">
-                  <span className="text-sm">Business Name</span>
-                  <span className="text-sm">{businessFormData?.name}</span>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <PiBuildingOffice className="text-black" />
+              <span className="font-medium text-sm">Business Details</span>
+            </div>
+            <Divider />
+          </div>
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3 ">
+            {!isEditing ? (
+              <>
+                <div className="col-span-1 flex gap-2 ">
+                  <MdLockOutline className="mt-1 text-[#AFAFAF]" />
+                  <div className="flex flex-col">
+                    <span className="text-sm">Business Name</span>
+                    <span className="text-sm">{businessFormData?.name}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="col-span-1 flex gap-2">
-                <MdLockOutline className="mt-1 text-[#AFAFAF]" />
-                <div className="flex flex-col">
-                  <span className="text-sm">Business Category</span>
-                  <span className="text-sm">
-                    {mapBusinessCategory(businessFormData?.businessCategory)}
-                  </span>
+                <div className="col-span-1 flex gap-2">
+                  <MdLockOutline className="mt-1 text-[#AFAFAF]" />
+                  <div className="flex flex-col">
+                    <span className="text-sm">Business Category</span>
+                    <span className="text-sm">
+                      {mapBusinessCategory(businessFormData?.businessCategory)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="col-span-1 flex gap-2 ">
-                <MdLockOutline className="mt-1 text-[#AFAFAF]" />
-                <div className="flex flex-col">
-                  <span className="text-sm">Business Email</span>
-                  <span
-                    className={cn(
-                      "text-sm",
-                      businessFormData?.contactEmailAddress.length > 0
-                        ? "text-black"
-                        : "text-red-500"
-                    )}
-                  >
-                    {businessFormData?.contactEmailAddress.length > 0
-                      ? businessFormData?.contactEmailAddress
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm">Phone No</span>
-                  <span
-                    className={cn(
-                      "text-sm",
-                      businessFormData?.contactPhoneNumber?.length > 0
-                        ? "text-black"
-                        : "text-red-500"
-                    )}
-                  >
-                    {businessFormData?.contactPhoneNumber?.length > 0
-                      ? businessFormData?.contactPhoneNumber
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm">Business Address</span>
-                  <span
-                    className={cn(
-                      "text-sm",
-                      businessFormData?.address?.length > 0
-                        ? "text-black"
-                        : "text-red-500"
-                    )}
-                  >
-                    {businessFormData?.address?.length > 0
-                      ? businessFormData?.address
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm">State</span>
-                  <span
-                    className={cn(
-                      "text-sm",
-                      businessFormData?.state?.length > 0
-                        ? "text-black"
-                        : "text-red-500"
-                    )}
-                  >
-                    {businessFormData?.state?.length > 0
-                      ? businessFormData?.state
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm">LGA</span>
-                  <span
-                    className={cn(
-                      "text-sm",
-                      businessFormData?.city?.length > 0
-                        ? "text-black"
-                        : "text-red-500"
-                    )}
-                  >
-                    {businessFormData?.city?.length > 0
-                      ? businessFormData?.city
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm">Primary Brand color</span>
-                  <div className="flex items-center justify-between">
+                <div className="col-span-1 flex gap-2 ">
+                  <MdLockOutline className="mt-1 text-[#AFAFAF]" />
+                  <div className="flex flex-col">
+                    <span className="text-sm">Business Email</span>
                     <span
                       className={cn(
                         "text-sm",
-                        businessFormData?.primaryBrandColour?.length > 0
+                        businessFormData?.contactEmailAddress.length > 0
                           ? "text-black"
                           : "text-red-500"
                       )}
                     >
-                      {businessFormData?.primaryBrandColour?.length > 0
-                        ? businessFormData?.primaryBrandColour
+                      {businessFormData?.contactEmailAddress.length > 0
+                        ? businessFormData?.contactEmailAddress
                         : "Not updated"}
                     </span>
-
-                    {businessFormData?.primaryBrandColour.length > 0 && (
-                      <TbCopy
-                        onClick={() =>
-                          copyTextToClipboard(
-                            businessFormData?.primaryBrandColour
-                          )
-                        }
-                        className="text-[20px] cursor-pointer text-grey400"
-                      />
-                    )}
                   </div>
                 </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm">Secondary Brand color</span>
-                  <div className="flex items-center justify-between">
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">Phone No</span>
                     <span
                       className={cn(
                         "text-sm",
-                        businessFormData?.secondaryBrandColour?.length > 0
+                        businessFormData?.contactPhoneNumber?.length > 0
                           ? "text-black"
                           : "text-red-500"
                       )}
                     >
-                      {businessFormData?.secondaryBrandColour?.length > 0
-                        ? businessFormData?.secondaryBrandColour
+                      {businessFormData?.contactPhoneNumber?.length > 0
+                        ? businessFormData?.contactPhoneNumber
                         : "Not updated"}
                     </span>
-                    {businessFormData?.secondaryBrandColour.length > 0 && (
-                      <TbCopy
-                        onClick={() =>
-                          copyTextToClipboard(
-                            businessFormData?.secondaryBrandColour
-                          )
-                        }
-                        className="text-[20px] cursor-pointer text-grey400"
-                      />
-                    )}
                   </div>
                 </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="col-span-1 w-full flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="name"
-                    label="Business Name"
-                    disabled
-                    onChange={handleInputChange}
-                    value={businessFormData?.name}
-                    placeholder="Business name"
-                  />
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">Business Address</span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        businessFormData?.address?.length > 0
+                          ? "text-black"
+                          : "text-red-500"
+                      )}
+                    >
+                      {businessFormData?.address?.length > 0
+                        ? businessFormData?.address
+                        : "Not updated"}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="businessCategory"
-                    disabled
-                    value={mapBusinessCategory(
-                      businessFormData?.businessCategory
-                    )}
-                    label="Business Category"
-                    placeholder="Business category"
-                  />
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">State</span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        businessFormData?.state?.length > 0
+                          ? "text-black"
+                          : "text-red-500"
+                      )}
+                    >
+                      {businessFormData?.state?.length > 0
+                        ? businessFormData?.state
+                        : "Not updated"}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="contactEmailAddress"
-                    disabled
-                    // errorMessage={response?.errors?.email?.[0]}
-                    onChange={handleInputChange}
-                    value={businessFormData?.contactEmailAddress}
-                    label="Business Email"
-                    placeholder="Enter email"
-                  />
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">LGA</span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        businessFormData?.city?.length > 0
+                          ? "text-black"
+                          : "text-red-500"
+                      )}
+                    >
+                      {businessFormData?.city?.length > 0
+                        ? businessFormData?.city
+                        : "Not updated"}
+                    </span>
+                  </div>
                 </div>
-              </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">Primary Brand color</span>
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={cn(
+                          "text-sm",
+                          businessFormData?.primaryBrandColour?.length > 0
+                            ? "text-black"
+                            : "text-red-500"
+                        )}
+                      >
+                        {businessFormData?.primaryBrandColour?.length > 0
+                          ? businessFormData?.primaryBrandColour
+                          : "Not updated"}
+                      </span>
 
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="contactPhoneNumber"
-                    // errorMessage={response?.errors?.lastName?.[0]}
-                    onChange={handleInputChange}
-                    value={businessFormData?.contactPhoneNumber}
-                    label="Phone number"
-                    placeholder="Enter phone number"
-                  />
+                      {businessFormData?.primaryBrandColour.length > 0 && (
+                        <TbCopy
+                          onClick={() =>
+                            copyTextToClipboard(
+                              businessFormData?.primaryBrandColour
+                            )
+                          }
+                          className="text-[20px] cursor-pointer text-grey400"
+                        />
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">Secondary Brand color</span>
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={cn(
+                          "text-sm",
+                          businessFormData?.secondaryBrandColour?.length > 0
+                            ? "text-black"
+                            : "text-red-500"
+                        )}
+                      >
+                        {businessFormData?.secondaryBrandColour?.length > 0
+                          ? businessFormData?.secondaryBrandColour
+                          : "Not updated"}
+                      </span>
+                      {businessFormData?.secondaryBrandColour.length > 0 && (
+                        <TbCopy
+                          onClick={() =>
+                            copyTextToClipboard(
+                              businessFormData?.secondaryBrandColour
+                            )
+                          }
+                          className="text-[20px] cursor-pointer text-grey400"
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="col-span-1 w-full flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="text"
+                      name="name"
+                      label="Business Name"
+                      disabled
+                      onChange={handleInputChange}
+                      value={businessFormData?.name}
+                      placeholder="Business name"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="text"
+                      name="businessCategory"
+                      disabled
+                      value={mapBusinessCategory(
+                        businessFormData?.businessCategory
+                      )}
+                      label="Business Category"
+                      placeholder="Business category"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="text"
+                      name="contactEmailAddress"
+                      disabled
+                      // errorMessage={response?.errors?.email?.[0]}
+                      onChange={handleInputChange}
+                      value={businessFormData?.contactEmailAddress}
+                      label="Business Email"
+                      placeholder="Enter email"
+                    />
+                  </div>
+                </div>
 
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="address"
-                    onChange={handleInputChange}
-                    errorMessage={
-                      businessFormData?.address.length < 5 &&
-                      "Business address must contain at least 5 characters"
-                    }
-                    value={businessFormData?.address}
-                    label="Business Address"
-                    placeholder="Enter business address"
-                  />
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="text"
+                      name="contactPhoneNumber"
+                      // errorMessage={response?.errors?.lastName?.[0]}
+                      onChange={handleInputChange}
+                      value={businessFormData?.contactPhoneNumber}
+                      label="Phone number"
+                      placeholder="Enter phone number"
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  {/* <CustomInput
+
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="text"
+                      name="address"
+                      onChange={handleInputChange}
+                      errorMessage={
+                        businessFormData?.address.length < 5 &&
+                        "Business address must contain at least 5 characters"
+                      }
+                      value={businessFormData?.address}
+                      label="Business Address"
+                      placeholder="Enter business address"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    {/* <CustomInput
                     type="text"
                     name="city"
                     disabled
@@ -570,169 +654,315 @@ const BusinessInformation = () => {
                     placeholder="Enter business city"
                   /> */}
 
-                  <SelectInput
-                    label="State"
-                    name="state"
-                    onChange={handleInputChange}
-                    defaultSelectedKeys={[businessFormData?.state]}
-                    value={businessFormData?.state}
-                    placeholder={"Select state"}
-                    contents={getStates()}
-                  />
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <SelectInput
-                    label="City"
-                    name="city"
-                    onChange={handleInputChange}
-                    defaultSelectedKeys={[businessFormData?.city]}
-                    value={businessFormData?.city}
-                    placeholder={"Select city"}
-                    contents={getCities()}
-                  />
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="w-full flex gap-2">
-                  <div className="flex flex-col w-full gap-2">
-                    <label
-                      className="text-black font-medium text-sm"
-                      htmlFor="primaryBrandColor"
-                    >
-                      Primary Brand Color
-                    </label>
-                    <input
-                      type="color"
-                      id="primaryBrandColour"
-                      name="primaryBrandColour"
-                      className=" w-full h-[46px] border border-[#E0E0E0] rounded-[6px] px-2"
+                    <SelectInput
+                      label="State"
+                      name="state"
                       onChange={handleInputChange}
-                      value={businessFormData?.primaryBrandColour}
-                      placeholder="Enter primary brand color"
-                    />
-                  </div>
-                  <div className="flex flex-col w-full gap-2">
-                    <label
-                      className="text-black font-medium text-sm"
-                      htmlFor="primaryBrandColor"
-                    >
-                      Secondary Brand Color
-                    </label>
-                    <input
-                      type="color"
-                      id="secondaryBrandColour"
-                      name="secondaryBrandColour"
-                      className=" w-full h-[46px] border border-[#E0E0E0] rounded-[6px] px-2"
-                      onChange={handleInputChange}
-                      value={businessFormData?.secondaryBrandColour}
-                      placeholder="Enter secondary brand color"
+                      defaultSelectedKeys={[businessFormData?.state]}
+                      value={businessFormData?.state}
+                      placeholder={"Select state"}
+                      contents={getStates()}
                     />
                   </div>
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* VAT Section */}
-      <div className="border border-secondaryGrey rounded-[10px] p-4 space-y-8">
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <PiBuildingOffice className="text-black" />
-            <span className="font-medium text-sm">VAT</span>
-          </div>
-          <Divider />
-        </div>
-
-        <div className="grid grid-cols-2 gap-x-8 gap-y-3">
-          {!isEditing ? (
-            <>
-              <div className="col-span-1 flex gap-2">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm">Status</span>
-                  <Chip
-                    className={`${
-                      businessFormData?.isVatEnabled
-                        ? "bg-success-50 text-success-600  border border-green-500"
-                        : "bg-gray-50 text-gray-600 border border-gray-500"
-                    }`}
-                    size="sm"
-                    variant="flat"
-                  >
-                    {businessFormData?.isVatEnabled ? "Enabled" : "Disabled"}
-                  </Chip>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <SelectInput
+                      label="City"
+                      name="city"
+                      onChange={handleInputChange}
+                      defaultSelectedKeys={[businessFormData?.city]}
+                      value={businessFormData?.city}
+                      placeholder={"Select city"}
+                      contents={getCities()}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="col-span-1 flex gap-2">
-                <div className="h-4 w-4"></div>
-                <div className="flex flex-col">
-                  <span className="text-sm">VAT Percentage</span>
-                  <span className="text-sm">
-                    {businessFormData?.vatRate || 0}%
-                  </span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="col-span-1 flex gap-2">
-                <div className="flex flex-col w-full">
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <label className="text-black font-medium text-sm">
-                        VAT
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="w-full flex gap-2">
+                    <div className="flex flex-col w-full gap-2">
+                      <label
+                        className="text-black font-medium text-sm"
+                        htmlFor="primaryBrandColor"
+                      >
+                        Primary Brand Color
                       </label>
-                      <span className="text-xs text-gray-600">
-                        Activate and customize your VAT and charges on customer
-                        order
+                      <input
+                        type="color"
+                        id="primaryBrandColour"
+                        name="primaryBrandColour"
+                        className=" w-full h-[46px] border border-[#E0E0E0] rounded-[6px] px-2"
+                        onChange={handleInputChange}
+                        value={businessFormData?.primaryBrandColour}
+                        placeholder="Enter primary brand color"
+                      />
+                    </div>
+                    <div className="flex flex-col w-full gap-2">
+                      <label
+                        className="text-black font-medium text-sm"
+                        htmlFor="primaryBrandColor"
+                      >
+                        Secondary Brand Color
+                      </label>
+                      <input
+                        type="color"
+                        id="secondaryBrandColour"
+                        name="secondaryBrandColour"
+                        className=" w-full h-[46px] border border-[#E0E0E0] rounded-[6px] px-2"
+                        onChange={handleInputChange}
+                        value={businessFormData?.secondaryBrandColour}
+                        placeholder="Enter secondary brand color"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Social Media & Website Section */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <FaGlobe className="text-black" />
+              <span className="font-medium text-sm">
+                Social Media & Website
+              </span>
+            </div>
+            <Divider />
+          </div>
+
+          <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+            {!isEditing ? (
+              <>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">Instagram</span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        businessFormData?.instagramPageUrl?.length > 0
+                          ? "text-black"
+                          : "text-red-500"
+                      )}
+                    >
+                      {businessFormData?.instagramPageUrl?.length > 0
+                        ? businessFormData?.instagramPageUrl
+                        : "Not updated"}
+                    </span>
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">TikTok</span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        businessFormData?.tikTokPageUrl?.length > 0
+                          ? "text-black"
+                          : "text-red-500"
+                      )}
+                    >
+                      {businessFormData?.tikTokPageUrl?.length > 0
+                        ? businessFormData?.tikTokPageUrl
+                        : "Not updated"}
+                    </span>
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">X (Twitter)</span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        businessFormData?.xPageUrl?.length > 0
+                          ? "text-black"
+                          : "text-red-500"
+                      )}
+                    >
+                      {businessFormData?.xPageUrl?.length > 0
+                        ? businessFormData?.xPageUrl
+                        : "Not updated"}
+                    </span>
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="h-4 w-4"></div>
+                  <div className="flex flex-col">
+                    <span className="text-sm">Website</span>
+                    <span
+                      className={cn(
+                        "text-sm",
+                        businessFormData?.websiteUrl?.length > 0
+                          ? "text-black"
+                          : "text-red-500"
+                      )}
+                    >
+                      {businessFormData?.websiteUrl?.length > 0
+                        ? businessFormData?.websiteUrl
+                        : "Not updated"}
+                    </span>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="url"
+                      name="instagramPageUrl"
+                      onChange={handleInputChange}
+                      value={businessFormData?.instagramPageUrl || ""}
+                      label="Instagram URL"
+                      placeholder="https://instagram.com/yourpage"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="url"
+                      name="tikTokPageUrl"
+                      onChange={handleInputChange}
+                      value={businessFormData?.tikTokPageUrl || ""}
+                      label="TikTok URL"
+                      placeholder="https://tiktok.com/@yourpage"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="url"
+                      name="xPageUrl"
+                      onChange={handleInputChange}
+                      value={businessFormData?.xPageUrl || ""}
+                      label="X (Twitter) URL"
+                      placeholder="https://x.com/yourpage"
+                    />
+                  </div>
+                </div>
+                <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                  <div className="flex flex-col w-full">
+                    <CustomInput
+                      type="url"
+                      name="websiteUrl"
+                      onChange={handleInputChange}
+                      value={businessFormData?.websiteUrl || ""}
+                      label="Website URL"
+                      placeholder="https://yourwebsite.com"
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* VAT Section */}
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <PiBuildingOffice className="text-black" />
+                <span className="font-medium text-sm">VAT</span>
+              </div>
+              <Divider />
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              {!isEditing ? (
+                <>
+                  <div className="col-span-1 flex gap-2">
+                    <div className="h-4 w-4"></div>
+                    <div className="flex flex-col">
+                      <span className="text-sm">Status</span>
+                      <Chip
+                        className={`${
+                          businessFormData?.isVatEnabled
+                            ? "bg-success-50 text-success-600  border border-green-500"
+                            : "bg-gray-50 text-gray-600 border border-gray-500"
+                        }`}
+                        size="sm"
+                        variant="flat"
+                      >
+                        {businessFormData?.isVatEnabled
+                          ? "Enabled"
+                          : "Disabled"}
+                      </Chip>
+                    </div>
+                  </div>
+                  <div className="col-span-1 flex gap-2">
+                    <div className="h-4 w-4"></div>
+                    <div className="flex flex-col">
+                      <span className="text-sm">VAT Percentage</span>
+                      <span className="text-sm">
+                        {businessFormData?.vatRate || 0}%
                       </span>
                     </div>
-                    <Switch
-                      size="sm"
-                      classNames={{
-                        wrapper: `m-0 ${
-                          businessFormData?.isVatEnabled
-                            ? "!bg-primaryColor"
-                            : "bg-[#E4E7EC]"
-                        } `,
-                      }}
-                      name="allowSystemAdvert"
-                      defaultChecked={businessFormData?.isVatEnabled}
-                      onChange={(e) =>
-                        setBusinessFormData((prevState: any) => ({
-                          ...prevState,
-                          isVatEnabled: e.target.checked,
-
-                          vatRate: e.target.checked ? prevState.vatRate : 7.5,
-                        }))
-                      }
-                      isSelected={businessFormData?.isVatEnabled}
-                      aria-label="VAT"
-                    />
                   </div>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="number"
-                    name="vatRate"
-                    disabled={!businessFormData?.isVatEnabled}
-                    label="VAT Percentage"
-                    onChange={handleInputChange}
-                    value={businessFormData?.vatRate || 7.5}
-                    placeholder="Enter VAT percentage"
-                  />
-                </div>
-              </div>
-            </>
-          )}
+                </>
+              ) : (
+                <>
+                  <div className="col-span-1 flex gap-2">
+                    <div className="flex flex-col w-full">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <label className="text-black font-medium text-sm">
+                            VAT
+                          </label>
+                          <span className="text-xs text-gray-600">
+                            Activate and customize your VAT and charges on
+                            customer order
+                          </span>
+                        </div>
+                        <Switch
+                          size="sm"
+                          classNames={{
+                            wrapper: `m-0 ${
+                              businessFormData?.isVatEnabled
+                                ? "!bg-primaryColor"
+                                : "bg-[#E4E7EC]"
+                            } `,
+                          }}
+                          name="allowSystemAdvert"
+                          defaultChecked={businessFormData?.isVatEnabled}
+                          onChange={(e) =>
+                            setBusinessFormData((prevState: any) => ({
+                              ...prevState,
+                              isVatEnabled: e.target.checked,
+
+                              vatRate: e.target.checked
+                                ? prevState.vatRate
+                                : 7.5,
+                            }))
+                          }
+                          isSelected={businessFormData?.isVatEnabled}
+                          aria-label="VAT"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+                    <div className="flex flex-col w-full">
+                      <CustomInput
+                        type="number"
+                        name="vatRate"
+                        disabled={!businessFormData?.isVatEnabled}
+                        label="VAT Percentage"
+                        onChange={handleInputChange}
+                        value={businessFormData?.vatRate || 7.5}
+                        placeholder="Enter VAT percentage"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       <Modal
         isOpen={isOpen}

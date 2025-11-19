@@ -97,12 +97,22 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: <Image src={Decline} alt="decline" />,
+      icon: (
+        <Image
+          src={Decline}
+          alt="decline"
+          width={20}
+          height={20}
+          quality={100}
+        />
+      ),
       title: "PENDING PAYMENT",
       desc: formatPrice(report?.pendingAmount || 0),
     },
     {
-      icon: <Image src={Like} alt="like" />,
+      icon: (
+        <Image src={Like} alt="like" width={20} height={20} quality={100} />
+      ),
       title: "TOTAL PAYMENT",
       desc: formatPrice(report?.totalAmount || 0),
     },

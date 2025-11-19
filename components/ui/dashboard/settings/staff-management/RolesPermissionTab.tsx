@@ -5,10 +5,13 @@ import { SmallLoader, getJsonItemFromLocalStorage } from "@/lib/utils";
 import { Divider, ScrollShadow, Spacer, Switch } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import { sections } from "../data";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 const RolesPermissionTab = () => {
-  const { data, isLoading: roleLoading, refetch } = useGetRoleByBusiness();
-  const permissionsData = data?.data?.data;
+  const queryClient = useQueryClient();
+  const { data, isLoading: roleLoading } = useGetRoleByBusiness();
+  const permissionsData = data; // data is already the permissions object from the hook
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
 
@@ -16,8 +19,6 @@ const RolesPermissionTab = () => {
     userRole: {},
     managerRole: {},
   });
-
-  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
     if (permissionsData) {
@@ -28,42 +29,78 @@ const RolesPermissionTab = () => {
     }
   }, [permissionsData]);
 
-  const handleToggle = (permission) => {
-    setPermissions((prev) => ({
-      ...prev,
-      userRole: {
-        ...prev.userRole,
-        [permission]: !prev.userRole[permission],
-      },
-    }));
-    setHasChanges(true);
-  };
+  const updatePermissionMutation = useMutation({
+    mutationFn: (updatedPermissions: any) => {
+      const permissionsToSend = {
+        userRole: {
+          ...updatedPermissions.userRole,
+          cooperateId: userInformation?.cooperateID,
+          businessId: businessInformation[0]?.businessId,
+        },
+        managerRole: {
+          ...updatedPermissions.managerRole,
+          cooperateId: userInformation?.cooperateID,
+          businessId: businessInformation[0]?.businessId,
+        },
+      };
+      return configureRole(
+        businessInformation[0]?.businessId,
+        permissionsToSend
+      );
+    },
+    onMutate: async (newPermissions) => {
+      const queryKey = ['roleByBusiness', businessInformation[0]?.businessId];
 
-  const assignPermission = async () => {
-    const permissionsToSend = {
+      // Cancel any outgoing refetches to avoid overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot the previous value
+      const previousPermissions = queryClient.getQueryData(queryKey);
+
+      // Optimistically update to the new value - data is stored directly as permissions object
+      queryClient.setQueryData(queryKey, newPermissions);
+
+      // Return a context object with the snapshotted value
+      return { previousPermissions, queryKey };
+    },
+    onError: (err, newPermissions, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      if (context?.queryKey) {
+        queryClient.setQueryData(
+          context.queryKey,
+          context.previousPermissions
+        );
+      }
+      toast.error("Failed to update permission. Please try again.");
+    },
+    onSuccess: (response) => {
+      if (!response?.data?.isSuccessful && response?.data?.error) {
+        toast.error(response?.data?.error);
+      }
+      // Don't update cache here - let the optimistic update stay until refetch
+    },
+    onSettled: (_data, _error, _variables, context) => {
+      // Only refetch to sync with server, this will replace the optimistic update
+      if (context?.queryKey) {
+        queryClient.invalidateQueries({
+          queryKey: context.queryKey,
+          refetchType: 'active'
+        });
+      }
+    },
+  });
+
+  const handleToggle = (permission: string) => {
+    const updatedPermissions = {
+      ...permissions,
       userRole: {
         ...permissions.userRole,
-        cooperateId: userInformation?.cooperateID,
-        businessId: businessInformation[0]?.businessId,
-      },
-      managerRole: {
-        ...permissions.managerRole,
-        cooperateId: userInformation?.cooperateID,
-        businessId: businessInformation[0]?.businessId,
+        [permission]: !permissions.userRole[permission],
       },
     };
-    const response = await configureRole(
-      businessInformation[0]?.businessId,
-      permissionsToSend
-    );
 
-    if (response?.data?.isSuccessful) {
-      refetch();
-      setHasChanges(false);
-      console.log("Permission assigned successfully");
-    } else if (response?.data?.error) {
-      console.log(response?.data?.error, "errrrrrrrror");
-    }
+    setPermissions(updatedPermissions);
+    updatePermissionMutation.mutate(updatedPermissions);
   };
 
   return (
@@ -81,7 +118,7 @@ const RolesPermissionTab = () => {
         </div>
       ) : (
         <div className="w-full border border-secondaryGrey rounded-lg">
-          <div className="grid grid-cols-3 p-3 rounded-tl-lg border-b border-secondaryGrey rounded-tr-lg bg-grey300 mb-4 text-grey500 font-medium">
+          <div className="grid grid-cols-3 p-3 text-sm rounded-tl-lg border-b border-secondaryGrey rounded-tr-lg bg-grey300 mb-4 text-grey500 font-medium">
             <div className="col-span-1 font-medium">Actions</div>
             <div className="col-span-1 text-center font-medium">Manager</div>
             <div className="col-span-1 text-center font-medium">Staff</div>
@@ -89,7 +126,7 @@ const RolesPermissionTab = () => {
           <ScrollShadow size={0} className="w-full">
             {sections.map((section) => (
               <div key={section.title} className="px-3">
-                <div className="font-medium border-b pb-3 border-secondaryGrey text-primaryColor mt-0 mb-4">
+                <div className="font-medium border-b border-gray-100 text-sm  text-primaryColor pb-2 mb-2">
                   {section.title}
                 </div>
 
@@ -106,7 +143,7 @@ const RolesPermissionTab = () => {
 
                   return (
                     <div key={permission.key}>
-                      <div className="grid grid-cols-3 items-center">
+                      <div className="grid grid-cols-3 text-sm items-center">
                         <div className="col-span-1 text-grey500">
                           {permission.label}
                         </div>
@@ -140,25 +177,13 @@ const RolesPermissionTab = () => {
                           />
                         </div>
                       </div>
-                      <Divider className="my-4" />
+                      <Divider className="my-2 bg-gray-100" />
                     </div>
                   );
                 })}
               </div>
             ))}
           </ScrollShadow>
-        </div>
-      )}
-      <Spacer y={4} />
-
-      {hasChanges && (
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={assignPermission}
-            className="px-4 py-2 bg-primaryColor text-white rounded-md hover:bg-opacity-90 transition-colors"
-          >
-            Save Changes
-          </button>
         </div>
       )}
     </div>

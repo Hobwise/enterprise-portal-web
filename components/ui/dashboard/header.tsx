@@ -182,7 +182,9 @@ const Header = ({ ispos }: any) => {
   return (
     <div
       className={cn(
-        `sticky inset-x-0 top-0 z-50 w-full  transition-all ${ispos ? "": "border-b"}  border-primaryGrey`,
+        `sticky inset-x-0 top-0 z-50 w-full  transition-all ${
+          ispos ? "" : "border-b"
+        }  border-primaryGrey`,
         {
           "border-b  border-primaryGrey bg-white/75 backdrop-blur-lg": scrolled,
           "border-b  border-primaryGrey bg-white": selectedLayout,
@@ -208,87 +210,95 @@ const Header = ({ ispos }: any) => {
             }
           />
         )}
-        <div className={`flex h-[64px] bg-white text-black ${ispos ? "": "border-b"} border-primaryGrey items-center justify-between px-6`}>
+        <div
+          className={`flex h-[64px] bg-white text-black ${
+            ispos ? "" : "border-b"
+          } border-primaryGrey items-center justify-between px-6`}
+        >
           {ispos && (
-            <Link href={pathname.startsWith('/business-activities') ? "/business-activities" : "/pos"} className="cursor-pointer">
+            <Link
+              href={
+                pathname.startsWith("/business-activities")
+                  ? "/business-activities"
+                  : "/pos"
+              }
+              className="cursor-pointer"
+            >
               <CompanyLogo
                 textColor="text-black font-lexend text-[28px] font-[600]"
                 containerClass="flex gap-2 items-center"
               />
             </Link>
           )}
-        {
-          !ispos && (
-              <div className="flex items-center space-x-4">
-            <div className="flex items-center gap-2">
-              {navItem ? (
-                <>
-                  {navItem?.title === "Menu" ? (
-                    <PiBookOpenTextLight className="font-bold text-grey500 text-xl" />
-                  ) : (
-                    <Image
-                      className={"dashboardLogo"}
-                      src={navItem?.icon}
-                      alt={navItem?.title}
-                    />
-                  )}
-                  <span className="text-[#494E58] font-[600]">
-                    {navItem?.title}
-                  </span>
-                </>
-              ) : (
-                <>
-                  {routeOutsideSidebar()?.icon}
-                  <span className="text-[#494E58] font-[600]">
-                    {routeOutsideSidebar()?.title}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-          )
-        }
-
-
-             <div className="flex items-center space-x-8">
+          {!ispos && (
             <div className="flex items-center space-x-4">
-            {!ispos && (
-              <Popover
-                placement="bottom"
-                onOpenChange={setNotifPopoverOpen}
-                isOpen={notifPopoverOpen}
-              >
-                <PopoverTrigger>
-                  {unreadCount === 0 ? (
-                    <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
-                  ) : (
-                    <Badge
-                      className="cursor-pointer h-6 w-6 flex justify-center items-center rounded-full"
-                      size="sm"
-                      color="danger"
-                      content={
-                        unreadNotCount !== 0
-                          ? unreadNotCount
-                          : unreadCount > 0
-                          ? unreadCount
-                          : undefined
-                      }
-                    >
-                      <SlBell className="text-[#494E58] h-5 w-5 cursor-pointer" />
-                    </Badge>
-                  )}
-                </PopoverTrigger>
-                <PopoverContent className="">
-                  {notifPopoverOpen && (
-                    <NotificationFetcher
-                      page={page}
-                      pageSize={pageSize}
-                      loadMore={loadMore}
-                    />
-                  )}
-                </PopoverContent>
-              </Popover>
-             )}
+              <div className="flex items-center gap-2">
+                {navItem ? (
+                  <>
+                    {navItem?.title === "Menu" ? (
+                      <PiBookOpenTextLight className="font-bold text-grey500 text-xl" />
+                    ) : (
+                      <Image
+                        className={"dashboardLogo"}
+                        src={navItem?.icon}
+                        alt={navItem?.title}
+                      />
+                    )}
+                    <span className="text-[#494E58] font-[600]">
+                      {navItem?.title}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    {routeOutsideSidebar()?.icon}
+                    <span className="text-[#494E58] font-[600]">
+                      {routeOutsideSidebar()?.title}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-4">
+              {!ispos && (
+                <Popover
+                  placement="bottom"
+                  onOpenChange={setNotifPopoverOpen}
+                  isOpen={notifPopoverOpen}
+                >
+                  <PopoverTrigger>
+                    {unreadCount === 0 ? (
+                      <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
+                    ) : (
+                      <Badge
+                        className="cursor-pointer h-6 w-6 flex justify-center items-center rounded-full"
+                        size="sm"
+                        color="danger"
+                        content={
+                          unreadNotCount !== 0
+                            ? unreadNotCount
+                            : unreadCount > 0
+                            ? unreadCount
+                            : undefined
+                        }
+                      >
+                        <SlBell className="text-[#494E58] h-5 w-5 cursor-pointer" />
+                      </Badge>
+                    )}
+                  </PopoverTrigger>
+                  <PopoverContent className="">
+                    {notifPopoverOpen && (
+                      <NotificationFetcher
+                        page={page}
+                        pageSize={pageSize}
+                        loadMore={loadMore}
+                      />
+                    )}
+                  </PopoverContent>
+                </Popover>
+              )}
 
               {/* Active Hours Display */}
               {/* {isMounted && userInfo?.activeHours !== undefined && (
@@ -357,27 +367,33 @@ const Header = ({ ispos }: any) => {
                     )}
                   </DropdownTrigger>
                   <DropdownMenu aria-label="settings Actions" variant="flat">
-                    <DropdownItem key="firstLogin" isReadOnly className="cursor-default opacity-100">
+                    <DropdownItem
+                      key="firstLogin"
+                      isReadOnly
+                      className="cursor-default opacity-100"
+                    >
                       <div className="flex items-center gap-2 px-2 py-1">
                         <IoTimeOutline className="text-primaryColor text-[22px]" />
                         <div className="flex flex-col">
-                          <span className="text-xs text-primaryColor">Clock In</span>
+                          <span className="text-xs text-primaryColor">
+                            Clock In
+                          </span>
                           <span className="text-xs text-primaryColor font-medium">
-                            {userInfo?.firstLogin ? formatLoginTime(userInfo.firstLogin) : "N/A"}
+                            {userInfo?.firstLogin
+                              ? formatLoginTime(userInfo.firstLogin)
+                              : "N/A"}
                           </span>
                         </div>
                       </div>
                     </DropdownItem>
-                    <DropdownItem key="Profile Management">
+                    <DropdownItem key="Settings">
                       <Link
                         prefetch={true}
                         href={"/dashboard/settings/personal-information"}
                         className="flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2"
                       >
                         <MdOutlinePerson className="text-[22px]" />
-                        <span className="  text-sm font-md">
-                          Profile Management
-                        </span>
+                        <span className="  text-sm font-md">Settings</span>
                       </Link>
                     </DropdownItem>
                     <DropdownItem key="logout">
@@ -394,7 +410,6 @@ const Header = ({ ispos }: any) => {
               )}
             </div>
           </div>
-       
         </div>
 
         <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
