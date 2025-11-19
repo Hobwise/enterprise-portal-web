@@ -1,13 +1,12 @@
 "use client";
 
-import BackButton from '@/components/backButton';
+import BackButton from "@/components/backButton";
 import SettingsSidebar, { lists } from "@/components/settingsSidebar";
-import { Spacer } from '@nextui-org/react';
+import { Spacer } from "@nextui-org/react";
 import { useEffect, useState, useMemo } from "react";
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import { isPOSUser, isCategoryUser } from "@/lib/userTypeUtils";
 import { usePathname } from "next/navigation";
-
 
 const SettingsLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();

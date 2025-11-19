@@ -279,7 +279,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
       wrapper: ['max-h-[382px]'],
       th: [
         'text-default-500',
-        'text-sm',
+        'text-xs',
         'border-b',
         'border-divider',
         'py-4',

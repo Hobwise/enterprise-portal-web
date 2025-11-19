@@ -109,7 +109,7 @@ const InvoiceModal = ({
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="font-semibold text-black">Order Ref</span>
-                      <span className="text-black">{singleOrder.quickResponseID}</span>
+                      <span className="text-black">{singleOrder.reference}</span>
                     </div>
                     <div className="flex justify-between py-1">
                       <span className="font-semibold text-black">Date & Time</span>

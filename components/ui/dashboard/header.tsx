@@ -68,7 +68,7 @@ const Header = ({ ispos }: any) => {
   const { data } = useUser();
 
   // Get user info from localStorage for activeHours, firstLogin, lastLogin
-  const userInfo = getJsonItemFromLocalStorage('userInformation');
+  const userInfo = getJsonItemFromLocalStorage("userInformation");
 
   // Helper function to format active hours
   const formatActiveHours = (hours: number): string => {
@@ -76,7 +76,7 @@ const Header = ({ ispos }: any) => {
     const totalMinutes = Math.round(hours * 60);
 
     if (totalMinutes < 60) {
-      return `${totalMinutes} min${totalMinutes !== 1 ? 's' : ''}`;
+      return `${totalMinutes} min${totalMinutes !== 1 ? "s" : ""}`;
     }
 
     const hrs = Math.floor(totalMinutes / 60);
