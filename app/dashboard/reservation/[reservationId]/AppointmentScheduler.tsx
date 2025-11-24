@@ -88,6 +88,12 @@ const AppointmentScheduler: React.FC<{
     }
   };
 
+  useEffect(() => {
+    setSelectedAppointment(null);
+    setEachBooking(null);
+    setIsEditBookingModal(false);
+  }, [bookings]);
+
   
 
   const updateBookingStatus = async (

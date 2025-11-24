@@ -33,7 +33,7 @@ import { FiLogOut } from "react-icons/fi";
 import { GoPlus } from "react-icons/go";
 import { IoIosArrowDown } from "react-icons/io";
 import { PiBookOpenTextLight } from "react-icons/pi";
-import LogoutModal from "../logoutModal";
+
 import { SIDENAV_ITEMS } from "./constants";
 import AddBusiness from "./settings/addBusiness";
 import { SideNavItem } from "./types";
@@ -341,19 +341,7 @@ const SideNav = () => {
                   </div>
                 </DropdownItem>
               )}
-              <DropdownItem
-                key="logout"
-                className="text-danger"
-                color="danger"
-                onClick={onOpenChange}
-              >
-                <div className="flex items-center gap-3 ">
-                  <div className="p-2 rounded-md">
-                    <FiLogOut className="text-[20px]" />
-                  </div>
-                  <span className="font-[500] text-[14px]">Logout</span>
-                </div>
-              </DropdownItem>
+
             </DropdownMenu>
           </Dropdown>
           )}
@@ -364,7 +352,7 @@ const SideNav = () => {
         toggleBusinessModal={toggleBusinessModal}
         isOpenBusinessModal={isOpenBusinessModal}
       />
-      <LogoutModal onOpenChange={onOpenChange} isOpen={isOpen} />
+
     </div>
   );
 };

@@ -78,10 +78,10 @@ const BookingDetails = ({
               <Spacer y={1} />
               <div>
                 <p className='font-[400] text-grey500 text-[14px]'>
-                  RESERVATION
+                  RESERVATION NAME
                 </p>
                 <p className='font-[500] text-black '>
-                  {bookingDetails.reservation?.reservationName}
+                  {bookingDetails.reservationName || bookingDetails.reservation?.reservationName}
                 </p>
               </div>
               <Spacer y={1} />
@@ -93,6 +93,53 @@ const BookingDetails = ({
                   {bookingDetails.emailAddress}
                 </p>
               </div>
+              <Spacer y={1} />
+              <div>
+                <p className='font-[400] text-grey500 text-[14px]'>
+                  PHONE NUMBER
+                </p>
+                <p className='font-[500] text-black '>
+                  {bookingDetails.phoneNumber}
+                </p>
+              </div>
+              <Spacer y={1} />
+              <div>
+                <p className='font-[400] text-grey500 text-[14px]'>
+                  BOOKING DATE & TIME
+                </p>
+                <p className='font-[500] text-black '>
+                  {new Date(bookingDetails.bookingDateTime).toLocaleString()}
+                </p>
+              </div>
+              <Spacer y={1} />
+              <div>
+                <p className='font-[400] text-grey500 text-[14px]'>
+                  QUANTITY
+                </p>
+                <p className='font-[500] text-black '>
+                  {bookingDetails.quantity}
+                </p>
+              </div>
+              <Spacer y={1} />
+              <div>
+                <p className='font-[400] text-grey500 text-[14px]'>
+                  NUMBER OF GUESTS
+                </p>
+                <p className='font-[500] text-black '>
+                  {bookingDetails.numberOfGuest}
+                </p>
+              </div>
+              <Spacer y={1} />
+              {bookingDetails.description && (
+                <div>
+                  <p className='font-[400] text-grey500 text-[14px]'>
+                    DESCRIPTION
+                  </p>
+                  <p className='font-[500] text-black '>
+                    {bookingDetails.description}
+                  </p>
+                </div>
+              )}
 
               {shouldShowButton && (
                 <>

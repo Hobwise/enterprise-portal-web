@@ -38,15 +38,14 @@ const Bookings: React.FC = () => {
   const { userRolePermissions, role } = usePermission();
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingExport, setLoadingExport] = useState(false);
-  const [openBookingModal, setOpenBookingModal] = useState(false);
   const [openCreateBookingModal, setOpenCreateBookingModal] = useState(false);
   const [openSuccessModal, setOpenSuccessModal] = useState(false);
 
-  const showBookingModal = () => {
-    setOpenBookingModal(true);
+  const showCreateBookingModal = () => {
+    setOpenCreateBookingModal(true);
   };
-  const closeBookingModal = () => {
-    setOpenBookingModal(false);
+  const closeCreateBookingModal = () => {
+    setOpenCreateBookingModal(false);
   };
   const showSuccessModal = () => {
     setOpenSuccessModal(true);
@@ -54,14 +53,16 @@ const Bookings: React.FC = () => {
   const closeSuccessModal = () => {
     setOpenSuccessModal(false);
   };
-  const showCreateBookingModal = () => {
-    setOpenCreateBookingModal(true);
-  };
-  const closeCreateBookingModal = () => {
-    setOpenCreateBookingModal(false);
-  };
 
-  const { setPage, setTableStatus } = useGlobalContext();
+  const {
+    setPage,
+    setTableStatus,
+    bookingDetails,
+    isBookingDetailsModalOpen,
+    openBookingDetailsModal,
+    closeBookingDetailsModal,
+    setBookingDetails,
+  } = useGlobalContext();
 
   useEffect(() => {
     refetch();
@@ -77,7 +78,6 @@ const Bookings: React.FC = () => {
 
   const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [bookingDetails, setBookingDetails] = useState<any>(null);
   const [completedBooking, setCompletedBooking] = useState<any>(null);
 
   const updateBookingStatus = async (
@@ -95,7 +95,7 @@ const Bookings: React.FC = () => {
       });
       refetch();
       setBookingId("");
-      closeBookingModal();
+      closeBookingDetailsModal();
     } else {
       notify({
         title: "Error!",
@@ -220,15 +220,15 @@ const Bookings: React.FC = () => {
         bookingId={bookingId}
         setBookingId={setBookingId}
         onOpenChange={onOpenChange}
-        showBookingModal={showBookingModal}
+        showBookingModal={openBookingDetailsModal}
         setBookingDetails={setBookingDetails}
       />
       <BookingDetails
         setBookingId={setBookingId}
-        openBookingModal={openBookingModal}
-        setOpenBookingModal={setOpenBookingModal}
-        showBookingModal={showBookingModal}
-        closeBookingModal={closeBookingModal}
+        openBookingModal={isBookingDetailsModalOpen}
+        setOpenBookingModal={closeBookingDetailsModal}
+        showBookingModal={openBookingDetailsModal}
+        closeBookingModal={closeBookingDetailsModal}
         updateBookingStatus={updateBookingStatus}
         isLoading={loading}
         bookingDetails={bookingDetails}

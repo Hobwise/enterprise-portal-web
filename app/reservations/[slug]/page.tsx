@@ -20,7 +20,7 @@ export default function BookReservation() {
       redirect(RESERVATIONS_URL);
     }
     setLoading(false);
-  }, []);
+  }, [pathname]);
 
   return (
     <div className="mt-28 px-6 lg:px-24 space-y-4">

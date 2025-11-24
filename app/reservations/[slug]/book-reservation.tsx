@@ -93,6 +93,15 @@ export default function BookReservationPage({
   const router = useRouter();
   const [open, setOpen] = useState<boolean>(false);
 
+  useEffect(() => {
+    setQuantity(1);
+    setNoOfGuests(1);
+    setSelectedTime(new Set([]));
+    setSelectedPeriod({ quantity: 0, timeSlot: "" });
+    setDetails(defaultValues);
+    setError(defaultValues);
+  }, [reservation.id]);
+
   // Use menuConfig color if provided (customer mode), otherwise use default primaryColor
   const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
   const textColorStyle = { color: primaryColor };
