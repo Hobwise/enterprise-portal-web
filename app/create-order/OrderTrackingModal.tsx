@@ -678,54 +678,64 @@ const OrderTrackingPage = ({
                 </div>
               </div>
             )}
-          <div className="flex gap-5 border-t border-gray-200 py-4 pb-safe z-20">
-            {/* <CustomButton
-              onClick={onAddMoreItems}
-              disabled={orderData?.status === 1 || orderData?.status === 2}
-              style={
-                orderData?.status === 1 || orderData?.status === 2
-                  ? {
-                      backgroundColor: "#F3F4F6",
-                      borderColor: "#D1D5DB",
-                      color: "#9CA3AF",
-                      borderWidth: "2px",
-                    }
-                  : {
-                      ...borderColorStyle,
-                      ...textColorStyle,
-                      backgroundColor: "white",
-                      borderWidth: "2px",
-                    }
-              }
-              className={`flex-1 h-12 md:h-14 ${
-                orderData?.status === 1 || orderData?.status === 2
-                  ? "cursor-not-allowed"
-                  : ""
-              } font-semibold flex items-center justify-center gap-2 text-base`}
+          <div className="border-t border-gray-200 py-4 pb-safe z-20">
+            <div className="flex gap-5">
+              {/* <CustomButton
+                onClick={onAddMoreItems}
+                disabled={orderData?.status === 1 || orderData?.status === 2}
+                style={
+                  orderData?.status === 1 || orderData?.status === 2
+                    ? {
+                        backgroundColor: "#F3F4F6",
+                        borderColor: "#D1D5DB",
+                        color: "#9CA3AF",
+                        borderWidth: "2px",
+                      }
+                    : {
+                        ...borderColorStyle,
+                        ...textColorStyle,
+                        backgroundColor: "white",
+                        borderWidth: "2px",
+                      }
+                }
+                className={`flex-1 h-12 md:h-14 ${
+                  orderData?.status === 1 || orderData?.status === 2
+                    ? "cursor-not-allowed"
+                    : ""
+                } font-semibold flex items-center justify-center gap-2 text-base`}
+              >
+                <IoAddCircleOutline className="w-6 h-6" />
+                Add items
+              </CustomButton> */}
+              <CustomButton
+                onClick={() => {
+                  // Pass the updated order data (which includes reference) to parent
+                  onCheckout(orderData);
+                }}
+                disabled={orderData?.status === 2 || orderData?.status === 1}
+                style={
+                  orderData?.status === 1 || orderData?.status === 1
+                    ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
+                    : primaryColorStyle
+                }
+                className={`flex-1 h-12 md:h-14 ${
+                  orderData?.status === 1 || orderData?.status === 1
+                    ? "cursor-not-allowed"
+                    : "text-white"
+                } font-semibold flex items-center justify-center gap-2 text-base`}
+              >
+                <span>Update this order</span>
+                <HiArrowLongLeft className="w-6 h-6 rotate-180" />
+              </CustomButton>
+            </div>
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={handleMenuClick}
+              className="w-full text-center text-sm text-gray-600 hover:text-gray-800 py-3 mt-2 transition-colors"
             >
-              <IoAddCircleOutline className="w-6 h-6" />
-              Add items
-            </CustomButton> */}
-            <CustomButton
-              onClick={() => {
-                // Pass the updated order data (which includes reference) to parent
-                onCheckout(orderData);
-              }}
-              disabled={orderData?.status === 2 || orderData?.status === 1}
-              style={
-                orderData?.status === 1 || orderData?.status === 1
-                  ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
-                  : primaryColorStyle
-              }
-              className={`flex-1 h-12 md:h-14 ${
-                orderData?.status === 1 || orderData?.status === 1
-                  ? "cursor-not-allowed"
-                  : "text-white"
-              } font-semibold flex items-center justify-center gap-2 text-base`}
-            >
-              <span>Update this order</span>
-              <HiArrowLongLeft className="w-6 h-6 rotate-180" />
-            </CustomButton>
+              Close
+            </button>
           </div>
         </div>
       </div>
