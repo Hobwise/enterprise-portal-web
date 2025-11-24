@@ -238,11 +238,7 @@ const Header = ({ ispos }: any) => {
                     {navItem?.title === "Menu" ? (
                       <PiBookOpenTextLight className="font-bold text-grey500 text-xl" />
                     ) : (
-                      <Image
-                        className={"dashboardLogo"}
-                        src={navItem?.icon}
-                        alt={navItem?.title}
-                      />
+                      <span className="text-[#494E58]">{navItem?.icon}</span>
                     )}
                     <span className="text-[#494E58] font-[600]">
                       {navItem?.title}
@@ -250,7 +246,7 @@ const Header = ({ ispos }: any) => {
                   </>
                 ) : (
                   <>
-                    {routeOutsideSidebar()?.icon}
+                    <span className="text-[#494E58]">{routeOutsideSidebar()?.icon}</span>
                     <span className="text-[#494E58] font-[600]">
                       {routeOutsideSidebar()?.title}
                     </span>

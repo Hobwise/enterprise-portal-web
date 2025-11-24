@@ -1,102 +1,93 @@
 'use client';
-import Image from 'next/image';
-import { IoIosSettings } from 'react-icons/io';
-import Booking from '../../../public/assets/icons/bookings.png';
-import Campaigns from '../../../public/assets/icons/campaigns.png';
-import Dashboard from '../../../public/assets/icons/dashboard.png';
-import Menu from '../../../public/assets/icons/menu.png';
-import Orders from '../../../public/assets/icons/order.png';
-import Payments from '../../../public/assets/icons/payment.png';
-import QRCode from '../../../public/assets/icons/qr-code.png';
-import Report from '../../../public/assets/icons/reports.png';
-import Reservation from '../../../public/assets/icons/reservation.png';
 import { SideNavItem } from './types';
+import {
+  DashboardSidebar,
+  OrderSidebar,
+  QRcodeSidebar,
+  CampaignSidebar,
+  ReservationSidebar,
+  BookingSidebar,
+  PaymentSidebar,
+  ReportSidebar,
+  SettingsIcon,
+} from "@/public/assets/svg";
+import Menu from '../../../public/assets/icons/menu.png';
 
 export const SIDENAV_ITEMS: SideNavItem[] = [
   {
-    title: 'Dashboard',
-    path: '/dashboard',
-    icon: Dashboard,
+    title: "Dashboard",
+    path: "/dashboard",
+    icon: <DashboardSidebar />,
   },
   {
-    title: 'Menu',
-    path: '/dashboard/menu',
+    title: "Menu",
+    path: "/dashboard/menu",
     icon: Menu,
   },
   {
-    title: 'Orders',
-    path: '/dashboard/orders',
-    icon: Orders,
+    title: "Orders",
+    path: "/dashboard/orders",
+    icon: <OrderSidebar />,
   },
   {
-    title: 'Quick Response',
-    path: '/dashboard/quick-response',
-    icon: QRCode,
+    title: "Quick Response",
+    path: "/dashboard/quick-response",
+    icon: <QRcodeSidebar />,
   },
   {
-    title: 'Campaigns',
-    path: '/dashboard/campaigns',
-    icon: Campaigns,
+    title: "Campaigns",
+    path: "/dashboard/campaigns",
+    icon: <CampaignSidebar />,
   },
   {
-    title: 'Reservation',
-    path: '/dashboard/reservation',
-    icon: Reservation,
+    title: "Reservation",
+    path: "/dashboard/reservation",
+    icon: <ReservationSidebar />,
   },
   {
-    title: 'Bookings',
-    path: '/dashboard/bookings',
-    icon: Booking,
+    title: "Bookings",
+    path: "/dashboard/bookings",
+    icon: <BookingSidebar />,
   },
   {
-    title: 'Payments',
-    path: '/dashboard/payments',
-    icon: Payments,
+    title: "Payments",
+    path: "/dashboard/payments",
+    icon: <PaymentSidebar />,
   },
   {
-    title: 'Reports',
-    path: '/dashboard/reports',
-    icon: Report,
+    title: "Reports",
+    path: "/dashboard/reports",
+    icon: <ReportSidebar />,
   },
 ];
 
 export const headerRouteMapping = {
   settings: {
     title: 'Settings',
-    icon: <IoIosSettings className='text-[20px] dashboardLogo' />,
+    icon: <SettingsIcon />,
   },
   menu: {
     title: 'Menu',
-    icon: <Image src={Menu} className='dashboardLogo' alt='menu logo' />,
+    icon: Menu,
   },
   orders: {
     title: 'Orders',
-    icon: <Image src={Orders} className='dashboardLogo' alt='order logo' />,
+    icon: <OrderSidebar />,
   },
   'quick-response': {
     title: 'Quick Response',
-    icon: (
-      <Image src={QRCode} className='dashboardLogo' alt='Quick response logo' />
-    ),
+    icon: <QRcodeSidebar />,
   },
   reservation: {
     title: 'Reservation',
-    icon: (
-      <Image
-        src={Reservation}
-        className='dashboardLogo'
-        alt='Reservation logo'
-      />
-    ),
+    icon: <ReservationSidebar />,
   },
   campaigns: {
     title: 'Campaigns',
-    icon: (
-      <Image src={Campaigns} className='dashboardLogo' alt='Campaigns logo' />
-    ),
+    icon: <CampaignSidebar />,
   },
   report: {
     title: 'Reports',
-    icon: <Image src={Report} className='dashboardLogo' alt='Report logo' />,
+    icon: <ReportSidebar />,
   },
 };

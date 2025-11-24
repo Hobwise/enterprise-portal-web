@@ -99,7 +99,7 @@ const ServingInfoModal = ({
     onSubmit(formData);
   };
 
-  const isFormValid = formData.name.trim() && formData.phoneNumber.trim();
+  const isFormValid = true; // Name and phone number are now optional
 
   // Don't render if not open
   if (!isOpen) return null;

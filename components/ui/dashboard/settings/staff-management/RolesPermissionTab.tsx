@@ -2,7 +2,7 @@
 import { configureRole } from "@/app/api/controllers/dashboard/settings";
 import useGetRoleByBusiness from "@/hooks/cachedEndpoints/useGetRoleBusiness";
 import { SmallLoader, getJsonItemFromLocalStorage } from "@/lib/utils";
-import { Divider, ScrollShadow, Spacer, Switch } from "@nextui-org/react";
+import { ScrollShadow, Switch } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 import { sections } from "../data";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -117,17 +117,25 @@ const RolesPermissionTab = () => {
           <SmallLoader />
         </div>
       ) : (
-        <div className="w-full border border-secondaryGrey rounded-lg">
-          <div className="grid grid-cols-3 p-3 text-sm rounded-tl-lg border-b border-secondaryGrey rounded-tr-lg bg-grey300 mb-4 text-grey500 font-medium">
-            <div className="col-span-1 font-medium">Actions</div>
-            <div className="col-span-1 text-center font-medium">Manager</div>
-            <div className="col-span-1 text-center font-medium">Staff</div>
+        <div className="w-full border border-divider rounded-lg overflow-hidden">
+          <div className="grid grid-cols-3 px-4 py-4 text-default-500 text-xs border-b border-divider bg-grey300">
+            <div className="col-span-1 font-medium uppercase">
+              ACTIONS
+            </div>
+            <div className="col-span-1 text-center font-medium uppercase">
+              MANAGER
+            </div>
+            <div className="col-span-1 text-center font-medium uppercase">
+              STAFF
+            </div>
           </div>
           <ScrollShadow size={0} className="w-full">
             {sections.map((section) => (
-              <div key={section.title} className="px-3">
-                <div className="font-medium border-b border-gray-100 text-sm  text-primaryColor pb-2 mb-2">
-                  {section.title}
+              <div key={section.title}>
+                <div className="px-4 py-3 bg-[#FAFAFA] border-b border-divider">
+                  <div className="font-semibold text-sm text-primaryColor">
+                    {section.title}
+                  </div>
                 </div>
 
                 {section.permissions.map((permission) => {
@@ -142,15 +150,18 @@ const RolesPermissionTab = () => {
                       : permissions.managerRole[permission.key] || false;
 
                   return (
-                    <div key={permission.key}>
-                      <div className="grid grid-cols-3 text-sm items-center">
-                        <div className="col-span-1 text-grey500">
+                    <div
+                      key={permission.key}
+                      className="border-b border-divider last:border-b-0 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="grid grid-cols-3 text-sm items-center px-4 py-3 h-[60px]">
+                        <div className="col-span-1 text-textGrey">
                           {permission.label}
                         </div>
                         <div className="col-span-1 flex justify-center">
                           <Switch
                             size="sm"
-                            isSelected={isManagerRoleChecked}
+                            isSelected={true}
                             isDisabled={true}
                             classNames={{
                               wrapper:
@@ -177,7 +188,6 @@ const RolesPermissionTab = () => {
                           />
                         </div>
                       </div>
-                      <Divider className="my-2 bg-gray-100" />
                     </div>
                   );
                 })}

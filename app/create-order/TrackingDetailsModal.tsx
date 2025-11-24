@@ -84,7 +84,7 @@ const TrackingDetailsPage = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen">
       {/* Back Button */}
       <button
         onClick={onClose}
@@ -100,9 +100,10 @@ const TrackingDetailsPage = ({
         showMenuButton={false}
         baseString={baseString}
       />
+
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="max-w-lg mx-auto px-6 py-8 pb-28 flex flex-col gap-8">
+      <div className="flex-1 overflow-y-auto px-6 py-8 pb-32">
+        <div className="max-w-lg mx-auto flex flex-col gap-8">
           <h2 className="text-2xl font-bold text-black mb-3">
             Tracking Details
           </h2>
@@ -111,6 +112,7 @@ const TrackingDetailsPage = ({
             preparation
           </p>
           {/* Tracking ID Input */}
+
           <div className="mb-8">
             <CustomInput
               type="text"
@@ -119,13 +121,17 @@ const TrackingDetailsPage = ({
               onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                 setTrackingId(e.target.value)
               }
+              placeholder="Enter Your Tracking ID"
               label="Tracking ID"
               isRequired
-              autoComplete="off"
             />
           </div>
         </div>
-        <div className="flex gap-5 border-t max-w-xl mx-auto border-gray-200 px-4 py-4 pb-safe z-20">
+      </div>
+
+      {/* Fixed Bottom Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 pb-safe shadow-lg">
+        <div className="max-w-xl mx-auto flex gap-5">
           <CustomButton
             onClick={onClose}
             className="flex-1 h-12 md:h-14 bg-white border-2 border-gray-300 text-black font-medium text-base"

@@ -153,6 +153,17 @@ const Profile = () => {
     }
   };
 
+  const mapRole = (role: number) => {
+    switch (role) {
+      case 0:
+        return "Manager";
+      case 1:
+        return "Staff";
+      default:
+        return "User";
+    }
+  };
+
   const getChangedFields = () => {
     if (!userFormData) {
       return {};
@@ -166,13 +177,13 @@ const Profile = () => {
 
       // Include field if it has a value
       // Allow 0 for gender, but exclude empty strings, null, and undefined
-      if (value !== null && value !== undefined && value !== '') {
+      if (value !== null && value !== undefined && value !== "") {
         fieldsWithValues[key] = value;
       }
     });
 
     // Convert gender to number if it exists
-    if ('gender' in fieldsWithValues && fieldsWithValues.gender !== undefined) {
+    if ("gender" in fieldsWithValues && fieldsWithValues.gender !== undefined) {
       fieldsWithValues.gender = Number(fieldsWithValues.gender);
     }
 
@@ -217,32 +228,32 @@ const Profile = () => {
                     </div>
                   )}
                 </div>
+                <div className="flex flex-col gap-2">
+                  {/* Username */}
+                  <div className="text-center space-y-1">
+                    <p className="text-xs text-[#596375]">
+                      @{data?.userName || "username not set"}
+                    </p>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {data?.firstName && data?.lastName
+                        ? `${data.firstName} ${data.lastName}`
+                        : "Name not set"}
+                    </h3>
+                    <p className="text-sm text-[#33363B] font-medium">
+                      {data?.role !== undefined ? mapRole(data.role) : "User"}
+                    </p>
+                  </div>
 
-                {/* Username */}
-                <div className="text-center space-y-1">
-                  <p className="text-xs text-[#596375]">
-                    @{data?.userName || "username not set"}
-                  </p>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {data?.firstName && data?.lastName
-                      ? `${data.firstName} ${data.lastName}`
-                      : "Name not set"}
-                  </h3>
-                  <p className="text-sm text-[#33363B] font-medium">
-                    {data?.isActive ? "Account Manager" : "User"}
-                  </p>
+                  {/* Contact Information */}
+                  <div className="w-full space-y-1 text-center">
+                    <p className="text-sm text-gray-500 font-[400]">
+                      {data?.email}
+                    </p>
+                    <p className="text-sm text-gray-500 font-[400]">
+                      {data?.phoneNumber || "Phone not set"}
+                    </p>
+                  </div>
                 </div>
-
-                {/* Contact Information */}
-                <div className="w-full space-y-1 text-center">
-                  <p className="text-sm text-gray-500 font-[400]">
-                    {data?.email}
-                  </p>
-                  <p className="text-sm text-gray-500 font-[400]">
-                    {data?.phoneNumber || "Phone not set"}
-                  </p>
-                </div>
-
                 {/* Edit Profile Button */}
                 <CustomButton
                   disableRipple

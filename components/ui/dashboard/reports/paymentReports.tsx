@@ -15,8 +15,10 @@ import {
 import { Line } from "react-chartjs-2";
 import { BsArrowUpShort } from "react-icons/bs";
 import { IoIosArrowForward } from "react-icons/io";
-import Decline from "../../../../public/assets/icons/canceled.png";
-import Like from "../../../../public/assets/icons/like.png";
+import {
+  DeclinedReportIcon,
+  ClosedReportIcon,
+} from "@/public/assets/svg";
 import Star from "../../../../public/assets/icons/star.png";
 import paymentIllustration from "../../../../public/assets/images/paymentIllustration.png";
 
@@ -97,22 +99,12 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: (
-        <Image
-          src={Decline}
-          alt="decline"
-          width={20}
-          height={20}
-          quality={100}
-        />
-      ),
+      icon: <DeclinedReportIcon width={20} height={20} />,
       title: "PENDING PAYMENT",
       desc: formatPrice(report?.pendingAmount || 0),
     },
     {
-      icon: (
-        <Image src={Like} alt="like" width={20} height={20} quality={100} />
-      ),
+      icon: <ClosedReportIcon width={20} height={20} />,
       title: "TOTAL PAYMENT",
       desc: formatPrice(report?.totalAmount || 0),
     },

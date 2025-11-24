@@ -426,8 +426,10 @@ const MenuItem = memo(({ item, pathname }: { item: SideNavItem; pathname: string
         >
           {item.title === "Menu" ? (
             <PiBookOpenTextLight className="font-bold text-xl" />
-          ) : (
+          ) : typeof item.icon === 'string' || (item.icon as any)?.src ? (
             <Image src={item.icon} alt={item.title} />
+          ) : (
+            item.icon
           )}
 
           <span className="font-[400] text-[14px] flex">{item.title}</span>
