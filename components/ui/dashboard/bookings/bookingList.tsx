@@ -252,6 +252,8 @@ const BookingsList: React.FC<BookingsListProps> = ({
     setIsOpenDelete: globalSetIsOpenDelete,
     isOpenEdit,
     toggleModalEdit,
+    setBookingDetails,
+    openBookingDetailsModal,
   } = useGlobalContext();
 
   // Use the new hook for fetching all data
@@ -608,6 +610,10 @@ const BookingsList: React.FC<BookingsListProps> = ({
             <TableRow
               key={String(booking?.reference || booking?.id)}
               className="cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => {
+                setBookingDetails(booking);
+                openBookingDetailsModal();
+              }}
             >
               {(columnKey) => (
                 <TableCell>{renderCell(booking, String(columnKey))}</TableCell>

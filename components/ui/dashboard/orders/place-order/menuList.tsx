@@ -51,6 +51,8 @@ type Item = {
   count: number;
   packingCost: number;
   isPacked?: boolean;
+  isVatEnabled?: boolean;
+  vatRate?: number;
 };
 
 
@@ -720,11 +722,14 @@ const MenuList = () => {
   const handleCardClick = useCallback((menuItem: Item, isItemPacked: boolean) => {
     setSelectedItems((prevItems: any) => {
       const existingItem = prevItems.find((item: any) => item.id === menuItem.id);
-      
+
       if (existingItem) {
         // Remove item if it exists
         return prevItems.filter((item: any) => item.id !== menuItem.id);
       } else {
+        // Get current section's VAT settings
+        const currentSection = menuSections.find(s => s.id === activeSubCategory);
+
         // Add new item
         return [
           ...prevItems,
@@ -733,11 +738,13 @@ const MenuList = () => {
             count: 1,
             isPacked: isItemPacked,
             packingCost: menuItem.packingCost,
+            isVatEnabled: currentSection?.isVatEnabled || false,
+            vatRate: currentSection?.vatRate || 0,
           },
         ];
       }
     });
-  }, []);
+  }, [menuSections, activeSubCategory]);
 
 
   const handleDecrement = useCallback((id: string) => {
@@ -763,13 +770,13 @@ const MenuList = () => {
 
   const handleIncrement = useCallback((id: string) => {
     if (isUpdating) return; // Prevent concurrent updates
-    
+
     setIsUpdating(true);
-    
+
     setSelectedItems((prevItems) => {
       // Check if item exists in selected items
       const existingItem = prevItems.find(item => item.id === id);
-      
+
       if (existingItem) {
         // Increment existing item
         const updatedItems = prevItems.map((item) =>
@@ -781,11 +788,16 @@ const MenuList = () => {
         // Add new item from menuItems
         const menuItem = menuItems?.find(item => item.id === id);
         if (menuItem) {
+          // Get current section's VAT settings
+          const currentSection = menuSections.find(s => s.id === activeSubCategory);
+
           const newItem = {
             ...menuItem,
             count: 1,
             isPacked: false,
-            packingCost: menuItem.packingCost 
+            packingCost: menuItem.packingCost,
+            isVatEnabled: currentSection?.isVatEnabled || false,
+            vatRate: currentSection?.vatRate || 0,
           };
           setTimeout(() => setIsUpdating(false), 100);
           return [...prevItems, newItem];
@@ -794,7 +806,7 @@ const MenuList = () => {
         return prevItems;
       }
     });
-  }, [isUpdating, menuItems]);
+  }, [isUpdating, menuItems, menuSections, activeSubCategory]);
 
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {

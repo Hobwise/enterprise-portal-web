@@ -20,7 +20,7 @@ const useSingleReservation = (reservationId: any) => {
   };
 
   const { data, isLoading, isError, refetch } = useQuery<any>({
-    queryKey: ['singleReservation', { page, rowsPerPage, tableStatus }],
+    queryKey: ['singleReservation', { reservationId, page, rowsPerPage, tableStatus }],
     queryFn: getSingleReservation,
     
       enabled: !!reservationId,

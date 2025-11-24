@@ -51,6 +51,10 @@ const BookingGrid: React.FC<BookingGridProps> = () => {
     selectedDate.toISOString() // Ensures correct format
   );
 
+  useEffect(() => {
+    setSelectedDate(new Date());
+  }, [reservationId]);
+
   // Check if selected date is today
   const isToday = (date: Date): boolean => {
     const today = new Date();
