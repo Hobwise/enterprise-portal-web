@@ -76,6 +76,7 @@ const EditReservation = ({
       allowSystemAdvert: reservationItem?.allowSystemAdvert || !true,
       numberOfSeat: reservationItem?.numberOfSeat || 1,
     });
+    setSelectedImage("");
   }, [reservationItem]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -10,6 +10,11 @@ interface TableContextType {
   tableStatus: string;
   setTableStatus: (status: string) => void;
   resetPagination: () => void;
+  bookingDetails: any;
+  setBookingDetails: (details: any) => void;
+  isBookingDetailsModalOpen: boolean;
+  openBookingDetailsModal: () => void;
+  closeBookingDetailsModal: () => void;
 }
 
 const TableContext = createContext<TableContextType | undefined>(undefined);
@@ -40,6 +45,8 @@ export const TableProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const [page, setPageState] = useState<number>(() => getStoredValue('table_page', 1));
   const [rowsPerPage, setRowsPerPageState] = useState<number>(() => getStoredValue('table_rowsPerPage', 10));
   const [tableStatus, setTableStatusState] = useState<string>(() => getStoredValue('table_status', 'All'));
+  const [bookingDetails, setBookingDetails] = useState<any>(null);
+  const [isBookingDetailsModalOpen, setIsBookingDetailsModalOpen] = useState(false);
 
   // Wrapped setters that persist to sessionStorage
   const setPage = useCallback((newPage: number) => {
@@ -55,6 +62,15 @@ export const TableProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const setTableStatus = useCallback((newStatus: string) => {
     setTableStatusState(newStatus);
     setStoredValue('table_status', newStatus);
+  }, []);
+
+  const openBookingDetailsModal = useCallback(() => {
+    setIsBookingDetailsModalOpen(true);
+  }, []);
+
+  const closeBookingDetailsModal = useCallback(() => {
+    setIsBookingDetailsModalOpen(false);
+    setBookingDetails(null);
   }, []);
 
   // Memoized callback to reset pagination
@@ -73,7 +89,12 @@ export const TableProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     tableStatus,
     setTableStatus,
     resetPagination,
-  }), [page, setPage, rowsPerPage, setRowsPerPage, tableStatus, setTableStatus, resetPagination]);
+    bookingDetails,
+    setBookingDetails,
+    isBookingDetailsModalOpen,
+    openBookingDetailsModal,
+    closeBookingDetailsModal,
+  }), [page, setPage, rowsPerPage, setRowsPerPage, tableStatus, setTableStatus, resetPagination, bookingDetails, isBookingDetailsModalOpen, openBookingDetailsModal, closeBookingDetailsModal]);
 
   return (
     <TableContext.Provider value={contextValue}>
