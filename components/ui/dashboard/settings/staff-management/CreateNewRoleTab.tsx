@@ -29,8 +29,8 @@ const CreateNewRoleTab = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const columns = [
-    { name: "Role", uid: "role" },
-    { name: "Members", uid: "count" },
+    { name: "ROLE", uid: "role" },
+    { name: "MEMBERS", uid: "count" },
     { name: "", uid: "actions" },
   ];
 
@@ -85,8 +85,17 @@ const CreateNewRoleTab = () => {
           <SmallLoader />
         </div>
       ) : (
-        <div className="border border-primaryGrey flex flex-col gap-2 rounded-lg">
-          <Table removeWrapper={true} shadow="none" aria-label="Roles table">
+        <div className="border border-divider rounded-lg overflow-hidden">
+          <Table
+            removeWrapper={true}
+            shadow="none"
+            aria-label="Roles table"
+            classNames={{
+              th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
+              td: "py-3 text-textGrey border-b border-divider h-[70px]",
+              tr: "border-b border-divider rounded-none hover:bg-gray-50 transition-colors",
+            }}
+          >
             <TableHeader columns={columns}>
               {(column) => (
                 <TableColumn

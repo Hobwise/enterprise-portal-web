@@ -15,10 +15,12 @@ import {
 import { Line } from "react-chartjs-2";
 import { BsArrowUpShort } from "react-icons/bs";
 import { IoIosArrowForward } from "react-icons/io";
-import Accepted from "../../../../public/assets/icons/accepted.png";
-import Decline from "../../../../public/assets/icons/canceled.png";
-import Cancel from "../../../../public/assets/icons/declined.png";
-import Like from "../../../../public/assets/icons/like.png";
+import {
+  AcceptedReportIcon,
+  DeclinedReportIcon,
+  CancelledReportIcon,
+  ClosedReportIcon,
+} from "@/public/assets/svg";
 import Star from "../../../../public/assets/icons/star.png";
 import orderIllustration from "../../../../public/assets/images/orderIlustration.png";
 
@@ -99,42 +101,22 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: (
-        <Image
-          src={Accepted}
-          alt="accepted"
-          width={20}
-          height={20}
-          quality={100}
-        />
-      ),
+      icon: <AcceptedReportIcon width={20} height={20} />,
       title: "ACCEPTED",
       desc: report?.closedOrdersCount,
     },
     {
-      icon: (
-        <Image
-          src={Decline}
-          alt="decline"
-          width={20}
-          height={20}
-          quality={100}
-        />
-      ),
+      icon: <DeclinedReportIcon width={20} height={20} />,
       title: "PENDING",
       desc: report?.openOrdersCount,
     },
     {
-      icon: (
-        <Image src={Cancel} alt="cancel" width={20} height={20} quality={100} />
-      ),
+      icon: <CancelledReportIcon width={20} height={20} />,
       title: "CANCELLED",
       desc: report?.cancelledOrdersCount,
     },
     {
-      icon: (
-        <Image src={Like} alt="like" width={20} height={20} quality={100} />
-      ),
+      icon: <ClosedReportIcon width={20} height={20} />,
       title: "CLOSED",
       desc: report?.closedOrdersCount,
     },

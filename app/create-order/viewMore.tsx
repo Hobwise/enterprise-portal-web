@@ -299,6 +299,7 @@ const ViewModal = ({
                                       menuName: selectedMenu.menuName,
                                       image: selectedMenu.image,
                                       packingCost: selectedMenu.packingCost,
+                                      menuID: selectedMenu.menuID, // Preserve menuID from parent
                                     },
                                     false
                                   );

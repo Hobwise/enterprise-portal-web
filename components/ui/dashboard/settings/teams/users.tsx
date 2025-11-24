@@ -255,11 +255,12 @@ const Users = ({ data, refetch }: any) => {
         bottomContent={bottomContent}
         bottomContentPlacement="outside"
         classNames={{
-          td: "h-[70px]",
+          wrapper: "max-h-[382px]",
+          th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
+          td: "py-3 text-textGrey border-b border-divider h-[70px]",
+          tr: "border-b border-divider rounded-none hover:bg-gray-50 transition-colors",
         }}
-        // classNames={classNames}
         selectedKeys={selectedKeys}
-        // selectionMode='multiple'
         sortDescriptor={sortDescriptor}
         topContentPlacement="outside"
         onSelectionChange={setSelectedKeys}

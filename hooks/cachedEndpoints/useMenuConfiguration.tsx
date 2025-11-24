@@ -29,7 +29,9 @@ const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
     queryFn: getMenuConfig,
     enabled: !!businessId,
     retry: 2,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Enable refetch on tab focus for mobile
+    refetchOnMount: true, // Always refetch on component mount
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   return {

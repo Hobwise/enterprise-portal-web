@@ -3,36 +3,22 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { saveJsonItemToLocalStorage } from "@/lib/utils";
 import { IoIosArrowForward } from "react-icons/io";
-import Accepted from "../../../../public/assets/icons/accepted.png";
-import Decline from "../../../../public/assets/icons/canceled.png";
+import {
+  AcceptedReportIcon,
+  DeclinedReportIcon,
+} from "@/public/assets/svg";
 import Star from "../../../../public/assets/icons/star.png";
 import auditIllustration from "../../../../public/assets/images/auditlogIllustration.png";
 
 const ReportDetails = ({ report }: any) => {
   const reportData = [
     {
-      icon: (
-        <Image
-          src={Accepted}
-          alt="accepted"
-          width={20}
-          height={20}
-          quality={100}
-        />
-      ),
+      icon: <AcceptedReportIcon width={20} height={20} />,
       title: "USERS",
       desc: report?.totalUsersCount,
     },
     {
-      icon: (
-        <Image
-          src={Decline}
-          alt="decline"
-          width={20}
-          height={20}
-          quality={100}
-        />
-      ),
+      icon: <DeclinedReportIcon width={20} height={20} />,
       title: "ACTIVITIES",
       desc: report?.totalActivitiesCount,
     },

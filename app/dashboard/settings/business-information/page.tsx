@@ -209,25 +209,26 @@ const BusinessInformation = () => {
                     </div>
                   )}
                 </div>
+                <div className="flex flex-col gap-2">
+                  {/* Business Name */}
+                  <div className="text-center space-y-1">
+                    <h3 className="text-xl font-semibold text-gray-900">
+                      {businessFormData?.name}
+                    </h3>
+                    <p className="text-sm text-gray-500 font-[400]">
+                      {businessFormData?.address}
+                    </p>
+                  </div>
 
-                {/* Business Name */}
-                <div className="text-center space-y-1">
-                  <h3 className="text-xl font-semibold text-gray-900">
-                    {businessFormData?.name}
-                  </h3>
-                  <p className="text-sm text-gray-500 font-[400]">
-                    {businessFormData?.address}
-                  </p>
-                </div>
-
-                {/* Contact Information */}
-                <div className="w-full space-y-1 text-center">
-                  <p className="text-sm text-gray-500 font-[600]">
-                    {businessFormData?.contactPhoneNumber}
-                  </p>
-                  <p className="text-sm text-gray-500 font-[400]">
-                    {businessFormData?.contactEmailAddress}
-                  </p>
+                  {/* Contact Information */}
+                  <div className="w-full space-y-1 text-center">
+                    <p className="text-sm text-gray-500 font-[600]">
+                      {businessFormData?.contactPhoneNumber}
+                    </p>
+                    <p className="text-sm text-gray-500 font-[400]">
+                      {businessFormData?.contactEmailAddress}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Edit Business Button */}
