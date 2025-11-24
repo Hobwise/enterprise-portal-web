@@ -2,6 +2,7 @@
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useQueryClient } from '@tanstack/react-query';
 
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
@@ -106,6 +107,32 @@ const CreateOrder = () => {
       }
     }
   }, [mode, viewOnlyStorageKey]);
+
+  // Initialize query client for cache management
+  const queryClient = useQueryClient();
+
+  // Handle stale data on Android devices when rescanning QR codes
+  useEffect(() => {
+    // Invalidate queries when URL parameters change (new QR scan)
+    queryClient.invalidateQueries({ queryKey: ['menuConfig'] });
+    queryClient.invalidateQueries({ queryKey: ['customerMenuCategories'] });
+    queryClient.invalidateQueries({ queryKey: ['customerMenuItems'] });
+  }, [businessId, cooperateID, qrId, queryClient]);
+
+  // Handle page visibility changes for mobile devices
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Refetch data when tab becomes visible after being in background
+        queryClient.invalidateQueries({ queryKey: ['menuConfig', businessId, cooperateID] });
+        queryClient.invalidateQueries({ queryKey: ['customerMenuCategories', businessId, cooperateID] });
+        queryClient.invalidateQueries({ queryKey: ['customerMenuItems'] });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [businessId, cooperateID, queryClient]);
 
   const { data: menuConfig, isLoading: menuConfigLoading, isError: menuConfigError } = useMenuConfig(
     businessId,
