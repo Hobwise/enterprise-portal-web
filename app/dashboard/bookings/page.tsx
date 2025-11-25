@@ -164,14 +164,14 @@ const Bookings: React.FC = () => {
                   disabled={loadingExport}
                   onClick={exportCSV}
                   className="flex text-grey600 bg-white"
+                  title="Export"
+                  aria-label="Export"
                 >
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export csv</p>
                 </Button>
                 {(role === 0 ||
                   userRolePermissions?.canCreateOrder === true) && (

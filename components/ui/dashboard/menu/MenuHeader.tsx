@@ -44,7 +44,6 @@ const MenuHeader = ({
             {categories.length > 0 ? (
               <div className="flex items-center">
                 <span>Menu</span>
-          
               </div>
             ) : (
               <span>Menu</span>
@@ -72,14 +71,14 @@ const MenuHeader = ({
               disabled={isExporting}
               onClick={handleExportCSV}
               className="flex text-grey600 bg-white"
+              title="Export"
+              aria-label="Export"
             >
               {isExporting ? (
                 <VscLoading className="animate-spin" />
               ) : (
                 <MdOutlineFileDownload className="text-[22px]" />
               )}
-
-              <p>Export csv</p>
             </Button>
           </ButtonGroup>
           <CustomButton
@@ -98,7 +97,7 @@ const MenuHeader = ({
               navigator.clipboard.writeText(shortUrl);
               toast.success("Short menu URL copied to clipboard!");
             }}
-            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border-2 border-primaryColor"
+            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border border-primaryColor"
           >
             Copy Menu URL
           </CustomButton>
