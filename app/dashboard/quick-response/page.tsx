@@ -83,7 +83,6 @@ const QRCode: React.FC = () => {
             {data?.quickResponses?.length > 0 ? (
               <div className="flex items-center">
                 <span>Quick response</span>
-                
               </div>
             ) : (
               <span>Quick response</span>
@@ -114,14 +113,14 @@ const QRCode: React.FC = () => {
                   disabled={loadingExport}
                   onClick={exportCSV}
                   className="flex text-grey600 bg-white"
+                  title="Export"
+                  aria-label="Export"
                 >
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export csv</p>
                 </Button>
               </ButtonGroup>
             </>

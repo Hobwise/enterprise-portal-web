@@ -159,7 +159,6 @@ const Payments: React.FC = () => {
             {data?.categories?.data?.categoryCount > 0 ? (
               <div className="flex items-center">
                 <span> Payments</span>
-           
               </div>
             ) : (
               <span>Payments</span>
@@ -191,14 +190,14 @@ const Payments: React.FC = () => {
                   disabled={loadingExport}
                   onPress={exportCSV}
                   className="flex text-grey600 bg-white"
+                  title="Export"
+                  aria-label="Export"
                 >
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export csv</p>
                 </Button>
               </ButtonGroup>
             </>
