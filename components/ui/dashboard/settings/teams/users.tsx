@@ -216,7 +216,7 @@ const Users = ({ data, refetch }: any) => {
               <MdOutlineFileDownload className="text-[22px]" />
             )}
 
-            <p>Export csv</p>
+            <p>Export</p>
           </Button>
           {(role === 0 || userRolePermissions?.canCreateUser === true) && (
             <Button

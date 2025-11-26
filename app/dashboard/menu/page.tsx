@@ -907,18 +907,23 @@ const RestaurantMenu = () => {
     }
   };
 
-  const handleExportCSV = async () => {
+  const handleExportXLSX = async () => {
     setIsExporting(true);
     try {
       const business = getJsonItemFromLocalStorage('business');
       const response = await exportGrid(business[0]?.businessId, 0);
 
       if (response?.data) {
-        const blob = new Blob([response.data], { type: 'text/csv' });
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.setAttribute('download', `menu-export-${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute(
+          'download',
+          `menu-export-${new Date().toISOString().split('T')[0]}.xlsx`
+        );
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -1657,7 +1662,7 @@ const RestaurantMenu = () => {
         businessInformation={businessInformation}
         activeSubCategory={activeSubCategory}
         isExporting={isExporting}
-        handleExportCSV={handleExportCSV}
+        handleExportXLSX={handleExportXLSX}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         categories={categories}

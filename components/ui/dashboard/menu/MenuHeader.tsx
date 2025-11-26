@@ -13,7 +13,7 @@ interface MenuHeaderProps {
   menuItems?: any[] | null; // Keep for backward compatibility but not used
   activeSubCategory?: string; // Keep for backward compatibility but not used
   isExporting: boolean;
-  handleExportCSV: () => void;
+  handleExportXLSX: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   categories?: any[];
@@ -28,7 +28,7 @@ interface MenuHeaderProps {
 
 const MenuHeader = ({
   isExporting,
-  handleExportCSV,
+  handleExportXLSX,
   searchQuery,
   onSearchChange,
   categories = [],
@@ -67,21 +67,19 @@ const MenuHeader = ({
             />
           </div>
 
-          <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
-            <Button
-              disabled={isExporting}
-              onClick={handleExportCSV}
-              className="flex text-grey600 bg-white"
-            >
-              {isExporting ? (
-                <VscLoading className="animate-spin" />
-              ) : (
-                <MdOutlineFileDownload className="text-[22px]" />
-              )}
+          <CustomButton
+            disabled={isExporting}
+            onClick={handleExportXLSX}
+            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border-2 border-primaryColor"
+          >
+            {isExporting ? (
+              <VscLoading className="animate-spin" />
+            ) : (
+              <MdOutlineFileDownload className="text-[22px]" />
+            )}
 
-              <p>Export csv</p>
-            </Button>
-          </ButtonGroup>
+            <span>Export</span>
+          </CustomButton>
           <CustomButton
             onClick={() => {
               // Generate shortened URL using base64 encoding

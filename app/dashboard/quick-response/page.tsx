@@ -121,7 +121,7 @@ const QRCode: React.FC = () => {
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
 
-                  <p>Export csv</p>
+                  <p>Export</p>
                 </Button>
               </ButtonGroup>
             </>
