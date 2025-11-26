@@ -18,7 +18,7 @@ import ConfirmBooking from "@/components/ui/dashboard/bookings/confirmBooking";
 import CreateBooking from "@/components/ui/dashboard/bookings/createBooking";
 import CreateReservation from "@/components/ui/dashboard/bookings/createReservation";
 import SuccessModal from "@/components/ui/dashboard/bookings/successModal";
-import useBookings from "@/hooks/cachedEndpoints/useBookings";
+import useAllBookingsData from "@/hooks/cachedEndpoints/useAllBookingsData";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { downloadCSV } from "@/lib/downloadToExcel";
@@ -31,7 +31,6 @@ import toast from "react-hot-toast";
 import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Bookings: React.FC = () => {
-  const { categories, details, isLoading, isError, refetch } = useBookings();
   const businessInformation = getJsonItemFromLocalStorage("business");
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -55,6 +54,9 @@ const Bookings: React.FC = () => {
   };
 
   const {
+    page,
+    rowsPerPage,
+    tableStatus,
     setPage,
     setTableStatus,
     bookingDetails,
@@ -64,17 +66,37 @@ const Bookings: React.FC = () => {
     setBookingDetails,
   } = useGlobalContext();
 
+  const {
+    categories,
+    getCategoryDetails,
+    isLoadingInitial,
+    isError,
+    refetch,
+  } = useAllBookingsData(page, rowsPerPage);
+
   useEffect(() => {
-    refetch();
     setTableStatus("All Bookings");
     setPage(1);
-  }, [refetch]);
+  }, [setTableStatus, setPage]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  const data = { categories, details };
+  const currentCategoryName =
+    tableStatus || categories?.[0]?.name || "All Bookings";
+  const currentCategoryDetails = getCategoryDetails(currentCategoryName);
+  const categoryPayload = useMemo(
+    () => ({
+      bookingCategories: categories || [],
+    }),
+    [categories]
+  );
+
+  const data = {
+    categories: categoryPayload,
+    details: currentCategoryDetails,
+  };
 
   const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -85,9 +107,9 @@ const Bookings: React.FC = () => {
     checkingLoading: boolean = true
   ) => {
     setLoading(checkingLoading);
-    const data = await postBookingStatus(bookingDetails?.id, id);
+    const response = await postBookingStatus(bookingDetails?.id, id);
     setLoading(false);
-    if (data?.data?.isSuccessful) {
+    if (response?.data?.isSuccessful) {
       notify({
         title: "Success!",
         text: "Operation successful",
@@ -99,7 +121,7 @@ const Bookings: React.FC = () => {
     } else {
       notify({
         title: "Error!",
-        text: data?.response?.data?.error?.responseDescription,
+        text: response?.response?.data?.error?.responseDescription,
         type: "error",
       });
     }
@@ -121,7 +143,7 @@ const Bookings: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
+  if (isLoadingInitial) return <CustomLoading />;
 
   if (isError) return <Error onClick={() => refetch()} />;
 
@@ -159,13 +181,11 @@ const Bookings: React.FC = () => {
                 />
               </div>
 
-              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
+              <div className="flex items-center gap-2">
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}
-                  className="flex text-grey600 bg-white"
-                  title="Export"
-                  aria-label="Export"
+                  className="flex text-primaryColor border-primaryColor bg-white border rounded-lg"
                 >
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
@@ -177,12 +197,12 @@ const Bookings: React.FC = () => {
                   userRolePermissions?.canCreateOrder === true) && (
                   <Button
                     onClick={showCreateBookingModal}
-                    className="flex text-grey600 bg-white"
+                    className="flex text-primaryColor border-primaryColor bg-white border rounded-lg"
                   >
                     <p>Create a booking</p>
                   </Button>
                 )}
-              </ButtonGroup>
+              </div>
               {(role === 0 || userRolePermissions?.canEditOrder === true) && (
                 <CustomButton onClick={onOpen} className="flex text-white">
                   <IoAddCircleOutline className="text-[22px]" />
@@ -198,11 +218,13 @@ const Bookings: React.FC = () => {
       {data.categories.bookingCategories &&
       data.categories?.bookingCategories?.length > 0 ? (
         <BookingsList
-          bookings={details?.data || []}
+          bookings={data.details || []}
           categories={data.categories}
           refetch={refetch}
           searchQuery={searchQuery}
-          isLoading={isLoading}
+          isLoading={isLoadingInitial}
+          isLoadingInitial={isLoadingInitial}
+          getCategoryDetails={getCategoryDetails}
         />
       ) : (
         <CreateReservation showCreateBookingModal={showCreateBookingModal} />
