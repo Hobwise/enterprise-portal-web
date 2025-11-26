@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import {
   columns,
@@ -32,7 +32,6 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 
 import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
-import useAllBookingsData from "@/hooks/cachedEndpoints/useAllBookingsData";
 import { notify, submitBookingStatus } from "@/lib/utils";
 import { useQueryClient } from '@tanstack/react-query';
 import { CiCalendar } from "react-icons/ci";
@@ -88,6 +87,8 @@ interface BookingsListProps {
   refetch: () => void;
   isLoading?: boolean;
   isPending?: boolean;
+  getCategoryDetails?: (categoryName: string) => any;
+  isLoadingInitial?: boolean;
 }
 
 // Status mapping for booking categories
@@ -232,6 +233,8 @@ const BookingsList: React.FC<BookingsListProps> = ({
   refetch,
   isLoading = false,
   isPending = false,
+  getCategoryDetails,
+  isLoadingInitial = false,
 }) => {
   const { userRolePermissions, role } = usePermission();
   const queryClient = useQueryClient();
@@ -256,10 +259,6 @@ const BookingsList: React.FC<BookingsListProps> = ({
     openBookingDetailsModal,
   } = useGlobalContext();
 
-  // Use the new hook for fetching all data
-  const { getCategoryDetails, isLoadingInitial, isLoadingAll } =
-    useAllBookingsData(page, rowsPerPage, 1, undefined, undefined);
-
   const toggleDeleteModal = (id?: number) => {
     setId(id);
     setIsOpenDelete(!isOpenDelete);
@@ -275,10 +274,11 @@ const BookingsList: React.FC<BookingsListProps> = ({
     setPage(1);
   }, [setTableStatus, setPage]);
 
-  // Get data for current category from the new hook
-  const currentCategoryData = getCategoryDetails(
-    tableStatus || categories?.bookingCategories?.[0]?.name || "All Bookings"
-  );
+  const currentCategoryName =
+    tableStatus || categories?.bookingCategories?.[0]?.name || "All Bookings";
+  const currentCategoryData = getCategoryDetails
+    ? getCategoryDetails(currentCategoryName)
+    : null;
 
   // Use the new filtered function that includes status filtering
   const filteredData = getFilteredBookingDetails(

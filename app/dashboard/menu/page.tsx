@@ -907,7 +907,7 @@ const RestaurantMenu = () => {
     }
   };
 
-  const handleExportCSV = async () => {
+  const handleExportXLSX = async () => {
     setIsExporting(true);
     try {
       const business = getJsonItemFromLocalStorage('business');
@@ -1650,7 +1650,7 @@ const RestaurantMenu = () => {
         businessInformation={businessInformation}
         activeSubCategory={activeSubCategory}
         isExporting={isExporting}
-        handleExportCSV={handleExportCSV}
+        handleExportXLSX={handleExportXLSX}
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         categories={categories}

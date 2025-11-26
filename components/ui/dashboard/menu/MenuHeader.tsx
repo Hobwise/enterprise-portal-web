@@ -13,7 +13,7 @@ interface MenuHeaderProps {
   menuItems?: any[] | null; // Keep for backward compatibility but not used
   activeSubCategory?: string; // Keep for backward compatibility but not used
   isExporting: boolean;
-  handleExportCSV: () => void;
+  handleExportXLSX: () => void;
   searchQuery: string;
   onSearchChange: (value: string) => void;
   categories?: any[];
@@ -28,7 +28,7 @@ interface MenuHeaderProps {
 
 const MenuHeader = ({
   isExporting,
-  handleExportCSV,
+  handleExportXLSX,
   searchQuery,
   onSearchChange,
   categories = [],

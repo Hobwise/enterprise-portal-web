@@ -66,6 +66,13 @@ interface ApiResponse {
   };
 }
 
+type ValidationErrors = {
+  placedByName?: string;
+  placedByPhoneNumber?: string;
+  quickResponseID?: string;
+  additionalCostName?: string;
+};
+
 
 // Type guard to check if response has data property
 const hasDataProperty = (response: any): response is ApiResponse => {
@@ -107,12 +114,7 @@ const CheckoutModal = ({
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{
-    placedByName?: boolean;
-    placedByPhoneNumber?: boolean;
-    quickResponseID?: boolean;
-    additionalCostName?: boolean;
-  }>({});
+  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
   const [reference, setReference] = useState("");
   const [screen, setScreen] = useState(1);
   const [mobileSubStep, setMobileSubStep] = useState<'1A' | '1B' | '1C'>('1A');
@@ -139,36 +141,31 @@ const CheckoutModal = ({
   // Frontend validation helper function
   const validateCheckoutForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    const fieldErrors: any = {};
+    const fieldErrors: ValidationErrors = {};
 
-    // Validate customer name
-    if (!order.placedByName?.trim()) {
-      errors.push('Customer name is required');
-      fieldErrors.placedByName = true;
-    } else if (order.placedByName.trim().length < 2) {
-      errors.push('Customer name must be at least 2 characters long');
-      fieldErrors.placedByName = true;
-    } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
-      errors.push('Customer name can only contain letters and spaces');
-      fieldErrors.placedByName = true;
-    }
-
-    // Validate phone number
-    if (!order.placedByPhoneNumber?.trim()) {
-      errors.push('Customer phone number is required');
-      fieldErrors.placedByPhoneNumber = true;
-    } else {
-      const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
-      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
-        errors.push('Phone number must be 10-11 digits');
-        fieldErrors.placedByPhoneNumber = true;
+    const trimmedName = order.placedByName?.trim() || '';
+    if (trimmedName) {
+      if (trimmedName.length < 2) {
+        errors.push('Customer name must be at least 2 characters long');
+        fieldErrors.placedByName = 'Customer name must be at least 2 characters long';
+      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
+        errors.push('Customer name can only contain letters and spaces');
+        fieldErrors.placedByName = 'Customer name can only contain letters and spaces';
       }
     }
 
-    // Validate table selection
+    const trimmedPhone = order.placedByPhoneNumber?.trim() || '';
+    if (trimmedPhone) {
+      const phoneNumber = trimmedPhone.replace(/\D/g, '');
+      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
+        errors.push('Phone number must be 10-11 digits');
+        fieldErrors.placedByPhoneNumber = 'Phone number must be 10-11 digits';
+      }
+    }
+
     if (!order.quickResponseID?.trim()) {
       errors.push('Table selection is required');
-      fieldErrors.quickResponseID = true;
+      fieldErrors.quickResponseID = 'Table selection is required';
     }
 
     // Validate selected items
@@ -190,7 +187,7 @@ const CheckoutModal = ({
     // Validate additional cost name if additional cost is provided
     if (additionalCost > 0 && !additionalCostName?.trim()) {
       errors.push('Additional cost name is required when amount is provided');
-      fieldErrors.additionalCostName = true;
+      fieldErrors.additionalCostName = 'Additional cost name is required when amount is provided';
     }
 
     // Set validation errors for UI
@@ -202,36 +199,31 @@ const CheckoutModal = ({
   // Validate customer information step (1B to 1C)
   const validateCustomerInfo = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    const fieldErrors: any = {};
+    const fieldErrors: ValidationErrors = {};
 
-    // Validate customer name
-    if (!order.placedByName?.trim()) {
-      errors.push('Customer name is required');
-      fieldErrors.placedByName = true;
-    } else if (order.placedByName.trim().length < 2) {
-      errors.push('Customer name must be at least 2 characters long');
-      fieldErrors.placedByName = true;
-    } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
-      errors.push('Customer name can only contain letters and spaces');
-      fieldErrors.placedByName = true;
-    }
-
-    // Validate phone number
-    if (!order.placedByPhoneNumber?.trim()) {
-      errors.push('Customer phone number is required');
-      fieldErrors.placedByPhoneNumber = true;
-    } else {
-      const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
-      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
-        errors.push('Phone number must be 10-11 digits');
-        fieldErrors.placedByPhoneNumber = true;
+    const trimmedName = order.placedByName?.trim() || '';
+    if (trimmedName) {
+      if (trimmedName.length < 2) {
+        errors.push('Customer name must be at least 2 characters long');
+        fieldErrors.placedByName = 'Customer name must be at least 2 characters long';
+      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
+        errors.push('Customer name can only contain letters and spaces');
+        fieldErrors.placedByName = 'Customer name can only contain letters and spaces';
       }
     }
 
-    // Validate table selection
+    const trimmedPhone = order.placedByPhoneNumber?.trim() || '';
+    if (trimmedPhone) {
+      const phoneNumber = trimmedPhone.replace(/\D/g, '');
+      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
+        errors.push('Phone number must be 10-11 digits');
+        fieldErrors.placedByPhoneNumber = 'Phone number must be 10-11 digits';
+      }
+    }
+
     if (!order.quickResponseID?.trim()) {
       errors.push('Table selection is required');
-      fieldErrors.quickResponseID = true;
+      fieldErrors.quickResponseID = 'Table selection is required';
     }
 
     // Set validation errors for UI
@@ -484,10 +476,10 @@ const CheckoutModal = ({
     const { name, value } = event.target;
 
     // Clear validation error for this field when user starts typing
-    if (validationErrors[name as keyof typeof validationErrors]) {
+    if (validationErrors[name as keyof ValidationErrors]) {
       setValidationErrors(prev => ({
         ...prev,
-        [name]: false
+        [name]: undefined
       }));
     }
 
@@ -600,12 +592,21 @@ const CheckoutModal = ({
   const validateOrderPayload = (payload: any): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
-    // Validate required fields
-    if (!payload.placedByName?.trim()) {
-      errors.push('Customer name is required');
+    const trimmedName = payload.placedByName?.trim() || '';
+    if (trimmedName) {
+      if (trimmedName.length < 2) {
+        errors.push('Customer name must be at least 2 characters long');
+      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
+        errors.push('Customer name can only contain letters and spaces');
+      }
     }
-    if (!payload.placedByPhoneNumber?.trim()) {
-      errors.push('Customer phone number is required');
+
+    const trimmedPhone = payload.placedByPhoneNumber?.trim() || '';
+    if (trimmedPhone) {
+      const phoneNumber = trimmedPhone.replace(/\D/g, '');
+      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
+        errors.push('Phone number must be 10-11 digits');
+      }
     }
     if (!payload.quickResponseID?.trim()) {
       errors.push('Table selection is required');
@@ -655,13 +656,13 @@ const CheckoutModal = ({
       throw new Error("No items selected for checkout");
     }
 
-    if (!order.placedByName || !order.placedByPhoneNumber || !order.quickResponseID) {
+    if (!order.quickResponseID) {
       notify({
         title: "Error",
-        text: "Please fill in all required fields",
+        text: "Please select a table",
         type: "error",
       });
-      throw new Error("Please fill in all required fields");
+      throw new Error("Please select a table");
     }
 
     let payload: any = {};
@@ -679,10 +680,14 @@ const CheckoutModal = ({
         };
       });
 
+      const normalizedCustomerName = order.placedByName?.trim() || "";
+      const payloadCustomerName = normalizedCustomerName || "Anonymous";
+      const normalizedPhoneNumber = order.placedByPhoneNumber?.trim() || "";
+
       payload = {
         status: 0,
-        placedByName: order.placedByName,
-        placedByPhoneNumber: order.placedByPhoneNumber,
+        placedByName: payloadCustomerName,
+        placedByPhoneNumber: normalizedPhoneNumber,
         quickResponseID: order.quickResponseID,
         comment: order.comment,
         additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
@@ -868,13 +873,13 @@ const CheckoutModal = ({
       throw new Error("No items selected for checkout");
     }
 
-    if (!order.placedByName || !order.placedByPhoneNumber || !order.quickResponseID) {
+    if (!order.quickResponseID) {
       notify({
         title: "Error",
-        text: "Please fill in all required fields",
+        text: "Please select a table",
         type: "error",
       });
-      throw new Error("Please fill in all required fields");
+      throw new Error("Please select a table");
     }
     const transformedArray = selectedItems.map((item: any) => {
       const finalItemID = item.itemID || item.id;
@@ -889,10 +894,14 @@ const CheckoutModal = ({
       };
     });
 
+    const normalizedCustomerName = order.placedByName?.trim() || "";
+    const payloadCustomerName = normalizedCustomerName || "Anonymous";
+    const normalizedPhoneNumber = order.placedByPhoneNumber?.trim() || "";
+
     const payload = {
       status: 0,
-      placedByName: order.placedByName,
-      placedByPhoneNumber: order.placedByPhoneNumber,
+      placedByName: payloadCustomerName,
+      placedByPhoneNumber: normalizedPhoneNumber,
       quickResponseID: order.quickResponseID,
       comment: order.comment,
       totalAmount: finalTotalPrice,  // Already rounded in calculation
@@ -1574,7 +1583,7 @@ const CheckoutModal = ({
                                     if (validationErrors.additionalCostName) {
                                       setValidationErrors(prev => ({
                                         ...prev,
-                                        additionalCostName: false
+                                        additionalCostName: undefined
                                       }));
                                     }
                                   }}
@@ -1582,7 +1591,7 @@ const CheckoutModal = ({
                                   name="additionalCostName"
                                   placeholder="Enter cost name"
                                   isInvalid={!!validationErrors.additionalCostName}
-                                  errorMessage={validationErrors.additionalCostName ? "Cost name is required" : ""}
+                                  errorMessage={validationErrors.additionalCostName || ""}
                                 />
                               </div>
                             </div>
@@ -1605,8 +1614,8 @@ const CheckoutModal = ({
                         <CustomInput
                           type="text"
                           onChange={handleInputChange}
-                          errorMessage={response?.errors?.placedByName?.[0]}
-                          isInvalid={!!validationErrors.placedByName}
+                          errorMessage={validationErrors.placedByName || response?.errors?.placedByName?.[0]}
+                          isInvalid={!!(validationErrors.placedByName || response?.errors?.placedByName?.length)}
                           value={order.placedByName}
                           name="placedByName"
                           label="Name"
@@ -1616,9 +1625,9 @@ const CheckoutModal = ({
                         <CustomInput
                           type="tel"
                           errorMessage={
-                            !id && response?.errors?.placedByPhoneNumber?.[0]
+                            validationErrors.placedByPhoneNumber || (!id && response?.errors?.placedByPhoneNumber?.[0])
                           }
-                          isInvalid={!!validationErrors.placedByPhoneNumber}
+                          isInvalid={!!(validationErrors.placedByPhoneNumber || (!id && response?.errors?.placedByPhoneNumber?.length))}
                           onChange={handleInputChange}
                           value={order.placedByPhoneNumber}
                           name="placedByPhoneNumber"
@@ -1628,8 +1637,8 @@ const CheckoutModal = ({
                         <Spacer y={2} />
 
                         <SelectInput
-                          errorMessage={response?.errors?.quickResponseID?.[0]}
-                          isInvalid={!!validationErrors.quickResponseID}
+                          errorMessage={validationErrors.quickResponseID || response?.errors?.quickResponseID?.[0]}
+                          isInvalid={!!(validationErrors.quickResponseID || response?.errors?.quickResponseID?.length)}
                           label="Select a table"
                           placeholder="Select table"
                           name="quickResponseID"
@@ -1795,10 +1804,10 @@ const CheckoutModal = ({
                             onChange={handleInputChange}
                             label="Customer name"
                             placeholder="Enter customer name"
-                            isRequired={true}
+                            isRequired={false}
                             classnames="w-full h-12 mb-4"
-                            isInvalid={validationErrors.placedByName}
-                            errorMessage={validationErrors.placedByName ? "name is required" : ""}
+                            isInvalid={!!validationErrors.placedByName}
+                            errorMessage={validationErrors.placedByName || ""}
                           />
 
                           <CustomInput
@@ -1808,10 +1817,10 @@ const CheckoutModal = ({
                             onChange={handleInputChange}
                             label="Phone number"
                             placeholder="Enter phone number"
-                            isRequired={true}
+                            isRequired={false}
                             classnames={"h-12 w-full mb-4"}
-                            isInvalid={validationErrors.placedByPhoneNumber}
-                            errorMessage={validationErrors.placedByPhoneNumber ? "Valid phone number is required" : ""}
+                            isInvalid={!!validationErrors.placedByPhoneNumber}
+                            errorMessage={validationErrors.placedByPhoneNumber || ""}
                           />
 
                           <div className="w-full">
@@ -1825,8 +1834,8 @@ const CheckoutModal = ({
                               value={order.quickResponseID}
                               contents={qr}
                               className="w-full"
-                              isInvalid={validationErrors.quickResponseID}
-                              errorMessage={validationErrors.quickResponseID ? "Table selection is required" : ""}
+                              isInvalid={!!validationErrors.quickResponseID}
+                              errorMessage={validationErrors.quickResponseID || ""}
                               isMobile={true}
                             />
                           </div>
@@ -1870,7 +1879,7 @@ const CheckoutModal = ({
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-grey600">Name:</span>
-                                <span className="text-black font-medium">{order.placedByName}</span>
+                                <span className="text-black font-medium">{order.placedByName?.trim() || "Anonymous"}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-grey600">Phone:</span>
