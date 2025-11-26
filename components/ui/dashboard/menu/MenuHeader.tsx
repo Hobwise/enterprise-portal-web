@@ -70,7 +70,7 @@ const MenuHeader = ({
           <CustomButton
             disabled={isExporting}
             onClick={handleExportXLSX}
-            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border-2 border-primaryColor"
+            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border border-primaryColor"
           >
             {isExporting ? (
               <VscLoading className="animate-spin" />
@@ -96,7 +96,7 @@ const MenuHeader = ({
               navigator.clipboard.writeText(shortUrl);
               toast.success("Short menu URL copied to clipboard!");
             }}
-            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border-2 border-primaryColor"
+            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border border-primaryColor"
           >
             Copy Menu URL
           </CustomButton>
