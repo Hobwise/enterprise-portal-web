@@ -44,8 +44,11 @@ const responseData = await getCustomerMenuCategories(businessId, cooperateId);
   const { data, isLoading, isError, refetch } = useQuery<MenuCategory[]>({
     queryKey: ['customerMenuCategories', businessId, cooperateId],
     queryFn: fetchCategories,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Enable refetch on tab focus for mobile
+    refetchOnMount: true, // Always refetch on component mount
     enabled: !!businessId,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
   return { data, isLoading, isError, refetch };

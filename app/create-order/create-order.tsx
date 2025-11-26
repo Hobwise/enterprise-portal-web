@@ -2,6 +2,7 @@
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useQueryClient } from '@tanstack/react-query';
 
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
@@ -55,6 +56,22 @@ const CreateOrder = () => {
   let cooperateID = searchParams.get("cooperateID");
   let qrId = searchParams.get("id");
   const mode = searchParams.get("mode");
+
+  // Validate required parameters
+  if (!businessId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-50">
+        <Error
+          imageHeight="h-32"
+          imageWidth="w-32"
+          onClick={() => router.push("/")}
+          title="Invalid QR Code"
+          message="This QR code is missing required business information. Please scan a valid QR code or contact support."
+        />
+      </div>
+    );
+  }
+
   const viewOnlyStorageKey = `menuViewOnly_${businessId}_${
     cooperateID || "default"
   }`;
@@ -91,7 +108,33 @@ const CreateOrder = () => {
     }
   }, [mode, viewOnlyStorageKey]);
 
-  const { data: menuConfig, isLoading: menuConfigLoading } = useMenuConfig(
+  // Initialize query client for cache management
+  const queryClient = useQueryClient();
+
+  // Handle stale data on Android devices when rescanning QR codes
+  useEffect(() => {
+    // Invalidate queries when URL parameters change (new QR scan)
+    queryClient.invalidateQueries({ queryKey: ['menuConfig'] });
+    queryClient.invalidateQueries({ queryKey: ['customerMenuCategories'] });
+    queryClient.invalidateQueries({ queryKey: ['customerMenuItems'] });
+  }, [businessId, cooperateID, qrId, queryClient]);
+
+  // Handle page visibility changes for mobile devices
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Refetch data when tab becomes visible after being in background
+        queryClient.invalidateQueries({ queryKey: ['menuConfig', businessId, cooperateID] });
+        queryClient.invalidateQueries({ queryKey: ['customerMenuCategories', businessId, cooperateID] });
+        queryClient.invalidateQueries({ queryKey: ['customerMenuItems'] });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [businessId, cooperateID, queryClient]);
+
+  const { data: menuConfig, isLoading: menuConfigLoading, isError: menuConfigError } = useMenuConfig(
     businessId,
     cooperateID
   );
@@ -180,14 +223,14 @@ const CreateOrder = () => {
     return menuItemsData.map((item: any) => ({
       ...item,
       waitingTimeMinutes: selectedCategory?.waitingTimeMinutes || 0,
-      // Propagate VAT config from the selected category/section to each item
+      // Propagate VAT settings from the selected category/section to each item
       isVatEnabled: (selectedCategory as any)?.isVatEnabled ?? false,
       vatRate: (selectedCategory as any)?.vatRate ?? 0,
     }));
   }, [menuItemsData, categories, selectedCategoryId]);
 
-  const isLoading = categoriesLoading || itemsLoading;
-  const isError = categoriesError || itemsError;
+  const isLoading = categoriesLoading || itemsLoading || menuConfigLoading;
+  const isError = categoriesError || itemsError || menuConfigError;
 
   const [activeSubCategory, setActiveSubCategory] = useState<string>("");
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -315,6 +358,10 @@ const CreateOrder = () => {
     count: number;
     packingCost: number;
     isPacked?: boolean;
+    menuID?: string;
+    waitingTimeMinutes?: number;
+    isVatEnabled?: boolean;
+    vatRate?: number;
   };
 
   const toggleVarietyModal = (menu: any) => {
@@ -328,6 +375,13 @@ const CreateOrder = () => {
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
+      // Look up category VAT settings using menuID
+      const itemCategory = categories?.find(
+        (cat: any) => cat.id === menuItem.menuID
+      );
+      const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+      const vatRate = itemCategory?.vatRate ?? 0;
+
       // setSelectedMenu(menuItem);
       setSelectedItems((prevItems: Item[]) => [
         ...prevItems,
@@ -338,6 +392,9 @@ const CreateOrder = () => {
           packingCost: menuItem.isVariety
             ? (selectedMenu as any)?.packingCost || 0
             : menuItem.packingCost || 0,
+          // Add VAT metadata from category
+          isVatEnabled,
+          vatRate,
         },
       ]);
     }
@@ -351,6 +408,13 @@ const CreateOrder = () => {
       // If item already exists, increment count
       handleIncrement(menuItem.id);
     } else {
+      // Look up category VAT settings using menuID
+      const itemCategory = categories?.find(
+        (cat: any) => cat.id === menuItem.menuID
+      );
+      const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+      const vatRate = itemCategory?.vatRate ?? 0;
+
       // Add new item to cart
       setSelectedItems((prevItems: Item[]) => [
         ...prevItems,
@@ -359,6 +423,9 @@ const CreateOrder = () => {
           count: 1,
           isPacked: false,
           packingCost: menuItem.packingCost || 0,
+          // Add VAT metadata from category
+          isVatEnabled,
+          vatRate,
         },
       ]);
     }
@@ -463,9 +530,6 @@ const CreateOrder = () => {
     try {
       setServingInfo(servingInfoData);
 
-      console.log("🔄 Order submission - isUpdatingOrder:", isUpdatingOrder);
-      console.log("🔄 Order submission - orderId:", orderId);
-
       if (
         isUpdatingOrder &&
         !hasOrderChanged(originalOrderItems, selectedItems)
@@ -481,6 +545,18 @@ const CreateOrder = () => {
       let subtotal = 0;
       let packingCost = 0;
       let vat = 0;
+
+      // Get all unique VAT rates from categories to use as fallback
+      const categoryVatRates = Array.from(
+        new Set(
+          categories
+            ?.map((cat: any) => cat.vatRate)
+            .filter((rate: number) => rate > 0) || []
+        )
+      );
+      const defaultVatRate =
+        categoryVatRates.length > 0 ? categoryVatRates[0] : 0;
+
       selectedItems.forEach((item: any) => {
         const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
         subtotal += itemTotal;
@@ -490,9 +566,14 @@ const CreateOrder = () => {
             (Number(item.packingCost) || 0) * (Number(item.count) || 0);
           packingCost += itemPackingTotal;
         }
+
+        // Only apply VAT if isVatEnabled is true and vatRate exists
         if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
           const itemSubtotal = itemTotal + itemPackingTotal;
-          vat += itemSubtotal * item.vatRate;
+          // Convert percentage to decimal (e.g., 7.5 -> 0.075)
+          const vatRateDecimal = item.vatRate / 100;
+          const itemVat = itemSubtotal * vatRateDecimal;
+          vat += itemVat;
         }
       });
 
@@ -501,13 +582,19 @@ const CreateOrder = () => {
       vat = Math.round(vat * 100) / 100;
       const total = Math.round((subtotal + packingCost + vat) * 100) / 100;
 
-      const orderDetails = selectedItems.map((item) => ({
-        itemId: item.id,
-        quantity: item.count,
-        unitPrice: item.price,
-        isVariety: item.isVariety || false,
-        isPacked: item.isPacked || false,
-      }));
+      const orderDetails = selectedItems.map((item) => {
+        return {
+          itemId: item.id,
+          quantity: item.count,
+          unitPrice: item.price,
+          isVariety: item.isVariety || false,
+          isPacked: item.isPacked ?? false,
+          packingCost: item.isPacked ? item.packingCost ?? 0 : 0,
+          menuID: item.menuID,
+          isVatEnabled: item.isVatEnabled ?? false,
+          vatRate: item.vatRate ?? 0,
+        };
+      });
 
       const payload = {
         status: 0,
@@ -522,11 +609,8 @@ const CreateOrder = () => {
       let response;
 
       if (isUpdatingOrder && orderId) {
-        console.log("📝 CALLING UPDATE ORDER ENDPOINT with orderId:", orderId);
-        // ✅ Pass orderId to updateCustomerOrder
         response = await updateCustomerOrder(orderId, payload);
       } else {
-        console.log("🆕 CALLING PLACE ORDER ENDPOINT");
         response = await placeCustomerOrder(
           payload,
           businessId || "",
@@ -537,7 +621,52 @@ const CreateOrder = () => {
       if (response?.isSuccessful && response?.data) {
         let orderDataToStore = response.data;
 
-        console.log("✅ Response data:", response.data);
+        // Merge the submitted data back into the response
+        // The API may not return isPacked, packingCost, isVatEnabled, vatRate, and menuID, so we need to preserve them
+        if (
+          orderDataToStore.orderDetails &&
+          Array.isArray(orderDataToStore.orderDetails)
+        ) {
+          orderDataToStore.orderDetails = orderDataToStore.orderDetails.map(
+            (detail: any, index: number) => {
+              // Match submittedItem by itemId (not by index) to handle reordering
+              const submittedItem = orderDetails.find(
+                (od: any) => od.itemId === detail.itemID
+              );
+              // Find the corresponding item from selectedItems to get VAT metadata
+              // Try multiple matching strategies: by ID, by name
+              const originalItem =
+                selectedItems.find(
+                  (item: any) =>
+                    item.id === detail.itemID ||
+                    item.itemID === detail.itemID ||
+                    item.itemName === detail.itemName
+                ) || selectedItems[index];
+
+              return {
+                ...detail,
+                isPacked: submittedItem?.isPacked ?? detail.isPacked ?? false,
+                packingCost:
+                  submittedItem?.packingCost ?? detail.packingCost ?? 0,
+                // Preserve VAT metadata and menuID - try all sources in order of preference
+                isVatEnabled:
+                  originalItem?.isVatEnabled ??
+                  submittedItem?.isVatEnabled ??
+                  detail.isVatEnabled ??
+                  false,
+                vatRate:
+                  originalItem?.vatRate ??
+                  submittedItem?.vatRate ??
+                  detail.vatRate ??
+                  0,
+                menuID:
+                  originalItem?.menuID ??
+                  submittedItem?.menuID ??
+                  detail.menuID,
+              };
+            }
+          );
+        }
 
         // For NEW orders: Extract and store BOTH orderId and reference
         if (!isUpdatingOrder) {
@@ -547,28 +676,23 @@ const CreateOrder = () => {
           // Extract orderId from orderDetails
           if (response.data.orderDetails?.[0]?.orderID) {
             newOrderId = response.data.orderDetails[0].orderID;
-            console.log("🆕 Extracted orderId from orderDetails:", newOrderId);
           }
 
           // Extract reference (this is what we use for tracking)
           if (response.data.reference) {
             newReference = response.data.reference;
-            console.log("🆕 Extracted reference:", newReference);
           }
 
           // Set both IDs
           if (newOrderId) {
             setOrderId(newOrderId);
-            console.log("🆕 Set permanent orderId for updates:", newOrderId);
           }
 
           if (newReference) {
             setOrderReference(newReference);
-            console.log("🆕 Set reference for tracking:", newReference);
           }
 
           setIsUpdatingOrder(true);
-          console.log("🔄 Set isUpdatingOrder to true for future updates");
         }
 
         // For UPDATE operations: Keep existing reference, update might return new orderId
@@ -578,33 +702,29 @@ const CreateOrder = () => {
             const updatedOrderId = response.data.orderDetails[0].orderID;
             if (updatedOrderId !== orderId) {
               setOrderId(updatedOrderId);
-              console.log("🔄 Updated orderId:", updatedOrderId);
             }
           }
-
-          // Reference should remain the same for updates
-          console.log("🔄 Keeping existing reference:", orderReference);
         }
 
-        // Attach VAT metadata for display
+        // Attach VAT metadata for display - always use vatRate from items
         const enabledRates = Array.from(
           new Set(
             selectedItems
-              .filter((i: any) => i.isVatEnabled && i.vatRate && i.vatRate > 0)
+              .filter((i: any) => i.vatRate && i.vatRate > 0)
               .map((i: any) => Number(i.vatRate))
           )
         );
         if (enabledRates.length > 0) {
-          (orderDataToStore as any).isVatEnabled = true;
           (orderDataToStore as any).vatRate = enabledRates[0];
         } else {
-          (orderDataToStore as any).isVatEnabled = false;
           (orderDataToStore as any).vatRate = 0;
         }
 
         setOrderData(orderDataToStore);
         setIsServingInfoOpen(false);
         setIsOrderTrackingOpen(true);
+        // DON'T clear selectedItems - keep them so we can go back to edit
+        // The cart already has all the correct data (packing, VAT, etc.)
 
         toast.success(
           isUpdatingOrder
@@ -622,7 +742,6 @@ const CreateOrder = () => {
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Order submission error:", error);
       toast.error("Failed to place order. Please try again.");
     } finally {
       setOrderLoading(false);
@@ -632,12 +751,24 @@ const CreateOrder = () => {
   // Handle adding more items from order tracking
   const handleAddMoreItemsFromTracking = () => {
     if (orderData && orderData.orderDetails) {
-      console.log("🔄 Adding more items from tracking");
-      console.log("📋 Current orderId:", orderId);
-      console.log("📋 Current reference:", orderReference);
-
       const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
         const basePrice = detail.unitPrice || 0;
+
+        // Find the menuID by matching itemID with menu items
+        let menuID = detail.menuID;
+        if (!menuID && menuItems?.length > 0) {
+          const matchedMenuItem = menuItems.find(
+            (item: any) => item.id === detail.itemID
+          );
+          if (matchedMenuItem) {
+            menuID = matchedMenuItem.menuID;
+          }
+        }
+
+        // Look up category using menuID to get fresh VAT data
+        const itemCategory = categories?.find((cat: any) => cat.id === menuID);
+        const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+        const vatRate = itemCategory?.vatRate ?? 0;
 
         return {
           id: detail.itemID,
@@ -648,15 +779,18 @@ const CreateOrder = () => {
           price: basePrice,
           currency: "NGN",
           isAvailable: true,
-          hasVariety: detail.isVariety || false,
+          hasVariety: detail.isVariety ?? false,
           image: detail.image || "",
-          isVariety: detail.isVariety || false,
+          isVariety: detail.isVariety ?? false,
           varieties: detail.varieties || null,
-          count: detail.quantity || 1,
-          packingCost: detail.packingCost || 0,
-          isPacked: detail.isPacked || false,
-          menuID: detail.menuID || "",
-          waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+          count: detail.quantity ?? 1,
+          packingCost: detail.packingCost ?? 0,
+          isPacked: detail.isPacked ?? false,
+          menuID: menuID || "", // Use the found menuID
+          waitingTimeMinutes: detail.waitingTimeMinutes ?? 0,
+          // Add fresh VAT metadata from category lookup
+          isVatEnabled,
+          vatRate,
         };
       });
 
@@ -665,22 +799,16 @@ const CreateOrder = () => {
 
       if (!isUpdatingOrder) {
         setIsUpdatingOrder(true);
-        console.log("🔄 Set isUpdatingOrder to true");
       }
 
       // Ensure we have the orderId from order data
       if (!orderId && orderData.orderDetails?.[0]?.orderID) {
         setOrderId(orderData.orderDetails[0].orderID);
-        console.log(
-          "📋 Set orderId from orderDetails:",
-          orderData.orderDetails[0].orderID
-        );
       }
 
       // Ensure we have the reference
       if (!orderReference && orderData.reference) {
         setOrderReference(orderData.reference);
-        console.log("📋 Set reference from orderData:", orderData.reference);
       }
 
       if (orderData.placedByName || orderData.placedByPhoneNumber) {
@@ -699,11 +827,30 @@ const CreateOrder = () => {
   const handleCheckoutFromTracking = async (updatedOrderData?: any) => {
     const currentOrderData = updatedOrderData || orderData;
 
-    console.log("🔄 Checkout from tracking - orderId:", orderId);
-    console.log(
-      "🔄 Checkout from tracking - currentOrderData:",
-      currentOrderData
-    );
+    // Check if we have order data with an orderID (meaning this is an existing order to update)
+    const hasExistingOrder = currentOrderData?.orderDetails?.[0]?.orderID;
+
+    // If cart already has items AND we have an existing order, open cart modal instead of reloading
+    // This preserves all item data (packing, VAT, etc.)
+    if (selectedItems.length > 0 && hasExistingOrder) {
+      // IMPORTANT: Ensure orderId is set from the order data if we don't have it yet
+      const orderIdFromData = currentOrderData.orderDetails[0].orderID;
+      if (!orderId && orderIdFromData) {
+        setOrderId(orderIdFromData);
+      } else if (orderId && orderId !== orderIdFromData) {
+        // Update orderId if it changed
+        setOrderId(orderIdFromData);
+      }
+
+      // Ensure isUpdatingOrder is true (defensive check)
+      if (!isUpdatingOrder) {
+        setIsUpdatingOrder(true);
+      }
+
+      setIsOrderTrackingOpen(false);
+      setIsCartOpen(true);
+      return;
+    }
 
     // Check if we already have complete order data
     if (
@@ -718,6 +865,24 @@ const CreateOrder = () => {
         (detail: any) => {
           const basePrice = detail.unitPrice || 0;
 
+          // Find the menuID by matching itemID with menu items
+          let menuID = detail.menuID;
+          if (!menuID && menuItems?.length > 0) {
+            const matchedMenuItem = menuItems.find(
+              (item: any) => item.id === detail.itemID
+            );
+            if (matchedMenuItem) {
+              menuID = matchedMenuItem.menuID;
+            }
+          }
+
+          // Look up category using menuID to get fresh VAT data
+          const itemCategory = categories?.find(
+            (cat: any) => cat.id === menuID
+          );
+          const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+          const vatRate = itemCategory?.vatRate ?? 0;
+
           return {
             id: detail.itemID,
             itemID: detail.itemID,
@@ -727,15 +892,18 @@ const CreateOrder = () => {
             price: basePrice,
             currency: "NGN",
             isAvailable: true,
-            hasVariety: detail.isVariety || false,
+            hasVariety: detail.isVariety ?? false,
             image: detail.image || "",
-            isVariety: detail.isVariety || false,
+            isVariety: detail.isVariety ?? false,
             varieties: detail.varieties || null,
-            count: detail.quantity || 1,
-            packingCost: detail.packingCost || 0,
-            isPacked: detail.isPacked || false,
-            menuID: detail.menuID || "",
-            waitingTimeMinutes: detail.waitingTimeMinutes || 0,
+            count: detail.quantity ?? 1,
+            packingCost: detail.packingCost ?? 0,
+            isPacked: detail.isPacked ?? false,
+            menuID: menuID || "", // Use the found menuID
+            waitingTimeMinutes: detail.waitingTimeMinutes ?? 0,
+            // Add fresh VAT metadata from category lookup
+            isVatEnabled,
+            vatRate,
           };
         }
       );
@@ -747,16 +915,11 @@ const CreateOrder = () => {
       // Ensure we're in update mode and have the orderId
       if (!isUpdatingOrder) {
         setIsUpdatingOrder(true);
-        console.log("🔄 Set isUpdatingOrder to true from checkout");
       }
 
       // Make sure we have the orderId from the order data
       if (!orderId && fullOrderData.orderDetails?.[0]?.orderID) {
         setOrderId(fullOrderData.orderDetails[0].orderID);
-        console.log(
-          "📋 Set orderId from orderDetails in checkout:",
-          fullOrderData.orderDetails[0].orderID
-        );
       }
 
       // Extract and store serving info from order data for prefilling
@@ -780,6 +943,22 @@ const CreateOrder = () => {
 
   // Handle track order submission from TrackingDetailsModal
   const handleTrackOrderSubmit = (orderData: any) => {
+    // Merge VAT metadata from categories since API doesn't return it
+    if (orderData?.orderDetails && Array.isArray(orderData.orderDetails)) {
+      orderData.orderDetails = orderData.orderDetails.map((detail: any) => {
+        // Look up category by menuID to get VAT settings
+        const itemCategory = categories?.find((cat: any) => cat.id === detail.menuID);
+
+        return {
+          ...detail,
+          // Preserve existing VAT data if available, otherwise lookup from category
+          isVatEnabled: detail.isVatEnabled ?? itemCategory?.isVatEnabled ?? false,
+          vatRate: detail.vatRate ?? itemCategory?.vatRate ?? 0,
+          menuID: detail.menuID ?? undefined,
+        };
+      });
+    }
+
     setOrderData(orderData);
     setIsTrackingDetailsOpen(false);
     setIsOrderTrackingOpen(true);

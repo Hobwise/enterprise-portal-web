@@ -144,8 +144,6 @@ const Reservation: React.FC = () => {
           <div className="text-[24px] leading-8 font-semibold">
             <div className="flex items-center">
               <span>Reservation</span>
-
-            
             </div>
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
@@ -173,14 +171,14 @@ const Reservation: React.FC = () => {
                   disabled={loadingExport}
                   onClick={exportCSV}
                   className="flex text-grey600 bg-white"
+                  title="Export"
+                  aria-label="Export"
                 >
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export</p>
                 </Button>
                 <Popover
                   showArrow={true}
@@ -218,7 +216,7 @@ const Reservation: React.FC = () => {
                   backgroundColor="bg-primaryColor"
                 >
                   <div className="flex gap-2 items-center justify-center">
-                     <IoAddCircleOutline className="text-[22px]" />
+                    <IoAddCircleOutline className="text-[22px]" />
 
                     <p>Add reservation</p>
                   </div>

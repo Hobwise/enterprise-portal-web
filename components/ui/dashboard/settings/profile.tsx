@@ -153,6 +153,17 @@ const Profile = () => {
     }
   };
 
+  const mapRole = (role: number) => {
+    switch (role) {
+      case 0:
+        return "Manager";
+      case 1:
+        return "Staff";
+      default:
+        return "User";
+    }
+  };
+
   const getChangedFields = () => {
     if (!userFormData) {
       return {};
@@ -166,13 +177,13 @@ const Profile = () => {
 
       // Include field if it has a value
       // Allow 0 for gender, but exclude empty strings, null, and undefined
-      if (value !== null && value !== undefined && value !== '') {
+      if (value !== null && value !== undefined && value !== "") {
         fieldsWithValues[key] = value;
       }
     });
 
     // Convert gender to number if it exists
-    if ('gender' in fieldsWithValues && fieldsWithValues.gender !== undefined) {
+    if ("gender" in fieldsWithValues && fieldsWithValues.gender !== undefined) {
       fieldsWithValues.gender = Number(fieldsWithValues.gender);
     }
 
@@ -180,138 +191,157 @@ const Profile = () => {
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4 lg:space-y-5">
-      <div>
-        <h2 className="font-semibold text-[#101928]">Personal information</h2>
-        <p className="text-sm text-[#667185]">
-          See your full personal information
-        </p>
-      </div>
-      <div className="border border-secondaryGrey rounded-[10px] p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 lg:space-y-8">
-        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
-          {userFormData?.image ? (
-            <div className="relative">
-              <Avatar
-                size="lg"
-                className="h-[120px] w-[120px]"
-                src={`data:image/jpeg;base64,${userFormData.image}`}
-              />
-              <div
-                className="absolute top-0 right-0 cursor-pointer"
-                onClick={() => removeFileMutation.mutate()}
-              >
-                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
-                  <RxCross2 />
+    <div className="space-y-3 sm:space-y-4  lg:space-y-5">
+      {!isEditing ? (
+        // Card view when not editing
+        <div className="py-10 px-6 sm:px-8 lg:px-10 bg-[#5F35D214] rounded-md">
+          <div className="flex justify-center items-center">
+            <div className="bg-white rounded-[8px] p-8 sm:p-10 lg:p-12 w-full max-w-[420px] shadow-xl">
+              <div className="flex flex-col items-center space-y-5">
+                {/* Profile Photo */}
+                <div className="relative">
+                  {userFormData?.image || previewUrl ? (
+                    <Avatar
+                      size="lg"
+                      className="h-[120px] w-[120px]"
+                      src={
+                        userFormData?.image
+                          ? `data:image/jpeg;base64,${userFormData.image}`
+                          : previewUrl!
+                      }
+                    />
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[#5F35D20A]">
+                        <label
+                          htmlFor="profile-photo-edit"
+                          className="flex flex-col items-center justify-center space-y-4"
+                        >
+                          <Image
+                            src="/assets/icons/video-audio-icon.svg"
+                            width={34}
+                            height={34}
+                            alt="Video audio icon"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          ) : !previewUrl ? (
-            <div>
-              <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[#5F35D20A]">
-                <label
-                  htmlFor="profile-photo"
-                  className="flex flex-col items-center justify-center space-y-4"
+                <div className="flex flex-col gap-2">
+                  {/* Username */}
+                  <div className="text-center space-y-1">
+                    <p className="text-xs text-[#596375]">
+                      @{data?.userName || "username not set"}
+                    </p>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {data?.firstName && data?.lastName
+                        ? `${data.firstName} ${data.lastName}`
+                        : "Name not set"}
+                    </h3>
+                    <p className="text-sm text-[#33363B] font-medium">
+                      {data?.role !== undefined ? mapRole(data.role) : "User"}
+                    </p>
+                  </div>
+
+                  {/* Contact Information */}
+                  <div className="w-full space-y-1 text-center">
+                    <p className="text-sm text-gray-500 font-[400]">
+                      {data?.email}
+                    </p>
+                    <p className="text-sm text-gray-500 font-[400]">
+                      {data?.phoneNumber || "Phone not set"}
+                    </p>
+                  </div>
+                </div>
+                {/* Edit Profile Button */}
+                <CustomButton
+                  disableRipple
+                  className="border-2 border-primaryColor text-primaryColor text-sm px-6 font-bold py-2 h-[36px] mt-2"
+                  backgroundColor="bg-white"
+                  onClick={() => {
+                    setOriginalUserData(userFormData);
+                    setIsEditing(true);
+                  }}
                 >
-                  <Image
-                    src="/assets/icons/video-audio-icon.svg"
-                    width={24}
-                    height={24}
-                    alt="Video audio icon"
-                  />
-                  <span className="font-semibold text-[8px] text-primaryColor">
-                    Upload Profile Photo
-                  </span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    id="profile-photo"
-                    onChange={handleFileChange}
-                    className="hidden"
-                  />
-                </label>
+                  Edit profile
+                </CustomButton>
               </div>
-              <p className="text-[10px] mt-1 font-semibold text-center text-gray-500">
-                SVG, PNG, JPG or GIF (max. 3mb)
-              </p>
             </div>
-          ) : (
-            <div className="relative">
-              <Avatar
-                size="lg"
-                className="h-[120px] w-[120px]"
-                src={previewUrl}
-              />
-              <div
-                className="absolute top-0 right-0 cursor-pointer"
-                onClick={() => removeFileMutation.mutate()}
-              >
-                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
-                  <RxCross2 />
+          </div>
+        </div>
+      ) : (
+        // Edit mode
+        <div className="space-y-4 sm:space-y-6 lg:space-y-8 p-5">
+          <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-4">
+            {userFormData?.image ? (
+              <div className="relative">
+                <Avatar
+                  size="lg"
+                  className="h-[120px] w-[120px]"
+                  src={`data:image/jpeg;base64,${userFormData.image}`}
+                />
+                <div
+                  className="absolute top-0 right-0 cursor-pointer"
+                  onClick={() => removeFileMutation.mutate()}
+                >
+                  <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
+                    <RxCross2 />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* {!previewUrl ? (
-            <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[#5F35D20A]">
-              <label
-                htmlFor="profile-photo"
-                className="flex flex-col items-center justify-center space-y-4"
-              >
-                <Image
-                  src="/assets/icons/video-audio-icon.svg"
-                  width={24}
-                  height={24}
-                  alt="Video audio icon"
+            ) : !previewUrl ? (
+              <div>
+                <div className="flex items-center justify-center w-[120px] h-[120px] rounded-full bg-[#5F35D20A]">
+                  <label
+                    htmlFor="profile-photo-edit"
+                    className="flex flex-col items-center justify-center space-y-4 cursor-pointer"
+                  >
+                    <Image
+                      src="/assets/icons/video-audio-icon.svg"
+                      width={24}
+                      height={24}
+                      alt="Video audio icon"
+                    />
+                    <span className="font-semibold text-[8px] text-primaryColor">
+                      Upload Profile Photo
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="profile-photo-edit"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+                <p className="text-[10px] mt-1 font-semibold text-center text-gray-500">
+                  SVG, PNG, JPG or GIF (max. 3mb)
+                </p>
+              </div>
+            ) : (
+              <div className="relative">
+                <Avatar
+                  size="lg"
+                  className="h-[120px] w-[120px]"
+                  src={previewUrl}
                 />
-                <span className="font-semibold text-[8px] text-primaryColor">
-                  No Profile Photo
-                </span>
-                <input
-                  type="file"
-                  id="profile-photo"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-            </div>
-          ) : (
-            <div className="relative">
-              <Avatar
-                size="lg"
-                className="h-[120px] w-[120px]"
-                src={previewUrl}
-              />
-              <div
-                className="absolute top-0 right-0 cursor-pointer"
-                onClick={() => removeFileMutation.mutate()}
-              >
-                <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
-                  <RxCross2 />
+                <div
+                  className="absolute top-0 right-0 cursor-pointer"
+                  onClick={() => removeFileMutation.mutate()}
+                >
+                  <div className="w-8 h-8 bg-white flex items-center justify-center rounded-[10px]">
+                    <RxCross2 />
+                  </div>
                 </div>
               </div>
-            </div>
-          )} */}
+            )}
 
-          {!isEditing ? (
-            <CustomButton
-              disableRipple
-              className="flex border border-primaryColor rounded-[10px] text-primaryColor text-xs p-2 h-[30px]"
-              backgroundColor="bg-transparent"
-              onClick={() => {
-                setOriginalUserData(userFormData); // Store original data before editing
-                setIsEditing((prevState) => !prevState);
-              }}
-            >
-              <BiEditAlt className="text-base" />
-              Edit
-            </CustomButton>
-          ) : (
             <div className="flex flex-wrap gap-2">
               <CustomButton
                 disableRipple
                 loading={updateUserMutation.isLoading}
-                className="flex rounded-[10px] text-xs p-2 h-[30px] text-white"
+                className="flex  text-xs p-2 h-[30px] text-white"
                 onClick={() => updateUserMutation.mutate()}
               >
                 <IoCheckmarkCircleOutline className="text-base" />
@@ -319,13 +349,13 @@ const Profile = () => {
               </CustomButton>
               <CustomButton
                 disableRipple
-                className="flex rounded-[10px] text-xs p-2 h-[30px] text-danger"
+                className="flex  border border-danger-500 text-xs p-2 h-[30px] text-danger"
                 backgroundColor="bg-transparent"
                 onClick={() => {
                   if (originalUserData) {
-                    setUserFormData(originalUserData); // Restore original data
+                    setUserFormData(originalUserData);
                   }
-                  setOriginalUserData(null); // Clear stored original
+                  setOriginalUserData(null);
                   setIsEditing(false);
                 }}
               >
@@ -333,209 +363,100 @@ const Profile = () => {
                 Cancel
               </CustomButton>
             </div>
-          )}
-        </div>
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <CiUser className="text-black" />
-            <span className="font-medium text-sm">Personal Details</span>
           </div>
-          <Divider />
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <CiUser className="text-black" />
+              <span className="font-medium text-sm">Personal Details</span>
+            </div>
+            <Divider />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+            <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+              <div className="flex flex-col w-full">
+                <CustomInput
+                  type="text"
+                  name="firstName"
+                  label="First name"
+                  disabled
+                  onChange={handleInputChange}
+                  value={userFormData?.firstName}
+                  placeholder="First name"
+                />
+              </div>
+            </div>
+            <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+              <div className="flex flex-col w-full">
+                <CustomInput
+                  type="text"
+                  name="lastName"
+                  disabled
+                  value={userFormData?.lastName}
+                  label="Last name"
+                  placeholder="Last name"
+                />
+              </div>
+            </div>
+            <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+              <div className="flex flex-col w-full">
+                <CustomInput
+                  type="text"
+                  name="email"
+                  disabled
+                  onChange={handleInputChange}
+                  value={userFormData?.email}
+                  label="Email"
+                  placeholder="Enter email"
+                />
+              </div>
+            </div>
+
+            <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+              <div className="flex flex-col w-full">
+                <CustomInput
+                  type="text"
+                  name="phoneNumber"
+                  onChange={handleInputChange}
+                  value={userFormData?.phoneNumber}
+                  label="Phone number"
+                  placeholder="Enter phone number"
+                />
+              </div>
+            </div>
+
+            <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+              <div className="flex flex-col w-full">
+                <CustomInput
+                  type="text"
+                  name="userName"
+                  onChange={handleInputChange}
+                  value={userFormData?.userName}
+                  label="Username"
+                  placeholder="Enter username"
+                />
+              </div>
+            </div>
+
+            <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
+              <div className="flex flex-col w-full">
+                <SelectInput
+                  type="text"
+                  name="gender"
+                  onChange={handleInputChange}
+                  value={userFormData?.gender}
+                  defaultSelectedKeys={[String(userFormData?.gender)]}
+                  label="Gender"
+                  placeholder="Pick a gender"
+                  contents={[
+                    { label: "Male", value: "0" },
+                    { label: "Female", value: "1" },
+                  ]}
+                />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 ">
-          {!isEditing ? (
-            <>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1 flex-shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm">First Name</span>
-                  <span
-                    className={cn(
-                      "text-sm break-words",
-                      data?.firstName.length > 0 ? "text-black" : "text-red-500"
-                    )}
-                  >
-                    {data?.firstName.length > 0
-                      ? data?.firstName
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1 flex-shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm">Last Name</span>
-                  <span
-                    className={cn(
-                      "text-sm break-words",
-                      data?.lastName.length > 0 ? "text-black" : "text-red-500"
-                    )}
-                  >
-                    {data?.lastName.length > 0 ? data?.lastName : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <MdLockOutline className="mt-1 flex-shrink-0" />
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm">Email</span>
-                  <span
-                    className={cn(
-                      "text-sm break-words",
-                      data?.email.length > 0 ? "text-black" : "text-red-500"
-                    )}
-                  >
-                    {data?.email.length > 0 ? data?.email : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4 flex-shrink-0"></div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm">Phone No</span>
-                  <span
-                    className={cn(
-                      "text-sm break-words",
-                      data?.phoneNumber?.length > 0
-                        ? "text-black"
-                        : "text-red-500"
-                    )}
-                  >
-                    {data?.phoneNumber?.length > 0
-                      ? data?.phoneNumber
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4 flex-shrink-0"></div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm">Username</span>
-                  <span
-                    className={cn(
-                      "text-sm break-words",
-                      data?.userName?.length > 0 ? "text-black" : "text-red-500"
-                    )}
-                  >
-                    {data?.userName?.length > 0
-                      ? data?.userName
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="h-4 w-4 flex-shrink-0"></div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm">Gender</span>
-                  <span
-                    className={cn(
-                      "text-sm break-words",
-                      !Number.isNaN(data?.gender)
-                        ? "text-black"
-                        : "text-red-500"
-                    )}
-                  >
-                    {!Number.isNaN(data?.gender)
-                      ? mapGender(data?.gender)
-                      : "Not updated"}
-                  </span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="firstName"
-                    label="First name"
-                    disabled
-                    onChange={handleInputChange}
-                    value={userFormData?.firstName}
-                    placeholder="First name"
-                  />
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="lastName"
-                    disabled
-                    // errorMessage={response?.errors?.lastName?.[0]}
-                    // onChange={handleInputChange}
-                    value={userFormData?.lastName}
-                    label="Last name"
-                    placeholder="Last name"
-                  />
-                </div>
-              </div>
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="email"
-                    disabled
-                    // errorMessage={response?.errors?.email?.[0]}
-                    onChange={handleInputChange}
-                    value={userFormData?.email}
-                    label="Email"
-                    placeholder="Enter email"
-                  />
-                </div>
-              </div>
-
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="phoneNumber"
-                    // errorMessage={response?.errors?.lastName?.[0]}
-                    onChange={handleInputChange}
-                    value={userFormData?.phoneNumber}
-                    label="Phone number"
-                    placeholder="Enter phone number"
-                  />
-                </div>
-              </div>
-
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <CustomInput
-                    type="text"
-                    name="userName"
-                    // errorMessage={response?.errors?.lastName?.[0]}
-                    onChange={handleInputChange}
-                    value={userFormData?.userName}
-                    label="Username"
-                    placeholder="Enter username"
-                  />
-                </div>
-              </div>
-
-              <div className="col-span-1 flex gap-2 text-[#AFAFAF]">
-                <div className="flex flex-col w-full">
-                  <SelectInput
-                    type="text"
-                    name="gender"
-                    // errorMessage={response?.errors?.role?.[0]}
-                    onChange={handleInputChange}
-                    value={userFormData?.gender}
-                    defaultSelectedKeys={[String(userFormData?.gender)]}
-                    label="Gender"
-                    placeholder="Pick a gender"
-                    contents={[
-                      { label: "Male", value: "0" },
-                      { label: "Female", value: "1" },
-                    ]}
-                  />
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+      )}
 
       <Modal
         isOpen={isOpen}

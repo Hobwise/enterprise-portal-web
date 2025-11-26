@@ -192,8 +192,6 @@ const Bookings: React.FC = () => {
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export</p>
                 </Button>
                 {(role === 0 ||
                   userRolePermissions?.canCreateOrder === true) && (

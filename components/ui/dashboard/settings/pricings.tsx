@@ -124,7 +124,7 @@ const Pricing = () => {
     return <Error onClick={() => subscriptionQuery.refetch()} />;
 
   return (
-    <div className="w-full">
+    <div className="w-full  p-5">
       <div className="w-full mb-2">
         <h1 className="text-xl font-bold mb-2">Billing & Subscription</h1>
         <p className="text-foreground-600 mb-4">
@@ -161,7 +161,7 @@ const Pricing = () => {
               currentSubscriptionDetails={currentSubDetails}
             />
           )} */}
-          {subscriptionQuery?.data?.status === 'pending' && (
+          {subscriptionQuery?.data?.status === "pending" && (
             <SubscriptionPendingCard
               cardDetails={subscriptionQuery?.data?.authorization}
               currentSubscriptionDetails={currentSubDetails}

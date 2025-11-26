@@ -7,33 +7,43 @@ import { EXCLUDE_SETTINGS_PATHS } from "@/lib/routePermissions";
 import { useEffect, useState } from "react";
 import { isPOSUser, getAllowedSettingsPaths, canAccessSettingsPath } from "@/lib/userTypeUtils";
 
-const lists = [
+export const lists = [
   {
     title: "Personal Information",
+    subtitle: "See your full personal information",
     href: "/dashboard/settings/personal-information",
   },
   {
     title: "Password Management",
+    subtitle: "Update your password and security settings",
     href: "/dashboard/settings/password-management",
   },
   {
     title: "Business Information",
+    subtitle: "See your full business information",
     href: "/dashboard/settings/business-information",
   },
-  { title: "KYC Compliance", href: "/dashboard/settings/kyc-compliance" },
+  // { title: "KYC Compliance", subtitle: "Complete your KYC verification", href: "/dashboard/settings/kyc-compliance" },
   {
     title: "Billing & Subscription",
+    subtitle: "Manage your subscription and billing details",
     href: "/dashboard/settings/subscriptions",
   },
-  { title: "Teams Management", href: "/dashboard/settings/teams" },
   {
-    title: "Roles and Permissions",
+    title: "Staff Management",
+    subtitle: "Manage your team members roles and permissions",
     href: "/dashboard/settings/staff-management",
   },
   {
-    title: "Terms and Condition",
-    href: "/dashboard/settings/business-settings",
+    title: "Customize Business Display",
+    subtitle: "Customize how your business appears to customers",
+    href: "/dashboard/settings/customize-business-display",
   },
+  // {
+  //   title: "Terms and Condition",
+  //   subtitle: "View terms and conditions",
+  //   href: "/dashboard/settings/business-settings",
+  // },
 ];
 
 const SettingsSidebar = () => {

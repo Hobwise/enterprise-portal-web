@@ -74,9 +74,12 @@ const useCustomerMenuItems = (
       }
       return undefined;
     },
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Enable refetch on tab focus for mobile
+    refetchOnMount: true, // Always refetch on component mount
     enabled: !!menuId,
     initialPageParam: 1,
+    retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
   });
 
   // Flatten all pages into a single array

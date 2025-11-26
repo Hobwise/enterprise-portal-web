@@ -59,7 +59,9 @@ export const CustomButton = ({
           />
         </svg>
       }
-      className={`${style ? '' : backgroundColor} ${radius} ${className} disabled:bg-grey500 disabled:cursor-not-allowed ${
+      className={`${
+        style ? "" : backgroundColor
+      } ${radius} ${className} disabled:bg-gray-300 disabled:text-black disabled:cursor-not-allowed ${
         disabled || loading ? "pointer-events-none opacity-70" : ""
       }`}
     >

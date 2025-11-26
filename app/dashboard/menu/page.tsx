@@ -21,7 +21,7 @@ import {
   deleteVariety,
 } from '@/app/api/controllers/dashboard/menu';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, dynamicExportConfig } from '@/lib/utils';
 import MenuHeader from '@/components/ui/dashboard/menu/MenuHeader';
 import CategoryTabs from '@/components/ui/dashboard/menu/CategoryTabs';
 import MenuToolbar from '@/components/ui/dashboard/menu/MenuToolbar';
@@ -913,28 +913,16 @@ const RestaurantMenu = () => {
       const business = getJsonItemFromLocalStorage('business');
       const response = await exportGrid(business[0]?.businessId, 0);
 
-      if (response?.data) {
-        const blob = new Blob([response.data], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute(
-          'download',
-          `menu-export-${new Date().toISOString().split('T')[0]}.xlsx`
+      if (response?.status === 200) {
+        dynamicExportConfig(
+          response,
+          `Menu-${business[0]?.businessName}`
         );
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-
         toast.success('Menu data exported successfully');
       } else {
         toast.error('Failed to export menu data');
       }
     } catch (error) {
-      console.error('Error exporting menu data:', error);
       toast.error('Failed to export menu data');
     } finally {
       setIsExporting(false);

@@ -149,7 +149,7 @@ export default function Navbar({ type = "non-colored", className }: INavbar) {
                       type === "default" && "border border-primaryColor"
                     )}
                   >
-                    Login 
+                    Login
                   </CustomButton>
                 </Link>
                 <Link href={SIGN_UP_URL} target="_blank">
@@ -208,16 +208,14 @@ export default function Navbar({ type = "non-colored", className }: INavbar) {
                   )}
                 </DropdownTrigger>
                 <DropdownMenu aria-label="settings Actions" variant="flat">
-                  <DropdownItem key="Profile Management">
+                  <DropdownItem key="Settings">
                     <Link
                       prefetch={true}
                       href={"/dashboard/settings/personal-information"}
                       className="flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2"
                     >
                       <MdOutlinePerson className="text-[22px]" />
-                      <span className="  text-sm font-md">
-                        Profile Management
-                      </span>
+                      <span className="  text-sm font-md">Settings</span>
                     </Link>
                   </DropdownItem>
                   <DropdownItem key="logout">

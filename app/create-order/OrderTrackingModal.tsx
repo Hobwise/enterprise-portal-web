@@ -58,6 +58,7 @@ const OrderTrackingPage = ({
   const [orderData, setOrderData] = useState<any>(initialOrderData);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [previousStatus, setPreviousStatus] = useState<number | null>(null);
+  const [previousEstimatedTime, setPreviousEstimatedTime] = useState<string | undefined>(estimatedTime);
 
   useEffect(() => {
     if (
@@ -128,6 +129,7 @@ const OrderTrackingPage = ({
             }
           }
           const newStatus = newOrderData.status;
+          const newEstimatedTime = newOrderData.estimatedCompletionTime;
 
           // Check if status has changed and show notification
           if (previousStatus !== null && previousStatus !== newStatus) {
@@ -161,6 +163,29 @@ const OrderTrackingPage = ({
             }
           }
 
+          // Check if preparation time has changed
+          if (
+            previousEstimatedTime &&
+            newEstimatedTime &&
+            previousEstimatedTime !== newEstimatedTime
+          ) {
+            const prevTime = new Date(previousEstimatedTime).getTime();
+            const newTime = new Date(newEstimatedTime).getTime();
+            const diffMinutes = Math.round((newTime - prevTime) / 60000);
+
+            if (diffMinutes > 0) {
+              toast.info(
+                `Preparation time updated: +${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""}`
+              );
+            } else if (diffMinutes < 0) {
+              toast.success(
+                `Good news! Preparation time reduced by ${Math.abs(diffMinutes)} minute${Math.abs(diffMinutes) !== 1 ? "s" : ""}`
+              );
+            }
+
+            setPreviousEstimatedTime(newEstimatedTime);
+          }
+
           setPreviousStatus(newStatus);
           setOrderData(newOrderData);
         }
@@ -170,32 +195,32 @@ const OrderTrackingPage = ({
     // Poll immediately when modal opens
     pollOrderStatus();
 
-    // Check if we should continue polling
+    // Check if we should continue polling (continue polling even after time expires to catch status changes)
     const shouldContinuePolling = () => {
-      if (!estimatedTime) return true;
-      const target = new Date(estimatedTime).getTime();
-      const now = new Date().getTime();
-      return now < target;
+      // Continue polling if order is still open (not closed or cancelled)
+      return orderData?.status !== 1 && orderData?.status !== 2;
     };
 
-    // Set up 30-second polling interval
+    // Set up 5-second polling interval for real-time updates
     const pollInterval = setInterval(() => {
       if (shouldContinuePolling()) {
         pollOrderStatus();
       } else {
         clearInterval(pollInterval);
       }
-    }, 30000); // 30 seconds
+    }, 5000); // 5 seconds for near real-time updates
 
     return () => clearInterval(pollInterval);
-  }, [isOpen, trackingId, businessId, cooperateId, estimatedTime]);
+  }, [isOpen, trackingId, businessId, cooperateId, previousStatus, previousEstimatedTime, orderData?.status]);
 
-  // Timer countdown
+  // Timer countdown - use orderData's estimatedCompletionTime for real-time updates
   useEffect(() => {
-    if (!estimatedTime) return;
+    const currentEstimatedTime = orderData?.estimatedCompletionTime || estimatedTime;
+
+    if (!currentEstimatedTime) return;
 
     const calculateTimeLeft = () => {
-      const target = new Date(estimatedTime).getTime();
+      const target = new Date(currentEstimatedTime).getTime();
       const now = new Date().getTime();
       const difference = target - now;
 
@@ -219,7 +244,7 @@ const OrderTrackingPage = ({
     const timer = setInterval(calculateTimeLeft, 1000);
 
     return () => clearInterval(timer);
-  }, [estimatedTime]);
+  }, [orderData?.estimatedCompletionTime, estimatedTime]);
 
   const copyTrackingId = () => {
     navigator.clipboard.writeText(trackingId);
@@ -653,54 +678,64 @@ const OrderTrackingPage = ({
                 </div>
               </div>
             )}
-          <div className="flex gap-5 border-t border-gray-200 py-4 pb-safe z-20">
-            {/* <CustomButton
-              onClick={onAddMoreItems}
-              disabled={orderData?.status === 1 || orderData?.status === 2}
-              style={
-                orderData?.status === 1 || orderData?.status === 2
-                  ? {
-                      backgroundColor: "#F3F4F6",
-                      borderColor: "#D1D5DB",
-                      color: "#9CA3AF",
-                      borderWidth: "2px",
-                    }
-                  : {
-                      ...borderColorStyle,
-                      ...textColorStyle,
-                      backgroundColor: "white",
-                      borderWidth: "2px",
-                    }
-              }
-              className={`flex-1 h-12 md:h-14 ${
-                orderData?.status === 1 || orderData?.status === 2
-                  ? "cursor-not-allowed"
-                  : ""
-              } font-semibold flex items-center justify-center gap-2 text-base`}
+          <div className="border-t border-gray-200 py-4 pb-safe z-20">
+            <div className="flex gap-5">
+              {/* <CustomButton
+                onClick={onAddMoreItems}
+                disabled={orderData?.status === 1 || orderData?.status === 2}
+                style={
+                  orderData?.status === 1 || orderData?.status === 2
+                    ? {
+                        backgroundColor: "#F3F4F6",
+                        borderColor: "#D1D5DB",
+                        color: "#9CA3AF",
+                        borderWidth: "2px",
+                      }
+                    : {
+                        ...borderColorStyle,
+                        ...textColorStyle,
+                        backgroundColor: "white",
+                        borderWidth: "2px",
+                      }
+                }
+                className={`flex-1 h-12 md:h-14 ${
+                  orderData?.status === 1 || orderData?.status === 2
+                    ? "cursor-not-allowed"
+                    : ""
+                } font-semibold flex items-center justify-center gap-2 text-base`}
+              >
+                <IoAddCircleOutline className="w-6 h-6" />
+                Add items
+              </CustomButton> */}
+              <CustomButton
+                onClick={() => {
+                  // Pass the updated order data (which includes reference) to parent
+                  onCheckout(orderData);
+                }}
+                disabled={orderData?.status === 2 || orderData?.status === 1}
+                style={
+                  orderData?.status === 1 || orderData?.status === 1
+                    ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
+                    : primaryColorStyle
+                }
+                className={`flex-1 h-12 md:h-14 ${
+                  orderData?.status === 1 || orderData?.status === 1
+                    ? "cursor-not-allowed"
+                    : "text-white"
+                } font-semibold flex items-center justify-center gap-2 text-base`}
+              >
+                <span>Update this order</span>
+                <HiArrowLongLeft className="w-6 h-6 rotate-180" />
+              </CustomButton>
+            </div>
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={handleMenuClick}
+              className="w-full text-center text-sm text-gray-600 hover:text-gray-800 py-3 mt-2 transition-colors"
             >
-              <IoAddCircleOutline className="w-6 h-6" />
-              Add items
-            </CustomButton> */}
-            <CustomButton
-              onClick={() => {
-                // Pass the updated order data (which includes reference) to parent
-                onCheckout(orderData);
-              }}
-              disabled={orderData?.status === 2 || orderData?.status === 1}
-              style={
-                orderData?.status === 1 || orderData?.status === 1
-                  ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
-                  : primaryColorStyle
-              }
-              className={`flex-1 h-12 md:h-14 ${
-                orderData?.status === 1 || orderData?.status === 1
-                  ? "cursor-not-allowed"
-                  : "text-white"
-              } font-semibold flex items-center justify-center gap-2 text-base`}
-            >
-              <span>Update this order</span>
-              <HiArrowLongLeft className="w-6 h-6 rotate-180" />
-            </CustomButton>
+              Close
+            </button>
           </div>
         </div>
       </div>

@@ -69,15 +69,7 @@ const Password = () => {
     }
   };
   return (
-    <div>
-      <div className="mb-4">
-        <h1 className="text-[16px] leading-8 font-semibold">
-          Update password
-        </h1>
-        <p className="text-sm text-grey600 md:mb-10 mb-4">
-          Protect your account with secure password
-        </p>
-      </div>
+    <div className="p-5">
       <form autoComplete="off" onSubmit={submitFormData}>
         <CustomInput
           errorMessage={response?.errors?.oldPassword?.[0]}

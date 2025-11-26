@@ -112,6 +112,7 @@ export const placeCustomerOrder = async (
       unitPrice: number;
       isVariety?: boolean;
       isPacked?: boolean;
+      packingCost?: number;
     }>;
   },
   businessId?: string,
@@ -163,6 +164,7 @@ export const updateCustomerOrder = async (
       unitPrice: number;
       isVariety?: boolean;
       isPacked?: boolean;
+      packingCost?: number;
     }>;
   }
 ) => {
