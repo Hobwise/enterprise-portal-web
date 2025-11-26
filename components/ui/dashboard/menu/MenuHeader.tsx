@@ -74,6 +74,7 @@ const MenuHeader = ({
               title="Export"
               aria-label="Export"
             >
+              Export
               {isExporting ? (
                 <VscLoading className="animate-spin" />
               ) : (

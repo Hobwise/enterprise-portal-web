@@ -174,6 +174,7 @@ const Reservation: React.FC = () => {
                   title="Export"
                   aria-label="Export"
                 >
+                  Export
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (

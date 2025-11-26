@@ -13,10 +13,90 @@ import { Toaster as SonnerToaster } from "sonner";
 import { companyInfo } from "../lib/companyInfo";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import { Metadata, Viewport } from "next";
+import {
+  OrganizationSchema,
+  WebsiteSchema,
+  SoftwareApplicationSchema,
+} from "@/components/StructuredData";
 
-export const metadata = {
-  title: companyInfo.name,
-  description: "Streamline your business processes",
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#ffffff",
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL("https://hobwise.com"),
+  title: {
+    default: "Hobwise - Restaurant & Hospitality Management Platform",
+    template: "%s | Hobwise",
+  },
+  description:
+    "All-in-one restaurant and hospitality management platform. Manage menus, reservations, orders, payments, QR codes, and campaigns efficiently for your business.",
+  keywords: [
+    "restaurant management",
+    "hospitality software",
+    "reservation system",
+    "menu management",
+    "QR ordering",
+    "restaurant POS",
+    "Nigeria restaurant software",
+    "business management platform",
+    "restaurant reservation software",
+    "digital menu",
+    "online ordering system",
+    "hospitality management",
+  ],
+  authors: [{ name: "Hobwise", url: "https://hobwise.com" }],
+  creator: "Hobwise",
+  publisher: "Hobwise",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://hobwise.com",
+    siteName: "Hobwise",
+    title: "Hobwise - Restaurant & Hospitality Management Platform",
+    description:
+      "All-in-one restaurant and hospitality management platform. Manage menus, reservations, orders, payments, and more with ease.",
+    images: [
+      {
+        url: "/assets/images/hobwise-seo-favicon.png",
+        width: 1200,
+        height: 630,
+        alt: "Hobwise Platform Dashboard",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Hobwise - Restaurant & Hospitality Management Platform",
+    description:
+      "All-in-one restaurant and hospitality management platform for modern businesses",
+    images: ["/assets/images/hobwise-seo-favicon.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",
+  },
   manifest: "/manifest.json",
 };
 
@@ -31,6 +111,11 @@ export default function RootLayout({
       className={` ${bricolage_grotesque.className}`}
       suppressHydrationWarning
     >
+      <head>
+        <OrganizationSchema />
+        <WebsiteSchema />
+        <SoftwareApplicationSchema />
+      </head>
       <body>
         <ClientProviders>
           <QueryProvider>
