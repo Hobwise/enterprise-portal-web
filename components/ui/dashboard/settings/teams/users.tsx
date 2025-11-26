@@ -229,6 +229,7 @@ const Users = ({ data, refetch }: any) => {
             title="Export"
             aria-label="Export"
           >
+            Export
             {loadingExport ? (
               <VscLoading className="animate-spin" />
             ) : (

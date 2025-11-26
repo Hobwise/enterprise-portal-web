@@ -69,11 +69,12 @@ const MenuHeader = ({
           <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
             <Button
               disabled={isExporting}
-              onClick={handleExportCSV}
+              onClick={handleExportXLSX}
               className="flex text-grey600 bg-white"
               title="Export"
               aria-label="Export"
             >
+              Export
               {isExporting ? (
                 <VscLoading className="animate-spin" />
               ) : (

@@ -187,6 +187,7 @@ const Bookings: React.FC = () => {
                   onClick={exportCSV}
                   className="flex text-primaryColor border-primaryColor bg-white border rounded-lg"
                 >
+                  Export
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
