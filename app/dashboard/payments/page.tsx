@@ -165,7 +165,7 @@ const Payments: React.FC = () => {
             )}
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
-            Showing all payments
+          Review all payment history
           </p>
         </div>
         <div className="flex items-center gap-3">

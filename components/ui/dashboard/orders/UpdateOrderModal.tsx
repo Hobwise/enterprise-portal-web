@@ -368,7 +368,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
               <div className="w-full flex items-center justify-center flex-col">
                 <h2 className="text-lg font-bold text-black">{businessInformation?.[0]?.businessName || "N/A"}</h2>
                 <p className="text-base font-medium text-[#808794]">
-                  {businessInformation?.[0]?.businessAddress || "Location not available"}
+                  {businessInformation?.[0]?.businessAddress || businessInformation?.[0]?.city + " " + " " + businessInformation?.[0]?.state || ""}
                 </p>
           
               </div>

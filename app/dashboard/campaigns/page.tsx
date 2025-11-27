@@ -53,7 +53,8 @@ const Compaigns: React.FC = () => {
             </div>
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
-            Showing all campaigns
+          Manage Your Business Campaigns
+
           </p>
         </div>
         <div className="flex items-center gap-3">

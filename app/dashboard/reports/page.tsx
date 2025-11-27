@@ -162,7 +162,7 @@ const Reports: React.FC = () => {
               )}
             </div>
             <div className="flex gap-2 items-center">
-              <p className="text-sm text-grey600">A summary of activities</p>
+              <p className="text-sm text-grey600">Track and monitor business activites</p>
               <Dropdown isDisabled={isLoading}>
                 <DropdownTrigger>
                   <Button
