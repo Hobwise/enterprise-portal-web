@@ -68,8 +68,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/assets/images/hobwise-seo-favicon.png",
-        width: 1200,
-        height: 630,
+        width: 1919,
+        height: 804,
         alt: "Hobwise Platform Dashboard",
       },
     ],
