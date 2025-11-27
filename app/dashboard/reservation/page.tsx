@@ -166,14 +166,15 @@ const Reservation: React.FC = () => {
                   placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-xl">
+              <div className="flex items-center gap-2  rounded-xl">
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}
-                  className="flex text-grey600 bg-white"
+                  className="flex border rounded-lg text-grey600 bg-white"
                   title="Export"
                   aria-label="Export"
                 >
+                  Export
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
@@ -188,7 +189,7 @@ const Reservation: React.FC = () => {
                   <PopoverTrigger>
                     <Button
                       onClick={handleCopyClick}
-                      className="flex text-grey600 bg-white"
+                      className="flex border rounded-lg text-grey600 bg-white"
                     >
                       <VscCopy />
                       <p>Copy link</p>
@@ -200,7 +201,7 @@ const Reservation: React.FC = () => {
                     </div>
                   </PopoverContent>
                 </Popover>
-              </ButtonGroup>
+              </div>
             </>
           )}
 
