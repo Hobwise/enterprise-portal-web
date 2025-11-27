@@ -15,6 +15,9 @@ interface CustomInputProps {
   isInvalid?: boolean;
   size?: "lg" | "md" | "sm";
   classnames?: string;
+  inputTextColor?: string;
+  bgColor?: string;
+  eyeIconStyle?: string;
   placeholder?: string;
   endContent?: JSX.Element | null;
   isRequired?: boolean;
@@ -41,8 +44,11 @@ export const CustomInput = ({
   isRequired,
   startContent,
   defaultValue,
+  bgColor = "bg-white",
   classnames = "bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]",
+  inputTextColor = "text-black",
   errorMessage,
+  eyeIconStyle = "text-foreground-500 text-lg",
   isInvalid,
   size = "lg",
   min,
@@ -64,9 +70,9 @@ export const CustomInput = ({
       onClick={toggleVisibility}
     >
       {isVisible ? (
-        <IoEyeOutline className="text-foreground-500 text-lg" />
+        <IoEyeOutline className={eyeIconStyle} />
       ) : (
-        <IoEyeOffOutline className="text-foreground-500 text-lg" />
+        <IoEyeOffOutline className={eyeIconStyle} />
       )}
     </button>
   );
@@ -94,9 +100,9 @@ export const CustomInput = ({
     setTimeout(() => {
       if (inputRef.current) {
         inputRef.current.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'nearest'
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
         });
       }
     }, 300);
@@ -105,43 +111,47 @@ export const CustomInput = ({
   return (
     <div ref={inputRef}>
       <Input
-      key="outside"
-      type={type === "password" ? passwordType : type}
-      label={label}
-      value={value}
-      name={name}
-      hidden={hidden}
-      disabled={disabled}
-      onChange={onChange}
-      defaultValue={defaultValue}
-      variant="bordered"
-      classNames={{
-        label: "text-[#000] font-[500] text-[14px]",
-        base: "bg-none",
-        inputWrapper: [
-          `${classnames} ${disabled ? "bg-secondaryGrey" : "bg-white"} `,
-        ],
-        innerWrapper: `bg-none border-none`,
-        input: ["bg-none", "text-black placeholder:text-[14px] bg-none"],
-      }}
-      autoCorrect="off"
-      placeholder={placeholder}
-      labelPlacement="outside"
-      isRequired={isRequired}
-      spellCheck="false"
-      ng-model="name"
-      autoComplete={autoComplete || "new-password"}
-      errorMessage={errorMessage}
-      isInvalid={isInvalid || (errorMessage && true)}
-      size={size}
-      endContent={type === "password" ? passwordEndContent : endContent}
-      startContent={startContent}
-      onCopy={handleCopy}
-      onPaste={handlePaste}
-      onFocus={handleFocus}
-      min={min}
-      max={max}
-    />
+        key="outside"
+        type={type === "password" ? passwordType : type}
+        label={label}
+        value={value}
+        name={name}
+        hidden={hidden}
+        disabled={disabled}
+        onChange={onChange}
+        defaultValue={defaultValue}
+        variant="bordered"
+        classNames={{
+          label: "text-[#000] font-[500] text-[14px]",
+          base: "bg-none",
+          inputWrapper: [
+            `${classnames} ${disabled ? "bg-secondaryGrey" : bgColor} `,
+          ],
+          innerWrapper: `bg-none border-none`,
+          input: [
+            "bg-none",
+            `${inputTextColor}`,
+            "placeholder:text-[14px] bg-none",
+          ],
+        }}
+        autoCorrect="off"
+        placeholder={placeholder}
+        labelPlacement="outside"
+        isRequired={isRequired}
+        spellCheck="false"
+        ng-model="name"
+        autoComplete={autoComplete || "new-password"}
+        errorMessage={errorMessage}
+        isInvalid={isInvalid || (errorMessage && true)}
+        size={size}
+        endContent={type === "password" ? passwordEndContent : endContent}
+        startContent={startContent}
+        onCopy={handleCopy}
+        onPaste={handlePaste}
+        onFocus={handleFocus}
+        min={min}
+        max={max}
+      />
     </div>
   );
 };
