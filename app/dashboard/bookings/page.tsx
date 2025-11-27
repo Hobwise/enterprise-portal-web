@@ -161,7 +161,7 @@ const Bookings: React.FC = () => {
             )}
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
-            Showing all bookings
+          Create and Manage Your Bookings
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -185,7 +185,7 @@ const Bookings: React.FC = () => {
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}
-                  className="flex text-primaryColor border-primaryColor bg-white border rounded-lg"
+                  className="flex  text-grey600 bg-white border rounded-lg"
                 >
                   Export
                   {loadingExport ? (
@@ -194,23 +194,25 @@ const Bookings: React.FC = () => {
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
                 </Button>
-                {(role === 0 ||
-                  userRolePermissions?.canCreateOrder === true) && (
-                  <Button
-                    onClick={showCreateBookingModal}
-                    className="flex text-primaryColor border-primaryColor bg-white border rounded-lg"
-                  >
-                    <p>Create a booking</p>
+                
+                {(role === 0 || userRolePermissions?.canEditOrder === true) && (
+                  <Button onClick={onOpen} className="flex  text-primaryColor border-primaryColor bg-white border rounded-lg">
+                  
+  
+                    <p>Admit booking</p>
                   </Button>
                 )}
+                {(role === 0 ||
+                  userRolePermissions?.canCreateOrder === true) && (
+                  <CustomButton
+                    onClick={showCreateBookingModal}
+                    className="flex text-white"
+                  >
+                      <IoAddCircleOutline className="text-[22px]" />
+                    <p>Create a booking</p>
+                  </CustomButton>
+                )}
               </div>
-              {(role === 0 || userRolePermissions?.canEditOrder === true) && (
-                <CustomButton onClick={onOpen} className="flex text-white">
-                  <IoAddCircleOutline className="text-[22px]" />
-
-                  <p>Admit booking</p>
-                </CustomButton>
-              )}
             </>
           )}
         </div>

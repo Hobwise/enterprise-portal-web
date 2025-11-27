@@ -49,7 +49,7 @@ const MenuHeader = ({
               <span>Menu</span>
             )}
           </div>
-          <p className="text-sm text-grey600">Showing all categories</p>
+          <p className="text-sm text-grey600">Manage all menu Items and Categories</p>
         </div>
         <div className="flex items-center gap-3">
           <div>
