@@ -130,7 +130,7 @@ const OrdersContent: React.FC = () => {
             )}
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px]  w-full ">
-            Showing all orders
+           Review Your Order History
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">

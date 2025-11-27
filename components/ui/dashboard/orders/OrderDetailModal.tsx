@@ -72,10 +72,10 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {orderData.restaurantName || 'Cubana Restaurant and Grills'}
+                    {orderData.restaurantName }
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
-                    {orderData.restaurantLocation || 'Tafawa Balewa Way, Ikeja, Lagos'}
+                    {orderData.restaurantLocation }
                   </p>
                 </div>
               </div>

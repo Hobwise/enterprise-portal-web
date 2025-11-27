@@ -147,7 +147,7 @@ const Reservation: React.FC = () => {
             </div>
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
-            Showing all Reservations
+          Manage Your reservations 
           </p>
         </div>
         <div className="flex items-center gap-3">

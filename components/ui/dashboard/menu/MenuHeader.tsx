@@ -49,7 +49,7 @@ const MenuHeader = ({
               <span>Menu</span>
             )}
           </div>
-          <p className="text-sm text-grey600">Showing all categories</p>
+          <p className="text-sm text-grey600">Manage all menu Items and Categories</p>
         </div>
         <div className="flex items-center gap-3">
           <div>
@@ -69,11 +69,12 @@ const MenuHeader = ({
           <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
             <Button
               disabled={isExporting}
-              onClick={handleExportCSV}
+              onClick={handleExportXLSX}
               className="flex text-grey600 bg-white"
               title="Export"
               aria-label="Export"
             >
+              Export
               {isExporting ? (
                 <VscLoading className="animate-spin" />
               ) : (

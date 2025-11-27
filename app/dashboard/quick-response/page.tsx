@@ -89,7 +89,7 @@ const QRCode: React.FC = () => {
             )}
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px]  w-full ">
-            Showing all Quick Response
+          Create and manage your QR
           </p>
         </div>
         <div className="flex items-center flex-wrap gap-3">
