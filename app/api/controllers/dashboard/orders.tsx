@@ -23,24 +23,20 @@ interface OrderDetail {
   isPacked?: boolean;
 }
 
+const optionalPhoneSchema = z
+  .string()
+  .trim()
+  .optional()
+  .or(z.literal(""));
+
 export const orderSchema = z.object({
   placedByName: z.string().trim().min(1, "Name is required"),
-  placedByPhoneNumber: z
-    .string()
-    .length(11, "Phone number must be 11 digits long")
-    .refine((value) => /^\d+$/.test(value), {
-      message: "Phone number must only contain digits",
-    }),
+  placedByPhoneNumber: optionalPhoneSchema,
   quickResponseID: z.string().trim().min(1, "Select a Table"),
 });
 export const orderSchemaUser = z.object({
   placedByName: z.string().trim().min(1, "Name is required"),
-  placedByPhoneNumber: z
-    .string()
-    .length(11, "Phone number must be 11 digits long")
-    .refine((value) => /^\d+$/.test(value), {
-      message: "Phone number must only contain digits",
-    }),
+  placedByPhoneNumber: optionalPhoneSchema,
 });
 
 // Function to get category order counts for business-activities
