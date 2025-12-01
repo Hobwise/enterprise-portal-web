@@ -72,6 +72,8 @@ const POSContent = () => {
 
   const orderSummary = calculateOrderSummary();
 
+
+
   // Filter menu items based on search query
   const filteredMenuItems = menuItems.filter((item) => {
     if (!searchQuery.trim()) return true;
@@ -255,6 +257,8 @@ const POSContent = () => {
 
     loadExistingOrder();
   }, [searchParams, menuItems.length]);
+
+  console.log('Rendered POSContent with existingOrder:', orderItems);
 
   return (
     <>
