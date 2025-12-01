@@ -74,6 +74,7 @@ type ValidationErrors = {
 };
 
 
+
 // Type guard to check if response has data property
 const hasDataProperty = (response: any): response is ApiResponse => {
   return response && typeof response === 'object' && 'data' in response;
@@ -91,6 +92,7 @@ const CheckoutModal = ({
   businessId,
   cooperateID,
   handlePackingCost,
+  categoriesData,
 }: any) => {
 
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -114,7 +116,12 @@ const CheckoutModal = ({
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [validationErrors, setValidationErrors] = useState<{
+    placedByName?: boolean;
+    placedByPhoneNumber?: boolean;
+    quickResponseID?: boolean;
+    additionalCostName?: boolean;
+  }>({});
   const [reference, setReference] = useState("");
   const [screen, setScreen] = useState(1);
   const [mobileSubStep, setMobileSubStep] = useState<'1A' | '1B' | '1C'>('1A');
@@ -131,6 +138,9 @@ const CheckoutModal = ({
   const [additionalCost, setAdditionalCost] = useState(0);
   const [additionalCostName, setAdditionalCostName] = useState("");
 
+
+
+
   useEffect(() => {
     if (orderDetails) {
       setAdditionalCost(orderDetails.additionalCost);
@@ -141,31 +151,32 @@ const CheckoutModal = ({
   // Frontend validation helper function
   const validateCheckoutForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    const fieldErrors: ValidationErrors = {};
+    const fieldErrors: any = {};
 
-    const trimmedName = order.placedByName?.trim() || '';
-    if (trimmedName) {
-      if (trimmedName.length < 2) {
+    // Validate customer name (optional, will default to "anonymous" if empty)
+    if (order.placedByName?.trim()) {
+      if (order.placedByName.trim().length < 2) {
         errors.push('Customer name must be at least 2 characters long');
-        fieldErrors.placedByName = 'Customer name must be at least 2 characters long';
-      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
+        fieldErrors.placedByName = true;
+      } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
         errors.push('Customer name can only contain letters and spaces');
-        fieldErrors.placedByName = 'Customer name can only contain letters and spaces';
+        fieldErrors.placedByName = true;
       }
     }
 
-    const trimmedPhone = order.placedByPhoneNumber?.trim() || '';
-    if (trimmedPhone) {
-      const phoneNumber = trimmedPhone.replace(/\D/g, '');
+    // Validate phone number (optional, but if provided must be valid)
+    if (order.placedByPhoneNumber?.trim()) {
+      const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
       if (phoneNumber.length < 10 || phoneNumber.length > 11) {
         errors.push('Phone number must be 10-11 digits');
-        fieldErrors.placedByPhoneNumber = 'Phone number must be 10-11 digits';
+        fieldErrors.placedByPhoneNumber = true;
       }
     }
 
+    // Validate table selection
     if (!order.quickResponseID?.trim()) {
       errors.push('Table selection is required');
-      fieldErrors.quickResponseID = 'Table selection is required';
+      fieldErrors.quickResponseID = true;
     }
 
     // Validate selected items
@@ -187,7 +198,7 @@ const CheckoutModal = ({
     // Validate additional cost name if additional cost is provided
     if (additionalCost > 0 && !additionalCostName?.trim()) {
       errors.push('Additional cost name is required when amount is provided');
-      fieldErrors.additionalCostName = 'Additional cost name is required when amount is provided';
+      fieldErrors.additionalCostName = true;
     }
 
     // Set validation errors for UI
@@ -199,31 +210,32 @@ const CheckoutModal = ({
   // Validate customer information step (1B to 1C)
   const validateCustomerInfo = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    const fieldErrors: ValidationErrors = {};
+    const fieldErrors: any = {};
 
-    const trimmedName = order.placedByName?.trim() || '';
-    if (trimmedName) {
-      if (trimmedName.length < 2) {
+    // Validate customer name (optional, will default to "anonymous" if empty)
+    if (order.placedByName?.trim()) {
+      if (order.placedByName.trim().length < 2) {
         errors.push('Customer name must be at least 2 characters long');
-        fieldErrors.placedByName = 'Customer name must be at least 2 characters long';
-      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
+        fieldErrors.placedByName = true;
+      } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
         errors.push('Customer name can only contain letters and spaces');
-        fieldErrors.placedByName = 'Customer name can only contain letters and spaces';
+        fieldErrors.placedByName = true;
       }
     }
 
-    const trimmedPhone = order.placedByPhoneNumber?.trim() || '';
-    if (trimmedPhone) {
-      const phoneNumber = trimmedPhone.replace(/\D/g, '');
+    // Validate phone number (optional, but if provided must be valid)
+    if (order.placedByPhoneNumber?.trim()) {
+      const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ''); // Remove non-digits
       if (phoneNumber.length < 10 || phoneNumber.length > 11) {
         errors.push('Phone number must be 10-11 digits');
-        fieldErrors.placedByPhoneNumber = 'Phone number must be 10-11 digits';
+        fieldErrors.placedByPhoneNumber = true;
       }
     }
 
+    // Validate table selection
     if (!order.quickResponseID?.trim()) {
       errors.push('Table selection is required');
-      fieldErrors.quickResponseID = 'Table selection is required';
+      fieldErrors.quickResponseID = true;
     }
 
     // Set validation errors for UI
@@ -429,11 +441,12 @@ const CheckoutModal = ({
   ];
 
   // Calculate detailed total price directly from selectedItems to ensure accuracy
-  const calculateDetailedTotalPrice = () => {
+  const calculateDetailedTotalPrice = (): { itemsSubtotal: number; packingSubtotal: number; vatAmount: number } => {
     let itemsSubtotal = 0;
     let packingSubtotal = 0;
     let vatAmount = 0;
 
+    // First, calculate total subtotals for all items
     selectedItems.forEach((item: any) => {
       // Round each item calculation to prevent floating point errors
       const itemPrice = Number(item.price) || 0;
@@ -443,30 +456,40 @@ const CheckoutModal = ({
       itemsSubtotal += itemTotal;
 
       // Add packing cost only if item is packed
-      let itemPackingCost = 0;
       if (item.isPacked && item.packingCost > 0) {
         const packingCostPerItem = Number(item.packingCost) || 0;
         const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
         packingSubtotal += packingTotal;
-        itemPackingCost = packingTotal;
-      }
-
-      // Calculate VAT per item if enabled for this item's section
-      if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
-        const itemSubtotal = itemTotal + itemPackingCost;
-        vatAmount += Math.round(itemSubtotal * item.vatRate * 100) / 100;
       }
     });
 
     // Round subtotals
     itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
     packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+
+    // Calculate VAT on the total subtotal (items + packing), not per item
+    // Get VAT rate from the first item's category (assuming all items are from same category)
+    // If items are from different categories, use the first one found
+    if (selectedItems.length > 0 && categoriesData) {
+      const firstItem = selectedItems[0];
+      if (firstItem.categoryId) {
+        const category = categoriesData.find((cat: any) => cat.categoryId === firstItem.categoryId);
+        if (category?.isVatEnabled && category?.vatRate && category.vatRate > 0) {
+          // vatRate from endpoint is a percentage (e.g., 10 for 10%), so divide by 100
+          const vatRateDecimal = category.vatRate / 100;
+          const totalSubtotal = itemsSubtotal + packingSubtotal;
+          vatAmount = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
+        }
+      }
+    }
+
     vatAmount = Math.round(vatAmount * 100) / 100;
 
     return { itemsSubtotal, packingSubtotal, vatAmount };
   };
 
   const { itemsSubtotal, packingSubtotal, vatAmount } = calculateDetailedTotalPrice();
+  console.log(vatAmount)
   const subtotal = itemsSubtotal + packingSubtotal;
   // Round final total to 2 decimal places
   const finalTotalPrice = Math.round((subtotal + vatAmount + (Number(additionalCost) || 0)) * 100) / 100;
@@ -476,10 +499,10 @@ const CheckoutModal = ({
     const { name, value } = event.target;
 
     // Clear validation error for this field when user starts typing
-    if (validationErrors[name as keyof ValidationErrors]) {
+    if (validationErrors[name as keyof typeof validationErrors]) {
       setValidationErrors(prev => ({
         ...prev,
-        [name]: undefined
+        [name]: false
       }));
     }
 
@@ -511,6 +534,7 @@ const CheckoutModal = ({
     let vatCalc = 0;
 
     try {
+      // First, calculate total subtotals for all items
       items.forEach((item, index) => {
         if (!item.id || item.price === undefined || item.count === undefined) {
           errors.push(`Item ${index + 1}: Missing required data (id, price, or count)`);
@@ -525,21 +549,16 @@ const CheckoutModal = ({
         itemsSubtotal += itemTotal;
 
         // Add packing cost only if item is packed
-        let itemPackingCost = 0;
         if (item.isPacked && item.packingCost > 0) {
           const packingCostPerItem = Number(item.packingCost) || 0;
           const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
           packingSubtotal += packingTotal;
-          itemPackingCost = packingTotal;
-        }
-
-        // Calculate VAT per item if enabled
-        if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
-          const itemSubtotal = itemTotal + itemPackingCost;
-          vatCalc += Math.round(itemSubtotal * item.vatRate * 100) / 100;
         }
 
         // Log each item calculation
+        const category = item.categoryId && categoriesData 
+          ? categoriesData.find((cat: any) => cat.categoryId === item.categoryId)
+          : null;
         console.log(`Item ${index + 1} (${item.itemName || item.id}):`, {
           price: itemPrice,
           count: itemCount,
@@ -547,15 +566,29 @@ const CheckoutModal = ({
           isPacked: item.isPacked,
           packingCost: item.packingCost,
           packingTotal: item.isPacked ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) / 100 : 0,
-          isVatEnabled: item.isVatEnabled,
-          vatRate: item.vatRate,
-          itemVat: item.isVatEnabled && item.vatRate ? Math.round((itemTotal + itemPackingCost) * item.vatRate * 100) / 100 : 0
+          isVatEnabled: category?.isVatEnabled || false,
+          vatRate: category?.vatRate || 0,
         });
       });
 
       // Round subtotals
       itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
       packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+
+      // Calculate VAT on the total subtotal (items + packing), not per item
+      if (items.length > 0 && categoriesData) {
+        const firstItem = items[0];
+        if (firstItem.categoryId) {
+          const category = categoriesData.find((cat: any) => cat.categoryId === firstItem.categoryId);
+          if (category?.isVatEnabled && category?.vatRate && category.vatRate > 0) {
+            // vatRate from endpoint is a percentage (e.g., 10 for 10%), so divide by 100
+            const vatRateDecimal = category.vatRate / 100;
+            const totalSubtotal = itemsSubtotal + packingSubtotal;
+            vatCalc = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
+          }
+        }
+      }
+
       vatCalc = Math.round(vatCalc * 100) / 100;
 
       const baseSubtotal = itemsSubtotal + packingSubtotal;
@@ -592,22 +625,9 @@ const CheckoutModal = ({
   const validateOrderPayload = (payload: any): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
-    const trimmedName = payload.placedByName?.trim() || '';
-    if (trimmedName) {
-      if (trimmedName.length < 2) {
-        errors.push('Customer name must be at least 2 characters long');
-      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
-        errors.push('Customer name can only contain letters and spaces');
-      }
-    }
-
-    const trimmedPhone = payload.placedByPhoneNumber?.trim() || '';
-    if (trimmedPhone) {
-      const phoneNumber = trimmedPhone.replace(/\D/g, '');
-      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
-        errors.push('Phone number must be 10-11 digits');
-      }
-    }
+    // Validate required fields
+    // Name is optional (will default to "anonymous" if empty)
+    // Phone is optional
     if (!payload.quickResponseID?.trim()) {
       errors.push('Table selection is required');
     }
@@ -680,14 +700,13 @@ const CheckoutModal = ({
         };
       });
 
-      const normalizedCustomerName = order.placedByName?.trim() || "";
-      const payloadCustomerName = normalizedCustomerName || "Anonymous";
-      const normalizedPhoneNumber = order.placedByPhoneNumber?.trim() || "";
+      // Default name to "anonymous" if not provided
+      const customerName = order.placedByName?.trim() || "anonymous";
 
       payload = {
         status: 0,
-        placedByName: payloadCustomerName,
-        placedByPhoneNumber: normalizedPhoneNumber,
+        placedByName: customerName,
+        placedByPhoneNumber: order.placedByPhoneNumber?.trim() || "",
         quickResponseID: order.quickResponseID,
         comment: order.comment,
         additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
@@ -894,14 +913,13 @@ const CheckoutModal = ({
       };
     });
 
-    const normalizedCustomerName = order.placedByName?.trim() || "";
-    const payloadCustomerName = normalizedCustomerName || "Anonymous";
-    const normalizedPhoneNumber = order.placedByPhoneNumber?.trim() || "";
+    // Default name to "anonymous" if not provided
+    const customerName = order.placedByName?.trim() || "anonymous";
 
     const payload = {
       status: 0,
-      placedByName: payloadCustomerName,
-      placedByPhoneNumber: normalizedPhoneNumber,
+      placedByName: customerName,
+      placedByPhoneNumber: order.placedByPhoneNumber?.trim() || "",
       quickResponseID: order.quickResponseID,
       comment: order.comment,
       totalAmount: finalTotalPrice,  // Already rounded in calculation
@@ -1583,7 +1601,7 @@ const CheckoutModal = ({
                                     if (validationErrors.additionalCostName) {
                                       setValidationErrors(prev => ({
                                         ...prev,
-                                        additionalCostName: undefined
+                                        additionalCostName: false
                                       }));
                                     }
                                   }}
@@ -1591,7 +1609,7 @@ const CheckoutModal = ({
                                   name="additionalCostName"
                                   placeholder="Enter cost name"
                                   isInvalid={!!validationErrors.additionalCostName}
-                                  errorMessage={validationErrors.additionalCostName || ""}
+                                  errorMessage={validationErrors.additionalCostName ? "Cost name is required" : ""}
                                 />
                               </div>
                             </div>
@@ -1614,31 +1632,31 @@ const CheckoutModal = ({
                         <CustomInput
                           type="text"
                           onChange={handleInputChange}
-                          errorMessage={validationErrors.placedByName || response?.errors?.placedByName?.[0]}
-                          isInvalid={!!(validationErrors.placedByName || response?.errors?.placedByName?.length)}
+                          errorMessage={response?.errors?.placedByName?.[0]}
+                          isInvalid={!!validationErrors.placedByName}
                           value={order.placedByName}
                           name="placedByName"
-                          label="Name"
-                          placeholder="Enter name"
+                          label="Name (optional)"
+                          placeholder="Enter name (defaults to anonymous)"
                         />
                         <Spacer y={2} />
                         <CustomInput
                           type="tel"
                           errorMessage={
-                            validationErrors.placedByPhoneNumber || (!id && response?.errors?.placedByPhoneNumber?.[0])
+                            !id && response?.errors?.placedByPhoneNumber?.[0]
                           }
-                          isInvalid={!!(validationErrors.placedByPhoneNumber || (!id && response?.errors?.placedByPhoneNumber?.length))}
+                          isInvalid={!!validationErrors.placedByPhoneNumber}
                           onChange={handleInputChange}
                           value={order.placedByPhoneNumber}
                           name="placedByPhoneNumber"
-                          label="Phone number"
+                          label="Phone number (optional)"
                           placeholder="Enter phone number"
                         />
                         <Spacer y={2} />
 
                         <SelectInput
-                          errorMessage={validationErrors.quickResponseID || response?.errors?.quickResponseID?.[0]}
-                          isInvalid={!!(validationErrors.quickResponseID || response?.errors?.quickResponseID?.length)}
+                          errorMessage={response?.errors?.quickResponseID?.[0]}
+                          isInvalid={!!validationErrors.quickResponseID}
                           label="Select a table"
                           placeholder="Select table"
                           name="quickResponseID"
@@ -1802,12 +1820,12 @@ const CheckoutModal = ({
                             value={order.placedByName}
                             name="placedByName"
                             onChange={handleInputChange}
-                            label="Customer name"
-                            placeholder="Enter customer name"
+                            label="Customer name (optional)"
+                            placeholder="Enter customer name (defaults to anonymous)"
                             isRequired={false}
                             classnames="w-full h-12 mb-4"
-                            isInvalid={!!validationErrors.placedByName}
-                            errorMessage={validationErrors.placedByName || ""}
+                            isInvalid={validationErrors.placedByName}
+                            errorMessage={validationErrors.placedByName ? "Name must be at least 2 characters and contain only letters" : ""}
                           />
 
                           <CustomInput
@@ -1815,12 +1833,12 @@ const CheckoutModal = ({
                             value={order.placedByPhoneNumber}
                             name="placedByPhoneNumber"
                             onChange={handleInputChange}
-                            label="Phone number"
+                            label="Phone number (optional)"
                             placeholder="Enter phone number"
                             isRequired={false}
                             classnames={"h-12 w-full mb-4"}
-                            isInvalid={!!validationErrors.placedByPhoneNumber}
-                            errorMessage={validationErrors.placedByPhoneNumber || ""}
+                            isInvalid={validationErrors.placedByPhoneNumber}
+                            errorMessage={validationErrors.placedByPhoneNumber ? "Phone number must be 10-11 digits" : ""}
                           />
 
                           <div className="w-full">
@@ -1834,8 +1852,8 @@ const CheckoutModal = ({
                               value={order.quickResponseID}
                               contents={qr}
                               className="w-full"
-                              isInvalid={!!validationErrors.quickResponseID}
-                              errorMessage={validationErrors.quickResponseID || ""}
+                              isInvalid={validationErrors.quickResponseID}
+                              errorMessage={validationErrors.quickResponseID ? "Table selection is required" : ""}
                               isMobile={true}
                             />
                           </div>
@@ -1879,7 +1897,7 @@ const CheckoutModal = ({
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-grey600">Name:</span>
-                                <span className="text-black font-medium">{order.placedByName?.trim() || "Anonymous"}</span>
+                                <span className="text-black font-medium">{order.placedByName}</span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-grey600">Phone:</span>
