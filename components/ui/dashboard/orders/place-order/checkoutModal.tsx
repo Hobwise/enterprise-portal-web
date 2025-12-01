@@ -352,11 +352,11 @@ const CheckoutModal = ({
 
           // Explicitly close the modal
           onOpenChange(false);
-        } else {
+      } else {
           // Not on orders page - navigate there
           router.push("/dashboard/orders");
-        }
-      } catch (error) {
+      }
+    } catch (error) {
         console.error('Error in Pay Later:', error);
       } finally {
         setIsPayLaterLoading(false);
@@ -417,12 +417,12 @@ const CheckoutModal = ({
 
         // Close the modal
         onOpenChange(false);
-      } else {
+        } else {
         // Not on orders page - close modal and navigate there
         onOpenChange(false);
         router.push("/dashboard/orders");
-      }
-    } catch (error) {
+        }
+      } catch (error) {
       console.error('Error in Cancel Payment:', error);
       // Still close the modal even if refresh fails
       onOpenChange(false);
@@ -439,6 +439,27 @@ const CheckoutModal = ({
     },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
+
+  const getVatRateDecimal = (): number => {
+    if (!selectedItems || selectedItems.length === 0) return 0;
+
+    for (const item of selectedItems) {
+      // Prefer category-based VAT when available
+      if (item?.categoryId && categoriesData) {
+        const category = categoriesData.find((cat: any) => cat.categoryId === item.categoryId);
+        if (category?.isVatEnabled && category?.vatRate && category.vatRate > 0) {
+          return category.vatRate > 1 ? category.vatRate / 100 : category.vatRate;
+        }
+      }
+
+      // Fallback to item-level VAT if present (used in POS/other flows)
+      if (item?.isVatEnabled && item?.vatRate && item.vatRate > 0) {
+        return item.vatRate > 1 ? item.vatRate / 100 : item.vatRate;
+      }
+    }
+
+    return 0;
+  };
 
   // Calculate detailed total price directly from selectedItems to ensure accuracy
   const calculateDetailedTotalPrice = (): { itemsSubtotal: number; packingSubtotal: number; vatAmount: number } => {
@@ -468,19 +489,10 @@ const CheckoutModal = ({
     packingSubtotal = Math.round(packingSubtotal * 100) / 100;
 
     // Calculate VAT on the total subtotal (items + packing), not per item
-    // Get VAT rate from the first item's category (assuming all items are from same category)
-    // If items are from different categories, use the first one found
-    if (selectedItems.length > 0 && categoriesData) {
-      const firstItem = selectedItems[0];
-      if (firstItem.categoryId) {
-        const category = categoriesData.find((cat: any) => cat.categoryId === firstItem.categoryId);
-        if (category?.isVatEnabled && category?.vatRate && category.vatRate > 0) {
-          // vatRate from endpoint is a percentage (e.g., 10 for 10%), so divide by 100
-          const vatRateDecimal = category.vatRate / 100;
-          const totalSubtotal = itemsSubtotal + packingSubtotal;
-          vatAmount = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
-        }
-      }
+    const vatRateDecimal = getVatRateDecimal();
+    if (vatRateDecimal > 0) {
+      const totalSubtotal = itemsSubtotal + packingSubtotal;
+      vatAmount = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
     }
 
     vatAmount = Math.round(vatAmount * 100) / 100;
@@ -538,7 +550,7 @@ const CheckoutModal = ({
       items.forEach((item, index) => {
         if (!item.id || item.price === undefined || item.count === undefined) {
           errors.push(`Item ${index + 1}: Missing required data (id, price, or count)`);
-          return;
+        return;
         }
 
         // Use same calculation logic as main function
@@ -576,17 +588,10 @@ const CheckoutModal = ({
       packingSubtotal = Math.round(packingSubtotal * 100) / 100;
 
       // Calculate VAT on the total subtotal (items + packing), not per item
-      if (items.length > 0 && categoriesData) {
-        const firstItem = items[0];
-        if (firstItem.categoryId) {
-          const category = categoriesData.find((cat: any) => cat.categoryId === firstItem.categoryId);
-          if (category?.isVatEnabled && category?.vatRate && category.vatRate > 0) {
-            // vatRate from endpoint is a percentage (e.g., 10 for 10%), so divide by 100
-            const vatRateDecimal = category.vatRate / 100;
-            const totalSubtotal = itemsSubtotal + packingSubtotal;
-            vatCalc = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
-          }
-        }
+      const vatRateDecimal = getVatRateDecimal();
+      if (vatRateDecimal > 0) {
+        const totalSubtotal = itemsSubtotal + packingSubtotal;
+        vatCalc = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
       }
 
       vatCalc = Math.round(vatCalc * 100) / 100;
@@ -635,7 +640,7 @@ const CheckoutModal = ({
     // Validate order details
     if (!Array.isArray(payload.orderDetails) || payload.orderDetails.length === 0) {
       errors.push('At least one item must be selected');
-    } else {
+      } else {
       payload.orderDetails.forEach((item: any, index: number) => {
         if (!item.itemID) {
           errors.push(`Item ${index + 1}: Missing item ID`);
@@ -870,7 +875,7 @@ const CheckoutModal = ({
         type: "error",
       });
       throw new Error('Validation failed');
-    } else {
+        } else {
       console.error('Unexpected response format:', data);
       console.error('Failed payload:', payload);
       notify({
@@ -988,7 +993,7 @@ const CheckoutModal = ({
       if (data && 'errors' in data && data.errors?.placedByPhoneNumber) {
         const { placedByPhoneNumber, ...otherErrors } = data.errors;
         setResponse({ ...data, errors: otherErrors } as ApiResponse);
-      } else {
+        } else {
         setResponse(data as ApiResponse);
       }
     } catch (error) {
@@ -1337,18 +1342,18 @@ const CheckoutModal = ({
                   {/* Desktop Layout */}
                   <div className="hidden md:block">
                     <ModalHeader className="flex flex-col mt-5 gap-1">
-                      <div className="flex flex-row flex-wrap  justify-between">
-                        <div>
-                          <div className="text-[24px] leading-8 font-semibold">
+      <div className="flex flex-row flex-wrap  justify-between">
+        <div>
+          <div className="text-[24px] leading-8 font-semibold">
                             <span className="text-black">Confirm order</span>
-                          </div>
-                          <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
+          </div>
+          <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
                             Confirm order before checkout
-                          </p>
-                        </div>
+          </p>
+        </div>
 
                         <div className="gap-3 flex ">
-                          <CustomButton
+          <CustomButton
                             onClick={onOpenChange}
                             className="py-2 px-4 mb-0 bg-white border border-primaryGrey"
                           >
@@ -1359,19 +1364,19 @@ const CheckoutModal = ({
                             loading={loading}
                             disabled={loading}
                             onClick={handleCheckoutClick}
-                            className="py-2 px-4 mb-0 text-white"
-                            backgroundColor="bg-primaryColor"
-                          >
-                            <div className="flex gap-2 items-center justify-center">
+            className="py-2 px-4 mb-0 text-white"
+            backgroundColor="bg-primaryColor"
+          >
+            <div className="flex gap-2 items-center justify-center">
                               <p>Checkout {formatPrice(finalTotalPrice, 'NGN')} </p>
-                              <HiArrowLongLeft className="text-[22px] rotate-180" />
-                            </div>
-                          </CustomButton>
-                        </div>
+              <HiArrowLongLeft className="text-[22px] rotate-180" />
+            </div>
+          </CustomButton>
+        </div>
                       </div>
                       <Divider className="bg-primaryGrey" />
                     </ModalHeader>
-                  </div>
+      </div>
 
                   {/* Mobile Layout */}
                   <div className="block md:hidden">
@@ -1402,7 +1407,7 @@ const CheckoutModal = ({
                           <div>
                             <div className="text-xl font-semibold text-black">
                               Customer Details
-                            </div>
+              </div>
                             <p className="text-sm text-gray-500 mt-1">
                               Step 2 of 3
                             </p>
@@ -1423,47 +1428,47 @@ const CheckoutModal = ({
                           <div>
                             <div className="text-xl font-semibold text-black">
                               Review Order
-                            </div>
+          </div>
                             <p className="text-sm text-gray-500 mt-1">
                               Step 3 of 3
                             </p>
-                          </div>
+        </div>
                           <CustomButton
                             onClick={() => handleMobileNavigation('1B')}
                             className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
                           >
                             Back
                           </CustomButton>
-                        </div>
+          </div>
                       </ModalHeader>
                     )}
-                  </div>
-
+                </div>
+                
                   {/* Desktop ModalBody */}
                   <div className="hidden md:block">
                     <ModalBody>
                       <div className="flex lg:flex-row flex-col gap-3 mb-4">
                         <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
                         {selectedItems?.map((item: any, index: number) => {
-                          return (
+                    return (
                             <React.Fragment key={item.uniqueKey || `${item.id}-${index}`}>
-                              <div
+                        <div
                                 className="flex justify-between gap-2"
-                              >
+                        >
                                 <div className="py-3 w-[250px] rounded-lg  text-black  flex">
                                   <div className="h-[60px] w-[60px]">
-                                    <Image
-                                      src={
-                                        item?.image
-                                          ? `data:image/jpeg;base64,${item?.image}`
-                                          : noImage
-                                      }
+                              <Image
+                                src={
+                                  item?.image
+                                    ? `data:image/jpeg;base64,${item?.image}`
+                                    : noImage
+                                }
                                       width={60}
                                       height={60}
                                       className="object-cover rounded-lg bg-cover h-[60px]"
-                                      aria-label="uploaded image"
-                                      alt="uploaded image(s)"
-                                    />
+                                aria-label="uploaded image"
+                                alt="uploaded image(s)"
+                              />
                                   </div>
 
                                   <div className="px-3 flex  flex-col text-sm justify-center">
@@ -1497,36 +1502,36 @@ const CheckoutModal = ({
                                       <h3 className="font-[600]">
                                         {formatPrice(item?.price, 'NGN')}
                                       </h3>
-                                    </div>
-                                  </div>
+                            </div>
+                          </div>
                                 </div>
                                 <div className="flex  items-center">
-                                  <Button
-                                    onPress={() => handleDecrement(item.id)}
-                                    isIconOnly
-                                    size="sm"
+                            <Button
+                              onPress={() => handleDecrement(item.id)}
+                              isIconOnly
+                              size="sm"
                                     radius="sm"
-                                    variant="faded"
+                              variant="faded"
                                     className="border h-[35px] w-[30px] border-primaryGrey bg-white"
-                                    aria-label="minus"
-                                  >
-                                    <FaMinus />
-                                  </Button>
+                              aria-label="minus"
+                            >
+                              <FaMinus />
+                            </Button>
                                   <span className="font-bold  text-black py-2 px-4">
-                                    {item.count}
-                                  </span>
-                                  <Button
-                                    onPress={() => handleIncrement(item.id)}
-                                    isIconOnly
-                                    radius="sm"
-                                    size="sm"
-                                    variant="faded"
+                              {item.count}
+                            </span>
+                            <Button
+                              onPress={() => handleIncrement(item.id)}
+                              isIconOnly
+                              radius="sm"
+                              size="sm"
+                              variant="faded"
                                     className="border h-[35px] w-[30px] border-primaryGrey bg-white"
-                                    aria-label="plus"
-                                  >
-                                    <FaPlus />
-                                  </Button>
-                                </div>
+                              aria-label="plus"
+                            >
+                              <FaPlus />
+                            </Button>
+                          </div>
                                 <div className=" md:w-[150px] hidden w-auto md:grid place-content-center">
                                   <div className="flex flex-col">
                                     <h3 className="font-semibold text-black">
@@ -1544,13 +1549,13 @@ const CheckoutModal = ({
                                     )}
                                   </div>
                                 </div>
-                              </div>
-                              {index !== selectedItems?.length - 1 && (
-                                <Divider className="bg-[#E4E7EC80]" />
-                              )}
-                            </React.Fragment>
-                          );
-                        })}
+                        </div>
+                        {index !== selectedItems?.length - 1 && (
+                          <Divider className="bg-[#E4E7EC80]" />
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                         <div className="flex justify-end mt-auto">
                           <div className="flex flex-col gap-2">
                             <div className="flex justify-between">
@@ -1558,7 +1563,7 @@ const CheckoutModal = ({
                               <p className="text-black">
                                 {formatPrice(subtotal, 'NGN')}
                               </p>
-                            </div>
+                </div>
                             <div className="flex justify-between">
                               <p className="text-black font-bold">
                                 VAT:{" "}
@@ -1566,7 +1571,7 @@ const CheckoutModal = ({
                               <p className="text-black">
                                 {formatPrice(vatAmount, 'NGN')}
                               </p>
-                            </div>
+                </div>
                             <div className="flex items-center justify-between gap-2">
                               <p className="text-black font-bold">
                                 Additional cost:{" "}
@@ -1777,8 +1782,8 @@ const CheckoutModal = ({
                           <div className="bg-white pt-4 pb-safe border-t border-gray-200 mt-6">
                           {/* Mobile Pricing Summary */}
                           <div className="p-4 bg-gray-50 rounded-lg mb-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
                                 <span className="text-sm text-grey600">Subtotal</span>
                                 <span className="font-semibold text-sm text-black">
                                   {formatPrice(subtotal, 'NGN')}
@@ -1789,8 +1794,8 @@ const CheckoutModal = ({
                                 <span className="font-semibold text-sm text-black">
                                   {formatPrice(vatAmount, 'NGN')}
                                 </span>
-                              </div>
-                              <Divider className="my-2" />
+                    </div>
+                    <Divider className="my-2" />
                               <div className="flex justify-between items-center">
                                 <span className="font-semibold text-base text-black">Total</span>
                                 <span className="font-bold text-lg text-primaryColor">
@@ -1929,12 +1934,12 @@ const CheckoutModal = ({
                                     <p className="text-xs text-grey600">
                                       Qty: {item.count} × {formatPrice(item.price, 'NGN')}
                                       {item.isPacked && ` + Packing (${formatPrice(item.packingCost, 'NGN')})`}
-                                    </p>
-                                  </div>
+                      </p>
+                    </div>
                                   <p className="text-sm font-semibold text-black">
                                     {formatPrice(item.price * item.count + (item.isPacked ? item.packingCost * item.count : 0), 'NGN')}
                                   </p>
-                                </div>
+                  </div>
                               ))}
                             </div>
                           </div>
@@ -1978,8 +1983,8 @@ const CheckoutModal = ({
                         </div>
                       </ModalBody>
                     )}
-                  </div>
-                </>
+                </div>
+              </>
               )}
               {screen === 2 && (
                 <>
@@ -2041,8 +2046,8 @@ const CheckoutModal = ({
                           </div>
                           <p className="text-sm text-primaryColor mt-1 font-semibold">
                             {formatPrice(finalTotalPrice, 'NGN')}
-                          </p>
-                        </div>
+                    </p>
+                     </div>
                         <CustomButton
                           onClick={() => {
                             setScreen(1);
@@ -2052,7 +2057,7 @@ const CheckoutModal = ({
                         >
                           Back
                         </CustomButton>
-                      </div>
+                  </div>
                     </ModalHeader>
 
                     <ModalBody className="flex-1 overflow-y-auto pb-safe" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
@@ -2090,8 +2095,8 @@ const CheckoutModal = ({
                       </div>
                     </ModalBody>
                   </div>
-                </>
-              )}
+              </>
+            )}
               {screen === 3 && (
                 <>
                   <div

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Item, MenuItem, OrderSummary } from '@/app/pos/types';
-import { MAX_ITEM_QUANTITY, MIN_ITEM_QUANTITY, VAT_RATE } from '@/app/pos/constants';
+import { MAX_ITEM_QUANTITY, MIN_ITEM_QUANTITY } from '@/app/pos/constants';
 
 export const useOrderCart = (menuItems: MenuItem[]) => {
   const [orderItems, setOrderItems] = useState<Item[]>([]);
@@ -124,25 +124,38 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
   }, []);
 
   const calculateOrderSummary = useCallback((): OrderSummary => {
-    let subtotal = 0;
-    let vatAmount = 0;
+    let itemsSubtotal = 0;
+    let packingSubtotal = 0;
 
     orderItems.forEach((item) => {
-      const itemTotal = item.price * item.count;
-      const packingTotal = item.isPacked
-        ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
-        : 0;
-      const itemSubtotal = itemTotal + packingTotal;
+      const itemPrice = Number(item.price) || 0;
+      const itemCount = Number(item.count) || 0;
+      const itemTotal = Math.round(itemPrice * itemCount * 100) / 100;
+      itemsSubtotal += itemTotal;
 
-      subtotal += itemSubtotal;
-
-      // Apply VAT only if enabled for this item's section
-      if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
-        vatAmount += itemSubtotal * item.vatRate;
+      if (item.isPacked && item.packingCost > 0) {
+        const packingCostPerItem = Number(item.packingCost) || 0;
+        const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
+        packingSubtotal += packingTotal;
       }
     });
 
-    const total = subtotal + vatAmount;
+    itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
+    packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+
+    let vatAmount = 0;
+    const vatSourceItem = orderItems.find(
+      (item) => item.isVatEnabled && item.vatRate && item.vatRate > 0
+    );
+
+    if (vatSourceItem) {
+      const vatRateDecimal = vatSourceItem.vatRate / 100;
+      const totalSubtotal = itemsSubtotal + packingSubtotal;
+      vatAmount = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
+    }
+
+    const subtotal = Math.round((itemsSubtotal + packingSubtotal) * 100) / 100;
+    const total = Math.round((subtotal + vatAmount) * 100) / 100;
     const itemCount = orderItems.reduce((sum, item) => sum + item.count, 0);
 
     return { subtotal, vatAmount, total, itemCount };
