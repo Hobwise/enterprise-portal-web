@@ -1149,7 +1149,8 @@ const CheckoutModal = ({
       };
 
       const data = await completeOrderWithPayment(payload, orderId);
-
+ 
+       console.log('CompleteOrderWithPayment response:', data);
       if (hasDataProperty(data) && data.data?.isSuccessful) {
         // Clear loading state immediately
         setIsLoading(false);

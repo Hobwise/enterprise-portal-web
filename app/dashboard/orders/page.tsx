@@ -233,7 +233,7 @@ const OrdersContent: React.FC = () => {
               >
                 <div className="space-y-1 lg:space-y-2">
                   <h3 className={`text-xs lg:text-sm font-semibold uppercase tracking-wide ${isActive ? 'text-white/90' : 'text-gray-500'}`}>
-                    {category.name}
+                    {category.name === 'AwaitingConfirmation Orders' ? 'AWAITING CONFIRMATION ORDERS' : category.name}
                   </h3>
                   <div className={`text-2xl lg:text-3xl font-bold ${isActive ? 'text-white' : 'text-gray-900'}`}>
                     {formatPrice(category.totalAmount, 'NGN')}
