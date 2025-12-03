@@ -139,28 +139,19 @@ const Msg = ({ title, text }: { title: string; text: string }) => {
 
 export const notify = ({ title, text, type }: notifyType) => {
   const toastMessage = <Msg title={title} text={text} />;
-  const commonOptions = {
-    ...toastData,
-    className: "bg-white border-none", // Apply white background and no border by default
-    style: {
-      backgroundColor: "white",
-      border: "none",
-    },
-  };
-
   switch (type) {
     case "warning":
     case "caution": // Handle "caution" as a warning type
-      toast.warning(toastMessage, commonOptions);
+      toast.warning(toastMessage, toastData);
       break;
     case "success":
-      toast.success(toastMessage, commonOptions);
+      toast.success(toastMessage, toastData);
       break;
     case "error":
-      toast.error(toastMessage, commonOptions);
+      toast.error(toastMessage, toastData);
       break;
     default:
-      toast(toastMessage, commonOptions);
+      toast(toastMessage, toastData);
       break;
   }
 };
