@@ -1150,7 +1150,6 @@ const CheckoutModal = ({
 
       const data = await completeOrderWithPayment(payload, orderId);
  
-       console.log('CompleteOrderWithPayment response:', data);
       if (hasDataProperty(data) && data.data?.isSuccessful) {
         // Clear loading state immediately
         setIsLoading(false);
@@ -1169,9 +1168,8 @@ const CheckoutModal = ({
 
         // Call onOrderSuccess to clear cart (on POS page) BEFORE closing modal
         // This ensures cart is cleared after payment is confirmed
-        if (onOrderSuccess) {
           onOrderSuccess();
-        }
+        
 
         // Close modal or navigate
         if (pathname === '/dashboard/orders') {

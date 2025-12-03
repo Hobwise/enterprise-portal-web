@@ -113,14 +113,11 @@ type ToastData = {
     | "bottom-left"
     | "bottom-center";
   duration: number;
-  closeAfter?: number;
 };
 
 const toastData: ToastData = {
   position: "top-right",
-  duration: 2000,
-  closeAfter: 3000,
-};
+  duration: 3000,};
 
 interface notifyType {
   title?: any;
