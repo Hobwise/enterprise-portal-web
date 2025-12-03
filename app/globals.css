@@ -180,24 +180,24 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 40rem #ffff inset;
 }
 .Toastify__toast--error {
-  border: 2px solid #eb5757;
   border-radius: 15px !important;
-  background: #fae1e2 !important;
+  background: #fff !important;
+  border: none !important;
 }
 .Toastify__toast-icon {
   width: 20px !important;
 }
 
 .Toastify__toast--success {
-  border: 2px solid #3a9ea5 !important;
+  border: none !important;
   border-radius: 15px !important;
-  background: #f0f9fa !important;
+  background: #fff !important;
 }
 
 .Toastify__toast--warning {
-  border: 2px solid #e78326 !important;
+  border: none !important;
   border-radius: 15px !important;
-  background: #fadfc5 !important;
+  background: #fff !important;
 }
 
 .Toastify__toast-body {

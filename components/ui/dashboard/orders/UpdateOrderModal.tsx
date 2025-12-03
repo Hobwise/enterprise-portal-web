@@ -103,6 +103,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   const [additionalCostName, setAdditionalCostName] = useState<string>("");
   const [vatAmount, setVatAmount] = useState<number>(0);
   const [isVatApplied, setIsVatApplied] = useState<boolean>(true);
+  const [vatRate, setVatRate] = useState<number>(0);
 
   // Timer ref for cleanup
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -212,8 +213,23 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       setAdditionalCostName(fullOrderData.additionalCostName || "");
 
       // Extract VAT information from order details
-      setVatAmount(fullOrderData.vatAmount || 0);
+      const initialVatAmount = fullOrderData.vatAmount || 0;
+      const initialSubtotal = fullOrderData.subTotalAmount || 0;
       setIsVatApplied(fullOrderData.isVatApplied ?? true);
+
+      // Derive a VAT rate from the original order so we can recalculate when quantities change
+      if (initialVatAmount > 0 && initialSubtotal > 0) {
+        setVatRate(initialVatAmount / initialSubtotal);
+      } else {
+        setVatRate(0);
+      }
+
+      // Set initial VAT amount based on derived rate and current items
+      if (fullOrderData.isVatApplied && initialVatAmount > 0 && initialSubtotal > 0) {
+        setVatAmount(initialVatAmount);
+      } else {
+        setVatAmount(0);
+      }
 
       setIsDataProcessingComplete(true);
     }
@@ -300,6 +316,17 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       return acc + itemTotal + packingTotal;
     }, 0);
   };
+
+  // Recalculate VAT amount whenever items or VAT settings change
+  useEffect(() => {
+    const subtotal = calculateTotalPrice();
+    if (isVatApplied && vatRate > 0) {
+      const newVatAmount = Math.round(subtotal * vatRate);
+      setVatAmount(newVatAmount);
+    } else {
+      setVatAmount(0);
+    }
+  }, [selectedItems, isVatApplied, vatRate]);
 
   // Handle Add Item - navigate to place-order page (admin) or POS page (POS users) with current order
   const handleAddItem = () => {

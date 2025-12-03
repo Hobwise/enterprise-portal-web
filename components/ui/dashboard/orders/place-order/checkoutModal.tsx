@@ -137,14 +137,19 @@ const CheckoutModal = ({
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [additionalCost, setAdditionalCost] = useState(0);
   const [additionalCostName, setAdditionalCostName] = useState("");
+  const [vatAmount, setVatAmount] = useState(0);
+  const [isVatApplied, setIsVatApplied] = useState(true);
 
 
 
 
   useEffect(() => {
     if (orderDetails) {
-      setAdditionalCost(orderDetails.additionalCost);
-      setAdditionalCostName(orderDetails.additionalCostName);
+      setAdditionalCost(orderDetails.additionalCost || 0);
+      setAdditionalCostName(orderDetails.additionalCostName || "");
+      // Keep VAT handling consistent with UpdateOrderModal: use stored values when present
+      setVatAmount(orderDetails.vatAmount || 0);
+      setIsVatApplied(orderDetails.isVatApplied ?? true);
     }
   }, [orderDetails]);
 
@@ -488,8 +493,21 @@ const CheckoutModal = ({
     itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
     packingSubtotal = Math.round(packingSubtotal * 100) / 100;
 
+    // Decide VAT rate source:
+    // - For existing orders (id present) use backend VAT percentage (vatAmount / subTotalAmount)
+    // - For new orders fall back to category/item-based VAT
+    let vatRateDecimal = 0;
+
+    const backendSubtotal = orderDetails?.subTotalAmount;
+    if (id && orderDetails?.vatAmount && backendSubtotal && backendSubtotal > 0) {
+      // Derive VAT percentage from backend so behaviour matches backend calculations
+      vatRateDecimal = orderDetails.vatAmount / backendSubtotal;
+    } else {
+      // Fallback to existing frontend VAT logic
+      vatRateDecimal = getVatRateDecimal();
+    }
+
     // Calculate VAT on the total subtotal (items + packing), not per item
-    const vatRateDecimal = getVatRateDecimal();
     if (vatRateDecimal > 0) {
       const totalSubtotal = itemsSubtotal + packingSubtotal;
       vatAmount = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
@@ -500,11 +518,11 @@ const CheckoutModal = ({
     return { itemsSubtotal, packingSubtotal, vatAmount };
   };
 
-  const { itemsSubtotal, packingSubtotal, vatAmount } = calculateDetailedTotalPrice();
-  console.log(vatAmount)
+  const { itemsSubtotal, packingSubtotal, vatAmount: calculatedVatAmount } = calculateDetailedTotalPrice();
   const subtotal = itemsSubtotal + packingSubtotal;
-  // Round final total to 2 decimal places
-  const finalTotalPrice = Math.round((subtotal + vatAmount + (Number(additionalCost) || 0)) * 100) / 100;
+  // Always recalculate VAT from current items so quantity changes are reflected
+  const effectiveVatAmount = isVatApplied ? calculatedVatAmount : 0;
+  const finalTotalPrice = Math.round((subtotal + effectiveVatAmount + (Number(additionalCost) || 0)) * 100) / 100;
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -716,6 +734,9 @@ const CheckoutModal = ({
         comment: order.comment,
         additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
         additionalCostName: additionalCostName || '',
+        // Store VAT information the same way it's read by UpdateOrderModal
+        vatAmount: effectiveVatAmount,
+        isVatApplied,
         totalAmount: finalTotalPrice,  // Already rounded in calculation
         orderDetails: transformedArray,
       };
@@ -930,6 +951,9 @@ const CheckoutModal = ({
       totalAmount: finalTotalPrice,  // Already rounded in calculation
       additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
       additionalCostName: additionalCostName || '',
+      // Store VAT information so UpdateOrderModal can read it later
+      vatAmount: effectiveVatAmount,
+      isVatApplied,
       orderDetails: transformedArray,
     };
 
@@ -1563,14 +1587,16 @@ const CheckoutModal = ({
                                 {formatPrice(subtotal, 'NGN')}
                               </p>
                 </div>
-                            <div className="flex justify-between">
-                              <p className="text-black font-bold">
-                                VAT:{" "}
-                              </p>
-                              <p className="text-black">
-                                {formatPrice(vatAmount, 'NGN')}
-                              </p>
-                </div>
+                            {isVatApplied && (
+                              <div className="flex justify-between">
+                                <p className="text-black font-bold">
+                                  VAT:{" "}
+                                </p>
+                                <p className="text-black">
+                                  {formatPrice(effectiveVatAmount, 'NGN')}
+                                </p>
+                              </div>
+                            )}
                             <div className="flex items-center justify-between gap-2">
                               <p className="text-black font-bold">
                                 Additional cost:{" "}
@@ -1788,12 +1814,14 @@ const CheckoutModal = ({
                                   {formatPrice(subtotal, 'NGN')}
                                 </span>
                               </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-grey600">VAT</span>
-                                <span className="font-semibold text-sm text-black">
-                                  {formatPrice(vatAmount, 'NGN')}
-                                </span>
-                    </div>
+                              {isVatApplied && (
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-grey600">VAT</span>
+                                  <span className="font-semibold text-sm text-black">
+                                    {formatPrice(effectiveVatAmount, 'NGN')}
+                                  </span>
+                                </div>
+                              )}
                     <Divider className="my-2" />
                               <div className="flex justify-between items-center">
                                 <span className="font-semibold text-base text-black">Total</span>
@@ -1951,10 +1979,12 @@ const CheckoutModal = ({
                                 <span className="text-grey600">Subtotal</span>
                                 <span className="font-semibold text-black">{formatPrice(subtotal, 'NGN')}</span>
                               </div>
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-grey600">VAT</span>
-                                <span className="font-semibold text-black">{formatPrice(vatAmount, 'NGN')}</span>
-                              </div>
+                              {isVatApplied && (
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-grey600">VAT</span>
+                                  <span className="font-semibold text-black">{formatPrice(effectiveVatAmount, 'NGN')}</span>
+                                </div>
+                              )}
                               <Divider className="my-2" />
                               <div className="flex justify-between items-center">
                                 <span className="font-bold text-lg text-black">Total</span>
