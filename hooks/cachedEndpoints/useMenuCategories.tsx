@@ -20,6 +20,8 @@ interface Category {
   categoryId: string;
   orderIndex: number;
   categoryName: string;
+  isVatEnabled: boolean;
+  vatRate: number;
   menus: Menu[];
 }
 

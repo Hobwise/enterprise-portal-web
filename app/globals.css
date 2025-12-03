@@ -180,7 +180,6 @@ input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0px 40rem #ffff inset;
 }
 .Toastify__toast--error {
-  border: 2px solid #eb5757;
   border-radius: 15px !important;
   background: #fff !important;
   border: none !important;
