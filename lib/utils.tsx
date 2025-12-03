@@ -15,7 +15,8 @@ import { toPng } from "html-to-image";
 
 import cookie from "js-cookie";
 import Image from "next/image";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { twMerge } from "tailwind-merge";
 
 import * as XLSX from "xlsx";
@@ -112,12 +113,14 @@ type ToastData = {
     | "bottom-right"
     | "bottom-left"
     | "bottom-center";
-  duration: number;
+  autoClose: number;
+  className?: string; // Add className to ToastData
 };
 
 const toastData: ToastData = {
   position: "top-right",
-  duration: 3000,};
+  autoClose: 3000,
+};
 
 interface notifyType {
   title?: any;
@@ -133,19 +136,34 @@ const Msg = ({ title, text }: { title: string; text: string }) => {
     </div>
   );
 };
+
 export const notify = ({ title, text, type }: notifyType) => {
-  type === "warning" &&
-    toast(<Msg title={title} text={text} />, {
-      ...toastData,
-      icon: "⚠️",
-      style: {
-        background: "#F59E0B",
-        color: "#fff",
-      },
-    });
-  type === "success" &&
-    toast.success(<Msg title={title} text={text} />, toastData);
-  type === "error" && toast.error(<Msg title={title} text={text} />, toastData);
+  const toastMessage = <Msg title={title} text={text} />;
+  const commonOptions = {
+    ...toastData,
+    className: "bg-white border-none", // Apply white background and no border by default
+    style: {
+      backgroundColor: "white",
+      border: "none",
+    },
+  };
+
+  switch (type) {
+    case "warning":
+      toast.warning(toastMessage, commonOptions);
+      break;
+    case "success":
+      toast.success(toastMessage, commonOptions);
+      break;
+    case "error":
+      // Error toasts might need different styling if not specified,
+      // but applying commonOptions for consistency with a white background and no border.
+      toast.error(toastMessage, commonOptions);
+      break;
+    default:
+      toast(toastMessage, commonOptions);
+      break;
+  }
 };
 export function getInitials(name: string) {
   const words = name.split(" ");
