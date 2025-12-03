@@ -150,14 +150,13 @@ export const notify = ({ title, text, type }: notifyType) => {
 
   switch (type) {
     case "warning":
+    case "caution": // Handle "caution" as a warning type
       toast.warning(toastMessage, commonOptions);
       break;
     case "success":
       toast.success(toastMessage, commonOptions);
       break;
     case "error":
-      // Error toasts might need different styling if not specified,
-      // but applying commonOptions for consistency with a white background and no border.
       toast.error(toastMessage, commonOptions);
       break;
     default:
