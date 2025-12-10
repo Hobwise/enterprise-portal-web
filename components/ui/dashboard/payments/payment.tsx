@@ -22,7 +22,7 @@ import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 
 import { GrFormView } from 'react-icons/gr';
-import { columns, statusColorMap, statusDataMap } from './data';
+import { columns, paymentTypeMap, statusColorMap, statusDataMap } from './data';
 
 import moment from 'moment';
 
@@ -32,6 +32,7 @@ import ApprovePayment from './approvePayment';
 import Filters from './filters';
 
 const INITIAL_VISIBLE_COLUMNS = [
+  'paymentType',
   'totalAmount',
   'qrName',
   'reference',
@@ -51,6 +52,7 @@ interface PaymentItem {
   customer: string;
   status: number;
   paymentReference: string;
+  paymentType: number;
 }
 
 interface PaymentCategory {
@@ -195,6 +197,12 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     const cellValue = payment[columnKey as keyof PaymentItem];
 
     switch (columnKey) {
+      case 'paymentType':
+        return (
+          <div className='font-medium text-black text-sm'>
+            <p>{paymentTypeMap[payment.paymentType]}</p>
+          </div>
+        );
       case 'totalAmount':
         return (
           <div className='font-medium text-black text-sm'>

@@ -2,9 +2,15 @@
   "compilerOptions": {
     "jsx": "preserve",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     },
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -28,7 +34,10 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/app/confirm-email/page.tsx",
-    "lib/encrypt-decrypt.js"
+    "lib/encrypt-decrypt.js",
+    ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules"
+  ]
 }
