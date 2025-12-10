@@ -579,7 +579,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     </DropdownItem>
                   )}
 
-                  {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                  {/* {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                     options &&
                     options.includes('Payment Summary') && (
                       <DropdownItem
@@ -592,8 +592,18 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           <p>Payment Summary</p>
                         </div>
                       </DropdownItem>
-                    )) as any}
-
+                    )) as any} */}
+                        <DropdownItem
+                        key="payment-summary"
+                        onClick={() => togglePaymentSummaryModal(order)}
+                        aria-label='Payment Summary'
+                      >
+                        <div className='flex gap-3 items-center text-grey500'>
+                          <Receipt className='w-[18px] h-[18px]' />
+                          <p>Payment Summary</p>
+                        </div>
+                      </DropdownItem>
+{/* 
                   {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                     options &&
                     options.includes('Refund Order') && (
@@ -607,8 +617,18 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           <p>Refund Payment</p>
                         </div>
                       </DropdownItem>
-                    )) as any}
+                    )) as any} */}
 
+ <DropdownItem
+                        key="refund-order"
+                        onClick={() => toggleRefundModal(order)}
+                        aria-label='Refund Order'
+                      >
+                        <div className='flex gap-3 items-center text-grey500'>
+                          <RotateCcw className='w-[18px] h-[18px]' />
+                          <p>Refund Payment</p>
+                        </div>
+                      </DropdownItem>
                   {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                     options &&
                     options.includes('Cancel Order') && (
@@ -730,7 +750,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             </div>
                           </DropdownItem>
                         )}
-                        {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                        {/* {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                           availableOptions[statusDataMap[order.status]] &&
                           availableOptions[statusDataMap[order.status]].includes('Payment Summary') && (
                             <DropdownItem
@@ -743,8 +763,18 @@ const OrdersList: React.FC<OrdersListProps> = ({
                                 <p>Payment Summary</p>
                               </div>
                             </DropdownItem>
-                          )) as any}
-                        {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                          )) as any} */}
+                           <DropdownItem
+                              key="payment-summary"
+                              onClick={() => togglePaymentSummaryModal(order)}
+                              aria-label='Payment Summary'
+                            >
+                              <div className='flex gap-3 items-center text-grey500'>
+                                <Receipt className='w-[18px] h-[18px]' />
+                                <p>Payment Summary</p>
+                              </div>
+                            </DropdownItem>
+                        {/* {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                           availableOptions[statusDataMap[order.status]] &&
                           availableOptions[statusDataMap[order.status]].includes('Refund Order') && (
                             <DropdownItem
@@ -757,7 +787,17 @@ const OrdersList: React.FC<OrdersListProps> = ({
                                 <p>Refund Payment</p>
                               </div>
                             </DropdownItem>
-                          )) as any}
+                          )) as any} */}
+                           <DropdownItem
+                              key="refund-order"
+                              onClick={() => toggleRefundModal(order)}
+                              aria-label='Refund Order'
+                            >
+                              <div className='flex gap-3 items-center text-grey500'>
+                                <RotateCcw className='w-[18px] h-[18px]' />
+                                <p>Refund Payment</p>
+                              </div>
+                            </DropdownItem>
                         {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                           availableOptions[statusDataMap[order.status]] &&
                           availableOptions[statusDataMap[order.status]].includes('Cancel Order') && (
