@@ -69,6 +69,7 @@ interface BookingItem {
   bookingStatus: number;
   statusComment: string;
   id?: number;
+  dateCreated?: string;
 }
 
 interface BookingCategory {
@@ -322,9 +323,14 @@ const BookingsList: React.FC<BookingsListProps> = ({
     }
 
     return [...displayData].sort((a: BookingItem, b: BookingItem) => {
-      const first = a[sortDescriptor.column as keyof BookingItem];
-      const second = b[sortDescriptor.column as keyof BookingItem];
+      let first = a[sortDescriptor.column as keyof BookingItem];
+      let second = b[sortDescriptor.column as keyof BookingItem];
 
+      if (sortDescriptor.column === "bookingDateTime") {
+        first = a["dateCreated"] as string;
+        second = b["dateCreated"] as string;
+      }
+      
       let cmp = 0;
       if (first === null || first === undefined) cmp = 1;
       else if (second === null || second === undefined) cmp = -1;

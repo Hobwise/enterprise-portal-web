@@ -182,24 +182,38 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         (item: any) => {
           const { unitPrice, quantity, itemID, ...rest } = item;
 
-          // Get current packing cost and other details from menu data
-          const menuItem = menuData?.find((menu: any) => menu.id === itemID);
-
+          // Correctly find the item and its category from menuData
+          let foundCategory = null;
+          let foundMenuItem = null;
+          
+          if (menuData) {
+            for (const category of menuData) {
+              const item = category.items?.find((i: any) => i.id === itemID);
+              if (item) {
+                foundCategory = category;
+                foundMenuItem = item;
+                break;
+              }
+            }
+          }
+          
           return {
             ...rest,
             id: itemID,
             itemID: itemID,
             price: unitPrice,
             count: quantity,
+            originalCount: quantity, // Track original count for restriction logic
+            categoryId: foundCategory?.id, // Important: Add categoryId for reduction logic
             // Use current menu packing cost and item details
-            itemName: item.itemName || menuItem?.name || 'Unknown Item',
-            menuName: item.menuName || menuItem?.menuName || '',
-            itemDescription: item.itemDescription || menuItem?.description || '',
-            currency: item.currency || menuItem?.currency || 'NGN',
-            isAvailable: item.isAvailable ?? menuItem?.isAvailable ?? true,
-            hasVariety: item.hasVariety ?? menuItem?.hasVariety ?? false,
-            image: item.image || menuItem?.image || '',
-            varieties: item.varieties || menuItem?.varieties || null,
+            itemName: item.itemName || foundMenuItem?.itemName || 'Unknown Item',
+            menuName: item.menuName || foundMenuItem?.menuName || foundCategory?.name || '',
+            itemDescription: item.itemDescription || foundMenuItem?.itemDescription || '',
+            currency: item.currency || foundMenuItem?.currency || 'NGN',
+            isAvailable: item.isAvailable ?? foundMenuItem?.isAvailable ?? true,
+            hasVariety: item.hasVariety ?? foundMenuItem?.hasVariety ?? false,
+            image: item.image || foundMenuItem?.image || '',
+            varieties: item.varieties || foundMenuItem?.varieties || null,
             isVariety: item.isVariety || false,
             // Preserve historical isPacked status if available, otherwise default to false
             isPacked: item.isPacked || false,
@@ -291,7 +305,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         prevItems
           .map((item) =>
             item.id === id
-              ? { ...item, count: Math.max(1, item.count - 1) }
+              ? { ...item, count: Math.max(0, item.count - 1) } // Allow 0 so it can be filtered/removed
               : item
           )
           .filter((item) => item.count > 0)
@@ -303,7 +317,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         updateTimerRef.current = null;
       }, 100);
     },
-    [isUpdating]
+    [isUpdating, selectedItems, menuData]
   );
 
   // Calculate total price
@@ -472,7 +486,30 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                               variant="faded"
                               className="border border-[#EFEFEF]"
                               aria-label="minus"
-                              isDisabled={isUpdating}
+                              isDisabled={isUpdating || (
+                                (() => {
+                                  // Robust Check: Find category even if id is missing temporarily
+                                  let categoryId = (item as any).categoryId;
+                                  let category = menuData?.find((cat: any) => cat.id === categoryId);
+                                  
+                                  // Fallback: Scan menuData if category not linked yet
+                                  if (!category && menuData) {
+                                    for (const cat of menuData) {
+                                      if (cat.items?.some((i: any) => i.id === item.id || i.itemID === item.id)) {
+                                        category = cat;
+                                        break;
+                                      }
+                                    }
+                                  }
+
+                                  // User Rule: "only when true they can edit" => False = Restricted.
+                                  // New Rule: "disable the button for all... only the newly increase item"
+                                  // Logic: Disable if (NOT True) AND (Count <= OriginalCount).
+                                  // This allows decreasing newly added items (Count > OriginalCount) but locks original items.
+                                  const originalCount = (item as any).originalCount ?? 0;
+                                  return !!(!category?.preventOrderItemReduction && item.count <= originalCount);
+                                })()
+                              )}
                             >
                               <FaMinus />
                             </Button>

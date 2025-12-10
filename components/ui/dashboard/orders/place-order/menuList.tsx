@@ -144,6 +144,7 @@ const MenuList = () => {
         categoryId: category.categoryId,
         categoryName: category.categoryName,
         orderIndex: category.orderIndex,
+        preventOrderItemReduction: category.preventOrderItemReduction,
         menus: category.menus || []
       }));
       setCategories(transformedCategories);
@@ -1136,7 +1137,7 @@ const MenuList = () => {
           handlePackingCost={handlePackingCost}
           businessId={businessInformation?.[0]?.businessId}
           cooperateID={userInformation?.cooperateID}
-          categoriesData={categoriesData}
+          categoriesData={categories}
         />
         <ViewModal
           handleCardClick={handleCardClick}
