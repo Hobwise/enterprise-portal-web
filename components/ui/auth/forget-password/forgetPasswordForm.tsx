@@ -80,32 +80,51 @@ const ForgetPasswordForm = ({ setScreen, email, setEmail }: ForgetPasswordFormPr
     }
   };
 
+  const linkColor = "text-secondaryColor hover:text-secondaryColor/80";
+
   return (
     <>
-      <h2 className="text-[28px] font-bold">Forgot Password</h2>
-      <p className="text-sm text-grey500 mb-8">
-        Enter your email to request a temporary password
-      </p>
-      <Spacer y={8} />
+      <div className="text-center mb-8">
+        <h2 className="text-4xl font-extrabold mb-3">Forgot Password</h2>
+        <p className="text-base text-gray-400">
+          Enter your email to request a temporary password
+        </p>
+      </div>
+
       <form onSubmit={submitFormData} autoComplete="off">
         <CustomInput
           type="email"
-          label="Email Address"
+          label=""
           errorMessage={errors.email?.[0]}
           onChange={handleEmailChange}
           value={email}
           placeholder="Enter email"
-          endContent={<FaRegEnvelope className="text-foreground-500 text-l" />}
+          bgColor="bg-transparent"
+          classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+          inputTextColor="text-gray-200"
+          endContent={<FaRegEnvelope className="text-gray-300 text-lg" />}
         />
-        <Spacer y={8} />
-        <CustomButton loading={loading} disabled={loading} type="submit">
+
+        <Spacer y={7} />
+
+        <CustomButton
+          loading={loading}
+          disabled={loading}
+          type="submit"
+          className="bg-secondaryColor font-[600] text-[16px] w-full rounded-xl h-[55px] text-white hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80 transition-all"
+        >
           Send password
         </CustomButton>
       </form>
-      <Spacer y={8} />
-      <div className="flex items-center gap-2">
-        <p className="text-grey400 text-xs m-0">Remember password?</p>
-        <Link className="text-primaryColor text-sm" href="/auth/login">
+
+      <Spacer y={6} />
+
+      <div className="flex items-center justify-center gap-2">
+        <p className="text-gray-400 text-sm m-0">Remember password?</p>
+        <Link
+          className={`text-sm font-semibold ${linkColor}`}
+          href="/auth/login"
+        >
           Log In
         </Link>
       </div>

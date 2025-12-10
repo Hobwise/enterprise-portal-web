@@ -1,5 +1,14 @@
 User-Agent: *
 Allow: /
-Disallow: /private/
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /auth/confirm-email
+Disallow: /auth/business-information
+Disallow: /auth/select-business
+Disallow: /pos/
+Disallow: /business-activities/
+
+# Crawl-delay to be respectful
+Crawl-delay: 1
 
 Sitemap: https://hobwise.com/sitemap.xml

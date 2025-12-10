@@ -598,7 +598,7 @@ const CreateOrder = () => {
 
       const payload = {
         status: 0,
-        placedByName: servingInfoData.name,
+        placedByName: servingInfoData.name?.trim() || "Anonymous",
         placedByPhoneNumber: servingInfoData.phoneNumber,
         quickResponseID: qrId || "",
         comment: servingInfoData.comment,

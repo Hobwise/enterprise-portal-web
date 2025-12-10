@@ -133,24 +133,25 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
 
   return (
     <>
-      <h2 className="text-[28px] font-bold">
-        {isForced ? 'Update Password Required' : 'Enter password'}
-      </h2>
-      <p className="text-sm text-tomato mb-8">
-        {isForced ? (
-          <>
-            You need to update your password for security reasons. Please enter your current password and create a new one for{' '}
-            <span className="font-bold">{email}</span>
-          </>
-        ) : (
-          <>
-            Enter the password that was sent to{' '}
-            <span className="font-bold">{email}</span>
-          </>
-        )}
-      </p>
+      <div className="text-center mb-8">
+        <h2 className="text-4xl font-extrabold mb-3">
+          {isForced ? 'Update Password Required' : 'Enter Password'}
+        </h2>
+        <p className="text-base text-gray-400">
+          {isForced ? (
+            <>
+              You need to update your password for security reasons. Please enter your current password and create a new one for{' '}
+              <span className="font-semibold text-secondaryColor">{email}</span>
+            </>
+          ) : (
+            <>
+              Enter the password that was sent to{' '}
+              <span className="font-semibold text-secondaryColor">{email}</span>
+            </>
+          )}
+        </p>
+      </div>
 
-      <Spacer y={8} />
       <form onSubmit={submitFormData} autoComplete="off">
         <CustomInput
           errorMessage={errors.oldPassword?.[0]}
@@ -158,31 +159,54 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
           onChange={handleInputChange}
           name="oldPassword"
           type="password"
-          label={isForced ? "Current Password" : "Enter Password"}
+          label=""
           placeholder={isForced ? "Enter current password" : "Enter password"}
+          bgColor="bg-transparent"
+          classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+          inputTextColor="text-gray-200"
+          eyeIconStyle="text-gray-300 text-lg"
         />
-        <Spacer y={6} />
+
+        <Spacer y={5} />
+
         <CustomInput
           errorMessage={errors.password?.[0]}
           value={passwordFormData.password}
           onChange={handleInputChange}
           type="password"
           name="password"
-          label="Enter New Password"
-          placeholder="Enter password"
+          label=""
+          placeholder="Enter new password"
+          bgColor="bg-transparent"
+          classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+          inputTextColor="text-gray-200"
+          eyeIconStyle="text-gray-300 text-lg"
         />
-        <Spacer y={6} />
+
+        <Spacer y={5} />
+
         <CustomInput
           errorMessage={errors.confirmPassword?.[0]}
           value={passwordFormData.confirmPassword}
           onChange={handleInputChange}
           type="password"
           name="confirmPassword"
-          label="Confirm New Password"
-          placeholder="Confirm password"
+          label=""
+          placeholder="Confirm new password"
+          bgColor="bg-transparent"
+          classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+          inputTextColor="text-gray-200"
+          eyeIconStyle="text-gray-300 text-lg"
         />
-        <Spacer y={8} />
-        <CustomButton loading={loading} disabled={loading} type="submit">
+
+        <Spacer y={7} />
+
+        <CustomButton
+          loading={loading}
+          disabled={loading}
+          type="submit"
+          className="bg-secondaryColor font-[600] text-[16px] w-full rounded-xl h-[55px] text-white hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80 transition-all"
+        >
           Save new password
         </CustomButton>
       </form>

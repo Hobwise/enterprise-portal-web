@@ -58,7 +58,7 @@ const LoginForm = () => {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
     let hasValidationError = false;
-    
+
     if (!loginFormData.email) {
       newErrors.email = ["Email is required"];
       hasValidationError = true;
@@ -69,7 +69,7 @@ const LoginForm = () => {
       newErrors.email = ["Please enter a valid email address"];
       hasValidationError = true;
     }
-    
+
     if (!loginFormData.password) {
       newErrors.password = ["Password is required"];
       hasValidationError = true;
@@ -79,20 +79,20 @@ const LoginForm = () => {
     }
 
     setErrors(newErrors);
-    
+
     // Show a comprehensive validation error toast
     if (hasValidationError) {
       const errorMessages = [];
       if (newErrors.email) errorMessages.push(newErrors.email[0]);
       if (newErrors.password) errorMessages.push(newErrors.password[0]);
-      
+
       notify({
         title: "Validation Error",
         text: errorMessages.join(". "),
         type: "error",
       });
     }
-    
+
     return !hasValidationError;
   };
 
@@ -123,9 +123,9 @@ const LoginForm = () => {
       // Save critical data synchronously
       setTokenCookie("token", token, {
         expires: 7, // 7 days
-        path: '/',
-        sameSite: 'strict',
-        secure: process.env.NODE_ENV === 'production',
+        path: "/",
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
       });
       saveJsonItemToLocalStorage("userInformation", decryptedData.data);
       saveJsonItemToLocalStorage("business", businesses);
@@ -133,22 +133,24 @@ const LoginForm = () => {
       saveJsonItemToLocalStorage("loginDetails", loginFormData);
       setLoginDetails(loginFormData);
 
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[LoginForm] Saved loginDetails to localStorage', {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("[LoginForm] Saved loginDetails to localStorage", {
           email: loginFormData.email,
           hasPassword: !!loginFormData.password,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       // Verify loginDetails persistence
       const verifyLoginDetails = getJsonItemFromLocalStorage("loginDetails");
-      if (!verifyLoginDetails && process.env.NODE_ENV !== 'production') {
-        console.error("[LoginForm] WARNING: loginDetails not found in localStorage after saving!");
-      } else if (process.env.NODE_ENV !== 'production') {
-        console.log('[LoginForm] Verified loginDetails in localStorage:', {
+      if (!verifyLoginDetails && process.env.NODE_ENV !== "production") {
+        console.error(
+          "[LoginForm] WARNING: loginDetails not found in localStorage after saving!"
+        );
+      } else if (process.env.NODE_ENV !== "production") {
+        console.log("[LoginForm] Verified loginDetails in localStorage:", {
           email: verifyLoginDetails.email,
-          hasPassword: !!verifyLoginDetails.password
+          hasPassword: !!verifyLoginDetails.password,
         });
       }
 
@@ -160,34 +162,39 @@ const LoginForm = () => {
       }
 
       // Check if user needs to change password (common API patterns)
-      const needsPasswordChange = user?.mustChangePassword ||
-                                user?.isFirstLogin ||
-                                user?.passwordExpired ||
-                                user?.forcePasswordChange ||
-                                user?.requirePasswordChange;
+      const needsPasswordChange =
+        user?.mustChangePassword ||
+        user?.isFirstLogin ||
+        user?.passwordExpired ||
+        user?.forcePasswordChange ||
+        user?.requirePasswordChange;
 
       // Determine redirect path based on user assignment, business count and password status
       let redirectPath: string;
 
       // Extract user properties for classification
-      const { role, staffType, primaryAssignment, assignedCategoryId } = decryptedData.data;
+      const { role, staffType, primaryAssignment, assignedCategoryId } =
+        decryptedData.data;
 
       // User classification checks - POS Operator uses OR condition
-      const isPOSUser = primaryAssignment === "POS Operator" ||
-                        primaryAssignment === "Point of Sales" ||
-                        (assignedCategoryId && assignedCategoryId === "POS");
+      const isPOSUser =
+        primaryAssignment === "POS Operator" ||
+        primaryAssignment === "Point of Sales" ||
+        (assignedCategoryId && assignedCategoryId === "POS");
 
-      const isCategoryUser = role === 1 &&
-                             staffType === 2 &&
-                             assignedCategoryId &&
-                             assignedCategoryId !== "";
+      const isCategoryUser =
+        role === 1 &&
+        staffType === 2 &&
+        assignedCategoryId &&
+        assignedCategoryId !== "";
 
-      const isGeneralStaff = role === 1 && primaryAssignment === "General Staff";
+      const isGeneralStaff =
+        role === 1 && primaryAssignment === "General Staff";
 
       const isManager = role === 0;
 
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('User Classification:', {
+      if (process.env.NODE_ENV !== "production") {
+        console.log("User Classification:", {
           role,
           staffType,
           primaryAssignment,
@@ -196,7 +203,7 @@ const LoginForm = () => {
           isCategoryUser,
           isGeneralStaff,
           isManager,
-          hasBusinesses: businesses?.length > 0
+          hasBusinesses: businesses?.length > 0,
         });
       }
 
@@ -232,16 +239,16 @@ const LoginForm = () => {
       if (!needsPasswordChange) {
         notify({
           title: "Login Successful!",
-          text: `Welcome back${user?.name ? `, ${user.name}` : ''}!`,
+          text: `Welcome back${user?.name ? `, ${user.name}` : ""}!`,
           type: "success",
         });
       }
 
       // Add small delay to ensure cookies are persisted before navigation
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Use replace to prevent back button issues
-      window.location.href  = redirectPath;
+      window.location.href = redirectPath;
 
       // // Fallback to hard navigation if router.replace fails
       // setTimeout(() => {
@@ -249,9 +256,8 @@ const LoginForm = () => {
       //     window.location.href = redirectPath;
       //   }
       // }, 200);
-
     } catch (error) {
-      if (process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== "production") {
         console.error("Error handling login success:", error);
       }
       setLoading(false);
@@ -264,7 +270,7 @@ const LoginForm = () => {
   };
 
   const handleLoginError = (error: any) => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       console.error("Login error:", error);
     }
 
@@ -279,24 +285,31 @@ const LoginForm = () => {
       // Clear loading state before navigating
       setLoading(false);
       // Navigate immediately for better UX with proper parameter formatting
-      router.push(`/auth/forget-password?email=${encodeURIComponent(loginFormData.email)}&screen=2&forced=true`);
+      router.push(
+        `/auth/forget-password?email=${encodeURIComponent(
+          loginFormData.email
+        )}&screen=2&forced=true`
+      );
       return;
     }
-    
+
     // Handle other specific error codes if needed
     const errorMessages: Record<string, string> = {
-      "HB001": "Invalid email or password. Please check your credentials.",
-      "HB002": "Account is locked. Please contact support.",
-      "HB003": "Account not verified. Please check your email for verification link.",
-      "HB004": "Session expired. Please login again.",
+      HB001: "Invalid email or password. Please check your credentials.",
+      HB002: "Account is locked. Please contact support.",
+      HB003:
+        "Account not verified. Please check your email for verification link.",
+      HB004: "Session expired. Please login again.",
       // Add more error codes as needed
     };
-    
+
     const errorCode = error?.error?.responseCode;
-    const errorMessage = errorCode && errorMessages[errorCode] 
-      ? errorMessages[errorCode] 
-      : error?.error?.responseDescription || "An unexpected error occurred during login";
-    
+    const errorMessage =
+      errorCode && errorMessages[errorCode]
+        ? errorMessages[errorCode]
+        : error?.error?.responseDescription ||
+          "An unexpected error occurred during login";
+
     notify({
       title: "Login Failed",
       text: errorMessage,
@@ -331,18 +344,20 @@ const LoginForm = () => {
       abortControllerRef.current = new AbortController();
 
       // Call API with abort signal support (DON'T clear storage yet)
-      const response = await loginUser(loginFormData) as ApiResponse;
+      const response = (await loginUser(loginFormData)) as ApiResponse;
 
       // Log the response structure for debugging
       // Handle validation errors from server
       if (response?.errors) {
         setErrors(response.errors);
-        
+
         // Show server validation errors as toast
         const serverErrors = [];
-        if (response.errors.email) serverErrors.push(`Email: ${response.errors.email[0]}`);
-        if (response.errors.password) serverErrors.push(`Password: ${response.errors.password[0]}`);
-        
+        if (response.errors.email)
+          serverErrors.push(`Email: ${response.errors.email[0]}`);
+        if (response.errors.password)
+          serverErrors.push(`Password: ${response.errors.password[0]}`);
+
         notify({
           title: "Validation Failed",
           text: serverErrors.join(". "),
@@ -356,13 +371,12 @@ const LoginForm = () => {
       if (response?.data?.response) {
         const decryptedData = decryptPayload(response.data.response);
 
-        if (process.env.NODE_ENV !== 'production') {
-          console.log('Login decryptedData:', decryptedData);
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Login decryptedData:", decryptedData);
         }
 
         if (decryptedData?.data) {
-         handleLoginSuccess(decryptedData);
-        
+          handleLoginSuccess(decryptedData);
         } else if (decryptedData?.error) {
           handleLoginError(decryptedData);
         } else {
@@ -372,7 +386,7 @@ const LoginForm = () => {
       // Handle axios error response structure
       else if (response?.response?.data?.response) {
         const decryptedData = decryptPayload(response.response.data.response);
-        
+
         if (decryptedData?.error) {
           handleLoginError(decryptedData);
         } else {
@@ -387,10 +401,16 @@ const LoginForm = () => {
           handleLoginError(decryptedData);
         }
         // Handle plain error message
-        else if (response.response.data.message || response.response.data.error) {
+        else if (
+          response.response.data.message ||
+          response.response.data.error
+        ) {
           notify({
             title: "Login Failed",
-            text: response.response.data.message || response.response.data.error || "Authentication failed",
+            text:
+              response.response.data.message ||
+              response.response.data.error ||
+              "Authentication failed",
             type: "error",
           });
           setLoading(false);
@@ -409,7 +429,7 @@ const LoginForm = () => {
       }
       // Handle unexpected response format
       else {
-        if (process.env.NODE_ENV !== 'production') {
+        if (process.env.NODE_ENV !== "production") {
           console.error("Unexpected response structure:", response);
         }
         notify({
@@ -420,18 +440,18 @@ const LoginForm = () => {
         setLoading(false);
       }
     } catch (error: any) {
-      if (process.env.NODE_ENV !== 'production') {
+      if (process.env.NODE_ENV !== "production") {
         console.error("Login error:", error);
       }
 
       // Handle network errors
-      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
         notify({
           title: "Connection Timeout",
           text: "The request took too long. Please check your internet connection and try again.",
           type: "error",
         });
-      } else if (error.message.includes('Network')) {
+      } else if (error.message.includes("Network")) {
         notify({
           title: "Network Error",
           text: "Unable to connect to the server. Please check your internet connection.",
@@ -440,7 +460,9 @@ const LoginForm = () => {
       } else {
         notify({
           title: "Login Error",
-          text: error.message || "An unexpected error occurred. Please try again later.",
+          text:
+            error.message ||
+            "An unexpected error occurred. Please try again later.",
           type: "error",
         });
       }
@@ -452,13 +474,13 @@ const LoginForm = () => {
 
   // Prefetch routes on component mount for faster navigation
   useEffect(() => {
-    router.prefetch('/dashboard');
-    router.prefetch('/pos');
-    router.prefetch('/auth/select-business');
-    router.prefetch('/auth/business-information');
-    router.prefetch('/auth/forget-password');
-    router.prefetch('/dashboard/settings/password-management');
-    router.prefetch('/business-activities');
+    router.prefetch("/dashboard");
+    router.prefetch("/pos");
+    router.prefetch("/auth/select-business");
+    router.prefetch("/auth/business-information");
+    router.prefetch("/auth/forget-password");
+    router.prefetch("/dashboard/settings/password-management");
+    router.prefetch("/business-activities");
 
     return () => {
       // Cancel any pending requests when component unmounts
@@ -468,53 +490,63 @@ const LoginForm = () => {
     };
   }, [router]);
 
+  const linkColor = "text-secondaryColor  hover:text-secondaryColor/80";
+
   return (
     <form onSubmit={submitFormData} autoComplete="off" noValidate>
       <CustomInput
+        placeholder="Enter email"
         type="email"
         name="email"
         errorMessage={errors.email?.[0]}
         onChange={handleInputChange}
         value={loginFormData.email}
-        label="Email Address"
-        placeholder="Enter email"
+        label=""
         isRequired
         autoComplete="email"
-        endContent={<FaRegEnvelope className="text-foreground-500 text-l" />}
+        bgColor="bg-transparent"
+        classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+        inputTextColor="text-gray-200"
+        endContent={<FaRegEnvelope className="text-gray-300 text-lg" />}
       />
 
-      <Spacer y={6} />
-      
+      <Spacer y={5} />
+
       <CustomInput
         errorMessage={errors.password?.[0]}
         value={loginFormData.password}
         onChange={handleInputChange}
         type="password"
-        label="Password"
+        label=""
+        eyeIconStyle="text-gray-300 text-lg"
         name="password"
         placeholder="Enter password"
         isRequired
         autoComplete="current-password"
+        bgColor="bg-transparent"
+        classnames="border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor h-[56px] rounded-xl"
+        inputTextColor="text-gray-200"
       />
 
-      <Spacer y={4} />
-      
+      <Spacer y={7} />
+
       <div className="flex items-center justify-end">
         <Link
           prefetch={true}
-          className="text-primaryColor text-sm hover:underline transition-all"
+          className={`text-sm font-medium ${linkColor} transition-all`}
           href="/auth/forget-password"
         >
           Forgot Password?
         </Link>
       </div>
-      
+
       <Spacer y={7} />
-      
-          <CustomButton
+
+      <CustomButton
         loading={loading}
         disabled={loading}
         type="submit"
+        className="bg-secondaryColor font-[600] text-[16px] w-full rounded-xl h-[55px] text-white hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80 transition-all"
       >
         {loading ? "Logging in..." : "Log In"}
       </CustomButton>
