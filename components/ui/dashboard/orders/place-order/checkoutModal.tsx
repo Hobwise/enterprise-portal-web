@@ -1162,6 +1162,31 @@ const CheckoutModal = ({
       return;
     }
 
+    // Validate amount for partial payment
+    const totalDue = orderDetails?.amountRemaining ?? finalTotalPrice;
+    let finalAmountPaid = totalDue;
+    
+    if (paymentOption === 'partial') {
+      const amount = parseFloat(amountPaid);
+      if (!amount || isNaN(amount) || amount <= 0) {
+        notify({
+          title: "Validation Error",
+          text: "Please enter a valid amount for partial payment",
+          type: "error",
+        });
+        return;
+      }
+      if (amount > totalDue) {
+        notify({
+          title: "Validation Error",
+          text: "Amount received cannot be greater than the pending order amount",
+          type: "error",
+        });
+        return;
+      }
+      finalAmountPaid = amount;
+    }
+
     setIsLoading(true);
     try {
       const payload = {
@@ -1170,6 +1195,7 @@ const CheckoutModal = ({
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
         status: 1,
+        amountPaid: finalAmountPaid,
       };
 
       const data = await completeOrderWithPayment(payload, orderId);
@@ -1311,15 +1337,36 @@ const CheckoutModal = ({
   console.log(orderDetails?.quickResponseID || orderDetails?.qrReference || orderDetails)
 
   // Reset screen and states when modal opens
+  // We only reset when isOpen changes to true. We intentionally ignore 'id' changes
+  // to prevent resetting the screen if the ID updates during a flow (e.g. after creation).
   useEffect(() => {
     if (isOpen) {
       setScreen(1);
-      setOrderId(id || ""); // Use the id prop if provided, otherwise empty string
+      setOrderId(id || ""); 
       setReference("");
       setSelectedPaymentMethod(0);
       setIsPayLaterLoading(false);
+      setPaymentOption("full");
     }
-  }, [isOpen, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Sync local orderId if prop changes, but DO NOT reset screen
+  useEffect(() => {
+      if (id) {
+          setOrderId(id);
+      }
+  }, [id]);
+
+  // Update amount paid when order details or total price changes
+  useEffect(() => {
+    if (isOpen) {
+      setAmountPaid(String(orderDetails?.amountRemaining ?? finalTotalPrice));
+    }
+  }, [isOpen, orderDetails, finalTotalPrice]);
+
+  const [paymentOption, setPaymentOption] = useState<"full" | "partial">("full");
+  const [amountPaid, setAmountPaid] = useState<string>("");
 
   return (
     <div className="">
@@ -1533,10 +1580,21 @@ const CheckoutModal = ({
                               onPress={() => handleDecrement(item.id)}
                               isIconOnly
                               size="sm"
-                                    radius="sm"
+                              radius="sm"
                               variant="faded"
-                                    className="border h-[35px] w-[30px] border-primaryGrey bg-white"
+                              className="border h-[35px] w-[30px] border-primaryGrey bg-white"
                               aria-label="minus"
+                              isDisabled={
+                                (() => {
+                                  if (item.categoryId && categoriesData) {
+                                    const category = categoriesData.find((cat: any) => cat.categoryId === item.categoryId);
+                                    // User Rule: "only when true they can edit" => False = Restricted.
+                                    // Logic: Disable if (NOT True) AND (Count > 1).
+                                    return !!(!category?.preventOrderItemReduction && item.count > 1);
+                                  }
+                                  return false;
+                                })()
+                              }
                             >
                               <FaMinus />
                             </Button>
@@ -2144,35 +2202,84 @@ const CheckoutModal = ({
                         {getPaymentConfirmationText()}
                       </p>
                     </div>
-                    <div
-                      className={`flex items-center gap-2 p-4 rounded-lg justify-between bg-[#EAE5FF80]`}
-                    >
-                      <div>
-                        <p className="text-sm text-grey500">TOTAL ORDER</p>
-                        <p className="font-bold text-black text-[20px]">
-                          {" "}
-                          {formatPrice(finalTotalPrice, 'NGN')}
-                        </p>
-                      </div>
-                      <MdKeyboardArrowRight />
+
+
+                    <div className="flex flex-col items-center justify-center my-6">
+                      <p className="text-sm text-grey500 text-center uppercase mb-2">PENDING PAYMENT</p>
+                      <h2 className="text-3xl font-bold text-black">
+                        {formatPrice(orderDetails?.totalAmount ?? finalTotalPrice, 'NGN')}
+                      </h2>
                     </div>
-                    <Spacer y={4} />
-                    <CustomInput
-                      type="text"
-                      // defaultValue={menuItem?.itemName}
-                      value={reference}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReference(e.target.value)}
-                      name="itemName"
-                      label="Enter ref"
-                      placeholder="Provide payment reference"
-                    />
+
+                    <div className="mb-4">
+                      <SelectInput
+                        label="Payment Option"
+                        placeholder="Select Option"
+                        selectedKeys={[paymentOption]}
+                        onChange={(e: any) => {
+                          const val = e.target.value as "full" | "partial";
+                          setPaymentOption(val);
+                          if (val === 'full') {
+                            // Populate with full remaining amount
+                            const total = orderDetails?.amountRemaining ?? finalTotalPrice;
+                            setAmountPaid(String(total));
+                          } else {
+                            setAmountPaid("");
+                          }
+                        }}
+                        contents={[
+                          { label: "Full Payment", value: "full" },
+                          { label: "Partial Payment", value: "partial" },
+                        ]}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="mb-4 bg-[#EAE5FF80] p-4 rounded-lg flex flex-col items-center justify-center">
+                      <p className="text-sm text-grey500 mb-2">Amount Received</p>
+                       <div className="flex">
+                         <div className={`flex bg-[#EAE5FF80] w-full relative items-center justify-center  text-2xl font-bold bg-[#F7F6FA] ${paymentOption === 'full' ? 'opacity-60 cursor-not-allowed' : ''}`}>
+                           <p className="text-black   bg-[#EAE5FF80]">₦</p>
+                        <input
+                          type="number"
+                          value={amountPaid}
+                          onChange={(e) => setAmountPaid(e.target.value)}
+                          placeholder="0"
+                          disabled={paymentOption === 'full'}
+                          className={` bg-transparent  text-black border-none outline-none  p-0 ${paymentOption === 'full' ? ' w-1/3' : 'w-full'}`}
+                        />
+                      </div>
+                       </div>
+                    </div>
+
+                    {paymentOption === 'partial' && (
+                      <div className="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-100 flex flex-col items-center">
+                         <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider mb-1">Remaining Balance</span>
+                         <span className="text-2xl font-bold text-orange-700">
+                           {formatPrice(orderDetails?.amountRemaining ?? finalTotalPrice, 'NGN')}
+                         </span>
+                      </div>
+                    )}
+
+
+                    <div className="mt-4">
+                      <p className="text-black font-semibold mb-2">Enter Ref</p>
+                      <CustomInput
+                        type="text"
+                        // defaultValue={menuItem?.itemName}
+                        value={reference}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReference(e.target.value)}
+                        name="itemName"
+                        placeholder="Provide payment reference"
+                      />
+                    </div>
                     <Spacer y={5} />
                     <div className="flex md:flex-row flex-col gap-5">
                       <CustomButton
-                        onClick={handleCancelPayment}
+                        onClick={() => setScreen(2)}
                         className="bg-white h-[50px] w-full border border-primaryGrey"
                       >
-                        Cancel
+                        Back
                       </CustomButton>
                       <CustomButton
                         loading={isLoading}

@@ -11,6 +11,7 @@ type MenuCategory = {
   packingCost: number;
   waitingTimeMinutes: number;
   totalCount: number;
+  preventOrderItemReduction?: boolean;
 };
 
 type MenuItem = {
@@ -46,6 +47,7 @@ type MenuData = {
   waitingTimeMinutes: number;
   items: MenuItem[];
   totalCount: number;
+  preventOrderItemReduction?: boolean;
 };
 
 const useMenu = (businessIdOutsideApp?: any, cooperateID?: any) => {
@@ -75,15 +77,16 @@ const useMenu = (businessIdOutsideApp?: any, cooperateID?: any) => {
       // Create menu data array with categories
       const menuData: MenuData[] = categories.map((category) => ({
         name: category.name,
-        id: category.id,
+        id: (category as any).categoryId || category.id,
         packingCost: category.packingCost,
         waitingTimeMinutes: category.waitingTimeMinutes,
         items: [], // Initially empty for all categories
-        totalCount: category.totalCount ?? 0
+        totalCount: category.totalCount ?? 0,
+        preventOrderItemReduction: category.preventOrderItemReduction ?? false,
       }));
 
       // Only fetch items for the first category initially, or for the selected category
-      const targetCategoryId = menuIdTable || categories[0]?.id;
+      const targetCategoryId = menuIdTable || (categories[0] as any)?.categoryId || categories[0]?.id;
       
       if (targetCategoryId) {
         const targetCategoryIndex = menuData.findIndex(menu => menu.id === targetCategoryId);

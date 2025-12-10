@@ -22,6 +22,7 @@ interface Category {
   categoryName: string;
   isVatEnabled: boolean;
   vatRate: number;
+  preventOrderItemReduction?: boolean;
   menus: Menu[];
 }
 

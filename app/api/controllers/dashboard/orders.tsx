@@ -441,3 +441,34 @@ export async function getOrderProgress(orderId: string) {
     handleError(error, false);
   }
 }
+
+// Function to get payment summary
+export async function getPaymentSummary(orderId: string) {
+  try {
+    const response = await api.get(`${DASHBOARD.paymentSummary}/${orderId}`);
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+interface RefundPayload {
+  refundAmount: number;
+  reason: string;
+  treatedBy: string;
+  treatedById: string;
+  paymentReference: string;
+  paymentMethod: number;
+}
+
+// Function to process refund
+export async function refundOrder(payload: RefundPayload, orderId: string) {
+  const headers = { orderId };
+  try {
+    const response = await api.post(DASHBOARD.refundOrder, payload, { headers });
+    return response.data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
