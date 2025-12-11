@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 import {
   Chip,
@@ -17,30 +17,30 @@ import {
   TableRow,
   Selection,
   SortDescriptor,
-} from '@nextui-org/react';
-import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
+} from "@nextui-org/react";
+import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
+import { HiOutlineDotsVertical } from "react-icons/hi";
 
-import { GrFormView } from 'react-icons/gr';
-import { columns, paymentTypeMap, statusColorMap, statusDataMap } from './data';
+import { GrFormView } from "react-icons/gr";
+import { columns, paymentTypeMap, statusColorMap, statusDataMap } from "./data";
 
-import moment from 'moment';
+import moment from "moment";
 
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { formatPrice } from '@/lib/utils';
-import ApprovePayment from './approvePayment';
-import Filters from './filters';
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { formatPrice } from "@/lib/utils";
+import ApprovePayment from "./approvePayment";
+import Filters from "./filters";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  'paymentType',
-  'totalAmount',
-  'qrName',
-  'reference',
-  'treatedBy',
-  'dateCreated',
-  'customer',
-  'status',
-  'actions',
+  "paymentType",
+  "totalAmount",
+  "qrName",
+  "reference",
+  "treatedBy",
+  "dateCreated",
+  "customer",
+  "status",
+  "actions",
 ];
 interface PaymentItem {
   id: string;
@@ -62,7 +62,10 @@ interface PaymentCategory {
 }
 
 interface PaymentsListProps {
-  payments: PaymentItem[] | { payments?: PaymentItem[]; data?: PaymentItem[] } | any;
+  payments:
+    | PaymentItem[]
+    | { payments?: PaymentItem[]; data?: PaymentItem[] }
+    | any;
   categories: PaymentCategory[];
   searchQuery: string;
   refetch: () => void;
@@ -83,7 +86,7 @@ const getFilteredPaymentDetails = (
   payments: any,
   isLoading: boolean,
   isPending: boolean,
-  searchQuery: string = ''
+  searchQuery: string = ""
 ): PaymentItem[] => {
   // Check if data is in pending state
   if (isLoading || isPending || !payments) {
@@ -110,11 +113,15 @@ const getFilteredPaymentDetails = (
 
   // Apply search filter if provided
   if (searchQuery.trim()) {
-    return allPayments.filter((payment: PaymentItem) =>
-      payment.qrName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.treatedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.customer?.toLowerCase().includes(searchQuery.toLowerCase())
+    return allPayments.filter(
+      (payment: PaymentItem) =>
+        payment.qrName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        payment.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        payment.treatedBy?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        payment.customer?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        paymentTypeMap[payment.paymentType]
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
     );
   }
 
@@ -135,9 +142,11 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   totalPages,
   hasNext,
   hasPrevious,
-  totalCount
+  totalCount,
 }) => {
-  const [singlePayment, setSinglePayment] = React.useState<PaymentItem | null>(null);
+  const [singlePayment, setSinglePayment] = React.useState<PaymentItem | null>(
+    null
+  );
   const [isOpen, setIsOpen] = React.useState<Boolean>(false);
   const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
     useGlobalContext();
@@ -151,10 +160,12 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   );
 
   // State for table sorting and selection
-  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([]));
+  const [selectedKeys, setSelectedKeys] = React.useState<Selection>(
+    new Set([])
+  );
   const [sortDescriptor, setSortDescriptor] = React.useState<SortDescriptor>({
-    column: 'dateCreated',
-    direction: 'descending',
+    column: "dateCreated",
+    direction: "descending",
   });
 
   // Filter visible columns
@@ -182,7 +193,6 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     });
   }, [paymentDetails, sortDescriptor]);
 
-
   const toggleApproveModal = (payment: PaymentItem) => {
     setSinglePayment(payment);
     setIsOpen(!isOpen);
@@ -193,79 +203,94 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     setPage(1);
   };
 
-  const renderCell = React.useCallback((payment: PaymentItem, columnKey: string) => {
-    const cellValue = payment[columnKey as keyof PaymentItem];
+  const renderCell = React.useCallback(
+    (payment: PaymentItem, columnKey: string) => {
+      const cellValue = payment[columnKey as keyof PaymentItem];
 
-    switch (columnKey) {
-      case 'paymentType':
-        return (
-          <div className='font-medium text-black text-sm'>
-            <p>{paymentTypeMap[payment.paymentType]}</p>
-          </div>
-        );
-      case 'totalAmount':
-        return (
-          <div className='font-medium text-black text-sm'>
-            <p>{formatPrice(payment.totalAmount)}</p>
-          </div>
-        );
-      case 'qrName':
-        return (
-          <div className='flex text-textGrey text-sm'>{payment.qrName}</div>
-        );
-      case 'reference':
-        return <div className='text-textGrey text-sm'>{payment.reference}</div>;
-      case 'treatedBy':
-        return <div className='text-textGrey text-sm'>{payment.treatedBy}</div>;
-      case 'dateCreated':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(payment.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'customer':
-        return <div className='text-textGrey text-sm'>{payment.customer}</div>;
-      case 'status':
-        return (
-          <Chip
-            className='capitalize'
-            color={statusColorMap[payment.status]}
-            size='sm'
-            variant='bordered'
-          >
-            {statusDataMap[payment.status]}
-          </Chip>
-        );
+      switch (columnKey) {
+        case "paymentType":
+          return (
+            <div className="font-medium text-black text-sm">
+              <p>{paymentTypeMap[payment.paymentType]}</p>
+            </div>
+          );
+        case "totalAmount":
+          return (
+            <div className="font-medium text-black text-sm">
+              <p>{formatPrice(payment.totalAmount)}</p>
+            </div>
+          );
+        case "qrName":
+          return (
+            <div className="flex text-textGrey text-sm">{payment.qrName}</div>
+          );
+        case "reference":
+          return (
+            <div className="text-textGrey text-sm">{payment.reference}</div>
+          );
+        case "treatedBy":
+          return (
+            <div className="text-textGrey text-sm">{payment.treatedBy}</div>
+          );
+        case "dateCreated":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(payment.dateCreated).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "customer":
+          return (
+            <div className="text-textGrey text-sm">{payment.customer}</div>
+          );
+        case "status":
+          return (
+            <Chip
+              className="capitalize"
+              color={statusColorMap[payment.status]}
+              size="sm"
+              variant="bordered"
+            >
+              {statusDataMap[payment.status]}
+            </Chip>
+          );
 
-      case 'actions':
-        return (
-          <div className='relative flexjustify-center items-center gap-2' onClick={(e) => e.stopPropagation()}>
-            <Dropdown className=''>
-              <DropdownTrigger aria-label='actions'>
-                <div className='cursor-pointer flex justify-center items-center text-black'>
-                  <HiOutlineDotsVertical className='text-[22px] ' />
-                </div>
-              </DropdownTrigger>
-              <DropdownMenu aria-label='Approve payment' className='text-black'>
-                <DropdownItem
-                  onClick={() => {
-                    toggleApproveModal(payment);
-                  }}
-                  aria-label='update order'
-                >
-                  <div className={` flex gap-2  items-center text-grey500`}>
-                    <GrFormView className='text-[20px]' />
-                    <p>View more</p>
+        case "actions":
+          return (
+            <div
+              className="relative flexjustify-center items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Dropdown className="">
+                <DropdownTrigger aria-label="actions">
+                  <div className="cursor-pointer flex justify-center items-center text-black">
+                    <HiOutlineDotsVertical className="text-[22px] " />
                   </div>
-                </DropdownItem>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        );
-      default:
-        return cellValue;
-    }
-  }, []);
+                </DropdownTrigger>
+                <DropdownMenu
+                  aria-label="Approve payment"
+                  className="text-black"
+                >
+                  <DropdownItem
+                    onClick={() => {
+                      toggleApproveModal(payment);
+                    }}
+                    aria-label="update order"
+                  >
+                    <div className={` flex gap-2  items-center text-grey500`}>
+                      <GrFormView className="text-[20px]" />
+                      <p>View more</p>
+                    </div>
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          );
+        default:
+          return cellValue;
+      }
+    },
+    []
+  );
 
   const topContent = React.useMemo(() => {
     return (
@@ -284,25 +309,25 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   // Table styling - matching order table
   const classNames = React.useMemo(
     () => ({
-      wrapper: ['max-h-[382px]'],
+      wrapper: ["max-h-[382px]"],
       th: [
-        'text-default-500',
-        'text-xs',
-        'border-b',
-        'border-divider',
-        'py-4',
-        'rounded-none',
-        'bg-grey300',
+        "text-default-500",
+        "text-xs",
+        "border-b",
+        "border-divider",
+        "py-4",
+        "rounded-none",
+        "bg-grey300",
       ],
-      tr: 'border-b border-divider rounded-none',
+      tr: "border-b border-divider rounded-none",
       td: [
-        'py-3',
-        'text-textGrey',
-        'group-data-[first=true]:first:before:rounded-none',
-        'group-data-[first=true]:last:before:rounded-none',
-        'group-data-[middle=true]:before:rounded-none',
-        'group-data-[last=true]:first:before:rounded-none',
-        'group-data-[last=true]:last:before:rounded-none',
+        "py-3",
+        "text-textGrey",
+        "group-data-[first=true]:first:before:rounded-none",
+        "group-data-[first=true]:last:before:rounded-none",
+        "group-data-[middle=true]:before:rounded-none",
+        "group-data-[last=true]:first:before:rounded-none",
+        "group-data-[last=true]:last:before:rounded-none",
       ],
     }),
     []
@@ -314,27 +339,29 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   };
 
   return (
-    <section className='border border-primaryGrey rounded-lg overflow-hidden'>
-      <div className='overflow-x-auto'>
+    <section className="border border-primaryGrey rounded-lg overflow-hidden">
+      <div className="overflow-x-auto">
         <Table
-          radius='lg'
+          radius="lg"
           isCompact
           removeWrapper
-          aria-label='list of payments'
-          bottomContentPlacement='outside'
+          aria-label="list of payments"
+          bottomContentPlacement="outside"
           classNames={classNames}
           selectedKeys={selectedKeys}
           sortDescriptor={sortDescriptor as SortDescriptor}
           topContent={topContent}
-          topContentPlacement='outside'
+          topContentPlacement="outside"
           onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-          onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
+          onSortChange={
+            setSortDescriptor as (descriptor: SortDescriptor) => void
+          }
         >
           <TableHeader columns={headerColumns}>
             {(column) => (
               <TableColumn
                 key={column.uid}
-                align={column.uid === 'actions' ? 'center' : 'start'}
+                align={column.uid === "actions" ? "center" : "start"}
                 allowsSorting={column.sortable}
               >
                 {column.name}
@@ -344,7 +371,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
           <TableBody
             isLoading={shouldShowLoading}
             loadingContent={<SpinnerLoader size="md" />}
-            emptyContent={'No payment(s) found'}
+            emptyContent={"No payment(s) found"}
             items={shouldShowLoading ? [] : sortedPayments}
           >
             {(payment: PaymentItem) => (
@@ -354,7 +381,9 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
                 onClick={() => handleRowClick(payment)}
               >
                 {(columnKey) => (
-                  <TableCell>{renderCell(payment, String(columnKey))}</TableCell>
+                  <TableCell>
+                    {renderCell(payment, String(columnKey))}
+                  </TableCell>
                 )}
               </TableRow>
             )}
