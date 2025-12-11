@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getOrder, getPaymentSummary } from "@/app/api/controllers/dashboard/orders";
+import { getOrder } from "@/app/api/controllers/dashboard/orders";
 import { confirmPayment } from "@/app/api/controllers/dashboard/payment";
 import { CustomButton } from "@/components/customButton";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
@@ -21,22 +21,42 @@ import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
 import { IoReload } from "react-icons/io5";
 import moment from "moment";
 
-interface Payment {
-  paymentMethod: string;
-  amount: number;
-  paymentStatus: string;
-  paymentType: string;
-  dateCreated: string;
-  customer: string;
+interface OrderDetail {
+  id: string;
+  itemName: string;
+  menuName: string;
+  quantity: number;
+  packingCost: number;
+  unitPrice: number;
+  unit: string;
+  orderID: string;
+  itemID: string;
+  image: string;
+  totalPrice: number;
+  isVariety: boolean;
+  isPacked: boolean;
 }
 
-interface PaymentSummaryData {
+interface OrderData {
   reference: string;
-  status: string;
+  placedByName: string;
+  placedByPhoneNumber: string;
+  treatedBy: string;
+  additionalCostName: string;
+  additionalCost: number;
+  subTotalAmount: number;
+  vatAmount: number;
+  isVatApplied: boolean;
   totalAmount: number;
+  paymentMethod: number;
+  status: number;
+  dateCreated: string;
+  comment: string;
+  quickResponseID: string;
+  estimatedCompletionTime: string;
   amountPaid: number;
   amountRemaining: number;
-  payments: Payment[];
+  orderDetails: OrderDetail[];
 }
 
 const ApprovePayment = ({
@@ -49,7 +69,7 @@ const ApprovePayment = ({
   const queryClient = useQueryClient();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [order, setOrder] = useState<PaymentSummaryData | null>(null);
+  const [order, setOrder] = useState<any>([]);
   const [orderError, setOrderError] = useState<string | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   
@@ -156,27 +176,31 @@ const ApprovePayment = ({
   const getOrderDetails = async () => {
     try {
       setOrderError(null);
-      if (!singlePayment?.id) {
-        setOrderError("No Payment ID provided");
+      if (!singlePayment?.orderID) {
+        setOrderError("No Order ID provided");
         return;
       }
-      // Use getPaymentSummary which calls /Order/payment/{orderId}
-      const data = await getPaymentSummary(singlePayment.id);
 
-      // getPaymentSummary returns response.data directly (based on orders.tsx implementation)
-      if (data?.isSuccessful && data?.data) {
-        setOrder(data.data);
+      const businessId = businessInformation?.[0]?.businessId;
+      const cooperateId = businessInformation?.[0]?.cooperateID;
+
+      // Use getOrder which calls /api/v1/Order (DASHBOARD.order)
+      // Passing businessId and cooperateId as requested
+      const data = await getOrder(singlePayment.orderID, businessId, cooperateId);
+
+      if (data?.data?.isSuccessful) {
+        setOrder(data?.data?.data || {});
         setOrderError(null);
-      } else if (data?.error) {
-        const message = data?.error || "Failed to fetch order details";
-        setOrder(null);
+      } else if (data?.data?.error) {
+        const message = data?.data?.error || "Failed to fetch order details";
+        setOrder({});
         setOrderError(message);
       } else {
-        setOrder(null);
+        setOrder({});
         setOrderError("Failed to fetch order details");
       }
     } catch (err: any) {
-      setOrder(null);
+      setOrder({});
       setOrderError(
         err?.message ||
           "An unexpected error occurred while fetching order details."
@@ -185,21 +209,20 @@ const ApprovePayment = ({
   };
 
   useEffect(() => {
-    if (showOrderDetails && !order) {
-        // Only fetch if we haven't fetched yet (order is null) and details are requested
+    if (showOrderDetails && (Array.isArray(order) && order.length === 0)) {
         getOrderDetails();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showOrderDetails, singlePayment?.id]); 
+  }, [showOrderDetails, singlePayment?.orderID]); 
 
   useEffect(() => {
-     if (singlePayment?.id) {
+     if (singlePayment?.orderID) {
         getOrderDetails();
      } else {
-        setOrderError("No Payment ID associated with this payment.");
-        setOrder(null);
+        setOrderError("No Order ID associated with this payment.");
+        setOrder({});
      }
-  }, [singlePayment?.id]);
+  }, [singlePayment?.orderID]);
 
 
   const InfoRow = ({ label, value, valueClassName = "text-textGrey" }: { label: string, value: string | React.ReactNode, valueClassName?: string }) => (
@@ -209,7 +232,7 @@ const ApprovePayment = ({
     </div>
   );
 
-  const isOrderLoading = !order && !orderError && isLoading; // Simplify loading check if needed
+  const isOrderLoading = Array.isArray(order) && order.length === 0 && !orderError;
 
   return (
     <Modal
@@ -217,7 +240,7 @@ const ApprovePayment = ({
       size="md"
       isOpen={isOpen}
       onOpenChange={() => {
-        setOrder(null);
+        setOrder([]);
         setShowOrderDetails(false);
         setOrderError(null);
         toggleApproveModal();
@@ -260,53 +283,87 @@ const ApprovePayment = ({
                           <IoReload />
                         </button>
                       </div>
-                    ) : !order ? ( // Loading state
+                    ) : isOrderLoading ? (
                       <div className="flex flex-col items-center justify-center py-8">
                         <Spinner size="lg" color="primary" />
-                        <p className="text-sm text-gray-400 mt-4">Fetching payment details...</p>
+                        <p className="text-sm text-gray-400 mt-4">Fetching order details...</p>
                       </div>
                     ) : (
-                      <div className="space-y-6">
-                        {/* Summary Cards */}
-                        <div className="grid grid-cols-1 gap-3">
-                          <div className="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
-                            <p className="text-xs text-gray-500 uppercase">Total Amount</p>
-                            <p className="text-md font-bold text-black">{formatPrice(order.totalAmount)}</p>
+                      <div className="space-y-4">
+                        {order?.orderDetails?.map((item: any, index: number) => (
+                          <React.Fragment key={item.id || index}>
+                            <div className="flex justify-between items-start">
+                              <div className="flex gap-3">
+                                <div className="relative w-[50px] h-[50px] rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                  <Image
+                                    src={
+                                      item?.image
+                                        ? `data:image/jpeg;base64,${item?.image}`
+                                        : noImage
+                                    }
+                                    fill
+                                    className="object-cover"
+                                    alt={item.itemName || "Item"}
+                                  />
+                                </div>
+                                <div className="flex flex-col justify-center">
+                                  <p className="text-sm font-semibold text-gray-900">
+                                    {item.menuName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {item.itemName}
+                                    {item.unit && <span className="text-black ml-1">({item.unit})</span>}
+                                  </p>
+                                  <p className="text-xs font-medium mt-1">
+                                    x{item.quantity}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-gray-900">
+                                  {formatPrice(item.unitPrice)}
+                                </p>
+                                {item.packingCost > 0 && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Pack: {formatPrice(item.packingCost)}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {index !== order?.orderDetails?.length - 1 && (
+                              <Divider className="bg-gray-100" />
+                            )}
+                          </React.Fragment>
+                        ))}
+                        
+                        <div className="bg-gray-50 p-3 rounded-lg mt-4 space-y-2">
+                          <div className="flex justify-between text-xs font-semibold text-gray-700">
+                             <span>Subtotal</span>
+                             <span>{formatPrice(order.subTotalAmount)}</span>
                           </div>
-                          <div className="p-3 bg-green-50 rounded-lg flex justify-between items-center">
-                            <p className="text-xs text-green-600 uppercase">Amount Paid</p>
-                            <p className="text-md font-bold text-green-700">{formatPrice(order.amountPaid)}</p>
+                          <div className="flex justify-between text-xs font-semibold text-gray-700">
+                             <span>VAT ({(order.vatAmount / (order.subTotalAmount || 1) * 100).toFixed(2)}%)</span>
+                             <span>{formatPrice(order.vatAmount)}</span>
                           </div>
-                          <div className="p-3 bg-red-50 rounded-lg flex justify-between items-center">
-                            <p className="text-xs text-red-600 uppercase">Remaining</p>
-                            <p className="text-md font-bold text-red-700">{formatPrice(order.amountRemaining)}</p>
+                          {order.additionalCost > 0 && (
+                            <div className="flex justify-between text-xs font-semibold text-gray-700">
+                               <span>{order.additionalCostName || "Additional Cost"}</span>
+                               <span>{formatPrice(order.additionalCost)}</span>
+                            </div>
+                          )}
+                          <Divider className="my-1" />
+                          <div className="flex justify-between text-sm font-bold text-gray-900">
+                             <span>Total</span>
+                             <span>{formatPrice(order.totalAmount)}</span>
                           </div>
-                        </div>
-
-                        {/* Payments Table - Simplified for compact view */}
-                        <div>
-                           <h3 className="text-xs font-bold text-black mb-2 uppercase">Payment History</h3>
-                           {order.payments && order.payments.length > 0 ? (
-                             <div className="space-y-3">
-                               {order.payments.map((payment, index) => (
-                                 <div key={index} className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0 last:pb-0">
-                                   <div className="flex flex-col">
-                                     <span className="text-xs font-semibold text-gray-900">{formatPrice(payment.amount)}</span>
-                                     <span className="text-[10px] text-gray-500">{moment(payment.dateCreated).format('MMM DD, h:mm A')}</span>
-                                   </div>
-                                   <div className="flex flex-col items-end gap-1">
-                                      <span className="text-[10px] text-gray-600">{payment.paymentMethod}</span>
-                                      {/* Using a simpler text badge or keep Chip if imported? keeping it simple for now or using small badge logic */}
-                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${payment.paymentStatus === 'Successful' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                        {payment.paymentStatus}
-                                      </span>
-                                   </div>
-                                 </div>
-                               ))}
-                             </div>
-                           ) : (
-                              <p className="text-xs text-gray-400 text-center py-2">No payments recorded</p>
-                           )}
+                          <div className="flex justify-between text-xs font-semibold text-green-700 mt-1">
+                             <span>Amount Paid</span>
+                             <span>{formatPrice(order.amountPaid)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs font-semibold text-red-600">
+                             <span>Amount Remaining</span>
+                             <span>{formatPrice(order.amountRemaining)}</span>
+                          </div>
                         </div>
                       </div>
                     )}

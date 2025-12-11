@@ -1,7 +1,8 @@
 const columns = [
   { name: "ID", uid: "menuID", sortable: true },
   { name: "NAME", uid: "name", sortable: true },
-  { name: "AMOUNT", uid: "amount", sortable: true },
+  { name: "Total Amount", uid: "amount", sortable: true },
+  { name: "Remaining Amount", uid: "amountRemaining", sortable: true },
   { name: "TABLE NAME", uid: "qrReference", sortable: true },
   { name: "ORDER ID", uid: "orderID", sortable: true },
   { name: "PHONE NUMBER", uid: "placedByPhoneNumber", sortable: true },

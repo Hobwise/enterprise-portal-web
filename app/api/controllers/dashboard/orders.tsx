@@ -211,8 +211,14 @@ export async function getOrderByBusiness(
   }
 }
 
-export async function getOrder(orderId: string) {
-  const headers = { orderId };
+export async function getOrder(
+  orderId: string,
+  businessId?: string,
+  cooperateId?: string
+) {
+  const headers: any = { orderId };
+  if (businessId) headers.businessId = businessId;
+  if (cooperateId) headers.cooperateId = cooperateId;
 
   try {
     const data = await api.get(DASHBOARD.order, {
