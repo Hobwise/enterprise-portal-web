@@ -1,28 +1,63 @@
 import React, { useEffect, useState } from "react";
 import { getOrder } from "@/app/api/controllers/dashboard/orders";
 import { confirmPayment } from "@/app/api/controllers/dashboard/payment";
-import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
-import Error from "@/components/error";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { formatPrice, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import {
-  Chip,
   Divider,
   Modal,
   ModalBody,
   ModalContent,
-  Spacer,
   Spinner,
 } from "@nextui-org/react";
 import Image from "next/image";
-import { HiArrowLongLeft } from "react-icons/hi2";
+import { HiArrowLongRight } from "react-icons/hi2";
 import noImage from "../../../../public/assets/images/no-image.svg";
-import { paymentMethodMap } from "./data";
+import { paymentMethodMap, paymentTypeMap } from "./data";
 import { useQueryClient } from "@tanstack/react-query";
 import { paymentsCacheUtils } from "@/hooks/cachedEndpoints/usePayment";
 import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
 import { IoReload } from "react-icons/io5";
+import moment from "moment";
+
+interface OrderDetail {
+  id: string;
+  itemName: string;
+  menuName: string;
+  quantity: number;
+  packingCost: number;
+  unitPrice: number;
+  unit: string;
+  orderID: string;
+  itemID: string;
+  image: string;
+  totalPrice: number;
+  isVariety: boolean;
+  isPacked: boolean;
+}
+
+interface OrderData {
+  reference: string;
+  placedByName: string;
+  placedByPhoneNumber: string;
+  treatedBy: string;
+  additionalCostName: string;
+  additionalCost: number;
+  subTotalAmount: number;
+  vatAmount: number;
+  isVatApplied: boolean;
+  totalAmount: number;
+  paymentMethod: number;
+  status: number;
+  dateCreated: string;
+  comment: string;
+  quickResponseID: string;
+  estimatedCompletionTime: string;
+  amountPaid: number;
+  amountRemaining: number;
+  orderDetails: OrderDetail[];
+}
 
 const ApprovePayment = ({
   singlePayment,
@@ -33,10 +68,11 @@ const ApprovePayment = ({
   const { userRolePermissions, role } = usePermission();
   const queryClient = useQueryClient();
 
-  const [reference, setReference] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [order, setOrder] = useState([]);
+  const [order, setOrder] = useState<any>([]);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [showOrderDetails, setShowOrderDetails] = useState(false);
+  
   const userData = getJsonItemFromLocalStorage("userInformation");
   const businessInformation = getJsonItemFromLocalStorage("business");
 
@@ -140,21 +176,31 @@ const ApprovePayment = ({
   const getOrderDetails = async () => {
     try {
       setOrderError(null);
-      const data = await getOrder(singlePayment.orderID);
+      if (!singlePayment?.orderID) {
+        setOrderError("No Order ID provided");
+        return;
+      }
+
+      const businessId = businessInformation?.[0]?.businessId;
+      const cooperateId = businessInformation?.[0]?.cooperateID;
+
+      // Use getOrder which calls /api/v1/Order (DASHBOARD.order)
+      // Passing businessId and cooperateId as requested
+      const data = await getOrder(singlePayment.orderID, businessId, cooperateId);
 
       if (data?.data?.isSuccessful) {
-        setOrder(data?.data?.data);
+        setOrder(data?.data?.data || {});
         setOrderError(null);
       } else if (data?.data?.error) {
         const message = data?.data?.error || "Failed to fetch order details";
-        setOrder([]);
+        setOrder({});
         setOrderError(message);
       } else {
-        setOrder([]);
+        setOrder({});
         setOrderError("Failed to fetch order details");
       }
     } catch (err: any) {
-      setOrder([]);
+      setOrder({});
       setOrderError(
         err?.message ||
           "An unexpected error occurred while fetching order details."
@@ -163,247 +209,225 @@ const ApprovePayment = ({
   };
 
   useEffect(() => {
-    if (singlePayment?.orderID) {
-      getOrderDetails();
+    if (showOrderDetails && (Array.isArray(order) && order.length === 0)) {
+        getOrderDetails();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showOrderDetails, singlePayment?.orderID]); 
+
+  useEffect(() => {
+     if (singlePayment?.orderID) {
+        getOrderDetails();
+     } else {
+        setOrderError("No Order ID associated with this payment.");
+        setOrder({});
+     }
   }, [singlePayment?.orderID]);
 
+
+  const InfoRow = ({ label, value, valueClassName = "text-textGrey" }: { label: string, value: string | React.ReactNode, valueClassName?: string }) => (
+    <div className="flex justify-between items-center py-1.5 text-sm">
+      <span className="text-grey600 font-normal">{label}</span>
+      <span className={`font-semibold ${valueClassName}`}>{value}</span>
+    </div>
+  );
+
+  const isOrderLoading = Array.isArray(order) && order.length === 0 && !orderError;
+
   return (
-    <>
-      <Modal
-        isDismissable={false}
-        size="5xl"
-        isOpen={isOpen}
-        onOpenChange={() => {
-          setOrder([]);
-          toggleApproveModal();
-        }}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalBody className="flex justify-center">
-                <div className="p-5">
-                  <div className="flex flex-row flex-wrap  justify-between">
-                    <div>
-                      <h2 className="text-[18px] text-black leading-8 font-semibold">
-                        Order ID: {singlePayment.reference}
-                      </h2>
+    <Modal
+      isDismissable={false}
+      size="md"
+      isOpen={isOpen}
+      onOpenChange={() => {
+        setOrder([]);
+        setShowOrderDetails(false);
+        setOrderError(null);
+        toggleApproveModal();
+      }}
+    >
+      <ModalContent className="p-4">
+        {() => (
+          <ModalBody>
+            <div className="flex flex-col items-center w-full max-w-lg mx-auto">
+              <h2 className="text-xl font-bold text-gray-900 mb-4">
+                Payment Summary
+              </h2>
 
-                      <Chip
-                        classNames={{
-                          base: ` text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                        }}
-                      >
-                        {singlePayment.qrName}
-                      </Chip>
-                    </div>
-                    <div
-                      className={`${
-                        order?.length === 0 ? "hidden" : "block"
-                      } md:w-[15rem] w-full`}
-                    >
-                      <div className="flex item-center  text-xs text-black font-bold justify-between">
-                        <p>Subtotal</p>
-                        <h2>{formatPrice(order.subTotalAmount)}</h2>
+              <div className="w-full">
+                <button 
+                  onClick={() => setShowOrderDetails(!showOrderDetails)}
+                  className="text-primaryColor text-sm font-medium hover:underline mb-4 focus:outline-none"
+                >
+                  {showOrderDetails ? "Hide order details" : "View order details"}
+                </button>
+
+                {showOrderDetails ? (
+                  <div className="overflow-y-auto max-h-[400px] border border-gray-200 rounded-lg p-4 mb-4">
+                    {orderError ? (
+                      <div className="flex flex-col justify-center items-center text-black py-4">
+                        <Image
+                          src={noImage}
+                          width={40}
+                          height={40}
+                          className="object-cover rounded-lg opacity-50 mb-2"
+                          alt="error"
+                        />
+                        <p className="text-sm font-semibold mb-2">Something went wrong!</p>
+                        <p className="text-xs text-gray-500 mb-4">{orderError}</p>
+                        <button
+                          onClick={getOrderDetails}
+                          className="flex items-center gap-2 px-4 py-2 text-primaryColor border border-primaryColor rounded-full text-xs hover:bg-gray-50 transition-colors"
+                        >
+                          <span>Retry</span>
+                          <IoReload />
+                        </button>
                       </div>
-                      <div className="flex item-center  text-xs text-black font-bold justify-between">
-                        <p>
-                          VAT (
-                          {(
-                            (order.vatAmount /
-                              (order.totalAmount - order.vatAmount)) *
-                            100
-                          ).toFixed(2)}
-                          %)
-                        </p>
-                        <h2>{formatPrice(order.vatAmount)}</h2>
+                    ) : isOrderLoading ? (
+                      <div className="flex flex-col items-center justify-center py-8">
+                        <Spinner size="lg" color="primary" />
+                        <p className="text-sm text-gray-400 mt-4">Fetching order details...</p>
                       </div>
-
-                      <div
-                        className={`
-                          ${order.additionalCost ? "flex" : "hidden"} 
-                        flex item-center justify-between  text-xs text-black font-bold`}
-                      >
-                        <p>{order.additionalCostName || "Additional Cost"}</p>
-                        <h2>{formatPrice(order.additionalCost)}</h2>
-                      </div>
-                      <div className="flex item-center font-bold   text-black justify-between">
-                        <p>Total</p>
-                        <h2>{formatPrice(order.totalAmount)}</h2>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Spacer y={5} />
-                  <div className="flex gap-6">
-                    <div className="overflow-y-scroll grid place-content-center max-h-[305px] w-[60%] rounded-lg border border-[#E4E7EC80] p-2 ">
-                      {orderError ? (
-                        <div className="flex flex-col  justify-center items-center text-black  max-w-md mx-auto">
-                          <Image
-                            src={noImage}
-                            width={20}
-                            height={20}
-                            className={`object-cover rounded-lg w-12  h-12`}
-                            aria-label="uploaded image"
-                            alt="uploaded image(s)"
-                          />
-                          <Spacer y={2} />
-                          <p className="font-[600] text-sm text-center">
-                            Something went wrong!
-                          </p>
-                          <Spacer y={2} />
-                          <p className="text-xs text-gray-600 text-center">
-                            {orderError}
-                          </p>
-                          <Spacer y={2} />
-                          <button
-                            onClick={getOrderDetails}
-                            className="bg-white border px-4 py-2 border-primaryColor rounded-full text-primaryColor"
-                          >
-                            <div className="flex text-xs items-center gap-2">
-                              <p>Retry</p>
-                              <IoReload />
-                            </div>
-                          </button>
-                        </div>
-                      ) : order?.length === 0 ? (
-                        <div className={`grid h-full place-content-center`}>
-                          <Spinner />
-                          <p className="text-center mt-1 text-[14px] text-grey400">
-                            Fetching order details...
-                          </p>
-                        </div>
-                      ) : (
-                        <>
-                          {order?.orderDetails?.map((item, index) => {
-                            return (
-                              <React.Fragment key={item.id}>
-                                <div className="flex justify-between">
-                                  <div className="w-[250px] rounded-lg text-black  flex">
-                                    <div
-                                      className={`grid place-content-center`}
-                                    >
-                                      <Image
-                                        src={
-                                          item?.image
-                                            ? `data:image/jpeg;base64,${item?.image}`
-                                            : noImage
-                                        }
-                                        width={60}
-                                        height={60}
-                                        className={
-                                          "bg-cover h-[60px] rounded-lg w-[60px]"
-                                        }
-                                        aria-label="uploaded image"
-                                        alt="uploaded image(s)"
-                                      />
-                                    </div>
-                                    <div className="p-3 flex  flex-col text-sm justify-center">
-                                      <p className="font-[600]">
-                                        {item.menuName}
-                                      </p>
-                                      <Spacer y={2} />
-                                      <p className="text-grey600">
-                                        {item.itemName}{" "}
-                                        <span className="text-black">
-                                          {item.unit && `(${item.unit})`}
-                                        </span>
-                                      </p>
-
-                                      <p className="text-sm">
-                                        {item.iquantity}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  <div className="text-black flex items-center text-[12px]">
-                                    <span>QTY: </span>
-                                    <span className="font-[600]">
-                                      {"  "}
-                                      {item.quantity}
-                                    </span>
-                                  </div>
-                                  <div className="text-black w-[150px] grid place-content-center">
-                                    <div className="font-bold  text-end">
-                                      <p>{formatPrice(item.unitPrice)}</p>
-
-                                      <p
-                                        className={` ${
-                                          item.packingCost ? "block" : "hidden"
-                                        } text-xs text-grey500 font-normal`}
-                                      >
-                                        Pack cost:{" "}
-                                        {formatPrice(item.packingCost)}
-                                      </p>
-                                    </div>
-                                  </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {order?.orderDetails?.map((item: any, index: number) => (
+                          <React.Fragment key={item.id || index}>
+                            <div className="flex justify-between items-start">
+                              <div className="flex gap-3">
+                                <div className="relative w-[50px] h-[50px] rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                                  <Image
+                                    src={
+                                      item?.image
+                                        ? `data:image/jpeg;base64,${item?.image}`
+                                        : noImage
+                                    }
+                                    fill
+                                    className="object-cover"
+                                    alt={item.itemName || "Item"}
+                                  />
                                 </div>
-                                {index !== order?.orderDetails?.length - 1 && (
-                                  <Divider className="bg-primaryGrey" />
-                                )}
-                              </React.Fragment>
-                            );
-                          })}
-                        </>
-                      )}
-                    </div>
-                    <div className="flex-grow">
-                      <CustomInput
-                        type="text"
-                        value={paymentMethodMap[singlePayment.paymentMethod]}
-                        disabled={true}
-                        label="Channel"
-                        placeholder="Channel"
-                      />
-
-                      <Spacer y={3} />
-                      <CustomInput
-                        type="text"
-                        value={singlePayment.treatedBy}
-                        disabled={true}
-                        label="Staff"
-                        placeholder="Staff"
-                      />
-
-                      <Spacer y={3} />
-                      {(role === 0 ||
-                        userRolePermissions?.canEditPayment === true) &&
-                        singlePayment.status === 0 && (
-                          <>
-                            <CustomInput
-                              type="text"
-                              disabled={true}
-                              value={singlePayment?.paymentReference}
-                              onChange={(e) => setReference(e.target.value)}
-                              name="itemName"
-                              label="Payment Reference"
-                              placeholder="Provide payment reference"
-                            />
-
-                            <Spacer y={5} />
-
-                            <CustomButton
-                              loading={isLoading}
-                              disabled={isLoading}
-                              onClick={finalizeOrder}
-                              className="text-white w-full h-[50px]"
-                            >
-                              <div className="flex gap-2 items-center justify-center">
-                                <p>{"Confirm payment"} </p>
-                                <HiArrowLongLeft className="text-[22px] rotate-180" />
+                                <div className="flex flex-col justify-center">
+                                  <p className="text-sm font-semibold text-gray-900">
+                                    {item.menuName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {item.itemName}
+                                    {item.unit && <span className="text-black ml-1">({item.unit})</span>}
+                                  </p>
+                                  <p className="text-xs font-medium mt-1">
+                                    x{item.quantity}
+                                  </p>
+                                </div>
                               </div>
-                            </CustomButton>
-                          </>
-                        )}
-                    </div>
+                              <div className="text-right">
+                                <p className="text-sm font-bold text-gray-900">
+                                  {formatPrice(item.unitPrice)}
+                                </p>
+                                {item.packingCost > 0 && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Pack: {formatPrice(item.packingCost)}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {index !== order?.orderDetails?.length - 1 && (
+                              <Divider className="bg-gray-100" />
+                            )}
+                          </React.Fragment>
+                        ))}
+                        
+                        <div className="bg-gray-50 p-3 rounded-lg mt-4 space-y-2">
+                          <div className="flex justify-between text-xs font-semibold text-gray-700">
+                             <span>Subtotal</span>
+                             <span>{formatPrice(order.subTotalAmount)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs font-semibold text-gray-700">
+                             <span>VAT ({(order.vatAmount / (order.subTotalAmount || 1) * 100).toFixed(2)}%)</span>
+                             <span>{formatPrice(order.vatAmount)}</span>
+                          </div>
+                          {order.additionalCost > 0 && (
+                            <div className="flex justify-between text-xs font-semibold text-gray-700">
+                               <span>{order.additionalCostName || "Additional Cost"}</span>
+                               <span>{formatPrice(order.additionalCost)}</span>
+                            </div>
+                          )}
+                          <Divider className="my-1" />
+                          <div className="flex justify-between text-sm font-bold text-gray-900">
+                             <span>Total</span>
+                             <span>{formatPrice(order.totalAmount)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs font-semibold text-green-700 mt-1">
+                             <span>Amount Paid</span>
+                             <span>{formatPrice(order.amountPaid)}</span>
+                          </div>
+                          <div className="flex justify-between text-xs font-semibold text-red-600">
+                             <span>Amount Remaining</span>
+                             <span>{formatPrice(order.amountRemaining)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              </ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-    </>
+                ) : (
+                  <div className="space-y-4 mb-8">
+                    <InfoRow 
+                      label="Order ID" 
+                      value={singlePayment.reference} 
+                      valueClassName="text-gray-900 font-bold text-base"
+                    />
+                    <InfoRow 
+                      label="Amount Paid:" 
+                      value={formatPrice(singlePayment.totalAmount)} 
+                      valueClassName="text-gray-900 font-bold text-base"
+                    />
+                    <InfoRow 
+                      label="Payment method:" 
+                      value={paymentMethodMap[singlePayment.paymentMethod] || "Unknown"}
+                    />
+                    <InfoRow 
+                      label="Payment type:" 
+                      value={paymentTypeMap[singlePayment.paymentType] || "Unknown"} 
+                    />
+                    <InfoRow 
+                      label="Staff:" 
+                      value={singlePayment.treatedBy || "N/A"} 
+                    />
+                    <InfoRow 
+                      label="Time:" 
+                      value={moment(singlePayment.dateCreated).format("hh:mma")} 
+                    />
+                    <InfoRow 
+                      label="Date:" 
+                      value={moment(singlePayment.dateCreated).format("DD/MM/YYYY")} 
+                    />
+                    <InfoRow 
+                      label="Customer name" 
+                      value={singlePayment.customerName || singlePayment.customer || "N/A"} 
+                    />
+                  </div>
+                )}
+
+                {(true) && ( // Always show confirm button if it's open, relying on permission check below
+                   (role === 0 || userRolePermissions?.canEditPayment === true) && singlePayment.status === 0 ? (
+                    <CustomButton
+                      loading={isLoading}
+                      disabled={isLoading}
+                      onClick={finalizeOrder}
+                      className="w-full py-6 bg-primaryColor text-white rounded-xl shadow-lg hover:bg-primaryColor/90 transition-all font-semibold"
+                    >
+                      <div className="flex items-center justify-between w-full px-4">
+                        <span className="text-base text-center w-full">Confirm Payment</span>
+                        <HiArrowLongRight className="text-2xl" />
+                      </div>
+                    </CustomButton>
+                   ) : null
+                )}
+              </div>
+            </div>
+          </ModalBody>
+        )}
+      </ModalContent>
+    </Modal>
   );
 };
 

@@ -116,7 +116,7 @@ const MenuList = () => {
     setCurrentSection
   } = useGlobalContext();
 
-  const [order] = useState<any>(getJsonItemFromLocalStorage("order"));
+  const [order, setOrder] = useState<any>(getJsonItemFromLocalStorage("order"));
   const { data: categoriesData, isLoading: loadingCategories } = useMenuCategories();
   const [categories, setCategories] = useState<any[]>([]);
   
@@ -840,6 +840,7 @@ const MenuList = () => {
       // Clear the order from localStorage if we're not in add-items mode
       // This prevents accidental prefilling when creating a new order
       clearItemLocalStorage("order");
+      setOrder(null);
     }
   }, [order?.id, categories, searchParams]);
 
