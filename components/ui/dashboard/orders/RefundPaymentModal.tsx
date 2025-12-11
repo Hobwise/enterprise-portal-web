@@ -198,7 +198,7 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Refund Amount (Max: {formatPrice(maxRefundAmount)})
+                Refund Amount (Paid: {formatPrice(maxRefundAmount)})
               </label>
               <CustomInput
                 type="number"
