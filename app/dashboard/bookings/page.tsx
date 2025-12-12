@@ -18,6 +18,7 @@ import ConfirmBooking from "@/components/ui/dashboard/bookings/confirmBooking";
 import CreateBooking from "@/components/ui/dashboard/bookings/createBooking";
 import CreateReservation from "@/components/ui/dashboard/bookings/createReservation";
 import SuccessModal from "@/components/ui/dashboard/bookings/successModal";
+import EditBooking from "@/components/ui/dashboard/bookings/editBooking";
 import useAllBookingsData from "@/hooks/cachedEndpoints/useAllBookingsData";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
@@ -101,6 +102,7 @@ const Bookings: React.FC = () => {
   const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
   const [completedBooking, setCompletedBooking] = useState<any>(null);
+  const [isEditBookingModal, setIsEditBookingModal] = useState(false);
 
   const updateBookingStatus = async (
     id: number,
@@ -125,6 +127,15 @@ const Bookings: React.FC = () => {
         type: "error",
       });
     }
+  };
+
+  const toggleEditBookingModal = () => {
+    setIsEditBookingModal(!isEditBookingModal);
+  };
+
+  const openEditModal = () => {
+    closeBookingDetailsModal();
+    setIsEditBookingModal(true);
   };
 
   const exportCSV = async () => {
@@ -257,6 +268,13 @@ const Bookings: React.FC = () => {
         updateBookingStatus={updateBookingStatus}
         isLoading={loading}
         bookingDetails={bookingDetails}
+        openEditModal={openEditModal}
+      />
+      <EditBooking
+        eachBooking={bookingDetails}
+        isEditBookingModal={isEditBookingModal}
+        toggleEditBookingModal={toggleEditBookingModal}
+        refetch={refetch}
       />
       <SuccessModal
         bookingDetails={completedBooking}

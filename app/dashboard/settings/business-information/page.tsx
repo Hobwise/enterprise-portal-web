@@ -962,6 +962,80 @@ const BusinessInformation = () => {
               )}
             </div>
           </div>
+
+          {/* Order Settings Section */}
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <PiBuildingOffice className="text-black" />
+                <span className="font-medium text-sm">Order Settings</span>
+              </div>
+              <Divider />
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3">
+              {!isEditing ? (
+                <>
+                  <div className="col-span-1 flex gap-2">
+                    <div className="h-4 w-4"></div>
+                    <div className="flex flex-col">
+                      <span className="text-sm">Prevent Staff Order Item Reduction</span>
+                      <Chip
+                        className={`${
+                          businessFormData?.preventOrderItemReduction
+                            ? "bg-success-50 text-success-600  border border-green-500"
+                            : "bg-gray-50 text-gray-600 border border-gray-500"
+                        }`}
+                        size="sm"
+                        variant="flat"
+                      >
+                        {businessFormData?.preventOrderItemReduction
+                          ? "Enabled"
+                          : "Disabled"}
+                      </Chip>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="col-span-2 flex gap-2">
+                    <div className="flex flex-col w-full">
+                      <div className="flex items-center justify-between">
+                        <div className="flex flex-col">
+                          <label className="text-black font-medium text-sm">
+                            Prevent Staff Order Item Reduction
+                          </label>
+                          <span className="text-xs text-gray-600">
+                            When enabled, staff members will not be able to reduce or delete order items after the order is saved
+                          </span>
+                        </div>
+                        <Switch
+                          size="sm"
+                          classNames={{
+                            wrapper: `m-0 ${
+                              businessFormData?.preventOrderItemReduction
+                                ? "!bg-primaryColor"
+                                : "bg-[#E4E7EC]"
+                            } `,
+                          }}
+                          name="preventOrderItemReduction"
+                          defaultChecked={businessFormData?.preventOrderItemReduction}
+                          onChange={(e) =>
+                            setBusinessFormData((prevState: any) => ({
+                              ...prevState,
+                              preventOrderItemReduction: e.target.checked,
+                            }))
+                          }
+                          isSelected={businessFormData?.preventOrderItemReduction}
+                          aria-label="Prevent Order Item Reduction"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
