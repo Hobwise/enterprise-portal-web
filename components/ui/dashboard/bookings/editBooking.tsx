@@ -241,7 +241,7 @@ const EditBooking = ({
               </h2>
               <ScrollShadow size={5} className="w-full h-[500px]">
                 <form onSubmit={updateBookingHandler}>
-                  <div className="flex gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <CustomInput
                       type="text"
                       value={bookings.firstName}
@@ -264,7 +264,7 @@ const EditBooking = ({
                     />
                   </div>
                   <Spacer y={5} />
-                  <div className="flex gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <CustomInput
                       type="text"
                       value={bookings.email}
@@ -310,7 +310,9 @@ const EditBooking = ({
                     size="lg"
                     className="text-black"
                     label="Choose reservation"
-                    placeholder={eachBooking.reservationName}
+                    placeholder={
+                      eachBooking?.reservationName || "Select reservation"
+                    }
                     classNames={selectClassNames}
                     selectedKeys={
                       selectedReservation ? [selectedReservation.id] : []
@@ -318,7 +320,9 @@ const EditBooking = ({
                     renderValue={() => {
                       return (
                         <span className="text-black">
-                          {selectedReservation.reservationName}
+                          {selectedReservation?.reservationName ||
+                            eachBooking?.reservationName ||
+                            "Select reservation"}
                         </span>
                       );
                     }}
