@@ -1,5 +1,6 @@
 import React from 'react';
 const columns = [
+  { name: 'PAYMENT TYPE', uid: 'paymentType', sortable: true },
   { name: 'AMOUNT', uid: 'totalAmount', sortable: true },
   { name: 'TABLE', uid: 'qrName', sortable: true },
   //   { name: 'ORDER ID', uid: 'orderID' },
@@ -21,6 +22,12 @@ export const statusColorMap: Record<
   2: 'danger',
   3: 'secondary',
 };
+
+export const paymentTypeMap: Record<number, string> = {
+  0: 'Order',
+  1: 'Refund',
+};
+
 export const paymentMethodMap: Record<
   number,
   'Cash' | 'POS' | 'Bank transfer' | 'Checkout'

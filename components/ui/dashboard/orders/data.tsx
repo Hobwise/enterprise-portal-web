@@ -1,7 +1,8 @@
 const columns = [
   { name: "ID", uid: "menuID", sortable: true },
   { name: "NAME", uid: "name", sortable: true },
-  { name: "AMOUNT", uid: "amount", sortable: true },
+  { name: "Total Amount", uid: "amount", sortable: true },
+  { name: "Remaining Amount", uid: "amountRemaining", sortable: true },
   { name: "TABLE NAME", uid: "qrReference", sortable: true },
   { name: "ORDER ID", uid: "orderID", sortable: true },
   { name: "PHONE NUMBER", uid: "placedByPhoneNumber", sortable: true },
@@ -20,13 +21,13 @@ export const statusColorMap: Record<
   3: "secondary",
 };
 
-type AvailableOption = "Update Order" | "Checkout" | "Cancel Order" | "Generate Invoice";
+type AvailableOption = "Update Order" | "Checkout" | "Cancel Order" | "Generate Invoice" | "Payment Summary" | "Refund Order";
 
 export const availableOptions: Record<string, AvailableOption[]> = {
-  open: ["Update Order", "Checkout", "Cancel Order"],
-  closed: ["Generate Invoice"],
-  cancelled: [],
-  "awaiting confirmation": ["Update Order", "Checkout", "Cancel Order"],
+  open: ["Update Order", "Checkout", "Cancel Order", "Payment Summary", "Refund Order"],
+  closed: ["Generate Invoice", "Payment Summary", "Refund Order"],
+  cancelled: ["Payment Summary"],
+  "awaiting confirmation": ["Update Order", "Checkout", "Cancel Order", "Payment Summary", "Refund Order"],
 };
 export const statusDataMap: Record<
   number,

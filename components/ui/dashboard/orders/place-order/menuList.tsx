@@ -51,8 +51,7 @@ type Item = {
   count: number;
   packingCost: number;
   isPacked?: boolean;
-  isVatEnabled?: boolean;
-  vatRate?: number;
+  categoryId?: string;
 };
 
 
@@ -117,7 +116,7 @@ const MenuList = () => {
     setCurrentSection
   } = useGlobalContext();
 
-  const [order] = useState<any>(getJsonItemFromLocalStorage("order"));
+  const [order, setOrder] = useState<any>(getJsonItemFromLocalStorage("order"));
   const { data: categoriesData, isLoading: loadingCategories } = useMenuCategories();
   const [categories, setCategories] = useState<any[]>([]);
   
@@ -145,11 +144,13 @@ const MenuList = () => {
         categoryId: category.categoryId,
         categoryName: category.categoryName,
         orderIndex: category.orderIndex,
+        preventOrderItemReduction: category.preventOrderItemReduction,
         menus: category.menus || []
       }));
       setCategories(transformedCategories);
     }
   }, [categoriesData]);
+
 
   const filteredItems = useMemo(() => {
     if (!menuItems) return [];
@@ -542,6 +543,7 @@ const MenuList = () => {
     if (response?.data?.isSuccessful) {
       const orderData = response?.data?.data;
 
+
       const updatedArray = orderData.orderDetails.map((item: any) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
 
@@ -562,6 +564,8 @@ const MenuList = () => {
         placedByName: orderData.placedByName || order.placedByName || '',
         placedByPhoneNumber: orderData.placedByPhoneNumber || order.placedByPhoneNumber || '',
       };
+
+      console.log(transformedOrderData)
 
       setOrderDetails(transformedOrderData);
       setSelectedItems(() => updatedArray);
@@ -727,8 +731,12 @@ const MenuList = () => {
         // Remove item if it exists
         return prevItems.filter((item: any) => item.id !== menuItem.id);
       } else {
-        // Get current section's VAT settings
-        const currentSection = menuSections.find(s => s.id === activeSubCategory);
+        // Find category for this item to store categoryId
+        const currentCategory = categories.find(cat => 
+          cat.menus.some((menu: any) => 
+            menu.menuSections?.some((section: any) => section.id === activeSubCategory)
+          )
+        );
 
         // Add new item
         return [
@@ -738,13 +746,12 @@ const MenuList = () => {
             count: 1,
             isPacked: isItemPacked,
             packingCost: menuItem.packingCost,
-            isVatEnabled: currentSection?.isVatEnabled || false,
-            vatRate: currentSection?.vatRate || 0,
+            categoryId: currentCategory?.categoryId,
           },
         ];
       }
     });
-  }, [menuSections, activeSubCategory]);
+  }, [menuSections, activeSubCategory, categories]);
 
 
   const handleDecrement = useCallback((id: string) => {
@@ -788,16 +795,19 @@ const MenuList = () => {
         // Add new item from menuItems
         const menuItem = menuItems?.find(item => item.id === id);
         if (menuItem) {
-          // Get current section's VAT settings
-          const currentSection = menuSections.find(s => s.id === activeSubCategory);
+          // Find category for this item to store categoryId
+          const currentCategory = categories.find(cat => 
+            cat.menus.some((menu: any) => 
+              menu.menuSections?.some((section: any) => section.id === activeSubCategory)
+            )
+          );
 
           const newItem = {
             ...menuItem,
             count: 1,
             isPacked: false,
             packingCost: menuItem.packingCost,
-            isVatEnabled: currentSection?.isVatEnabled || false,
-            vatRate: currentSection?.vatRate || 0,
+            categoryId: currentCategory?.categoryId,
           };
           setTimeout(() => setIsUpdating(false), 100);
           return [...prevItems, newItem];
@@ -806,7 +816,7 @@ const MenuList = () => {
         return prevItems;
       }
     });
-  }, [isUpdating, menuItems, menuSections, activeSubCategory]);
+  }, [isUpdating, menuItems, categories, activeSubCategory]);
 
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
@@ -830,6 +840,7 @@ const MenuList = () => {
       // Clear the order from localStorage if we're not in add-items mode
       // This prevents accidental prefilling when creating a new order
       clearItemLocalStorage("order");
+      setOrder(null);
     }
   }, [order?.id, categories, searchParams]);
 
@@ -879,6 +890,8 @@ const MenuList = () => {
     );
     onOpen();
   }, [isUpdating, menuItems, onOpen]);
+  console.log(selectedItems)
+
 
   return (
     <>
@@ -1125,6 +1138,7 @@ const MenuList = () => {
           handlePackingCost={handlePackingCost}
           businessId={businessInformation?.[0]?.businessId}
           cooperateID={userInformation?.cooperateID}
+          categoriesData={categories}
         />
         <ViewModal
           handleCardClick={handleCardClick}

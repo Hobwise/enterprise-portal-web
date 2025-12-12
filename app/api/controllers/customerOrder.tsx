@@ -24,7 +24,10 @@ export const getCustomerMenuCategories = async (
       headers,
     });
 
-    return await response.json();
+    const responseData = await response.json();
+    console.log('[/api/v1/Menu/categories] Endpoint Response:', JSON.stringify(responseData, null, 2));
+    
+    return responseData;
   } catch (error) {
     console.error("Error fetching customer menu categories:", error);
     throw error;

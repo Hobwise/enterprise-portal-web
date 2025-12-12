@@ -15,7 +15,8 @@ import { toPng } from "html-to-image";
 
 import cookie from "js-cookie";
 import Image from "next/image";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { twMerge } from "tailwind-merge";
 
 import * as XLSX from "xlsx";
@@ -112,12 +113,13 @@ type ToastData = {
     | "bottom-right"
     | "bottom-left"
     | "bottom-center";
-  duration: number;
+  autoClose: number;
+  className?: string; // Add className to ToastData
 };
 
 const toastData: ToastData = {
   position: "top-right",
-  duration: 2000,
+  autoClose: 3000,
 };
 
 interface notifyType {
@@ -134,19 +136,24 @@ const Msg = ({ title, text }: { title: string; text: string }) => {
     </div>
   );
 };
+
 export const notify = ({ title, text, type }: notifyType) => {
-  type === "warning" &&
-    toast(<Msg title={title} text={text} />, {
-      ...toastData,
-      icon: "⚠️",
-      style: {
-        background: "#F59E0B",
-        color: "#fff",
-      },
-    });
-  type === "success" &&
-    toast.success(<Msg title={title} text={text} />, toastData);
-  type === "error" && toast.error(<Msg title={title} text={text} />, toastData);
+  const toastMessage = <Msg title={title} text={text} />;
+  switch (type) {
+    case "warning":
+    case "caution": // Handle "caution" as a warning type
+      toast.warning(toastMessage, toastData);
+      break;
+    case "success":
+      toast.success(toastMessage, toastData);
+      break;
+    case "error":
+      toast.error(toastMessage, toastData);
+      break;
+    default:
+      toast(toastMessage, toastData);
+      break;
+  }
 };
 export function getInitials(name: string) {
   const words = name.split(" ");

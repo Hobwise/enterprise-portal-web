@@ -8,7 +8,8 @@ import "@fontsource/bricolage-grotesque"; // Defaults to weight 400
 import "@fontsource/bricolage-grotesque/400.css";
 import "@fontsource/bricolage-grotesque/500.css";
 import "@fontsource/bricolage-grotesque/700.css";
-import { Toaster } from "react-hot-toast";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { Toaster as SonnerToaster } from "sonner";
 import { companyInfo } from "../lib/companyInfo";
 import "./globals.css";
@@ -123,27 +124,11 @@ export default function RootLayout({
               <Providers>
                 {children}
                 <Analytics />
-              <Toaster
-                toastOptions={{
-                  duration: 2000,
-                  success: {
-                    style: {
-                      border: "2px solid #3a9ea5",
-                      boxShadow: "none",
-                    },
-                  },
-                  error: {
-                    style: {
-                      border: "2px solid #eb5757",
-                      boxShadow: "none",
-                    },
-                  },
-                }}
-              />
-              <SonnerToaster position="top-right" richColors />
-            </Providers>
-          </AppProvider>
-        </QueryProvider>
+                <ToastContainer />
+                <SonnerToaster position="top-right" richColors />
+              </Providers>
+            </AppProvider>
+          </QueryProvider>
         </ClientProviders>
       </body>
     </html>

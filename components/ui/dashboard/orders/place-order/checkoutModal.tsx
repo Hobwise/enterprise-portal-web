@@ -15,7 +15,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from "@/lib/utils";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Button,
   Checkbox,
@@ -35,7 +35,7 @@ import { IoIosArrowRoundBack } from "react-icons/io";
 import { IoClose } from "react-icons/io5";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../../public/assets/images/no-image.svg";
-import { ordersCacheUtils } from '@/hooks/cachedEndpoints/useOrder';
+import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
 
 interface Order {
   placedByName: string;
@@ -73,10 +73,9 @@ type ValidationErrors = {
   additionalCostName?: string;
 };
 
-
 // Type guard to check if response has data property
 const hasDataProperty = (response: any): response is ApiResponse => {
-  return response && typeof response === 'object' && 'data' in response;
+  return response && typeof response === "object" && "data" in response;
 };
 
 const CheckoutModal = ({
@@ -91,8 +90,8 @@ const CheckoutModal = ({
   businessId,
   cooperateID,
   handlePackingCost,
+  categoriesData,
 }: any) => {
-
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
 
@@ -114,80 +113,92 @@ const CheckoutModal = ({
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
+  const [validationErrors, setValidationErrors] = useState<{
+    placedByName?: boolean;
+    placedByPhoneNumber?: boolean;
+    quickResponseID?: boolean;
+    additionalCostName?: boolean;
+  }>({});
   const [reference, setReference] = useState("");
   const [screen, setScreen] = useState(1);
-  const [mobileSubStep, setMobileSubStep] = useState<'1A' | '1B' | '1C'>('1A');
+  const [mobileSubStep, setMobileSubStep] = useState<"1A" | "1B" | "1C">("1A");
 
-  const [qr, setQr] = useState<{ id: string; label: string; name?: string; value?: string }[]>([]);
+  const [qr, setQr] = useState<
+    { id: string; label: string; name?: string; value?: string }[]
+  >([]);
   const [order, setOrder] = useState<Order>({
     placedByName: orderDetails?.placedByName || "",
     placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
-    quickResponseID: orderDetails?.quickResponseID || orderDetails?.qrReference || "",
+    quickResponseID:
+      orderDetails?.quickResponseID || orderDetails?.qrReference || "",
     comment: orderDetails?.comment || "",
   });
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [additionalCost, setAdditionalCost] = useState(0);
   const [additionalCostName, setAdditionalCostName] = useState("");
+  const [vatAmount, setVatAmount] = useState(0);
+  const [isVatApplied, setIsVatApplied] = useState(true);
 
   useEffect(() => {
     if (orderDetails) {
-      setAdditionalCost(orderDetails.additionalCost);
-      setAdditionalCostName(orderDetails.additionalCostName);
+      setAdditionalCost(orderDetails.additionalCost || 0);
+      setAdditionalCostName(orderDetails.additionalCostName || "");
+      // Keep VAT handling consistent with UpdateOrderModal: use stored values when present
+      setVatAmount(orderDetails.vatAmount || 0);
+      setIsVatApplied(orderDetails.isVatApplied ?? true);
     }
   }, [orderDetails]);
 
   // Frontend validation helper function
   const validateCheckoutForm = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    const fieldErrors: ValidationErrors = {};
+    const fieldErrors: any = {};
 
-    const trimmedName = order.placedByName?.trim() || '';
-    if (trimmedName) {
-      if (trimmedName.length < 2) {
-        errors.push('Customer name must be at least 2 characters long');
-        fieldErrors.placedByName = 'Customer name must be at least 2 characters long';
-      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
-        errors.push('Customer name can only contain letters and spaces');
-        fieldErrors.placedByName = 'Customer name can only contain letters and spaces';
+    // Validate customer name (optional, will default to "anonymous" if empty)
+    if (order.placedByName?.trim()) {
+      if (order.placedByName.trim().length < 2) {
+        errors.push("Customer name must be at least 2 characters long");
+        fieldErrors.placedByName = true;
+      } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
+        errors.push("Customer name can only contain letters and spaces");
+        fieldErrors.placedByName = true;
       }
     }
 
-    const trimmedPhone = order.placedByPhoneNumber?.trim() || '';
-    if (trimmedPhone) {
-      const phoneNumber = trimmedPhone.replace(/\D/g, '');
+    // Validate phone number (optional, but if provided must be valid)
+    if (order.placedByPhoneNumber?.trim()) {
+      const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ""); // Remove non-digits
       if (phoneNumber.length < 10 || phoneNumber.length > 11) {
-        errors.push('Phone number must be 10-11 digits');
-        fieldErrors.placedByPhoneNumber = 'Phone number must be 10-11 digits';
+        errors.push("Phone number must be 10-11 digits");
+        fieldErrors.placedByPhoneNumber = true;
       }
     }
 
+    // Validate table selection
     if (!order.quickResponseID?.trim()) {
-      errors.push('Table selection is required');
-      fieldErrors.quickResponseID = 'Table selection is required';
+      errors.push("Table selection is required");
+      fieldErrors.quickResponseID = true;
     }
 
     // Validate selected items
     if (!selectedItems || selectedItems.length === 0) {
-      errors.push('At least one item must be selected');
+      errors.push("At least one item must be selected");
     } else {
       // Validate each selected item
-      const invalidItems = selectedItems.filter((item: any) =>
-        !item.id ||
-        !item.itemName ||
-        item.count <= 0 ||
-        item.price <= 0
+      const invalidItems = selectedItems.filter(
+        (item: any) =>
+          !item.id || !item.itemName || item.count <= 0 || item.price <= 0
       );
       if (invalidItems.length > 0) {
-        errors.push('Some selected items have invalid data');
+        errors.push("Some selected items have invalid data");
       }
     }
 
     // Validate additional cost name if additional cost is provided
     if (additionalCost > 0 && !additionalCostName?.trim()) {
-      errors.push('Additional cost name is required when amount is provided');
-      fieldErrors.additionalCostName = 'Additional cost name is required when amount is provided';
+      errors.push("Additional cost name is required when amount is provided");
+      fieldErrors.additionalCostName = true;
     }
 
     // Set validation errors for UI
@@ -199,31 +210,32 @@ const CheckoutModal = ({
   // Validate customer information step (1B to 1C)
   const validateCustomerInfo = (): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
-    const fieldErrors: ValidationErrors = {};
+    const fieldErrors: any = {};
 
-    const trimmedName = order.placedByName?.trim() || '';
-    if (trimmedName) {
-      if (trimmedName.length < 2) {
-        errors.push('Customer name must be at least 2 characters long');
-        fieldErrors.placedByName = 'Customer name must be at least 2 characters long';
-      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
-        errors.push('Customer name can only contain letters and spaces');
-        fieldErrors.placedByName = 'Customer name can only contain letters and spaces';
+    // Validate customer name (optional, will default to "anonymous" if empty)
+    if (order.placedByName?.trim()) {
+      if (order.placedByName.trim().length < 2) {
+        errors.push("Customer name must be at least 2 characters long");
+        fieldErrors.placedByName = true;
+      } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
+        errors.push("Customer name can only contain letters and spaces");
+        fieldErrors.placedByName = true;
       }
     }
 
-    const trimmedPhone = order.placedByPhoneNumber?.trim() || '';
-    if (trimmedPhone) {
-      const phoneNumber = trimmedPhone.replace(/\D/g, '');
+    // Validate phone number (optional, but if provided must be valid)
+    if (order.placedByPhoneNumber?.trim()) {
+      const phoneNumber = order.placedByPhoneNumber.trim().replace(/\D/g, ""); // Remove non-digits
       if (phoneNumber.length < 10 || phoneNumber.length > 11) {
-        errors.push('Phone number must be 10-11 digits');
-        fieldErrors.placedByPhoneNumber = 'Phone number must be 10-11 digits';
+        errors.push("Phone number must be 10-11 digits");
+        fieldErrors.placedByPhoneNumber = true;
       }
     }
 
+    // Validate table selection
     if (!order.quickResponseID?.trim()) {
-      errors.push('Table selection is required');
-      fieldErrors.quickResponseID = 'Table selection is required';
+      errors.push("Table selection is required");
+      fieldErrors.quickResponseID = true;
     }
 
     // Set validation errors for UI
@@ -233,9 +245,9 @@ const CheckoutModal = ({
   };
 
   // Handle mobile sub-step navigation with validation
-  const handleMobileNavigation = (targetStep: '1A' | '1B' | '1C') => {
+  const handleMobileNavigation = (targetStep: "1A" | "1B" | "1C") => {
     // If moving from 1B to 1C, validate customer information
-    if (mobileSubStep === '1B' && targetStep === '1C') {
+    if (mobileSubStep === "1B" && targetStep === "1C") {
       const validation = validateCustomerInfo();
       if (!validation.isValid) {
         return; // Stop navigation if validation fails
@@ -255,7 +267,7 @@ const CheckoutModal = ({
       // Show validation errors
       notify({
         title: "Validation Error",
-        text: validation.errors.join(', '),
+        text: validation.errors.join(", "),
         type: "error",
       });
       return; // Stop here if validation fails
@@ -277,7 +289,7 @@ const CheckoutModal = ({
       setScreen(2);
       setLoading(false);
     } catch (error) {
-      console.error('Error during checkout:', error);
+      console.error("Error during checkout:", error);
       setLoading(false);
       notify({
         title: "Error",
@@ -303,34 +315,34 @@ const CheckoutModal = ({
       clearScreenStates(); // Clear states before navigation
 
       try {
-        if (pathname === '/dashboard/orders') {
+        if (pathname === "/dashboard/orders") {
           // Already on orders page - just close modal and refresh data
           // Invalidate all order-related queries to force refetch from backend
           await queryClient.invalidateQueries({
-            queryKey: ['orderCategories'],
-            refetchType: 'active'
+            queryKey: ["orderCategories"],
+            refetchType: "active",
           });
           await queryClient.invalidateQueries({
-            queryKey: ['orderDetails'],
-            refetchType: 'active'
+            queryKey: ["orderDetails"],
+            refetchType: "active",
           });
           await queryClient.invalidateQueries({
-            queryKey: ['orders'],
-            refetchType: 'active'
+            queryKey: ["orders"],
+            refetchType: "active",
           });
 
           // Force immediate refetch of all active queries
           await queryClient.refetchQueries({
-            queryKey: ['orderCategories'],
-            type: 'active'
+            queryKey: ["orderCategories"],
+            type: "active",
           });
           await queryClient.refetchQueries({
-            queryKey: ['orderDetails'],
-            type: 'active'
+            queryKey: ["orderDetails"],
+            type: "active",
           });
           await queryClient.refetchQueries({
-            queryKey: ['orders'],
-            type: 'active'
+            queryKey: ["orders"],
+            type: "active",
           });
 
           // Call the refetch function to update the table immediately
@@ -345,15 +357,14 @@ const CheckoutModal = ({
           router.push("/dashboard/orders");
         }
       } catch (error) {
-        console.error('Error in Pay Later:', error);
+        console.error("Error in Pay Later:", error);
       } finally {
         setIsPayLaterLoading(false);
       }
-    } else if(screen === 3){
+    } else if (screen === 3) {
       clearScreenStates(); // Clear states before navigation
       router.push("/dashboard/orders");
-    }
-    else {
+    } else {
       setSelectedPaymentMethod(methodId);
       setScreen(3);
     }
@@ -368,34 +379,34 @@ const CheckoutModal = ({
     setSelectedPaymentMethod(0);
 
     try {
-      if (pathname === '/dashboard/orders') {
+      if (pathname === "/dashboard/orders") {
         // Already on orders page - just close modal and refresh data
         // Invalidate all order-related queries to force refetch from backend
         await queryClient.invalidateQueries({
-          queryKey: ['orderCategories'],
-          refetchType: 'active'
+          queryKey: ["orderCategories"],
+          refetchType: "active",
         });
         await queryClient.invalidateQueries({
-          queryKey: ['orderDetails'],
-          refetchType: 'active'
+          queryKey: ["orderDetails"],
+          refetchType: "active",
         });
         await queryClient.invalidateQueries({
-          queryKey: ['orders'],
-          refetchType: 'active'
+          queryKey: ["orders"],
+          refetchType: "active",
         });
 
         // Force immediate refetch of all active queries
         await queryClient.refetchQueries({
-          queryKey: ['orderCategories'],
-          type: 'active'
+          queryKey: ["orderCategories"],
+          type: "active",
         });
         await queryClient.refetchQueries({
-          queryKey: ['orderDetails'],
-          type: 'active'
+          queryKey: ["orderDetails"],
+          type: "active",
         });
         await queryClient.refetchQueries({
-          queryKey: ['orders'],
-          type: 'active'
+          queryKey: ["orders"],
+          type: "active",
         });
 
         // Call the refetch function to update the table immediately
@@ -411,7 +422,7 @@ const CheckoutModal = ({
         router.push("/dashboard/orders");
       }
     } catch (error) {
-      console.error('Error in Cancel Payment:', error);
+      console.error("Error in Cancel Payment:", error);
       // Still close the modal even if refresh fails
       onOpenChange(false);
     }
@@ -428,12 +439,46 @@ const CheckoutModal = ({
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
 
+  const getVatRateDecimal = (): number => {
+    if (!selectedItems || selectedItems.length === 0) return 0;
+
+    for (const item of selectedItems) {
+      // Prefer category-based VAT when available
+      if (item?.categoryId && categoriesData) {
+        const category = categoriesData.find(
+          (cat: any) => cat.categoryId === item.categoryId
+        );
+        if (
+          category?.isVatEnabled &&
+          category?.vatRate &&
+          category.vatRate > 0
+        ) {
+          return category.vatRate > 1
+            ? category.vatRate / 100
+            : category.vatRate;
+        }
+      }
+
+      // Fallback to item-level VAT if present (used in POS/other flows)
+      if (item?.isVatEnabled && item?.vatRate && item.vatRate > 0) {
+        return item.vatRate > 1 ? item.vatRate / 100 : item.vatRate;
+      }
+    }
+
+    return 0;
+  };
+
   // Calculate detailed total price directly from selectedItems to ensure accuracy
-  const calculateDetailedTotalPrice = () => {
+  const calculateDetailedTotalPrice = (): {
+    itemsSubtotal: number;
+    packingSubtotal: number;
+    vatAmount: number;
+  } => {
     let itemsSubtotal = 0;
     let packingSubtotal = 0;
     let vatAmount = 0;
 
+    // First, calculate total subtotals for all items
     selectedItems.forEach((item: any) => {
       // Round each item calculation to prevent floating point errors
       const itemPrice = Number(item.price) || 0;
@@ -443,43 +488,70 @@ const CheckoutModal = ({
       itemsSubtotal += itemTotal;
 
       // Add packing cost only if item is packed
-      let itemPackingCost = 0;
       if (item.isPacked && item.packingCost > 0) {
         const packingCostPerItem = Number(item.packingCost) || 0;
-        const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
+        const packingTotal =
+          Math.round(packingCostPerItem * itemCount * 100) / 100;
         packingSubtotal += packingTotal;
-        itemPackingCost = packingTotal;
-      }
-
-      // Calculate VAT per item if enabled for this item's section
-      if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
-        const itemSubtotal = itemTotal + itemPackingCost;
-        vatAmount += Math.round(itemSubtotal * item.vatRate * 100) / 100;
       }
     });
 
     // Round subtotals
     itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
     packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+
+    // Decide VAT rate source:
+    // - For existing orders (id present) use backend VAT percentage (vatAmount / subTotalAmount)
+    // - For new orders fall back to category/item-based VAT
+    let vatRateDecimal = 0;
+
+    const backendSubtotal = orderDetails?.subTotalAmount;
+    if (
+      id &&
+      orderDetails?.vatAmount &&
+      backendSubtotal &&
+      backendSubtotal > 0
+    ) {
+      // Derive VAT percentage from backend so behaviour matches backend calculations
+      vatRateDecimal = orderDetails.vatAmount / backendSubtotal;
+    } else {
+      // Fallback to existing frontend VAT logic
+      vatRateDecimal = getVatRateDecimal();
+    }
+
+    // Calculate VAT on the total subtotal (items + packing), not per item
+    if (vatRateDecimal > 0) {
+      const totalSubtotal = itemsSubtotal + packingSubtotal;
+      vatAmount = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
+    }
+
     vatAmount = Math.round(vatAmount * 100) / 100;
 
     return { itemsSubtotal, packingSubtotal, vatAmount };
   };
 
-  const { itemsSubtotal, packingSubtotal, vatAmount } = calculateDetailedTotalPrice();
+  const {
+    itemsSubtotal,
+    packingSubtotal,
+    vatAmount: calculatedVatAmount,
+  } = calculateDetailedTotalPrice();
   const subtotal = itemsSubtotal + packingSubtotal;
-  // Round final total to 2 decimal places
-  const finalTotalPrice = Math.round((subtotal + vatAmount + (Number(additionalCost) || 0)) * 100) / 100;
+  // Always recalculate VAT from current items so quantity changes are reflected
+  const effectiveVatAmount = isVatApplied ? calculatedVatAmount : 0;
+  const finalTotalPrice =
+    Math.round(
+      (subtotal + effectiveVatAmount + (Number(additionalCost) || 0)) * 100
+    ) / 100;
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
     const { name, value } = event.target;
 
     // Clear validation error for this field when user starts typing
-    if (validationErrors[name as keyof ValidationErrors]) {
-      setValidationErrors(prev => ({
+    if (validationErrors[name as keyof typeof validationErrors]) {
+      setValidationErrors((prev) => ({
         ...prev,
-        [name]: undefined
+        [name]: false,
       }));
     }
 
@@ -499,7 +571,10 @@ const CheckoutModal = ({
   };
 
   // Verify calculation accuracy
-  const verifyCalculation = (items: any[], addCost: number = 0): {
+  const verifyCalculation = (
+    items: any[],
+    addCost: number = 0
+  ): {
     isValid: boolean;
     calculated: number;
     breakdown: any;
@@ -511,9 +586,12 @@ const CheckoutModal = ({
     let vatCalc = 0;
 
     try {
+      // First, calculate total subtotals for all items
       items.forEach((item, index) => {
         if (!item.id || item.price === undefined || item.count === undefined) {
-          errors.push(`Item ${index + 1}: Missing required data (id, price, or count)`);
+          errors.push(
+            `Item ${index + 1}: Missing required data (id, price, or count)`
+          );
           return;
         }
 
@@ -525,42 +603,54 @@ const CheckoutModal = ({
         itemsSubtotal += itemTotal;
 
         // Add packing cost only if item is packed
-        let itemPackingCost = 0;
         if (item.isPacked && item.packingCost > 0) {
           const packingCostPerItem = Number(item.packingCost) || 0;
-          const packingTotal = Math.round(packingCostPerItem * itemCount * 100) / 100;
+          const packingTotal =
+            Math.round(packingCostPerItem * itemCount * 100) / 100;
           packingSubtotal += packingTotal;
-          itemPackingCost = packingTotal;
-        }
-
-        // Calculate VAT per item if enabled
-        if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
-          const itemSubtotal = itemTotal + itemPackingCost;
-          vatCalc += Math.round(itemSubtotal * item.vatRate * 100) / 100;
         }
 
         // Log each item calculation
+        const category =
+          item.categoryId && categoriesData
+            ? categoriesData.find(
+                (cat: any) => cat.categoryId === item.categoryId
+              )
+            : null;
         console.log(`Item ${index + 1} (${item.itemName || item.id}):`, {
           price: itemPrice,
           count: itemCount,
           itemTotal,
           isPacked: item.isPacked,
           packingCost: item.packingCost,
-          packingTotal: item.isPacked ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) / 100 : 0,
-          isVatEnabled: item.isVatEnabled,
-          vatRate: item.vatRate,
-          itemVat: item.isVatEnabled && item.vatRate ? Math.round((itemTotal + itemPackingCost) * item.vatRate * 100) / 100 : 0
+          packingTotal: item.isPacked
+            ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) /
+              100
+            : 0,
+          isVatEnabled: category?.isVatEnabled || false,
+          vatRate: category?.vatRate || 0,
         });
       });
 
       // Round subtotals
       itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
       packingSubtotal = Math.round(packingSubtotal * 100) / 100;
+
+      // Calculate VAT on the total subtotal (items + packing), not per item
+      const vatRateDecimal = getVatRateDecimal();
+      if (vatRateDecimal > 0) {
+        const totalSubtotal = itemsSubtotal + packingSubtotal;
+        vatCalc = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
+      }
+
       vatCalc = Math.round(vatCalc * 100) / 100;
 
       const baseSubtotal = itemsSubtotal + packingSubtotal;
-      const additionalCostRounded = Math.round((Number(addCost) || 0) * 100) / 100;
-      const finalCalc = Math.round((baseSubtotal + vatCalc + additionalCostRounded) * 100) / 100;
+      const additionalCostRounded =
+        Math.round((Number(addCost) || 0) * 100) / 100;
+      const finalCalc =
+        Math.round((baseSubtotal + vatCalc + additionalCostRounded) * 100) /
+        100;
 
       const breakdown = {
         itemsSubtotal,
@@ -568,70 +658,66 @@ const CheckoutModal = ({
         baseSubtotal,
         vatAmount: vatCalc,
         additionalCost: additionalCostRounded,
-        finalTotal: finalCalc
+        finalTotal: finalCalc,
       };
 
       return {
         isValid: errors.length === 0,
         calculated: breakdown.finalTotal,
         breakdown,
-        errors
+        errors,
       };
     } catch (error) {
-      errors.push(`Calculation error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Calculation error: ${
+          error instanceof Error ? error.message : "Unknown error"
+        }`
+      );
       return {
         isValid: false,
         calculated: 0,
         breakdown: {},
-        errors
+        errors,
       };
     }
   };
 
   // Validate payload data before API call
-  const validateOrderPayload = (payload: any): { isValid: boolean; errors: string[] } => {
+  const validateOrderPayload = (
+    payload: any
+  ): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
-    const trimmedName = payload.placedByName?.trim() || '';
-    if (trimmedName) {
-      if (trimmedName.length < 2) {
-        errors.push('Customer name must be at least 2 characters long');
-      } else if (!/^[a-zA-Z\s]+$/.test(trimmedName)) {
-        errors.push('Customer name can only contain letters and spaces');
-      }
-    }
-
-    const trimmedPhone = payload.placedByPhoneNumber?.trim() || '';
-    if (trimmedPhone) {
-      const phoneNumber = trimmedPhone.replace(/\D/g, '');
-      if (phoneNumber.length < 10 || phoneNumber.length > 11) {
-        errors.push('Phone number must be 10-11 digits');
-      }
-    }
+    // Validate required fields
+    // Name is optional (will default to "anonymous" if empty)
+    // Phone is optional
     if (!payload.quickResponseID?.trim()) {
-      errors.push('Table selection is required');
+      errors.push("Table selection is required");
     }
 
     // Validate order details
-    if (!Array.isArray(payload.orderDetails) || payload.orderDetails.length === 0) {
-      errors.push('At least one item must be selected');
+    if (
+      !Array.isArray(payload.orderDetails) ||
+      payload.orderDetails.length === 0
+    ) {
+      errors.push("At least one item must be selected");
     } else {
       payload.orderDetails.forEach((item: any, index: number) => {
         if (!item.itemID) {
           errors.push(`Item ${index + 1}: Missing item ID`);
         }
-        if (typeof item.quantity !== 'number' || item.quantity < 1) {
+        if (typeof item.quantity !== "number" || item.quantity < 1) {
           errors.push(`Item ${index + 1}: Invalid quantity`);
         }
-        if (typeof item.unitPrice !== 'number' || item.unitPrice < 0) {
+        if (typeof item.unitPrice !== "number" || item.unitPrice < 0) {
           errors.push(`Item ${index + 1}: Invalid unit price`);
         }
       });
     }
 
     // Validate total amount
-    if (typeof payload.totalAmount !== 'number' || payload.totalAmount < 0) {
-      errors.push('Invalid total amount');
+    if (typeof payload.totalAmount !== "number" || payload.totalAmount < 0) {
+      errors.push("Invalid total amount");
     }
 
     return { isValid: errors.length === 0, errors };
@@ -639,11 +725,11 @@ const CheckoutModal = ({
 
   const placeOrder = async () => {
     // Debug log at start
-    console.log('PlaceOrder called with:', {
+    console.log("PlaceOrder called with:", {
       selectedItems: selectedItems?.length || 0,
       order,
       additionalCost,
-      finalTotalPrice
+      finalTotalPrice,
     });
 
     // Safety check: Ensure we have required data
@@ -671,7 +757,7 @@ const CheckoutModal = ({
         const finalItemID = item.itemID || item.id;
         // console.log(`Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
         return {
-          itemID: finalItemID,  // Use itemID if available, fallback to id
+          itemID: finalItemID, // Use itemID if available, fallback to id
           quantity: item.count,
           unitPrice: item.price,
           isVariety: item.isVariety,
@@ -680,23 +766,25 @@ const CheckoutModal = ({
         };
       });
 
-      const normalizedCustomerName = order.placedByName?.trim() || "";
-      const payloadCustomerName = normalizedCustomerName || "Anonymous";
-      const normalizedPhoneNumber = order.placedByPhoneNumber?.trim() || "";
+      // Default name to "anonymous" if not provided
+      const customerName = order.placedByName?.trim() || "anonymous";
 
       payload = {
         status: 0,
-        placedByName: payloadCustomerName,
-        placedByPhoneNumber: normalizedPhoneNumber,
+        placedByName: customerName,
+        placedByPhoneNumber: order.placedByPhoneNumber?.trim() || "",
         quickResponseID: order.quickResponseID,
         comment: order.comment,
         additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
-        additionalCostName: additionalCostName || '',
-        totalAmount: finalTotalPrice,  // Already rounded in calculation
+        additionalCostName: additionalCostName || "",
+        // Store VAT information the same way it's read by UpdateOrderModal
+        vatAmount: effectiveVatAmount,
+        isVatApplied,
+        totalAmount: finalTotalPrice, // Already rounded in calculation
         orderDetails: transformedArray,
       };
     } catch (error) {
-      console.error('Error building payload:', error);
+      console.error("Error building payload:", error);
       notify({
         title: "Error",
         text: "Failed to prepare order data",
@@ -706,18 +794,23 @@ const CheckoutModal = ({
     }
 
     // Verify calculations
-    const calculationVerification = verifyCalculation(selectedItems, additionalCost);
+    const calculationVerification = verifyCalculation(
+      selectedItems,
+      additionalCost
+    );
     if (!calculationVerification.isValid) {
       notify({
         title: "Calculation Error",
-        text: calculationVerification.errors.join(', '),
+        text: calculationVerification.errors.join(", "),
         type: "error",
       });
-      throw new Error(calculationVerification.errors.join(', '));
+      throw new Error(calculationVerification.errors.join(", "));
     }
 
     // Check if calculated total matches our frontend total
-    const _calculationDifference = Math.abs(calculationVerification.calculated - payload.totalAmount);
+    const _calculationDifference = Math.abs(
+      calculationVerification.calculated - payload.totalAmount
+    );
     // if (_calculationDifference > 0.01) {
     //   console.warn('Calculation mismatch detected:', {
     //     frontendTotal: payload.totalAmount,
@@ -732,45 +825,49 @@ const CheckoutModal = ({
     if (!validation.isValid) {
       notify({
         title: "Validation Error",
-        text: validation.errors.join(', '),
+        text: validation.errors.join(", "),
         type: "error",
       });
-      throw new Error(validation.errors.join(', '));
+      throw new Error(validation.errors.join(", "));
     }
 
     // Log payload for debugging
-    console.log('Order Payload:', JSON.stringify(payload, null, 2));
-    console.log('Frontend Calculation:', {
+    console.log("Order Payload:", JSON.stringify(payload, null, 2));
+    console.log("Frontend Calculation:", {
       subtotal,
       vatAmount,
       additionalCost,
       finalTotal: finalTotalPrice,
-      itemsCount: selectedItems.length
+      itemsCount: selectedItems.length,
     });
-    console.log('Verified Calculation:', calculationVerification.breakdown);
+    console.log("Verified Calculation:", calculationVerification.breakdown);
 
     const id = businessId ? businessId : businessInformation[0]?.businessId;
 
-    console.log('Calling createOrder with:', {
+    console.log("Calling createOrder with:", {
       id,
       cooperateID: effectiveCooperateID,
-      payloadSize: JSON.stringify(payload).length
+      payloadSize: JSON.stringify(payload).length,
     });
 
     const data = await createOrder(id, payload, effectiveCooperateID);
 
-    console.log('CreateOrder response:', data);
+    console.log("CreateOrder response:", data);
 
     // Handle undefined response
     if (!data) {
-      console.error('CreateOrder returned undefined');
-      console.error('Request details:', { id, cooperateID: effectiveCooperateID, payload });
+      console.error("CreateOrder returned undefined");
+      console.error("Request details:", {
+        id,
+        cooperateID: effectiveCooperateID,
+        payload,
+      });
       notify({
         title: "Error!",
         text: "Failed to create order. Please check your connection and try again.",
         type: "error",
       });
-      throw new Error('Failed to create order');
+      throw new Error("Failed to create order");
     }
 
     setResponse(data as ApiResponse);
@@ -791,45 +888,47 @@ const CheckoutModal = ({
         // Run cache/query operations in background without blocking screen transition
         Promise.all([
           queryClient.invalidateQueries({
-            queryKey: ['orderCategories'],
-            refetchType: 'active'
+            queryKey: ["orderCategories"],
+            refetchType: "active",
           }),
           queryClient.invalidateQueries({
-            queryKey: ['orderDetails'],
-            refetchType: 'active'
+            queryKey: ["orderDetails"],
+            refetchType: "active",
           }),
           queryClient.invalidateQueries({
-            queryKey: ['orders'],
-            refetchType: 'active'
+            queryKey: ["orders"],
+            refetchType: "active",
+          }),
+        ])
+          .then(() => {
+            // Only refetch if on orders page
+            if (pathname === "/dashboard/orders") {
+              return Promise.all([
+                queryClient.refetchQueries({
+                  queryKey: ["orderCategories"],
+                  type: "active",
+                }),
+                queryClient.refetchQueries({
+                  queryKey: ["orderDetails"],
+                  type: "active",
+                }),
+                queryClient.refetchQueries({
+                  queryKey: ["orders"],
+                  type: "active",
+                }),
+              ]);
+            }
           })
-        ]).then(() => {
-          // Only refetch if on orders page
-          if (pathname === '/dashboard/orders') {
-            return Promise.all([
-              queryClient.refetchQueries({
-                queryKey: ['orderCategories'],
-                type: 'active'
-              }),
-              queryClient.refetchQueries({
-                queryKey: ['orderDetails'],
-                type: 'active'
-              }),
-              queryClient.refetchQueries({
-                queryKey: ['orders'],
-                type: 'active'
-              })
-            ]);
-          }
-        }).catch(error => {
-          console.error('Background refresh error:', error);
-        });
+          .catch((error) => {
+            console.error("Background refresh error:", error);
+          });
 
         // Screen transition will happen in handleCheckoutClick immediately
         // Note: onOrderSuccess is NOT called here to preserve cart items during payment flow
         // It will be called after successful payment completion in finalizeOrder
       } else if (apiData.data?.error) {
-        console.error('Order creation failed:', apiData.data?.error);
-        console.error('Failed payload:', payload);
+        console.error("Order creation failed:", apiData.data?.error);
+        console.error("Failed payload:", payload);
         notify({
           title: "Order Creation Failed",
           text: apiData.data?.error || "Unknown error",
@@ -837,29 +936,32 @@ const CheckoutModal = ({
         });
         throw new Error(apiData.data?.error || "Order creation failed");
       }
-    } else if (data && 'errors' in data) {
+    } else if (data && "errors" in data) {
       // Handle validation errors
       const errorData = data as ApiResponse;
       const validationErrors = Object.entries(errorData.errors || {})
-        .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-        .join('; ');
-      console.error('Validation errors:', errorData.errors);
-      console.error('Failed payload:', payload);
+        .map(
+          ([field, errors]) =>
+            `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`
+        )
+        .join("; ");
+      console.error("Validation errors:", errorData.errors);
+      console.error("Failed payload:", payload);
       notify({
         title: "Validation Failed",
         text: validationErrors,
         type: "error",
       });
-      throw new Error('Validation failed');
+      throw new Error("Validation failed");
     } else {
-      console.error('Unexpected response format:', data);
-      console.error('Failed payload:', payload);
+      console.error("Unexpected response format:", data);
+      console.error("Failed payload:", payload);
       notify({
         title: "Error!",
         text: "Unexpected error occurred. Please check the console for details.",
         type: "error",
       });
-      throw new Error('Unexpected error occurred');
+      throw new Error("Unexpected error occurred");
     }
   };
   const updateOrder = async () => {
@@ -885,7 +987,7 @@ const CheckoutModal = ({
       const finalItemID = item.itemID || item.id;
       // console.log(`Update Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
       return {
-        itemID: finalItemID,  // Use itemID if available, fallback to id
+        itemID: finalItemID, // Use itemID if available, fallback to id
         quantity: item.count,
         unitPrice: item.price,
         isVariety: item.isVariety,
@@ -894,41 +996,48 @@ const CheckoutModal = ({
       };
     });
 
-    const normalizedCustomerName = order.placedByName?.trim() || "";
-    const payloadCustomerName = normalizedCustomerName || "Anonymous";
-    const normalizedPhoneNumber = order.placedByPhoneNumber?.trim() || "";
+    // Default name to "anonymous" if not provided
+    const customerName = order.placedByName?.trim() || "anonymous";
 
     const payload = {
       status: 0,
-      placedByName: payloadCustomerName,
-      placedByPhoneNumber: normalizedPhoneNumber,
+      placedByName: customerName,
+      placedByPhoneNumber: order.placedByPhoneNumber?.trim() || "",
       quickResponseID: order.quickResponseID,
       comment: order.comment,
-      totalAmount: finalTotalPrice,  // Already rounded in calculation
+      totalAmount: finalTotalPrice, // Already rounded in calculation
       additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
-      additionalCostName: additionalCostName || '',
+      additionalCostName: additionalCostName || "",
+      // Store VAT information so UpdateOrderModal can read it later
+      vatAmount: effectiveVatAmount,
+      isVatApplied,
       orderDetails: transformedArray,
     };
 
     // Verify calculations
-    const calculationVerification = verifyCalculation(selectedItems, additionalCost);
+    const calculationVerification = verifyCalculation(
+      selectedItems,
+      additionalCost
+    );
     if (!calculationVerification.isValid) {
       notify({
         title: "Calculation Error",
-        text: calculationVerification.errors.join(', '),
+        text: calculationVerification.errors.join(", "),
         type: "error",
       });
-      throw new Error(calculationVerification.errors.join(', '));
+      throw new Error(calculationVerification.errors.join(", "));
     }
 
     // Check if calculated total matches our frontend total
-    const calculationDifference = Math.abs(calculationVerification.calculated - payload.totalAmount);
+    const calculationDifference = Math.abs(
+      calculationVerification.calculated - payload.totalAmount
+    );
     if (calculationDifference > 0.01) {
-      console.warn('Update calculation mismatch detected:', {
+      console.warn("Update calculation mismatch detected:", {
         frontendTotal: payload.totalAmount,
         verifiedTotal: calculationVerification.calculated,
         difference: calculationDifference,
-        breakdown: calculationVerification.breakdown
+        breakdown: calculationVerification.breakdown,
       });
     }
 
@@ -937,22 +1046,25 @@ const CheckoutModal = ({
     if (!validation.isValid) {
       notify({
         title: "Validation Error",
-        text: validation.errors.join(', '),
+        text: validation.errors.join(", "),
         type: "error",
       });
-      throw new Error(validation.errors.join(', '));
+      throw new Error(validation.errors.join(", "));
     }
 
     // Log payload for debugging
-    console.log('Update Order Payload:', JSON.stringify(payload, null, 2));
-    console.log('Update Frontend Calculation:', {
+    console.log("Update Order Payload:", JSON.stringify(payload, null, 2));
+    console.log("Update Frontend Calculation:", {
       subtotal,
       vatAmount,
       additionalCost,
       finalTotal: finalTotalPrice,
-      itemsCount: selectedItems.length
+      itemsCount: selectedItems.length,
     });
-    console.log('Update Verified Calculation:', calculationVerification.breakdown);
+    console.log(
+      "Update Verified Calculation:",
+      calculationVerification.breakdown
+    );
 
     if (!id) {
       notify({
@@ -967,15 +1079,15 @@ const CheckoutModal = ({
     try {
       data = await editOrder(id, payload);
       // Clear phone validation errors for existing orders
-      if (data && 'errors' in data && data.errors?.placedByPhoneNumber) {
+      if (data && "errors" in data && data.errors?.placedByPhoneNumber) {
         const { placedByPhoneNumber, ...otherErrors } = data.errors;
         setResponse({ ...data, errors: otherErrors } as ApiResponse);
       } else {
         setResponse(data as ApiResponse);
       }
     } catch (error) {
-      console.error('editOrder API call failed:', error);
-      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
+      console.error("editOrder API call failed:", error);
+      console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
       notify({
         title: "Error!",
         text: "Failed to update order. Please try again.",
@@ -998,38 +1110,40 @@ const CheckoutModal = ({
       // Run cache/query operations in background without blocking screen transition
       Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ['orderCategories'],
-          refetchType: 'active'
+          queryKey: ["orderCategories"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['orderDetails'],
-          refetchType: 'active'
+          queryKey: ["orderDetails"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['orders'],
-          refetchType: 'active'
+          queryKey: ["orders"],
+          refetchType: "active",
+        }),
+      ])
+        .then(() => {
+          // Only refetch if on orders page
+          if (pathname === "/dashboard/orders") {
+            return Promise.all([
+              queryClient.refetchQueries({
+                queryKey: ["orderCategories"],
+                type: "active",
+              }),
+              queryClient.refetchQueries({
+                queryKey: ["orderDetails"],
+                type: "active",
+              }),
+              queryClient.refetchQueries({
+                queryKey: ["orders"],
+                type: "active",
+              }),
+            ]);
+          }
         })
-      ]).then(() => {
-        // Only refetch if on orders page
-        if (pathname === '/dashboard/orders') {
-          return Promise.all([
-            queryClient.refetchQueries({
-              queryKey: ['orderCategories'],
-              type: 'active'
-            }),
-            queryClient.refetchQueries({
-              queryKey: ['orderDetails'],
-              type: 'active'
-            }),
-            queryClient.refetchQueries({
-              queryKey: ['orders'],
-              type: 'active'
-            })
-          ]);
-        }
-      }).catch(error => {
-        console.error('Background refresh error:', error);
-      });
+        .catch((error) => {
+          console.error("Background refresh error:", error);
+        });
 
       // Screen transition will happen in handleCheckoutClick immediately
       // Note: onOrderSuccess is NOT called here to preserve cart items during payment flow
@@ -1038,37 +1152,40 @@ const CheckoutModal = ({
       // Stay on screen 2 (payment selection) - user needs to choose payment method
       // Screen is already set to 2 by handleCheckoutClick
     } else if (hasDataProperty(data) && data.data?.error) {
-      console.error('Order update failed:', data.data.error);
-      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
+      console.error("Order update failed:", data.data.error);
+      console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
       notify({
         title: "Order Update Failed",
         text: data.data.error,
         type: "error",
       });
       throw new Error(data.data.error || "Order update failed");
-    } else if (data && 'errors' in data) {
+    } else if (data && "errors" in data) {
       // Handle validation errors
       const errorData = data as ApiResponse;
       const validationErrors = Object.entries(errorData.errors || {})
-        .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(', ') : errors}`)
-        .join('; ');
-      console.error('Validation errors:', errorData.errors);
-      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
+        .map(
+          ([field, errors]) =>
+            `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`
+        )
+        .join("; ");
+      console.error("Validation errors:", errorData.errors);
+      console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
       notify({
         title: "Validation Failed",
         text: validationErrors,
         type: "error",
       });
-      throw new Error('Validation failed');
+      throw new Error("Validation failed");
     } else {
-      console.error('Unexpected response format:', data);
-      console.error('Payload that was sent:', JSON.stringify(payload, null, 2));
+      console.error("Unexpected response format:", data);
+      console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
       notify({
         title: "Error!",
         text: "Unexpected error occurred. Please check the console for details.",
         type: "error",
       });
-      throw new Error('Unexpected error occurred');
+      throw new Error("Unexpected error occurred");
     }
   };
 
@@ -1091,7 +1208,9 @@ const CheckoutModal = ({
     if (!validation.isValid) {
       notify({
         title: "Validation Error",
-        text: "Please fix all validation errors before confirming payment: " + validation.errors.join(', '),
+        text:
+          "Please fix all validation errors before confirming payment: " +
+          validation.errors.join(", "),
         type: "error",
       });
       return;
@@ -1115,6 +1234,31 @@ const CheckoutModal = ({
       return;
     }
 
+    // Validate amount for partial payment
+    const totalDue = orderDetails?.amountRemaining ?? finalTotalPrice;
+    let finalAmountPaid = totalDue;
+
+    if (paymentOption === "partial") {
+      const amount = parseFloat(amountPaid.replace(/,/g, ""));
+      if (!amount || isNaN(amount) || amount <= 0) {
+        notify({
+          title: "Validation Error",
+          text: "Please enter a valid amount for partial payment",
+          type: "error",
+        });
+        return;
+      }
+      if (amount > totalDue) {
+        notify({
+          title: "Validation Error",
+          text: "Amount received cannot be greater than the pending order amount",
+          type: "error",
+        });
+        return;
+      }
+      finalAmountPaid = amount;
+    }
+
     setIsLoading(true);
     try {
       const payload = {
@@ -1123,6 +1267,7 @@ const CheckoutModal = ({
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
         status: 1,
+        paidAmount: finalAmountPaid,
       };
 
       const data = await completeOrderWithPayment(payload, orderId);
@@ -1145,12 +1290,10 @@ const CheckoutModal = ({
 
         // Call onOrderSuccess to clear cart (on POS page) BEFORE closing modal
         // This ensures cart is cleared after payment is confirmed
-        if (onOrderSuccess) {
-          onOrderSuccess();
-        }
+        onOrderSuccess();
 
         // Close modal or navigate
-        if (pathname === '/dashboard/orders') {
+        if (pathname === "/dashboard/orders") {
           // Already on orders page - just close modal
           onOpenChange(false);
         } else {
@@ -1164,35 +1307,34 @@ const CheckoutModal = ({
 
         // Invalidate all order-related queries to force refetch from backend
         await queryClient.invalidateQueries({
-          queryKey: ['orderCategories'],
-          refetchType: 'active'
+          queryKey: ["orderCategories"],
+          refetchType: "active",
         });
         await queryClient.invalidateQueries({
-          queryKey: ['orderDetails'],
-          refetchType: 'active'
+          queryKey: ["orderDetails"],
+          refetchType: "active",
         });
         await queryClient.invalidateQueries({
-          queryKey: ['orders'],
-          refetchType: 'active'
+          queryKey: ["orders"],
+          refetchType: "active",
         });
 
         // Force immediate refetch of all active queries
         await queryClient.refetchQueries({
-          queryKey: ['orderCategories'],
-          type: 'active'
+          queryKey: ["orderCategories"],
+          type: "active",
         });
         await queryClient.refetchQueries({
-          queryKey: ['orderDetails'],
-          type: 'active'
+          queryKey: ["orderDetails"],
+          type: "active",
         });
         await queryClient.refetchQueries({
-          queryKey: ['orders'],
-          type: 'active'
+          queryKey: ["orders"],
+          type: "active",
         });
 
         // Note: onOrderSuccess was already called above (before closing modal)
         // to ensure cart is cleared at the right time
-
       } else if (hasDataProperty(data) && data.data?.error) {
         notify({
           title: "Error!",
@@ -1232,7 +1374,9 @@ const CheckoutModal = ({
       }));
 
       // Sort alphabetically by label/name
-      const sortedData = newData.sort((a: any, b: any) => a.label.localeCompare(b.label));
+      const sortedData = newData.sort((a: any, b: any) =>
+        a.label.localeCompare(b.label)
+      );
       setQr(sortedData);
     } else if (data?.data?.error) {
     }
@@ -1246,7 +1390,9 @@ const CheckoutModal = ({
       // If quickResponseID is empty or is actually a table name, find the ID
       if (!tableId || qr.some((table: any) => table.label === tableId)) {
         const tableName = orderDetails?.qrReference || tableId;
-        const matchingTable = qr.find((table: any) => table.label === tableName);
+        const matchingTable = qr.find(
+          (table: any) => table.label === tableName
+        );
         tableId = matchingTable?.id || tableId;
       }
 
@@ -1262,26 +1408,53 @@ const CheckoutModal = ({
     getQrID();
   }, []);
 
-  console.log(orderDetails?.quickResponseID || orderDetails?.qrReference || orderDetails)
+  console.log(
+    orderDetails?.quickResponseID || orderDetails?.qrReference || orderDetails
+  );
 
   // Reset screen and states when modal opens
+  // We only reset when isOpen changes to true. We intentionally ignore 'id' changes
+  // to prevent resetting the screen if the ID updates during a flow (e.g. after creation).
   useEffect(() => {
     if (isOpen) {
       setScreen(1);
-      setOrderId(id || ""); // Use the id prop if provided, otherwise empty string
+      setOrderId(id || "");
       setReference("");
       setSelectedPaymentMethod(0);
       setIsPayLaterLoading(false);
+      setPaymentOption("full");
     }
-  }, [isOpen, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Sync local orderId if prop changes, but DO NOT reset screen
+  useEffect(() => {
+    if (id) {
+      setOrderId(id);
+    }
+  }, [id]);
+
+  // Update amount paid when order details or total price changes
+  useEffect(() => {
+    if (isOpen) {
+      const total = orderDetails?.amountRemaining ?? finalTotalPrice;
+      setAmountPaid(total.toLocaleString("en-US"));
+    }
+  }, [isOpen, orderDetails, finalTotalPrice]);
+
+  const [paymentOption, setPaymentOption] = useState<"full" | "partial">(
+    "full"
+  );
+  const [amountPaid, setAmountPaid] = useState<string>("");
 
   return (
     <div className="">
       <Modal
         classNames={{
-          base: screen === 1
-            ? "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] m-0 md:m-auto mb-safe"
-            : "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto",
+          base:
+            screen === 1
+              ? "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] m-0 md:m-auto mb-safe"
+              : "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto",
           body: "px-4 py-2 md:px-6 flex-1 overflow-y-auto",
           header: "px-4 py-3 md:px-6 flex-shrink-0",
           wrapper: "!fixed !inset-0 items-center justify-center",
@@ -1294,7 +1467,7 @@ const CheckoutModal = ({
           if (!open) {
             // When closing the modal, reset all states
             setScreen(1);
-            setMobileSubStep('1A');
+            setMobileSubStep("1A");
             setReference("");
             setIsPayLaterLoading(false);
             setSelectedPaymentMethod(0);
@@ -1302,7 +1475,10 @@ const CheckoutModal = ({
             setOrder({
               placedByName: orderDetails?.placedByName || "",
               placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
-              quickResponseID: orderDetails?.quickResponseID || orderDetails?.qrReference || "",
+              quickResponseID:
+                orderDetails?.quickResponseID ||
+                orderDetails?.qrReference ||
+                "",
               comment: orderDetails?.comment || "",
             });
             setAdditionalCost(orderDetails?.additionalCost || 0);
@@ -1345,7 +1521,9 @@ const CheckoutModal = ({
                             backgroundColor="bg-primaryColor"
                           >
                             <div className="flex gap-2 items-center justify-center">
-                              <p>Checkout {formatPrice(finalTotalPrice, 'NGN')} </p>
+                              <p>
+                                Checkout {formatPrice(finalTotalPrice, "NGN")}{" "}
+                              </p>
                               <HiArrowLongLeft className="text-[22px] rotate-180" />
                             </div>
                           </CustomButton>
@@ -1357,7 +1535,7 @@ const CheckoutModal = ({
 
                   {/* Mobile Layout */}
                   <div className="block md:hidden">
-                    {mobileSubStep === '1A' && (
+                    {mobileSubStep === "1A" && (
                       <ModalHeader className="flex flex-col gap-3 bg-white border-b border-gray-200 sticky bottom-0 z-10">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1378,7 +1556,7 @@ const CheckoutModal = ({
                       </ModalHeader>
                     )}
 
-                    {mobileSubStep === '1B' && (
+                    {mobileSubStep === "1B" && (
                       <ModalHeader className="flex flex-col gap-3 bg-white border-b border-gray-200 sticky top-0 z-10">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1390,7 +1568,7 @@ const CheckoutModal = ({
                             </p>
                           </div>
                           <CustomButton
-                            onClick={() => handleMobileNavigation('1A')}
+                            onClick={() => handleMobileNavigation("1A")}
                             className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
                           >
                             Back
@@ -1399,7 +1577,7 @@ const CheckoutModal = ({
                       </ModalHeader>
                     )}
 
-                    {mobileSubStep === '1C' && (
+                    {mobileSubStep === "1C" && (
                       <ModalHeader className="flex flex-col gap-3 bg-white border-b border-gray-200 sticky top-0 z-10">
                         <div className="flex items-center justify-between">
                           <div>
@@ -1411,7 +1589,7 @@ const CheckoutModal = ({
                             </p>
                           </div>
                           <CustomButton
-                            onClick={() => handleMobileNavigation('1B')}
+                            onClick={() => handleMobileNavigation("1B")}
                             className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
                           >
                             Back
@@ -1426,242 +1604,282 @@ const CheckoutModal = ({
                     <ModalBody>
                       <div className="flex lg:flex-row flex-col gap-3 mb-4">
                         <div className="lg:w-[60%] max-h-[500px]  overflow-y-scroll w-full rounded-lg border border-[#E4E7EC80] p-2">
-                        {selectedItems?.map((item: any, index: number) => {
-                          return (
-                            <React.Fragment key={item.uniqueKey || `${item.id}-${index}`}>
-                              <div
-                                className="flex justify-between gap-2"
+                          {selectedItems?.map((item: any, index: number) => {
+                            return (
+                              <React.Fragment
+                                key={item.uniqueKey || `${item.id}-${index}`}
                               >
-                                <div className="py-3 w-[250px] rounded-lg  text-black  flex">
-                                  <div className="h-[60px] w-[60px]">
-                                    <Image
-                                      src={
-                                        item?.image
-                                          ? `data:image/jpeg;base64,${item?.image}`
-                                          : noImage
-                                      }
-                                      width={60}
-                                      height={60}
-                                      className="object-cover rounded-lg bg-cover h-[60px]"
-                                      aria-label="uploaded image"
-                                      alt="uploaded image(s)"
-                                    />
-                                  </div>
-
-                                  <div className="px-3 flex  flex-col text-sm justify-center">
-                                    <p className="font-[600]">
-                                      
-                                       {item.itemName}
-                                    </p>
-                                    <Spacer y={2} />
-                                    <p className="text-grey600">
-                                    {item.menuName} {" "}
-                                      <span className="text-black">
-                                        {item.unit && `(${item.unit})`}
-                                      </span>
-                                    </p>
-                                    {item.packingCost > 0 && (
-                                      <Checkbox
-                                        size="sm"
-                                        defaultSelected={item.isPacked}
-                                        isSelected={item.isPacked}
-                                        onValueChange={(isSelected) =>
-                                          handlePackingCost(item.id, isSelected)
+                                <div className="flex justify-between gap-2">
+                                  <div className="py-3 w-[250px] rounded-lg  text-black  flex">
+                                    <div className="h-[60px] w-[60px]">
+                                      <Image
+                                        src={
+                                          item?.image
+                                            ? `data:image/jpeg;base64,${item?.image}`
+                                            : noImage
                                         }
-                                      >
-                                        <span className="text-grey600 text-sm">
-                                          Pack In
+                                        width={60}
+                                        height={60}
+                                        className="object-cover rounded-lg bg-cover h-[60px]"
+                                        aria-label="uploaded image"
+                                        alt="uploaded image(s)"
+                                      />
+                                    </div>
+
+                                    <div className="px-3 flex  flex-col text-sm justify-center">
+                                      <p className="font-[600]">
+                                        {item.itemName}
+                                      </p>
+                                      <Spacer y={2} />
+                                      <p className="text-grey600">
+                                        {item.menuName}{" "}
+                                        <span className="text-black">
+                                          {item.unit && `(${item.unit})`}
                                         </span>
-                                      </Checkbox>
-                                    )}
-                                    <Spacer y={2} />
-                                    <div className="text-black md:w-[150px] md:hidden w-auto grid place-content-end">
-                                      <h3 className="font-[600]">
-                                        {formatPrice(item?.price, 'NGN')}
+                                      </p>
+                                      {item.packingCost > 0 && (
+                                        <Checkbox
+                                          size="sm"
+                                          defaultSelected={item.isPacked}
+                                          isSelected={item.isPacked}
+                                          onValueChange={(isSelected) =>
+                                            handlePackingCost(
+                                              item.id,
+                                              isSelected
+                                            )
+                                          }
+                                        >
+                                          <span className="text-grey600 text-sm">
+                                            Pack In
+                                          </span>
+                                        </Checkbox>
+                                      )}
+                                      <Spacer y={2} />
+                                      <div className="text-black md:w-[150px] md:hidden w-auto grid place-content-end">
+                                        <h3 className="font-[600]">
+                                          {formatPrice(item?.price, "NGN")}
+                                        </h3>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex  items-center">
+                                    <Button
+                                      onPress={() => handleDecrement(item.id)}
+                                      isIconOnly
+                                      size="sm"
+                                      radius="sm"
+                                      variant="faded"
+                                      className="border h-[35px] w-[30px] border-primaryGrey bg-white"
+                                      aria-label="minus"
+                                      isDisabled={(() => {
+                                        if (item.categoryId && categoriesData) {
+                                          const category = categoriesData.find(
+                                            (cat: any) =>
+                                              cat.categoryId === item.categoryId
+                                          );
+                                          // User Rule: "only when true they can edit" => False = Restricted.
+                                          // Logic: Disable if (NOT True) AND (Count > 1).
+                                          return !!(
+                                            !category?.preventOrderItemReduction &&
+                                            item.count > 1
+                                          );
+                                        }
+                                        return false;
+                                      })()}
+                                    >
+                                      <FaMinus />
+                                    </Button>
+                                    <span className="font-bold  text-black py-2 px-4">
+                                      {item.count}
+                                    </span>
+                                    <Button
+                                      onPress={() => handleIncrement(item.id)}
+                                      isIconOnly
+                                      radius="sm"
+                                      size="sm"
+                                      variant="faded"
+                                      className="border h-[35px] w-[30px] border-primaryGrey bg-white"
+                                      aria-label="plus"
+                                    >
+                                      <FaPlus />
+                                    </Button>
+                                  </div>
+                                  <div className=" md:w-[150px] hidden w-auto md:grid place-content-center">
+                                    <div className="flex flex-col">
+                                      <h3 className="font-semibold text-black">
+                                        {formatPrice(
+                                          item?.price * item.count,
+                                          "NGN"
+                                        )}
                                       </h3>
+                                      {item.packingCost > 0 && (
+                                        <span
+                                          className={cn(
+                                            "text-xs text-gray-200",
+                                            item.isPacked &&
+                                              "font-bold text-black"
+                                          )}
+                                        >
+                                          {formatPrice(
+                                            item.packingCost * item.count,
+                                            "NGN"
+                                          )}
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
-                                <div className="flex  items-center">
-                                  <Button
-                                    onPress={() => handleDecrement(item.id)}
-                                    isIconOnly
-                                    size="sm"
-                                    radius="sm"
-                                    variant="faded"
-                                    className="border h-[35px] w-[30px] border-primaryGrey bg-white"
-                                    aria-label="minus"
-                                  >
-                                    <FaMinus />
-                                  </Button>
-                                  <span className="font-bold  text-black py-2 px-4">
-                                    {item.count}
-                                  </span>
-                                  <Button
-                                    onPress={() => handleIncrement(item.id)}
-                                    isIconOnly
-                                    radius="sm"
-                                    size="sm"
-                                    variant="faded"
-                                    className="border h-[35px] w-[30px] border-primaryGrey bg-white"
-                                    aria-label="plus"
-                                  >
-                                    <FaPlus />
-                                  </Button>
-                                </div>
-                                <div className=" md:w-[150px] hidden w-auto md:grid place-content-center">
-                                  <div className="flex flex-col">
-                                    <h3 className="font-semibold text-black">
-                                      {formatPrice(item?.price  * item.count, 'NGN')}
-                                    </h3>
-                                    {item.packingCost > 0 && (
-                                      <span
-                                        className={cn(
-                                          "text-xs text-gray-200",
-                                          item.isPacked && "font-bold text-black"
-                                        )}
-                                      >
-                                        {formatPrice(item.packingCost * item.count, 'NGN')} 
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
+                                {index !== selectedItems?.length - 1 && (
+                                  <Divider className="bg-[#E4E7EC80]" />
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                          <div className="flex justify-end mt-auto">
+                            <div className="flex flex-col gap-2">
+                              <div className="flex justify-between">
+                                <p className="text-black font-bold">
+                                  Subtotal:{" "}
+                                </p>
+                                <p className="text-black">
+                                  {formatPrice(subtotal, "NGN")}
+                                </p>
                               </div>
-                              {index !== selectedItems?.length - 1 && (
-                                <Divider className="bg-[#E4E7EC80]" />
+                              {isVatApplied && (
+                                <div className="flex justify-between">
+                                  <p className="text-black font-bold">VAT: </p>
+                                  <p className="text-black">
+                                    {formatPrice(effectiveVatAmount, "NGN")}
+                                  </p>
+                                </div>
                               )}
-                            </React.Fragment>
-                          );
-                        })}
-                        <div className="flex justify-end mt-auto">
-                          <div className="flex flex-col gap-2">
-                            <div className="flex justify-between">
-                              <p className="text-black font-bold">Subtotal: </p>
-                              <p className="text-black">
-                                {formatPrice(subtotal, 'NGN')}
-                              </p>
-                            </div>
-                            <div className="flex justify-between">
-                              <p className="text-black font-bold">
-                                VAT:{" "}
-                              </p>
-                              <p className="text-black">
-                                {formatPrice(vatAmount, 'NGN')}
-                              </p>
-                            </div>
-                            <div className="flex items-center justify-between gap-2">
-                              <p className="text-black font-bold">
-                                Additional cost:{" "}
-                              </p>
-                              <div className="w-40">
-                                <CustomInput
-                                  type="number"
-                                  size="sm"
-                                  startContent={
-                                    <span className="text-gray-500">₦</span>
-                                  }
-                                  onChange={(e: any) =>
-                                    setAdditionalCost(+e.target.value)
-                                  }
-                                  value={String(additionalCost)}
-                                  name="additionalCost"
-                                  placeholder="Amount"
-                                />
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between  gap-2">
-                              <p className="text-black font-bold">
-                                Additional cost name:{" "}
-                              </p>
-                              <div className="w-40">
-                                <CustomInput
-                                  type="text"
-                                  size="sm"
-                                  onChange={(e: any) => {
-                                    setAdditionalCostName(e.target.value);
-                                    // Clear validation error when user starts typing
-                                    if (validationErrors.additionalCostName) {
-                                      setValidationErrors(prev => ({
-                                        ...prev,
-                                        additionalCostName: undefined
-                                      }));
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-black font-bold">
+                                  Additional cost:{" "}
+                                </p>
+                                <div className="w-40">
+                                  <CustomInput
+                                    type="number"
+                                    size="sm"
+                                    startContent={
+                                      <span className="text-gray-500">₦</span>
                                     }
-                                  }}
-                                  value={additionalCostName}
-                                  name="additionalCostName"
-                                  placeholder="Enter cost name"
-                                  isInvalid={!!validationErrors.additionalCostName}
-                                  errorMessage={validationErrors.additionalCostName || ""}
-                                />
+                                    onChange={(e: any) =>
+                                      setAdditionalCost(+e.target.value)
+                                    }
+                                    value={String(additionalCost)}
+                                    name="additionalCost"
+                                    placeholder="Amount"
+                                  />
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex justify-between">
-                              <p className="text-black font-bold">Total: </p>
-                              <p className="text-black">
-                                {formatPrice(finalTotalPrice, 'NGN')}
-                              </p>
-                            </div>
-                            {/* <div className="flex gap-2">
+                              <div className="flex items-center justify-between  gap-2">
+                                <p className="text-black font-bold">
+                                  Additional cost name:{" "}
+                                </p>
+                                <div className="w-40">
+                                  <CustomInput
+                                    type="text"
+                                    size="sm"
+                                    onChange={(e: any) => {
+                                      setAdditionalCostName(e.target.value);
+                                      // Clear validation error when user starts typing
+                                      if (validationErrors.additionalCostName) {
+                                        setValidationErrors((prev) => ({
+                                          ...prev,
+                                          additionalCostName: false,
+                                        }));
+                                      }
+                                    }}
+                                    value={additionalCostName}
+                                    name="additionalCostName"
+                                    placeholder="Enter cost name"
+                                    isInvalid={
+                                      !!validationErrors.additionalCostName
+                                    }
+                                    errorMessage={
+                                      validationErrors.additionalCostName
+                                        ? "Cost name is required"
+                                        : ""
+                                    }
+                                  />
+                                </div>
+                              </div>
+                              <div className="flex justify-between">
+                                <p className="text-black font-bold">Total: </p>
+                                <p className="text-black">
+                                  {formatPrice(finalTotalPrice, "NGN")}
+                                </p>
+                              </div>
+                              {/* <div className="flex gap-2">
                               <p className="text-black font-bold">
                                 Additional cost:{' '}
                               </p>
                   
                             </div> */}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4">
-                        <CustomInput
-                          type="text"
-                          onChange={handleInputChange}
-                          errorMessage={validationErrors.placedByName || response?.errors?.placedByName?.[0]}
-                          isInvalid={!!(validationErrors.placedByName || response?.errors?.placedByName?.length)}
-                          value={order.placedByName}
-                          name="placedByName"
-                          label="Name"
-                          placeholder="Enter name"
-                        />
-                        <Spacer y={2} />
-                        <CustomInput
-                          type="tel"
-                          errorMessage={
-                            validationErrors.placedByPhoneNumber || (!id && response?.errors?.placedByPhoneNumber?.[0])
-                          }
-                          isInvalid={!!(validationErrors.placedByPhoneNumber || (!id && response?.errors?.placedByPhoneNumber?.length))}
-                          onChange={handleInputChange}
-                          value={order.placedByPhoneNumber}
-                          name="placedByPhoneNumber"
-                          label="Phone number"
-                          placeholder="Enter phone number"
-                        />
-                        <Spacer y={2} />
+                        <div className="flex-grow bg-[#F7F6FA] z-10 rounded-lg p-4">
+                          <CustomInput
+                            type="text"
+                            onChange={handleInputChange}
+                            errorMessage={response?.errors?.placedByName?.[0]}
+                            isInvalid={!!validationErrors.placedByName}
+                            value={order.placedByName}
+                            name="placedByName"
+                            label="Name (optional)"
+                            placeholder="Enter name (defaults to anonymous)"
+                          />
+                          <Spacer y={2} />
+                          <CustomInput
+                            type="tel"
+                            errorMessage={
+                              !id && response?.errors?.placedByPhoneNumber?.[0]
+                            }
+                            isInvalid={!!validationErrors.placedByPhoneNumber}
+                            onChange={handleInputChange}
+                            value={order.placedByPhoneNumber}
+                            name="placedByPhoneNumber"
+                            label="Phone number (optional)"
+                            placeholder="Enter phone number"
+                          />
+                          <Spacer y={2} />
 
-                        <SelectInput
-                          errorMessage={validationErrors.quickResponseID || response?.errors?.quickResponseID?.[0]}
-                          isInvalid={!!(validationErrors.quickResponseID || response?.errors?.quickResponseID?.length)}
-                          label="Select a table"
-                          placeholder="Select table"
-                          name="quickResponseID"
-                          selectedKeys={order?.quickResponseID ? [order.quickResponseID] : []}
-                          onChange={handleInputChange}
-                          value={order.quickResponseID}
-                          contents={qr}
-                        />
-                        <Spacer y={2} />
-                        <CustomTextArea
-                          // defaultValue={menuItem?.itemDescription}
-                          value={order.comment}
-                          name="comment"
-                          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
-                            setResponse(null);
-                            setOrder((prevOrder) => ({
-                              ...prevOrder,
-                              comment: e.target.value,
-                            }));
-                          }}
-                          label="Add comment"
-                          placeholder="Add a comment to this order. (optional)"
-                        />
+                          <SelectInput
+                            errorMessage={
+                              response?.errors?.quickResponseID?.[0]
+                            }
+                            isInvalid={!!validationErrors.quickResponseID}
+                            label="Select a table"
+                            placeholder="Select table"
+                            name="quickResponseID"
+                            selectedKeys={
+                              order?.quickResponseID
+                                ? [order.quickResponseID]
+                                : []
+                            }
+                            onChange={handleInputChange}
+                            value={order.quickResponseID}
+                            contents={qr}
+                          />
+                          <Spacer y={2} />
+                          <CustomTextArea
+                            // defaultValue={menuItem?.itemDescription}
+                            value={order.comment}
+                            name="comment"
+                            onChange={(
+                              e: React.ChangeEvent<HTMLTextAreaElement>
+                            ) => {
+                              setResponse(null);
+                              setOrder((prevOrder) => ({
+                                ...prevOrder,
+                                comment: e.target.value,
+                              }));
+                            }}
+                            label="Add comment"
+                            placeholder="Add a comment to this order. (optional)"
+                          />
                         </div>
                       </div>
                     </ModalBody>
@@ -1669,8 +1887,15 @@ const CheckoutModal = ({
 
                   {/* Mobile ModalBody */}
                   <div className="block md:hidden flex-col min-h-0">
-                    {mobileSubStep === '1A' && (
-                      <ModalBody className="flex-1 overflow-y-auto" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '2rem', maxHeight: 'calc(100vh - 12rem)' }}>
+                    {mobileSubStep === "1A" && (
+                      <ModalBody
+                        className="flex-1 overflow-y-auto"
+                        style={{
+                          scrollPaddingTop: "2rem",
+                          scrollPaddingBottom: "2rem",
+                          maxHeight: "calc(100vh - 12rem)",
+                        }}
+                      >
                         {/* Mobile Step 1A: Items Review */}
                         <div className="space-y-4 pb-4">
                           {selectedItems?.map((item: any, index: number) => {
@@ -1694,12 +1919,17 @@ const CheckoutModal = ({
                                         <h3 className="font-semibold text-sm text-black">
                                           {item.itemName}
                                         </h3>
-                                        <p className="text-xs text-grey600">{item.menuName}</p>
+                                        <p className="text-xs text-grey600">
+                                          {item.menuName}
+                                        </p>
                                       </div>
                                     </div>
                                     <div className="text-right">
                                       <p className="font-semibold text-sm text-black">
-                                        {formatPrice(item?.price * item.count, 'NGN')}
+                                        {formatPrice(
+                                          item?.price * item.count,
+                                          "NGN"
+                                        )}
                                       </p>
                                     </div>
                                   </div>
@@ -1733,15 +1963,22 @@ const CheckoutModal = ({
                                       </Button>
                                     </div>
 
-                                    {(item.packingCost > 0) && (
+                                    {item.packingCost > 0 && (
                                       <Checkbox
                                         size="sm"
-                                        onChange={(e) => handlePackingCost(item.id, e.target.checked)}
+                                        onChange={(e) =>
+                                          handlePackingCost(
+                                            item.id,
+                                            e.target.checked
+                                          )
+                                        }
                                         isSelected={item.isPacked}
                                         className="text-sm"
                                       >
                                         <span className="text-sm">
-                                           Packing ({formatPrice(item.packingCost, 'NGN')})
+                                          Packing (
+                                          {formatPrice(item.packingCost, "NGN")}
+                                          )
                                         </span>
                                       </Checkbox>
                                     )}
@@ -1754,35 +1991,42 @@ const CheckoutModal = ({
                             );
                           })}
 
-
                           {/* Continue Button - At bottom */}
                           <div className="bg-white pt-4 pb-safe border-t border-gray-200 mt-6">
-                          {/* Mobile Pricing Summary */}
-                          <div className="p-4 bg-gray-50 rounded-lg mb-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-grey600">Subtotal</span>
-                                <span className="font-semibold text-sm text-black">
-                                  {formatPrice(subtotal, 'NGN')}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-sm text-grey600">VAT</span>
-                                <span className="font-semibold text-sm text-black">
-                                  {formatPrice(vatAmount, 'NGN')}
-                                </span>
-                              </div>
-                              <Divider className="my-2" />
-                              <div className="flex justify-between items-center">
-                                <span className="font-semibold text-base text-black">Total</span>
-                                <span className="font-bold text-lg text-primaryColor">
-                                  {formatPrice(finalTotalPrice, 'NGN')}
-                                </span>
+                            {/* Mobile Pricing Summary */}
+                            <div className="p-4 bg-gray-50 rounded-lg mb-4">
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm text-grey600">
+                                    Subtotal
+                                  </span>
+                                  <span className="font-semibold text-sm text-black">
+                                    {formatPrice(subtotal, "NGN")}
+                                  </span>
+                                </div>
+                                {isVatApplied && (
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-sm text-grey600">
+                                      VAT
+                                    </span>
+                                    <span className="font-semibold text-sm text-black">
+                                      {formatPrice(effectiveVatAmount, "NGN")}
+                                    </span>
+                                  </div>
+                                )}
+                                <Divider className="my-2" />
+                                <div className="flex justify-between items-center">
+                                  <span className="font-semibold text-base text-black">
+                                    Total
+                                  </span>
+                                  <span className="font-bold text-lg text-primaryColor">
+                                    {formatPrice(finalTotalPrice, "NGN")}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                          </div>
                             <CustomButton
-                              onClick={() => handleMobileNavigation('1B')}
+                              onClick={() => handleMobileNavigation("1B")}
                               className="w-full py-5 text-white font-semibold"
                               backgroundColor="bg-primaryColor"
                             >
@@ -1793,8 +2037,15 @@ const CheckoutModal = ({
                       </ModalBody>
                     )}
 
-                    {mobileSubStep === '1B' && (
-                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: 'calc(100vh - 12rem)' }}>
+                    {mobileSubStep === "1B" && (
+                      <ModalBody
+                        className="flex-1 overflow-y-auto pb-24"
+                        style={{
+                          scrollPaddingTop: "2rem",
+                          scrollPaddingBottom: "8rem",
+                          maxHeight: "calc(100vh - 12rem)",
+                        }}
+                      >
                         {/* Mobile Step 1B: Customer Information */}
                         <div className="space-y-6 pb-[300px]">
                           <CustomInput
@@ -1802,12 +2053,16 @@ const CheckoutModal = ({
                             value={order.placedByName}
                             name="placedByName"
                             onChange={handleInputChange}
-                            label="Customer name"
-                            placeholder="Enter customer name"
+                            label="Customer name (optional)"
+                            placeholder="Enter customer name (defaults to anonymous)"
                             isRequired={false}
                             classnames="w-full h-12 mb-4"
-                            isInvalid={!!validationErrors.placedByName}
-                            errorMessage={validationErrors.placedByName || ""}
+                            isInvalid={validationErrors.placedByName}
+                            errorMessage={
+                              validationErrors.placedByName
+                                ? "Name must be at least 2 characters and contain only letters"
+                                : ""
+                            }
                           />
 
                           <CustomInput
@@ -1815,12 +2070,16 @@ const CheckoutModal = ({
                             value={order.placedByPhoneNumber}
                             name="placedByPhoneNumber"
                             onChange={handleInputChange}
-                            label="Phone number"
+                            label="Phone number (optional)"
                             placeholder="Enter phone number"
                             isRequired={false}
                             classnames={"h-12 w-full mb-4"}
-                            isInvalid={!!validationErrors.placedByPhoneNumber}
-                            errorMessage={validationErrors.placedByPhoneNumber || ""}
+                            isInvalid={validationErrors.placedByPhoneNumber}
+                            errorMessage={
+                              validationErrors.placedByPhoneNumber
+                                ? "Phone number must be 10-11 digits"
+                                : ""
+                            }
                           />
 
                           <div className="w-full">
@@ -1829,13 +2088,21 @@ const CheckoutModal = ({
                               placeholder="Choose a table"
                               isRequired={true}
                               name="quickResponseID"
-                              selectedKeys={order?.quickResponseID ? [order.quickResponseID] : []}
+                              selectedKeys={
+                                order?.quickResponseID
+                                  ? [order.quickResponseID]
+                                  : []
+                              }
                               onChange={handleInputChange}
                               value={order.quickResponseID}
                               contents={qr}
                               className="w-full"
-                              isInvalid={!!validationErrors.quickResponseID}
-                              errorMessage={validationErrors.quickResponseID || ""}
+                              isInvalid={validationErrors.quickResponseID}
+                              errorMessage={
+                                validationErrors.quickResponseID
+                                  ? "Table selection is required"
+                                  : ""
+                              }
                               isMobile={true}
                             />
                           </div>
@@ -1843,7 +2110,9 @@ const CheckoutModal = ({
                           <CustomTextArea
                             value={order.comment}
                             name="comment"
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                            onChange={(
+                              e: React.ChangeEvent<HTMLTextAreaElement>
+                            ) => {
                               setResponse(null);
                               setOrder((prevOrder) => ({
                                 ...prevOrder,
@@ -1858,7 +2127,7 @@ const CheckoutModal = ({
                           {/* Continue Button - At bottom */}
                           <div className="bg-white pt-4 pb-safe mt-auto">
                             <CustomButton
-                              onClick={() => handleMobileNavigation('1C')}
+                              onClick={() => handleMobileNavigation("1C")}
                               className="w-full py-4 text-white font-semibold"
                               backgroundColor="bg-primaryColor"
                             >
@@ -1869,32 +2138,50 @@ const CheckoutModal = ({
                       </ModalBody>
                     )}
 
-                    {mobileSubStep === '1C' && (
-                      <ModalBody className="flex-1 overflow-y-auto pb-24" style={{ scrollPaddingTop: '2rem', scrollPaddingBottom: '8rem', maxHeight: 'calc(100vh - 12rem)' }}>
+                    {mobileSubStep === "1C" && (
+                      <ModalBody
+                        className="flex-1 overflow-y-auto pb-24"
+                        style={{
+                          scrollPaddingTop: "2rem",
+                          scrollPaddingBottom: "8rem",
+                          maxHeight: "calc(100vh - 12rem)",
+                        }}
+                      >
                         {/* Mobile Step 1C: Final Review */}
                         <div className="space-y-6 pb-4">
                           {/* Customer Information Summary */}
                           <div className="p-4 bg-gray-50 rounded-lg">
-                            <h3 className="font-semibold text-sm text-black mb-3">Customer Information</h3>
+                            <h3 className="font-semibold text-sm text-black mb-3">
+                              Customer Information
+                            </h3>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-grey600">Name:</span>
-                                <span className="text-black font-medium">{order.placedByName?.trim() || "Anonymous"}</span>
+                                <span className="text-black font-medium">
+                                  {order.placedByName}
+                                </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-grey600">Phone:</span>
-                                <span className="text-black font-medium">{order.placedByPhoneNumber}</span>
+                                <span className="text-black font-medium">
+                                  {order.placedByPhoneNumber}
+                                </span>
                               </div>
                               <div className="flex justify-between">
                                 <span className="text-grey600">Table:</span>
                                 <span className="text-black font-medium">
-                                  {(qr as any[]).find((table: any) => table.id === order.quickResponseID)?.name || order.quickResponseID}
+                                  {(qr as any[]).find(
+                                    (table: any) =>
+                                      table.id === order.quickResponseID
+                                  )?.name || order.quickResponseID}
                                 </span>
                               </div>
                               {order.comment && (
                                 <div className="flex justify-between">
                                   <span className="text-grey600">Comment:</span>
-                                  <span className="text-black font-medium">{order.comment}</span>
+                                  <span className="text-black font-medium">
+                                    {order.comment}
+                                  </span>
                                 </div>
                               )}
                             </div>
@@ -1902,19 +2189,37 @@ const CheckoutModal = ({
 
                           {/* Items Summary */}
                           <div className="p-4 border border-[#E4E7EC80] rounded-lg">
-                            <h3 className="font-semibold text-sm text-black mb-3">Order Items ({selectedItems?.length})</h3>
+                            <h3 className="font-semibold text-sm text-black mb-3">
+                              Order Items ({selectedItems?.length})
+                            </h3>
                             <div className="space-y-3">
                               {selectedItems?.map((item: any) => (
-                                <div key={item.id} className="flex justify-between items-center">
+                                <div
+                                  key={item.id}
+                                  className="flex justify-between items-center"
+                                >
                                   <div className="flex-1">
-                                    <p className="text-sm font-medium text-black">{item.itemName}</p>
+                                    <p className="text-sm font-medium text-black">
+                                      {item.itemName}
+                                    </p>
                                     <p className="text-xs text-grey600">
-                                      Qty: {item.count} × {formatPrice(item.price, 'NGN')}
-                                      {item.isPacked && ` + Packing (${formatPrice(item.packingCost, 'NGN')})`}
+                                      Qty: {item.count} ×{" "}
+                                      {formatPrice(item.price, "NGN")}
+                                      {item.isPacked &&
+                                        ` + Packing (${formatPrice(
+                                          item.packingCost,
+                                          "NGN"
+                                        )})`}
                                     </p>
                                   </div>
                                   <p className="text-sm font-semibold text-black">
-                                    {formatPrice(item.price * item.count + (item.isPacked ? item.packingCost * item.count : 0), 'NGN')}
+                                    {formatPrice(
+                                      item.price * item.count +
+                                        (item.isPacked
+                                          ? item.packingCost * item.count
+                                          : 0),
+                                      "NGN"
+                                    )}
                                   </p>
                                 </div>
                               ))}
@@ -1927,17 +2232,25 @@ const CheckoutModal = ({
                             <div className="space-y-2">
                               <div className="flex justify-between items-center text-sm">
                                 <span className="text-grey600">Subtotal</span>
-                                <span className="font-semibold text-black">{formatPrice(subtotal, 'NGN')}</span>
+                                <span className="font-semibold text-black">
+                                  {formatPrice(subtotal, "NGN")}
+                                </span>
                               </div>
-                              <div className="flex justify-between items-center text-sm">
-                                <span className="text-grey600">VAT</span>
-                                <span className="font-semibold text-black">{formatPrice(vatAmount, 'NGN')}</span>
-                              </div>
+                              {isVatApplied && (
+                                <div className="flex justify-between items-center text-sm">
+                                  <span className="text-grey600">VAT</span>
+                                  <span className="font-semibold text-black">
+                                    {formatPrice(effectiveVatAmount, "NGN")}
+                                  </span>
+                                </div>
+                              )}
                               <Divider className="my-2" />
                               <div className="flex justify-between items-center">
-                                <span className="font-bold text-lg text-black">Total</span>
+                                <span className="font-bold text-lg text-black">
+                                  Total
+                                </span>
                                 <span className="font-bold text-xl text-primaryColor">
-                                  {formatPrice(finalTotalPrice, 'NGN')}
+                                  {formatPrice(finalTotalPrice, "NGN")}
                                 </span>
                               </div>
                             </div>
@@ -1952,7 +2265,9 @@ const CheckoutModal = ({
                               backgroundColor="bg-primaryColor"
                             >
                               <div className="flex gap-2 items-center justify-center">
-                                <p className="font-semibold">Proceed to Payment</p>
+                                <p className="font-semibold">
+                                  Proceed to Payment
+                                </p>
                                 <HiArrowLongLeft className="text-[20px] rotate-180" />
                               </div>
                             </CustomButton>
@@ -1975,7 +2290,7 @@ const CheckoutModal = ({
                           </span>
                         </div>
                         <p className="text-sm  text-primaryColor xl:mb-8 w-full mb-4">
-                          {formatPrice(finalTotalPrice, 'NGN')}
+                          {formatPrice(finalTotalPrice, "NGN")}
                         </p>
                       </div>
                     </div>
@@ -1983,7 +2298,9 @@ const CheckoutModal = ({
                       {paymentMethods.map((item) => (
                         <div
                           key={item.id}
-                          onClick={() => !isPayLaterLoading && handleClick(item.id)}
+                          onClick={() =>
+                            !isPayLaterLoading && handleClick(item.id)
+                          }
                           className={`flex items-center gap-2 p-4 rounded-lg justify-between ${
                             selectedPaymentMethod === item.id
                               ? "bg-[#EAE5FF80]"
@@ -1998,10 +2315,14 @@ const CheckoutModal = ({
                             <p className="font-semibold">
                               {item.text}
                               {item.id === 3 && isPayLaterLoading && (
-                                <span className="ml-2 text-sm">Processing...</span>
+                                <span className="ml-2 text-sm">
+                                  Processing...
+                                </span>
                               )}
                             </p>
-                            <p className="text-sm text-grey500">{item.subText}</p>
+                            <p className="text-sm text-grey500">
+                              {item.subText}
+                            </p>
                           </div>
                           {item.id === 3 && isPayLaterLoading ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primaryColor"></div>
@@ -2022,13 +2343,13 @@ const CheckoutModal = ({
                             Select Payment Method
                           </div>
                           <p className="text-sm text-primaryColor mt-1 font-semibold">
-                            {formatPrice(finalTotalPrice, 'NGN')}
+                            {formatPrice(finalTotalPrice, "NGN")}
                           </p>
                         </div>
                         <CustomButton
                           onClick={() => {
                             setScreen(1);
-                            setMobileSubStep('1C');
+                            setMobileSubStep("1C");
                           }}
                           className="py-2 px-3 mb-0 bg-white border border-gray-300 text-sm"
                         >
@@ -2037,12 +2358,17 @@ const CheckoutModal = ({
                       </div>
                     </ModalHeader>
 
-                    <ModalBody className="flex-1 overflow-y-auto pb-safe" style={{ maxHeight: 'calc(100vh - 12rem)' }}>
+                    <ModalBody
+                      className="flex-1 overflow-y-auto pb-safe"
+                      style={{ maxHeight: "calc(100vh - 12rem)" }}
+                    >
                       <div className="space-y-3 py-4">
                         {paymentMethods.map((item) => (
                           <div
                             key={item.id}
-                            onClick={() => !isPayLaterLoading && handleClick(item.id)}
+                            onClick={() =>
+                              !isPayLaterLoading && handleClick(item.id)
+                            }
                             className={`flex items-center gap-3 p-5 rounded-lg border justify-between transition-all ${
                               selectedPaymentMethod === item.id
                                 ? "bg-[#EAE5FF80] border-primaryColor"
@@ -2057,10 +2383,14 @@ const CheckoutModal = ({
                               <p className="font-semibold text-base text-black">
                                 {item.text}
                                 {item.id === 3 && isPayLaterLoading && (
-                                  <span className="ml-2 text-sm font-normal">Processing...</span>
+                                  <span className="ml-2 text-sm font-normal">
+                                    Processing...
+                                  </span>
                                 )}
                               </p>
-                              <p className="text-sm text-grey500 mt-1">{item.subText}</p>
+                              <p className="text-sm text-grey500 mt-1">
+                                {item.subText}
+                              </p>
                             </div>
                             {item.id === 3 && isPayLaterLoading ? (
                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primaryColor"></div>
@@ -2092,35 +2422,119 @@ const CheckoutModal = ({
                         {getPaymentConfirmationText()}
                       </p>
                     </div>
-                    <div
-                      className={`flex items-center gap-2 p-4 rounded-lg justify-between bg-[#EAE5FF80]`}
-                    >
-                      <div>
-                        <p className="text-sm text-grey500">TOTAL ORDER</p>
-                        <p className="font-bold text-black text-[20px]">
-                          {" "}
-                          {formatPrice(finalTotalPrice, 'NGN')}
-                        </p>
-                      </div>
-                      <MdKeyboardArrowRight />
+
+                    <div className="flex flex-col items-center justify-center my-6">
+                      <p className="text-sm text-grey500 text-center uppercase mb-2">
+                        PENDING PAYMENT
+                      </p>
+                      <h2 className="text-3xl font-bold text-black">
+                        {formatPrice(
+                          orderDetails?.totalAmount ?? finalTotalPrice,
+                          "NGN"
+                        )}
+                      </h2>
                     </div>
-                    <Spacer y={4} />
-                    <CustomInput
-                      type="text"
-                      // defaultValue={menuItem?.itemName}
-                      value={reference}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReference(e.target.value)}
-                      name="itemName"
-                      label="Enter ref"
-                      placeholder="Provide payment reference"
-                    />
+
+                    <div className="mb-4">
+                      <SelectInput
+                        label="Payment Option"
+                        placeholder="Select Option"
+                        selectedKeys={[paymentOption]}
+                        onChange={(e: any) => {
+                          const val = e.target.value as "full" | "partial";
+                          setPaymentOption(val);
+                          if (val === "full") {
+                            // Populate with full remaining amount
+                            const total =
+                              orderDetails?.amountRemaining ?? finalTotalPrice;
+                            setAmountPaid(total.toLocaleString("en-US"));
+                          } else {
+                            setAmountPaid("");
+                          }
+                        }}
+                        contents={[
+                          { label: "Full Payment", value: "full" },
+                          { label: "Partial Payment", value: "partial" },
+                        ]}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div className="mb-4 bg-[#EAE5FF80] p-4 rounded-lg flex flex-col items-center justify-center">
+                      <p className="text-sm text-grey500 mb-2">
+                        Amount Received
+                      </p>
+                      <div className="flex">
+                        <div
+                          className={`flex bg-[#EAE5FF80] w-full relative items-center justify-center  text-2xl font-bold bg-[#F7F6FA] ${
+                            paymentOption === "full"
+                              ? "opacity-60 cursor-not-allowed"
+                              : ""
+                          }`}
+                        >
+                          <p className="text-black   bg-[#EAE5FF80]">₦</p>
+                          <input
+                            type="text"
+                            value={amountPaid}
+                            onChange={(e) => {
+                              const rawValue = e.target.value.replace(/,/g, "");
+                              if (
+                                !isNaN(parseFloat(rawValue)) ||
+                                rawValue === ""
+                              ) {
+                                setAmountPaid(
+                                  rawValue === ""
+                                    ? ""
+                                    : parseFloat(rawValue).toLocaleString(
+                                        "en-US"
+                                      )
+                                );
+                              }
+                            }}
+                            placeholder="0"
+                            disabled={paymentOption === "full"}
+                            className={` bg-transparent  text-black border-none outline-none  p-0 ${
+                              paymentOption === "full" ? " w-1/3" : "w-full"
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {paymentOption === "partial" && (
+                      <div className="mb-6 p-4 rounded-xl bg-orange-50 border border-orange-100 flex flex-col items-center">
+                        <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider mb-1">
+                          Remaining Balance
+                        </span>
+                        <span className="text-2xl font-bold text-orange-700">
+                          {formatPrice(
+                            orderDetails?.amountRemaining ?? finalTotalPrice,
+                            "NGN"
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="mt-4">
+                      <p className="text-black font-semibold mb-2">Enter Ref</p>
+                      <CustomInput
+                        type="text"
+                        // defaultValue={menuItem?.itemName}
+                        value={reference}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setReference(e.target.value)
+                        }
+                        name="itemName"
+                        placeholder="Provide payment reference"
+                      />
+                    </div>
                     <Spacer y={5} />
                     <div className="flex md:flex-row flex-col gap-5">
                       <CustomButton
-                        onClick={handleCancelPayment}
+                        onClick={() => setScreen(2)}
                         className="bg-white h-[50px] w-full border border-primaryGrey"
                       >
-                        Cancel
+                        Back
                       </CustomButton>
                       <CustomButton
                         loading={isLoading}

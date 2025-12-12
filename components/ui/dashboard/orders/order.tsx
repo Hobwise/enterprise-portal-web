@@ -25,7 +25,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { TbFileInvoice } from 'react-icons/tb';
-import { Clock } from 'lucide-react';
+import { Clock, Receipt, RotateCcw } from 'lucide-react';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import {
   availableOptions,
@@ -48,6 +48,8 @@ import InvoiceModal from './invoice';
 import UpdateOrderModal from './UpdateOrderModal';
 import CheckoutModal from './place-order/checkoutModal';
 import OrderProgressModal from './OrderProgressModal';
+import PaymentSummaryModal from './PaymentSummaryModal';
+import RefundPaymentModal from './RefundPaymentModal';
 import { completeOrder, getOrder } from '@/app/api/controllers/dashboard/orders';
 import useOrderDetails from '@/hooks/cachedEndpoints/useOrderDetails';
 import { CustomInput } from '@/components/CustomInput';
@@ -74,6 +76,7 @@ interface OrderItem {
   dateUpdated: string;
   comment?: string;
   orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number }[];
+  amountRemaining?: number;
 }
 
 interface OrderCategory {
@@ -102,6 +105,7 @@ interface OrdersListProps {
 const INITIAL_VISIBLE_COLUMNS = [
   "name",
   "amount",
+  "amountRemaining",
   "qrReference",
   "orderID",
   "status",
@@ -157,6 +161,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenCheckoutModal, setIsOpenCheckoutModal] = React.useState<boolean>(false);
   const [checkoutSelectedItems, setCheckoutSelectedItems] = React.useState<any[]>([]);
   const [isOpenProgress, setIsOpenProgress] = React.useState<boolean>(false);
+  const [isOpenPaymentSummary, setIsOpenPaymentSummary] = React.useState<boolean>(false);
+  const [isOpenRefund, setIsOpenRefund] = React.useState<boolean>(false);
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] = React.useState<boolean>(false);
@@ -308,6 +314,16 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const toggleProgressModal = (order: OrderItem) => {
     setSingleOrder(order);
     setIsOpenProgress(!isOpenProgress);
+  };
+
+  const togglePaymentSummaryModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenPaymentSummary(!isOpenPaymentSummary);
+  };
+
+  const toggleRefundModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenRefund(!isOpenRefund);
   };
 
   // Payment modal functions
@@ -501,6 +517,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
             <p>{formatPrice(order.totalAmount)}</p>
           </div>
         );
+      case 'amountRemaining':
+        return (
+          <div className='text-textGrey text-sm'>
+            <p>{order.amountRemaining !== undefined ? formatPrice(order.amountRemaining) : '-'}</p>
+          </div>
+        );
       case 'orderID':
         return <div className='text-textGrey text-sm'>{order.reference}</div>;
 
@@ -564,6 +586,38 @@ const OrdersList: React.FC<OrdersListProps> = ({
                       </div>
                     </DropdownItem>
                   )}
+
+                  {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    options &&
+                    options.includes('Payment Summary') && (
+                      <DropdownItem
+                        key="payment-summary"
+                        onClick={() => togglePaymentSummaryModal(order)}
+                        aria-label='Payment Summary'
+                      >
+                        <div className='flex gap-3 items-center text-grey500'>
+                          <Receipt className='w-[18px] h-[18px]' />
+                          <p>Payment Summary</p>
+                        </div>
+                      </DropdownItem>
+                    )) as any}
+                   
+
+                  {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                    options &&
+                    options.includes('Refund Order') && (
+                      <DropdownItem
+                        key="refund-order"
+                        onClick={() => toggleRefundModal(order)}
+                        aria-label='Refund Order'
+                      >
+                        <div className='flex gap-3 items-center text-grey500'>
+                          <RotateCcw className='w-[18px] h-[18px]' />
+                          <p>Refund Payment</p>
+                        </div>
+                      </DropdownItem>
+                    )) as any}
+
 
                   {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                     options &&
@@ -686,6 +740,54 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             </div>
                           </DropdownItem>
                         )}
+                        {/* {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                          availableOptions[statusDataMap[order.status]] &&
+                          availableOptions[statusDataMap[order.status]].includes('Payment Summary') && (
+                            <DropdownItem
+                              key="payment-summary"
+                              onClick={() => togglePaymentSummaryModal(order)}
+                              aria-label='Payment Summary'
+                            >
+                              <div className='flex gap-3 items-center text-grey500'>
+                                <Receipt className='w-[18px] h-[18px]' />
+                                <p>Payment Summary</p>
+                              </div>
+                            </DropdownItem>
+                          )) as any} */}
+                           <DropdownItem
+                              key="payment-summary"
+                              onClick={() => togglePaymentSummaryModal(order)}
+                              aria-label='Payment Summary'
+                            >
+                              <div className='flex gap-3 items-center text-grey500'>
+                                <Receipt className='w-[18px] h-[18px]' />
+                                <p>Payment Summary</p>
+                              </div>
+                            </DropdownItem>
+                        {/* {((role === 0 || userRolePermissions?.canEditOrder === true) &&
+                          availableOptions[statusDataMap[order.status]] &&
+                          availableOptions[statusDataMap[order.status]].includes('Refund Order') && (
+                            <DropdownItem
+                              key="refund-order"
+                              onClick={() => toggleRefundModal(order)}
+                              aria-label='Refund Order'
+                            >
+                              <div className='flex gap-3 items-center text-grey500'>
+                                <RotateCcw className='w-[18px] h-[18px]' />
+                                <p>Refund Payment</p>
+                              </div>
+                            </DropdownItem>
+                          )) as any} */}
+                           <DropdownItem
+                              key="refund-order"
+                              onClick={() => toggleRefundModal(order)}
+                              aria-label='Refund Order'
+                            >
+                              <div className='flex gap-3 items-center text-grey500'>
+                                <RotateCcw className='w-[18px] h-[18px]' />
+                                <p>Refund Payment</p>
+                              </div>
+                            </DropdownItem>
                         {((role === 0 || userRolePermissions?.canEditOrder === true) &&
                           availableOptions[statusDataMap[order.status]] &&
                           availableOptions[statusDataMap[order.status]].includes('Cancel Order') && (
@@ -1026,6 +1128,22 @@ const OrdersList: React.FC<OrdersListProps> = ({
           )}
         </ModalContent>
       </Modal>
+      <PaymentSummaryModal
+        isOpen={isOpenPaymentSummary}
+        onOpenChange={setIsOpenPaymentSummary}
+        orderId={singleOrder?.id || null}
+      />
+      <RefundPaymentModal
+        isOpen={isOpenRefund}
+        onOpenChange={setIsOpenRefund}
+        orderId={singleOrder?.id || ""}
+        totalAmount={singleOrder?.totalAmount || 0}
+        maxRefundAmount={singleOrder?.totalAmount || 0}
+        onSuccess={() => {
+          refetch();
+          queryClient.invalidateQueries({ queryKey: ['orders'] });
+        }}
+      />
     </section>
   );
 };
