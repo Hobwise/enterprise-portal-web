@@ -77,6 +77,7 @@ interface OrderItem {
   comment?: string;
   orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number }[];
   amountRemaining?: number;
+  amountPaid?: number;
 }
 
 interface OrderCategory {
@@ -1138,7 +1139,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenRefund}
         orderId={singleOrder?.id || ""}
         totalAmount={singleOrder?.totalAmount || 0}
-        maxRefundAmount={singleOrder?.totalAmount || 0}
+        maxRefundAmount={singleOrder?.amountPaid || 0}
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({ queryKey: ['orders'] });
