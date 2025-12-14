@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import useOrderDetails from "@/hooks/cachedEndpoints/useOrderDetails";
 import useMenu from "@/hooks/cachedEndpoints/useMenu";
+import useOrderConfiguration from "@/hooks/cachedEndpoints/useOrderConfiguration";
 
 type Item = {
   id: string;
@@ -98,7 +99,8 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   const [_storedOrderData, setStoredOrderData] = useState<OrderData | null>(
     null
   );
-  const [isDataProcessingComplete, setIsDataProcessingComplete] = useState<boolean>(false);
+  const [isDataProcessingComplete, setIsDataProcessingComplete] =
+    useState<boolean>(false);
   const [additionalCost, setAdditionalCost] = useState<number>(0);
   const [additionalCostName, setAdditionalCostName] = useState<string>("");
   const [vatAmount, setVatAmount] = useState<number>(0);
@@ -125,14 +127,18 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     }
   }, [isOpen, orderData]);
 
+  // Use order configuration hook
+  const { data: orderConfig } = useOrderConfiguration();
+  const orderConfiguration = orderConfig?.data;
+
   // Use cached order details hook
   const {
     orderDetails: fullOrderData,
     isLoading: isLoadingOrderDetails,
     isSuccessful,
-    error
+    error,
   } = useOrderDetails(orderFromProp?.id, {
-    enabled: !!orderFromProp?.id && isOpen
+    enabled: !!orderFromProp?.id && isOpen,
   });
 
   // Use menu hook to get current menu items with up-to-date packing costs
@@ -141,15 +147,34 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
   // Check if we should show loading state
   useEffect(() => {
     // If modal just opened and we're waiting for data
-    if (isOpen && orderFromProp?.id && !isLoadingOrderDetails && !isLoadingMenu) {
+    if (
+      isOpen &&
+      orderFromProp?.id &&
+      !isLoadingOrderDetails &&
+      !isLoadingMenu
+    ) {
       // If we have both successful status and menu data but still processing,
       // it means data is ready and we should complete processing
-      if (isSuccessful && menuData && !isDataProcessingComplete && !fullOrderData) {
+      if (
+        isSuccessful &&
+        menuData &&
+        !isDataProcessingComplete &&
+        !fullOrderData
+      ) {
         // Data fetch completed but no order details returned
         setIsDataProcessingComplete(true);
       }
     }
-  }, [isOpen, orderFromProp, isLoadingOrderDetails, isLoadingMenu, isSuccessful, menuData, isDataProcessingComplete, fullOrderData]);
+  }, [
+    isOpen,
+    orderFromProp,
+    isLoadingOrderDetails,
+    isLoadingMenu,
+    isSuccessful,
+    menuData,
+    isDataProcessingComplete,
+    fullOrderData,
+  ]);
 
   // Process order details when they're loaded
   useEffect(() => {
@@ -161,7 +186,10 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
     // Handle successful data load
     if (fullOrderData && isSuccessful && menuData) {
       // Validate that we have order details
-      if (!fullOrderData.orderDetails || !Array.isArray(fullOrderData.orderDetails)) {
+      if (
+        !fullOrderData.orderDetails ||
+        !Array.isArray(fullOrderData.orderDetails)
+      ) {
         toast.error("Invalid order data structure");
         setIsDataProcessingComplete(true);
         return;
@@ -169,7 +197,9 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
       // Filter out invalid items and process valid ones
       const validItems = fullOrderData.orderDetails.filter((item: any) => {
-        return item && item.itemID && item.unitPrice != null && item.quantity > 0;
+        return (
+          item && item.itemID && item.unitPrice != null && item.quantity > 0
+        );
       });
 
       if (validItems.length === 0) {
@@ -178,48 +208,51 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         return;
       }
 
-      const updatedArray = validItems.map(
-        (item: any) => {
-          const { unitPrice, quantity, itemID, ...rest } = item;
+      const updatedArray = validItems.map((item: any) => {
+        const { unitPrice, quantity, itemID, ...rest } = item;
 
-          // Correctly find the item and its category from menuData
-          let foundCategory = null;
-          let foundMenuItem = null;
-          
-          if (menuData) {
-            for (const category of menuData) {
-              const item = category.items?.find((i: any) => i.id === itemID);
-              if (item) {
-                foundCategory = category;
-                foundMenuItem = item;
-                break;
-              }
+        // Correctly find the item and its category from menuData
+        let foundCategory = null;
+        let foundMenuItem = null;
+
+        if (menuData) {
+          for (const category of menuData) {
+            const item = category.items?.find((i: any) => i.id === itemID);
+            if (item) {
+              foundCategory = category;
+              foundMenuItem = item;
+              break;
             }
           }
-          
-          return {
-            ...rest,
-            id: itemID,
-            itemID: itemID,
-            price: unitPrice,
-            count: quantity,
-            originalCount: quantity, // Track original count for restriction logic
-            categoryId: foundCategory?.id, // Important: Add categoryId for reduction logic
-            // Use current menu packing cost and item details
-            itemName: item.itemName || foundMenuItem?.itemName || 'Unknown Item',
-            menuName: item.menuName || foundMenuItem?.menuName || foundCategory?.name || '',
-            itemDescription: item.itemDescription || foundMenuItem?.itemDescription || '',
-            currency: item.currency || foundMenuItem?.currency || 'NGN',
-            isAvailable: item.isAvailable ?? foundMenuItem?.isAvailable ?? true,
-            hasVariety: item.hasVariety ?? foundMenuItem?.hasVariety ?? false,
-            image: item.image || foundMenuItem?.image || '',
-            varieties: item.varieties || foundMenuItem?.varieties || null,
-            isVariety: item.isVariety || false,
-            // Preserve historical isPacked status if available, otherwise default to false
-            isPacked: item.isPacked || false,
-          };
         }
-      );
+
+        return {
+          ...rest,
+          id: itemID,
+          itemID: itemID,
+          price: unitPrice,
+          count: quantity,
+          originalCount: quantity, // Track original count for restriction logic
+          categoryId: foundCategory?.id, // Important: Add categoryId for reduction logic
+          // Use current menu packing cost and item details
+          itemName: item.itemName || foundMenuItem?.itemName || "Unknown Item",
+          menuName:
+            item.menuName ||
+            foundMenuItem?.menuName ||
+            foundCategory?.name ||
+            "",
+          itemDescription:
+            item.itemDescription || foundMenuItem?.itemDescription || "",
+          currency: item.currency || foundMenuItem?.currency || "NGN",
+          isAvailable: item.isAvailable ?? foundMenuItem?.isAvailable ?? true,
+          hasVariety: item.hasVariety ?? foundMenuItem?.hasVariety ?? false,
+          image: item.image || foundMenuItem?.image || "",
+          varieties: item.varieties || foundMenuItem?.varieties || null,
+          isVariety: item.isVariety || false,
+          // Preserve historical isPacked status if available, otherwise default to false
+          isPacked: item.isPacked || false,
+        };
+      });
       setSelectedItems(() => updatedArray);
 
       // Extract additional cost from order details
@@ -231,16 +264,24 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       const initialSubtotal = fullOrderData.subTotalAmount || 0;
       setIsVatApplied(fullOrderData.isVatApplied ?? true);
 
-      // Derive a VAT rate from the original order so we can recalculate when quantities change
-      if (initialVatAmount > 0 && initialSubtotal > 0) {
-        setVatRate(initialVatAmount / initialSubtotal);
-      } else {
-        setVatRate(0);
-      }
+      // Derive VAT rate from configuration
+      // We prioritize the configuration API over calculated or stored values for the rate
+      const configVatRate = orderConfiguration?.vatRate ?? 0;
+      setVatRate(configVatRate > 0 ? configVatRate / 100 : 0);
 
       // Set initial VAT amount based on derived rate and current items
-      if (fullOrderData.isVatApplied && initialVatAmount > 0 && initialSubtotal > 0) {
-        setVatAmount(initialVatAmount);
+      // If VAT is enabled in config, we calculate it dynamically
+      const isVatEnabled = orderConfiguration?.isVatEnabled ?? true;
+      setIsVatApplied(isVatEnabled);
+
+      if (isVatEnabled && configVatRate > 0 && initialSubtotal > 0) {
+        // If we want to recalculate fresh:
+        // setVatAmount(Math.round(initialSubtotal * (configVatRate / 100)));
+        // Or keep existing if it matches? Let's recalculate to be safe and consistent with "new endpoint"
+        // But we need to use the current calculated subtotal of the items
+        // The subtotal from fullOrderData might be slightly different if items were transformed.
+        // Let's rely on the useEffect that calculates VAT to set the initial amount correctly once items are set.
+        // So here we just set the rate.
       } else {
         setVatAmount(0);
       }
@@ -248,7 +289,12 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       setIsDataProcessingComplete(true);
     }
     // If data is already loaded (cached) and successful, mark as complete
-    else if (isSuccessful && !isLoadingOrderDetails && !fullOrderData && menuData) {
+    else if (
+      isSuccessful &&
+      !isLoadingOrderDetails &&
+      !fullOrderData &&
+      menuData
+    ) {
       // No order details available but query succeeded - mark as complete
       setIsDataProcessingComplete(true);
     }
@@ -258,7 +304,16 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       toast.error("Failed to load order details");
       setIsDataProcessingComplete(true);
     }
-  }, [fullOrderData, isSuccessful, error, menuData, isOpen, orderFromProp, isLoadingOrderDetails]);
+  }, [
+    fullOrderData,
+    isSuccessful,
+    error,
+    menuData,
+    isOpen,
+    orderFromProp,
+    isLoadingOrderDetails,
+    orderConfiguration,
+  ]);
 
   // Increment handler
   const handleIncrement = useCallback(
@@ -407,11 +462,17 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
           <ModalHeader className="flex flex-col gap-3 border-b border-primaryGrey">
             <div className="flex items-center justify-between w-full">
               <div className="w-full flex items-center justify-center flex-col">
-                <h2 className="text-lg font-bold text-black">{businessInformation?.[0]?.businessName || "N/A"}</h2>
+                <h2 className="text-lg font-bold text-black">
+                  {businessInformation?.[0]?.businessName || "N/A"}
+                </h2>
                 <p className="text-base font-medium text-[#808794]">
-                  {businessInformation?.[0]?.businessAddress || businessInformation?.[0]?.city + " " + " " + businessInformation?.[0]?.state || ""}
+                  {businessInformation?.[0]?.businessAddress ||
+                    businessInformation?.[0]?.city +
+                      " " +
+                      " " +
+                      businessInformation?.[0]?.state ||
+                    ""}
                 </p>
-          
               </div>
               <Button
                 isIconOnly
@@ -429,7 +490,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                 <div className="flex items-center w-full gap-6 justify-between mb-1">
                   <span className="text-textGrey">OrderID</span>
                   <span className="ml-2 font-semibold text-black">
-                      {orderData?.reference}
+                    {orderData?.reference}
                   </span>
                 </div>
                 <div className="flex items-center w-full gap-6 justify-between mb-1">
@@ -443,8 +504,9 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                 <div className="flex items-center w-full gap-6 justify-between mb-1">
                   <span className="text-textGrey">Served by:</span>
                   <span className="ml-2 font-semibold text-black">
-                    {userInformation?.firstName + " " + userInformation?.lastName || 
-                      "Not assigned"}
+                    {userInformation?.firstName +
+                      " " +
+                      userInformation?.lastName || "Not assigned"}
                   </span>
                 </div>
               </div>
@@ -453,12 +515,18 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
           <ModalBody className="p-6">
             {/* Cart Items */}
-            {isLoadingOrderDetails || isLoadingMenu || !isDataProcessingComplete ? (
+            {isLoadingOrderDetails ||
+            isLoadingMenu ||
+            !isDataProcessingComplete ? (
               <div className="flex flex-col h-[40vh] justify-center items-center">
                 <SpinnerLoader size="md" />
                 <Spacer y={3} />
                 <p className="text-sm text-textGrey">
-                  {isLoadingOrderDetails ? "Loading order details..." : isLoadingMenu ? "Loading menu data..." : "Processing order data..."}
+                  {isLoadingOrderDetails
+                    ? "Loading order details..."
+                    : isLoadingMenu
+                    ? "Loading menu data..."
+                    : "Processing order data..."}
                 </p>
               </div>
             ) : selectedItems.length > 0 ? (
@@ -486,16 +554,25 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                               variant="faded"
                               className="border border-[#EFEFEF]"
                               aria-label="minus"
-                              isDisabled={isUpdating || (
+                              isDisabled={
+                                isUpdating ||
                                 (() => {
                                   // Robust Check: Find category even if id is missing temporarily
                                   let categoryId = (item as any).categoryId;
-                                  let category = menuData?.find((cat: any) => cat.id === categoryId);
-                                  
+                                  let category = menuData?.find(
+                                    (cat: any) => cat.id === categoryId
+                                  );
+
                                   // Fallback: Scan menuData if category not linked yet
                                   if (!category && menuData) {
                                     for (const cat of menuData) {
-                                      if (cat.items?.some((i: any) => i.id === item.id || i.itemID === item.id)) {
+                                      if (
+                                        cat.items?.some(
+                                          (i: any) =>
+                                            i.id === item.id ||
+                                            i.itemID === item.id
+                                        )
+                                      ) {
                                         category = cat;
                                         break;
                                       }
@@ -506,10 +583,22 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                                   // New Rule: "disable the button for all... only the newly increase item"
                                   // Logic: Disable if (NOT True) AND (Count <= OriginalCount).
                                   // This allows decreasing newly added items (Count > OriginalCount) but locks original items.
-                                  const originalCount = (item as any).originalCount ?? 0;
-                                  return !!(!category?.preventOrderItemReduction && item.count <= originalCount);
+                                  const originalCount =
+                                    (item as any).originalCount ?? 0;
+
+                                  // Use global configuration for prevention
+                                  const preventReduction =
+                                    orderConfiguration?.preventOrderItemReduction ??
+                                    false;
+
+                                  // If preventReduction is TRUE, we BLOCK reducing below original count.
+                                  // The button is disabled if: preventReduction IS true AND current count <= original count
+                                  return !!(
+                                    preventReduction &&
+                                    item.count <= originalCount
+                                  );
                                 })()
-                              )}
+                              }
                             >
                               <FaMinus />
                             </Button>
@@ -579,7 +668,9 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         Grand Total
                       </h4>
                       <p className="text-[18px] font-[700] text-primaryColor">
-                        {formatPrice(calculateTotalPrice() + vatAmount + additionalCost)}
+                        {formatPrice(
+                          calculateTotalPrice() + vatAmount + additionalCost
+                        )}
                       </p>
                     </div>
 

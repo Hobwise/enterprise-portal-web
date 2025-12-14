@@ -23,11 +23,7 @@ interface OrderDetail {
   isPacked?: boolean;
 }
 
-const optionalPhoneSchema = z
-  .string()
-  .trim()
-  .optional()
-  .or(z.literal(""));
+const optionalPhoneSchema = z.string().trim().optional().or(z.literal(""));
 
 export const orderSchema = z.object({
   placedByName: z.string().trim().min(1, "Name is required"),
@@ -148,8 +144,28 @@ export async function getOrderDetails(
 ) {
   // Default to current day if dates are not provided
   const now = new Date();
-  const defaultStartDate = startDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
-  const defaultEndDate = endDate || new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+  const defaultStartDate =
+    startDate ||
+    new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0,
+      0,
+      0,
+      0
+    ).toISOString();
+  const defaultEndDate =
+    endDate ||
+    new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      23,
+      59,
+      59,
+      999
+    ).toISOString();
 
   // Build URL with query parameters
   const pageParam = page || 1;
@@ -164,13 +180,11 @@ export async function getOrderDetails(
     businessId: businessId,
   };
 
-
   try {
     const response = await api.post(url, payload);
 
     return response.data;
   } catch (error) {
-
     handleError(error, false);
   }
 }
@@ -251,13 +265,17 @@ export async function getOrderByRef(
 export async function completeOrder(categoryId: string, orderId: string) {
   const url = `${DASHBOARD.completeOrder}?categoryId=${categoryId}`;
   const headers = {
-    orderId
+    orderId,
   };
 
   try {
-    const data = await api.post(url, {}, {
-      headers,
-    });
+    const data = await api.post(
+      url,
+      {},
+      {
+        headers,
+      }
+    );
 
     return data;
   } catch (error) {
@@ -268,7 +286,7 @@ export async function completeOrder(categoryId: string, orderId: string) {
 export async function completeOrderWithPayment(payload: any, orderId: string) {
   const url = `${DASHBOARD.completeOrderWithPayment}`;
   const headers = {
-    orderId
+    orderId,
   };
 
   try {
@@ -400,7 +418,10 @@ export async function getActiveOrdersByCategory(categoryId: string) {
 }
 
 // Function to get individual order details by category
-export async function getOrderDetailsByCategory(categoryId: string, orderId: string) {
+export async function getOrderDetailsByCategory(
+  categoryId: string,
+  orderId: string
+) {
   try {
     const response = await api.get(
       `/api/v1/Order/categories/${categoryId}/orders/${orderId}`
@@ -471,10 +492,24 @@ interface RefundPayload {
 export async function refundOrder(payload: RefundPayload, orderId: string) {
   const headers = { orderId };
   try {
-    const response = await api.post(DASHBOARD.refundOrder, payload, { headers });
+    const response = await api.post(DASHBOARD.refundOrder, payload, {
+      headers,
+    });
     return response.data;
   } catch (error) {
     handleError(error);
   }
 }
 
+// Function to get business order configuration
+export async function getBusinessOrderConfiguration(businessId: string) {
+  const headers = { businessId };
+  try {
+    const response = await api.get(`/api/v1/Business/order-configuration`, {
+      headers,
+    });
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
