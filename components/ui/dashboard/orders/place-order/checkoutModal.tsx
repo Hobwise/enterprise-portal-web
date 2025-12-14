@@ -36,6 +36,7 @@ import { IoClose } from "react-icons/io5";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../../public/assets/images/no-image.svg";
 import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
+import useOrderConfiguration from "@/hooks/cachedEndpoints/useOrderConfiguration";
 
 interface Order {
   placedByName: string;
@@ -134,6 +135,15 @@ const CheckoutModal = ({
     comment: orderDetails?.comment || "",
   });
 
+  const { data: orderConfig } = useOrderConfiguration(businessId);
+  const orderConfiguration = orderConfig?.data;
+
+  // DEBUG LOGS
+  useEffect(() => {
+    console.log("DEBUG: Order Configuration:", orderConfiguration);
+    console.log("DEBUG: Business Info:", businessInformation);
+  }, [orderConfiguration, businessInformation]);
+
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [additionalCost, setAdditionalCost] = useState(0);
   const [additionalCostName, setAdditionalCostName] = useState("");
@@ -146,9 +156,16 @@ const CheckoutModal = ({
       setAdditionalCostName(orderDetails.additionalCostName || "");
       // Keep VAT handling consistent with UpdateOrderModal: use stored values when present
       setVatAmount(orderDetails.vatAmount || 0);
+      setVatAmount(orderDetails.vatAmount || 0);
       setIsVatApplied(orderDetails.isVatApplied ?? true);
     }
   }, [orderDetails]);
+
+  useEffect(() => {
+    if (orderConfiguration) {
+      setIsVatApplied(orderConfiguration.isVatEnabled ?? true);
+    }
+  }, [orderConfiguration]);
 
   // Frontend validation helper function
   const validateCheckoutForm = (): { isValid: boolean; errors: string[] } => {
@@ -439,35 +456,6 @@ const CheckoutModal = ({
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
 
-  const getVatRateDecimal = (): number => {
-    if (!selectedItems || selectedItems.length === 0) return 0;
-
-    for (const item of selectedItems) {
-      // Prefer category-based VAT when available
-      if (item?.categoryId && categoriesData) {
-        const category = categoriesData.find(
-          (cat: any) => cat.categoryId === item.categoryId
-        );
-        if (
-          category?.isVatEnabled &&
-          category?.vatRate &&
-          category.vatRate > 0
-        ) {
-          return category.vatRate > 1
-            ? category.vatRate / 100
-            : category.vatRate;
-        }
-      }
-
-      // Fallback to item-level VAT if present (used in POS/other flows)
-      if (item?.isVatEnabled && item?.vatRate && item.vatRate > 0) {
-        return item.vatRate > 1 ? item.vatRate / 100 : item.vatRate;
-      }
-    }
-
-    return 0;
-  };
-
   // Calculate detailed total price directly from selectedItems to ensure accuracy
   const calculateDetailedTotalPrice = (): {
     itemsSubtotal: number;
@@ -476,7 +464,6 @@ const CheckoutModal = ({
   } => {
     let itemsSubtotal = 0;
     let packingSubtotal = 0;
-    let vatAmount = 0;
 
     // First, calculate total subtotals for all items
     selectedItems.forEach((item: any) => {
@@ -500,32 +487,37 @@ const CheckoutModal = ({
     itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
     packingSubtotal = Math.round(packingSubtotal * 100) / 100;
 
-    // Decide VAT rate source:
-    // - For existing orders (id present) use backend VAT percentage (vatAmount / subTotalAmount)
-    // - For new orders fall back to category/item-based VAT
-    let vatRateDecimal = 0;
+    // Use VAT from configuration if available, otherwise fallback
+    const configVatRate = orderConfiguration?.vatRate ?? 0;
+    const shouldCalculateVat = orderConfiguration?.isVatEnabled ?? true; // Default to true if not specified? Or false? User said isVatEnabled: true in example.
 
-    const backendSubtotal = orderDetails?.subTotalAmount;
-    if (
-      id &&
-      orderDetails?.vatAmount &&
-      backendSubtotal &&
-      backendSubtotal > 0
-    ) {
-      // Derive VAT percentage from backend so behaviour matches backend calculations
-      vatRateDecimal = orderDetails.vatAmount / backendSubtotal;
-    } else {
-      // Fallback to existing frontend VAT logic
-      vatRateDecimal = getVatRateDecimal();
+    // Calculate VAT based on subtotal if enabled
+    let vatAmount = 0;
+    if (shouldCalculateVat && configVatRate > 0) {
+      // Calculates VAT: (Items + Packing) * (Rate / 100)
+      // Assuming rate is percentage e.g. 7.5
+      vatAmount =
+        Math.round(
+          (itemsSubtotal + packingSubtotal) * (configVatRate / 100) * 100
+        ) / 100;
     }
 
-    // Calculate VAT on the total subtotal (items + packing), not per item
-    if (vatRateDecimal > 0) {
-      const totalSubtotal = itemsSubtotal + packingSubtotal;
-      vatAmount = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
-    }
+    // If we have orderDetails with a fixed VAT amount (e.g. editing an order?), we might want to respect that?
+    // But for a new order (checkout), we calculate.
+    // If orderDetails is present, it might be an edit.
+    // However, the requested change "use this new endpoint ... instead remove the old methods" implies we should rely on the endpoint.
+    // If we are just placing an order, orderDetails might be partial.
+    // Let's stick to the calculation using the rate.
 
-    vatAmount = Math.round(vatAmount * 100) / 100;
+    // Log calculation details
+    console.log("DEBUG: Calculation:", {
+      itemsSubtotal,
+      packingSubtotal,
+      vatAmount,
+      configVatRate,
+      shouldCalculateVat,
+      isVatApplied,
+    });
 
     return { itemsSubtotal, packingSubtotal, vatAmount };
   };
@@ -583,7 +575,6 @@ const CheckoutModal = ({
     const errors: string[] = [];
     let itemsSubtotal = 0;
     let packingSubtotal = 0;
-    let vatCalc = 0;
 
     try {
       // First, calculate total subtotals for all items
@@ -611,12 +602,6 @@ const CheckoutModal = ({
         }
 
         // Log each item calculation
-        const category =
-          item.categoryId && categoriesData
-            ? categoriesData.find(
-                (cat: any) => cat.categoryId === item.categoryId
-              )
-            : null;
         console.log(`Item ${index + 1} (${item.itemName || item.id}):`, {
           price: itemPrice,
           count: itemCount,
@@ -627,8 +612,6 @@ const CheckoutModal = ({
             ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) /
               100
             : 0,
-          isVatEnabled: category?.isVatEnabled || false,
-          vatRate: category?.vatRate || 0,
         });
       });
 
@@ -636,14 +619,17 @@ const CheckoutModal = ({
       itemsSubtotal = Math.round(itemsSubtotal * 100) / 100;
       packingSubtotal = Math.round(packingSubtotal * 100) / 100;
 
-      // Calculate VAT on the total subtotal (items + packing), not per item
-      const vatRateDecimal = getVatRateDecimal();
-      if (vatRateDecimal > 0) {
-        const totalSubtotal = itemsSubtotal + packingSubtotal;
-        vatCalc = Math.round(totalSubtotal * vatRateDecimal * 100) / 100;
-      }
+      // Use VAT calculation similar to main function
+      const configVatRate = orderConfiguration?.vatRate ?? 0;
+      const shouldCalculateVat = orderConfiguration?.isVatEnabled ?? true;
 
-      vatCalc = Math.round(vatCalc * 100) / 100;
+      let vatCalc = 0;
+      if (shouldCalculateVat && configVatRate > 0) {
+        vatCalc =
+          Math.round(
+            (itemsSubtotal + packingSubtotal) * (configVatRate / 100) * 100
+          ) / 100;
+      }
 
       const baseSubtotal = itemsSubtotal + packingSubtotal;
       const additionalCostRounded =
@@ -1263,7 +1249,6 @@ const CheckoutModal = ({
     try {
       const payload = {
         treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
-        treatedById: userInformation.id,
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
         status: 1,
@@ -1672,19 +1657,17 @@ const CheckoutModal = ({
                                       className="border h-[35px] w-[30px] border-primaryGrey bg-white"
                                       aria-label="minus"
                                       isDisabled={(() => {
-                                        if (item.categoryId && categoriesData) {
-                                          const category = categoriesData.find(
-                                            (cat: any) =>
-                                              cat.categoryId === item.categoryId
-                                          );
-                                          // User Rule: "only when true they can edit" => False = Restricted.
-                                          // Logic: Disable if (NOT True) AND (Count > 1).
-                                          return !!(
-                                            !category?.preventOrderItemReduction &&
-                                            item.count > 1
-                                          );
-                                        }
-                                        return false;
+                                        // For new items/orders, allow reduction (originalCount usually 0)
+                                        // For existing items in an update, restrict if configured.
+                                        const originalCount =
+                                          (item as any).originalCount ?? 0;
+                                        const preventReduction =
+                                          orderConfiguration?.preventOrderItemReduction ??
+                                          false;
+                                        return !!(
+                                          preventReduction &&
+                                          item.count <= originalCount
+                                        );
                                       })()}
                                     >
                                       <FaMinus />
@@ -2429,7 +2412,10 @@ const CheckoutModal = ({
                       </p>
                       <h2 className="text-3xl font-bold text-black">
                         {formatPrice(
-                          orderDetails?.totalAmount ?? finalTotalPrice,
+                          Math.max(
+                            0,
+                            finalTotalPrice - (orderDetails?.amountPaid || 0)
+                          ),
                           "NGN"
                         )}
                       </h2>
@@ -2445,8 +2431,10 @@ const CheckoutModal = ({
                           setPaymentOption(val);
                           if (val === "full") {
                             // Populate with full remaining amount
-                            const total =
-                              orderDetails?.amountRemaining ?? finalTotalPrice;
+                            const total = Math.max(
+                              0,
+                              finalTotalPrice - (orderDetails?.amountPaid || 0)
+                            );
                             setAmountPaid(total.toLocaleString("en-US"));
                           } else {
                             setAmountPaid("");
@@ -2508,7 +2496,12 @@ const CheckoutModal = ({
                         </span>
                         <span className="text-2xl font-bold text-orange-700">
                           {formatPrice(
-                            orderDetails?.amountRemaining ?? finalTotalPrice,
+                            Math.max(
+                              0,
+                              finalTotalPrice -
+                                (orderDetails?.amountPaid || 0) -
+                                (Number(amountPaid.replace(/,/g, "")) || 0)
+                            ),
                             "NGN"
                           )}
                         </span>
