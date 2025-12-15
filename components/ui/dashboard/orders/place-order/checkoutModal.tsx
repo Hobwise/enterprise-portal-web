@@ -1422,7 +1422,10 @@ const CheckoutModal = ({
   // Update amount paid when order details or total price changes
   useEffect(() => {
     if (isOpen) {
-      const total = orderDetails?.amountRemaining ?? finalTotalPrice;
+      const total = Math.max(
+        0,
+        finalTotalPrice - (orderDetails?.amountPaid || 0)
+      );
       setAmountPaid(total.toLocaleString("en-US"));
     }
   }, [isOpen, orderDetails, finalTotalPrice]);
