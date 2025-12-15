@@ -369,18 +369,22 @@ const ApprovePayment = ({
                                           </span>
                                         )}
                                       </p>
-                                      <p className="text-xs font-medium mt-1">
-                                        x{item.quantity}
-                                      </p>
                                     </div>
                                   </div>
                                   <div className="text-right">
                                     <p className="text-sm font-bold text-gray-900">
+                                      {formatPrice(
+                                        item.unitPrice * item.quantity +
+                                          item.packingCost * item.quantity
+                                      )}
+                                    </p>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      {item.quantity} x{" "}
                                       {formatPrice(item.unitPrice)}
                                     </p>
                                     {item.packingCost > 0 && (
-                                      <p className="text-xs text-gray-500 mt-1">
-                                        Pack: {formatPrice(item.packingCost)}
+                                      <p className="text-xs text-gray-500">
+                                        + Pack: {formatPrice(item.packingCost)}
                                       </p>
                                     )}
                                   </div>

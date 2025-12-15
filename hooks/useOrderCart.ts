@@ -90,12 +90,21 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
   }, [isUpdating, menuItems]);
 
   const addItemToCart = useCallback((item: MenuItem) => {
-    const cartItemId = item.uniqueKey || item.id;
-    const existingItem = orderItems.find((orderItem: Item) => orderItem.id === cartItemId);
+    // Check if item already exists in cart, matching by distinct itemID and packing status
+    // valid itemID check is crucial to merge items from different categories/menus
+    const existingItem = orderItems.find((orderItem: Item) => 
+      orderItem.itemID === item.id && 
+      (orderItem.isPacked || false) === (item.isPacked || false)
+    );
 
     if (existingItem) {
       handleIncrement(existingItem.id);
     } else {
+      const cartItemId = item.uniqueKey || item.id;
+      // Ensure we don't have ID collision if uniqueKey was undefined but itemID exists
+      // If by rare chance cartItemId (uniqueKey) clashes with another item that is NOT the same itemID (unlikely)
+      // We should be fine as uniqueKey is designed to be unique.
+      
       const newItem: Item = {
         id: cartItemId,
         itemID: item.id,

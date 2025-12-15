@@ -77,6 +77,7 @@ interface OrderItem {
   comment?: string;
   orderDetails?: { itemID: string; itemName: string; quantity: number; unitPrice: number }[];
   amountRemaining?: number;
+  amountPaid?: number;
 }
 
 interface OrderCategory {
@@ -698,7 +699,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
               onMouseEnter={() => prefetchOrderDetails(order.id)}
             >
               {/* Header: Name + Phone + Comment */}
-              <div className='flex items-end justify-end -mb-5 mb-3 mt-2'>
+              <div className='flex items-end justify-end  mb-3 mt-2'>
             
 
                 {/* Actions Dropdown */}
@@ -1138,7 +1139,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenRefund}
         orderId={singleOrder?.id || ""}
         totalAmount={singleOrder?.totalAmount || 0}
-        maxRefundAmount={singleOrder?.totalAmount || 0}
+        maxRefundAmount={singleOrder?.amountPaid || 0}
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({ queryKey: ['orders'] });
