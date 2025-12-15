@@ -300,6 +300,23 @@ export async function completeOrderWithPayment(payload: any, orderId: string) {
   }
 }
 
+export async function cancelOrder(payload: any, orderId: string) {
+  const url = `${DASHBOARD.cancelOrder}`;
+  const headers = {
+    orderId,
+  };
+
+  try {
+    const data = await api.post(url, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
 export async function createOrder(
   businessId: string,
   payload: Order,

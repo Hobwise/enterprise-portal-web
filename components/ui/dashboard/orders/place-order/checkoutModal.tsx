@@ -138,11 +138,7 @@ const CheckoutModal = ({
   const { data: orderConfig } = useOrderConfiguration(businessId);
   const orderConfiguration = orderConfig?.data;
 
-  // DEBUG LOGS
-  useEffect(() => {
-    console.log("DEBUG: Order Configuration:", orderConfiguration);
-    console.log("DEBUG: Business Info:", businessInformation);
-  }, [orderConfiguration, businessInformation]);
+
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [additionalCost, setAdditionalCost] = useState(0);
@@ -509,15 +505,7 @@ const CheckoutModal = ({
     // If we are just placing an order, orderDetails might be partial.
     // Let's stick to the calculation using the rate.
 
-    // Log calculation details
-    console.log("DEBUG: Calculation:", {
-      itemsSubtotal,
-      packingSubtotal,
-      vatAmount,
-      configVatRate,
-      shouldCalculateVat,
-      isVatApplied,
-    });
+   
 
     return { itemsSubtotal, packingSubtotal, vatAmount };
   };
@@ -602,17 +590,6 @@ const CheckoutModal = ({
         }
 
         // Log each item calculation
-        console.log(`Item ${index + 1} (${item.itemName || item.id}):`, {
-          price: itemPrice,
-          count: itemCount,
-          itemTotal,
-          isPacked: item.isPacked,
-          packingCost: item.packingCost,
-          packingTotal: item.isPacked
-            ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) /
-              100
-            : 0,
-        });
       });
 
       // Round subtotals
@@ -711,12 +688,7 @@ const CheckoutModal = ({
 
   const placeOrder = async () => {
     // Debug log at start
-    console.log("PlaceOrder called with:", {
-      selectedItems: selectedItems?.length || 0,
-      order,
-      additionalCost,
-      finalTotalPrice,
-    });
+   
 
     // Safety check: Ensure we have required data
     if (!selectedItems || selectedItems.length === 0) {
@@ -817,28 +789,10 @@ const CheckoutModal = ({
       throw new Error(validation.errors.join(", "));
     }
 
-    // Log payload for debugging
-    console.log("Order Payload:", JSON.stringify(payload, null, 2));
-    console.log("Frontend Calculation:", {
-      subtotal,
-      vatAmount,
-      additionalCost,
-      finalTotal: finalTotalPrice,
-      itemsCount: selectedItems.length,
-    });
-    console.log("Verified Calculation:", calculationVerification.breakdown);
+   
 
     const id = businessId ? businessId : businessInformation[0]?.businessId;
-
-    console.log("Calling createOrder with:", {
-      id,
-      cooperateID: effectiveCooperateID,
-      payloadSize: JSON.stringify(payload).length,
-    });
-
     const data = await createOrder(id, payload, effectiveCooperateID);
-
-    console.log("CreateOrder response:", data);
 
     // Handle undefined response
     if (!data) {
@@ -913,8 +867,6 @@ const CheckoutModal = ({
         // Note: onOrderSuccess is NOT called here to preserve cart items during payment flow
         // It will be called after successful payment completion in finalizeOrder
       } else if (apiData.data?.error) {
-        console.error("Order creation failed:", apiData.data?.error);
-        console.error("Failed payload:", payload);
         notify({
           title: "Order Creation Failed",
           text: apiData.data?.error || "Unknown error",
@@ -931,8 +883,6 @@ const CheckoutModal = ({
             `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`
         )
         .join("; ");
-      console.error("Validation errors:", errorData.errors);
-      console.error("Failed payload:", payload);
       notify({
         title: "Validation Failed",
         text: validationErrors,
@@ -1036,21 +986,7 @@ const CheckoutModal = ({
         type: "error",
       });
       throw new Error(validation.errors.join(", "));
-    }
-
-    // Log payload for debugging
-    console.log("Update Order Payload:", JSON.stringify(payload, null, 2));
-    console.log("Update Frontend Calculation:", {
-      subtotal,
-      vatAmount,
-      additionalCost,
-      finalTotal: finalTotalPrice,
-      itemsCount: selectedItems.length,
-    });
-    console.log(
-      "Update Verified Calculation:",
-      calculationVerification.breakdown
-    );
+    }   
 
     if (!id) {
       notify({
@@ -1072,8 +1008,6 @@ const CheckoutModal = ({
         setResponse(data as ApiResponse);
       }
     } catch (error) {
-      console.error("editOrder API call failed:", error);
-      console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
       notify({
         title: "Error!",
         text: "Failed to update order. Please try again.",

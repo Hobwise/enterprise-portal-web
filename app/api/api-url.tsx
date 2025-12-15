@@ -64,9 +64,10 @@ export const DASHBOARD = {
   orderByRef: "api/v1/Order/by-reference",
   placeOrder: "api/v1/Order/place",
   completeOrder: "api/v1/Order/mark-complete",
-  completeOrderWithPayment: "api/v1/Order/complete",
+  completeOrderWithPayment: "api/v1/Order/payment",
   paymentSummary: "api/v1/Order/payment",
   refundOrder: "api/v1/Order/refund",
+  cancelOrder: "api/v1/Order/cancel",
 
   // Payments
   paymentByBusiness: "api/v1/Payment/categories",
