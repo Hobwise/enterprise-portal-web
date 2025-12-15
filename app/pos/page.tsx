@@ -6,7 +6,12 @@ import { useDisclosure } from "@nextui-org/react";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/ui/dashboard/header";
 import CheckoutModal from "@/components/ui/dashboard/orders/place-order/checkoutModal";
-import { getJsonItemFromLocalStorage, formatPrice, notify, clearItemLocalStorage } from "@/lib/utils";
+import {
+  getJsonItemFromLocalStorage,
+  formatPrice,
+  notify,
+  clearItemLocalStorage,
+} from "@/lib/utils";
 import { getOrder } from "@/app/api/controllers/dashboard/orders";
 import toast from "react-hot-toast";
 
@@ -35,14 +40,15 @@ const POSContent = () => {
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
   const [isVarietyModalOpen, setIsVarietyModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [selectedVarietyItem, setSelectedVarietyItem] = useState<MenuItem | null>(null);
+  const [selectedVarietyItem, setSelectedVarietyItem] =
+    useState<MenuItem | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [existingOrder, setExistingOrder] = useState<any>(null);
   const [isLoadingExistingOrder, setIsLoadingExistingOrder] = useState(false);
 
   // Business information
-  const businessInformation = getJsonItemFromLocalStorage('business');
-  const userInformation = getJsonItemFromLocalStorage('userInformation');
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
 
   // Fetch POS menu data
   const { loading, error, posData, refetch } = usePOSMenu();
@@ -71,8 +77,6 @@ const POSContent = () => {
   } = useOrderCart(menuItems);
 
   const orderSummary = calculateOrderSummary();
-
-
 
   // Filter menu items based on search query
   const filteredMenuItems = menuItems.filter((item) => {
@@ -129,9 +133,9 @@ const POSContent = () => {
   const handleQuickAdd = (item: MenuItem) => {
     if (!item.isAvailable) {
       notify({
-        title: 'Unavailable',
-        text: 'This item is currently unavailable',
-        type: 'error'
+        title: "Unavailable",
+        text: "This item is currently unavailable",
+        type: "error",
       });
       return;
     }
@@ -142,9 +146,9 @@ const POSContent = () => {
   const handleAddItemFromModal = (item: MenuItem, includePacking: boolean) => {
     if (!item.isAvailable) {
       notify({
-        title: 'Unavailable',
-        text: 'This item is currently unavailable',
-        type: 'error'
+        title: "Unavailable",
+        text: "This item is currently unavailable",
+        type: "error",
       });
       return;
     }
@@ -154,14 +158,20 @@ const POSContent = () => {
   };
 
   // Handle adding variety items to cart
-  const handleAddVarietyToCart = (baseItem: MenuItem, variety?: Variety, includePacking?: boolean) => {
+  const handleAddVarietyToCart = (
+    baseItem: MenuItem,
+    variety?: Variety,
+    includePacking?: boolean
+  ) => {
     if (variety) {
       // Adding a variety
       const varietyItem: MenuItem = {
         ...baseItem,
         uniqueKey: undefined, // Prevent inheriting base uniqueKey to ensure variety.id is used
         id: variety.id,
-        itemName: `${baseItem.itemName} (${variety.unit || variety.name || 'Variety'})`,
+        itemName: `${baseItem.itemName} (${
+          variety.unit || variety.name || "Variety"
+        })`,
         price: variety.price,
         currency: variety.currency || baseItem.currency,
         isVariety: true,
@@ -170,7 +180,9 @@ const POSContent = () => {
       addItemToCart(varietyItem);
     } else {
       // Adding base item with packing if specified
-      const itemToAdd = includePacking ? { ...baseItem, isPacked: true } : baseItem;
+      const itemToAdd = includePacking
+        ? { ...baseItem, isPacked: true }
+        : baseItem;
       addItemToCart(itemToAdd);
     }
   };
@@ -185,8 +197,8 @@ const POSContent = () => {
   useEffect(() => {
     const loadExistingOrder = async () => {
       // Check if we're in add-items mode (coming from UpdateOrderModal)
-      const isAddItemsMode = searchParams.get('mode') === 'add-items';
-      const order = getJsonItemFromLocalStorage('order');
+      const isAddItemsMode = searchParams.get("mode") === "add-items";
+      const order = getJsonItemFromLocalStorage("order");
 
       if (isAddItemsMode && order?.id && menuItems.length > 0) {
         setIsLoadingExistingOrder(true);
@@ -198,17 +210,19 @@ const POSContent = () => {
             const orderDetails = orderData.orderDetails || [];
 
             // Debug logging
-            console.log('API orderData:', orderData);
-            console.log('localStorage order:', order);
+            console.log("API orderData:", orderData);
+            console.log("localStorage order:", order);
 
             // Transform order details to match POS cart format
             orderDetails.forEach((item: any) => {
-              const menuItem = menuItems.find((m: MenuItem) => m.id === item.itemID);
+              const menuItem = menuItems.find(
+                (m: MenuItem) => m.id === item.itemID
+              );
 
               if (menuItem) {
                 const transformedItem = {
                   ...menuItem,
-                  id: menuItem.uniqueKey || item.itemID,
+                  id: item.itemID,
                   itemID: item.itemID,
                   itemName: item.itemName || menuItem.itemName,
                   menuName: item.menuName || menuItem.menuName,
@@ -217,9 +231,9 @@ const POSContent = () => {
                   packingCost: item.packingCost || menuItem.packingCost || 0,
                 } as MenuItem;
 
-                // Add item to cart multiple times to match the quantity
-                for (let i = 0; i < item.quantity; i++) {
-                  addItemToCart(transformedItem);
+                // Add item to cart with specific quantity
+                if (item.quantity > 0) {
+                  addItemToCart(transformedItem, item.quantity);
                 }
               }
             });
@@ -228,12 +242,18 @@ const POSContent = () => {
             // Use localStorage order as fallback if API response doesn't have the field
             const transformedOrderData = {
               ...orderData,
-              quickResponseID: orderData.quickResponseID || orderData.qrReference || order.qrReference,
-              placedByName: orderData.placedByName || order.placedByName || '',
-              placedByPhoneNumber: orderData.placedByPhoneNumber || order.placedByPhoneNumber || '',
+              quickResponseID:
+                orderData.quickResponseID ||
+                orderData.qrReference ||
+                order.qrReference,
+              placedByName: orderData.placedByName || order.placedByName || "",
+              placedByPhoneNumber:
+                orderData.placedByPhoneNumber ||
+                order.placedByPhoneNumber ||
+                "",
             };
 
-            console.log('Transformed orderData:', transformedOrderData);
+            console.log("Transformed orderData:", transformedOrderData);
 
             setExistingOrder(transformedOrderData);
             toast.success(`Loading order ${order.reference || order.id}`);
@@ -258,14 +278,18 @@ const POSContent = () => {
     loadExistingOrder();
   }, [searchParams, menuItems.length]);
 
-  console.log('Rendered POSContent with existingOrder:', orderItems);
+  console.log("Rendered POSContent with existingOrder:", orderItems);
 
   return (
     <>
       <style jsx>{`
         @keyframes slideUp {
-          from { transform: translateY(100%); }
-          to { transform: translateY(0); }
+          from {
+            transform: translateY(100%);
+          }
+          to {
+            transform: translateY(0);
+          }
         }
         .animate-slideUp {
           animation: slideUp 0.3s ease-out;
@@ -285,7 +309,6 @@ const POSContent = () => {
           <POSHeader onSearch={handleSearch} />
 
           {/* Mobile Category Tabs */}
-     
 
           <div className="h-[83vh] lg:h-[83vh] bg-gray-50 flex">
             <div className="flex flex-1 overflow-hidden bg-white">
@@ -331,30 +354,33 @@ const POSContent = () => {
                   </div>
                 </div>
 
-                     <div className="lg:hidden bg-[#391D84]">
-            <div className="flex overflow-x-auto scrollbar-hide">
-              {mainTabs.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    selectedCategory === category
-                      ? "text-white bg-[#251258] border-[#A07EFF]"
-                      : "text-purple-200 border-transparent hover:text-white"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
+                <div className="lg:hidden bg-[#391D84]">
+                  <div className="flex overflow-x-auto scrollbar-hide">
+                    {mainTabs.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => setSelectedCategory(category)}
+                        className={`flex-shrink-0 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                          selectedCategory === category
+                            ? "text-white bg-[#251258] border-[#A07EFF]"
+                            : "text-purple-200 border-transparent hover:text-white"
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Menu Grid */}
                 <div className="flex-1 p-3 sm:p-4 lg:p-6 overflow-y-auto">
                   {loading ? (
                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                       {[...Array(LOADING_SKELETON_COUNT)].map((_, index) => (
-                        <div key={index} className="bg-gray-200 animate-pulse rounded-lg min-h-[120px]" />
+                        <div
+                          key={index}
+                          className="bg-gray-200 animate-pulse rounded-lg min-h-[120px]"
+                        />
                       ))}
                     </div>
                   ) : error ? (
@@ -370,7 +396,9 @@ const POSContent = () => {
                   ) : filteredMenuItems.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-full">
                       <p className="text-gray-500">
-                        {searchQuery.trim() ? "No items found matching your search" : "No items available in this category"}
+                        {searchQuery.trim()
+                          ? "No items found matching your search"
+                          : "No items available in this category"}
                       </p>
                     </div>
                   ) : (
@@ -396,9 +424,11 @@ const POSContent = () => {
                 orderSummary={orderSummary}
                 businessName={businessInformation?.[0]?.businessName}
                 businessAddress={businessInformation?.[0]?.address}
-                staffName={userInformation?.firstName && userInformation?.lastName
-                  ? `${userInformation.firstName} ${userInformation.lastName}`
-                  : userInformation?.firstName || 'Staff'}
+                staffName={
+                  userInformation?.firstName && userInformation?.lastName
+                    ? `${userInformation.firstName} ${userInformation.lastName}`
+                    : userInformation?.firstName || "Staff"
+                }
                 isUpdating={isUpdating}
                 onIncrement={handleIncrement}
                 onDecrement={handleDecrement}
@@ -418,7 +448,10 @@ const POSContent = () => {
               <div className="relative w-full bg-white rounded-t-2xl shadow-2xl animate-slideUp max-h-[85vh] flex flex-col">
                 <div className="flex items-center justify-between p-3 border-b">
                   <h3 className="text-lg font-semibold">Your Order</h3>
-                  <button onClick={closeOrderModal} className="p-2 hover:bg-gray-100 rounded-full">
+                  <button
+                    onClick={closeOrderModal}
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                  >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -431,11 +464,13 @@ const POSContent = () => {
                       <div className="font-medium">
                         {userInformation?.firstName && userInformation?.lastName
                           ? `${userInformation.firstName} ${userInformation.lastName}`
-                          : userInformation?.firstName || 'Staff'}
+                          : userInformation?.firstName || "Staff"}
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="text-gray-500">{orderSummary.itemCount} items</div>
+                      <div className="text-gray-500">
+                        {orderSummary.itemCount} items
+                      </div>
                       <div className="text-gray-500">Order Type</div>
                       <div className="font-medium">POS</div>
                     </div>
@@ -447,9 +482,15 @@ const POSContent = () => {
                     {orderItems.map((item) => (
                       <div key={item.id} className="flex items-start space-x-3">
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium  text-xs">{item.itemName}</h4>
-                          <p className="text-xs text-gray-500">{item.menuName}</p>
-                          {item.isPacked && <p className="text-xs text-blue-600">+ Packing</p>}
+                          <h4 className="font-medium  text-xs">
+                            {item.itemName}
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            {item.menuName}
+                          </p>
+                          {item.isPacked && (
+                            <p className="text-xs text-blue-600">+ Packing</p>
+                          )}
                         </div>
                         <div className="flex items-center space-x-2">
                           <button
@@ -459,7 +500,9 @@ const POSContent = () => {
                           >
                             <Minus className="w-3 h-3" />
                           </button>
-                          <span className="w-8 text-center text-sm font-bold">{item.count}</span>
+                          <span className="w-8 text-center text-sm font-bold">
+                            {item.count}
+                          </span>
                           <button
                             onClick={() => handleIncrement(item.id)}
                             className="w-8 h-8 rounded-md border flex items-center justify-center hover:bg-gray-50"
@@ -470,7 +513,10 @@ const POSContent = () => {
                         </div>
                         <div className="text-right w-20">
                           <div className="text-sm font-medium">
-                            {formatPrice(item.price * item.count, item.currency)}
+                            {formatPrice(
+                              item.price * item.count,
+                              item.currency
+                            )}
                           </div>
                         </div>
                       </div>
@@ -482,15 +528,30 @@ const POSContent = () => {
                   <div className="space-y-2 text-sm mb-4">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>{formatPrice(orderSummary.subtotal, orderItems?.[0]?.currency || 'NGN')}</span>
+                      <span>
+                        {formatPrice(
+                          orderSummary.subtotal,
+                          orderItems?.[0]?.currency || "NGN"
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>VAT</span>
-                      <span>{formatPrice(orderSummary.vatAmount, orderItems?.[0]?.currency || 'NGN')}</span>
+                      <span>
+                        {formatPrice(
+                          orderSummary.vatAmount,
+                          orderItems?.[0]?.currency || "NGN"
+                        )}
+                      </span>
                     </div>
                     <div className="flex justify-between font-bold text-lg pt-2 border-t">
                       <span>Total</span>
-                      <span className="text-primaryColor">{formatPrice(orderSummary.total, orderItems?.[0]?.currency || 'NGN')}</span>
+                      <span className="text-primaryColor">
+                        {formatPrice(
+                          orderSummary.total,
+                          orderItems?.[0]?.currency || "NGN"
+                        )}
+                      </span>
                     </div>
                   </div>
 
@@ -530,7 +591,7 @@ const POSContent = () => {
               <div className="relative">
                 <ShoppingCart className="w-6 h-6" />
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                  {orderSummary.itemCount > 99 ? '99+' : orderSummary.itemCount}
+                  {orderSummary.itemCount > 99 ? "99+" : orderSummary.itemCount}
                 </span>
               </div>
             </button>
@@ -578,14 +639,16 @@ const POSContent = () => {
 
 const POSpage = () => {
   return (
-    <Suspense fallback={
-      <div className="flex h-screen items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5F35D2] mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading POS...</p>
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-white">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5F35D2] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading POS...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <POSContent />
     </Suspense>
   );
