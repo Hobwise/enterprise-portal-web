@@ -188,7 +188,7 @@ const CreateBooking = ({
 
   return (
     <Modal
-      size="2xl"
+      size="3xl"
       isDismissable={false}
       isOpen={openCreateBookingModal}
       onOpenChange={() => closeCreateBookingModal()}
