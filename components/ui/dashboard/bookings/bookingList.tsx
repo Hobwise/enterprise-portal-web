@@ -337,7 +337,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
       else if (first < second) cmp = -1;
       else if (first > second) cmp = 1;
 
-      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+      return sortDescriptor.direction === "ascending" ? -cmp : cmp;
     });
   }, [displayData, sortDescriptor]);
 

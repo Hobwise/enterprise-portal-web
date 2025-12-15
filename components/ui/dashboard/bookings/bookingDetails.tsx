@@ -32,7 +32,7 @@ const BookingDetails = ({
   const getButtonText = () => {
     switch (bookingDetails?.bookingStatus) {
       case 0:
-        return "Accept this booking";
+        return "Confirm booking";
       case 1:
         return "Admit customer";
       case 2:
