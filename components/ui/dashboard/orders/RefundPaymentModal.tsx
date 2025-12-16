@@ -109,39 +109,13 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
       reason: reason,
       treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
       treatedById: userInformation?.id || "",
-      paymentReference: `REF-${Date.now()}`, // Generating a temporary ref if one isn't required from user input
+      paymentReference: `REF-${Date.now()}`, 
       paymentMethod: parseInt(paymentMethod),
-      orderId: orderId, // Assuming the endpoint might need orderId in payload or query. Plan said POST /api/v1/Order/refund with payload. 
-                        // Wait, looking at the user request: POST /api/v{version}/Order/refund 
-                        // Payload schema: { refundAmount, reason, treatedBy, treatedById, paymentReference, paymentMethod }
-                        // It does NOT have orderId in the payload schema provided by user.
-                        // However, a refund MUST be linked to an order. 
-                        // I'll check the controller again.
-                        // I added `refundOrder` which calls `api.post(DASHBOARD.refundOrder, payload)`.
-                        // If the backend expects orderId as a query param or part of the URL, I might need to adjust.
-                        // BUT, if the user provided schema is exact, maybe `paymentReference` IS the link? Or maybe I missed it.
-                        // Let's assume for now I should append orderId to the URL or payload if the schema allows extra fields.
-                        // Actually, looking at the prompt: "/Order/payment/{orderId}(get)... on the refund option call this endpoint POST ... { refundAmount... }"
-                        // It seems the refund might be global or I need to check how to link it.
-                        // Usually I'd expect orderId. I will try to pass orderId in the payload as well, or query param. 
-                        // Let's look at `api-url.tsx`. `refundOrder: "api/v1/Order/refund"`.
-                        // I will add orderId to the payload just in case, or maybe `paymentReference` refers to the original order's payment reference?
-                        // The user said: "paymentReference": "string".
-                        // Use the original order's payment reference?
-                        // I'll pass orderId in the payload, standard practice.
-                        orderId: orderId
+      orderId: orderId
     };
 
     try {
-      // Small adjustment: controller function expects specific payload. I'll stick to what I defined in controller but add orderId if helpful.
-      // Actually, I'll pass orderId as a query param in the controller if I can, OR just payload. 
-      // Re-reading controller: `api.post(DASHBOARD.refundOrder, payload)`.
-      // I will UPDATE the controller to accept orderId query param if needed, but for now lets trust the payload.
-      // Wait, if I look at `UpdateOrderModal.tsx`, `completeOrderWithPayment` takes payload and orderId.
-      // `completeOrderWithPayment` url is `api/v1/Order/complete`.
-      // The user prompt schema for refund doesn't have orderId. 
-      // Maybe "paymentReference" IS the order reference?
-      // I'll assume I should send the order ID as "orderId" in the body.
+  
       const response = await refundOrder(payload as any, orderId);
 
       if (response?.isSuccessful) {
