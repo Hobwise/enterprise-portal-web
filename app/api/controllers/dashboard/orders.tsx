@@ -285,9 +285,7 @@ export async function completeOrder(categoryId: string, orderId: string) {
 
 export async function completeOrderWithPayment(payload: any, orderId: string) {
   const url = `${DASHBOARD.completeOrderWithPayment}`;
-  const headers = {
-    orderId,
-  };
+  const headers = { orderId };
 
   try {
     const data = await api.post(url, payload, {
@@ -299,6 +297,7 @@ export async function completeOrderWithPayment(payload: any, orderId: string) {
     handleError(error);
   }
 }
+
 
 export async function cancelOrder(payload: any, orderId: string) {
   const url = `${DASHBOARD.cancelOrder}`;

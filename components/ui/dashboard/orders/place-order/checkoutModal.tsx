@@ -138,8 +138,6 @@ const CheckoutModal = ({
   const { data: orderConfig } = useOrderConfiguration(businessId);
   const orderConfiguration = orderConfig?.data;
 
-
-
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [additionalCost, setAdditionalCost] = useState(0);
   const [additionalCostName, setAdditionalCostName] = useState("");
@@ -505,8 +503,6 @@ const CheckoutModal = ({
     // If we are just placing an order, orderDetails might be partial.
     // Let's stick to the calculation using the rate.
 
-   
-
     return { itemsSubtotal, packingSubtotal, vatAmount };
   };
 
@@ -688,7 +684,6 @@ const CheckoutModal = ({
 
   const placeOrder = async () => {
     // Debug log at start
-   
 
     // Safety check: Ensure we have required data
     if (!selectedItems || selectedItems.length === 0) {
@@ -788,8 +783,6 @@ const CheckoutModal = ({
       });
       throw new Error(validation.errors.join(", "));
     }
-
-   
 
     const id = businessId ? businessId : businessInformation[0]?.businessId;
     const data = await createOrder(id, payload, effectiveCooperateID);
@@ -986,7 +979,7 @@ const CheckoutModal = ({
         type: "error",
       });
       throw new Error(validation.errors.join(", "));
-    }   
+    }
 
     if (!id) {
       notify({
@@ -1157,6 +1150,7 @@ const CheckoutModal = ({
     // Validate amount for partial payment
     const totalDue = orderDetails?.amountRemaining ?? finalTotalPrice;
     let finalAmountPaid = totalDue;
+       const systemReference = (): number => Math.floor(1e9 + Math.random() * 9e9);
 
     if (paymentOption === "partial") {
       const amount = parseFloat(amountPaid.replace(/,/g, ""));
@@ -1183,13 +1177,16 @@ const CheckoutModal = ({
     try {
       const payload = {
         treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
+         treatedById: userInformation?.id || "",
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
-        status: 1,
         paidAmount: finalAmountPaid,
+        systemReference: systemReference(),
       };
 
       const data = await completeOrderWithPayment(payload, orderId);
+
+      console.log("Finalize payment response:", data, payload, orderId);
 
       if (hasDataProperty(data) && data.data?.isSuccessful) {
         // Clear loading state immediately
@@ -1326,10 +1323,6 @@ const CheckoutModal = ({
   useEffect(() => {
     getQrID();
   }, []);
-
-  console.log(
-    orderDetails?.quickResponseID || orderDetails?.qrReference || orderDetails
-  );
 
   // Reset screen and states when modal opens
   // We only reset when isOpen changes to true. We intentionally ignore 'id' changes
