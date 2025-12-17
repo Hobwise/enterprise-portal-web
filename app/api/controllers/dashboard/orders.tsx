@@ -298,7 +298,6 @@ export async function completeOrderWithPayment(payload: any, orderId: string) {
   }
 }
 
-
 export async function cancelOrder(payload: any, orderId: string) {
   const url = `${DASHBOARD.cancelOrder}`;
   const headers = {
