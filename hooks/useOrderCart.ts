@@ -100,10 +100,16 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
     if (existingItem) {
       handleIncrement(existingItem.id, quantity);
     } else {
-      const cartItemId = item.uniqueKey || item.id;
-      // Ensure we don't have ID collision if uniqueKey was undefined but itemID exists
-      // If by rare chance cartItemId (uniqueKey) clashes with another item that is NOT the same itemID (unlikely)
-      // We should be fine as uniqueKey is designed to be unique.
+      let cartItemId = item.uniqueKey || item.id;
+      
+      // Ensure strict uniqueness of cartItemId in the orderItems array
+      // If an item with this ID already exists (which implies a variant mismatch since we are in the else block),
+      // we must generate a new unique ID for this new row.
+      if (orderItems.some((i) => i.id === cartItemId)) {
+        cartItemId = `${cartItemId}-${
+          item.isPacked ? "packed" : "unpacked"
+        }-${Date.now()}`;
+      }
       
       const newItem: Item = {
         id: cartItemId,

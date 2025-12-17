@@ -208,7 +208,21 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         return;
       }
 
-      const updatedArray = validItems.map((item: any) => {
+      // Deduplicate items by merging quantities
+      const uniqueItemsMap = new Map<string, any>();
+      validItems.forEach((item: any) => {
+        if (uniqueItemsMap.has(item.itemID)) {
+          const existing = uniqueItemsMap.get(item.itemID);
+          existing.quantity += item.quantity;
+        } else {
+          // Clone the item to avoid mutating original data
+          uniqueItemsMap.set(item.itemID, { ...item });
+        }
+      });
+
+      const deduplicatedItems = Array.from(uniqueItemsMap.values());
+
+      const updatedArray = deduplicatedItems.map((item: any) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
 
         // Correctly find the item and its category from menuData
@@ -404,10 +418,11 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       saveJsonItemToLocalStorage("order", orderData);
 
       // Navigate to appropriate page based on user type
+      const query = `?mode=add-items&orderId=${orderData.id}`;
       if (isPOSUser) {
-        router.push("/pos?mode=add-items");
+        router.push(`/pos${query}`);
       } else {
-        router.push("/dashboard/orders/place-order?mode=add-items");
+        router.push(`/dashboard/orders/place-order${query}`);
       }
     } else {
       toast.error("Order data not available");

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { ShoppingCart, X, Plus, Minus } from "lucide-react";
 import { useDisclosure } from "@nextui-org/react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Header from "@/components/ui/dashboard/header";
 import CheckoutModal from "@/components/ui/dashboard/orders/place-order/checkoutModal";
 import {
@@ -35,6 +35,8 @@ import { LOADING_SKELETON_COUNT } from "./constants";
 
 const POSContent = () => {
   const searchParams = useSearchParams();
+  const router = useRouter(); // Initialize router
+  const pathname = usePathname(); // Initialize pathname
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
@@ -45,6 +47,9 @@ const POSContent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [existingOrder, setExistingOrder] = useState<any>(null);
   const [isLoadingExistingOrder, setIsLoadingExistingOrder] = useState(false);
+
+  // Get order ID from URL params
+  const urlOrderId = searchParams.get("orderId");
 
   // Business information
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -193,17 +198,25 @@ const POSContent = () => {
     handleDecrement(itemId);
   };
 
+  // Wrapper function to clear cart and reset URL params
+  const handleClearCart = () => {
+    clearCart();
+    // Clear URL params to exit update mode
+    router.replace(pathname);
+  };
+
   // Load existing order when in add-items mode
   useEffect(() => {
     const loadExistingOrder = async () => {
       // Check if we're in add-items mode (coming from UpdateOrderModal)
       const isAddItemsMode = searchParams.get("mode") === "add-items";
       const order = getJsonItemFromLocalStorage("order");
+      const idToLoad = urlOrderId || order?.id;
 
-      if (isAddItemsMode && order?.id && menuItems.length > 0) {
+      if (isAddItemsMode && idToLoad && menuItems.length > 0) {
         setIsLoadingExistingOrder(true);
         try {
-          const response = await getOrder(order.id);
+          const response = await getOrder(idToLoad);
 
           if (response?.data?.isSuccessful) {
             const orderData = response?.data?.data;
@@ -245,18 +258,19 @@ const POSContent = () => {
               quickResponseID:
                 orderData.quickResponseID ||
                 orderData.qrReference ||
-                order.qrReference,
-              placedByName: orderData.placedByName || order.placedByName || "",
+                order?.qrReference,
+              placedByName: orderData.placedByName || order?.placedByName || "",
               placedByPhoneNumber:
                 orderData.placedByPhoneNumber ||
-                order.placedByPhoneNumber ||
+                order?.placedByPhoneNumber ||
                 "",
             };
 
             console.log("Transformed orderData:", transformedOrderData);
 
             setExistingOrder(transformedOrderData);
-            toast.success(`Loading order ${order.reference || order.id}`);
+            // No local state update for ID needed as we rely on URL
+            toast.success(`Loading order ${orderData.reference || idToLoad}`);
 
             // Clear the order from localStorage after loading
             clearItemLocalStorage("order");
@@ -432,7 +446,7 @@ const POSContent = () => {
                 isUpdating={isUpdating}
                 onIncrement={handleIncrement}
                 onDecrement={handleDecrement}
-                onClearCart={clearCart}
+                onClearCart={handleClearCart}
                 onProcessOrder={onOpen}
               />
             </div>
@@ -558,7 +572,7 @@ const POSContent = () => {
                   <div className="flex space-x-3">
                     <button
                       onClick={() => {
-                        clearCart();
+                        handleClearCart();
                         closeOrderModal();
                       }}
                       className="flex-1 flex items-center justify-center space-x-2 py-3 border border-[#6D42E2] text-[#6D42E2] rounded-md"
@@ -624,12 +638,12 @@ const POSContent = () => {
             selectedItems={orderItems}
             onOpenChange={onOpenChange}
             isOpen={isOpen}
-            id={existingOrder?.id || null}
+            id={urlOrderId || existingOrder?.id || null}
             orderDetails={existingOrder}
             handlePackingCost={handlePackingCost}
             businessId={businessInformation?.[0]?.businessId}
             cooperateID={userInformation?.cooperateID}
-            onOrderSuccess={clearCart}
+            onOrderSuccess={handleClearCart}
           />
         </main>
       </div>

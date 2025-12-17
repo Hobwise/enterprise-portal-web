@@ -706,18 +706,31 @@ const CheckoutModal = ({
 
     let payload: any = {};
     try {
-      const transformedArray = selectedItems.map((item: any) => {
-        const finalItemID = item.itemID || item.id;
-        // console.log(`Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
-        return {
-          itemID: finalItemID, // Use itemID if available, fallback to id
-          quantity: item.count,
-          unitPrice: item.price,
-          isVariety: item.isVariety,
-          isPacked: item.isPacked,
-          packingCost: item?.packingCost || 0,
-        };
+      // Deduplicate items merged by finalItemID
+      const deduplicatedMap = new Map<string, any>();
+
+      selectedItems.forEach((item: any) => {
+        // For variety items, item.id is the unique variety ID, while item.itemID might be the parent item ID.
+        // We must use the unique variety ID to avoid duplicate keys in the backend.
+        const finalItemID = item.isVariety ? item.id : item.itemID || item.id;
+
+        if (deduplicatedMap.has(finalItemID)) {
+          // Merge quantities if item already exists
+          const existing = deduplicatedMap.get(finalItemID);
+          existing.quantity += item.count;
+        } else {
+          deduplicatedMap.set(finalItemID, {
+            itemID: finalItemID,
+            quantity: item.count,
+            unitPrice: item.price,
+            isVariety: item.isVariety,
+            isPacked: item.isPacked,
+            packingCost: item?.packingCost || 0,
+          });
+        }
       });
+
+      const transformedArray = Array.from(deduplicatedMap.values());
 
       // Default name to "anonymous" if not provided
       const customerName = order.placedByName?.trim() || "anonymous";
@@ -912,18 +925,32 @@ const CheckoutModal = ({
       });
       throw new Error("Please select a table");
     }
-    const transformedArray = selectedItems.map((item: any) => {
-      const finalItemID = item.itemID || item.id;
-      // console.log(`Update Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
-      return {
-        itemID: finalItemID, // Use itemID if available, fallback to id
-        quantity: item.count,
-        unitPrice: item.price,
-        isVariety: item.isVariety,
-        isPacked: item.isPacked,
-        packingCost: item.packingCost || 0,
-      };
+
+    // Deduplicate items merged by finalItemID
+    const deduplicatedMap = new Map<string, any>();
+
+    selectedItems.forEach((item: any) => {
+      // Determine the correct ID for the backend
+      const finalItemID = item.isVariety ? item.id : item.itemID || item.id;
+
+      if (deduplicatedMap.has(finalItemID)) {
+        // Merge quantities if item already exists
+        const existing = deduplicatedMap.get(finalItemID);
+        existing.quantity += item.count;
+        // Optionally update other fields if needed, but price should be same
+      } else {
+        deduplicatedMap.set(finalItemID, {
+          itemID: finalItemID,
+          quantity: item.count,
+          unitPrice: item.price,
+          isVariety: item.isVariety,
+          isPacked: item.isPacked,
+          packingCost: item?.packingCost || 0,
+        });
+      }
     });
+
+    const transformedArray = Array.from(deduplicatedMap.values());
 
     // Default name to "anonymous" if not provided
     const customerName = order.placedByName?.trim() || "anonymous";
@@ -1150,7 +1177,7 @@ const CheckoutModal = ({
     // Validate amount for partial payment
     const totalDue = orderDetails?.amountRemaining ?? finalTotalPrice;
     let finalAmountPaid = totalDue;
-       const systemReference = (): number => Math.floor(1e9 + Math.random() * 9e9);
+    const systemReference = (): number => Math.floor(1e9 + Math.random() * 9e9);
 
     if (paymentOption === "partial") {
       const amount = parseFloat(amountPaid.replace(/,/g, ""));
@@ -1177,7 +1204,7 @@ const CheckoutModal = ({
     try {
       const payload = {
         treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
-         treatedById: userInformation?.id || "",
+        treatedById: userInformation?.id || "",
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
         paidAmount: finalAmountPaid,
