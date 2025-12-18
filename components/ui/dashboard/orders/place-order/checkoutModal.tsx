@@ -516,7 +516,7 @@ const CheckoutModal = ({
   const effectiveVatAmount = isVatApplied ? calculatedVatAmount : 0;
   const finalTotalPrice =
     Math.round(
-      (subtotal + effectiveVatAmount + (Number(additionalCost) || 0)) * 100
+      (subtotal +  + (Number(additionalCost) || 0)) * 100
     ) / 100;
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1191,7 +1191,7 @@ const CheckoutModal = ({
       }
       if (amount > totalDue) {
         notify({
-          title: "Validation Error",
+          title: "Payment Error",
           text: "Amount received cannot be greater than the pending order amount",
           type: "error",
         });
