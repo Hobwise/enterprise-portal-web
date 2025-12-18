@@ -185,7 +185,7 @@ const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({
                   </TableHeader>
                   <TableBody>
                     {data.payments
-                      .slice((page - 1) * 10, page * 10)
+                      .slice((page - 1) * 5, page * 5)
                       .map((payment, index) => {
                         const isDebit = payment.paymentDirection === "Debit";
                         return (
