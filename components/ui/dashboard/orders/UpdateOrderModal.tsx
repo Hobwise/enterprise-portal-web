@@ -689,17 +689,11 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                       </p>
                     </div>
 
+                    {/* Make Payment Button - Positioned prominently below total */}
+              
+
                     {/* Footer Buttons */}
-                    <div className="flex gap-3 mt-6">
-                      {/* {orderData?.status === 0 && onProcessPayment && (
-                        <CustomButton
-                        className="h-[50px] flex-1 bg-green-600 text-white"
-                        onClick={onProcessPayment}
-                          disabled={selectedItems.length === 0}
-                        >
-                          Process Payment
-                        </CustomButton>
-                      )} */}
+                    <div className="flex gap-3 mt-4">
                       <CustomButton
                         onClick={handleAddItem}
                         className="h-[50px] flex-1 bg-white text-black border border-primaryGrey flex-shrink-0"
@@ -728,6 +722,23 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         Process Order
                       </CustomButton>
                     </div>
+                          {onProcessPayment && (
+                      <div className="mt-4 w-full">
+                        <CustomButton
+                          className="h-[50px] w-full text-primaryColor border-primaryColor border bg-transparent font-semibold text-[15px]"
+                          onClick={() => {
+                            if (onProcessPayment) {
+                              onProcessPayment();
+                            }
+                          }}
+                          disabled={selectedItems.length === 0}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <span>Make Payment</span>
+                          </div>
+                        </CustomButton>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
