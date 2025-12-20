@@ -515,9 +515,7 @@ const CheckoutModal = ({
   // Always recalculate VAT from current items so quantity changes are reflected
   const effectiveVatAmount = isVatApplied ? calculatedVatAmount : 0;
   const finalTotalPrice =
-    Math.round(
-      (subtotal +  + (Number(additionalCost) || 0)) * 100
-    ) / 100;
+    Math.round((subtotal + +(Number(additionalCost) || 0)) * 100) / 100;
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);

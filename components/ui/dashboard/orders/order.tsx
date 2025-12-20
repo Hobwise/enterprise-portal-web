@@ -752,7 +752,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           >
                             <div className="flex gap-3 items-center text-grey500">
                               <Receipt className="w-[18px] h-[18px]" />
-                              <p>Confirm Payment</p>
+                              <p>Make Payment</p>
                             </div>
                           </DropdownItem>
                         )) as any
@@ -1245,7 +1245,18 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     <span className="text-black">Confirm payment</span>
                   </div>
                   <p className="text-sm  text-grey500 xl:mb-8 w-full mb-4">
-                    confirm that customer has paid for order
+                    {(() => {
+                      switch (selectedPaymentMethod) {
+                        case 0: // Cash
+                          return "This is confirmation that the total order sum has been paid by the customer using cash";
+                        case 1: // POS
+                          return "This is confirmation that the total order sum has been paid by the customer using Pos";
+                        case 2: // Bank Transfer
+                          return "This is confirmation that the total order sum has been paid by the customer via bank transfer";
+                        default:
+                          return "confirm that customer has paid for order";
+                      }
+                    })()}
                   </p>
                 </div>
 
@@ -1305,10 +1316,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                         value={amountPaid}
                         onChange={(e) => {
                           const rawValue = e.target.value.replace(/,/g, "");
-                          if (
-                            !isNaN(parseFloat(rawValue)) ||
-                            rawValue === ""
-                          ) {
+                          if (!isNaN(parseFloat(rawValue)) || rawValue === "") {
                             setAmountPaid(
                               rawValue === ""
                                 ? ""
