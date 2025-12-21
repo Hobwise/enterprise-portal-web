@@ -501,6 +501,7 @@ interface RefundPayload {
   treatedById: string;
   paymentReference: string;
   paymentMethod: number;
+   systemReference: number;
 }
 
 // Function to process refund

@@ -66,6 +66,7 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
   const handleSubmit = async () => {
     // Validation
     const numAmount = parseFloat(amount);
+    const systemReference = (): number => Math.floor(1e9 + Math.random() * 9e9);
     if (!amount || isNaN(numAmount) || numAmount <= 0) {
       notify({
         title: "Validation Error",
@@ -111,7 +112,8 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
       treatedById: userInformation?.id || "",
       paymentReference: `REF-${Date.now()}`, 
       paymentMethod: parseInt(paymentMethod),
-      orderId: orderId
+      orderId: orderId,
+      systemReference: systemReference()
     };
 
     try {
