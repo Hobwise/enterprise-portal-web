@@ -17,6 +17,8 @@ import ReserveTableImage from "../../../../public/assets/images/reserve-table.sv
 import Image from "next/image";
 import { FiEdit } from "react-icons/fi";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { useState } from "react";
+import ConfirmationModal from "./confirmationModal";
 
 const BookingDetails = ({
   openBookingModal,
@@ -28,6 +30,12 @@ const BookingDetails = ({
   openEditModal,
 }: any) => {
   const { userRolePermissions, role } = usePermission();
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    status: number;
+    isCancellation?: boolean;
+  } | null>(null);
 
   const getButtonText = () => {
     switch (bookingDetails?.bookingStatus) {
@@ -42,14 +50,74 @@ const BookingDetails = ({
     }
   };
 
+  const getConfirmationText = () => {
+    if (confirmAction?.isCancellation) {
+      return "Are you sure you want to cancel this booking?";
+    }
+    switch (bookingDetails?.bookingStatus) {
+      case 0:
+        return "Are you sure you want to confirm this booking?";
+      case 1:
+        return "Are you sure you want to admit this customer?";
+      case 2:
+        return "Are you sure you want to close this booking?";
+      default:
+        return "Are you sure you want to proceed with this action?";
+    }
+  };
+
+  const getConfirmationTitle = () => {
+    if (confirmAction?.isCancellation) {
+      return "Cancel Booking";
+    }
+    switch (bookingDetails?.bookingStatus) {
+      case 0:
+        return "Confirm Booking";
+      case 1:
+        return "Admit Customer";
+      case 2:
+        return "Close Booking";
+      default:
+        return "Confirm Action";
+    }
+  };
+
+  const handleActionClick = (status: number, isCancellation = false) => {
+    setConfirmAction({ status, isCancellation });
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (confirmAction) {
+      setIsProcessing(true);
+      try {
+        // Pass false as second parameter to prevent parent's loading state from showing
+        await updateBookingStatus(confirmAction.status, false);
+        // Only close modal on success (parent handles closing bookingDetails modal)
+        setIsConfirmModalOpen(false);
+        setConfirmAction(null);
+      } catch (error) {
+        console.error("Error updating booking status:", error);
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+  };
+
+  const handleCancelConfirmation = () => {
+    setIsConfirmModalOpen(false);
+    setConfirmAction(null);
+  };
+
   const shouldShowButton = ![3, 5, 6, 4].includes(
     bookingDetails?.bookingStatus
   );
 
   return (
+    <>
     <Modal
       isDismissable={false}
-      isOpen={openBookingModal}
+      isOpen={openBookingModal && !isConfirmModalOpen}
       onOpenChange={() => {
         setBookingId("");
         closeBookingModal();
@@ -194,23 +262,23 @@ const BookingDetails = ({
                 <div className="mt-6 flex gap-3">
                   <CustomButton
                     className="flex-1 h-[48px] text-white "
-                    loading={isLoading}
+                    loading={isProcessing}
                     onClick={() =>
-                      updateBookingStatus(
+                      handleActionClick(
                         submitBookingStatus(bookingDetails?.bookingStatus)
                       )
                     }
-                    disabled={isLoading}
+                    disabled={isProcessing}
                     type="submit"
                   >
-                    {isLoading ? "Processing..." : getButtonText() + " →"}
+                    {getButtonText() + " →"}
                   </CustomButton>
                   {bookingDetails?.bookingStatus === 0 && (
                     <CustomButton
                       backgroundColor="bg-gray-200"
                       className="flex-1 h-[48px] text-gray-700 hover:bg-gray-300"
-                      onClick={() => updateBookingStatus(3, false)}
-                      disabled={isLoading}
+                      onClick={() => handleActionClick(3, true)}
+                      disabled={isProcessing}
                       type="submit"
                     >
                       Cancel Booking ✕
@@ -223,6 +291,17 @@ const BookingDetails = ({
         )}
       </ModalContent>
     </Modal>
+
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        toggleModal={handleCancelConfirmation}
+        handleConfirm={handleConfirmAction}
+        isLoading={isProcessing}
+        title={getConfirmationTitle()}
+        text={getConfirmationText()}
+        isCancellation={confirmAction?.isCancellation}
+      />
+    </>
   );
 };
 
