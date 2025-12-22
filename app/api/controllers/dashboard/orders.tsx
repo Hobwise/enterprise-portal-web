@@ -285,6 +285,21 @@ export async function completeOrder(categoryId: string, orderId: string) {
 
 export async function completeOrderWithPayment(payload: any, orderId: string) {
   const url = `${DASHBOARD.completeOrderWithPayment}`;
+  const headers = { orderId };
+
+  try {
+    const data = await api.post(url, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function cancelOrder(payload: any, orderId: string) {
+  const url = `${DASHBOARD.cancelOrder}`;
   const headers = {
     orderId,
   };
@@ -486,6 +501,7 @@ interface RefundPayload {
   treatedById: string;
   paymentReference: string;
   paymentMethod: number;
+   systemReference: number;
 }
 
 // Function to process refund

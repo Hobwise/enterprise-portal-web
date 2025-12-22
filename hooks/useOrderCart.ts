@@ -25,7 +25,7 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
     });
   }, [isUpdating]);
 
-  const handleIncrement = useCallback((id: string) => {
+  const handleIncrement = useCallback((id: string, amount: number = 1) => {
     if (isUpdating) return;
 
     setIsUpdating(true);
@@ -35,7 +35,7 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
 
       if (existingItem) {
         const updatedItems = prevItems.map((item) =>
-          item.id === id ? { ...item, count: Math.min(item.count + 1, MAX_ITEM_QUANTITY) } : item
+          item.id === id ? { ...item, count: Math.min(item.count + amount, MAX_ITEM_QUANTITY) } : item
         );
         setTimeout(() => setIsUpdating(false), 100);
         return updatedItems;
@@ -89,7 +89,7 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
     );
   }, [isUpdating, menuItems]);
 
-  const addItemToCart = useCallback((item: MenuItem) => {
+  const addItemToCart = useCallback((item: MenuItem, quantity: number = 1) => {
     // Check if item already exists in cart, matching by distinct itemID and packing status
     // valid itemID check is crucial to merge items from different categories/menus
     const existingItem = orderItems.find((orderItem: Item) => 
@@ -98,12 +98,18 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
     );
 
     if (existingItem) {
-      handleIncrement(existingItem.id);
+      handleIncrement(existingItem.id, quantity);
     } else {
-      const cartItemId = item.uniqueKey || item.id;
-      // Ensure we don't have ID collision if uniqueKey was undefined but itemID exists
-      // If by rare chance cartItemId (uniqueKey) clashes with another item that is NOT the same itemID (unlikely)
-      // We should be fine as uniqueKey is designed to be unique.
+      let cartItemId = item.uniqueKey || item.id;
+      
+      // Ensure strict uniqueness of cartItemId in the orderItems array
+      // If an item with this ID already exists (which implies a variant mismatch since we are in the else block),
+      // we must generate a new unique ID for this new row.
+      if (orderItems.some((i) => i.id === cartItemId)) {
+        cartItemId = `${cartItemId}-${
+          item.isPacked ? "packed" : "unpacked"
+        }-${Date.now()}`;
+      }
       
       const newItem: Item = {
         id: cartItemId,
@@ -118,7 +124,7 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
         image: item.image || '',
         isVariety: item.isVariety || false,
         varieties: item.varieties || null,
-        count: 1,
+        count: quantity,
         packingCost: item.packingCost || 0,
         isPacked: item.isPacked || false,
         isVatEnabled: item.isVatEnabled,

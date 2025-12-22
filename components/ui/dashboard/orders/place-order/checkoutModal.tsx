@@ -138,12 +138,6 @@ const CheckoutModal = ({
   const { data: orderConfig } = useOrderConfiguration(businessId);
   const orderConfiguration = orderConfig?.data;
 
-  // DEBUG LOGS
-  useEffect(() => {
-    console.log("DEBUG: Order Configuration:", orderConfiguration);
-    console.log("DEBUG: Business Info:", businessInformation);
-  }, [orderConfiguration, businessInformation]);
-
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
   const [additionalCost, setAdditionalCost] = useState(0);
   const [additionalCostName, setAdditionalCostName] = useState("");
@@ -509,16 +503,6 @@ const CheckoutModal = ({
     // If we are just placing an order, orderDetails might be partial.
     // Let's stick to the calculation using the rate.
 
-    // Log calculation details
-    console.log("DEBUG: Calculation:", {
-      itemsSubtotal,
-      packingSubtotal,
-      vatAmount,
-      configVatRate,
-      shouldCalculateVat,
-      isVatApplied,
-    });
-
     return { itemsSubtotal, packingSubtotal, vatAmount };
   };
 
@@ -531,9 +515,7 @@ const CheckoutModal = ({
   // Always recalculate VAT from current items so quantity changes are reflected
   const effectiveVatAmount = isVatApplied ? calculatedVatAmount : 0;
   const finalTotalPrice =
-    Math.round(
-      (subtotal + effectiveVatAmount + (Number(additionalCost) || 0)) * 100
-    ) / 100;
+    Math.round((subtotal + +(Number(additionalCost) || 0)) * 100) / 100;
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -602,17 +584,6 @@ const CheckoutModal = ({
         }
 
         // Log each item calculation
-        console.log(`Item ${index + 1} (${item.itemName || item.id}):`, {
-          price: itemPrice,
-          count: itemCount,
-          itemTotal,
-          isPacked: item.isPacked,
-          packingCost: item.packingCost,
-          packingTotal: item.isPacked
-            ? Math.round((Number(item.packingCost) || 0) * itemCount * 100) /
-              100
-            : 0,
-        });
       });
 
       // Round subtotals
@@ -711,12 +682,6 @@ const CheckoutModal = ({
 
   const placeOrder = async () => {
     // Debug log at start
-    console.log("PlaceOrder called with:", {
-      selectedItems: selectedItems?.length || 0,
-      order,
-      additionalCost,
-      finalTotalPrice,
-    });
 
     // Safety check: Ensure we have required data
     if (!selectedItems || selectedItems.length === 0) {
@@ -739,18 +704,31 @@ const CheckoutModal = ({
 
     let payload: any = {};
     try {
-      const transformedArray = selectedItems.map((item: any) => {
-        const finalItemID = item.itemID || item.id;
-        // console.log(`Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
-        return {
-          itemID: finalItemID, // Use itemID if available, fallback to id
-          quantity: item.count,
-          unitPrice: item.price,
-          isVariety: item.isVariety,
-          isPacked: item.isPacked,
-          packingCost: item?.packingCost || 0,
-        };
+      // Deduplicate items merged by finalItemID
+      const deduplicatedMap = new Map<string, any>();
+
+      selectedItems.forEach((item: any) => {
+        // For variety items, item.id is the unique variety ID, while item.itemID might be the parent item ID.
+        // We must use the unique variety ID to avoid duplicate keys in the backend.
+        const finalItemID = item.isVariety ? item.id : item.itemID || item.id;
+
+        if (deduplicatedMap.has(finalItemID)) {
+          // Merge quantities if item already exists
+          const existing = deduplicatedMap.get(finalItemID);
+          existing.quantity += item.count;
+        } else {
+          deduplicatedMap.set(finalItemID, {
+            itemID: finalItemID,
+            quantity: item.count,
+            unitPrice: item.price,
+            isVariety: item.isVariety,
+            isPacked: item.isPacked,
+            packingCost: item?.packingCost || 0,
+          });
+        }
       });
+
+      const transformedArray = Array.from(deduplicatedMap.values());
 
       // Default name to "anonymous" if not provided
       const customerName = order.placedByName?.trim() || "anonymous";
@@ -817,28 +795,8 @@ const CheckoutModal = ({
       throw new Error(validation.errors.join(", "));
     }
 
-    // Log payload for debugging
-    console.log("Order Payload:", JSON.stringify(payload, null, 2));
-    console.log("Frontend Calculation:", {
-      subtotal,
-      vatAmount,
-      additionalCost,
-      finalTotal: finalTotalPrice,
-      itemsCount: selectedItems.length,
-    });
-    console.log("Verified Calculation:", calculationVerification.breakdown);
-
     const id = businessId ? businessId : businessInformation[0]?.businessId;
-
-    console.log("Calling createOrder with:", {
-      id,
-      cooperateID: effectiveCooperateID,
-      payloadSize: JSON.stringify(payload).length,
-    });
-
     const data = await createOrder(id, payload, effectiveCooperateID);
-
-    console.log("CreateOrder response:", data);
 
     // Handle undefined response
     if (!data) {
@@ -913,8 +871,6 @@ const CheckoutModal = ({
         // Note: onOrderSuccess is NOT called here to preserve cart items during payment flow
         // It will be called after successful payment completion in finalizeOrder
       } else if (apiData.data?.error) {
-        console.error("Order creation failed:", apiData.data?.error);
-        console.error("Failed payload:", payload);
         notify({
           title: "Order Creation Failed",
           text: apiData.data?.error || "Unknown error",
@@ -931,8 +887,6 @@ const CheckoutModal = ({
             `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`
         )
         .join("; ");
-      console.error("Validation errors:", errorData.errors);
-      console.error("Failed payload:", payload);
       notify({
         title: "Validation Failed",
         text: validationErrors,
@@ -969,18 +923,32 @@ const CheckoutModal = ({
       });
       throw new Error("Please select a table");
     }
-    const transformedArray = selectedItems.map((item: any) => {
-      const finalItemID = item.itemID || item.id;
-      // console.log(`Update Item transform: ${item.itemName} - id: ${item.id}, itemID: ${item.itemID}, using: ${finalItemID}`);
-      return {
-        itemID: finalItemID, // Use itemID if available, fallback to id
-        quantity: item.count,
-        unitPrice: item.price,
-        isVariety: item.isVariety,
-        isPacked: item.isPacked,
-        packingCost: item.packingCost || 0,
-      };
+
+    // Deduplicate items merged by finalItemID
+    const deduplicatedMap = new Map<string, any>();
+
+    selectedItems.forEach((item: any) => {
+      // Determine the correct ID for the backend
+      const finalItemID = item.isVariety ? item.id : item.itemID || item.id;
+
+      if (deduplicatedMap.has(finalItemID)) {
+        // Merge quantities if item already exists
+        const existing = deduplicatedMap.get(finalItemID);
+        existing.quantity += item.count;
+        // Optionally update other fields if needed, but price should be same
+      } else {
+        deduplicatedMap.set(finalItemID, {
+          itemID: finalItemID,
+          quantity: item.count,
+          unitPrice: item.price,
+          isVariety: item.isVariety,
+          isPacked: item.isPacked,
+          packingCost: item?.packingCost || 0,
+        });
+      }
     });
+
+    const transformedArray = Array.from(deduplicatedMap.values());
 
     // Default name to "anonymous" if not provided
     const customerName = order.placedByName?.trim() || "anonymous";
@@ -1038,20 +1006,6 @@ const CheckoutModal = ({
       throw new Error(validation.errors.join(", "));
     }
 
-    // Log payload for debugging
-    console.log("Update Order Payload:", JSON.stringify(payload, null, 2));
-    console.log("Update Frontend Calculation:", {
-      subtotal,
-      vatAmount,
-      additionalCost,
-      finalTotal: finalTotalPrice,
-      itemsCount: selectedItems.length,
-    });
-    console.log(
-      "Update Verified Calculation:",
-      calculationVerification.breakdown
-    );
-
     if (!id) {
       notify({
         title: "Error",
@@ -1072,8 +1026,6 @@ const CheckoutModal = ({
         setResponse(data as ApiResponse);
       }
     } catch (error) {
-      console.error("editOrder API call failed:", error);
-      console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
       notify({
         title: "Error!",
         text: "Failed to update order. Please try again.",
@@ -1223,6 +1175,7 @@ const CheckoutModal = ({
     // Validate amount for partial payment
     const totalDue = orderDetails?.amountRemaining ?? finalTotalPrice;
     let finalAmountPaid = totalDue;
+    const systemReference = (): number => Math.floor(1e9 + Math.random() * 9e9);
 
     if (paymentOption === "partial") {
       const amount = parseFloat(amountPaid.replace(/,/g, ""));
@@ -1236,7 +1189,7 @@ const CheckoutModal = ({
       }
       if (amount > totalDue) {
         notify({
-          title: "Validation Error",
+          title: "Payment Error",
           text: "Amount received cannot be greater than the pending order amount",
           type: "error",
         });
@@ -1249,13 +1202,16 @@ const CheckoutModal = ({
     try {
       const payload = {
         treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
+        treatedById: userInformation?.id || "",
         paymentMethod: selectedPaymentMethod,
         paymentReference: reference,
-        status: 1,
         paidAmount: finalAmountPaid,
+        systemReference: systemReference(),
       };
 
       const data = await completeOrderWithPayment(payload, orderId);
+
+      console.log("Finalize payment response:", data, payload, orderId);
 
       if (hasDataProperty(data) && data.data?.isSuccessful) {
         // Clear loading state immediately
@@ -1393,10 +1349,6 @@ const CheckoutModal = ({
     getQrID();
   }, []);
 
-  console.log(
-    orderDetails?.quickResponseID || orderDetails?.qrReference || orderDetails
-  );
-
   // Reset screen and states when modal opens
   // We only reset when isOpen changes to true. We intentionally ignore 'id' changes
   // to prevent resetting the screen if the ID updates during a flow (e.g. after creation).
@@ -1422,7 +1374,10 @@ const CheckoutModal = ({
   // Update amount paid when order details or total price changes
   useEffect(() => {
     if (isOpen) {
-      const total = orderDetails?.amountRemaining ?? finalTotalPrice;
+      const total = Math.max(
+        0,
+        finalTotalPrice - (orderDetails?.amountPaid || 0)
+      );
       setAmountPaid(total.toLocaleString("en-US"));
     }
   }, [isOpen, orderDetails, finalTotalPrice]);

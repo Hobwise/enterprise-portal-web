@@ -208,7 +208,21 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
         return;
       }
 
-      const updatedArray = validItems.map((item: any) => {
+      // Deduplicate items by merging quantities
+      const uniqueItemsMap = new Map<string, any>();
+      validItems.forEach((item: any) => {
+        if (uniqueItemsMap.has(item.itemID)) {
+          const existing = uniqueItemsMap.get(item.itemID);
+          existing.quantity += item.quantity;
+        } else {
+          // Clone the item to avoid mutating original data
+          uniqueItemsMap.set(item.itemID, { ...item });
+        }
+      });
+
+      const deduplicatedItems = Array.from(uniqueItemsMap.values());
+
+      const updatedArray = deduplicatedItems.map((item: any) => {
         const { unitPrice, quantity, itemID, ...rest } = item;
 
         // Correctly find the item and its category from menuData
@@ -404,10 +418,11 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       saveJsonItemToLocalStorage("order", orderData);
 
       // Navigate to appropriate page based on user type
+      const query = `?mode=add-items&orderId=${orderData.id}`;
       if (isPOSUser) {
-        router.push("/pos?mode=add-items");
+        router.push(`/pos${query}`);
       } else {
-        router.push("/dashboard/orders/place-order?mode=add-items");
+        router.push(`/dashboard/orders/place-order${query}`);
       }
     } else {
       toast.error("Order data not available");
@@ -674,17 +689,11 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                       </p>
                     </div>
 
+                    {/* Make Payment Button - Positioned prominently below total */}
+              
+
                     {/* Footer Buttons */}
-                    <div className="flex gap-3 mt-6">
-                      {/* {orderData?.status === 0 && onProcessPayment && (
-                        <CustomButton
-                        className="h-[50px] flex-1 bg-green-600 text-white"
-                        onClick={onProcessPayment}
-                          disabled={selectedItems.length === 0}
-                        >
-                          Process Payment
-                        </CustomButton>
-                      )} */}
+                    <div className="flex gap-3 mt-4">
                       <CustomButton
                         onClick={handleAddItem}
                         className="h-[50px] flex-1 bg-white text-black border border-primaryGrey flex-shrink-0"
@@ -713,6 +722,23 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         Process Order
                       </CustomButton>
                     </div>
+                          {onProcessPayment && (
+                      <div className="mt-4 w-full">
+                        <CustomButton
+                          className="h-[50px] w-full text-primaryColor border-primaryColor border bg-transparent font-semibold text-[15px]"
+                          onClick={() => {
+                            if (onProcessPayment) {
+                              onProcessPayment();
+                            }
+                          }}
+                          disabled={selectedItems.length === 0}
+                        >
+                          <div className="flex items-center justify-center gap-2">
+                            <span>Make Payment</span>
+                          </div>
+                        </CustomButton>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

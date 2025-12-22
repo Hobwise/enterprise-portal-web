@@ -375,14 +375,16 @@ const ApprovePayment = ({
                                     <p className="text-sm font-bold text-gray-900">
                                       {formatPrice(
                                         item.unitPrice * item.quantity +
-                                          item.packingCost * item.quantity
+                                          (item.isPacked
+                                            ? item.packingCost * item.quantity
+                                            : 0)
                                       )}
                                     </p>
                                     <p className="text-xs text-gray-500 mt-1">
                                       {item.quantity} x{" "}
                                       {formatPrice(item.unitPrice)}
                                     </p>
-                                    {item.packingCost > 0 && (
+                                    {item.packingCost > 0 && item.isPacked && (
                                       <p className="text-xs text-gray-500">
                                         + Pack: {formatPrice(item.packingCost)}
                                       </p>

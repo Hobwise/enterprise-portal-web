@@ -20,6 +20,7 @@ import { X } from "lucide-react";
 import { formatPrice } from "@/lib/utils";
 import moment from "moment";
 import { getPaymentSummary } from "@/app/api/controllers/dashboard/orders";
+import CustomPagination from "./CustomPagination";
 
 interface PaymentSummaryModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ interface Payment {
   amount: number;
   paymentStatus: string;
   paymentType: string;
+  paymentDirection?: string;
   dateCreated: string;
   customer: string;
 }
@@ -53,6 +55,7 @@ const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({
   const [data, setData] = useState<PaymentSummaryData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -72,7 +75,7 @@ const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({
           setIsLoading(false);
         }
       } else if (!isOpen) {
-          setData(null);
+        setData(null);
       }
     };
 
@@ -106,9 +109,18 @@ const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({
           </div>
           {data && (
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
-              <span>Reference: <span className="font-semibold text-black">{data.reference}</span></span>
+              <span>
+                Reference:{" "}
+                <span className="font-semibold text-black">
+                  {data.reference}
+                </span>
+              </span>
               <span>•</span>
-              <Chip size="sm" color={data.status === "Full Payment" ? "success" : "warning"} variant="flat">
+              <Chip
+                size="sm"
+                color={data.status === "Full Payment" ? "success" : "warning"}
+                variant="flat"
+              >
                 {data.status}
               </Chip>
             </div>
@@ -128,46 +140,101 @@ const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({
               {/* Summary Cards */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-500 uppercase">Total Amount</p>
-                  <p className="text-lg font-bold text-black">{formatPrice(data.totalAmount)}</p>
+                  <p className="text-xs text-gray-500 uppercase">
+                    Total Amount
+                  </p>
+                  <p className="text-lg font-bold text-black">
+                    {formatPrice(data.totalAmount)}
+                  </p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg">
-                  <p className="text-xs text-green-600 uppercase">Amount Paid</p>
-                  <p className="text-lg font-bold text-green-700">{formatPrice(data.amountPaid)}</p>
+                  <p className="text-xs text-green-600 uppercase">
+                    Amount Paid
+                  </p>
+                  <p className="text-lg font-bold text-green-700">
+                    {formatPrice(data.amountPaid)}
+                  </p>
                 </div>
                 <div className="p-4 bg-red-50 rounded-lg">
                   <p className="text-xs text-red-600 uppercase">Remaining</p>
-                  <p className="text-lg font-bold text-red-700">{formatPrice(data.amountRemaining)}</p>
+                  <p className="text-lg font-bold text-red-700">
+                    {formatPrice(data.amountRemaining)}
+                  </p>
                 </div>
               </div>
 
               {/* Payments Table */}
               <div>
-                <h3 className="text-sm font-semibold text-black mb-3">Payment History</h3>
-                <Table aria-label="Payment history table" shadow="none" classNames={{ wrapper: "p-0 border border-gray-200 rounded-lg shadow-none" }}>
+                <h3 className="text-sm font-semibold text-black mb-3">
+                  Payment History
+                </h3>
+                <Table
+                  aria-label="Payment history table"
+                  shadow="none"
+                  classNames={{
+                    wrapper:
+                      "p-0 border border-gray-200 rounded-lg shadow-none",
+                  }}
+                >
                   <TableHeader>
                     <TableColumn>DATE</TableColumn>
                     <TableColumn>METHOD</TableColumn>
+                    <TableColumn>TYPE</TableColumn>
                     <TableColumn>AMOUNT</TableColumn>
                     <TableColumn>STATUS</TableColumn>
                   </TableHeader>
                   <TableBody>
-                    {data.payments.map((payment, index) => (
-                      <TableRow className="text-black" key={index}>
-                        <TableCell>{moment(payment.dateCreated).format('MMM DD, YYYY h:mm A')}</TableCell>
-                        <TableCell>{payment.paymentMethod}</TableCell>
-                        <TableCell>{formatPrice(payment.amount)}</TableCell>
-                        <TableCell>
-                          <Chip size="sm" color="success" variant="flat">
-                            {payment.paymentStatus}
-                          </Chip>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {data.payments
+                      .slice((page - 1) * 5, page * 5)
+                      .map((payment, index) => {
+                        const isDebit = payment.paymentDirection === "Debit";
+                        return (
+                          <TableRow className="text-black" key={index}>
+                            <TableCell>
+                              {moment(payment.dateCreated).format(
+                                "MMM DD, YYYY h:mm A"
+                              )}
+                            </TableCell>
+                            <TableCell>{payment.paymentMethod}</TableCell>
+                            <TableCell>
+                              <span
+                                className={
+                                  isDebit ? "text-red-600" : "text-green-600"
+                                }
+                              >
+                                {payment.paymentDirection || "-"}
+                              </span>
+                            </TableCell>
+                            <TableCell
+                              className={isDebit ? "text-red-600" : ""}
+                            >
+                              {isDebit ? "-" : ""}
+                              {formatPrice(payment.amount)}
+                            </TableCell>
+                            <TableCell>
+                              <Chip size="sm" color="success" variant="flat">
+                                {payment.paymentStatus}
+                              </Chip>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                   </TableBody>
                 </Table>
-                {data.payments.length === 0 && (
-                    <div className="text-center py-4 text-gray-500 text-sm border-t border-gray-200">No payments recorded</div>
+                {Math.ceil(data.payments.length / 10) > 1 && (
+                  <div className="flex w-full justify-center mt-4 border-t border-gray-200">
+                    <CustomPagination
+                      currentPage={page}
+                      totalPages={Math.ceil(data.payments.length / 10)}
+                      hasNext={page < Math.ceil(data.payments.length / 10)}
+                      hasPrevious={page > 1}
+                      totalCount={data.payments.length}
+                      pageSize={10}
+                      onPageChange={(page: number) => setPage(page)}
+                      onNext={() => setPage(page + 1)}
+                      onPrevious={() => setPage(page - 1)}
+                    />
+                  </div>
                 )}
               </div>
             </div>

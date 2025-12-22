@@ -21,13 +21,34 @@ export const statusColorMap: Record<
   3: "secondary",
 };
 
-type AvailableOption = "Update Order" | "Checkout" | "Cancel Order" | "Generate Invoice" | "Payment Summary" | "Refund Order";
+type AvailableOption =
+  | "Update Order"
+  | "Checkout"
+  | "Cancel Order"
+  | "Generate Invoice"
+  | "Payment Summary"
+  | "Refund Order"
+  | "Confirm Payment";
 
 export const availableOptions: Record<string, AvailableOption[]> = {
-  open: ["Update Order", "Checkout", "Cancel Order", "Payment Summary", "Refund Order"],
+  open: [
+    "Update Order",
+    "Checkout",
+    "Confirm Payment",
+    "Cancel Order",
+    "Payment Summary",
+    "Refund Order",
+  ],
   closed: ["Generate Invoice", "Payment Summary", "Refund Order"],
   cancelled: ["Payment Summary"],
-  "awaiting confirmation": ["Update Order", "Checkout", "Cancel Order", "Payment Summary", "Refund Order"],
+  "awaiting confirmation": [
+    "Update Order",
+    "Checkout",
+    "Confirm Payment",
+    "Cancel Order",
+    "Payment Summary",
+    "Refund Order",
+  ],
 };
 export const statusDataMap: Record<
   number,

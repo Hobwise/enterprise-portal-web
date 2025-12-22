@@ -21,8 +21,8 @@ import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../public/assets/images/no-image.svg";
-import { ordersCacheUtils } from '@/hooks/cachedEndpoints/useOrder';
-import { useQueryClient } from '@tanstack/react-query';
+import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ConfirmOrderModal = ({
   singleOrder,
@@ -107,37 +107,37 @@ const ConfirmOrderModal = ({
       // Invalidate all related order queries with aggressive refetch
       await Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ['orderCategories'],
-          refetchType: 'active'
+          queryKey: ["orderCategories"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['orderDetails'],
-          refetchType: 'active'
+          queryKey: ["orderDetails"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['allOrdersData'],
-          refetchType: 'active'
+          queryKey: ["allOrdersData"],
+          refetchType: "active",
         }),
         queryClient.invalidateQueries({
-          queryKey: ['orders'],
-          refetchType: 'active'
-        })
+          queryKey: ["orders"],
+          refetchType: "active",
+        }),
       ]);
 
       // Force immediate refetch of all active queries
       await Promise.all([
         queryClient.refetchQueries({
-          queryKey: ['orderCategories'],
-          type: 'active'
+          queryKey: ["orderCategories"],
+          type: "active",
         }),
         queryClient.refetchQueries({
-          queryKey: ['orderDetails'],
-          type: 'active'
+          queryKey: ["orderDetails"],
+          type: "active",
         }),
         queryClient.refetchQueries({
-          queryKey: ['orders'],
-          type: 'active'
-        })
+          queryKey: ["orders"],
+          type: "active",
+        }),
       ]);
 
       toggleConfirmModal();
@@ -185,7 +185,7 @@ const ConfirmOrderModal = ({
                     <div>
                       <div className="text-[24px] leading-8 font-semibold">
                         <span className="text-black">
-                          {singleOrder?.reference || 'Order'}
+                          {singleOrder?.reference || "Order"}
                         </span>
                       </div>
                       <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
@@ -207,7 +207,8 @@ const ConfirmOrderModal = ({
                       >
                         <div className="flex gap-2 items-center justify-center">
                           <p>
-                            Checkout {formatPrice(singleOrder?.totalAmount || 0)}{" "}
+                            Checkout{" "}
+                            {formatPrice(singleOrder?.totalAmount || 0)}{" "}
                           </p>
                           <HiArrowLongLeft className="text-[22px] rotate-180" />
                         </div>
@@ -228,66 +229,69 @@ const ConfirmOrderModal = ({
                         </div>
                       ) : (
                         <>
-                          {order?.orderDetails?.map((item: any, index: number) => {
-                            return (
-                              <>
-                                <div
-                                  key={item.id}
-                                  className="flex justify-between"
-                                >
-                                  <div className="w-[250px] rounded-lg text-black  flex">
-                                    <div
-                                      className={`grid place-content-center`}
-                                    >
-                                      <Image
-                                        src={
-                                          item?.image
-                                            ? `data:image/jpeg;base64,${item?.image}`
-                                            : noImage
-                                        }
-                                        width={60}
-                                        height={60}
-                                        className={
-                                          "bg-cover h-[60px] rounded-lg w-[60px]"
-                                        }
-                                        aria-label="uploaded image"
-                                        alt="uploaded image(s)"
-                                      />
-                                    </div>
-                                    <div className="p-3 flex  flex-col text-sm justify-center">
-                                      <p className="font-[600]">
-                                        {item.menuName}
-                                      </p>
-                                      <Spacer y={2} />
-                                      <p className="text-grey600">
-                                        {item.itemName}{" "}
-                                        <span className="text-black">
-                                          {item.unit && `(${item.unit})`}
-                                        </span>
-                                      </p>
+                          {order?.orderDetails?.map(
+                            (item: any, index: number) => {
+                              return (
+                                <>
+                                  <div
+                                    key={item.id}
+                                    className="flex justify-between"
+                                  >
+                                    <div className="w-[250px] rounded-lg text-black  flex">
+                                      <div
+                                        className={`grid place-content-center`}
+                                      >
+                                        <Image
+                                          src={
+                                            item?.image
+                                              ? `data:image/jpeg;base64,${item?.image}`
+                                              : noImage
+                                          }
+                                          width={60}
+                                          height={60}
+                                          className={
+                                            "bg-cover h-[60px] rounded-lg w-[60px]"
+                                          }
+                                          aria-label="uploaded image"
+                                          alt="uploaded image(s)"
+                                        />
+                                      </div>
+                                      <div className="p-3 flex  flex-col text-sm justify-center">
+                                        <p className="font-[600]">
+                                          {item.menuName}
+                                        </p>
+                                        <Spacer y={2} />
+                                        <p className="text-grey600">
+                                          {item.itemName}{" "}
+                                          <span className="text-black">
+                                            {item.unit && `(${item.unit})`}
+                                          </span>
+                                        </p>
 
-                                      <p className="">{item.iquantity}</p>
+                                        <p className="">{item.iquantity}</p>
+                                      </div>
+                                    </div>
+                                    <div className="text-black flex items-center text-[12px]">
+                                      <span>QTY:</span>
+                                      <span className="font-[600]">
+                                        {" "}
+                                        {item.quantity}
+                                      </span>
+                                    </div>
+                                    <div className="text-black w-[150px] grid place-content-center">
+                                      <h3 className="font-[600]">
+                                        {formatPrice(item?.unitPrice)}
+                                      </h3>
                                     </div>
                                   </div>
-                                  <div className="text-black flex items-center text-[12px]">
-                                    <span>QTY:</span>
-                                    <span className="font-[600]">
-                                      {" "}
-                                      {item.quantity}
-                                    </span>
-                                  </div>
-                                  <div className="text-black w-[150px] grid place-content-center">
-                                    <h3 className="font-[600]">
-                                      {formatPrice(item?.unitPrice)}
-                                    </h3>
-                                  </div>
-                                </div>
-                                {index !== order?.orderDetails?.length - 1 && (
-                                  <Divider className="bg-primaryGrey" />
-                                )}
-                              </>
-                            );
-                          })}
+                                  {index !==
+                                    order?.orderDetails?.length - 1 && (
+                                    <Divider className="bg-primaryGrey" />
+                                  )}
+                                </>
+                              );
+                            }
+                          )}
                         </>
                       )}
                     </div>
@@ -295,15 +299,15 @@ const ConfirmOrderModal = ({
                       <div className="flex justify-between items-center">
                         <div className="text-sm">
                           <p className="font-[600] text-black">
-                            {singleOrder?.placedByName || 'Customer'}
+                            {singleOrder?.placedByName || "Customer"}
                           </p>
                           <p className="text-grey500">
-                            {singleOrder?.placedByPhoneNumber || ''}
+                            {singleOrder?.placedByPhoneNumber || ""}
                           </p>
                         </div>
                         <div>
                           <span className="rounded-full text-sm px-4 py-2 bg-[#EAE5FF] text-primaryColor">
-                            {singleOrder?.qrReference || 'N/A'}
+                            {singleOrder?.qrReference || "N/A"}
                           </span>
                         </div>
                       </div>
@@ -367,7 +371,18 @@ const ConfirmOrderModal = ({
                       <span className="text-black">Confirm payment</span>
                     </div>
                     <p className="text-sm  text-grey500 xl:mb-8 w-full mb-4">
-                      confirm that customer has paid for order
+                      {(() => {
+                        switch (selectedPaymentMethod) {
+                          case 0: // Cash
+                            return "This is confirmation that the total order sum has been paid by the customer in full using cash";
+                          case 1: // POS
+                            return "This is confirmation that the total order sum has been paid by the customer in full using Pos";
+                          case 2: // Bank Transfer
+                            return "This is confirmation that the total order sum has been paid by the customer in full via bank transfer";
+                          default:
+                            return "confirm that customer has paid for order";
+                        }
+                      })()}
                     </p>
                   </div>
                   <div
@@ -387,7 +402,9 @@ const ConfirmOrderModal = ({
                     type="text"
                     // defaultValue={menuItem?.itemName}
                     value={reference}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setReference(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setReference(e.target.value)
+                    }
                     name="itemName"
                     label="Enter ref (optional)"
                     placeholder="Optional payment reference"
