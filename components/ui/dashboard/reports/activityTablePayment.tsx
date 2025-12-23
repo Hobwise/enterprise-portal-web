@@ -52,6 +52,32 @@ const INITIAL_VISIBLE_COLUMNS6 = [
   'totalAmount',
 ];
 
+const INITIAL_VISIBLE_COLUMNS18 = [
+  'date',
+  'totalCredits',
+  'totalDebits',
+  'netMovement',
+];
+
+const INITIAL_VISIBLE_COLUMNS19 = [
+  'date',
+  'grossRevenue',
+  'refunds',
+  'discounts',
+  'taxes',
+  'netRevenue',
+];
+
+const INITIAL_VISIBLE_COLUMNS20 = [
+  'orderId',
+  'customer',
+  'orderDate',
+  'orderTotal',
+  'totalPaid',
+  'outstanding',
+  'daysOverdue',
+];
+
 const columns4 = [
   { name: "CUSTOMER NAME", uid: "customer" },
   { name: "TREATED BY", uid: "treatedBy" },
@@ -73,6 +99,32 @@ const columns6 = [
   { name: "PENDING SALES AMOUNT", uid: "pendingSalesAmount" },
   { name: "CONFIRMED SALES AMOUNT", uid: "confirmedSalesAmount" },
   { name: "TOTAL SALES AMOUNT", uid: "totalSalesAmount" },
+];
+
+const columns18 = [
+  { name: "DATE", uid: "date" },
+  { name: "TOTAL CREDITS", uid: "totalCredits" },
+  { name: "TOTAL DEBITS", uid: "totalDebits" },
+  { name: "NET MOVEMENT", uid: "netMovement" },
+];
+
+const columns19 = [
+  { name: "DATE", uid: "date" },
+  { name: "GROSS REVENUE", uid: "grossRevenue" },
+  { name: "REFUNDS", uid: "refunds" },
+  { name: "DISCOUNTS", uid: "discounts" },
+  { name: "TAXES", uid: "taxes" },
+  { name: "NET REVENUE", uid: "netRevenue" },
+];
+
+const columns20 = [
+  { name: "ORDER ID", uid: "orderId" },
+  { name: "CUSTOMER", uid: "customer" },
+  { name: "ORDER DATE", uid: "orderDate" },
+  { name: "ORDER TOTAL", uid: "orderTotal" },
+  { name: "TOTAL PAID", uid: "totalPaid" },
+  { name: "OUTSTANDING", uid: "outstanding" },
+  { name: "DAYS OVERDUE", uid: "daysOverdue" },
 ];
 
 const ActivityTablePayment = ({
@@ -107,6 +159,27 @@ const ActivityTablePayment = ({
         data: data?.qrOrders || [],
         column: columns6,
         visibleColumn: INITIAL_VISIBLE_COLUMNS6,
+      };
+    }
+    if (reportType === 18) {
+      return {
+        data: data?.cashMovements || [],
+        column: columns18,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS18,
+      };
+    }
+    if (reportType === 19) {
+      return {
+        data: data?.netRevenue || [],
+        column: columns19,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS19,
+      };
+    }
+    if (reportType === 20) {
+      return {
+        data: data?.outstandingReceivables || [],
+        column: columns20,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS20,
       };
     }
   }, [reportType, data]);
@@ -176,7 +249,21 @@ const ActivityTablePayment = ({
         item?.confirmedSalesAmount?.toLowerCase().includes(searchQuery) ||
         item?.confirmedSalesAmount?.toLowerCase().includes(searchQuery) ||
         item?.totalSalesAmount?.toLowerCase().includes(searchQuery) ||
-        item?.pendingSalesAmount?.toLowerCase().includes(searchQuery)
+        item?.pendingSalesAmount?.toLowerCase().includes(searchQuery) ||
+        item?.date?.toLowerCase().includes(searchQuery) ||
+        item?.totalCredits?.toLowerCase().includes(searchQuery) ||
+        item?.totalDebits?.toLowerCase().includes(searchQuery) ||
+        item?.netMovement?.toLowerCase().includes(searchQuery) ||
+        item?.grossRevenue?.toLowerCase().includes(searchQuery) ||
+        item?.refunds?.toLowerCase().includes(searchQuery) ||
+        item?.discounts?.toLowerCase().includes(searchQuery) ||
+        item?.taxes?.toLowerCase().includes(searchQuery) ||
+        item?.netRevenue?.toLowerCase().includes(searchQuery) ||
+        item?.orderId?.toLowerCase().includes(searchQuery) ||
+        item?.orderDate?.toLowerCase().includes(searchQuery) ||
+        item?.orderTotal?.toLowerCase().includes(searchQuery) ||
+        item?.outstanding?.toLowerCase().includes(searchQuery) ||
+        String(item?.daysOverdue)?.toLowerCase().includes(searchQuery)
     );
 
     return filteredData;
@@ -294,6 +381,96 @@ const ActivityTablePayment = ({
           >
             {cellValue}
           </Chip>
+        );
+      case "date":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.date}</p>
+          </div>
+        );
+      case "totalCredits":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.totalCredits}</p>
+          </div>
+        );
+      case "totalDebits":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.totalDebits}</p>
+          </div>
+        );
+      case "netMovement":
+        return (
+          <div className="text-textGrey text-sm font-semibold">
+            <p>{payment.netMovement}</p>
+          </div>
+        );
+      case "grossRevenue":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.grossRevenue}</p>
+          </div>
+        );
+      case "refunds":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.refunds}</p>
+          </div>
+        );
+      case "discounts":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.discounts}</p>
+          </div>
+        );
+      case "taxes":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.taxes}</p>
+          </div>
+        );
+      case "netRevenue":
+        return (
+          <div className="text-textGrey text-sm font-semibold">
+            <p>{payment.netRevenue}</p>
+          </div>
+        );
+      case "orderId":
+        return (
+          <div className="font-medium text-black text-sm">
+            <p>{payment.orderId}</p>
+          </div>
+        );
+      case "orderDate":
+        return (
+          <div className="text-textGrey text-sm">
+            {moment(payment.orderDate).format("MMMM Do YYYY, h:mm:ss a")}
+          </div>
+        );
+      case "orderTotal":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.orderTotal}</p>
+          </div>
+        );
+      case "totalPaid":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.totalPaid}</p>
+          </div>
+        );
+      case "outstanding":
+        return (
+          <div className="text-textGrey text-sm font-semibold">
+            <p>{payment.outstanding}</p>
+          </div>
+        );
+      case "daysOverdue":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.daysOverdue}</p>
+          </div>
         );
 
       default:

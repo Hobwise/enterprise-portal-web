@@ -73,6 +73,40 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     'totalAmount',
     'percentageOfTotalSales',
   ];
+
+  const INITIAL_VISIBLE_COLUMNS15 = [
+    'orderId',
+    'orderDate',
+    'customer',
+    'orderTotal',
+    'totalPaid',
+    'totalRefunded',
+    'outstanding',
+    'paymentStatus',
+    'orderStatus',
+  ];
+
+  const INITIAL_VISIBLE_COLUMNS16 = [
+    'orderId',
+    'orderDate',
+    'customer',
+    'orderTotal',
+    'totalPaid',
+    'outstanding',
+    'paymentStatus',
+    'lastPaymentDate',
+  ];
+
+  const INITIAL_VISIBLE_COLUMNS17 = [
+    'orderId',
+    'orderDate',
+    'customer',
+    'orderTotal',
+    'totalRefunded',
+    'refundReason',
+    'refundDate',
+    'refundedBy',
+  ];
   
   // Table column definitions per report type
   const columns0 = [
@@ -136,6 +170,40 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     { name: "Total Sales %", uid: "percentageOfTotalSales", sortable: true },
   ];
 
+  const columns15 = [
+    { name: "ORDER ID", uid: "orderId", sortable: true },
+    { name: "ORDER DATE", uid: "orderDate", sortable: true },
+    { name: "CUSTOMER", uid: "customer", sortable: true },
+    { name: "ORDER TOTAL", uid: "orderTotal", sortable: true },
+    { name: "TOTAL PAID", uid: "totalPaid", sortable: true },
+    { name: "TOTAL REFUNDED", uid: "totalRefunded", sortable: true },
+    { name: "OUTSTANDING", uid: "outstanding", sortable: true },
+    { name: "PAYMENT STATUS", uid: "paymentStatus", sortable: true },
+    { name: "ORDER STATUS", uid: "orderStatus", sortable: true },
+  ];
+
+  const columns16 = [
+    { name: "ORDER ID", uid: "orderId", sortable: true },
+    { name: "ORDER DATE", uid: "orderDate", sortable: true },
+    { name: "CUSTOMER", uid: "customer", sortable: true },
+    { name: "ORDER TOTAL", uid: "orderTotal", sortable: true },
+    { name: "TOTAL PAID", uid: "totalPaid", sortable: true },
+    { name: "OUTSTANDING", uid: "outstanding", sortable: true },
+    { name: "PAYMENT STATUS", uid: "paymentStatus", sortable: true },
+    { name: "LAST PAYMENT DATE", uid: "lastPaymentDate", sortable: true },
+  ];
+
+  const columns17 = [
+    { name: "ORDER ID", uid: "orderId", sortable: true },
+    { name: "ORDER DATE", uid: "orderDate", sortable: true },
+    { name: "CUSTOMER", uid: "customer", sortable: true },
+    { name: "ORDER TOTAL", uid: "orderTotal", sortable: true },
+    { name: "TOTAL REFUNDED", uid: "totalRefunded", sortable: true },
+    { name: "REFUND REASON", uid: "refundReason", sortable: true },
+    { name: "REFUND DATE", uid: "refundDate", sortable: true },
+    { name: "REFUNDED BY", uid: "refundedBy", sortable: true },
+  ];
+
   const ActivityTableOrder = ({
     reportName,
     data,
@@ -188,6 +256,27 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           data: data?.categories || [],
           column: columns14,
           visibleColumn: INITIAL_VISIBLE_COLUMNS14,
+        };
+      }
+      if (reportType === 15) {
+        return {
+          data: data?.orderPayments || [],
+          column: columns15,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS15,
+        };
+      }
+      if (reportType === 16) {
+        return {
+          data: data?.partialPayments || [],
+          column: columns16,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS16,
+        };
+      }
+      if (reportType === 17) {
+        return {
+          data: data?.refundPayments || [],
+          column: columns17,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS17,
         };
       }
     }, [reportType, data]);
@@ -300,7 +389,17 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           item?.totalPurchaseAmount?.toLowerCase().includes(searchQuery) ||
           item?.totalSales?.toLowerCase().includes(searchQuery) ||
           item?.pendingSales?.toLowerCase().includes(searchQuery) ||
-          item?.confirmedSales?.toLowerCase().includes(searchQuery)
+          item?.confirmedSales?.toLowerCase().includes(searchQuery) ||
+          item?.customer?.toLowerCase().includes(searchQuery) ||
+          item?.orderTotal?.toLowerCase().includes(searchQuery) ||
+          item?.totalPaid?.toLowerCase().includes(searchQuery) ||
+          item?.totalRefunded?.toLowerCase().includes(searchQuery) ||
+          item?.outstanding?.toLowerCase().includes(searchQuery) ||
+          item?.paymentStatus?.toLowerCase().includes(searchQuery) ||
+          item?.lastPaymentDate?.toLowerCase().includes(searchQuery) ||
+          item?.refundReason?.toLowerCase().includes(searchQuery) ||
+          item?.refundDate?.toLowerCase().includes(searchQuery) ||
+          item?.refundedBy?.toLowerCase().includes(searchQuery)
       );
 
       return filteredData;
@@ -449,6 +548,83 @@ const INITIAL_VISIBLE_COLUMNS2 = [
             >
               {order.isCurrentlyAvailable ? "Available" : "Out of stock"}
             </Chip>
+          );
+        case "orderId":
+          return (
+            <div className="font-medium text-black text-sm">
+              <p>{order.orderId}</p>
+            </div>
+          );
+        case "orderDate":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(order.orderDate).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "customer":
+          return (
+            <div className="font-medium text-black text-sm">
+              <p>{order.customer}</p>
+            </div>
+          );
+        case "orderTotal":
+          return (
+            <div className="text-textGrey text-sm">{order.orderTotal}</div>
+          );
+        case "totalPaid":
+          return (
+            <div className="text-textGrey text-sm">{order.totalPaid}</div>
+          );
+        case "totalRefunded":
+          return (
+            <div className="text-textGrey text-sm">{order.totalRefunded}</div>
+          );
+        case "outstanding":
+          return (
+            <div className="text-textGrey text-sm">{order.outstanding}</div>
+          );
+        case "paymentStatus":
+          const paymentStatusColorMap: Record<
+            string,
+            "warning" | "success" | "danger" | "secondary"
+          > = {
+            Unpaid: "danger",
+            Paid: "success",
+            "Partially Paid": "warning",
+          };
+          return (
+            <Chip
+              className="capitalize"
+              color={paymentStatusColorMap[order.paymentStatus] || "secondary"}
+              size="sm"
+              variant="bordered"
+            >
+              {cellValue}
+            </Chip>
+          );
+        case "lastPaymentDate":
+          return (
+            <div className="text-textGrey text-sm">
+              {order.lastPaymentDate && moment(order.lastPaymentDate).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "refundReason":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.refundReason}</p>
+            </div>
+          );
+        case "refundDate":
+          return (
+            <div className="text-textGrey text-sm">
+              {order.refundDate && moment(order.refundDate).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "refundedBy":
+          return (
+            <div className="font-medium text-black text-sm">
+              <p>{order.refundedBy}</p>
+            </div>
           );
 
         default:
