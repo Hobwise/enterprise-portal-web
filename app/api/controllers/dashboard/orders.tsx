@@ -529,3 +529,13 @@ export async function getBusinessOrderConfiguration(businessId: string) {
     handleError(error, false);
   }
 }
+
+// Function to get order history
+export async function getOrderHistory(orderId: string) {
+  try {
+    const response = await api.get(`/api/v1/Order/history/${orderId}`);
+    return response.data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}

@@ -722,23 +722,6 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                         Process Order
                       </CustomButton>
                     </div>
-                          {onProcessPayment && (
-                      <div className="mt-4 w-full">
-                        <CustomButton
-                          className="h-[50px] w-full text-primaryColor border-primaryColor border bg-transparent font-semibold text-[15px]"
-                          onClick={() => {
-                            if (onProcessPayment) {
-                              onProcessPayment();
-                            }
-                          }}
-                          disabled={selectedItems.length === 0}
-                        >
-                          <div className="flex items-center justify-center gap-2">
-                            <span>Make Payment</span>
-                          </div>
-                        </CustomButton>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

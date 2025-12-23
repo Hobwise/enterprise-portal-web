@@ -12,7 +12,6 @@ const nextConfig = {
   experimental: {
     // Optimize package imports for faster builds
     optimizePackageImports: [
-      '@nextui-org/react',
       'lucide-react',
       'react-icons',
       '@iconify/react',
