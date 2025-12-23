@@ -150,7 +150,6 @@ const CheckoutModal = ({
       setAdditionalCostName(orderDetails.additionalCostName || "");
       // Keep VAT handling consistent with UpdateOrderModal: use stored values when present
       setVatAmount(orderDetails.vatAmount || 0);
-      setVatAmount(orderDetails.vatAmount || 0);
       setIsVatApplied(orderDetails.isVatApplied ?? true);
     }
   }, [orderDetails]);
@@ -171,8 +170,8 @@ const CheckoutModal = ({
       if (order.placedByName.trim().length < 2) {
         errors.push("Customer name must be at least 2 characters long");
         fieldErrors.placedByName = true;
-      } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
-        errors.push("Customer name can only contain letters and spaces");
+      } else if (!/^[a-zA-ZÀ-ÿ\s'\-.]+$/.test(order.placedByName.trim())) {
+        errors.push("Customer name contains invalid characters");
         fieldErrors.placedByName = true;
       }
     }
@@ -228,8 +227,8 @@ const CheckoutModal = ({
       if (order.placedByName.trim().length < 2) {
         errors.push("Customer name must be at least 2 characters long");
         fieldErrors.placedByName = true;
-      } else if (!/^[a-zA-Z\s]+$/.test(order.placedByName.trim())) {
-        errors.push("Customer name can only contain letters and spaces");
+      } else if (!/^[a-zA-ZÀ-ÿ\s'\-.]+$/.test(order.placedByName.trim())) {
+        errors.push("Customer name contains invalid characters");
         fieldErrors.placedByName = true;
       }
     }
@@ -302,11 +301,7 @@ const CheckoutModal = ({
     } catch (error) {
       console.error("Error during checkout:", error);
       setLoading(false);
-      notify({
-        title: "Error",
-        text: "Failed to process checkout. Please try again.",
-        type: "error",
-      });
+      // Don't show another notification here - the underlying functions already show specific error messages
     }
   };
 
@@ -515,7 +510,7 @@ const CheckoutModal = ({
   // Always recalculate VAT from current items so quantity changes are reflected
   const effectiveVatAmount = isVatApplied ? calculatedVatAmount : 0;
   const finalTotalPrice =
-    Math.round((subtotal + +(Number(additionalCost) || 0)) * 100) / 100;
+    Math.round((subtotal + effectiveVatAmount + +(Number(additionalCost) || 0)) * 100) / 100;
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setResponse(null);
@@ -872,36 +867,32 @@ const CheckoutModal = ({
         // It will be called after successful payment completion in finalizeOrder
       } else if (apiData.data?.error) {
         notify({
-          title: "Order Creation Failed",
+          title: "Error!",
           text: apiData.data?.error || "Unknown error",
           type: "error",
         });
         throw new Error(apiData.data?.error || "Order creation failed");
       }
-    } else if (data && "errors" in data) {
-      // Handle validation errors
-      const errorData = data as ApiResponse;
-      const validationErrors = Object.entries(errorData.errors || {})
-        .map(
-          ([field, errors]) =>
-            `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`
-        )
-        .join("; ");
-      notify({
-        title: "Validation Failed",
-        text: validationErrors,
-        type: "error",
-      });
-      throw new Error("Validation failed");
     } else {
-      console.error("Unexpected response format:", data);
+      // Extract error message from various possible response formats
+      const errorMessage =
+        (data as any)?.data?.error ||
+        (data as any)?.error ||
+        ((data as any)?.errors ? Object.entries((data as any).errors)
+          .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`)
+          .join("; ") : null) ||
+        "Failed to create order. Please try again.";
+
+      console.error("Order creation failed:", errorMessage);
+      console.error("Response:", data);
       console.error("Failed payload:", payload);
+
       notify({
         title: "Error!",
-        text: "Unexpected error occurred. Please check the console for details.",
+        text: errorMessage,
         type: "error",
       });
-      throw new Error("Unexpected error occurred");
+      throw new Error(errorMessage);
     }
   };
   const updateOrder = async () => {
@@ -1026,11 +1017,7 @@ const CheckoutModal = ({
         setResponse(data as ApiResponse);
       }
     } catch (error) {
-      notify({
-        title: "Error!",
-        text: "Failed to update order. Please try again.",
-        type: "error",
-      });
+    
       throw new Error("Failed to update order");
     }
 
@@ -1089,41 +1076,22 @@ const CheckoutModal = ({
 
       // Stay on screen 2 (payment selection) - user needs to choose payment method
       // Screen is already set to 2 by handleCheckoutClick
-    } else if (hasDataProperty(data) && data.data?.error) {
-      console.error("Order update failed:", data.data.error);
-      console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
-      notify({
-        title: "Order Update Failed",
-        text: data.data.error,
-        type: "error",
-      });
-      throw new Error(data.data.error || "Order update failed");
-    } else if (data && "errors" in data) {
-      // Handle validation errors
-      const errorData = data as ApiResponse;
-      const validationErrors = Object.entries(errorData.errors || {})
-        .map(
-          ([field, errors]) =>
-            `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`
-        )
-        .join("; ");
-      console.error("Validation errors:", errorData.errors);
-      console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
-      notify({
-        title: "Validation Failed",
-        text: validationErrors,
-        type: "error",
-      });
-      throw new Error("Validation failed");
     } else {
-      console.error("Unexpected response format:", data);
+      // Extract error message from various possible response formats
+      const errorMessage =
+        data?.data?.error ||
+        data?.error ||
+        (data?.errors ? Object.entries(data.errors)
+          .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`)
+          .join("; ") : null) ||
+        "Failed to update order. Please try again.";
+
+      console.error("Order update failed:", errorMessage);
+      console.error("Response:", data);
       console.error("Payload that was sent:", JSON.stringify(payload, null, 2));
-      notify({
-        title: "Error!",
-        text: "Unexpected error occurred. Please check the console for details.",
-        type: "error",
-      });
-      throw new Error("Unexpected error occurred");
+
+  
+      throw new Error(errorMessage);
     }
   };
 
@@ -1173,7 +1141,8 @@ const CheckoutModal = ({
     }
 
     // Validate amount for partial payment
-    const totalDue = orderDetails?.amountRemaining ?? finalTotalPrice;
+    // Use consistent calculation: total minus what's already paid
+    const totalDue = Math.max(0, finalTotalPrice - (orderDetails?.amountPaid || 0));
     let finalAmountPaid = totalDue;
     const systemReference = (): number => Math.floor(1e9 + Math.random() * 9e9);
 
@@ -1231,7 +1200,12 @@ const CheckoutModal = ({
 
         // Call onOrderSuccess to clear cart (on POS page) BEFORE closing modal
         // This ensures cart is cleared after payment is confirmed
-        onOrderSuccess();
+        // Wrap in try-catch to prevent callback errors from showing "Network error" after success
+        try {
+          onOrderSuccess();
+        } catch (e) {
+          console.error("Error in onOrderSuccess callback:", e);
+        }
 
         // Close modal or navigate
         if (pathname === "/dashboard/orders") {
@@ -1246,33 +1220,21 @@ const CheckoutModal = ({
         // Clear cache and invalidate queries - be more aggressive to ensure fresh data
         ordersCacheUtils.clearAll();
 
-        // Invalidate all order-related queries to force refetch from backend
-        await queryClient.invalidateQueries({
-          queryKey: ["orderCategories"],
-          refetchType: "active",
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["orderDetails"],
-          refetchType: "active",
-        });
-        await queryClient.invalidateQueries({
-          queryKey: ["orders"],
-          refetchType: "active",
-        });
-
-        // Force immediate refetch of all active queries
-        await queryClient.refetchQueries({
-          queryKey: ["orderCategories"],
-          type: "active",
-        });
-        await queryClient.refetchQueries({
-          queryKey: ["orderDetails"],
-          type: "active",
-        });
-        await queryClient.refetchQueries({
-          queryKey: ["orders"],
-          type: "active",
-        });
+        // Run cache operations in background without blocking or showing errors
+        // Payment already succeeded, so don't show network errors for cleanup
+        Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["orderCategories"], refetchType: "active" }),
+          queryClient.invalidateQueries({ queryKey: ["orderDetails"], refetchType: "active" }),
+          queryClient.invalidateQueries({ queryKey: ["orders"], refetchType: "active" }),
+        ])
+          .then(() => Promise.all([
+            queryClient.refetchQueries({ queryKey: ["orderCategories"], type: "active" }),
+            queryClient.refetchQueries({ queryKey: ["orderDetails"], type: "active" }),
+            queryClient.refetchQueries({ queryKey: ["orders"], type: "active" }),
+          ]))
+          .catch((error) => {
+            console.error("Background cache refresh error (payment already succeeded):", error);
+          });
 
         // Note: onOrderSuccess was already called above (before closing modal)
         // to ensure cart is cleared at the right time

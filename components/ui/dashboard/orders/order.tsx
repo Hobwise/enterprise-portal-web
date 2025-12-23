@@ -57,6 +57,8 @@ import { SelectItem } from "@nextui-org/react";
 import OrderProgressModal from "./OrderProgressModal";
 import PaymentSummaryModal from "./PaymentSummaryModal";
 import RefundPaymentModal from "./RefundPaymentModal";
+import OrderHistoryModal from "./OrderHistoryModal";
+import { History } from "lucide-react";
 import {
   completeOrder,
   completeOrderWithPayment,
@@ -185,6 +187,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenPaymentSummary, setIsOpenPaymentSummary] =
     React.useState<boolean>(false);
   const [isOpenRefund, setIsOpenRefund] = React.useState<boolean>(false);
+  const [isOpenHistoryModal, setIsOpenHistoryModal] =
+    React.useState<boolean>(false);
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] =
@@ -356,6 +360,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const toggleRefundModal = (order: OrderItem) => {
     setSingleOrder(order);
     setIsOpenRefund(!isOpenRefund);
+  };
+
+  const toggleHistoryModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenHistoryModal(!isOpenHistoryModal);
   };
 
   const [paymentOption, setPaymentOption] = React.useState<"full" | "partial">(
@@ -645,7 +654,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
           );
         case "amountRemaining":
           return (
-            <div className="text-textGrey text-sm">
+            <div className={`text-sm ${order.amountRemaining !== undefined && order.amountRemaining < 0 ? "text-red-500" : "text-textGrey"}`}>
               <p>
                 {order.amountRemaining !== undefined
                   ? formatPrice(order.amountRemaining)
@@ -775,6 +784,19 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           </DropdownItem>
                         )) as any
                     }
+
+                    {options && options.includes("Order History") && (
+                      <DropdownItem
+                        key="order-history"
+                        onClick={() => toggleHistoryModal(order)}
+                        aria-label="Order History"
+                      >
+                        <div className="flex gap-3 items-center text-grey500">
+                          <History className="w-[18px] h-[18px]" />
+                          <p>Order History</p>
+                        </div>
+                      </DropdownItem>
+                    )}
 
                     {
                       ((role === 0 ||
@@ -937,6 +959,20 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               <p>Refund Payment</p>
                             </div>
                           </DropdownItem>
+
+                          {availableOptions[statusDataMap[order.status]]?.includes("Order History") && (
+                            <DropdownItem
+                              key="order-history"
+                              onClick={() => toggleHistoryModal(order)}
+                              aria-label="Order History"
+                            >
+                              <div className="flex gap-3 items-center text-grey500">
+                                <History className="w-[18px] h-[18px]" />
+                                <p>Order History</p>
+                              </div>
+                            </DropdownItem>
+                          )}
+
                           {
                             ((role === 0 ||
                               userRolePermissions?.canEditOrder === true) &&
@@ -1405,6 +1441,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
           refetch();
           queryClient.invalidateQueries({ queryKey: ["orders"] });
         }}
+      />
+      <OrderHistoryModal
+        isOpen={isOpenHistoryModal}
+        onOpenChange={setIsOpenHistoryModal}
+        orderId={singleOrder?.id || null}
+        orderReference={singleOrder?.reference}
       />
     </section>
   );
