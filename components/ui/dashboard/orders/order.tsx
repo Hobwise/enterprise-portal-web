@@ -25,7 +25,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { TbFileInvoice } from "react-icons/tb";
-import { Clock, Receipt, RotateCcw } from "lucide-react";
+import { Clock, Receipt, RotateCcw, CreditCard } from "lucide-react";
 import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 import {
   availableOptions,
@@ -488,35 +488,27 @@ const OrdersList: React.FC<OrdersListProps> = ({
         type: "success",
       });
 
-      // Invalidate all order-related queries to force refetch from backend
-      await queryClient.invalidateQueries({
-        queryKey: ["orderCategories"],
-        refetchType: "active",
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["orderDetails"],
-        refetchType: "active",
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["orders"],
-        refetchType: "active",
-      });
-
-      // Force immediate refetch of all active queries
-      await queryClient.refetchQueries({
-        queryKey: ["orderCategories"],
-        type: "active",
-      });
-      await queryClient.refetchQueries({
-        queryKey: ["orderDetails"],
-        type: "active",
-      });
-      await queryClient.refetchQueries({
-        queryKey: ["orders"],
-        type: "active",
-      });
-
+      // Close modal immediately
       setIsOpenPaymentModal(false);
+
+      // Run cache invalidation in background (non-blocking)
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["orderCategories"],
+          refetchType: "active",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["orderDetails"],
+          refetchType: "active",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["orders"],
+          refetchType: "active",
+        }),
+      ]).catch(() => {
+        // Silently handle cache invalidation errors
+      });
+
       refetch();
     } else if (data?.data?.error) {
       notify({
@@ -760,7 +752,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             aria-label="Confirm Payment"
                           >
                             <div className="flex gap-3 items-center text-grey500">
-                              <Receipt className="w-[18px] h-[18px]" />
+                              <CreditCard className="w-[18px] h-[18px]" />
                               <p>Make Payment</p>
                             </div>
                           </DropdownItem>
@@ -942,8 +934,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
                                   aria-label="Confirm Payment"
                                 >
                                   <div className="flex gap-3 items-center text-grey500">
-                                    <Receipt className="w-[18px] h-[18px]" />
-                                    <p>Confirm Payment</p>
+                                    <CreditCard className="w-[18px] h-[18px]" />
+                                    <p>Make Payment</p>
                                   </div>
                                 </DropdownItem>
                               )) as any
