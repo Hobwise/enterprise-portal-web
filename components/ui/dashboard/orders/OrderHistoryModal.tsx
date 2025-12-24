@@ -77,7 +77,13 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
         try {
           const response = await getOrderHistory(orderId);
           if (response?.isSuccessful && response.data) {
-            setData(response.data);
+            // Sort by dateCreated descending (newest first)
+            const sortedData = [...response.data].sort((a: HistoryItem, b: HistoryItem) => {
+              const dateA = new Date(a.dateCreated).getTime();
+              const dateB = new Date(b.dateCreated).getTime();
+              return dateB - dateA;
+            });
+            setData(sortedData);
           } else {
             setError(response?.error || "Failed to fetch order history");
           }
@@ -346,9 +352,10 @@ const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
                       </div>
                       <div className="flex items-center gap-1 text-xs text-gray-500">
                         <Clock className="w-3 h-3" />
-                        {item.dateCreated && item.dateCreated !== "0001-01-01T00:00:00"
+                        {item.dateCreated 
                           ? moment(item.dateCreated).format("MMM DD, YYYY h:mm A")
                           : "N/A"}
+
                       </div>
                     </div>
 

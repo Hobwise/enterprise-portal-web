@@ -12,7 +12,10 @@ const useOrderDetails = (
   options?: { enabled?: boolean }
 ) => {
   // Validate orderId to prevent invalid API calls
-  const isValidOrderId = orderId && typeof orderId === 'string' && orderId.trim().length > 0;
+  const isValidOrderId = Boolean(orderId && typeof orderId === 'string' && orderId.trim().length > 0);
+
+  // Ensure enabled is always a strict boolean
+  const isEnabled = Boolean(isValidOrderId && options?.enabled !== false);
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['orderDetails', orderId],
@@ -22,9 +25,9 @@ const useOrderDetails = (
       }
       return getOrder(orderId);
     },
-    ...fetchQueryConfig(options),
+    ...fetchQueryConfig(),
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
-    enabled: isValidOrderId && options?.enabled !== false,
+    enabled: isEnabled,
   });
 
   return {
