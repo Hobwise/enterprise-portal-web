@@ -96,6 +96,8 @@ interface OrderItem {
   }[];
   amountRemaining?: number;
   amountPaid?: number;
+  isVatApplied?: boolean;
+  vatRate?: number;
 }
 
 interface OrderCategory {
@@ -1429,6 +1431,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
         orderId={singleOrder?.id || ""}
         totalAmount={singleOrder?.totalAmount || 0}
         maxRefundAmount={singleOrder?.amountPaid || 0}
+        isVatApplied={singleOrder?.isVatApplied ?? false}
+        vatPercentage={singleOrder?.vatRate ?? 0}
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({ queryKey: ["orders"] });
