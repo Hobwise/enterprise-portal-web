@@ -625,60 +625,28 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                     {itemsToRefund.map((item) => {
                       const itemRefundAmount = (item.unitPrice * item.refundQuantity) +
                         (item.isPacked ? item.packingCost * item.refundQuantity : 0);
-                      const itemVatAmount = isVatApplied && vatRate > 0
-                        ? Math.round(itemRefundAmount * (vatRate / 100) * 100) / 100
-                        : 0;
-                      const itemTotalWithVat = itemRefundAmount + itemVatAmount;
-                      
+
                       return (
-                        <div key={item.itemID} className="space-y-1">
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-700">
-                              {item.itemName} x{item.refundQuantity}
-                            </span>
-                            <span className="font-medium text-red-600">
-                              -{formatPrice(itemRefundAmount, "NGN")}
-                            </span>
-                          </div>
-                          {isVatApplied && itemVatAmount > 0 && (
-                            <div className="flex justify-between items-center text-xs pl-4 text-red-500">
-                              <span>VAT ({vatRate}%)</span>
-                              <span>-{formatPrice(itemVatAmount, "NGN")}</span>
-                            </div>
-                          )}
-                          <div className="flex justify-between items-center text-sm font-semibold pl-4 border-t border-red-200 pt-1">
-                            <span className="text-red-700">Item Total (with VAT)</span>
-                            <span className="text-red-700">-{formatPrice(itemTotalWithVat, "NGN")}</span>
-                          </div>
+                        <div key={item.itemID} className="flex justify-between items-center text-sm">
+                          <span className="text-gray-700">
+                            {item.itemName} x{item.refundQuantity}
+                          </span>
+                          <span className="font-medium text-red-600">
+                            -{formatPrice(itemRefundAmount, "NGN")}
+                          </span>
                         </div>
                       );
                     })}
-                    <div className="pt-2 border-t-2 border-red-300 space-y-1">
-                      <div className="flex justify-between">
-                        <span className="font-medium text-red-600">
-                          Items Subtotal (before VAT)
-                        </span>
-                        <span className="font-medium text-red-600">
-                          -{formatPrice(itemsRefundAmount, "NGN")}
-                        </span>
-                      </div>
+                    <div className="pt-2 border-t border-red-200 space-y-1">
                       {isVatApplied && vatRefundAmount > 0 && (
-                        <div className="flex justify-between">
-                          <span className="font-medium text-red-600">
-                            VAT on Refunded Items ({vatRate}%)
-                          </span>
-                          <span className="font-medium text-red-600">
-                            -{formatPrice(vatRefundAmount, "NGN")}
-                          </span>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-red-600">VAT ({vatRate}%)</span>
+                          <span className="text-red-600">-{formatPrice(vatRefundAmount, "NGN")}</span>
                         </div>
                       )}
-                      <div className="flex justify-between pt-1 border-t border-red-200">
-                        <span className="font-bold text-red-700 text-base">
-                          Total Refund to Customer (Items + VAT)
-                        </span>
-                        <span className="font-bold text-red-700 text-base">
-                          -{formatPrice(totalRefundAmount, "NGN")}
-                        </span>
+                      <div className="flex justify-between pt-1">
+                        <span className="font-bold text-red-700">Total Refund</span>
+                        <span className="font-bold text-red-700">-{formatPrice(totalRefundAmount, "NGN")}</span>
                       </div>
                     </div>
                   </div>
