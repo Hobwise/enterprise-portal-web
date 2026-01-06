@@ -65,7 +65,37 @@ const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({
         try {
           const response = await getPaymentSummary(orderId);
           if (response?.isSuccessful && response.data) {
-            setData(response.data);
+            const responseData = response.data;
+            const payments = responseData.payments || [];
+
+            // Calculate amountPaid from confirmed payments (Credit) minus confirmed refunds (Debit)
+            const confirmedCredits = payments
+              .filter(
+                (p: Payment) =>
+                  p.paymentStatus === "Confirmed" &&
+                  p.paymentDirection !== "Debit"
+              )
+              .reduce((sum: number, p: Payment) => sum + p.amount, 0);
+
+            const confirmedDebits = payments
+              .filter(
+                (p: Payment) =>
+                  p.paymentStatus === "Confirmed" &&
+                  p.paymentDirection === "Debit"
+              )
+              .reduce((sum: number, p: Payment) => sum + p.amount, 0);
+
+            const calculatedAmountPaid = confirmedCredits - confirmedDebits;
+            const calculatedAmountRemaining =
+              responseData.totalAmount - calculatedAmountPaid;
+
+            // Use calculated values if API returns 0 or undefined
+            setData({
+              ...responseData,
+              amountPaid: responseData.amountPaid || calculatedAmountPaid,
+              amountRemaining:
+                responseData.amountRemaining ?? calculatedAmountRemaining,
+            });
           } else {
             setError(response?.error || "Failed to fetch payment summary");
           }
