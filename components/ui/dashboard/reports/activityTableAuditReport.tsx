@@ -48,22 +48,21 @@ import { CustomInput } from '@/components/CustomInput';
   ];
   
   const column = [
-    { name: 'Username', uid: 'userName', sortable: true },
-    { name: 'Email Address', uid: 'emailAddress', sortable: true },
-    { name: 'IP Address', uid: 'ipAddress', sortable: true },
-  
-    { name: 'Activity', uid: 'activity', sortable: true },
-    { name: 'Date', uid: 'dateCreated', sortable: true },
-    { name: 'Status', uid: 'isSuccessful', sortable: true },
+    { name: "USERNAME", uid: "userName", sortable: true },
+    { name: "EMAIL ADDRESS", uid: "emailAddress", sortable: true },
+    { name: "IP ADDRESS", uid: "ipAddress", sortable: true },
+    { name: "ACTIVITY", uid: "activity", sortable: true },
+    { name: "DATE", uid: "dateCreated", sortable: true },
+    { name: "STATUS", uid: "isSuccessful", sortable: true },
   ];
-  
+
   const DAILY_COLUMNS = [
-    { name: 'Full Name', uid: 'fullName', sortable: true },
-    { name: 'Email Address', uid: 'emailAddress', sortable: true },
-    { name: 'First Login', uid: 'firstLoginTime', sortable: true },
-    { name: 'Last Seen', uid: 'lastSeenTime', sortable: true },
-    { name: 'Active Period', uid: 'activePeriod', sortable: true },
-    { name: 'Date', uid: 'date', sortable: true },
+    { name: "FULL NAME", uid: "fullName", sortable: true },
+    { name: "EMAIL ADDRESS", uid: "emailAddress", sortable: true },
+    { name: "FIRST LOGIN", uid: "firstLoginTime", sortable: true },
+    { name: "LAST SEEN", uid: "lastSeenTime", sortable: true },
+    { name: "ACTIVE PERIOD", uid: "activePeriod", sortable: true },
+    { name: "DATE", uid: "date", sortable: true },
   ];
 
 const ActivityTableAudit = ({

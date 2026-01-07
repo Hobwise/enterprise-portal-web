@@ -150,7 +150,7 @@ const ReportDetails = ({ report }: any) => {
           <h3 className=" font-semibold mb-2">Available reports</h3>
           <Divider />
 
-          <div>
+          <div className="h-[350px] overflow-y-auto overflow-x-hidden custom-scrollbar">
             {report?.availableReport.map((item: any) => (
               <div
                 onClick={() =>

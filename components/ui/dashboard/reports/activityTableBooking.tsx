@@ -115,27 +115,27 @@ const INITIAL_VISIBLE_COLUMNS7 = [
   'bookingFee',
 ];
 const columns7 = [
-  { name: "Customer Name", uid: "firstName" },
-  { name: "Customer Phone Number ", uid: "phoneNumber" },
-  { name: "Customer Email Address", uid: "emailAddress" },
-  { name: "Booking Fee", uid: "bookingFee" },
-  { name: "Booking Date", uid: "bookingDateTime" },
-  { name: "Status", uid: "bookingStatus" },
+  { name: "CUSTOMER NAME", uid: "firstName" },
+  { name: "CUSTOMER PHONE NUMBER", uid: "phoneNumber" },
+  { name: "CUSTOMER EMAIL ADDRESS", uid: "emailAddress" },
+  { name: "BOOKING FEE", uid: "bookingFee" },
+  { name: "BOOKING DATE", uid: "bookingDateTime" },
+  { name: "STATUS", uid: "bookingStatus" },
 ];
 
 const columns8 = [
   { name: "RESERVATION NAME", uid: "reservationName" },
-  { name: "Total Booking Amount", uid: "totalBookingFee" },
-  { name: "Total Bookings", uid: "totalBookings" },
-  { name: "Date Updated", uid: "dateUpdated" },
+  { name: "TOTAL BOOKING AMOUNT", uid: "totalBookingFee" },
+  { name: "TOTAL BOOKINGS", uid: "totalBookings" },
+  { name: "DATE UPDATED", uid: "dateUpdated" },
 ];
 
 const columns9 = [
-  { name: "Customer Name", uid: "customerFirstName" },
-  { name: "Customer Phone Number", uid: "customerPhoneNumber" },
-  { name: "Customer Email Address", uid: "customerEmailAddress" },
-  { name: "Total Booking Fee", uid: "totalBookingFee" },
-  { name: "Total Bookings", uid: "totalBookings" },
+  { name: "CUSTOMER NAME", uid: "customerFirstName" },
+  { name: "CUSTOMER PHONE NUMBER", uid: "customerPhoneNumber" },
+  { name: "CUSTOMER EMAIL ADDRESS", uid: "customerEmailAddress" },
+  { name: "TOTAL BOOKING FEE", uid: "totalBookingFee" },
+  { name: "TOTAL BOOKINGS", uid: "totalBookings" },
 ];
 
 const INITIAL_VISIBLE_COLUMNS10 = [
@@ -149,10 +149,10 @@ const INITIAL_VISIBLE_COLUMNS10 = [
 
 const columns10 = [
   { name: "RESERVATION NAME", uid: "reservationName" },
-  { name: "Quantity", uid: "reservationCapacity" },
-  { name: "Occupancy Rate", uid: "occupancyRate" },
-  { name: "Total Bookings", uid: "totalBookings" },
-  { name: "Average Daily Utilization", uid: "averageDailyUtilization" },
+  { name: "QUANTITY", uid: "reservationCapacity" },
+  { name: "OCCUPANCY RATE", uid: "occupancyRate" },
+  { name: "TOTAL BOOKINGS", uid: "totalBookings" },
+  { name: "AVERAGE DAILY UTILIZATION", uid: "averageDailyUtilization" },
 ];
 
 const ActivityTableBooking = ({
