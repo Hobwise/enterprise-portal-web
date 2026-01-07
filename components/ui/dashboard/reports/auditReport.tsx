@@ -57,7 +57,7 @@ const ReportDetails = ({ report }: any) => {
           <h3 className=" font-semibold mb-2">Available Audit logs</h3>
           <Divider />
 
-          <div className="h-[350px] overflow-y-auto overflow-x-hidden custom-scrollbar">
+          <div className="h-[180px] overflow-y-auto overflow-x-hidden custom-scrollbar">
             {report?.availableReport.map((item: any) => (
               <div
                 onClick={() =>

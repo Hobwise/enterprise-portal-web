@@ -91,7 +91,6 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     "orderTotal",
     "paidSoFar",
     "remaining",
-    "lastPaymentDate",
   ];
 
   const INITIAL_VISIBLE_COLUMNS17 = [
@@ -102,7 +101,7 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     "approvedBy",
     "date",
   ];
-  
+
   // Table column definitions per report type
   const columns0 = [
     { name: "CUSTOMER NAME", uid: "customerName", sortable: true },
@@ -182,7 +181,6 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     { name: "ORDER TOTAL", uid: "orderTotal", sortable: true },
     { name: "PAID SO FAR", uid: "paidSoFar", sortable: true },
     { name: "REMAINING", uid: "remaining", sortable: true },
-    { name: "LAST PAYMENT DATE", uid: "lastPaymentDate", sortable: true },
   ];
 
   const columns17 = [
@@ -386,7 +384,6 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           item?.totalRefunded?.toLowerCase().includes(searchQuery) ||
           item?.outstanding?.toLowerCase().includes(searchQuery) ||
           item?.paymentStatus?.toLowerCase().includes(searchQuery) ||
-          item?.lastPaymentDate?.toLowerCase().includes(searchQuery) ||
           item?.paidSoFar?.toLowerCase().includes(searchQuery) ||
           item?.remaining?.toLowerCase().includes(searchQuery) ||
           item?.refundReason?.toLowerCase().includes(searchQuery) ||
@@ -435,7 +432,7 @@ const INITIAL_VISIBLE_COLUMNS2 = [
       switch (columnKey) {
         case "name":
           return (
-            <div className="flex font-medium text-black items-center gap-2 text-sm cursor-pointer">
+            <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
               <span>{order.placedByName}</span>
               {/* {order.comment && (
                   <div
@@ -450,13 +447,13 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           );
         case "placedByName":
           return (
-            <div className="flex font-medium text-black items-center gap-2 text-sm cursor-pointer">
+            <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
               <span>{order.placedByName}</span>
             </div>
           );
         case "firstName":
           return (
-            <div className="flex font-medium text-black items-center gap-2 text-sm cursor-pointer">
+            <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
               <span>
                 {order.firstName} {order.lastName}
               </span>
@@ -479,7 +476,7 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           );
         case "itemName":
           return (
-            <div className="font-medium text-black text-sm">
+            <div className="text-textGrey text-sm">
               <p>{order.itemName}</p>
             </div>
           );
@@ -546,7 +543,7 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           );
         case "orderId":
           return (
-            <div className="font-medium text-black text-sm">
+            <div className="text-textGrey text-sm">
               <p>{order.orderId}</p>
             </div>
           );
@@ -558,7 +555,7 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           );
         case "customer":
           return (
-            <div className="font-medium text-black text-sm">
+            <div className="text-textGrey text-sm">
               <p>{order.customer}</p>
             </div>
           );
@@ -595,13 +592,6 @@ const INITIAL_VISIBLE_COLUMNS2 = [
               {cellValue}
             </Chip>
           );
-        case "lastPaymentDate":
-          return (
-            <div className="text-textGrey text-sm">
-              {order.lastPaymentDate &&
-                moment(order.lastPaymentDate).format("MMMM Do YYYY, h:mm:ss a")}
-            </div>
-          );
         case "refundReason":
           return (
             <div className="text-textGrey text-sm">
@@ -617,19 +607,19 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           );
         case "refundedBy":
           return (
-            <div className="font-medium text-black text-sm">
+            <div className="text-textGrey text-sm">
               <p>{order.refundedBy}</p>
             </div>
           );
         case "refundAmount":
           return (
-            <div className="text-textGrey text-sm font-semibold">
+            <div className="text-textGrey text-sm">
               <p>{order.refundAmount}</p>
             </div>
           );
         case "approvedBy":
           return (
-            <div className="font-medium text-black text-sm">
+            <div className="text-textGrey text-sm">
               <p>{order.approvedBy || "-"}</p>
             </div>
           );
@@ -648,7 +638,7 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           );
         case "remaining":
           return (
-            <div className="text-textGrey text-sm font-semibold">
+            <div className="text-textGrey text-sm">
               <p>{order.remaining}</p>
             </div>
           );
