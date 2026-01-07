@@ -146,23 +146,23 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     { name: "NAME", uid: "firstName", sortable: true },
     { name: "EMAIL ADDRESS", uid: "emailAddress", sortable: true },
     { name: "NUMBER OF ORDERS", uid: "numberOfOrders", sortable: true },
-    { name: "Pending Sales", uid: "pendingSales", sortable: true },
-    { name: "Confirmed Sales", uid: "confirmedSales", sortable: true },
-    { name: "Total Sales", uid: "totalSales", sortable: true },
+    { name: "PENDING SALES", uid: "pendingSales", sortable: true },
+    { name: "CONFIRMED SALES", uid: "confirmedSales", sortable: true },
+    { name: "TOTAL SALES", uid: "totalSales", sortable: true },
   ];
 
   const columns13 = [
-    { name: "Total Amount", uid: "totalAmount", sortable: true },
+    { name: "TOTAL AMOUNT", uid: "totalAmount", sortable: true },
     { name: "NUMBER OF ORDERS", uid: "numberOfOrders", sortable: true },
-    { name: "Order Status", uid: "orderStatus", sortable: true },
+    { name: "ORDER STATUS", uid: "orderStatus", sortable: true },
   ];
 
   const columns14 = [
-    { name: "Category Name", uid: "categoryName", sortable: true },
-    { name: "Total Orders", uid: "totalOrders", sortable: true },
-    { name: "Total Items Sold", uid: "totalItemsSold", sortable: true },
-    { name: "Total Amount", uid: "totalAmount", sortable: true },
-    { name: "Total Sales %", uid: "percentageOfTotalSales", sortable: true },
+    { name: "CATEGORY NAME", uid: "categoryName", sortable: true },
+    { name: "TOTAL ORDERS", uid: "totalOrders", sortable: true },
+    { name: "TOTAL ITEMS SOLD", uid: "totalItemsSold", sortable: true },
+    { name: "TOTAL AMOUNT", uid: "totalAmount", sortable: true },
+    { name: "TOTAL SALES %", uid: "percentageOfTotalSales", sortable: true },
   ];
 
   const columns15 = [
