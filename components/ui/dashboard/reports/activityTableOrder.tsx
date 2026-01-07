@@ -87,25 +87,20 @@ const INITIAL_VISIBLE_COLUMNS2 = [
   ];
 
   const INITIAL_VISIBLE_COLUMNS16 = [
-    'orderId',
-    'orderDate',
-    'customer',
-    'orderTotal',
-    'totalPaid',
-    'outstanding',
-    'paymentStatus',
-    'lastPaymentDate',
+    "orderId",
+    "orderTotal",
+    "paidSoFar",
+    "remaining",
+    "lastPaymentDate",
   ];
 
   const INITIAL_VISIBLE_COLUMNS17 = [
-    'orderId',
-    'orderDate',
-    'customer',
-    'orderTotal',
-    'totalRefunded',
-    'refundReason',
-    'refundDate',
-    'refundedBy',
+    "orderId",
+    "customer",
+    "refundAmount",
+    "refundReason",
+    "approvedBy",
+    "date",
   ];
   
   // Table column definitions per report type
@@ -184,24 +179,19 @@ const INITIAL_VISIBLE_COLUMNS2 = [
 
   const columns16 = [
     { name: "ORDER ID", uid: "orderId", sortable: true },
-    { name: "ORDER DATE", uid: "orderDate", sortable: true },
-    { name: "CUSTOMER", uid: "customer", sortable: true },
     { name: "ORDER TOTAL", uid: "orderTotal", sortable: true },
-    { name: "TOTAL PAID", uid: "totalPaid", sortable: true },
-    { name: "OUTSTANDING", uid: "outstanding", sortable: true },
-    { name: "PAYMENT STATUS", uid: "paymentStatus", sortable: true },
+    { name: "PAID SO FAR", uid: "paidSoFar", sortable: true },
+    { name: "REMAINING", uid: "remaining", sortable: true },
     { name: "LAST PAYMENT DATE", uid: "lastPaymentDate", sortable: true },
   ];
 
   const columns17 = [
     { name: "ORDER ID", uid: "orderId", sortable: true },
-    { name: "ORDER DATE", uid: "orderDate", sortable: true },
     { name: "CUSTOMER", uid: "customer", sortable: true },
-    { name: "ORDER TOTAL", uid: "orderTotal", sortable: true },
-    { name: "TOTAL REFUNDED", uid: "totalRefunded", sortable: true },
+    { name: "REFUND AMOUNT", uid: "refundAmount", sortable: true },
     { name: "REFUND REASON", uid: "refundReason", sortable: true },
-    { name: "REFUND DATE", uid: "refundDate", sortable: true },
-    { name: "REFUNDED BY", uid: "refundedBy", sortable: true },
+    { name: "APPROVED BY", uid: "approvedBy", sortable: true },
+    { name: "DATE", uid: "date", sortable: true },
   ];
 
   const ActivityTableOrder = ({
@@ -267,14 +257,14 @@ const INITIAL_VISIBLE_COLUMNS2 = [
       }
       if (reportType === 16) {
         return {
-          data: data?.partialPayments || [],
+          data: data?.orderPayments || [],
           column: columns16,
           visibleColumn: INITIAL_VISIBLE_COLUMNS16,
         };
       }
       if (reportType === 17) {
         return {
-          data: data?.refundPayments || [],
+          data: data?.orderRefunds || [],
           column: columns17,
           visibleColumn: INITIAL_VISIBLE_COLUMNS17,
         };
@@ -397,9 +387,14 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           item?.outstanding?.toLowerCase().includes(searchQuery) ||
           item?.paymentStatus?.toLowerCase().includes(searchQuery) ||
           item?.lastPaymentDate?.toLowerCase().includes(searchQuery) ||
+          item?.paidSoFar?.toLowerCase().includes(searchQuery) ||
+          item?.remaining?.toLowerCase().includes(searchQuery) ||
           item?.refundReason?.toLowerCase().includes(searchQuery) ||
           item?.refundDate?.toLowerCase().includes(searchQuery) ||
-          item?.refundedBy?.toLowerCase().includes(searchQuery)
+          item?.refundedBy?.toLowerCase().includes(searchQuery) ||
+          item?.refundAmount?.toLowerCase().includes(searchQuery) ||
+          item?.approvedBy?.toLowerCase().includes(searchQuery) ||
+          item?.date?.toLowerCase().includes(searchQuery)
       );
 
       return filteredData;
@@ -572,9 +567,7 @@ const INITIAL_VISIBLE_COLUMNS2 = [
             <div className="text-textGrey text-sm">{order.orderTotal}</div>
           );
         case "totalPaid":
-          return (
-            <div className="text-textGrey text-sm">{order.totalPaid}</div>
-          );
+          return <div className="text-textGrey text-sm">{order.totalPaid}</div>;
         case "totalRefunded":
           return (
             <div className="text-textGrey text-sm">{order.totalRefunded}</div>
@@ -605,7 +598,8 @@ const INITIAL_VISIBLE_COLUMNS2 = [
         case "lastPaymentDate":
           return (
             <div className="text-textGrey text-sm">
-              {order.lastPaymentDate && moment(order.lastPaymentDate).format("MMMM Do YYYY, h:mm:ss a")}
+              {order.lastPaymentDate &&
+                moment(order.lastPaymentDate).format("MMMM Do YYYY, h:mm:ss a")}
             </div>
           );
         case "refundReason":
@@ -617,13 +611,45 @@ const INITIAL_VISIBLE_COLUMNS2 = [
         case "refundDate":
           return (
             <div className="text-textGrey text-sm">
-              {order.refundDate && moment(order.refundDate).format("MMMM Do YYYY, h:mm:ss a")}
+              {order.refundDate &&
+                moment(order.refundDate).format("MMMM Do YYYY, h:mm:ss a")}
             </div>
           );
         case "refundedBy":
           return (
             <div className="font-medium text-black text-sm">
               <p>{order.refundedBy}</p>
+            </div>
+          );
+        case "refundAmount":
+          return (
+            <div className="text-textGrey text-sm font-semibold">
+              <p>{order.refundAmount}</p>
+            </div>
+          );
+        case "approvedBy":
+          return (
+            <div className="font-medium text-black text-sm">
+              <p>{order.approvedBy || "-"}</p>
+            </div>
+          );
+        case "date":
+          return (
+            <div className="text-textGrey text-sm">
+              {order.date &&
+                moment(order.date).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "paidSoFar":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.paidSoFar}</p>
+            </div>
+          );
+        case "remaining":
+          return (
+            <div className="text-textGrey text-sm font-semibold">
+              <p>{order.remaining}</p>
             </div>
           );
 
@@ -704,63 +730,65 @@ const INITIAL_VISIBLE_COLUMNS2 = [
             </p>
             <p className="text-xs text-danger-500">{data?.message}</p>
           </div>
-          <Table
-            radius="lg"
-            isCompact
-            removeWrapper
-            allowsSorting
-            aria-label="list of orders"
-            bottomContent={
-              isLoading || items?.length === 0 ? (
-                ""
-              ) : (
-                <PaginationComponent
-                  data={items}
-                  page={page}
-                  setPage={setPage}
-                  pages={pages}
-                />
-              )
-            }
-            bottomContentPlacement="outside"
-            classNames={classNames}
-            selectedKeys={selectedKeys}
-            // selectionMode='multiple'
-            sortDescriptor={sortDescriptor}
-            // topContent={topContent}
-            topContentPlacement="outside"
-            onSelectionChange={setSelectedKeys}
-            onSortChange={setSortDescriptor}
-          >
-            <TableHeader columns={columns?.column}>
-              {(column) => (
-                <TableColumn
-                  key={column.uid}
-                  align={column.uid === "actions" ? "center" : "start"}
-                  allowsSorting={column.sortable}
-                >
-                  {column.name}
-                </TableColumn>
-              )}
-            </TableHeader>
-            <TableBody
-              style={{
-                textAlign: "center",
-              }}
-              emptyContent={"No items found"}
-              items={sortedItems || []}
-              isLoading={isLoading}
-              loadingContent={<SmallLoader />}
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <Table
+              radius="lg"
+              isCompact
+              removeWrapper
+              allowsSorting
+              aria-label="list of orders"
+              bottomContent={
+                isLoading || items?.length === 0 ? (
+                  ""
+                ) : (
+                  <PaginationComponent
+                    data={items}
+                    page={page}
+                    setPage={setPage}
+                    pages={pages}
+                  />
+                )
+              }
+              bottomContentPlacement="outside"
+              classNames={classNames}
+              selectedKeys={selectedKeys}
+              // selectionMode='multiple'
+              sortDescriptor={sortDescriptor}
+              // topContent={topContent}
+              topContentPlacement="outside"
+              onSelectionChange={setSelectedKeys}
+              onSortChange={setSortDescriptor}
             >
-              {(item: any, index: any) => (
-                <TableRow key={`row-${index}`}>
-                  {(columnKey) => (
-                    <TableCell>{renderCell(item, columnKey)}</TableCell>
-                  )}
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+              <TableHeader columns={columns?.column}>
+                {(column) => (
+                  <TableColumn
+                    key={column.uid}
+                    align={column.uid === "actions" ? "center" : "start"}
+                    allowsSorting={column.sortable}
+                  >
+                    {column.name}
+                  </TableColumn>
+                )}
+              </TableHeader>
+              <TableBody
+                style={{
+                  textAlign: "center",
+                }}
+                emptyContent={"No items found"}
+                items={sortedItems || []}
+                isLoading={isLoading}
+                loadingContent={<SmallLoader />}
+              >
+                {(item: any, index: any) => (
+                  <TableRow key={`row-${index}`}>
+                    {(columnKey) => (
+                      <TableCell>{renderCell(item, columnKey)}</TableCell>
+                    )}
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </section>
 
         <Modal

@@ -452,63 +452,65 @@ const ActivityTableBooking = ({
           </p>
           <p className="text-xs text-danger-500">{data?.message}</p>
         </div>
-        <Table
-          radius="lg"
-          isCompact
-          removeWrapper
-          allowsSorting
-          aria-label="list of bookings"
-          bottomContent={
-            isLoading || items?.length === 0 ? (
-              ""
-            ) : (
-              <PaginationComponent
-                data={items}
-                page={page}
-                setPage={setPage}
-                pages={pages}
-              />
-            )
-          }
-          bottomContentPlacement="outside"
-          classNames={classNames}
-          selectedKeys={selectedKeys}
-          // selectionMode='multiple'
-          sortDescriptor={sortDescriptor}
-          // topContent={topContent}
-          topContentPlacement="outside"
-          onSelectionChange={setSelectedKeys}
-          onSortChange={setSortDescriptor}
-        >
-          <TableHeader columns={columns?.column}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === "actions" ? "center" : "start"}
-                allowsSorting={column.sortable}
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            style={{
-              textAlign: "center",
-            }}
-            emptyContent={"No items found"}
-            items={sortedItems || []}
-            isLoading={isLoading}
-            loadingContent={<SmallLoader />}
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            allowsSorting
+            aria-label="list of bookings"
+            bottomContent={
+              isLoading || items?.length === 0 ? (
+                ""
+              ) : (
+                <PaginationComponent
+                  data={items}
+                  page={page}
+                  setPage={setPage}
+                  pages={pages}
+                />
+              )
+            }
+            bottomContentPlacement="outside"
+            classNames={classNames}
+            selectedKeys={selectedKeys}
+            // selectionMode='multiple'
+            sortDescriptor={sortDescriptor}
+            // topContent={topContent}
+            topContentPlacement="outside"
+            onSelectionChange={setSelectedKeys}
+            onSortChange={setSortDescriptor}
           >
-            {(item: any, index: any) => (
-              <TableRow key={`row-${index}`}>
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            <TableHeader columns={columns?.column}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.uid === "actions" ? "center" : "start"}
+                  allowsSorting={column.sortable}
+                >
+                  {column.name}
+                </TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              style={{
+                textAlign: "center",
+              }}
+              emptyContent={"No items found"}
+              items={sortedItems || []}
+              isLoading={isLoading}
+              loadingContent={<SmallLoader />}
+            >
+              {(item: any, index: any) => (
+                <TableRow key={`row-${index}`}>
+                  {(columnKey) => (
+                    <TableCell>{renderCell(item, columnKey)}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </section>
 
       <Modal
