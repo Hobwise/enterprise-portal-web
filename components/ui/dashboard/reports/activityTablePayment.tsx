@@ -54,12 +54,14 @@ const INITIAL_VISIBLE_COLUMNS5 = [
 ];
 
 const INITIAL_VISIBLE_COLUMNS6 = [
-  "confirmedAmount",
-  "dateUpdated",
-  "numberOfOrders",
-  "pendingAmount",
   "quickResponseName",
-  "totalAmount",
+  "numberOfOrders",
+  "pendingSalesAmount",
+  "confirmedSalesAmount",
+  "totalSalesAmount",
+  "totalRefundAmount",
+  "grossSalesAmount",
+  "dateUpdated",
 ];
 
 const INITIAL_VISIBLE_COLUMNS18 = [
@@ -112,6 +114,9 @@ const columns6 = [
   { name: "PENDING SALES AMOUNT", uid: "pendingSalesAmount" },
   { name: "CONFIRMED SALES AMOUNT", uid: "confirmedSalesAmount" },
   { name: "TOTAL SALES AMOUNT", uid: "totalSalesAmount" },
+  { name: "TOTAL REFUND AMOUNT", uid: "totalRefundAmount" },
+  { name: "GROSS SALES AMOUNT", uid: "grossSalesAmount" },
+  { name: "DATE UPDATED", uid: "dateUpdated" },
 ];
 
 const columns18 = [
@@ -261,9 +266,10 @@ const ActivityTablePayment = ({
         String(item?.debitCount)?.toLowerCase().includes(searchQuery) ||
         item?.dateCreated?.toLowerCase().includes(searchQuery) ||
         item?.confirmedSalesAmount?.toLowerCase().includes(searchQuery) ||
-        item?.confirmedSalesAmount?.toLowerCase().includes(searchQuery) ||
         item?.totalSalesAmount?.toLowerCase().includes(searchQuery) ||
         item?.pendingSalesAmount?.toLowerCase().includes(searchQuery) ||
+        item?.totalRefundAmount?.toLowerCase().includes(searchQuery) ||
+        item?.grossSalesAmount?.toLowerCase().includes(searchQuery) ||
         item?.date?.toLowerCase().includes(searchQuery) ||
         item?.totalCredits?.toLowerCase().includes(searchQuery) ||
         item?.totalDebits?.toLowerCase().includes(searchQuery) ||
@@ -315,13 +321,13 @@ const ActivityTablePayment = ({
     switch (columnKey) {
       case "name":
         return (
-          <div className="flex font-medium text-black items-center gap-2 text-sm cursor-pointer">
+          <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
             <span>{payment.placedByName}</span>
           </div>
         );
       case "paymentMethod":
         return (
-          <div className="font-medium text-black text-sm">
+          <div className="text-textGrey text-sm">
             <p>{payment.paymentMethod}</p>
           </div>
         );
@@ -351,7 +357,7 @@ const ActivityTablePayment = ({
         );
       case "quickResponseName":
         return (
-          <div className="flex text-black font-medium items-center gap-2 text-sm">
+          <div className="flex text-textGrey items-center gap-2 text-sm">
             <span> {payment.quickResponseName}</span>
           </div>
         );
@@ -364,7 +370,7 @@ const ActivityTablePayment = ({
         );
       case "customer":
         return (
-          <div className="font-medium text-black text-sm">
+          <div className="text-textGrey text-sm">
             <p>{payment.customer}</p>
           </div>
         );
@@ -408,6 +414,36 @@ const ActivityTablePayment = ({
       case "confirmedAmount":
         return (
           <div className="text-textGrey text-sm">{payment.confirmedAmount}</div>
+        );
+      case "pendingSalesAmount":
+        return (
+          <div className="text-textGrey text-sm">
+            {payment.pendingSalesAmount}
+          </div>
+        );
+      case "confirmedSalesAmount":
+        return (
+          <div className="text-textGrey text-sm">
+            {payment.confirmedSalesAmount}
+          </div>
+        );
+      case "totalSalesAmount":
+        return (
+          <div className="text-textGrey text-sm">
+            {payment.totalSalesAmount}
+          </div>
+        );
+      case "totalRefundAmount":
+        return (
+          <div className="text-textGrey text-sm">
+            {payment.totalRefundAmount}
+          </div>
+        );
+      case "grossSalesAmount":
+        return (
+          <div className="text-textGrey text-sm">
+            {payment.grossSalesAmount}
+          </div>
         );
       case "orderID":
         return <div className="text-textGrey text-sm">{payment.reference}</div>;
@@ -509,7 +545,7 @@ const ActivityTablePayment = ({
         );
       case "orderId":
         return (
-          <div className="font-medium text-black text-sm">
+          <div className="text-textGrey text-sm">
             <p>{payment.orderId}</p>
           </div>
         );
