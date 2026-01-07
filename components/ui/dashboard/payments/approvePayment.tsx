@@ -195,7 +195,18 @@ const ApprovePayment = ({
       );
 
       if (data?.data?.isSuccessful) {
-        setOrder(data?.data?.data || {});
+        const orderData = data?.data?.data || {};
+
+        // Calculate amountPaid and amountRemaining if API returns 0 or undefined
+        const calculatedAmountPaid = orderData.amountPaid || 0;
+        const calculatedAmountRemaining =
+          orderData.amountRemaining ?? orderData.totalAmount - calculatedAmountPaid;
+
+        setOrder({
+          ...orderData,
+          amountPaid: calculatedAmountPaid,
+          amountRemaining: calculatedAmountRemaining,
+        });
         setOrderError(null);
       } else if (data?.data?.error) {
         const message = data?.data?.error || "Failed to fetch order details";

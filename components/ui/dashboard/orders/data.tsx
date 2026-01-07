@@ -1,8 +1,8 @@
 const columns = [
   { name: "ID", uid: "menuID", sortable: true },
   { name: "NAME", uid: "name", sortable: true },
-  { name: "Total Amount", uid: "amount", sortable: true },
-  { name: "Remaining Amount", uid: "amountRemaining", sortable: true },
+  { name: "TOTAL", uid: "amount", sortable: true },
+  { name: "REMAINING AMOUNT", uid: "amountRemaining", sortable: true },
   { name: "TABLE NAME", uid: "qrReference", sortable: true },
   { name: "ORDER ID", uid: "orderID", sortable: true },
   { name: "PHONE NUMBER", uid: "placedByPhoneNumber", sortable: true },
@@ -28,7 +28,8 @@ type AvailableOption =
   | "Generate Invoice"
   | "Payment Summary"
   | "Refund Order"
-  | "Confirm Payment";
+  | "Confirm Payment"
+  | "Order History";
 
 export const availableOptions: Record<string, AvailableOption[]> = {
   open: [
@@ -38,9 +39,10 @@ export const availableOptions: Record<string, AvailableOption[]> = {
     "Cancel Order",
     "Payment Summary",
     "Refund Order",
+    "Order History",
   ],
-  closed: ["Generate Invoice", "Payment Summary", "Refund Order"],
-  cancelled: ["Payment Summary"],
+  closed: ["Generate Invoice", "Payment Summary", "Refund Order", "Order History"],
+  cancelled: ["Payment Summary", "Order History"],
   "awaiting confirmation": [
     "Update Order",
     "Checkout",
@@ -48,6 +50,7 @@ export const availableOptions: Record<string, AvailableOption[]> = {
     "Cancel Order",
     "Payment Summary",
     "Refund Order",
+    "Order History",
   ],
 };
 export const statusDataMap: Record<

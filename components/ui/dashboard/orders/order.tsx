@@ -25,7 +25,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { TbFileInvoice } from "react-icons/tb";
-import { Clock, Receipt, RotateCcw } from "lucide-react";
+import { Clock, Receipt, RotateCcw, CreditCard } from "lucide-react";
 import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 import {
   availableOptions,
@@ -57,6 +57,8 @@ import { SelectItem } from "@nextui-org/react";
 import OrderProgressModal from "./OrderProgressModal";
 import PaymentSummaryModal from "./PaymentSummaryModal";
 import RefundPaymentModal from "./RefundPaymentModal";
+import OrderHistoryModal from "./OrderHistoryModal";
+import { History } from "lucide-react";
 import {
   completeOrder,
   completeOrderWithPayment,
@@ -94,6 +96,8 @@ interface OrderItem {
   }[];
   amountRemaining?: number;
   amountPaid?: number;
+  isVatApplied?: boolean;
+  vatRate?: number;
 }
 
 interface OrderCategory {
@@ -185,6 +189,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenPaymentSummary, setIsOpenPaymentSummary] =
     React.useState<boolean>(false);
   const [isOpenRefund, setIsOpenRefund] = React.useState<boolean>(false);
+  const [isOpenHistoryModal, setIsOpenHistoryModal] =
+    React.useState<boolean>(false);
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] =
@@ -358,6 +364,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setIsOpenRefund(!isOpenRefund);
   };
 
+  const toggleHistoryModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenHistoryModal(!isOpenHistoryModal);
+  };
+
   const [paymentOption, setPaymentOption] = React.useState<"full" | "partial">(
     "full"
   );
@@ -479,35 +490,27 @@ const OrdersList: React.FC<OrdersListProps> = ({
         type: "success",
       });
 
-      // Invalidate all order-related queries to force refetch from backend
-      await queryClient.invalidateQueries({
-        queryKey: ["orderCategories"],
-        refetchType: "active",
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["orderDetails"],
-        refetchType: "active",
-      });
-      await queryClient.invalidateQueries({
-        queryKey: ["orders"],
-        refetchType: "active",
-      });
-
-      // Force immediate refetch of all active queries
-      await queryClient.refetchQueries({
-        queryKey: ["orderCategories"],
-        type: "active",
-      });
-      await queryClient.refetchQueries({
-        queryKey: ["orderDetails"],
-        type: "active",
-      });
-      await queryClient.refetchQueries({
-        queryKey: ["orders"],
-        type: "active",
-      });
-
+      // Close modal immediately
       setIsOpenPaymentModal(false);
+
+      // Run cache invalidation in background (non-blocking)
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["orderCategories"],
+          refetchType: "active",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["orderDetails"],
+          refetchType: "active",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["orders"],
+          refetchType: "active",
+        }),
+      ]).catch(() => {
+        // Silently handle cache invalidation errors
+      });
+
       refetch();
     } else if (data?.data?.error) {
       notify({
@@ -645,7 +648,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
           );
         case "amountRemaining":
           return (
-            <div className="text-textGrey text-sm">
+            <div className={`text-sm ${order.amountRemaining !== undefined && order.amountRemaining < 0 ? "text-red-500" : "text-textGrey"}`}>
               <p>
                 {order.amountRemaining !== undefined
                   ? formatPrice(order.amountRemaining)
@@ -751,7 +754,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             aria-label="Confirm Payment"
                           >
                             <div className="flex gap-3 items-center text-grey500">
-                              <Receipt className="w-[18px] h-[18px]" />
+                              <CreditCard className="w-[18px] h-[18px]" />
                               <p>Make Payment</p>
                             </div>
                           </DropdownItem>
@@ -775,6 +778,19 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           </DropdownItem>
                         )) as any
                     }
+
+                    {options && options.includes("Order History") && (
+                      <DropdownItem
+                        key="order-history"
+                        onClick={() => toggleHistoryModal(order)}
+                        aria-label="Order History"
+                      >
+                        <div className="flex gap-3 items-center text-grey500">
+                          <History className="w-[18px] h-[18px]" />
+                          <p>Order History</p>
+                        </div>
+                      </DropdownItem>
+                    )}
 
                     {
                       ((role === 0 ||
@@ -920,8 +936,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
                                   aria-label="Confirm Payment"
                                 >
                                   <div className="flex gap-3 items-center text-grey500">
-                                    <Receipt className="w-[18px] h-[18px]" />
-                                    <p>Confirm Payment</p>
+                                    <CreditCard className="w-[18px] h-[18px]" />
+                                    <p>Make Payment</p>
                                   </div>
                                 </DropdownItem>
                               )) as any
@@ -937,6 +953,20 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               <p>Refund Payment</p>
                             </div>
                           </DropdownItem>
+
+                          {availableOptions[statusDataMap[order.status]]?.includes("Order History") && (
+                            <DropdownItem
+                              key="order-history"
+                              onClick={() => toggleHistoryModal(order)}
+                              aria-label="Order History"
+                            >
+                              <div className="flex gap-3 items-center text-grey500">
+                                <History className="w-[18px] h-[18px]" />
+                                <p>Order History</p>
+                              </div>
+                            </DropdownItem>
+                          )}
+
                           {
                             ((role === 0 ||
                               userRolePermissions?.canEditOrder === true) &&
@@ -1401,10 +1431,18 @@ const OrdersList: React.FC<OrdersListProps> = ({
         orderId={singleOrder?.id || ""}
         totalAmount={singleOrder?.totalAmount || 0}
         maxRefundAmount={singleOrder?.amountPaid || 0}
+        isVatApplied={singleOrder?.isVatApplied ?? false}
+        vatPercentage={singleOrder?.vatRate ?? 0}
         onSuccess={() => {
           refetch();
           queryClient.invalidateQueries({ queryKey: ["orders"] });
         }}
+      />
+      <OrderHistoryModal
+        isOpen={isOpenHistoryModal}
+        onOpenChange={setIsOpenHistoryModal}
+        orderId={singleOrder?.id || null}
+        orderReference={singleOrder?.reference}
       />
     </section>
   );
