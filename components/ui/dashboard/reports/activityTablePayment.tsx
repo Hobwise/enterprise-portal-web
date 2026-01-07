@@ -29,68 +29,81 @@ import PDF from '../../../../public/assets/icons/pdf-icon.png';
 import { PaginationComponent } from './data';
 
 const INITIAL_VISIBLE_COLUMNS4 = [
-  'customer',
-  'treatedBy',
-  'totalAmount',
-  'reference',
-  'paymentMethod',
-  'status',
+  "customer",
+  "orderId",
+  "treatedBy",
+  "totalAmount",
+  "quickResponseName",
+  "paymentMethod",
+  "paymentDirection",
+  "paymentType",
+  "paymentReference",
+  "confirmedBy",
+  "status",
+  "dateCreated",
 ];
 const INITIAL_VISIBLE_COLUMNS5 = [
-  'lastRecordDateTime',
-  'paymentCount',
-  'paymentMethod',
-  'totalAmount',
+  "paymentMethod",
+  "numberOfPayments",
+  "creditCount",
+  "debitCount",
+  "totalCredits",
+  "totalDebits",
+  "totalAmountProcessed",
+  "lastRecordDateTime",
 ];
 
 const INITIAL_VISIBLE_COLUMNS6 = [
-  'confirmedAmount',
-  'dateUpdated',
-  'numberOfOrders',
-  'pendingAmount',
-  'quickResponseName',
-  'totalAmount',
+  "confirmedAmount",
+  "dateUpdated",
+  "numberOfOrders",
+  "pendingAmount",
+  "quickResponseName",
+  "totalAmount",
 ];
 
 const INITIAL_VISIBLE_COLUMNS18 = [
-  'date',
-  'totalCredits',
-  'totalDebits',
-  'netMovement',
+  "date",
+  "totalCredits",
+  "totalDebits",
+  "netMovement",
 ];
 
-const INITIAL_VISIBLE_COLUMNS19 = [
-  'date',
-  'grossRevenue',
-  'refunds',
-  'discounts',
-  'taxes',
-  'netRevenue',
-];
+const INITIAL_VISIBLE_COLUMNS19 = ["period", "netRevenue"];
 
 const INITIAL_VISIBLE_COLUMNS20 = [
-  'orderId',
-  'customer',
-  'orderDate',
-  'orderTotal',
-  'totalPaid',
-  'outstanding',
-  'daysOverdue',
+  "orderId",
+  "customer",
+  "orderDate",
+  "orderTotal",
+  "totalPaid",
+  "outstanding",
+  "treatedBy",
 ];
 
 const columns4 = [
   { name: "CUSTOMER NAME", uid: "customer" },
+  { name: "ORDER ID", uid: "orderId" },
   { name: "TREATED BY", uid: "treatedBy" },
   { name: "TOTAL AMOUNT", uid: "totalAmount" },
-  { name: "PAYMENT REFERENCE", uid: "paymentReference" },
+  { name: "QUICK RESPONSE NAME", uid: "quickResponseName" },
   { name: "PAYMENT METHOD", uid: "paymentMethod" },
+  { name: "PAYMENT DIRECTION", uid: "paymentDirection" },
+  { name: "PAYMENT TYPE", uid: "paymentType" },
+  { name: "PAYMENT REFERENCE", uid: "paymentReference" },
+  { name: "CONFIRMED BY", uid: "confirmedBy" },
   { name: "STATUS", uid: "status" },
+  { name: "DATE CREATED", uid: "dateCreated" },
 ];
 
 const columns5 = [
   { name: "PAYMENT METHOD", uid: "paymentMethod" },
-  { name: "Number Of Payments", uid: "numberOfPayments" },
-  { name: "TOTAL AMOUNT PROCESSED", uid: "totalAmountProcessed" },
+  { name: "NUMBER OF PAYMENTS", uid: "numberOfPayments" },
+  { name: "CREDIT COUNT", uid: "creditCount" },
+  { name: "DEBIT COUNT", uid: "debitCount" },
+  { name: "TOTAL CREDITS", uid: "totalCredits" },
+  { name: "TOTAL DEBITS", uid: "totalDebits" },
+  { name: "NET AMOUNT PROCESSED", uid: "totalAmountProcessed" },
   { name: "DATE UPDATED", uid: "lastRecordDateTime" },
 ];
 const columns6 = [
@@ -109,11 +122,7 @@ const columns18 = [
 ];
 
 const columns19 = [
-  { name: "DATE", uid: "date" },
-  { name: "GROSS REVENUE", uid: "grossRevenue" },
-  { name: "REFUNDS", uid: "refunds" },
-  { name: "DISCOUNTS", uid: "discounts" },
-  { name: "TAXES", uid: "taxes" },
+  { name: "PERIOD", uid: "period" },
   { name: "NET REVENUE", uid: "netRevenue" },
 ];
 
@@ -124,7 +133,7 @@ const columns20 = [
   { name: "ORDER TOTAL", uid: "orderTotal" },
   { name: "TOTAL PAID", uid: "totalPaid" },
   { name: "OUTSTANDING", uid: "outstanding" },
-  { name: "DAYS OVERDUE", uid: "daysOverdue" },
+  { name: "TREATED BY", uid: "treatedBy" },
 ];
 
 const ActivityTablePayment = ({
@@ -170,7 +179,7 @@ const ActivityTablePayment = ({
     }
     if (reportType === 19) {
       return {
-        data: data?.netRevenue || [],
+        data: data?.netRevenues || [],
         column: columns19,
         visibleColumn: INITIAL_VISIBLE_COLUMNS19,
       };
@@ -242,9 +251,14 @@ const ActivityTablePayment = ({
         item?.lastRecordDateTime?.toLowerCase().includes(searchQuery) ||
         item?.reference?.toLowerCase().includes(searchQuery) ||
         item?.paymentMethod?.toLowerCase().includes(searchQuery) ||
+        item?.paymentDirection?.toLowerCase().includes(searchQuery) ||
+        item?.paymentType?.toLowerCase().includes(searchQuery) ||
+        item?.confirmedBy?.toLowerCase().includes(searchQuery) ||
         item?.status?.toLowerCase().includes(searchQuery) ||
         String(item?.numberOfOrders)?.toLowerCase().includes(searchQuery) ||
         String(item?.numberOfPayments)?.toLowerCase().includes(searchQuery) ||
+        String(item?.creditCount)?.toLowerCase().includes(searchQuery) ||
+        String(item?.debitCount)?.toLowerCase().includes(searchQuery) ||
         item?.dateCreated?.toLowerCase().includes(searchQuery) ||
         item?.confirmedSalesAmount?.toLowerCase().includes(searchQuery) ||
         item?.confirmedSalesAmount?.toLowerCase().includes(searchQuery) ||
@@ -254,16 +268,13 @@ const ActivityTablePayment = ({
         item?.totalCredits?.toLowerCase().includes(searchQuery) ||
         item?.totalDebits?.toLowerCase().includes(searchQuery) ||
         item?.netMovement?.toLowerCase().includes(searchQuery) ||
-        item?.grossRevenue?.toLowerCase().includes(searchQuery) ||
-        item?.refunds?.toLowerCase().includes(searchQuery) ||
-        item?.discounts?.toLowerCase().includes(searchQuery) ||
-        item?.taxes?.toLowerCase().includes(searchQuery) ||
+        item?.period?.toLowerCase().includes(searchQuery) ||
         item?.netRevenue?.toLowerCase().includes(searchQuery) ||
         item?.orderId?.toLowerCase().includes(searchQuery) ||
         item?.orderDate?.toLowerCase().includes(searchQuery) ||
         item?.orderTotal?.toLowerCase().includes(searchQuery) ||
         item?.outstanding?.toLowerCase().includes(searchQuery) ||
-        String(item?.daysOverdue)?.toLowerCase().includes(searchQuery)
+        item?.treatedBy?.toLowerCase().includes(searchQuery)
     );
 
     return filteredData;
@@ -306,6 +317,36 @@ const ActivityTablePayment = ({
         return (
           <div className="flex font-medium text-black items-center gap-2 text-sm cursor-pointer">
             <span>{payment.placedByName}</span>
+          </div>
+        );
+      case "paymentMethod":
+        return (
+          <div className="font-medium text-black text-sm">
+            <p>{payment.paymentMethod}</p>
+          </div>
+        );
+      case "numberOfPayments":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.numberOfPayments}</p>
+          </div>
+        );
+      case "totalAmountProcessed":
+        return (
+          <div className="text-textGrey text-sm font-semibold">
+            <p>{payment.netAmountProcessed || payment.totalAmountProcessed}</p>
+          </div>
+        );
+      case "creditCount":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.creditCount}</p>
+          </div>
+        );
+      case "debitCount":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.debitCount}</p>
           </div>
         );
       case "quickResponseName":
@@ -370,6 +411,30 @@ const ActivityTablePayment = ({
         );
       case "orderID":
         return <div className="text-textGrey text-sm">{payment.reference}</div>;
+      case "paymentReference":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.paymentReference}</p>
+          </div>
+        );
+      case "paymentDirection":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.paymentDirection}</p>
+          </div>
+        );
+      case "paymentType":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.paymentType}</p>
+          </div>
+        );
+      case "confirmedBy":
+        return (
+          <div className="text-textGrey text-sm">
+            <p>{payment.confirmedBy || "-"}</p>
+          </div>
+        );
 
       case "status":
         return (
@@ -430,6 +495,12 @@ const ActivityTablePayment = ({
             <p>{payment.taxes}</p>
           </div>
         );
+      case "period":
+        return (
+          <div className="text-textGrey text-sm">
+            {moment(payment.period).format("MMMM Do YYYY")}
+          </div>
+        );
       case "netRevenue":
         return (
           <div className="text-textGrey text-sm font-semibold">
@@ -457,7 +528,7 @@ const ActivityTablePayment = ({
       case "totalPaid":
         return (
           <div className="text-textGrey text-sm">
-            <p>{payment.totalPaid}</p>
+            <p>{payment.paidSoFar || payment.totalPaid}</p>
           </div>
         );
       case "outstanding":
@@ -466,10 +537,10 @@ const ActivityTablePayment = ({
             <p>{payment.outstanding}</p>
           </div>
         );
-      case "daysOverdue":
+      case "treatedBy":
         return (
           <div className="text-textGrey text-sm">
-            <p>{payment.daysOverdue}</p>
+            <p>{payment.treatedBy || "-"}</p>
           </div>
         );
 
@@ -550,63 +621,65 @@ const ActivityTablePayment = ({
           </p>
           <p className="text-xs text-danger-500">{data?.message}</p>
         </div>
-        <Table
-          radius="lg"
-          isCompact
-          removeWrapper
-          allowsSorting
-          aria-label="list of orders"
-          bottomContent={
-            isLoading || items?.length === 0 ? (
-              ""
-            ) : (
-              <PaginationComponent
-                data={items}
-                page={page}
-                setPage={setPage}
-                pages={pages}
-              />
-            )
-          }
-          bottomContentPlacement="outside"
-          classNames={classNames}
-          selectedKeys={selectedKeys}
-          // selectionMode='multiple'
-          sortDescriptor={sortDescriptor}
-          // topContent={topContent}
-          topContentPlacement="outside"
-          onSelectionChange={setSelectedKeys}
-          onSortChange={setSortDescriptor}
-        >
-          <TableHeader columns={columns?.column}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === "actions" ? "center" : "start"}
-                allowsSorting={column.sortable}
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            style={{
-              textAlign: "center",
-            }}
-            emptyContent={"No items found"}
-            items={sortedItems || []}
-            isLoading={isLoading}
-            loadingContent={<SmallLoader />}
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            allowsSorting
+            aria-label="list of orders"
+            bottomContent={
+              isLoading || items?.length === 0 ? (
+                ""
+              ) : (
+                <PaginationComponent
+                  data={items}
+                  page={page}
+                  setPage={setPage}
+                  pages={pages}
+                />
+              )
+            }
+            bottomContentPlacement="outside"
+            classNames={classNames}
+            selectedKeys={selectedKeys}
+            // selectionMode='multiple'
+            sortDescriptor={sortDescriptor}
+            // topContent={topContent}
+            topContentPlacement="outside"
+            onSelectionChange={setSelectedKeys}
+            onSortChange={setSortDescriptor}
           >
-            {(item: any, index: any) => (
-              <TableRow key={`row-${index}`}>
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            <TableHeader columns={columns?.column}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.uid === "actions" ? "center" : "start"}
+                  allowsSorting={column.sortable}
+                >
+                  {column.name}
+                </TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              style={{
+                textAlign: "center",
+              }}
+              emptyContent={"No items found"}
+              items={sortedItems || []}
+              isLoading={isLoading}
+              loadingContent={<SmallLoader />}
+            >
+              {(item: any, index: any) => (
+                <TableRow key={`row-${index}`}>
+                  {(columnKey) => (
+                    <TableCell>{renderCell(item, columnKey)}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </section>
 
       <Modal
