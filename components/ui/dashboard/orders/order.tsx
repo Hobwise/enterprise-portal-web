@@ -43,6 +43,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from "@/lib/utils";
+import { isPOSUser } from "@/lib/userTypeUtils";
 import moment from "moment";
 import { FaCommentDots } from "react-icons/fa6";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -170,6 +171,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const { userRolePermissions, role } = usePermission();
   const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const isPOSUserState = isPOSUser(userInformation);
 
   const [singleOrder, setSingleOrder] = React.useState<OrderItem | null>(null);
   const [isOpenCancelOrder, setIsOpenCancelOrder] =
@@ -727,6 +729,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
                     {
                       ((role === 0 ||
+                        isPOSUserState ||
                         userRolePermissions?.canEditOrder === true) &&
                         options &&
                         options.includes("Payment Summary") && (
@@ -745,6 +748,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
                     {
                       ((role === 0 ||
+                        isPOSUserState ||
                         userRolePermissions?.canEditOrder === true) &&
                         options &&
                         options.includes("Confirm Payment") && (
@@ -923,6 +927,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
                           {
                             ((role === 0 ||
+                              isPOSUserState ||
                               userRolePermissions?.canEditOrder === true) &&
                               availableOptions[statusDataMap[order.status]] &&
                               availableOptions[
