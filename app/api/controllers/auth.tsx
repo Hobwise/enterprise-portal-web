@@ -39,9 +39,15 @@ const additionalUserSchema = z.object({
   lastName: inputNameValidation("Last name"),
   email: emailValidation(),
   role: z.number().min(0, "Select a role"),
-  assignmentId: z.string().min(1, "Select a position"),
+  assignmentId: z.string().optional(),
   password: passwordValidation(),
-});
+}).refine(
+  (data) => data.role !== 1 || (data.assignmentId && data.assignmentId.length > 0),
+  {
+    message: "Select a position",
+    path: ["assignmentId"],
+  }
+);
 
 const loginSchema = z.object({
   email: emailValidation(),

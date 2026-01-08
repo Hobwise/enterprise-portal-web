@@ -762,8 +762,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     }
 
                     {
-                      ((role === 0 ||
-                        userRolePermissions?.canEditOrder === true) &&
+                      (role === 0 &&
                         options &&
                         options.includes("Refund Order") && (
                           <DropdownItem
@@ -793,8 +792,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     )}
 
                     {
-                      ((role === 0 ||
-                        userRolePermissions?.canEditOrder === true) &&
+                      (role === 0 &&
                         options &&
                         options.includes("Cancel Order") && (
                           <DropdownItem
@@ -943,16 +941,22 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               )) as any
                           }
 
-                          <DropdownItem
-                            key="refund-order"
-                            onClick={() => toggleRefundModal(order)}
-                            aria-label="Refund Order"
-                          >
-                            <div className="flex gap-3 items-center text-grey500">
-                              <RotateCcw className="w-[18px] h-[18px]" />
-                              <p>Refund Payment</p>
-                            </div>
-                          </DropdownItem>
+                          {role === 0 &&
+                            availableOptions[statusDataMap[order.status]] &&
+                            availableOptions[
+                              statusDataMap[order.status]
+                            ].includes("Refund Order") && (
+                              <DropdownItem
+                                key="refund-order"
+                                onClick={() => toggleRefundModal(order)}
+                                aria-label="Refund Order"
+                              >
+                                <div className="flex gap-3 items-center text-grey500">
+                                  <RotateCcw className="w-[18px] h-[18px]" />
+                                  <p>Refund Payment</p>
+                                </div>
+                              </DropdownItem>
+                            )}
 
                           {availableOptions[statusDataMap[order.status]]?.includes("Order History") && (
                             <DropdownItem
@@ -968,8 +972,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           )}
 
                           {
-                            ((role === 0 ||
-                              userRolePermissions?.canEditOrder === true) &&
+                            (role === 0 &&
                               availableOptions[statusDataMap[order.status]] &&
                               availableOptions[
                                 statusDataMap[order.status]

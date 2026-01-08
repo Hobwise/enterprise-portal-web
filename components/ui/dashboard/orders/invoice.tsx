@@ -117,6 +117,12 @@ const InvoiceModal = ({
                         {moment(singleOrder.dateCreated).format("MMM. D, YYYY, h:mma")}
                       </span>
                     </div>
+                    <div className="flex justify-between py-1">
+                      <span className="font-semibold text-black">Created Date</span>
+                      <span className="text-black">
+                        {moment().format("MMM. D, YYYY, h:mma")}
+                      </span>
+                    </div>
                   </div>
 
                   <Divider className="my-2"/>
