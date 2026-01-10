@@ -43,6 +43,7 @@ import {
   getJsonItemFromLocalStorage,
   notify,
 } from "@/lib/utils";
+import { isPOSUser } from "@/lib/userTypeUtils";
 import moment from "moment";
 import { FaCommentDots } from "react-icons/fa6";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -170,6 +171,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const { userRolePermissions, role } = usePermission();
   const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const isPOSUserState = isPOSUser(userInformation);
 
   const [singleOrder, setSingleOrder] = React.useState<OrderItem | null>(null);
   const [isOpenCancelOrder, setIsOpenCancelOrder] =
@@ -727,6 +729,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
                     {
                       ((role === 0 ||
+                        isPOSUserState ||
                         userRolePermissions?.canEditOrder === true) &&
                         options &&
                         options.includes("Payment Summary") && (
@@ -745,6 +748,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
                     {
                       ((role === 0 ||
+                        isPOSUserState ||
                         userRolePermissions?.canEditOrder === true) &&
                         options &&
                         options.includes("Confirm Payment") && (
@@ -762,8 +766,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     }
 
                     {
-                      ((role === 0 ||
-                        userRolePermissions?.canEditOrder === true) &&
+                      (role === 0 &&
                         options &&
                         options.includes("Refund Order") && (
                           <DropdownItem
@@ -793,8 +796,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     )}
 
                     {
-                      ((role === 0 ||
-                        userRolePermissions?.canEditOrder === true) &&
+                      (role === 0 &&
                         options &&
                         options.includes("Cancel Order") && (
                           <DropdownItem
@@ -925,6 +927,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
                           {
                             ((role === 0 ||
+                              isPOSUserState ||
                               userRolePermissions?.canEditOrder === true) &&
                               availableOptions[statusDataMap[order.status]] &&
                               availableOptions[
@@ -943,16 +946,22 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               )) as any
                           }
 
-                          <DropdownItem
-                            key="refund-order"
-                            onClick={() => toggleRefundModal(order)}
-                            aria-label="Refund Order"
-                          >
-                            <div className="flex gap-3 items-center text-grey500">
-                              <RotateCcw className="w-[18px] h-[18px]" />
-                              <p>Refund Payment</p>
-                            </div>
-                          </DropdownItem>
+                          {role === 0 &&
+                            availableOptions[statusDataMap[order.status]] &&
+                            availableOptions[
+                              statusDataMap[order.status]
+                            ].includes("Refund Order") && (
+                              <DropdownItem
+                                key="refund-order"
+                                onClick={() => toggleRefundModal(order)}
+                                aria-label="Refund Order"
+                              >
+                                <div className="flex gap-3 items-center text-grey500">
+                                  <RotateCcw className="w-[18px] h-[18px]" />
+                                  <p>Refund Payment</p>
+                                </div>
+                              </DropdownItem>
+                            )}
 
                           {availableOptions[statusDataMap[order.status]]?.includes("Order History") && (
                             <DropdownItem
@@ -968,8 +977,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           )}
 
                           {
-                            ((role === 0 ||
-                              userRolePermissions?.canEditOrder === true) &&
+                            (role === 0 &&
                               availableOptions[statusDataMap[order.status]] &&
                               availableOptions[
                                 statusDataMap[order.status]
