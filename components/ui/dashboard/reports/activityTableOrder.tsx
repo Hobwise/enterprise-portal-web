@@ -298,33 +298,9 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     };
 
     const [searchQuery, setSearchQuery] = useState("");
-    const [sortDescriptor, setSortDescriptor] = useState(() => {
-      // For Most Popular Items report (reportType === 1), sort by quantity in descending order
-      if (reportType === 1) {
-        return {
-          column: "totalQuantitySold",
-          direction: "descending",
-        };
-      }
-      // For Order Status Sales (reportType === 13), sort by numberOfOrders desc
-      if (reportType === 13) {
-        return {
-          column: "numberOfOrders",
-          direction: "descending",
-        };
-      }
-      // For Category Performance (reportType === 14), sort by rawTotalAmount desc if present, else totalOrders desc
-      if (reportType === 14) {
-        return {
-          column: "rawTotalAmount",
-          direction: "descending",
-        } as any;
-      }
-      // Default sorting for other reports
-      return {
-        column: "dateCreated",
-        direction: "ascending",
-      };
+    const [sortDescriptor, setSortDescriptor] = useState({
+      column: undefined,
+      direction: "ascending",
     });
 
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -409,9 +385,15 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     }, [page, filteredItems]);
 
     const sortedItems = useMemo(() => {
+      // Only sort if a column is selected
+      if (!sortDescriptor.column) {
+        return items;
+      }
+
+      const column = sortDescriptor.column as string;
       return [...items].sort((a, b) => {
-        const first = a[sortDescriptor.column];
-        const second = b[sortDescriptor.column];
+        const first = a[column];
+        const second = b[column];
         let cmp = 0;
 
         if (typeof first === "string" && typeof second === "string") {
@@ -740,7 +722,13 @@ const INITIAL_VISIBLE_COLUMNS2 = [
                 )
               }
               bottomContentPlacement="outside"
-              classNames={classNames}
+              classNames={{
+                ...classNames,
+                th: [
+                  ...(Array.isArray(classNames?.th) ? classNames.th : []),
+                  "sticky top-0 z-10 bg-white border-b border-divider",
+                ],
+              }}
               selectedKeys={selectedKeys}
               // selectionMode='multiple'
               sortDescriptor={sortDescriptor}

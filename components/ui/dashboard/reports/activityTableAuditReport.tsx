@@ -75,7 +75,7 @@ const ActivityTableAudit = ({
   isLoadingExport,
   exportFile,
 }: any) => {
-  const business = getJsonItemFromLocalStorage('business');
+  const business = getJsonItemFromLocalStorage("business");
 
   const columns = useMemo(() => {
     if (reportType === 11) {
@@ -102,10 +102,10 @@ const ActivityTableAudit = ({
   const [showMore, setShowMore] = useState(false);
   const [isOpenDownload, setIsOpenDownload] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortDescriptor, setSortDescriptor] = useState({
-    column: "dateCreated",
-    direction: "descending",
+    column: undefined,
+    direction: "ascending",
   });
 
   const toggleDownloadReport = () => {
@@ -119,7 +119,7 @@ const ActivityTableAudit = ({
     const cellValue = audit[columnKey];
 
     switch (columnKey) {
-      case 'firstName':
+      case "firstName":
         return (
           <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
             <span>
@@ -127,39 +127,39 @@ const ActivityTableAudit = ({
             </span>
           </div>
         );
-      case 'dateCreated':
+      case "dateCreated":
         return (
-          <div className='text-textGrey text-sm'>
-            {moment(audit.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
+          <div className="text-textGrey text-sm">
+            {moment(audit.dateCreated).format("MMMM Do YYYY, h:mm:ss a")}
           </div>
         );
-      case 'firstLoginTime':
+      case "firstLoginTime":
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             {audit.firstLoginTime
-              ? moment(audit.firstLoginTime).format('MMMM Do YYYY, h:mm:ss a')
-              : '-'}
+              ? moment(audit.firstLoginTime).format("MMMM Do YYYY, h:mm:ss a")
+              : "-"}
           </div>
         );
-      case 'lastSeenTime':
+      case "lastSeenTime":
         return (
-          <div className='text-textGrey text-sm'>
+          <div className="text-textGrey text-sm">
             {audit.lastSeenTime
-              ? moment(audit.lastSeenTime).format('MMMM Do YYYY, h:mm:ss a')
-              : '-'}
+              ? moment(audit.lastSeenTime).format("MMMM Do YYYY, h:mm:ss a")
+              : "-"}
           </div>
         );
-      case 'date':
-        return <div className='text-textGrey text-sm'>{audit.date || '-'}</div>;
-      case 'isSuccessful':
+      case "date":
+        return <div className="text-textGrey text-sm">{audit.date || "-"}</div>;
+      case "isSuccessful":
         return (
           <Chip
-            className='capitalize'
-            color={audit.isSuccessful ? 'success' : 'danger'}
-            size='sm'
-            variant='bordered'
+            className="capitalize"
+            color={audit.isSuccessful ? "success" : "danger"}
+            size="sm"
+            variant="bordered"
           >
-            {audit.isSuccessful ? 'Successful' : 'Failed'}
+            {audit.isSuccessful ? "Successful" : "Failed"}
           </Chip>
         );
 
@@ -211,20 +211,26 @@ const ActivityTableAudit = ({
   }, [page, filteredItems]);
 
   const sortedItems = useMemo(() => {
+    // Only sort if a column is selected
+    if (!sortDescriptor.column) {
+      return items;
+    }
+
+    const column = sortDescriptor.column as string;
     return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
+      const first = a[column];
+      const second = b[column];
       let cmp = 0;
 
-      if (typeof first === 'string' && typeof second === 'string') {
+      if (typeof first === "string" && typeof second === "string") {
         cmp = first.localeCompare(second);
-      } else if (typeof first === 'number' && typeof second === 'number') {
+      } else if (typeof first === "number" && typeof second === "number") {
         cmp = first - second;
       } else if (first instanceof Date && second instanceof Date) {
         cmp = first.getTime() - second.getTime();
       }
 
-      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
     });
   }, [sortDescriptor, items]);
 
@@ -242,28 +248,28 @@ const ActivityTableAudit = ({
 
   return (
     <>
-      <div className='w-full mt-4 flex justify-between  gap-3'>
+      <div className="w-full mt-4 flex justify-between  gap-3">
         <CustomInput
-          classnames={'w-[242px]'}
-          label=''
-          size='md'
+          classnames={"w-[242px]"}
+          label=""
+          size="md"
           value={searchQuery}
           onChange={handleSearchChange}
           isRequired={false}
           startContent={<IoSearchOutline />}
-          type='text'
-          placeholder='Search here...'
+          type="text"
+          placeholder="Search here..."
         />
 
-        <div className='flex gap-3'>
-          <div className='flex items-center'>
+        <div className="flex gap-3">
+          <div className="flex items-center">
             {isLoadingExport && <SmallLoader />}
             <div
               onClick={() => toggleDownloadReport()}
-              className='py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 '
+              className="py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 "
             >
-              <div className='flex gap-2 items-center justify-center'>
-                <MdOutlineFileDownload className='text-[22px]' />
+              <div className="flex gap-2 items-center justify-center">
+                <MdOutlineFileDownload className="text-[22px]" />
                 <p>Export</p>
               </div>
             </div>
@@ -285,41 +291,41 @@ const ActivityTableAudit = ({
       </div>
       <section
         ref={reportRef}
-        className='border border-primaryGrey rounded-md mt-2 p-3'
+        className="border border-primaryGrey rounded-md mt-2 p-3"
       >
-        <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>{reportName}</p>
-          <p className='text-base font-semibold'>
-            {business[0]?.businessName}, {business[0]?.city}{' '}
+        <div className=" flex flex-col items-center mb-4">
+          <p className="text-xl font-bold capitalize">{reportName}</p>
+          <p className="text-base font-semibold">
+            {business[0]?.businessName}, {business[0]?.city}{" "}
             {business[0]?.state}
           </p>
-          <p className='text-sm text-grey600'>
-            {selectedValue === 'Custom date' && (
-              <p className='text-default-500 text-sm'>
+          <p className="text-sm text-grey600">
+            {selectedValue === "Custom date" && (
+              <p className="text-default-500 text-sm">
                 {value.start &&
                   moment(formatDateTimeForPayload3(value?.start)).format(
-                    'MMMM Do YYYY'
+                    "MMMM Do YYYY"
                   )}
-                {' - '}
+                {" - "}
                 {value.end &&
                   moment(formatDateTimeForPayload3(value?.end)).format(
-                    'MMMM Do YYYY'
+                    "MMMM Do YYYY"
                   )}
               </p>
             )}
           </p>
-          <p className='text-xs text-danger-500'>{data?.message}</p>
+          <p className="text-xs text-danger-500">{data?.message}</p>
         </div>
         <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
           <Table
-            radius='lg'
+            radius="lg"
             isCompact
             removeWrapper
             allowsSorting
-            aria-label='list of audit reports'
+            aria-label="list of audit reports"
             bottomContent={
               isLoading ? (
-                ''
+                ""
               ) : (
                 <PaginationComponent
                   data={items}
@@ -329,11 +335,17 @@ const ActivityTableAudit = ({
                 />
               )
             }
-            bottomContentPlacement='outside'
-            classNames={classNames}
+            bottomContentPlacement="outside"
+            classNames={{
+              ...classNames,
+              th: [
+                ...(Array.isArray(classNames?.th) ? classNames.th : []),
+                "sticky top-0 z-10 bg-white border-b border-divider",
+              ],
+            }}
             selectedKeys={selectedKeys}
             sortDescriptor={sortDescriptor}
-            topContentPlacement='outside'
+            topContentPlacement="outside"
             onSelectionChange={setSelectedKeys}
             onSortChange={setSortDescriptor}
           >
@@ -341,7 +353,7 @@ const ActivityTableAudit = ({
               {(column) => (
                 <TableColumn
                   key={column.uid}
-                  align={column.uid === 'actions' ? 'center' : 'start'}
+                  align={column.uid === "actions" ? "center" : "start"}
                   allowsSorting={column.sortable}
                 >
                   {column.name}
@@ -350,9 +362,9 @@ const ActivityTableAudit = ({
             </TableHeader>
             <TableBody
               style={{
-                textAlign: 'center',
+                textAlign: "center",
               }}
-              emptyContent={'No items found'}
+              emptyContent={"No items found"}
               items={sortedItems || []}
               isLoading={isLoading}
               loadingContent={<SmallLoader />}
@@ -370,42 +382,42 @@ const ActivityTableAudit = ({
       </section>
 
       <Modal
-        className='text-black'
+        className="text-black"
         isOpen={isOpenDownload}
         onOpenChange={toggleDownloadReport}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className='flex flex-col gap-1'>
+              <ModalHeader className="flex flex-col gap-1">
                 Choose a method to export
               </ModalHeader>
-              <ModalBody className='mb-6'>
+              <ModalBody className="mb-6">
                 <div
                   onClick={() => {
                     exportFile(0);
                     toggleDownloadReport();
                   }}
-                  className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
+                  className="flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md"
                 >
-                  <div className='flex gap-2'>
-                    <Image src={PDF} alt='pdf icon' />
+                  <div className="flex gap-2">
+                    <Image src={PDF} alt="pdf icon" />
                     <p>Export as PDF</p>
                   </div>
-                  <IoIosArrowForward className='text-grey600' />
+                  <IoIosArrowForward className="text-grey600" />
                 </div>
                 <div
                   onClick={() => {
                     toggleDownloadReport();
                     exportFile(1);
                   }}
-                  className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
+                  className="flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md"
                 >
-                  <div className='flex gap-2'>
-                    <Image src={CSV} alt='pdf icon' />
+                  <div className="flex gap-2">
+                    <Image src={CSV} alt="pdf icon" />
                     <p>Export as CSV</p>
                   </div>
-                  <IoIosArrowForward className='text-grey600' />
+                  <IoIosArrowForward className="text-grey600" />
                 </div>
               </ModalBody>
             </>
