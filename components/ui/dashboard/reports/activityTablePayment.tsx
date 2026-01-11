@@ -227,7 +227,7 @@ const ActivityTablePayment = ({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortDescriptor, setSortDescriptor] = useState({
-    column: "dateCreated",
+    column: undefined,
     direction: "ascending",
   });
 
@@ -298,9 +298,15 @@ const ActivityTablePayment = ({
   }, [page, filteredItems]);
 
   const sortedItems = useMemo(() => {
+    // Only sort if a column is selected
+    if (!sortDescriptor.column) {
+      return items;
+    }
+
+    const column = sortDescriptor.column as string;
     return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
+      const first = a[column];
+      const second = b[column];
       let cmp = 0;
 
       if (typeof first === "string" && typeof second === "string") {
@@ -677,7 +683,13 @@ const ActivityTablePayment = ({
               )
             }
             bottomContentPlacement="outside"
-            classNames={classNames}
+            classNames={{
+              ...classNames,
+              th: [
+                ...(Array.isArray(classNames?.th) ? classNames.th : []),
+                "sticky top-0 z-10 bg-white border-b border-divider",
+              ],
+            }}
             selectedKeys={selectedKeys}
             // selectionMode='multiple'
             sortDescriptor={sortDescriptor}
