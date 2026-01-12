@@ -1,7 +1,7 @@
 'use client';
 import Error from '@/components/error';
 import useSingleCampaign from '@/hooks/cachedEndpoints/useSingleCampaign';
-import { CustomLoading } from '@/lib/utils';
+import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 import { Button } from '@nextui-org/react';
 import moment from 'moment';
 import Image from 'next/image';

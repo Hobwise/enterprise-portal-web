@@ -11,6 +11,7 @@ import { CustomButton } from "@/components/customButton";
 import { CustomTextArea } from "@/components/customTextArea";
 import SelectInput from "@/components/selectInput";
 import useMenu from "@/hooks/cachedEndpoints/useMenu";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import {
   SmallLoader,
   THREEMB,
@@ -30,6 +31,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useQueryClient } from '@tanstack/react-query';
 import {
   MdOutlineAddPhotoAlternate,
   MdOutlineFileDownload,
@@ -38,15 +40,38 @@ import Success from "../../../../public/assets/images/success.png";
 import AddMultipleMenu from "./add-mulitple-menuItem/addMultipleMenu";
 import SelectMenu from "./add-mulitple-menuItem/selectMenu";
 
+// Define types for better type safety
+interface MenuItem {
+  id: string;
+  name: string;
+  label: string;
+  value: string;
+}
+
+interface ApiResponse {
+  data?: {
+    isSuccessful?: boolean;
+    data?: any;
+    error?: string;
+  };
+  errors?: {
+    itemName?: string[];
+    price?: string[];
+    menuID?: string[];
+  };
+}
+
 const AddItemToMenu = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { refetch } = useMenu();
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState("");
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [imageError, setImageError] = useState("");
-  const [response, setResponse] = useState(null);
+  const [response, setResponse] = useState<ApiResponse | null>(null);
   const [selectedImage, setSelectedImage] = useState("");
   const [activeScreen, setActiveScreen] = useState(1);
   const [isOpenMultipleMenu, setIsOpenMultipleMenu] = useState(false);
@@ -55,7 +80,7 @@ const AddItemToMenu = () => {
     setIsOpenMultipleMenu(!isOpenMultipleMenu);
   };
 
-  const [menu, setMenu] = useState([]);
+  const [menu, setMenu] = useState<MenuItem[]>([]);
   const [menuItem, setMenuItem] = useState<payloadMenuItem>({
     itemDescription: "",
     itemName: "",
@@ -66,11 +91,12 @@ const AddItemToMenu = () => {
   });
 
   const businessInformation = getJsonItemFromLocalStorage("business");
+  
   const getMenuName = async () => {
     const data = await getMenu(businessInformation[0]?.businessId);
 
     if (data?.data?.isSuccessful) {
-      const newData = data?.data?.data.map((item) => ({
+      const newData = data?.data?.data.map((item: any) => ({
         ...item,
         label: item.name,
         value: item.id,
@@ -86,7 +112,7 @@ const AddItemToMenu = () => {
     }
   };
 
-  const menuFileUpload = async (formData: FormData, file) => {
+  const menuFileUpload = async (formData: FormData, file: File) => {
     setIsLoadingImage(true);
     const data = await uploadFile(businessInformation[0]?.businessId, formData);
     setIsLoadingImage(false);
@@ -103,6 +129,7 @@ const AddItemToMenu = () => {
       });
     }
   };
+  
   const removeUploadedFile = async () => {
     const data = await deleteFile(
       businessInformation[0]?.businessId,
@@ -122,7 +149,7 @@ const AddItemToMenu = () => {
     }
   };
 
-  const handleImageChange = async (event: any) => {
+  const handleImageChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
       const file = event.target.files[0];
       if (file.size > THREEMB) {
@@ -136,7 +163,7 @@ const AddItemToMenu = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setResponse(null);
     const { name, value } = e.target;
     setMenuItem((prevFormData) => ({
@@ -144,6 +171,7 @@ const AddItemToMenu = () => {
       [name]: value,
     }));
   };
+  
   const postMenuItem = async () => {
     // if (!selectedImage) {
     //   return setImageError('Upload an image');
@@ -164,10 +192,17 @@ const AddItemToMenu = () => {
       payload
     );
 
-    setResponse(data);
+    setResponse(data as ApiResponse);
 
     setIsLoading(false);
 
+    // Check if data has errors (validation errors)
+    if (data && 'errors' in data) {
+      // Handle validation errors
+      return;
+    }
+
+    // Check if data has successful response
     if (data?.data?.isSuccessful) {
       onOpen();
       setMenuItem({
@@ -177,6 +212,11 @@ const AddItemToMenu = () => {
         price: 0,
         imageReference: "",
       });
+      
+      // Invalidate queries to update menu counts and refresh menu items
+      await queryClient.invalidateQueries('menuCategories');
+      await queryClient.invalidateQueries(['menuItems']);
+      await refetch();
 
       // setSelectedFile();
       setSelectedImage("");
@@ -189,9 +229,37 @@ const AddItemToMenu = () => {
     }
   };
 
+  // Handle window focus to refetch categories
+  useEffect(() => {
+    const handleWindowFocus = () => {
+      getMenuName();
+    };
+
+    // Add event listener for window focus
+    window.addEventListener('focus', handleWindowFocus);
+
+    // Cleanup event listener on component unmount
+    return () => {
+      window.removeEventListener('focus', handleWindowFocus);
+    };
+  }, []);
+
   useEffect(() => {
     getMenuName();
   }, []);
+
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canCreateMenu) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
+  // Check if user has permission to create menu items
+  if (role !== 0 && !userRolePermissions?.canCreateMenu) {
+    return null; // Will redirect via useEffect
+  }
+
   return (
     <>
       <div className="flex md:flex-row flex-col justify-between md:items-center items-start">

@@ -1,7 +1,7 @@
 'use client';
-import { getBookingsByBusiness } from '@/app/api/controllers/dashboard/bookings';
+import { getBookingCategories, getBookingDetails } from '@/app/api/controllers/dashboard/bookings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
@@ -19,21 +19,13 @@ interface Booking {
   statusComment: string;
 }
 
-interface BookingGroup {
+interface BookingCategory {
   name: string;
-  bookings: Booking[];
   totalCount: number;
-  pageSize: number;
-  currentPage: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
+  bookings: Booking[];
 }
 
 const useBookings = (
-  filterType: number,
-  startDate?: string,
-  endDate?: string,
   options?: { enabled: boolean }
 ) => {
   const { page, rowsPerPage, tableStatus } = useGlobalContext();
@@ -42,36 +34,55 @@ const useBookings = (
   const getAllBookings = async ({ queryKey }: { queryKey: any }) => {
     const [
       _key,
-      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+      { page, rowsPerPage, tableStatus },
     ] = queryKey;
 
     try {
-      const responseData = await getBookingsByBusiness(
-        businessInformation[0]?.businessId,
-        page,
-        rowsPerPage,
-        tableStatus,
-        filterType,
-        startDate,
-        endDate
+      // Fetch booking categories
+      const categoriesResponse = await getBookingCategories(
+        businessInformation[0]?.businessId
       );
-      return (responseData?.data?.data as BookingGroup[]) ?? [];
+      const categories = categoriesResponse?.data?.data || [];
+      
+      if (categories.length === 0) {
+        return { categories: [], details: [] };
+      }
+
+      // Fetch details for the selected category or first category
+      const targetCategory = tableStatus || categories[0]?.name;
+      const detailsItems = await getBookingDetails(
+        businessInformation[0]?.businessId,
+        targetCategory,
+        page,
+        rowsPerPage
+      );
+       
+      return {
+        categories,
+        details: detailsItems,
+      };
     } catch (error) {
-      return [];
+      return { categories: [], details: [] };
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<BookingGroup[]>(
-    [
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: [
       "bookings",
-      { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
+      { page, rowsPerPage, tableStatus },
     ],
-    getAllBookings,
-    fetchQueryConfig(options)
-  );
+    queryFn: getAllBookings,
+    
+      ...fetchQueryConfig(options),
+      refetchOnWindowFocus: false,
+      staleTime: 0,
+      enabled: options?.enabled !== false,
+    
+  });
 
   return {
-    data,
+    categories: data?.categories || [],
+    details: data?.details || [],
     isLoading,
     isError,
     refetch,

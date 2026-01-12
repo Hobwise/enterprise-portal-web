@@ -26,18 +26,18 @@ const BusinessProfile = ({ setActiveScreen }: any) => {
       }, 2000);
     }, [text2]);
     return (
-      <div className='flex justify-between text-black gap-3 items-center py-4'>
+      <div className="flex justify-between text-black gap-3  p-5 items-center py-4">
         <div>
-          <p className='text-xs font-[400] text-grey500'>{text1}</p>
-          <p className='text-sm font-[500]'>{text2}</p>
+          <p className="text-xs font-[400] text-grey500">{text1}</p>
+          <p className="text-sm font-[500]">{text2}</p>
         </div>
         <div>
           {changeIcon ? (
-            <IoCheckmarkOutline className='text-[20px] cursor-pointer text-grey400' />
+            <IoCheckmarkOutline className="text-[20px] cursor-pointer text-grey400" />
           ) : (
             <TbCopy
               onClick={copyToClipboard}
-              className='text-[20px] cursor-pointer text-grey400'
+              className="text-[20px] cursor-pointer text-grey400"
             />
           )}
         </div>

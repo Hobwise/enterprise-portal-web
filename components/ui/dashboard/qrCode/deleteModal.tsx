@@ -44,7 +44,7 @@ const DeleteQRModal = ({ isOpenDelete, toggleQRmodalModal }: any) => {
     }
   };
   return (
-    <Modal isOpen={isOpenDelete} onOpenChange={toggleQRmodalModal}>
+    <Modal isOpen={isOpenDelete} onOpenChange={toggleQRmodalModal} size="md">
       <ModalContent>
         {(onClose) => (
           <>

@@ -75,7 +75,7 @@ export async function uploadFilemultipleMenuItem(
 
     return data;
   } catch (error) {
-    return error.response;
+    return (error as any).response;
   }
 }
 export async function getMenuByBusiness(
@@ -128,6 +128,7 @@ export async function getMenuByBusinessUser(
 
 type payloadMenu = {
   name: string;
+  categoryId: string,
   packingCost?: number;
   waitingTimeMinutes?: number;
 };
@@ -203,15 +204,17 @@ export type payloadMenuItem = {
   itemName: string;
   itemDescription: string;
   price: number;
-  isAvailable?: boolean;
+  currency: string;
+  isAvailable: boolean;
+  hasVariety: boolean;
   imageReference: string;
 };
 export type payloadMenuVariety = {
+  id?: string; // Required for edit, optional for create
   price: number;
   unit: string;
   itemID?: string;
   menuID?: string;
-
   currency?: string;
 };
 export async function createMenuItem(
@@ -302,13 +305,16 @@ export async function editMenuVariety(
 export async function deleteMenuItem(businessId: string, itemId: string) {
   const headers = businessId ? { businessId } : {};
   try {
+    console.log('Deleting menu item:', { itemId, businessId, url: `${DASHBOARD.menuItem}?itemId=${itemId}` });
     const data = await api.delete(`${DASHBOARD.menuItem}?itemId=${itemId}`, {
       headers,
     });
 
     return data;
   } catch (error) {
+    console.error('Delete menu item error:', error);
     handleError(error);
+    throw error; // Re-throw to handle in the calling function
   }
 }
 export async function deleteVariety(businessId: string, itemId: string) {
@@ -326,7 +332,7 @@ export async function deleteVariety(businessId: string, itemId: string) {
     handleError(error);
   }
 }
-export async function deleteMenu(businessId: string, menuId: string) {
+export async function deleteMenu(businessId: string,  menuId: string) {
   const headers = businessId ? { businessId } : {};
   try {
     const data = await api.delete(`${DASHBOARD.getMenu}?menuId=${menuId}`, {
@@ -390,6 +396,90 @@ export async function exportGrid(
       headers,
       responseType: 'blob',
     });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getMenuCategories(businessId: string, cooperateId: string) {
+  const headers = businessId ? { businessId, cooperateId } : {};
+
+  try {
+    const data = await api.get(DASHBOARD.menuCategories, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+type payloadCategory = {
+  name: string;
+  orderIndex?: number;
+};
+
+export async function createCategory(businessId: string, payload: payloadCategory) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.post(DASHBOARD.menuCategory, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function updateCategory(businessId: string, categoryId: string, payload: payloadCategory) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.put(`${DASHBOARD.menuCategory}?categoryId=${categoryId}`, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function deleteCategory(businessId: string, categoryId: string) {
+  const headers = businessId ? { businessId } : {};
+  
+  try {
+    console.log('Deleting category:', { categoryId, businessId });
+    const data = await api.delete(`${DASHBOARD.menuCategory}?categoryId=${categoryId}`, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    console.error('Delete category error:', error);
+    handleError(error);
+    throw error;
+  }
+}
+
+export async function getMenuItems(menuId: string, page: number, pageSize: number) {
+  try {
+    const data = await api.get(`${DASHBOARD.menuItems}?MenuId=${menuId}&Page=${page}&PageSize=${pageSize}`);
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getMenuVariety(itemId: string) {
+  try {
+    const data = await api.get(`${DASHBOARD.menuVariety}?itemId=${itemId}`);
 
     return data;
   } catch (error) {

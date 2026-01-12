@@ -3,20 +3,22 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { saveJsonItemToLocalStorage } from "@/lib/utils";
 import { IoIosArrowForward } from "react-icons/io";
-import Accepted from "../../../../public/assets/icons/accepted.png";
-import Decline from "../../../../public/assets/icons/canceled.png";
+import {
+  AcceptedReportIcon,
+  DeclinedReportIcon,
+} from "@/public/assets/svg";
 import Star from "../../../../public/assets/icons/star.png";
 import auditIllustration from "../../../../public/assets/images/auditlogIllustration.png";
 
 const ReportDetails = ({ report }: any) => {
   const reportData = [
     {
-      icon: <Image src={Accepted} alt="accepted" />,
+      icon: <AcceptedReportIcon width={20} height={20} />,
       title: "USERS",
       desc: report?.totalUsersCount,
     },
     {
-      icon: <Image src={Decline} alt="decline" />,
+      icon: <DeclinedReportIcon width={20} height={20} />,
       title: "ACTIVITIES",
       desc: report?.totalActivitiesCount,
     },
@@ -55,7 +57,7 @@ const ReportDetails = ({ report }: any) => {
           <h3 className=" font-semibold mb-2">Available Audit logs</h3>
           <Divider />
 
-          <div>
+          <div className="h-[180px] overflow-y-auto overflow-x-hidden custom-scrollbar">
             {report?.availableReport.map((item: any) => (
               <div
                 onClick={() =>
@@ -102,7 +104,7 @@ const ReportDetails = ({ report }: any) => {
             </div>
           </div>
         </Card>
-        <Card className="bg-[#FDF5E1] lg:h-[348px] h-full">
+        {/* <Card className="bg-[#FDF5E1] lg:h-[348px] h-full">
           <CardBody className=" p-4">
             <div className="mb-4">
               <Image src={Star} alt="star" />
@@ -113,7 +115,7 @@ const ReportDetails = ({ report }: any) => {
               {report?.mostActiveUser?.activityCount}
             </p>
           </CardBody>
-        </Card>
+        </Card> */}
       </div>
     </div>
   );

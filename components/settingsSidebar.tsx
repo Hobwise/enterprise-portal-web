@@ -4,55 +4,80 @@ import Link from "next/link";
 import { cn, getJsonItemFromLocalStorage } from "@/lib/utils";
 import { usePathname, useRouter } from "next/navigation";
 import { EXCLUDE_SETTINGS_PATHS } from "@/lib/routePermissions";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { isPOSUser, getAllowedSettingsPaths, canAccessSettingsPath } from "@/lib/userTypeUtils";
 
-const lists = [
+export const lists = [
   {
     title: "Personal Information",
+    subtitle: "See your full personal information",
     href: "/dashboard/settings/personal-information",
   },
   {
     title: "Password Management",
+    subtitle: "Update your password and security settings",
     href: "/dashboard/settings/password-management",
   },
   {
     title: "Business Information",
+    subtitle: "See your full business information",
     href: "/dashboard/settings/business-information",
   },
-  { title: "KYC Compliance", href: "/dashboard/settings/kyc-compliance" },
+  // { title: "KYC Compliance", subtitle: "Complete your KYC verification", href: "/dashboard/settings/kyc-compliance" },
   {
     title: "Billing & Subscription",
+    subtitle: "Manage your subscription and billing details",
     href: "/dashboard/settings/subscriptions",
   },
-  { title: "Teams Management", href: "/dashboard/settings/teams" },
   {
-    title: "Roles and Permissions",
+    title: "Staff Management",
+    subtitle: "Manage your team members roles and permissions",
     href: "/dashboard/settings/staff-management",
   },
   {
-    title: "Terms and Condition",
-    href: "/dashboard/settings/business-settings",
+    title: "Customize Business Display",
+    subtitle: "Customize how your business appears to customers",
+    href: "/dashboard/settings/customize-business-display",
   },
+  // {
+  //   title: "Terms and Condition",
+  //   subtitle: "View terms and conditions",
+  //   href: "/dashboard/settings/business-settings",
+  // },
 ];
 
 const SettingsSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const userInfo = getJsonItemFromLocalStorage("userInformation");
-  const filteredLists =
-    userInfo.role === 0
-      ? lists
-      : lists.filter((item) => !EXCLUDE_SETTINGS_PATHS.includes(item.href));
+  // Initialize with all lists to match server render
+  const [filteredLists, setFilteredLists] = useState(lists);
 
   useEffect(() => {
-    if (userInfo.role === 1 && EXCLUDE_SETTINGS_PATHS.includes(pathname)) {
-      router.push("/dashboard/settings/personal-information");
+    // Access localStorage only on client side after hydration
+    const userInfo = getJsonItemFromLocalStorage("userInformation");
+
+    if (userInfo) {
+      // Get allowed paths for this user type
+      const allowedPaths = getAllowedSettingsPaths(userInfo);
+
+      // Filter lists based on allowed paths
+      const filtered = lists.filter((item) =>
+        allowedPaths.includes(item.href)
+      );
+
+      setFilteredLists(filtered);
+
+      // Redirect users away from restricted paths
+      if (!canAccessSettingsPath(userInfo, pathname)) {
+        // Redirect to personal information as the default allowed page
+        router.push("/dashboard/settings/personal-information");
+      }
     }
-  }, [pathname]);
+  }, [pathname, router]);
 
   return (
-    <ul className="col-span-3 border inline-flex flex-col border-secondaryGrey p-3 rounded-lg h-fit">
+    <ul className="col-span-1 lg:col-span-3 border flex flex-col border-secondaryGrey p-3 rounded-lg h-fit">
       {filteredLists.map((item) => (
         <li
           key={item.href}

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { IoIosArrowBack } from "react-icons/io";
 import { options } from "@/app/dashboard/settings/kyc-compliance/verification-types";
 import { IoCloudUploadOutline } from "react-icons/io5";
-import { useMutation } from "react-query";
+import { useMutation } from '@tanstack/react-query';
 import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,

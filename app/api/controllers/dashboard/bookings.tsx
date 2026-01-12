@@ -20,7 +20,6 @@ export const bookingsSchema = z.object({
   phoneNumber: z
     .string()
     .length(11, "Phone number must be 11 digits long")
-    .startsWith("0", "Phone number must start with 0")
     .refine((value) => /^\d+$/.test(value), {
       message: "Phone number must only contain digits",
     }),
@@ -94,33 +93,21 @@ export async function updateBooking(
   }
 }
 
-export async function getBookingsByBusiness(
+export async function getBookingCategories(
   businessId: string,
-  page: any,
-  rowsPerPage: any,
-  tableStatus: any,
-  filterType: any,
-  startDate?: any,
-  endDate?: any
+  // filterType: number,
+  // startDate?: string,
+  // endDate?: string
 ) {
   const headers = businessId ? { businessId } : {};
-
   const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    // filterType: filterType,
     businessId: businessId,
-    statusPaginationInfoList: [
-      {
-        status: tableStatus || "All",
-        page: page || 1,
-        pageSize: rowsPerPage || 10,
-      },
-    ],
+
   };
 
   try {
-    const data = await api.post(DASHBOARD.bookingsByBusiness, payload, {
+    const data = await api.get(DASHBOARD.bookingsByBusiness, {
+      params: payload,
       headers,
     });
 
@@ -129,6 +116,64 @@ export async function getBookingsByBusiness(
     handleError(error, false);
   }
 }
+
+export async function getBookingDetails(
+  businessId: string,
+  category: string,
+  page?: number,
+  pageSize?: number
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    category: category,
+    businessId: businessId,
+    page: page || 0,
+    pageSize: pageSize || 10,
+  };
+
+  try {
+    const response = await api.post(DASHBOARD.bookingsByDetails, payload, {
+      headers,
+    });
+    return response.data;
+
+
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+
+// export async function getBookings(
+//   businessId: string,
+//   page: any,
+//   rowsPerPage: any,
+//   tableStatus: any,
+// ) {
+//   const headers = businessId ? { businessId } : {};
+
+//   const payload = {
+//     // filterType: filterType,
+//     businessId: businessId,
+//     statusPaginationInfoList: [
+//       {
+//         status: tableStatus || "All",
+//         page: page || 1ame,
+//         pageSize: rowsPerPage || 10,
+//       },
+//     ],
+//   };
+
+//   try {
+//     const data = await api.get(DASHBOARD.bookingsByBusiness, payload, {
+//       headers,
+//     });
+
+//     return data;
+//   } catch (error) {
+//     handleError(error, false);
+//   }
+// }
 
 export async function getBookingByRef(
   businessId: string,

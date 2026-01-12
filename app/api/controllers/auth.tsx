@@ -39,8 +39,15 @@ const additionalUserSchema = z.object({
   lastName: inputNameValidation("Last name"),
   email: emailValidation(),
   role: z.number().min(0, "Select a role"),
+  assignmentId: z.string().optional(),
   password: passwordValidation(),
-});
+}).refine(
+  (data) => data.role !== 1 || (data.assignmentId && data.assignmentId.length > 0),
+  {
+    message: "Select a position",
+    path: ["assignmentId"],
+  }
+);
 
 const loginSchema = z.object({
   email: emailValidation(),
@@ -139,6 +146,7 @@ export async function createAdditionalUser(formData: any) {
     lastName: formData.lastName,
     email: formData.email,
     role: formData.role,
+    assignmentId: formData.assignmentId,
     password: formData.password,
   });
 
@@ -156,30 +164,8 @@ export async function createAdditionalUser(formData: any) {
     handleError(error);
   }
 }
+
 export async function updateUser(payload: any, userId: string) {
-  // const validatedFields = updateUserSchema.safeParse({
-  //   firstName: formData.firstName,
-  //   lastName: formData.lastName,
-  //   email: formData.email,
-  //   role: formData.role,
-  // });
-
-  // if (!validatedFields.success) {
-  //   return {
-  //     errors: validatedFields.error.flatten().fieldErrors,
-  //   };
-  // }
-  // const payload = {
-  //   firstName: formData.firstName,
-  //   lastName: formData.lastName,
-  //   email: formData.email,
-  //   role: +formData.role,
-  //   businessID: formData.businessID,
-  //   cooperateID: formData.cooperateID,
-  //   isActive: formData.isActive,
-  //   imageReference: formData.imageReference,
-  // };
-
   try {
     // const data = await api.put(`${AUTH.user}?userId=${formData.id}`, payload);
     const data = await api.put(`${AUTH.user}?userId=${userId}`, payload);
@@ -248,6 +234,15 @@ export async function loginUserSelectedBusiness(
   formData: any,
   businessId: string
 ) {
+  if (!formData) {
+    return {
+      errors: { 
+        general: ["Session expired. Please login again."] 
+      },
+      requiresLogin: true
+    };
+  }
+
   const validatedFields = loginSchema.safeParse({
     password: formData.password,
     email: formData.email,
@@ -382,6 +377,20 @@ export async function getRoleCount(businessId: string, cooperateId: string) {
     const data = await api.get(
       `${AUTH.getRoleCount}?cooperateId=${cooperateId}&businessId=${businessId}`
     );
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getStaffAssignments(businessId: string) {
+  const headers = businessId ? { businessId, version: '1.0' } : {};
+
+  try {
+    const data = await api.get('https://sandbox-api.hobwise.com/api/v1/User/staff-assignment', {
+      headers,
+    });
 
     return data;
   } catch (error) {

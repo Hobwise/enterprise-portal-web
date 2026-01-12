@@ -5,7 +5,8 @@ import { CustomButton } from "@/components/customButton";
 import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { Spacer } from "@nextui-org/react";
 import React, { useState } from "react";
-import { toast } from "react-toastify";
+import toast from "react-hot-toast";
+
 
 const Password = () => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
@@ -29,6 +30,16 @@ const Password = () => {
 
   const submitFormData = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
+
+    // Check if user information is available
+    if (!userInformation?.email) {
+      notify({
+        title: "Error!",
+        text: "User information not found. Please log in again.",
+        type: "error",
+      });
+      return;
+    }
 
     setIsLoading(true);
     const payload = {
@@ -58,27 +69,8 @@ const Password = () => {
     }
   };
   return (
-    <div>
-      <div className="flex md:flex-row flex-col justify-between md:items-center items-start">
-        <div>
-          <h1 className="text-[16px] leading-8 font-semibold">
-            Update password
-          </h1>
-          <p className="text-sm  text-grey600 md:mb-10 mb-4">
-            Protect your account with secure password
-          </p>
-        </div>
-        <CustomButton
-          loading={isLoading}
-          disabled={isLoading}
-          onClick={submitFormData}
-          className="py-2 px-4 md:mb-0 mb-4 text-white"
-          backgroundColor="bg-primaryColor"
-        >
-          Save Changes
-        </CustomButton>
-      </div>
-      <form autoComplete="off">
+    <div className="p-5">
+      <form autoComplete="off" onSubmit={submitFormData}>
         <CustomInput
           errorMessage={response?.errors?.oldPassword?.[0]}
           value={passwordFormData?.oldPassword}
@@ -108,6 +100,18 @@ const Password = () => {
           label="Enter new password"
           placeholder="Confirm new password"
         />
+        <Spacer y={6} />
+        <div className="flex justify-end">
+          <CustomButton
+            loading={isLoading}
+            disabled={isLoading}
+            type="submit"
+            className="py-2 px-4 text-white"
+            backgroundColor="bg-primaryColor"
+          >
+            Save Changes
+          </CustomButton>
+        </div>
       </form>
     </div>
   );

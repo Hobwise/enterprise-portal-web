@@ -12,6 +12,13 @@ import {
   ModalContent,
   Spacer,
 } from '@nextui-org/react';
+import { MdClose, MdEdit } from "react-icons/md";
+import ReserveTableImage from "../../../../public/assets/images/reserve-table.svg";
+import Image from "next/image";
+import { FiEdit } from "react-icons/fi";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import { useState } from "react";
+import ConfirmationModal from "./confirmationModal";
 
 const BookingDetails = ({
   openBookingModal,
@@ -20,18 +27,86 @@ const BookingDetails = ({
   setBookingId,
   isLoading,
   bookingDetails,
+  openEditModal,
 }: any) => {
+  const { userRolePermissions, role } = usePermission();
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{
+    status: number;
+    isCancellation?: boolean;
+  } | null>(null);
+
   const getButtonText = () => {
     switch (bookingDetails?.bookingStatus) {
       case 0:
-        return 'Accept this booking';
+        return "Confirm booking";
       case 1:
-        return 'Admit customer';
+        return "Admit customer";
       case 2:
-        return 'Close this booking';
+        return "Close this booking";
       default:
-        return 'Admit';
+        return "Admit";
     }
+  };
+
+  const getConfirmationText = () => {
+    if (confirmAction?.isCancellation) {
+      return "Are you sure you want to cancel this booking?";
+    }
+    switch (bookingDetails?.bookingStatus) {
+      case 0:
+        return "Are you sure you want to confirm this booking?";
+      case 1:
+        return "Are you sure you want to admit this customer?";
+      case 2:
+        return "Are you sure you want to close this booking?";
+      default:
+        return "Are you sure you want to proceed with this action?";
+    }
+  };
+
+  const getConfirmationTitle = () => {
+    if (confirmAction?.isCancellation) {
+      return "Cancel Booking";
+    }
+    switch (bookingDetails?.bookingStatus) {
+      case 0:
+        return "Confirm Booking";
+      case 1:
+        return "Admit Customer";
+      case 2:
+        return "Close Booking";
+      default:
+        return "Confirm Action";
+    }
+  };
+
+  const handleActionClick = (status: number, isCancellation = false) => {
+    setConfirmAction({ status, isCancellation });
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (confirmAction) {
+      setIsProcessing(true);
+      try {
+        // Pass false as second parameter to prevent parent's loading state from showing
+        await updateBookingStatus(confirmAction.status, false);
+        // Only close modal on success (parent handles closing bookingDetails modal)
+        setIsConfirmModalOpen(false);
+        setConfirmAction(null);
+      } catch (error) {
+        console.error("Error updating booking status:", error);
+      } finally {
+        setIsProcessing(false);
+      }
+    }
+  };
+
+  const handleCancelConfirmation = () => {
+    setIsConfirmModalOpen(false);
+    setConfirmAction(null);
   };
 
   const shouldShowButton = ![3, 5, 6, 4].includes(
@@ -39,99 +114,194 @@ const BookingDetails = ({
   );
 
   return (
+    <>
     <Modal
       isDismissable={false}
-      isOpen={openBookingModal}
+      isOpen={openBookingModal && !isConfirmModalOpen}
       onOpenChange={() => {
-        setBookingId('');
+        setBookingId("");
         closeBookingModal();
+      }}
+      classNames={{
+        base: "max-w-md",
+        closeButton: "hidden",
       }}
     >
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalBody>
-              <div className='flex justify-between  mt-8 items-center'>
-                <h2 className='text-[24px] leading-3 text-black font-semibold'>
-                  Booking Details
-                </h2>
-                <Chip
-                  className='capitalize'
-                  color={statusColorMap[bookingDetails?.bookingStatus]}
-                  size='sm'
-                  variant='bordered'
-                >
-                  {statusDataMap[bookingDetails?.bookingStatus]}
-                </Chip>
-              </div>
-              {bookingDetails.reference && (
-                <p className='text-sm  text-grey600  mb-4'>
-                  Booking for {bookingDetails.reference}
-                </p>
-              )}
-              <div>
-                <p className='font-[400] text-grey500 text-[14px]'>NAME</p>
-                <p className='font-[500] text-black '>
-                  {bookingDetails.firstName} {bookingDetails.lastName}
-                </p>
-              </div>
-              <Spacer y={1} />
-              <div>
-                <p className='font-[400] text-grey500 text-[14px]'>
-                  RESERVATION
-                </p>
-                <p className='font-[500] text-black '>
-                  {bookingDetails.reservation?.reservationName}
-                </p>
-              </div>
-              <Spacer y={1} />
-              <div>
-                <p className='font-[400] text-grey500 text-[14px]'>
-                  EMAIL ADDRESS
-                </p>
-                <p className='font-[500] text-black '>
-                  {bookingDetails.emailAddress}
-                </p>
-              </div>
-
-              {shouldShowButton && (
-                <>
-                  <Spacer y={2} />
-                  <div className='flex gap-3'>
-                    <CustomButton
-                      className='flex-grow h-[54px] text-white'
-                      loading={isLoading}
-                      onClick={() =>
-                        updateBookingStatus(
-                          submitBookingStatus(bookingDetails?.bookingStatus)
-                        )
-                      }
-                      disabled={isLoading}
-                      type='submit'
+            <ModalBody className="p-6">
+              {/* Header with icons */}
+              <div className="flex justify-end gap-2 ">
+                {(role === 0 || userRolePermissions?.canEditOrder === true) &&
+                  bookingDetails?.bookingStatus !== 6 &&
+                  bookingDetails?.bookingStatus !== 4 &&
+                  bookingDetails?.bookingStatus !== 5 && (
+                    <button
+                      type="button"
+                      onClick={openEditModal}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      aria-label="Edit booking"
                     >
-                      {isLoading ? 'Processing...' : getButtonText()}
-                    </CustomButton>
-                    {bookingDetails?.bookingStatus === 0 && (
-                      <CustomButton
-                        backgroundColor='bg-transparent'
-                        className='border-grey500 border text-grey500 h-[54px] flex-grow'
-                        onClick={() => updateBookingStatus(3, false)}
-                        disabled={isLoading}
-                        type='submit'
-                      >
-                        {'Decline'}
-                      </CustomButton>
-                    )}
-                  </div>
-                </>
-              )}
+                      <FiEdit size={20} className="text-gray-600" />
+                    </button>
+                  )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBookingId("");
+                    closeBookingModal();
+                  }}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  aria-label="Close modal"
+                >
+                  <MdClose size={20} className="text-gray-600" />
+                </button>
+              </div>
 
-              <Spacer y={4} />
+              <div className="text-center mb-6">
+                <div className="flex justify-center items-center mb-3">
+                  <Image
+                    className="w-[220px] h-[40px] bg-cover rounded-lg"
+                    width={220}
+                    height={40}
+                    alt="reserve table"
+                    aria-label="reserve table"
+                    src={ReserveTableImage}
+                  />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {bookingDetails.firstName} {bookingDetails.lastName}
+                </h2>
+              </div>
+
+              {/* Booking details in single column format */}
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs text-gray-500">Reservation ID</p>
+                    <p className="font-semibold text-gray-800 text-sm">
+                      {bookingDetails?.reference || "N/A"}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs text-gray-500">Reservation Type</p>
+                    <p className="font-medium text-gray-800 text-sm text-right">
+                      {bookingDetails.reservationName ||
+                        bookingDetails.reservation?.reservationName}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs text-gray-500">
+                      Number of Reservation:
+                    </p>
+                    <p className="font-medium text-gray-800 text-sm">
+                      {bookingDetails.quantity}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs text-gray-500">Phone Number:</p>
+                    <p className="font-medium text-gray-800 text-sm">
+                      {bookingDetails.phoneNumber}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs text-gray-500">Email Address:</p>
+                    <p className="font-medium text-gray-800 text-sm text-right break-all">
+                      {bookingDetails.emailAddress}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs text-gray-500">Reserved Time:</p>
+                    <p className="font-medium text-gray-800 text-sm">
+                      {new Date(
+                        bookingDetails.bookingDateTime
+                      ).toLocaleTimeString("en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    <p className="text-xs text-gray-500">Reserved Date:</p>
+                    <p className="font-medium text-gray-800 text-sm">
+                      {new Date(
+                        bookingDetails.bookingDateTime
+                      ).toLocaleDateString("en-US", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Special Request */}
+                {bookingDetails.description && (
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">
+                      Special Request
+                    </p>
+                    <div className="bg-purple-50 min-h-[100px] rounded-lg p-4">
+                      <p className="text-sm text-gray-700">
+                        {bookingDetails.description}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Action buttons */}
+              {shouldShowButton && (
+                <div className="mt-6 flex gap-3">
+                  <CustomButton
+                    className="flex-1 h-[48px] text-white "
+                    loading={isProcessing}
+                    onClick={() =>
+                      handleActionClick(
+                        submitBookingStatus(bookingDetails?.bookingStatus)
+                      )
+                    }
+                    disabled={isProcessing}
+                    type="submit"
+                  >
+                    {getButtonText() + " →"}
+                  </CustomButton>
+                  {bookingDetails?.bookingStatus === 0 && (
+                    <CustomButton
+                      backgroundColor="bg-gray-200"
+                      className="flex-1 h-[48px] text-gray-700 hover:bg-gray-300"
+                      onClick={() => handleActionClick(3, true)}
+                      disabled={isProcessing}
+                      type="submit"
+                    >
+                      Cancel Booking ✕
+                    </CustomButton>
+                  )}
+                </div>
+              )}
             </ModalBody>
           </>
         )}
       </ModalContent>
     </Modal>
+
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        toggleModal={handleCancelConfirmation}
+        handleConfirm={handleConfirmAction}
+        isLoading={isProcessing}
+        title={getConfirmationTitle()}
+        text={getConfirmationText()}
+        isCancellation={confirmAction?.isCancellation}
+      />
+    </>
   );
 };
 

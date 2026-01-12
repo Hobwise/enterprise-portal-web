@@ -1,6 +1,6 @@
 import { getNotification } from '@/app/api/controllers/dashboard/settings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 
 export interface Event {
   message: string;
@@ -32,15 +32,15 @@ const useNotification = (page: number, pageSize: number) => {
     };
   };
 
-  const { data, isLoading, isError, refetch } = useQuery(
-    ['notification', page, pageSize],
-    fetchNotification,
-    {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['notification', page, pageSize],
+    queryFn: fetchNotification,
+    
       refetchInterval: 60000,
       refetchOnWindowFocus: false,
-      keepPreviousData: true,
-    }
-  );
+      placeholderData: keepPreviousData,
+    
+  });
 
   return { data, isLoading, isError, refetch };
 };

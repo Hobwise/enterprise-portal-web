@@ -1,7 +1,7 @@
 'use client';
 
 import { getFile } from '@/app/api/controllers/dashboard/settings';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 interface UseGetFileProps {
   imageRef: string;
@@ -14,14 +14,14 @@ const useGetFile = ({ imageRef }: UseGetFileProps) => {
     return responseData?.data;
   };
 
-  const { data, refetch, isLoading, isError } = useQuery<any>(
-    ['getFile', imageRef],
-    retrieveFile,
-    {
+  const { data, refetch, isLoading, isError } = useQuery<any>({
+    queryKey: ['getFile', imageRef],
+    queryFn: retrieveFile,
+    
       enabled: !!imageRef,
       refetchOnWindowFocus: false,
-    }
-  );
+    
+  });
 
   return { data, isLoading, isError, refetch };
 };

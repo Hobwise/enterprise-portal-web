@@ -7,10 +7,11 @@ import { useGlobalContext } from "@/hooks/globalProvider";
 import useTextCopy from "@/hooks/useTextCopy";
 import { companyInfo } from "@/lib/companyInfo";
 import {
-  CustomLoading,
   formatPrice,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
+import { generateShortSingleReservationUrlBrowser } from "@/lib/urlShortener";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 import {
   Button,
   ButtonGroup,
@@ -23,7 +24,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { FaEdit } from "react-icons/fa";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { RiDeleteBin6Line } from "react-icons/ri";
@@ -42,7 +43,6 @@ const ReservationDetails = () => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isOpenDelete, setIsOpenDelete] = useState(false);
   const [isOpenEdit, setIsOpenEdit] = useState(false);
-  const [loading, setLoading] = useState(true);
   const reservationId = searchParams.get("reservationId") || null;
 
   const { data, isLoading, isError, refetch } =
@@ -54,16 +54,6 @@ const ReservationDetails = () => {
     setTableStatus("All");
     setPage(1);
   }, []);
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (data && !isLoading) {
-        setLoading(false);
-      }
-    }, 2000);
-  
-    return () => clearTimeout(timeout);
-  }, [data, isLoading, reservationId, isOpenEdit]); 
-
 
   useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
@@ -90,9 +80,22 @@ const ReservationDetails = () => {
     return <Error onClick={() => refetch()} />;
   }
 
-  const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `${companyInfo.webUrl}/reservation/select-reservation/single-reservation?reservationId=${reservationId}`
-  );
+  // Generate shortened URL for single reservation
+  const shortReservationUrl = useMemo(() => {
+    if (!reservationId) return "";
+
+    return generateShortSingleReservationUrlBrowser(
+      typeof window !== "undefined"
+        ? window.location.origin
+        : companyInfo.webUrl,
+      {
+        reservationId: reservationId,
+      }
+    );
+  }, [reservationId]);
+
+  const { handleCopyClick, isOpen, setIsOpen } =
+    useTextCopy(shortReservationUrl);
 
   const formatTimeWithAMPM = (time: string | null | undefined): string => {
     // Return a placeholder if time is null or undefined
@@ -162,7 +165,7 @@ const ReservationDetails = () => {
         </div>
       </div>
       <Spacer y={5} />
-      {loading ? (
+      {isLoading ? (
         <CustomLoading />
       ) : (
         <section className="flex flex-col flex-grow">

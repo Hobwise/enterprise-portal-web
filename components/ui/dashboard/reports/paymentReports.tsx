@@ -15,8 +15,11 @@ import {
 import { Line } from "react-chartjs-2";
 import { BsArrowUpShort } from "react-icons/bs";
 import { IoIosArrowForward } from "react-icons/io";
-import Decline from "../../../../public/assets/icons/canceled.png";
-import Like from "../../../../public/assets/icons/like.png";
+import {
+  DeclinedReportIcon,
+  ClosedReportIcon,
+  AcceptedReportIcon,
+} from "@/public/assets/svg";
 import Star from "../../../../public/assets/icons/star.png";
 import paymentIllustration from "../../../../public/assets/images/paymentIllustration.png";
 
@@ -97,14 +100,14 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: <Image src={Decline} alt="decline" />,
+      icon: <DeclinedReportIcon width={20} height={20} />,
       title: "PENDING PAYMENT",
-      desc: formatPrice(report?.pendingAmount || 0),
+      desc: formatPrice(report?.pendingAmount || 0, "NGN"),
     },
     {
-      icon: <Image src={Like} alt="like" />,
-      title: "TOTAL PAYMENT",
-      desc: formatPrice(report?.totalAmount || 0),
+      icon: <AcceptedReportIcon width={20} height={20} />,
+      title: "CONFIRMED PAYMENT",
+      desc: formatPrice(report?.confirmedAmount || 0, "NGN"),
     },
   ];
 
@@ -148,7 +151,7 @@ const ReportDetails = ({ report }: any) => {
           <h3 className=" font-semibold mb-2">Available reports</h3>
           <Divider />
 
-          <div>
+          <div className="h-[180px] overflow-y-auto overflow-x-hidden custom-scrollbar">
             {report?.availableReport.map((item: any) => (
               <div
                 onClick={() =>
@@ -185,9 +188,9 @@ const ReportDetails = ({ report }: any) => {
           </div>
           <div>
             <div className="p-4">
-              <h2 className="font-medium text-sm">CONFIRMED PAYMENT </h2>
+              <h2 className="font-medium text-sm">TOTAL PAYMENT </h2>
               <h1 className="text-xl font-[500] my-[5px]">
-                {formatPrice(report?.confirmedAmount)}
+                {formatPrice(report?.totalAmount || 0, "NGN")}
               </h1>
               <div
                 className={`text-xs ${
@@ -214,7 +217,7 @@ const ReportDetails = ({ report }: any) => {
 
             <p className="font-[500] text-sm">Day with highest payment</p>
             <p className="text-[22px] font-semibold">
-              {formatPrice(report?.dayWithHighestPayment?.amount || 0)}
+              {formatPrice(report?.dayWithHighestPayment?.amount || 0, "NGN")}
             </p>
             <p className="text-sm">
               {" "}

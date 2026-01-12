@@ -1,7 +1,7 @@
 'use client';
 import { getTermsAndCondition } from '@/app/api/controllers/dashboard/settings';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const useTermsAndCondition = (
   isAdmin: boolean,
@@ -20,13 +20,11 @@ const useTermsAndCondition = (
     return responseData?.data?.data as any;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>(
-    'termsAndCondition',
-    fetchTermsAndCondition,
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ['termsAndCondition'],
+    queryFn: fetchTermsAndCondition,
+    refetchOnWindowFocus: false,
+  });
 
   return { data, isLoading, isError, refetch };
 };

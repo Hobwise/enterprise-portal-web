@@ -45,204 +45,378 @@ const INITIAL_VISIBLE_COLUMNS1 = [
   'dateCreated',
 ];
 const INITIAL_VISIBLE_COLUMNS2 = [
-  'lastOrderDateTime',
   'orderCount',
   'placedByName',
   'placedByPhoneNumber',
   'totalOrderValue',
 ];
-const INITIAL_VISIBLE_COLUMNS3 = [
-  'confirmedAmount',
-  'dateUpdated',
-  'emailAddress',
-  'firstName',
-  'numberOfOrders',
-  'pendingAmount',
-  'totalAmount',
-];
+  const INITIAL_VISIBLE_COLUMNS3 = [
+    'confirmedAmount',
+    'dateUpdated',
+    'emailAddress',
+    'firstName',
+    'numberOfOrders',
+    'pendingAmount',
+    'totalAmount',
+  ];
 
-const columns0 = [
-  { name: 'Name', uid: 'name', sortable: true },
-  { name: 'Amount', uid: 'amount', sortable: true },
-  { name: 'Order ID', uid: 'orderID', sortable: true },
-  { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
-  { name: 'Place By', uid: 'placedByName', sortable: true },
-  { name: 'Payment Method', uid: 'paymentMethod', sortable: true },
-  { name: 'Status', uid: 'orderStatus', sortable: true },
-];
-const columns1 = [
-  { name: 'Item Name', uid: 'itemName', sortable: true },
-  { name: 'Menu Name', uid: 'menuName', sortable: true },
-  { name: 'Amount Sold', uid: 'totalAmountSold', sortable: true },
-  { name: 'Quantity', uid: 'totalQuantitySold', sortable: true },
-  { name: 'Current Price', uid: 'currentPrice', sortable: true },
-  { name: 'Availability', uid: 'isCurrentlyAvailable', sortable: true },
-];
-const columns2 = [
-  { name: 'Place By', uid: 'placedByName', sortable: true },
-  { name: 'Phone Number', uid: 'placedByPhoneNumber', sortable: true },
-  { name: 'Order Count', uid: 'orderCount', sortable: true },
-  { name: 'Total Order Count', uid: 'totalOrderValue', sortable: true },
-  { name: 'Date Created/Updated', uid: 'lastOrderDateTime', sortable: true },
-];
-const columns3 = [
-  { name: 'Name', uid: 'firstName', sortable: true },
-  { name: 'Email Address', uid: 'emailAddress', sortable: true },
-  { name: 'Order Count', uid: 'numberOfOrder', sortable: true },
-  { name: 'Pending Payment', uid: 'pendingAmount', sortable: true },
-  { name: 'Confirmed Payment', uid: 'confirmedAmount' },
-  { name: 'Total Payment', uid: 'totalAmount', sortable: true },
-  { name: 'Order count', uid: 'numberOfOrders', sortable: true },
-];
+  const INITIAL_VISIBLE_COLUMNS13 = [
+    'orderStatus',
+    'numberOfOrders',
+    'totalAmount',
+  ];
 
-const ActivityTableOrder = ({
-  reportName,
-  data,
-  isLoading,
-  selectedValue,
-  reportType,
-  value,
-  exportFile,
-  isLoadingExport,
-}: any) => {
-  const business = getJsonItemFromLocalStorage('business');
-  const columns = useMemo(() => {
-    if (reportType === 0) {
-      return {
-        data: data?.orders || [],
-        column: columns0,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS0,
-      };
-    }
-    if (reportType === 1) {
-      return {
-        data: data?.items || [],
-        column: columns1,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS1,
-      };
-    }
-    if (reportType === 2) {
-      return {
-        data: data?.customers || [],
-        column: columns2,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS2,
-      };
-    }
-    if (reportType === 3) {
-      return {
-        data: data?.orders || [],
-        column: columns3,
-        visibleColumn: INITIAL_VISIBLE_COLUMNS3,
-      };
-    }
-  }, [reportType, data]);
+  const INITIAL_VISIBLE_COLUMNS14 = [
+    'categoryName',
+    'totalOrders',
+    'totalItemsSold',
+    'totalAmount',
+    'percentageOfTotalSales',
+  ];
 
-  const {
-    headerColumns,
-    setSelectedKeys,
-    selectedKeys,
+  const INITIAL_VISIBLE_COLUMNS15 = [
+    'orderId',
+    'orderDate',
+    'customer',
+    'orderTotal',
+    'totalPaid',
+    'totalRefunded',
+    'outstanding',
+    'paymentStatus',
+    'orderStatus',
+  ];
 
-    classNames,
-  } = usePagination(columns?.data, columns?.column, columns?.visibleColumn);
+  const INITIAL_VISIBLE_COLUMNS16 = [
+    "orderId",
+    "orderTotal",
+    "paidSoFar",
+    "remaining",
+  ];
 
-  const [showMore, setShowMore] = useState(false);
-  const [isOpenDownload, setIsOpenDownload] = useState(false);
-  const toggleDownloadReport = () => {
-    setIsOpenDownload(!isOpenDownload);
-  };
-  const toggleMoreFilters = () => {
-    setShowMore(!showMore);
-  };
+  const INITIAL_VISIBLE_COLUMNS17 = [
+    "orderId",
+    "customer",
+    "refundAmount",
+    "refundReason",
+    "approvedBy",
+    "date",
+  ];
 
-  const statusColorMap: Record<
-    string,
-    'warning' | 'success' | 'danger' | 'secondary'
-  > = {
-    Open: 'warning',
-    Closed: 'success',
-    Cancelled: 'danger',
-    AwaitingConfirmation: 'secondary',
-  };
+  // Table column definitions per report type
+  const columns0 = [
+    { name: "CUSTOMER NAME", uid: "customerName", sortable: true },
+    {
+      name: "CUSTOMER PHONE NUMBER",
+      uid: "customerPhoneNumber",
+      sortable: true,
+    },
+    { name: "ORDER ID", uid: "orderId", sortable: true },
+    { name: "AMOUNT", uid: "amount", sortable: true },
+    { name: "TREATED BY", uid: "treatedBy", sortable: true },
+    { name: "PAYMENT METHOD", uid: "paymentMethod", sortable: true },
+    { name: "STATUS", uid: "orderStatus", sortable: true },
+  ];
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortDescriptor, setSortDescriptor] = useState({
-    column: 'dateCreated',
-    direction: 'ascending',
-  });
+  const columns1 = [
+    { name: "ITEM NAME", uid: "itemName", sortable: true },
+    { name: "MENU NAME", uid: "menuName", sortable: true },
+    { name: "AMOUNT SOLD", uid: "netSalesAmount", sortable: true },
+    { name: "QUANTITY", uid: "totalQuantitySold", sortable: true },
+    { name: "CURRENT PRICE", uid: "currentPrice", sortable: true },
+    { name: "AVAILABILITY", uid: "isCurrentlyAvailable", sortable: true },
+  ];
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value.toLowerCase());
-  };
+  const columns2 = [
+    { name: "CUSTOMER NAME", uid: "customerName", sortable: true },
+    {
+      name: "CUSTOMER PHONE NUMBER",
+      uid: "customerPhoneNumber",
+      sortable: true,
+    },
+    { name: "NUMBER OF ORDERS", uid: "numberOfOrders", sortable: true },
+    {
+      name: "TOTAL PURCHASE AMOUNT",
+      uid: "totalPurchaseAmount",
+      sortable: true,
+    },
+  ];
 
-  const filteredItems = useMemo(() => {
-    let filteredData = [...columns?.data];
+  const columns3 = [
+    { name: "NAME", uid: "firstName", sortable: true },
+    { name: "EMAIL ADDRESS", uid: "emailAddress", sortable: true },
+    { name: "NUMBER OF ORDERS", uid: "numberOfOrders", sortable: true },
+    { name: "PENDING SALES", uid: "pendingSales", sortable: true },
+    { name: "CONFIRMED SALES", uid: "confirmedSales", sortable: true },
+    { name: "TOTAL SALES", uid: "totalSales", sortable: true },
+  ];
 
-    filteredData = filteredData.filter(
-      (item) =>
-        item?.firstName?.toLowerCase().includes(searchQuery) ||
-        item?.lastName?.toLowerCase().includes(searchQuery) ||
-        item?.name?.toLowerCase().includes(searchQuery) ||
-        item?.itemName?.toLowerCase().includes(searchQuery) ||
-        String(item?.orderCount)?.toLowerCase().includes(searchQuery) ||
-        item?.lastOrderDateTime?.toLowerCase().includes(searchQuery) ||
-        item?.totalOrderValue?.toLowerCase().includes(searchQuery) ||
-        item?.menuName?.toLowerCase().includes(searchQuery) ||
-        String(item?.totalQuantitySold)?.toLowerCase().includes(searchQuery) ||
-        String(item?.numberOfOrders)?.toLowerCase().includes(searchQuery) ||
-        item?.amount?.toLowerCase().includes(searchQuery) ||
-        item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-        item?.totalAmountSold?.toLowerCase().includes(searchQuery) ||
-        item?.pendingAmount?.toLowerCase().includes(searchQuery) ||
-        item?.totalAmount?.toLowerCase().includes(searchQuery) ||
-        item?.confirmedAmount?.toLowerCase().includes(searchQuery) ||
-        item?.totalAmountSold?.toLowerCase().includes(searchQuery) ||
-        item?.orderID?.toLowerCase().includes(searchQuery) ||
-        item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
-        item?.placedByName?.toLowerCase().includes(searchQuery) ||
-        item?.emailAddress?.toLowerCase().includes(searchQuery)
-    );
+  const columns13 = [
+    { name: "TOTAL AMOUNT", uid: "totalAmount", sortable: true },
+    { name: "NUMBER OF ORDERS", uid: "numberOfOrders", sortable: true },
+    { name: "ORDER STATUS", uid: "orderStatus", sortable: true },
+  ];
 
-    return filteredData;
-  }, [columns?.data, searchQuery]);
-  const [page, setPage] = useState(1);
-  const rowsPerPage = 10;
+  const columns14 = [
+    { name: "CATEGORY NAME", uid: "categoryName", sortable: true },
+    { name: "TOTAL ORDERS", uid: "totalOrders", sortable: true },
+    { name: "TOTAL ITEMS SOLD", uid: "totalItemsSold", sortable: true },
+    { name: "TOTAL AMOUNT", uid: "totalAmount", sortable: true },
+    { name: "TOTAL SALES %", uid: "percentageOfTotalSales", sortable: true },
+  ];
 
-  const pages = Math.ceil(filteredItems?.length / rowsPerPage);
+  const columns15 = [
+    { name: "ORDER ID", uid: "orderId", sortable: true },
+    { name: "ORDER DATE", uid: "orderDate", sortable: true },
+    { name: "CUSTOMER", uid: "customer", sortable: true },
+    { name: "ORDER TOTAL", uid: "orderTotal", sortable: true },
+    { name: "TOTAL PAID", uid: "totalPaid", sortable: true },
+    { name: "TOTAL REFUNDED", uid: "totalRefunded", sortable: true },
+    { name: "OUTSTANDING", uid: "outstanding", sortable: true },
+    { name: "PAYMENT STATUS", uid: "paymentStatus", sortable: true },
+    { name: "ORDER STATUS", uid: "orderStatus", sortable: true },
+  ];
 
-  const items = useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
+  const columns16 = [
+    { name: "ORDER ID", uid: "orderId", sortable: true },
+    { name: "ORDER TOTAL", uid: "orderTotal", sortable: true },
+    { name: "PAID SO FAR", uid: "paidSoFar", sortable: true },
+    { name: "REMAINING", uid: "remaining", sortable: true },
+  ];
 
-    return filteredItems?.slice(start, end);
-  }, [page, filteredItems]);
+  const columns17 = [
+    { name: "ORDER ID", uid: "orderId", sortable: true },
+    { name: "CUSTOMER", uid: "customer", sortable: true },
+    { name: "REFUND AMOUNT", uid: "refundAmount", sortable: true },
+    { name: "REFUND REASON", uid: "refundReason", sortable: true },
+    { name: "APPROVED BY", uid: "approvedBy", sortable: true },
+    { name: "DATE", uid: "date", sortable: true },
+  ];
 
-  const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
-      let cmp = 0;
+  const ActivityTableOrder = ({
+    reportName,
+    data,
+    isLoading,
+    selectedValue,
+    reportType,
+    value,
+    exportFile,
+    isLoadingExport,
+  }: any) => {
+    const business = getJsonItemFromLocalStorage("business");
+    const columns = useMemo(() => {
+      if (reportType === 0) {
+        return {
+          data: data?.orders || [],
+          column: columns0,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS0,
+        };
+      }
+      if (reportType === 1) {
+        return {
+          data: data?.items || [],
+          column: columns1,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS1,
+        };
+      }
+      if (reportType === 2) {
+        return {
+          data: data?.customers || [],
+          column: columns2,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS2,
+        };
+      }
+      if (reportType === 3) {
+        return {
+          data: data?.orders || [],
+          column: columns3,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS3,
+        };
+      }
+      if (reportType === 13) {
+        return {
+          data: data?.orders || [],
+          column: columns13,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS13,
+        };
+      }
+      if (reportType === 14) {
+        return {
+          data: data?.categories || [],
+          column: columns14,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS14,
+        };
+      }
+      if (reportType === 15) {
+        return {
+          data: data?.orderPayments || [],
+          column: columns15,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS15,
+        };
+      }
+      if (reportType === 16) {
+        return {
+          data: data?.orderPayments || [],
+          column: columns16,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS16,
+        };
+      }
+      if (reportType === 17) {
+        return {
+          data: data?.orderRefunds || [],
+          column: columns17,
+          visibleColumn: INITIAL_VISIBLE_COLUMNS17,
+        };
+      }
+    }, [reportType, data]);
 
-      if (typeof first === 'string' && typeof second === 'string') {
-        cmp = first.localeCompare(second);
-      } else if (typeof first === 'number' && typeof second === 'number') {
-        cmp = first - second;
-      } else if (first instanceof Date && second instanceof Date) {
-        cmp = first.getTime() - second.getTime();
+    const {
+      headerColumns,
+      setSelectedKeys,
+      selectedKeys,
+      classNames,
+      displayData,
+      isMobile,
+    } = usePagination(columns?.data, columns?.column, columns?.visibleColumn);
+
+    const [showMore, setShowMore] = useState(false);
+    const [isOpenDownload, setIsOpenDownload] = useState(false);
+    const toggleDownloadReport = () => {
+      setIsOpenDownload(!isOpenDownload);
+    };
+    const toggleMoreFilters = () => {
+      setShowMore(!showMore);
+    };
+
+    const statusColorMap: Record<
+      string,
+      "warning" | "success" | "danger" | "secondary"
+    > = {
+      Open: "warning",
+      Closed: "success",
+      Cancelled: "danger",
+      AwaitingConfirmation: "secondary",
+    };
+
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortDescriptor, setSortDescriptor] = useState({
+      column: undefined,
+      direction: "ascending",
+    });
+
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchQuery(event.target.value.toLowerCase());
+    };
+
+    const filteredItems = useMemo(() => {
+      let filteredData = [...columns?.data];
+
+      filteredData = filteredData.filter(
+        (item) =>
+          item?.firstName?.toLowerCase().includes(searchQuery) ||
+          item?.lastName?.toLowerCase().includes(searchQuery) ||
+          item?.name?.toLowerCase().includes(searchQuery) ||
+          item?.itemName?.toLowerCase().includes(searchQuery) ||
+          String(item?.orderCount)?.toLowerCase().includes(searchQuery) ||
+          item?.lastOrderDateTime?.toLowerCase().includes(searchQuery) ||
+          item?.totalOrderValue?.toLowerCase().includes(searchQuery) ||
+          item?.menuName?.toLowerCase().includes(searchQuery) ||
+          String(item?.totalQuantitySold)
+            ?.toLowerCase()
+            .includes(searchQuery) ||
+          String(item?.numberOfOrders)?.toLowerCase().includes(searchQuery) ||
+          item?.amount?.toLowerCase().includes(searchQuery) ||
+          item?.dateCreated?.toLowerCase().includes(searchQuery) ||
+          item?.totalAmountSold?.toLowerCase().includes(searchQuery) ||
+          item?.pendingAmount?.toLowerCase().includes(searchQuery) ||
+          item?.totalAmount?.toLowerCase().includes(searchQuery) ||
+          item?.confirmedAmount?.toLowerCase().includes(searchQuery) ||
+          item?.totalAmountSold?.toLowerCase().includes(searchQuery) ||
+          item?.orderId?.toLowerCase().includes(searchQuery) ||
+          item?.placedByPhoneNumber?.toLowerCase().includes(searchQuery) ||
+          item?.placedByName?.toLowerCase().includes(searchQuery) ||
+          item?.emailAddress?.toLowerCase().includes(searchQuery) ||
+          item?.orderStatus?.toLowerCase().includes(searchQuery) ||
+          String(item?.numberOfOrders)?.toLowerCase().includes(searchQuery) ||
+          item?.totalAmount?.toLowerCase().includes(searchQuery) ||
+          item?.categoryName?.toLowerCase().includes(searchQuery) ||
+          String(item?.totalOrders)?.toLowerCase().includes(searchQuery) ||
+          String(item?.totalItemsSold)?.toLowerCase().includes(searchQuery) ||
+          item?.percentageOfTotalSales?.toLowerCase().includes(searchQuery) ||
+          String(item?.rawTotalAmount)?.toLowerCase().includes(searchQuery) ||
+          String(item?.totalQuantitySold)
+            ?.toLowerCase()
+            .includes(searchQuery) ||
+          item?.totalAmount?.toLowerCase().includes(searchQuery) ||
+          item?.customerPhoneNumber?.toLowerCase().includes(searchQuery) ||
+          item?.customerName?.toLowerCase().includes(searchQuery) ||
+          item?.netSalesAmount?.toLowerCase().includes(searchQuery) ||
+          item?.totalPurchaseAmount?.toLowerCase().includes(searchQuery) ||
+          item?.totalSales?.toLowerCase().includes(searchQuery) ||
+          item?.pendingSales?.toLowerCase().includes(searchQuery) ||
+          item?.confirmedSales?.toLowerCase().includes(searchQuery) ||
+          item?.customer?.toLowerCase().includes(searchQuery) ||
+          item?.orderTotal?.toLowerCase().includes(searchQuery) ||
+          item?.totalPaid?.toLowerCase().includes(searchQuery) ||
+          item?.totalRefunded?.toLowerCase().includes(searchQuery) ||
+          item?.outstanding?.toLowerCase().includes(searchQuery) ||
+          item?.paymentStatus?.toLowerCase().includes(searchQuery) ||
+          item?.paidSoFar?.toLowerCase().includes(searchQuery) ||
+          item?.remaining?.toLowerCase().includes(searchQuery) ||
+          item?.refundReason?.toLowerCase().includes(searchQuery) ||
+          item?.refundDate?.toLowerCase().includes(searchQuery) ||
+          item?.refundedBy?.toLowerCase().includes(searchQuery) ||
+          item?.refundAmount?.toLowerCase().includes(searchQuery) ||
+          item?.approvedBy?.toLowerCase().includes(searchQuery) ||
+          item?.date?.toLowerCase().includes(searchQuery)
+      );
+
+      return filteredData;
+    }, [columns?.data, searchQuery]);
+    const [page, setPage] = useState(1);
+    const rowsPerPage = 10;
+
+    const pages = Math.ceil(filteredItems?.length / rowsPerPage);
+
+    const items = useMemo(() => {
+      const start = (page - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+
+      return filteredItems?.slice(start, end);
+    }, [page, filteredItems]);
+
+    const sortedItems = useMemo(() => {
+      // Only sort if a column is selected
+      if (!sortDescriptor.column) {
+        return items;
       }
 
-      return sortDescriptor.direction === 'descending' ? -cmp : cmp;
-    });
-  }, [sortDescriptor, items]);
+      const column = sortDescriptor.column as string;
+      return [...items].sort((a, b) => {
+        const first = a[column];
+        const second = b[column];
+        let cmp = 0;
 
-  const renderCell = useCallback((order, columnKey) => {
-    const cellValue = order[columnKey];
+        if (typeof first === "string" && typeof second === "string") {
+          cmp = first.localeCompare(second);
+        } else if (typeof first === "number" && typeof second === "number") {
+          cmp = first - second;
+        } else if (first instanceof Date && second instanceof Date) {
+          cmp = first.getTime() - second.getTime();
+        }
 
-    switch (columnKey) {
-      case 'name':
-        return (
-          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
-            <span>{order.placedByName}</span>
-            {/* {order.comment && (
+        return sortDescriptor.direction === "descending" ? -cmp : cmp;
+      });
+    }, [sortDescriptor, items]);
+
+    const renderCell = useCallback((order, columnKey) => {
+      const cellValue = order[columnKey];
+
+      switch (columnKey) {
+        case "name":
+          return (
+            <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
+              <span>{order.placedByName}</span>
+              {/* {order.comment && (
                   <div
                     title={'view comment'}
                     onClick={() => toggleCommentModal(order)}
@@ -251,21 +425,21 @@ const ActivityTableOrder = ({
                     <FaCommentDots className='text-primaryColor' />
                   </div>
                 )} */}
-          </div>
-        );
-      case 'placedByName':
-        return (
-          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
-            <span>{order.placedByName}</span>
-          </div>
-        );
-      case 'firstName':
-        return (
-          <div className='flex font-medium text-black items-center gap-2 text-sm cursor-pointer'>
-            <span>
-              {order.firstName} {order.lastName}
-            </span>
-            {/* {order.comment && (
+            </div>
+          );
+        case "placedByName":
+          return (
+            <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
+              <span>{order.placedByName}</span>
+            </div>
+          );
+        case "firstName":
+          return (
+            <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
+              <span>
+                {order.firstName} {order.lastName}
+              </span>
+              {/* {order.comment && (
                   <div
                     title={'view comment'}
                     onClick={() => toggleCommentModal(order)}
@@ -274,114 +448,219 @@ const ActivityTableOrder = ({
                     <FaCommentDots className='text-primaryColor' />
                   </div>
                 )} */}
-          </div>
-        );
-      case 'amount':
-        return (
-          <div className='text-textGrey text-sm'>
-            <p>{order.totalAmount}</p>
-          </div>
-        );
-      case 'itemName':
-        return (
-          <div className='font-medium text-black text-sm'>
-            <p>{order.itemName}</p>
-          </div>
-        );
-      case 'dateCreated':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(order.dateCreated).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'lastOrderDateTime':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(order.lastOrderDateTime).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'dateUpdated':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(order.dateUpdated).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
-      case 'totalAmountSold':
-        return (
-          <div className='text-textGrey text-sm'>{order.totalAmountSold}</div>
-        );
-      case 'pendingAmount':
-        return (
-          <div className='text-textGrey text-sm'>{order.pendingAmount}</div>
-        );
-      case 'totalAmount':
-        return <div className='text-textGrey text-sm'>{order.totalAmount}</div>;
-      case 'confirmedAmount':
-        return (
-          <div className='text-textGrey text-sm'>{order.confirmedAmount}</div>
-        );
-      case 'orderID':
-        return <div className='text-textGrey text-sm'>{order.reference}</div>;
+            </div>
+          );
+        case "amount":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.totalAmount}</p>
+            </div>
+          );
+        case "itemName":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.itemName}</p>
+            </div>
+          );
+        case "dateCreated":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(order.dateCreated).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "lastOrderDateTime":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(order.lastOrderDateTime).format(
+                "MMMM Do YYYY, h:mm:ss a"
+              )}
+            </div>
+          );
+        case "dateUpdated":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(order.dateUpdated).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "totalAmountSold":
+          return (
+            <div className="text-textGrey text-sm">{order.totalAmountSold}</div>
+          );
+        case "pendingAmount":
+          return (
+            <div className="text-textGrey text-sm">{order.pendingAmount}</div>
+          );
+        case "totalAmount":
+          return (
+            <div className="text-textGrey text-sm">{order.totalAmount}</div>
+          );
+        case "confirmedAmount":
+          return (
+            <div className="text-textGrey text-sm">{order.confirmedAmount}</div>
+          );
+        case "orderID":
+          return <div className="text-textGrey text-sm">{order.reference}</div>;
 
-      case 'orderStatus':
-        return (
-          <Chip
-            className='capitalize'
-            color={statusColorMap[order.orderStatus]}
-            size='sm'
-            variant='bordered'
-          >
-            {cellValue}
-          </Chip>
-        );
-      case 'isCurrentlyAvailable':
-        return (
-          <Chip
-            className='capitalize'
-            color={order.isCurrentlyAvailable ? 'success' : 'danger'}
-            size='sm'
-            variant='bordered'
-          >
-            {order.isCurrentlyAvailable ? 'Available' : 'Out of stock'}
-          </Chip>
-        );
-
-      default:
-        return cellValue;
-    }
-  }, []);
-
-  const reportRef = useRef(null);
-
-  return (
-    <>
-      <div className='w-full mt-4 flex justify-between  gap-3'>
-        <CustomInput
-          classnames={'w-[242px]'}
-          label=''
-          size='md'
-          value={searchQuery}
-          onChange={handleSearchChange}
-          isRequired={false}
-          startContent={<IoSearchOutline />}
-          type='text'
-          placeholder='Search here...'
-        />
-
-        <div className='flex gap-3'>
-          <div className='flex items-center'>
-            {isLoadingExport && <SmallLoader />}
-            <div
-              onClick={() => toggleDownloadReport()}
-              className='py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 '
+        case "orderStatus":
+          return (
+            <Chip
+              className="capitalize"
+              color={statusColorMap[order.orderStatus]}
+              size="sm"
+              variant="bordered"
             >
-              <div className='flex gap-2 items-center justify-center'>
-                <MdOutlineFileDownload className='text-[22px]' />
-                <p>Export</p>
+              {cellValue}
+            </Chip>
+          );
+        case "isCurrentlyAvailable":
+          return (
+            <Chip
+              className="capitalize"
+              color={order.isCurrentlyAvailable ? "success" : "danger"}
+              size="sm"
+              variant="bordered"
+            >
+              {order.isCurrentlyAvailable ? "Available" : "Out of stock"}
+            </Chip>
+          );
+        case "orderId":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.orderId}</p>
+            </div>
+          );
+        case "orderDate":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(order.orderDate).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "customer":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.customer}</p>
+            </div>
+          );
+        case "orderTotal":
+          return (
+            <div className="text-textGrey text-sm">{order.orderTotal}</div>
+          );
+        case "totalPaid":
+          return <div className="text-textGrey text-sm">{order.totalPaid}</div>;
+        case "totalRefunded":
+          return (
+            <div className="text-textGrey text-sm">{order.totalRefunded}</div>
+          );
+        case "outstanding":
+          return (
+            <div className="text-textGrey text-sm">{order.outstanding}</div>
+          );
+        case "paymentStatus":
+          const paymentStatusColorMap: Record<
+            string,
+            "warning" | "success" | "danger" | "secondary"
+          > = {
+            Unpaid: "danger",
+            Paid: "success",
+            "Partially Paid": "warning",
+          };
+          return (
+            <Chip
+              className="capitalize"
+              color={paymentStatusColorMap[order.paymentStatus] || "secondary"}
+              size="sm"
+              variant="bordered"
+            >
+              {cellValue}
+            </Chip>
+          );
+        case "refundReason":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.refundReason}</p>
+            </div>
+          );
+        case "refundDate":
+          return (
+            <div className="text-textGrey text-sm">
+              {order.refundDate &&
+                moment(order.refundDate).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "refundedBy":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.refundedBy}</p>
+            </div>
+          );
+        case "refundAmount":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.refundAmount}</p>
+            </div>
+          );
+        case "approvedBy":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.approvedBy || "-"}</p>
+            </div>
+          );
+        case "date":
+          return (
+            <div className="text-textGrey text-sm">
+              {order.date &&
+                moment(order.date).format("MMMM Do YYYY, h:mm:ss a")}
+            </div>
+          );
+        case "paidSoFar":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.paidSoFar}</p>
+            </div>
+          );
+        case "remaining":
+          return (
+            <div className="text-textGrey text-sm">
+              <p>{order.remaining}</p>
+            </div>
+          );
+
+        default:
+          return cellValue;
+      }
+    }, []);
+
+    const reportRef = useRef(null);
+
+    return (
+      <>
+        <div className="w-full mt-4 flex justify-between  gap-3">
+          <CustomInput
+            classnames={"w-[242px]"}
+            label=""
+            size="md"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            isRequired={false}
+            startContent={<IoSearchOutline />}
+            type="text"
+            placeholder="Search here..."
+          />
+
+          <div className="flex gap-3">
+            <div className="flex items-center">
+              {isLoadingExport && <SmallLoader />}
+              <div
+                onClick={() => toggleDownloadReport()}
+                className="py-2 px-2 md:mb-0 text-sm hover:text-grey600 transition-all cursor-pointer text-black  mb-4 "
+              >
+                <div className="flex gap-2 items-center justify-center">
+                  <MdOutlineFileDownload className="text-[22px]" />
+                  <p>Export</p>
+                </div>
               </div>
             </div>
-          </div>
-          {/* <CustomButton
+            {/* <CustomButton
             disableRipple={true}
             // onClick={() => exportFile(0)}
             onClick={() => toggleDownloadReport()}
@@ -394,139 +673,147 @@ const ActivityTableOrder = ({
               <p>Print</p>
             </div>
           </CustomButton> */}
+          </div>
         </div>
-      </div>
-      <section
-        ref={reportRef}
-        className='border border-primaryGrey rounded-md mt-2 p-3'
-      >
-        <div className=' flex flex-col items-center mb-4'>
-          <p className='text-xl font-bold capitalize'>{reportName}</p>
-          <p className='text-base font-semibold'>
-            {business[0]?.businessName}, {business[0]?.city}{' '}
-            {business[0]?.state}
-          </p>
-          <p className='text-sm text-grey600'>
-            {selectedValue === 'Custom date' && (
-              <p className='text-default-500 text-sm'>
-                {value.start &&
-                  moment(formatDateTimeForPayload3(value?.start)).format(
-                    'MMMM Do YYYY'
-                  )}
-                {' - '}
-                {value.end &&
-                  moment(formatDateTimeForPayload3(value?.end)).format(
-                    'MMMM Do YYYY'
-                  )}
-              </p>
-            )}
-          </p>
-          <p className='text-xs text-danger-500'>{data?.message}</p>
-        </div>
-        <Table
-          radius='lg'
-          isCompact
-          removeWrapper
-          allowsSorting
-          aria-label='list of orders'
-          bottomContent={
-            isLoading || items?.length === 0 ? (
-              ''
-            ) : (
-              <PaginationComponent
-                data={items}
-                page={page}
-                setPage={setPage}
-                pages={pages}
-              />
-            )
-          }
-          bottomContentPlacement='outside'
-          classNames={classNames}
-          selectedKeys={selectedKeys}
-          // selectionMode='multiple'
-          sortDescriptor={sortDescriptor}
-          // topContent={topContent}
-          topContentPlacement='outside'
-          onSelectionChange={setSelectedKeys}
-          onSortChange={setSortDescriptor}
+        <section
+          ref={reportRef}
+          className="border border-primaryGrey rounded-md mt-2 p-3"
         >
-          <TableHeader columns={columns?.column}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === 'actions' ? 'center' : 'start'}
-                allowsSorting={column.sortable}
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            style={{
-              textAlign: 'center',
-            }}
-            emptyContent={'No items found'}
-            items={sortedItems || []}
-            isLoading={isLoading}
-            loadingContent={<SmallLoader />}
-          >
-            {(item: any, index: any) => (
-              <TableRow key={`row-${index}`}>
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
+          <div className=" flex flex-col items-center mb-4">
+            <p className="text-xl font-bold capitalize">{reportName}</p>
+            <p className="text-base font-semibold">
+              {business[0]?.businessName}, {business[0]?.city}{" "}
+              {business[0]?.state}
+            </p>
+            <p className="text-sm text-grey600">
+              {selectedValue === "Custom date" && (
+                <p className="text-default-500 text-sm">
+                  {value.start &&
+                    moment(formatDateTimeForPayload3(value?.start)).format(
+                      "MMMM Do YYYY"
+                    )}
+                  {" - "}
+                  {value.end &&
+                    moment(formatDateTimeForPayload3(value?.end)).format(
+                      "MMMM Do YYYY"
+                    )}
+                </p>
+              )}
+            </p>
+            <p className="text-xs text-danger-500">{data?.message}</p>
+          </div>
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+            <Table
+              radius="lg"
+              isCompact
+              removeWrapper
+              allowsSorting
+              aria-label="list of orders"
+              bottomContent={
+                isLoading || items?.length === 0 ? (
+                  ""
+                ) : (
+                  <PaginationComponent
+                    data={items}
+                    page={page}
+                    setPage={setPage}
+                    pages={pages}
+                  />
+                )
+              }
+              bottomContentPlacement="outside"
+              classNames={{
+                ...classNames,
+                th: [
+                  ...(Array.isArray(classNames?.th) ? classNames.th : []),
+                  "sticky top-0 z-10 bg-white border-b border-divider",
+                ],
+              }}
+              selectedKeys={selectedKeys}
+              // selectionMode='multiple'
+              sortDescriptor={sortDescriptor}
+              // topContent={topContent}
+              topContentPlacement="outside"
+              onSelectionChange={setSelectedKeys}
+              onSortChange={setSortDescriptor}
+            >
+              <TableHeader columns={columns?.column}>
+                {(column) => (
+                  <TableColumn
+                    key={column.uid}
+                    align={column.uid === "actions" ? "center" : "start"}
+                    allowsSorting={column.sortable}
+                  >
+                    {column.name}
+                  </TableColumn>
                 )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </section>
+              </TableHeader>
+              <TableBody
+                style={{
+                  textAlign: "center",
+                }}
+                emptyContent={"No items found"}
+                items={sortedItems || []}
+                isLoading={isLoading}
+                loadingContent={<SmallLoader />}
+              >
+                {(item: any, index: any) => (
+                  <TableRow key={`row-${index}`}>
+                    {(columnKey) => (
+                      <TableCell>{renderCell(item, columnKey)}</TableCell>
+                    )}
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </section>
 
-      <Modal
-        className='text-black'
-        isOpen={isOpenDownload}
-        onOpenChange={toggleDownloadReport}
-      >
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className='flex flex-col gap-1'>
-                Choose a method to export
-              </ModalHeader>
-              <ModalBody className='mb-6'>
-                <div
-                  onClick={() => {
-                    exportFile(0);
-                    toggleDownloadReport();
-                  }}
-                  className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
-                >
-                  <div className='flex gap-2'>
-                    <Image src={PDF} alt='pdf icon' />
-                    <p>Export as PDF</p>
+        <Modal
+          className="text-black"
+          isOpen={isOpenDownload}
+          onOpenChange={toggleDownloadReport}
+        >
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader className="flex flex-col gap-1">
+                  Choose a method to export
+                </ModalHeader>
+                <ModalBody className="mb-6">
+                  <div
+                    onClick={() => {
+                      exportFile(0);
+                      toggleDownloadReport();
+                    }}
+                    className="flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md"
+                  >
+                    <div className="flex gap-2">
+                      <Image src={PDF} alt="pdf icon" />
+                      <p>Export as PDF</p>
+                    </div>
+                    <IoIosArrowForward className="text-grey600" />
                   </div>
-                  <IoIosArrowForward className='text-grey600' />
-                </div>
-                <div
-                  onClick={() => {
-                    toggleDownloadReport();
-                    exportFile(1);
-                  }}
-                  className='flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md'
-                >
-                  <div className='flex gap-2'>
-                    <Image src={CSV} alt='pdf icon' />
-                    <p>Export as CSV</p>
+                  <div
+                    onClick={() => {
+                      toggleDownloadReport();
+                      exportFile(1);
+                    }}
+                    className="flex justify-between items-center cursor-pointer px-3 py-4 hover:bg-primaryGrey rounded-md"
+                  >
+                    <div className="flex gap-2">
+                      <Image src={CSV} alt="pdf icon" />
+                      <p>Export as CSV</p>
+                    </div>
+                    <IoIosArrowForward className="text-grey600" />
                   </div>
-                  <IoIosArrowForward className='text-grey600' />
-                </div>
-              </ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-    </>
-  );
-};
+                </ModalBody>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+      </>
+    );
+  };
 
 export default ActivityTableOrder;

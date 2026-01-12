@@ -1,7 +1,13 @@
 'use client';
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 
-const Filters = ({ payments, handleTabChange, handleTabClick }: any) => {
+interface FiltersProps {
+  payments: any[];
+  tableStatus: string;
+  handleTabClick: (categoryName: string) => void;
+}
+
+const Filters = ({ payments, tableStatus, handleTabClick }: FiltersProps) => {
   return (
     <>
       <div className='flex  relative w-full top-4 px-3  border-b border-primaryGrey justify-between'>
@@ -16,15 +22,15 @@ const Filters = ({ payments, handleTabChange, handleTabClick }: any) => {
           }}
           variant={'underlined'}
           aria-label='payment filter'
-          onChange={handleTabChange}
+          selectedKey={tableStatus}
+          onSelectionChange={(key) => handleTabClick(key as string)}
         >
-          {payments?.map((payment: any) => {
+          {payments?.map((payment: any, index: number) => {
             return (
               <Tab
                 key={payment.name}
                 title={
                   <div
-                    onClick={() => handleTabClick(payment.name)}
                     className='flex items-center h-10 space-x-2 capitalize'
                   >
                     <span>{payment.name}</span>
@@ -34,7 +40,7 @@ const Filters = ({ payments, handleTabChange, handleTabClick }: any) => {
                         base: `text-xs h-5 w-3 text-white group-data-[selected=true]:bg-primaryColor`,
                       }}
                     >
-                      {payment?.totalCount}
+                      {payment?.count}
                     </Chip>
                   </div>
                 }

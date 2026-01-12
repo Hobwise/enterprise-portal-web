@@ -8,7 +8,7 @@ import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
-import { useQueryClient } from "react-query";
+import { useQueryClient } from '@tanstack/react-query';
 
 const SignupForm = () => {
   const router = useRouter();
@@ -60,40 +60,56 @@ const SignupForm = () => {
 
   return (
     <form onSubmit={submitFormData} autoComplete="off">
-      <div className="flex md:flex-row flex-col gap-5">
-        <CustomInput
-          type="text"
-          name="firstName"
-          label="First Name"
-          errorMessage={response?.errors?.firstName?.[0]}
-          onChange={handleInputChange}
-          value={signupFormData.firstName}
-          placeholder="First name"
-        />
+      <div className="flex md:flex-row flex-col w-full gap-5">
+        <div className="flex-1">
+          <CustomInput
+            type="text"
+            name="firstName"
+            label=""
+            errorMessage={response?.errors?.firstName?.[0]}
+            onChange={handleInputChange}
+            value={signupFormData.firstName}
+            placeholder="First name"
+            bgColor="bg-transparent"
+            classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+            inputTextColor="text-gray-200"
+          />
+        </div>
 
-        <CustomInput
-          type="text"
-          name="lastName"
-          errorMessage={response?.errors?.lastName?.[0]}
-          onChange={handleInputChange}
-          value={signupFormData.lastName}
-          label="Last Name"
-          placeholder="Last name"
-        />
+        <div className="flex-1">
+          <CustomInput
+            type="text"
+            name="lastName"
+            errorMessage={response?.errors?.lastName?.[0]}
+            onChange={handleInputChange}
+            value={signupFormData.lastName}
+            label=""
+            placeholder="Last name"
+            bgColor="bg-transparent"
+            classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+            inputTextColor="text-gray-200"
+          />
+        </div>
       </div>
-      <Spacer y={6} />
+
+      <Spacer y={5} />
+
       <CustomInput
         type="text"
         name="email"
         errorMessage={response?.errors?.email?.[0]}
         onChange={handleInputChange}
         value={signupFormData.email}
-        label="Email Address"
+        label=""
         placeholder="Enter email"
-        endContent={<FaRegEnvelope className="text-foreground-500 text-l" />}
+        bgColor="bg-transparent"
+        classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+        inputTextColor="text-gray-200"
+        endContent={<FaRegEnvelope className="text-gray-300 text-lg" />}
       />
 
-      <Spacer y={6} />
+      <Spacer y={5} />
+
       <Tooltip
         showArrow
         placement="left"
@@ -131,26 +147,40 @@ const SignupForm = () => {
             onChange={handleInputChange}
             type="password"
             name="password"
-            label="Password"
+            label=""
             placeholder="Enter password"
+            bgColor="bg-transparent"
+            classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+            inputTextColor="text-gray-200"
+            eyeIconStyle="text-gray-300 text-lg"
           />
         </div>
       </Tooltip>
 
-      <Spacer y={6} />
+      <Spacer y={5} />
+
       <CustomInput
         errorMessage={response?.errors?.confirmPassword?.[0]}
         value={signupFormData.confirmPassword}
         onChange={handleInputChange}
         type="password"
         name="confirmPassword"
-        label="Confirm Password"
-        placeholder="Enter password"
+        label=""
+        placeholder="Confirm password"
+        bgColor="bg-transparent"
+        classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
+        inputTextColor="text-gray-200"
+        eyeIconStyle="text-gray-300 text-lg"
       />
 
-      <Spacer y={6} />
+      <Spacer y={7} />
 
-      <CustomButton loading={loading} disabled={loading} type="submit">
+      <CustomButton
+        loading={loading}
+        disabled={loading}
+        type="submit"
+        className="bg-secondaryColor font-[600] text-[16px] w-full rounded-xl h-[55px] text-white hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80 transition-all"
+      >
         Create Account
       </CustomButton>
     </form>

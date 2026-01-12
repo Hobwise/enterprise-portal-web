@@ -1,7 +1,7 @@
 'use client';
 import { getRoleCount } from '@/app/api/controllers/auth';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const useRoleCount = () => {
   const business = getJsonItemFromLocalStorage('business');
@@ -15,13 +15,11 @@ const useRoleCount = () => {
     return responseData?.data?.data as any;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>(
-    'roleCount',
-    fetchRoleCount,
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ['roleCount'],
+    queryFn: fetchRoleCount,
+    refetchOnWindowFocus: false,
+  });
 
   return { data, isLoading, isError, refetch };
 };

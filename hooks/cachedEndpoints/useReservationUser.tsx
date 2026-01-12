@@ -5,7 +5,7 @@ import {
 } from '@/app/api/controllers/dashboard/reservations';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
-import { useQuery } from "react-query";
+import { useQuery } from '@tanstack/react-query';
 
 const useReservationUser = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -21,9 +21,11 @@ const useReservationUser = (businessIdOutsideApp?: any, cooperateID?: any) => {
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<
-    payloadReservationItem[]
-  >("reservationUser", getAllReservation, fetchQueryConfig());
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ["reservationUser"],
+    queryFn: getAllReservation,
+    ...fetchQueryConfig()
+  });
 
   return {
     data,

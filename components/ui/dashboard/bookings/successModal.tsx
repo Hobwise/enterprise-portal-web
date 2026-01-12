@@ -13,6 +13,7 @@ const SuccessModal = ({
     <Modal
       isDismissable={false}
       isOpen={openSuccessModal}
+      size="md"
       onOpenChange={() => {
         closeSuccessModal();
       }}

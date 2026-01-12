@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from '@/lib/userTypeUtils';
 import { useDisclosure } from '@nextui-org/react';
 import { motion, useCycle } from 'framer-motion';
 import { FiLogOut } from 'react-icons/fi';
@@ -38,13 +39,21 @@ const sidebar = {
 };
 
 const HeaderMobile = () => {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const { isOpen, onOpenChange } = useDisclosure();
   const userInformation = getJsonItemFromLocalStorage('userInformation');
 
   const pathname = usePathname();
   const containerRef = useRef(null);
   const { height } = useDimensions(containerRef);
   const [isOpenClass, toggleOpen] = useCycle(false, true);
+
+  // Hide mobile menu for POS users and Category users only
+  const isPOSUser = checkIsPOSUser(userInformation);
+  const isCategoryUser = checkIsCategoryUser(userInformation);
+
+  if (isPOSUser || isCategoryUser) {
+    return null;
+  }
 
   return (
     <motion.nav
@@ -113,7 +122,7 @@ export default HeaderMobile;
 const MenuToggle = ({ toggle }: { toggle: any }) => (
   <button
     onClick={toggle}
-    className='pointer-events-auto absolute right-4  top-[14px] z-30'
+    className='pointer-events-auto absolute left-4  top-[14px] z-30'
   >
     <svg width='23' height='23' viewBox='0 0 23 23'>
       <Path

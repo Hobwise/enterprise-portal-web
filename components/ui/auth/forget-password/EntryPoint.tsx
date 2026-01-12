@@ -6,9 +6,11 @@ import ForgetPasswordForm from './forgetPasswordForm';
 const EntryPoint = ({
   userEmail,
   screenNumber,
+  isForced,
 }: {
   userEmail?: string;
   screenNumber?: number;
+  isForced?: boolean;
 }) => {
   const [screen, setScreen] = useState<number>(screenNumber || 1);
   const [email, setEmail] = useState(userEmail || '');
@@ -22,7 +24,7 @@ const EntryPoint = ({
           setScreen={setScreen}
         />
       )}
-      {screen === 2 && <ChangePasswordForm email={email} />}
+      {screen === 2 && <ChangePasswordForm email={email} isForced={isForced} />}
     </>
   );
 };

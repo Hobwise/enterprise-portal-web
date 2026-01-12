@@ -8,11 +8,10 @@ import { CustomButton } from '@/components/customButton';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import {
-  CustomLoading,
   formatPrice,
   getJsonItemFromLocalStorage,
 } from '@/lib/utils';
-import { Button, ButtonGroup, Spacer, Tooltip } from '@nextui-org/react';
+import { Button, ButtonGroup, Spacer, Tooltip, Skeleton } from '@nextui-org/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -22,7 +21,7 @@ import { GoPlus } from 'react-icons/go';
 import { IoIosArrowRoundBack } from 'react-icons/io';
 import { MdCreate } from 'react-icons/md';
 import { RiDeleteBin6Line } from 'react-icons/ri';
-import { toast } from 'react-toastify';
+import toast from 'react-hot-toast';
 import noImage from '../../../../public/assets/images/no-image.svg';
 import DeleteMenu from './deleteMenu';
 import DeleteVariety from './deleteVariety';
@@ -172,7 +171,36 @@ const MenuDetails = () => {
       <Spacer y={5} />
 
       {isLoading ? (
-        <CustomLoading />
+        <div className='flex xl:flex-row flex-col'>
+          <div className='h-[564px] xl:w-1/2 w-full xl:mt-0 mt-4'>
+            <Skeleton className='w-full h-full rounded-lg' />
+          </div>
+          <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0'>
+            <Skeleton className='h-8 w-3/4 rounded-lg mb-4' />
+            <Skeleton className='h-4 w-full rounded-lg mb-4' />
+            <Skeleton className='h-4 w-1/3 rounded-lg mb-4' />
+            <Skeleton className='h-4 w-1/4 rounded-lg mb-4' />
+            <Skeleton className='h-4 w-1/2 rounded-lg mb-4' />
+            <Spacer y={10} />
+            
+            <Skeleton className='h-6 w-24 rounded-lg mb-2' />
+            <div className='border-[#EAECF0] text-sm border rounded-lg'>
+              <div className='flex justify-between border-b border-b-[#EAECF0] p-3 items-center'>
+                <Skeleton className='h-4 w-32 rounded-lg' />
+                <Skeleton className='h-8 w-32 rounded-lg' />
+              </div>
+              <div className='h-[250px] overflow-scroll p-3'>
+                {[1, 2, 3].map((_, index) => (
+                  <div key={index} className='mb-4'>
+                    <Skeleton className='h-4 w-3/4 rounded-lg mb-2' />
+                    <Skeleton className='h-4 w-1/2 rounded-lg mb-2' />
+                    <Skeleton className='h-4 w-1/3 rounded-lg' />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       ) : (
         <div className='flex  xl:flex-row flex-col'>
           <div className={`h-[564px]  xl:w-1/2 w-full  xl:mt-0 mt-4 `}>

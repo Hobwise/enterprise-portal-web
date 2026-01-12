@@ -9,8 +9,8 @@ import OrderReportDetails from '@/components/ui/dashboard/reports/orderReports';
 import PaymentReportDetails from '@/components/ui/dashboard/reports/paymentReports';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import useReport from '@/hooks/cachedEndpoints/useReport';
-import { CustomLoading, formatDateTimeForPayload2 } from '@/lib/utils';
-import { getLocalTimeZone, today } from '@internationalized/date';
+import { formatDateTimeForPayload2 } from '@/lib/utils';
+import { getLocalTimeZone, today, DateValue } from '@internationalized/date';
 import {
   Button,
   Chip,
@@ -25,22 +25,36 @@ import {
   Tab,
   Tabs,
   useDisclosure,
+  Skeleton,
+  Selection,
 } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import { MdKeyboardArrowDown } from 'react-icons/md';
+import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
+import {
+  getJsonItemFromLocalStorage,
+  saveJsonItemToLocalStorage,
+} from "@/lib/utils";
+
+interface TabItem {
+  id: string;
+  label: string;
+  content: React.ReactNode;
+}
 
 const Reports: React.FC = () => {
   const router = useRouter();
 
   const { userRolePermissions, role } = usePermission();
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
-  const [value, setValue] = React.useState({
-    start: null,
-    end: null,
+  const initialDate = today(getLocalTimeZone());
+  const [value, setValue] = React.useState<{ start: DateValue; end: DateValue }>({
+    start: initialDate,
+    end: initialDate,
   });
-  const [selectedKeys, setSelectedKeys] = useState(new Set(["This week"]));
+  const [selectedKeys, setSelectedKeys] = useState<Selection>(new Set(["This week"]));
   const selectedValue = useMemo(
-    () => Array.from(selectedKeys).join(", ").replaceAll("_", " "),
+    () => Array.from(selectedKeys as Set<string>).join(", ").replaceAll("_", " "),
     [selectedKeys]
   );
   const [previousSelectedValue, setPreviousSelectedValue] =
@@ -63,7 +77,7 @@ const Reports: React.FC = () => {
   };
 
   const checkValue = () => {
-    return value.start !== null && value.end !== null;
+    return value.start && value.end;
   };
 
   const shouldFetchReport =
@@ -93,23 +107,32 @@ const Reports: React.FC = () => {
     }
   }, [shouldFetchReport, selectedValue]);
 
-  const handleDateChange = (newValue: any) => {
+  const handleDateChange = (newValue: { start: DateValue; end: DateValue }) => {
     setValue(newValue);
     if (newValue.start && newValue.end) {
       onClose();
     }
   };
 
+  const [selectedTab, setSelectedTab] = useState<string>(() => {
+    // Read the selected tab from localStorage on mount
+    const savedTab = getJsonItemFromLocalStorage("selectedReportTab");
+    return savedTab || "orders";
+  });
+
+  // Update selectedTab when it changes in localStorage
+  useEffect(() => {
+    const savedTab = getJsonItemFromLocalStorage("selectedReportTab");
+    if (savedTab) {
+      setSelectedTab(savedTab);
+    }
+  }, []);
+
+  if (isLoading) return <CustomLoading />;
   if (isError) {
     return <Error onClick={() => refetch()} />;
   }
 
-  interface TabItem {
-    id: string;
-    label: string;
-    content: React.ReactNode;
-  }
-  const [selectedTab, setSelectedTab] = useState<string>("orders");
   let tabs: TabItem[] = [
     {
       id: "orders",
@@ -127,14 +150,14 @@ const Reports: React.FC = () => {
       content: <BookingReportDetails report={data?.bookingDetails} />,
     },
     {
-      id: "audits",
-      label: "Audits",
+      id: "users",
+      label: "Users",
       content: <AuditReportDetails report={data?.auditDetails} />,
     },
   ];
 
   return (
-    <Suspense fallback={<CustomLoading />}>
+    <Suspense fallback={null}>
       <div className="flex flex-col w-full">
         <div className="flex flex-row flex-wrap justify-between mb-4">
           <div>
@@ -155,7 +178,9 @@ const Reports: React.FC = () => {
               )}
             </div>
             <div className="flex gap-2 items-center">
-              <p className="text-sm text-grey600">A summary of activities</p>
+              <p className="text-sm text-grey600">
+                Track and monitor business activites
+              </p>
               <Dropdown isDisabled={isLoading}>
                 <DropdownTrigger>
                   <Button
@@ -173,7 +198,7 @@ const Reports: React.FC = () => {
                   selectionMode="single"
                   className="text-black"
                   selectedKeys={selectedKeys}
-                  onSelectionChange={setSelectedKeys}
+                  onSelectionChange={(keys) => setSelectedKeys(keys)}
                 >
                   <DropdownItem key="Today">Today</DropdownItem>
                   <DropdownItem key="This week">This week</DropdownItem>
@@ -188,7 +213,11 @@ const Reports: React.FC = () => {
         </div>
 
         {isLoading ? (
-          <CustomLoading />
+          <div className="w-full space-y-4">
+            <Skeleton className="w-full h-12 rounded-lg" />
+            <Skeleton className="w-full h-32 rounded-lg" />
+            <Skeleton className="w-full h-64 rounded-lg" />
+          </div>
         ) : (
           <div className="w-full relative md:-top-14 -top-2">
             <div className="mb-4  flex  md:justify-end justify-start">
@@ -199,7 +228,12 @@ const Reports: React.FC = () => {
                 aria-label="report tabs"
                 items={tabs}
                 selectedKey={selectedTab}
-                onSelectionChange={(key) => setSelectedTab(key as string)}
+                onSelectionChange={(key) => {
+                  const tabKey = key as string;
+                  setSelectedTab(tabKey);
+                  // Save the selected tab to localStorage
+                  saveJsonItemToLocalStorage("selectedReportTab", tabKey);
+                }}
               >
                 {(item) => <Tab key={item.id} title={item.label} />}
               </Tabs>

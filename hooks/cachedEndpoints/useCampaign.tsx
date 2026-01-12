@@ -5,7 +5,7 @@ import {
   payloadCampaignItem,
 } from '@/app/api/controllers/dashboard/campaigns';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 
@@ -28,11 +28,11 @@ const useCampaign = () => {
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<payloadCampaignItem[]>(
-    ["campaign", { page, rowsPerPage, tableStatus }],
-    getAllCampaign,
-    fetchQueryConfig()
-  );
+  const { data, isLoading, isError, refetch } = useQuery<payloadCampaignItem[]>({
+    queryKey: ["campaign", { page, rowsPerPage, tableStatus }],
+    queryFn: getAllCampaign,
+    ...fetchQueryConfig()
+  });
 
   return {
     data,

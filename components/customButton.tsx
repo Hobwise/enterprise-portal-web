@@ -12,6 +12,7 @@ interface ButtonProps {
   onClick?: any;
   disableRipple?: boolean;
   type?: "submit" | "button" | "reset";
+  style?: React.CSSProperties;
 }
 export const CustomButton = ({
   children,
@@ -24,6 +25,7 @@ export const CustomButton = ({
   backgroundColor = "bg-primaryColor",
   radius = "rounded-lg",
   className = "text-white font-bold text-md  h-[55px] w-full",
+  style,
 }: ButtonProps) => {
   return (
     <Button
@@ -34,6 +36,7 @@ export const CustomButton = ({
       disabled={disabled}
       disableRipple={disableRipple}
       aria-label="submit button"
+      style={style}
       spinner={
         <svg
           className="animate-spin h-5 w-5 text-current"
@@ -56,7 +59,11 @@ export const CustomButton = ({
           />
         </svg>
       }
-      className={`${backgroundColor}  ${radius} ${className} disabled:bg-grey500 disabled:cursor-not-allowed`}
+      className={`${
+        style ? "" : backgroundColor
+      } ${radius} ${className} disabled:bg-gray-300 disabled:text-black disabled:cursor-not-allowed ${
+        disabled || loading ? "pointer-events-none opacity-70" : ""
+      }`}
     >
       {loading ? "" : children}
     </Button>

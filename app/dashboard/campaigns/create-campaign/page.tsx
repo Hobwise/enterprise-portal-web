@@ -9,6 +9,7 @@ import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { CustomTextArea } from "@/components/customTextArea";
 import useCampaign from "@/hooks/cachedEndpoints/useCampaign";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import {
   SmallLoader,
   THREEMB,
@@ -28,6 +29,7 @@ import {
   today,
 } from "@internationalized/date";
 import { DatePicker } from "@nextui-org/date-picker";
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Button,
   Modal,
@@ -48,6 +50,7 @@ import Success from "../../../../public/assets/images/success.png";
 const AddNewCampaign = () => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const router = useRouter();
+  const { userRolePermissions, role, isLoading: isPermissionsLoading } = usePermission();
   const getCampaignSavedToDraft = getJsonItemFromLocalStorage(
     "saveCampaignToDraft"
   );
@@ -58,6 +61,7 @@ const AddNewCampaign = () => {
   );
 
   const { refetch } = useCampaign();
+  const queryClient = useQueryClient();
   const [isLoadingImage, setIsLoadingImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState("");
@@ -182,6 +186,11 @@ const AddNewCampaign = () => {
 
     if (data?.data?.isSuccessful) {
       onOpen();
+      // Invalidate campaign queries to refresh the campaign list
+      queryClient.invalidateQueries(['campaignCategories']);
+      // Invalidate all campaign data for all categories to show new campaign immediately
+      queryClient.invalidateQueries(['campaignsByCategory']);
+      
       clearItemLocalStorage("saveCampaignToDraft");
       clearItemLocalStorage("selectedImageCampaign");
       clearItemLocalStorage("saveStartDateTime");
@@ -233,6 +242,18 @@ const AddNewCampaign = () => {
     );
     setSelectedImage(selectedImageSavedToDraft || "");
   }, []);
+
+  // Check permissions before rendering
+  useEffect(() => {
+    if (!isPermissionsLoading && role !== 0 && !userRolePermissions?.canCreateCampaign) {
+      router.push('/dashboard/unauthorized');
+    }
+  }, [isPermissionsLoading, role, userRolePermissions, router]);
+
+  // Check if user has permission to create campaigns
+  if (role !== 0 && !userRolePermissions?.canCreateCampaign) {
+    return null; // Will redirect via useEffect
+  }
 
   return (
     <>

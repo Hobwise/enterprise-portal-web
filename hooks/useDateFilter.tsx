@@ -19,8 +19,9 @@ import { MdKeyboardArrowDown } from "react-icons/md";
 const useDateFilter = (endpoint: any) => {
   const [selectedKeys, setSelectedKeys] = useState(new Set(["This week"]));
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+  const [isDateChanging, setIsDateChanging] = useState(false);
 
-  const [value, setValue] = React.useState({
+  const [value, setValue] = React.useState<any>({
     start: null,
     end: null,
   });
@@ -65,12 +66,18 @@ const useDateFilter = (endpoint: any) => {
   const endDate = value.end
     ? `${formatDateTimeForPayload2(value.end)}Z`
     : undefined;
-  const { data, isError, refetch, isLoading } = endpoint(
+  const {  categories, details, salesSummary, isError, refetch, isLoading, isFetching } = endpoint(
     logIndexForSelectedKey(effectiveSelectedValue),
     startDate,
     endDate,
     { enabled: true }
   );
+
+  // Combined loading state that includes both API loading and date changing
+  const combinedIsLoading = isLoading || isDateChanging;
+
+  // Combined fetching state
+  const combinedIsFetching = isFetching || isDateChanging;
 
   useEffect(() => {
     if (shouldFetchReport && selectedValue !== "Custom date") {
@@ -81,19 +88,44 @@ const useDateFilter = (endpoint: any) => {
   const handleDateChange = (newValue: any) => {
     setValue(newValue);
     if (newValue.start && newValue.end) {
+      setIsDateChanging(true);
       onClose();
+      // Immediately trigger refetch without delay
+      refetch().finally(() => {
+        setIsDateChanging(false);
+      });
     }
   };
 
+  // Handle dropdown selection changes
+  const handleDropdownSelectionChange = (keys: any) => {
+    const newKeys = new Set(Array.from(keys) as string[]);
+    const newValue = Array.from(newKeys).join(", ").replaceAll("_", " ");
+    
+    // Only set loading if it's not "Custom date" (which opens modal)
+    if (newValue !== "Custom date") {
+      setIsDateChanging(true);
+      // Use a short timeout to allow loading state to show, then refetch
+      setTimeout(() => {
+        refetch().finally(() => {
+          setIsDateChanging(false);
+        });
+      }, 50);
+    }
+    
+    setSelectedKeys(newKeys);
+  };
+
   const dropdownComponent = (
-    <Dropdown isDisabled={isLoading}>
+    <Dropdown isDisabled={combinedIsLoading}>
       <DropdownTrigger>
         <Button
           endContent={<MdKeyboardArrowDown />}
           disableRipple
           className="font-[600] bg-transparent p-0 capitalize text-black"
+          isLoading={combinedIsLoading}
         >
-          {selectedValue}
+          {combinedIsLoading ? "Loading..." : selectedValue}
         </Button>
       </DropdownTrigger>
       <DropdownMenu
@@ -103,7 +135,7 @@ const useDateFilter = (endpoint: any) => {
         selectionMode="single"
         className="text-black"
         selectedKeys={selectedKeys}
-        onSelectionChange={setSelectedKeys}
+        onSelectionChange={handleDropdownSelectionChange}
       >
         <DropdownItem key="Today">Today</DropdownItem>
         <DropdownItem key="This week">This week</DropdownItem>
@@ -140,7 +172,13 @@ const useDateFilter = (endpoint: any) => {
                 label="Select date range"
                 showMonthAndYearPickers
                 labelPlacement="outside"
+                isDisabled={isDateChanging}
               />
+              {isDateChanging && (
+                <div className="text-center text-sm text-gray-500 mt-2">
+                  Applying date filter...
+                </div>
+              )}
             </ModalBody>
           </>
         )}
@@ -149,14 +187,19 @@ const useDateFilter = (endpoint: any) => {
   );
   const filterType = logIndexForSelectedKey(effectiveSelectedValue);
   return {
-    data,
-
+    categories,
+    details,
+    salesSummary,
     isError,
     refetch,
-    isLoading,
+    isLoading: combinedIsLoading,
+    isFetching: combinedIsFetching,
+
     dropdownComponent,
     datePickerModal,
     filterType,
+    startDate,
+    endDate,
   };
 };
 

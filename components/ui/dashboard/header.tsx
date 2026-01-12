@@ -1,11 +1,10 @@
-'use client';
+"use client";
 
-import useNotificationCount from '@/hooks/cachedEndpoints/useNotificationCount';
-import useNotification from '@/hooks/cachedEndpoints/useNotifications';
-import useSubscription from '@/hooks/cachedEndpoints/useSubscription';
-import useUser from '@/hooks/cachedEndpoints/useUser';
-import useScroll from '@/hooks/use-scroll';
-import { cn } from '@/lib/utils';
+import useNotification from "@/hooks/cachedEndpoints/useNotifications";
+import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import useUser from "@/hooks/cachedEndpoints/useUser";
+import useScroll from "@/hooks/use-scroll";
+import { cn, getJsonItemFromLocalStorage } from "@/lib/utils";
 import {
   Avatar,
   Badge,
@@ -17,30 +16,28 @@ import {
   PopoverContent,
   PopoverTrigger,
   useDisclosure,
-} from '@nextui-org/react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname, useSelectedLayoutSegment } from 'next/navigation';
-import { useState } from 'react';
-import { FiLogOut } from 'react-icons/fi';
-import { IoIosArrowDown } from 'react-icons/io';
-import { MdOutlinePerson } from 'react-icons/md';
-import { PiBookOpenTextLight } from 'react-icons/pi';
-import { SlBell } from 'react-icons/sl';
-import { Skeleton } from '../landingPage/skeleton-loading';
-import LogoutModal from '../logoutModal';
-import { SIDENAV_ITEMS, headerRouteMapping } from './constants';
-import Notifications from './notifications/notifications';
-import { NavigationBanner, useCheckExpiry } from './subscription-notification';
+} from "@nextui-org/react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname, useSelectedLayoutSegment } from "next/navigation";
+import { useState, useCallback, useEffect } from "react";
+import { FiLogOut } from "react-icons/fi";
+import { IoIosArrowDown } from "react-icons/io";
+import { IoTimeOutline } from "react-icons/io5";
+import { MdOutlinePerson } from "react-icons/md";
+import { PiBookOpenTextLight } from "react-icons/pi";
+import { SlBell } from "react-icons/sl";
+import { Skeleton } from "../landingPage/skeleton-loading";
+import LogoutModal from "../logoutModal";
+import { SIDENAV_ITEMS, headerRouteMapping } from "./constants";
+import Notifications from "./notifications/notifications";
+import { NavigationBanner, useCheckExpiry } from "./subscription-notification";
+import * as signalR from "@microsoft/signalr";
+import useNotifyCount from "@/hooks/cachedEndpoints/useNotificationCount";
+import CompanyLogo from "@/components/logo";
 
-const Header = () => {
-  const page = 1;
-
-  const [pageSize, setPageSize] = useState(10);
-
-  const { isOpen, onOpenChange } = useDisclosure();
-  const { data: notificationCount, refetch: refetchCount } =
-    useNotificationCount();
+// NotificationFetcher: fetches notifications only when mounted (popover open)
+const NotificationFetcher = ({ page, pageSize, ...props }: any) => {
   const {
     data: notifData,
     isLoading,
@@ -48,7 +45,64 @@ const Header = () => {
     refetch,
   } = useNotification(page, pageSize);
 
+  return (
+    <Notifications
+      notifData={notifData}
+      refetch={refetch}
+      loadMore={props.loadMore}
+      isLoading={isLoading}
+      isError={isError}
+    />
+  );
+};
+
+const Header = ({ ispos }: any) => {
+  const page = 1;
+  const [pageSize, setPageSize] = useState(10);
+  const [unreadNotCount, setUnreadNotCount] = useState(0);
+  const [notifPopoverOpen, setNotifPopoverOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  const { data: unreadCount = 0 } = useNotifyCount();
+  const { isOpen, onOpenChange } = useDisclosure();
   const { data } = useUser();
+
+  // Get user info from localStorage for activeHours, firstLogin, lastLogin
+  const userInfo = getJsonItemFromLocalStorage("userInformation");
+
+  // Helper function to format active hours
+  const formatActiveHours = (hours: number): string => {
+    if (!hours) return "0 min";
+    const totalMinutes = Math.round(hours * 60);
+
+    if (totalMinutes < 60) {
+      return `${totalMinutes} min${totalMinutes !== 1 ? "s" : ""}`;
+    }
+
+    const hrs = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
+
+    if (mins === 0) {
+      return `${hrs}h`;
+    }
+
+    return `${hrs}h ${mins}m`;
+  };
+
+  // Helper function to format login timestamps
+  const formatLoginTime = (timestamp: string): string => {
+    if (!timestamp) return "N/A";
+    const date = new Date(timestamp);
+
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
 
   const pathname = usePathname();
   const scrolled = useScroll(5);
@@ -63,11 +117,9 @@ const Header = () => {
     }
   };
 
-  const loadMore = () => {
-    if (notifData?.hasNext) {
-      setPageSize((prevSize) => prevSize + 10);
-    }
-  };
+  const loadMore = useCallback(() => {
+    setPageSize((prevSize) => prevSize + 10);
+  }, []);
 
   const { data: subscription } = useSubscription();
 
@@ -78,153 +130,280 @@ const Header = () => {
   const isActive = subscription?.isActive;
   const onTrialVersion = subscription?.onTrialVersion;
 
+  // Set mounted state for client-side rendering
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // SignalR connection for real-time notifications
+  useEffect(() => {
+    const userInfoString = localStorage.getItem("userInformation");
+    if (!userInfoString) {
+      console.warn("No user information found in localStorage");
+      return;
+    }
+
+    const userInfo = JSON.parse(userInfoString);
+    if (!userInfo.token) {
+      console.warn("No token found in user information");
+      return;
+    }
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl("https://sandbox-api.hobwise.com/notificationHub", {
+        accessTokenFactory: () => userInfo.token,
+      })
+      .configureLogging(signalR.LogLevel.Information)
+      .build();
+
+    connection.on("ReceiveNotification", (data) => {
+      if (data && typeof data.unreadCount !== "undefined") {
+        setUnreadNotCount(data.unreadCount);
+        console.log("jhg", data.unreadCount);
+      }
+    });
+
+    connection
+      .start()
+      .then(() => {
+        console.log("SignalR connected.");
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+
+    return () => {
+      connection.stop();
+    };
+  }, []);
+
+  // When popover opens, refetch unread count
+
   return (
     <div
       className={cn(
-        `sticky inset-x-0 top-0 z-50 w-full  transition-all border-b  border-primaryGrey`,
+        `sticky inset-x-0 top-0 z-50 w-full  transition-all ${
+          ispos ? "" : "border-b"
+        }  border-primaryGrey`,
         {
-          'border-b  border-primaryGrey bg-white/75 backdrop-blur-lg': scrolled,
-          'border-b  border-primaryGrey bg-white': selectedLayout,
+          "border-b  border-primaryGrey bg-white/75 backdrop-blur-lg": scrolled,
+          "border-b  border-primaryGrey bg-white": selectedLayout,
         }
       )}
     >
-      <div className='w-full'>
+      <div className="w-full">
         {onTrialVersion === false && isActive === false && (
           <NavigationBanner
-            title='Your subscription has expired!'
-            desc='Upgrade to a paid plan to continue enjoying uninterrupted access'
+            title="Your subscription has expired!"
+            desc="Upgrade to a paid plan to continue enjoying uninterrupted access"
           />
         )}
         {onTrialVersion && isActive === false && showBanner && (
           <NavigationBanner
-            title='Trial Expiry Notice!'
+            title="Trial Expiry Notice!"
             desc={
               <div>
-                Your trial period will expire{' '}
-                <span className='font-bold'>{message}</span> . To continue
+                Your trial period will expire{" "}
+                <span className="font-bold">{message}</span> . To continue
                 enjoying uninterrupted access, please upgrade to a plan.
               </div>
             }
           />
         )}
-        <div className='flex h-[64px] bg-white text-black border-b border-primaryGrey items-center justify-between px-6'>
-          <div className='flex items-center space-x-4'>
-            <div className='flex items-center gap-2'>
-              {navItem ? (
-                <>
-                  {navItem?.title === 'Menu' ? (
-                    <PiBookOpenTextLight className='font-bold text-grey500 text-xl' />
-                  ) : (
-                    <Image
-                      className={'dashboardLogo'}
-                      src={navItem?.icon}
-                      alt={navItem?.title}
-                    />
-                  )}
-                  <span className='text-[#494E58] font-[600]'>
-                    {navItem?.title}
-                  </span>
-                </>
-              ) : (
-                <>
-                  {routeOutsideSidebar()?.icon}
-                  <span className='text-[#494E58] font-[600]'>
-                    {routeOutsideSidebar()?.title}
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className='hidden md:flex items-center space-x-8'>
-            <div className='flex items-center space-x-4'>
-              <Popover placement='bottom'>
-                <PopoverTrigger>
-                  <Badge
-                    className='cursor-pointer'
-                    content={notificationCount === 0 ? '' : notificationCount}
-                    size='sm'
-                    color='danger'
-                  >
-                    <PopoverTrigger>
-                      <SlBell className='text-[#494E58] h-5 w-5 cursor-pointer' />
-                    </PopoverTrigger>
-                  </Badge>
-                </PopoverTrigger>
-                {notifData?.notifications?.length > 0 && (
-                  <PopoverContent className=''>
-                    <Notifications
-                      notifData={notifData}
-                      refetch={refetch}
-                      loadMore={loadMore}
-                      isLoading={isLoading}
-                      isError={isError}
-                      refetchCount={refetchCount}
-                    />
-                  </PopoverContent>
+        <div
+          className={`flex h-[64px] bg-white text-black ${
+            ispos ? "" : "border-b"
+          } border-primaryGrey items-center justify-between px-6`}
+        >
+          {ispos && (
+            <Link
+              href={
+                pathname.startsWith("/business-activities")
+                  ? "/business-activities"
+                  : "/pos"
+              }
+              className="cursor-pointer"
+            >
+              <CompanyLogo
+                textColor="text-black font-lexend text-[28px] font-[600]"
+                containerClass="flex gap-2 items-center"
+              />
+            </Link>
+          )}
+          {!ispos && (
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center gap-2">
+                {navItem ? (
+                  <>
+                    {navItem?.title === "Menu" ? (
+                      <PiBookOpenTextLight className="font-bold text-grey500 text-xl" />
+                    ) : (
+                      <span className="text-[#494E58]">{navItem?.icon}</span>
+                    )}
+                    <span className="text-[#494E58] font-[600]">
+                      {navItem?.title}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[#494E58]">{routeOutsideSidebar()?.icon}</span>
+                    <span className="text-[#494E58] font-[600]">
+                      {routeOutsideSidebar()?.title}
+                    </span>
+                  </>
                 )}
-              </Popover>
+              </div>
+            </div>
+          )}
 
-              {/* <span>
-                <IoChatbubblesOutline className="text-[#494E58]  h-5 w-5 cursor-pointer" />
-              </span> */}
-
-              <Dropdown placement='bottom-end'>
-                <DropdownTrigger>
-                  {data ? (
-                    <div className='flex items-center py-2 px-4 rounded-full border border-gray-300 gap-2 cursor-pointer'>
-                      <div className='flex flex-col leading-4 '>
-                        <span className='text-xs font-bold'>
-                          {data?.firstName} {data?.lastName}
-                        </span>
-                        <span className='text-xs text-gray-500'>
-                          {data?.role === 0 ? 'Manager' : 'Staff'}
-                        </span>
-                      </div>
-                      <Avatar
-                        size='sm'
-                        src={
-                          data?.image && `data:image/jpeg;base64,${data?.image}`
+          <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-4">
+              {!ispos && (
+                <Popover
+                  placement="bottom"
+                  onOpenChange={setNotifPopoverOpen}
+                  isOpen={notifPopoverOpen}
+                >
+                  <PopoverTrigger>
+                    {unreadCount === 0 ? (
+                      <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
+                    ) : (
+                      <Badge
+                        className="cursor-pointer h-6 w-6 flex justify-center items-center rounded-full"
+                        size="sm"
+                        color="danger"
+                        content={
+                          unreadNotCount !== 0
+                            ? unreadNotCount
+                            : unreadCount > 0
+                            ? unreadCount
+                            : undefined
                         }
+                      >
+                        <SlBell className="text-[#494E58] h-5 w-5 cursor-pointer" />
+                      </Badge>
+                    )}
+                  </PopoverTrigger>
+                  <PopoverContent className="">
+                    {notifPopoverOpen && (
+                      <NotificationFetcher
+                        page={page}
+                        pageSize={pageSize}
+                        loadMore={loadMore}
                       />
-                      <IoIosArrowDown />
-                    </div>
-                  ) : (
-                    <div className=' flex items-center gap-2 border border-gray-200 rounded-full py-1 px-2'>
-                      <div className='w-full flex flex-col gap-1'>
-                        <Skeleton className='h-2 w-16 rounded-lg' />
-                        <Skeleton className='h-2 w-16 rounded-lg' />
+                    )}
+                  </PopoverContent>
+                </Popover>
+              )}
+
+              {/* Active Hours Display */}
+              {/* {isMounted && userInfo?.activeHours !== undefined && (
+                <div className="flex items-center space-x-2 px-3 py-1 bg-purple-50 rounded-full border border-purple-200">
+                  <svg
+                    className="w-4 h-4 text-purple-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="text-xs font-medium text-purple-700">
+                    {formatActiveHours(userInfo.activeHours)}
+                  </span>
+                </div>
+              )} */}
+
+              {!isMounted ? (
+                <div className=" flex items-center gap-2 border border-gray-200 rounded-full py-1 px-2">
+                  <div className="w-full flex flex-col gap-1">
+                    <Skeleton className="h-2 w-16 rounded-lg" />
+                    <Skeleton className="h-2 w-16 rounded-lg" />
+                  </div>
+                  <div>
+                    <Skeleton className="flex rounded-full w-8 h-8" />
+                  </div>
+                </div>
+              ) : (
+                <Dropdown placement="bottom-end">
+                  <DropdownTrigger>
+                    {data ? (
+                      <div className="flex items-center py-2 px-4 rounded-full border border-gray-300 gap-2 cursor-pointer">
+                        <div className=" hidden md:flex flex-col leading-4 ">
+                          <span className="text-xs font-bold">
+                            {data?.firstName} {data?.lastName}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {data?.role === 0 ? "Manager" : "Staff"}
+                          </span>
+                        </div>
+                        <Avatar
+                          size="sm"
+                          src={
+                            data?.image &&
+                            `data:image/jpeg;base64,${data?.image}`
+                          }
+                        />
+                        <IoIosArrowDown />
                       </div>
-                      <div>
-                        <Skeleton className='flex rounded-full w-8 h-8' />
+                    ) : (
+                      <div className=" flex items-center gap-2 border border-gray-200 rounded-full py-1 px-2">
+                        <div className="w-full flex flex-col gap-1">
+                          <Skeleton className="h-2 w-16 rounded-lg" />
+                          <Skeleton className="h-2 w-16 rounded-lg" />
+                        </div>
+                        <div>
+                          <Skeleton className="flex rounded-full w-8 h-8" />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </DropdownTrigger>
-                <DropdownMenu aria-label='settings Actions' variant='flat'>
-                  <DropdownItem key='Profile Management'>
-                    <Link
-                      prefetch={true}
-                      href={'/dashboard/settings/personal-information'}
-                      className='flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2'
+                    )}
+                  </DropdownTrigger>
+                  <DropdownMenu aria-label="settings Actions" variant="flat">
+                    <DropdownItem
+                      key="firstLogin"
+                      isReadOnly
+                      className="cursor-default opacity-100"
                     >
-                      <MdOutlinePerson className='text-[22px]' />
-                      <span className='  text-sm font-md'>
-                        Profile Management
-                      </span>
-                    </Link>
-                  </DropdownItem>
-                  <DropdownItem key='logout'>
-                    <div
-                      onClick={onOpenChange}
-                      className='flex cursor-pointer text-danger-500 transition-all hover:rounded-md px-2 py-2 items-center gap-2'
-                    >
-                      <FiLogOut className='text-[20px]' />
-                      <span className='  text-sm font-md'> Log out</span>
-                    </div>
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
+                      <div className="flex items-center gap-2 px-2 py-1">
+                        <IoTimeOutline className="text-primaryColor text-[22px]" />
+                        <div className="flex flex-col">
+                          <span className="text-xs text-primaryColor">
+                            Clock In
+                          </span>
+                          <span className="text-xs text-primaryColor font-medium">
+                            {userInfo?.firstLogin
+                              ? formatLoginTime(userInfo.firstLogin)
+                              : "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    </DropdownItem>
+                    <DropdownItem key="Settings">
+                      <Link
+                        prefetch={true}
+                        href={"/dashboard/settings/personal-information"}
+                        className="flex cursor-pointer text-[#475367] transition-all hover:rounded-md px-2 py-2 items-center gap-2"
+                      >
+                        <MdOutlinePerson className="text-[22px]" />
+                        <span className="  text-sm font-md">Settings</span>
+                      </Link>
+                    </DropdownItem>
+                    <DropdownItem key="logout">
+                      <div
+                        onClick={onOpenChange}
+                        className="flex cursor-pointer text-danger-500 transition-all hover:rounded-md px-2 py-2 items-center gap-2"
+                      >
+                        <FiLogOut className="text-[20px]" />
+                        <span className="  text-sm font-md"> Log out</span>
+                      </div>
+                    </DropdownItem>
+                  </DropdownMenu>
+                </Dropdown>
+              )}
             </div>
           </div>
         </div>

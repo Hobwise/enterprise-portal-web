@@ -411,9 +411,7 @@ export default function UserGuide() {
               your business
             </p>
             <div className="space-y-1.5">
-              <p>
-                1. After login, You can navigate to the profile management page
-              </p>
+              <p>1. After login, You can navigate to the settings page</p>
               <p>2. Click on the Bills & Subscription to view all plan</p>
               <p>
                 3. Select plan of your choice and make payment through the

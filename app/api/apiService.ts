@@ -4,20 +4,31 @@ import { generateRefreshToken, logout } from './controllers/auth';
 import { decryptPayload } from '@/lib/encrypt-decrypt';
 
 let isRefreshing = false;
-let refreshSubscribers = [];
+let refreshSubscribers: Array<(token?: string | null, error?: any) => void> = [];
+let consecutive401Count = 0;
+const MAX_401_ATTEMPTS = 3;
 
-const subscribeTokenRefresh = (callback) => {
+const subscribeTokenRefresh = (callback: (token?: string | null, error?: any) => void) => {
   refreshSubscribers.push(callback);
 };
 
-const onTokenRefreshed = (token) => {
+const onTokenRefreshed = (token: string) => {
   refreshSubscribers.forEach((callback) => callback(token));
   refreshSubscribers = [];
+  consecutive401Count = 0; // Reset counter on successful refresh
 };
 
-const onRefreshFailed = (error) => {
+const onRefreshFailed = (error: any) => {
   refreshSubscribers.forEach((callback) => callback(null, error));
   refreshSubscribers = [];
+  consecutive401Count++; // Increment counter on refresh failure
+};
+
+const performImmediateLogout = () => {
+  consecutive401Count = 0; // Reset counter
+  isRefreshing = false; // Reset refresh state
+  refreshSubscribers = []; // Clear subscribers
+  resetLoginInfo();
 };
 
 const api = axios.create({
@@ -25,7 +36,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 20000,
+  timeout: 30000, // Increased from 20s to 30s for better reliability
 });
 
 const isTokenExpiringSoon = () => {
@@ -78,6 +89,7 @@ const refreshToken = async () => {
   } catch (error) {
     onRefreshFailed(error);
     resetLoginInfo();
+    window.location.href = '/auth/login';
     throw error;
   } finally {
     isRefreshing = false;
@@ -102,7 +114,9 @@ api.interceptors.request.use(async (config) => {
   const business = getJsonItemFromLocalStorage('business');
   const token = userData?.token;
   const cooperateID = userData?.cooperateID;
-  const businessId = business?.businessId;
+  const userId = userData?.id;
+  // Fix: business is an array, so we need to access the first element
+  const businessId = business?.[0]?.businessId;
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -112,6 +126,9 @@ api.interceptors.request.use(async (config) => {
   }
   if (businessId) {
     config.headers['businessId'] = businessId;
+  }
+  if (userId) {
+    config.headers['userId'] = userId;
   }
 
   const isMultipartFormData = config.headers['Content-Type'] === 'multipart/form-data';
@@ -123,21 +140,34 @@ api.interceptors.request.use(async (config) => {
 });
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Reset 401 counter on successful response
+    consecutive401Count = 0;
+    return response;
+  },
   async (error) => {
     const originalConfig = error.config;
 
     if (error.response && error.response.status === 401 && !originalConfig._retry) {
+      consecutive401Count++;
+      
+      // Circuit breaker: if too many consecutive 401s, force logout immediately
+      if (consecutive401Count >= MAX_401_ATTEMPTS) {
+        console.warn(`Too many consecutive 401 errors (${consecutive401Count}). Forcing logout.`);
+        performImmediateLogout();
+        return Promise.reject(new Error('Authentication failed - session expired'));
+      }
+
       originalConfig._retry = true;
 
       if (isRefreshing) {
         try {
-          const newToken = await new Promise((resolve, reject) => {
-            subscribeTokenRefresh((token, err) => {
+          const newToken = await new Promise<string | null>((resolve, reject) => {
+            subscribeTokenRefresh((token?: string | null, err?: any) => {
               if (err) {
                 reject(err);
               } else {
-                resolve(token);
+                resolve(token || null);
               }
             });
           });
@@ -157,13 +187,19 @@ api.interceptors.response.use(
           const newToken = await refreshToken();
           originalConfig.headers.Authorization = `Bearer ${newToken}`;
           return api(originalConfig);
-        } catch (refreshError) {
+        } catch (refreshError: any) {
           if (refreshError.response && refreshError.response.status === 400) {
-            resetLoginInfo();
+            performImmediateLogout();
           }
           return Promise.reject(refreshError);
         }
       }
+    } else if (error.response && error.response.status === 401) {
+      // If we get here without retry, it means token refresh wasn't attempted or applicable
+      // Immediately logout to prevent unresponsive state
+      consecutive401Count++;
+      performImmediateLogout();
+      return Promise.reject(error);
     } else {
       handleError(error, false);
     }
@@ -173,6 +209,26 @@ api.interceptors.response.use(
 );
 
 export const handleError = (error: any, showError: boolean = true) => {
+  // Check for authentication-related errors
+  const errorMessage = error?.message || error?.response?.data?.error?.responseDescription || '';
+  
+  // Handle null reference errors that indicate authentication issues
+  if (errorMessage.includes('Cannot read properties of null') && 
+      (errorMessage.includes('password') || errorMessage.includes('token') || errorMessage.includes('user'))) {
+    console.warn('Authentication error detected, redirecting to login...');
+    resetLoginInfo();
+    window.location.href = '/auth/login';
+    return;
+  }
+  
+  // Handle other authentication errors
+  if (error?.response?.status === 401 || error?.response?.status === 403) {
+    console.warn('Unauthorized access, redirecting to login...');
+    resetLoginInfo();
+    window.location.href = '/auth/login';
+    return;
+  }
+  
   if (showError) {
     if (!error.response?.data?.title) {
       notify({

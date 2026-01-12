@@ -1,6 +1,6 @@
 "use client";
 import {
-  completeOrder,
+  completeOrderWithPayment,
   getOrder,
 } from "@/app/api/controllers/dashboard/orders";
 import { CustomInput } from "@/components/CustomInput";
@@ -21,6 +21,8 @@ import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../public/assets/images/no-image.svg";
+import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ConfirmOrderModal = ({
   singleOrder,
@@ -28,17 +30,21 @@ const ConfirmOrderModal = ({
   toggleConfirmModal,
   refetch,
 }: any) => {
+  const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const [isLoading, setIsLoading] = useState(false);
 
   const [screen, setScreen] = useState(1);
-  const [order, setOrder] = useState([]);
+  const [order, setOrder] = useState<any>([]);
   const [reference, setReference] = useState("");
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
 
   const handleClick = (methodId: number) => {
     if (methodId === 3) {
+      // Pay Later - close modal without payment
+      toggleConfirmModal();
+      refetch();
     } else {
       setSelectedPaymentMethod(methodId);
       setScreen(3);
@@ -57,6 +63,7 @@ const ConfirmOrderModal = ({
   ];
 
   const getOrderDetails = async () => {
+    if (!singleOrder?.id) return;
     const data = await getOrder(singleOrder.id);
 
     if (data?.data?.isSuccessful) {
@@ -66,6 +73,15 @@ const ConfirmOrderModal = ({
   };
 
   const finalizeOrder = async () => {
+    if (!singleOrder?.id) {
+      notify({
+        title: "Error!",
+        text: "Order data not available",
+        type: "error",
+      });
+      return;
+    }
+
     setIsLoading(true);
     const payload = {
       treatedBy: `${userInformation?.firstName} ${userInformation?.lastName}`,
@@ -75,7 +91,7 @@ const ConfirmOrderModal = ({
       status: 1,
     };
 
-    const data = await completeOrder(payload, singleOrder?.id);
+    const data = await completeOrderWithPayment(payload, singleOrder.id);
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
@@ -84,6 +100,46 @@ const ConfirmOrderModal = ({
         text: "Payment has been made, awaiting confirmation",
         type: "success",
       });
+
+      // Clear the global orders cache to force fresh data
+      ordersCacheUtils.clearAll();
+
+      // Invalidate all related order queries with aggressive refetch
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["orderCategories"],
+          refetchType: "active",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["orderDetails"],
+          refetchType: "active",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["allOrdersData"],
+          refetchType: "active",
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ["orders"],
+          refetchType: "active",
+        }),
+      ]);
+
+      // Force immediate refetch of all active queries
+      await Promise.all([
+        queryClient.refetchQueries({
+          queryKey: ["orderCategories"],
+          type: "active",
+        }),
+        queryClient.refetchQueries({
+          queryKey: ["orderDetails"],
+          type: "active",
+        }),
+        queryClient.refetchQueries({
+          queryKey: ["orders"],
+          type: "active",
+        }),
+      ]);
+
       toggleConfirmModal();
       refetch();
     } else if (data?.data?.error) {
@@ -98,12 +154,16 @@ const ConfirmOrderModal = ({
   useEffect(() => {
     if (singleOrder?.id) {
       getOrderDetails();
+      // Prefill payment reference if order already has one
+      if (singleOrder.paymentReference) {
+        setReference(singleOrder.paymentReference);
+      }
     }
   }, [singleOrder?.id]);
   return (
     <Modal
       isDismissable={false}
-      size={screen === 1 ? "4xl" : "md"}
+      size="4xl"
       isOpen={isOpenConfirmOrder}
       onOpenChange={() => {
         setScreen(1);
@@ -116,7 +176,7 @@ const ConfirmOrderModal = ({
       }}
     >
       <ModalContent>
-        {(onClose) => (
+        {() => (
           <>
             {screen === 1 && (
               <>
@@ -125,7 +185,7 @@ const ConfirmOrderModal = ({
                     <div>
                       <div className="text-[24px] leading-8 font-semibold">
                         <span className="text-black">
-                          {singleOrder.reference}
+                          {singleOrder?.reference || "Order"}
                         </span>
                       </div>
                       <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
@@ -147,7 +207,8 @@ const ConfirmOrderModal = ({
                       >
                         <div className="flex gap-2 items-center justify-center">
                           <p>
-                            Checkout {formatPrice(singleOrder.totalAmount)}{" "}
+                            Checkout{" "}
+                            {formatPrice(singleOrder?.totalAmount || 0)}{" "}
                           </p>
                           <HiArrowLongLeft className="text-[22px] rotate-180" />
                         </div>
@@ -168,66 +229,69 @@ const ConfirmOrderModal = ({
                         </div>
                       ) : (
                         <>
-                          {order?.orderDetails?.map((item, index) => {
-                            return (
-                              <>
-                                <div
-                                  key={item.id}
-                                  className="flex justify-between"
-                                >
-                                  <div className="w-[250px] rounded-lg text-black  flex">
-                                    <div
-                                      className={`grid place-content-center`}
-                                    >
-                                      <Image
-                                        src={
-                                          item?.image
-                                            ? `data:image/jpeg;base64,${item?.image}`
-                                            : noImage
-                                        }
-                                        width={60}
-                                        height={60}
-                                        className={
-                                          "bg-cover h-[60px] rounded-lg w-[60px]"
-                                        }
-                                        aria-label="uploaded image"
-                                        alt="uploaded image(s)"
-                                      />
-                                    </div>
-                                    <div className="p-3 flex  flex-col text-sm justify-center">
-                                      <p className="font-[600]">
-                                        {item.menuName}
-                                      </p>
-                                      <Spacer y={2} />
-                                      <p className="text-grey600">
-                                        {item.itemName}{" "}
-                                        <span className="text-black">
-                                          {item.unit && `(${item.unit})`}
-                                        </span>
-                                      </p>
+                          {order?.orderDetails?.map(
+                            (item: any, index: number) => {
+                              return (
+                                <>
+                                  <div
+                                    key={item.id}
+                                    className="flex justify-between"
+                                  >
+                                    <div className="w-[250px] rounded-lg text-black  flex">
+                                      <div
+                                        className={`grid place-content-center`}
+                                      >
+                                        <Image
+                                          src={
+                                            item?.image
+                                              ? `data:image/jpeg;base64,${item?.image}`
+                                              : noImage
+                                          }
+                                          width={60}
+                                          height={60}
+                                          className={
+                                            "bg-cover h-[60px] rounded-lg w-[60px]"
+                                          }
+                                          aria-label="uploaded image"
+                                          alt="uploaded image(s)"
+                                        />
+                                      </div>
+                                      <div className="p-3 flex  flex-col text-sm justify-center">
+                                        <p className="font-[600]">
+                                          {item.menuName}
+                                        </p>
+                                        <Spacer y={2} />
+                                        <p className="text-grey600">
+                                          {item.itemName}{" "}
+                                          <span className="text-black">
+                                            {item.unit && `(${item.unit})`}
+                                          </span>
+                                        </p>
 
-                                      <p className="">{item.iquantity}</p>
+                                        <p className="">{item.iquantity}</p>
+                                      </div>
+                                    </div>
+                                    <div className="text-black flex items-center text-[12px]">
+                                      <span>QTY:</span>
+                                      <span className="font-[600]">
+                                        {" "}
+                                        {item.quantity}
+                                      </span>
+                                    </div>
+                                    <div className="text-black w-[150px] grid place-content-center">
+                                      <h3 className="font-[600]">
+                                        {formatPrice(item?.unitPrice)}
+                                      </h3>
                                     </div>
                                   </div>
-                                  <div className="text-black flex items-center text-[12px]">
-                                    <span>QTY:</span>
-                                    <span className="font-[600]">
-                                      {" "}
-                                      {item.quantity}
-                                    </span>
-                                  </div>
-                                  <div className="text-black w-[150px] grid place-content-center">
-                                    <h3 className="font-[600]">
-                                      {formatPrice(item?.unitPrice)}
-                                    </h3>
-                                  </div>
-                                </div>
-                                {index !== order?.orderDetails?.length - 1 && (
-                                  <Divider className="bg-primaryGrey" />
-                                )}
-                              </>
-                            );
-                          })}
+                                  {index !==
+                                    order?.orderDetails?.length - 1 && (
+                                    <Divider className="bg-primaryGrey" />
+                                  )}
+                                </>
+                              );
+                            }
+                          )}
                         </>
                       )}
                     </div>
@@ -235,15 +299,15 @@ const ConfirmOrderModal = ({
                       <div className="flex justify-between items-center">
                         <div className="text-sm">
                           <p className="font-[600] text-black">
-                            {singleOrder.placedByName}
+                            {singleOrder?.placedByName || "Customer"}
                           </p>
                           <p className="text-grey500">
-                            {singleOrder.placedByPhoneNumber}
+                            {singleOrder?.placedByPhoneNumber || ""}
                           </p>
                         </div>
                         <div>
                           <span className="rounded-full text-sm px-4 py-2 bg-[#EAE5FF] text-primaryColor">
-                            {singleOrder.qrReference}
+                            {singleOrder?.qrReference || "N/A"}
                           </span>
                         </div>
                       </div>
@@ -251,7 +315,7 @@ const ConfirmOrderModal = ({
                       <div className="text-sm">
                         <p className="font-[600] text-black">Comment</p>
                         <p className="text-grey500">
-                          {singleOrder.comment
+                          {singleOrder?.comment
                             ? singleOrder.comment
                             : "no comment"}
                         </p>
@@ -268,7 +332,7 @@ const ConfirmOrderModal = ({
                     <span className="text-black">Select payment method</span>
                   </div>
                   <p className="text-sm  text-primaryColor xl:mb-8 w-full mb-4">
-                    {formatPrice(singleOrder.totalAmount)}
+                    {formatPrice(singleOrder?.totalAmount || 0)}
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 text-black">
@@ -307,7 +371,18 @@ const ConfirmOrderModal = ({
                       <span className="text-black">Confirm payment</span>
                     </div>
                     <p className="text-sm  text-grey500 xl:mb-8 w-full mb-4">
-                      confirm that customer has paid for order
+                      {(() => {
+                        switch (selectedPaymentMethod) {
+                          case 0: // Cash
+                            return "This is confirmation that the total order sum has been paid by the customer in full using cash";
+                          case 1: // POS
+                            return "This is confirmation that the total order sum has been paid by the customer in full using Pos";
+                          case 2: // Bank Transfer
+                            return "This is confirmation that the total order sum has been paid by the customer in full via bank transfer";
+                          default:
+                            return "confirm that customer has paid for order";
+                        }
+                      })()}
                     </p>
                   </div>
                   <div
@@ -317,7 +392,7 @@ const ConfirmOrderModal = ({
                       <p className="text-sm text-grey500">TOTAL ORDER</p>
                       <p className="font-bold text-black text-[20px]">
                         {" "}
-                        {formatPrice(singleOrder.totalAmount)}
+                        {formatPrice(singleOrder?.totalAmount || 0)}
                       </p>
                     </div>
                     <MdKeyboardArrowRight />
@@ -327,10 +402,12 @@ const ConfirmOrderModal = ({
                     type="text"
                     // defaultValue={menuItem?.itemName}
                     value={reference}
-                    onChange={(e) => setReference(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setReference(e.target.value)
+                    }
                     name="itemName"
-                    label="Enter ref"
-                    placeholder="Provide payment reference"
+                    label="Enter ref (optional)"
+                    placeholder="Optional payment reference"
                   />
                   <Spacer y={5} />
                   <div className="flex gap-5">

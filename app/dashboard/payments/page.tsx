@@ -1,75 +1,114 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import {
-  CustomLoading,
-  dynamicExportConfig,
-  getJsonItemFromLocalStorage,
-} from "@/lib/utils";
+import { dynamicExportConfig, getJsonItemFromLocalStorage } from "@/lib/utils";
 
 import { CustomInput } from "@/components/CustomInput";
 import Error from "@/components/error";
 import NoPaymentsScreen from "@/components/ui/dashboard/payments/noPayments";
 import PaymentsList from "@/components/ui/dashboard/payments/payment";
 import usePayment from "@/hooks/cachedEndpoints/usePayment";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useDateFilter from "@/hooks/useDateFilter";
-import { downloadCSV } from "@/lib/downloadToExcel";
 import { Button, ButtonGroup, Chip } from "@nextui-org/react";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import toast from "react-hot-toast";
 import { VscLoading } from "react-icons/vsc";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
+import { CustomButton } from "@/components/customButton";
+import DateRangeDisplay from "@/components/ui/dashboard/DateRangeDisplay";
+import CustomPagination from "@/components/ui/dashboard/settings/BillingsComponents/CustomPagination";
+import PaymentCard from "@/components/ui/dashboard/payments/paymentCard";
 
 const Payments: React.FC = () => {
   const {
-    data,
+    categories,
+    details,
     isLoading,
     isError,
     refetch,
     dropdownComponent,
     datePickerModal,
     filterType,
+    startDate,
+    endDate,
   } = useDateFilter(usePayment);
+
+  // Keep track of previous data to prevent flashing during refetches
+  const [displayData, setDisplayData] = useState({ categories, details });
+
+  // Update display data only when new data is available and not loading
+  useEffect(() => {
+    if (!isLoading && categories && details) {
+      setDisplayData({ categories, details });
+    }
+  }, [categories, details, isLoading]);
+  const { userRolePermissions, role } = usePermission();
   const businessInformation = getJsonItemFromLocalStorage("business");
 
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingExport, setLoadingExport] = useState(false);
-  const { setPage, setTableStatus } = useGlobalContext();
+  const { setPage, setTableStatus, page, tableStatus } = useGlobalContext();
 
   useEffect(() => {
-    refetch()
+    refetch();
     setTableStatus("All");
     setPage(1);
-  }, []);
+  }, [filterType, startDate, endDate, refetch]);
+
+  // Refetch data when tableStatus changes (for payment card clicks)
+  useEffect(() => {
+    refetch();
+  }, [tableStatus, refetch]);
+
+  // Reset page when switching tabs
+  useEffect(() => {
+    if (tableStatus && tableStatus !== "All") {
+      setPage(1);
+    }
+  }, [tableStatus, setPage]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  const filteredItems = useMemo(() => {
-    return data?.paymentComposites?.map((item) => ({
-      ...item,
-      orders: item?.payments?.filter(
-        (item) =>
-          item?.qrName?.toLowerCase().includes(searchQuery) ||
-          String(item?.totalAmount)?.toLowerCase().includes(searchQuery) ||
-          item?.dateCreated?.toLowerCase().includes(searchQuery) ||
-          item?.reference?.toLowerCase().includes(searchQuery) ||
-          item?.treatedBy?.toLowerCase().includes(searchQuery) ||
-          item?.paymentReference?.toLowerCase().includes(searchQuery) ||
-          item?.customer?.toLowerCase().includes(searchQuery)
-      ),
-    }));
-  }, [data?.paymentComposites, searchQuery]);
+  // Use display data to prevent flashing, fall back to current data
+  const data =
+    displayData.categories && displayData.details
+      ? displayData
+      : { categories, details };
+
+  // Extract pagination info from details response
+  const paginationData = React.useMemo(() => {
+    if (details?.data && typeof details.data === "object") {
+      return {
+        currentPage: details.data.currentPage || page,
+        totalPages: details.data.totalPages || 1,
+        hasNext: details.data.hasNext || false,
+        hasPrevious: details.data.hasPrevious || false,
+        totalCount: details.data.totalCount || 0,
+        payments: details.data.payments || details.data.data || [],
+      };
+    }
+    return {
+      currentPage: page,
+      totalPages: 1,
+      hasNext: false,
+      hasPrevious: false,
+      totalCount: 0,
+      payments: [],
+    };
+  }, [details, page, tableStatus]);
 
   const exportCSV = async () => {
     setLoadingExport(true);
     const response = await exportGrid(
       businessInformation[0]?.businessId,
-      5,
+      5, // 5 for payments
       filterType
     );
     setLoadingExport(false);
@@ -85,36 +124,53 @@ const Payments: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
+  // Pagination handlers
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleNext = () => {
+    if (paginationData.hasNext) {
+      setPage(page + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (paginationData.hasPrevious) {
+      setPage(page - 1);
+    }
+  };
+
+  if (isLoading && (!categories || categories.length === 0)) {
+    return <CustomLoading />;
+  }
   if (isError) return <Error onClick={() => refetch()} />;
+
+  // Payment summary values (adjust keys if needed)
 
   return (
     <>
-      <div className="flex flex-row flex-wrap  xl:mb-8 mb-4 items-center justify-between">
+      {/* Payment Summary Card */}
+
+      {/* Existing filters/search UI */}
+      <div className="flex flex-row flex-wrap mb-4 xl:mb-8 items-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data?.paymentComposites?.[0]?.payments.length > 0 ? (
+            {data?.categories?.data?.categoryCount > 0 ? (
               <div className="flex items-center">
-                <span>All Payment</span>
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data?.paymentComposites[0]?.totalCount}
-                </Chip>
+                <span> Payments</span>
               </div>
             ) : (
               <span>Payments</span>
             )}
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
-            Showing all payments
+          Review all payment history
           </p>
         </div>
-        <div className="flex  gap-3">
+        <div className="flex items-center gap-3">
           {dropdownComponent}
-          {data?.paymentComposites?.[0]?.payments.length > 0 && (
+          {data?.categories?.data?.paymentCategories?.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -132,31 +188,71 @@ const Payments: React.FC = () => {
               <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
                 <Button
                   disabled={loadingExport}
-                  onClick={exportCSV}
+                  onPress={exportCSV}
                   className="flex text-grey600 bg-white"
+                  title="Export"
+                  aria-label="Export"
                 >
+                  Export
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export csv</p>
                 </Button>
               </ButtonGroup>
             </>
           )}
         </div>
       </div>
-
-      {data?.paymentComposites[0]?.payments.length > 0 ? (
-        <PaymentsList
-          data={data}
-          isLoading={isLoading}
-          payments={filteredItems}
-          refetch={refetch}
-          searchQuery={searchQuery}
+      <div className="mb-8">
+        <PaymentCard
+          data={data?.categories?.data?.paymentCategories}
+          tableStatus={tableStatus}
+          onStatusChange={setTableStatus}
+          onPageReset={() => setPage(1)}
         />
+      </div>
+
+      <DateRangeDisplay
+        startDate={startDate}
+        endDate={endDate}
+        filterType={filterType}
+      />
+
+      {data?.categories?.data?.paymentCategories &&
+      data?.categories?.data?.paymentCategories?.length > 0 ? (
+        <>
+          <PaymentsList
+            payments={paginationData.payments}
+            categories={data?.categories?.data?.paymentCategories}
+            refetch={refetch}
+            searchQuery={searchQuery}
+            isLoading={isLoading}
+            filterType={filterType}
+            startDate={startDate}
+            endDate={endDate}
+            currentPage={paginationData.currentPage}
+            totalPages={paginationData.totalPages}
+            hasNext={paginationData.hasNext}
+            hasPrevious={paginationData.hasPrevious}
+            totalCount={paginationData.totalCount}
+          />
+
+          {/* Pagination at page level */}
+          {paginationData.totalPages > 1 &&
+            paginationData.payments.length > 0 && (
+              <div className="mt-4">
+                <CustomPagination
+                  currentPage={paginationData.currentPage}
+                  totalPages={paginationData.totalPages}
+                  onPageChange={handlePageChange}
+                  onNext={handleNext}
+                  onPrevious={handlePrevious}
+                />
+              </div>
+            )}
+        </>
       ) : (
         <NoPaymentsScreen />
       )}

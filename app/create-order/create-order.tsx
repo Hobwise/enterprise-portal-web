@@ -1,111 +1,345 @@
 'use client';
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useQueryClient } from '@tanstack/react-query';
 
-import { CustomButton } from '@/components/customButton';
-import Error from '@/components/error';
-import { togglePreview } from '@/components/ui/dashboard/menu/preview-menu/data';
+import { CustomButton } from "@/components/customButton";
+import Error from "@/components/error";
+import { togglePreview } from "@/components/ui/dashboard/menu/preview-menu/data";
 
-import { CheckIcon } from '@/components/ui/dashboard/orders/place-order/data';
+import { CheckIcon } from "@/components/ui/dashboard/orders/place-order/data";
 
-import useMenuConfig from '@/hooks/cachedEndpoints/useMenuConfiguration';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import { formatPrice } from '@/lib/utils';
-import { useSearchParams } from 'next/navigation';
-import { HiArrowLongLeft } from 'react-icons/hi2';
-import noMenu from '../../public/assets/images/no-menu.png';
+import useMenuConfig from "@/hooks/cachedEndpoints/useMenuConfiguration";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import { formatPrice } from "@/lib/utils";
+import { useSearchParams, useRouter } from "next/navigation";
+import { HiArrowLongLeft } from "react-icons/hi2";
+import {
+  IoAddCircleOutline,
+  IoSearchOutline,
+  IoCart,
+  IoChevronBack,
+  IoChevronForward,
+  IoClose,
+} from "react-icons/io5";
+import { MdOutlineRestaurantMenu } from "react-icons/md";
+import { BiPackage } from "react-icons/bi";
+import { IoCalendarOutline } from "react-icons/io5";
+import { FaMinus, FaPlus } from "react-icons/fa6";
+import { CustomInput } from "@/components/CustomInput";
+import { HiOutlineMicrophone } from "react-icons/hi2";
+import { HiMenuAlt3 } from "react-icons/hi";
+import noMenu from "../../public/assets/images/no-menu-1.jpg";
 
-import useMenuUser from '@/hooks/cachedEndpoints/userMenuUser';
-import SplashScreen from '../reservation/splash-screen';
-import CheckoutModal from './checkoutModal';
-import Filters from './filter';
-import ViewModal from './viewMore';
+import useCustomerMenuCategories from "@/hooks/cachedEndpoints/useCustomerMenuCategories";
+import useCustomerMenuItems from "@/hooks/cachedEndpoints/useCustomerMenuItems";
+import MenuToolbar from "@/components/ui/dashboard/menu/MenuToolbar";
+import ViewModal from "./viewMore";
+import CartModal from "./CartModal";
+import ServingInfoModal, { ServingInfoData } from "./ServingInfoModal";
+import OrderTrackingPage from "./OrderTrackingModal";
+import TrackingDetailsPage from "./TrackingDetailsModal";
+import RestaurantBanner from "./RestaurantBanner";
+import {
+  placeCustomerOrder,
+  getCustomerOrderByReference,
+  updateCustomerOrder,
+} from "../api/controllers/customerOrder";
+import { toast } from "sonner";
 
 const CreateOrder = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  let businessName = searchParams.get('businessName');
-  let businessId = searchParams.get('businessID');
-  let cooperateID = searchParams.get('cooperateID');
-  let qrId = searchParams.get('id');
+  let businessName = searchParams.get("businessName") || "";
+  let businessId = searchParams.get("businessID");
+  let cooperateID = searchParams.get("cooperateID");
+  let qrId = searchParams.get("id");
+  const mode = searchParams.get("mode");
 
-  const { data: menuConfig } = useMenuConfig(businessId, cooperateID);
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  // Validate required parameters
+  if (!businessId) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-4 bg-gray-50">
+        <Error
+          imageHeight="h-32"
+          imageWidth="w-32"
+          onClick={() => router.push("/")}
+          title="Invalid QR Code"
+          message="This QR code is missing required business information. Please scan a valid QR code or contact support."
+        />
+      </div>
+    );
+  }
+
+  const viewOnlyStorageKey = `menuViewOnly_${businessId}_${
+    cooperateID || "default"
+  }`;
+
+  const [isViewOnlyMode, setIsViewOnlyMode] = useState(() => {
+    if (typeof window !== "undefined") {
+      // Check URL parameter first
+      if (mode === "view") {
+        sessionStorage.setItem(viewOnlyStorageKey, "true");
+        return true;
+      }
+
+      // Then check sessionStorage
+      const stored = sessionStorage.getItem(viewOnlyStorageKey);
+      if (stored === "true") {
+        return true;
+      }
+
+      return false;
+    }
+    return mode === "view";
+  });
+
+  // Sync with URL parameter and persist to sessionStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (mode === "view") {
+        setIsViewOnlyMode(true);
+        sessionStorage.setItem(viewOnlyStorageKey, "true");
+      } else {
+        setIsViewOnlyMode(false);
+        sessionStorage.removeItem(viewOnlyStorageKey);
+      }
+    }
+  }, [mode, viewOnlyStorageKey]);
+
+  // Initialize query client for cache management
+  const queryClient = useQueryClient();
+
+  // Handle stale data on Android devices when rescanning QR codes
+  useEffect(() => {
+    // Invalidate queries when URL parameters change (new QR scan)
+    queryClient.invalidateQueries({ queryKey: ['menuConfig'] });
+    queryClient.invalidateQueries({ queryKey: ['customerMenuCategories'] });
+    queryClient.invalidateQueries({ queryKey: ['customerMenuItems'] });
+  }, [businessId, cooperateID, qrId, queryClient]);
+
+  // Handle page visibility changes for mobile devices
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Refetch data when tab becomes visible after being in background
+        queryClient.invalidateQueries({ queryKey: ['menuConfig', businessId, cooperateID] });
+        queryClient.invalidateQueries({ queryKey: ['customerMenuCategories', businessId, cooperateID] });
+        queryClient.invalidateQueries({ queryKey: ['customerMenuItems'] });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [businessId, cooperateID, queryClient]);
+
+  const { data: menuConfig, isLoading: menuConfigLoading, isError: menuConfigError } = useMenuConfig(
+    businessId,
+    cooperateID
+  );
   const { menuIdTable, setMenuIdTable, setPage } = useGlobalContext();
+
+  // Dynamic color from menu config (fallback to primary color)
+  const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
+  const primaryColorStyle = { backgroundColor: primaryColor };
+  const textColorStyle = { color: primaryColor };
 
   const [selectedMenu, setSelectedMenu] = useState([]);
   const [isOpenVariety, setIsOpenVariety] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Item[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
-  const { data, isLoading, isError, refetch } = useMenuUser(
-    businessId,
-    cooperateID
+  // Debounce search query - wait 500ms after user stops typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Modal states for the new flow
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isServingInfoOpen, setIsServingInfoOpen] = useState(false);
+  const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isTrackingDetailsOpen, setIsTrackingDetailsOpen] = useState(false);
+
+  // Order state
+  const [orderData, setOrderData] = useState<any>(null);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderErrors, setOrderErrors] = useState<any>(null);
+  const [isUpdatingOrder, setIsUpdatingOrder] = useState(false); // Track if updating existing order
+  const [originalOrderItems, setOriginalOrderItems] = useState<Item[]>([]); // Store original order items for comparison
+  const [servingInfo, setServingInfo] = useState<ServingInfoData | null>(null); // Store serving info for prefilling
+  const [orderReference, setOrderReference] = useState<string>("");
+
+  // Track the order ID separately - this is what we use for updates
+  const [orderId, setOrderId] = useState<string>("");
+
+  // Menu state - using React Query hooks
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  const {
+    data: categories,
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+    refetch: refetchCategories,
+  } = useCustomerMenuCategories(
+    businessId || undefined,
+    cooperateID || undefined
   );
 
-  useEffect(() => {
-    setMenuIdTable(data?.[0]?.id);
-  }, []);
-  const [filteredMenu, setFilteredMenu] = useState<any[]>([]);
-  const handleTabClick = (index: any) => {
-    setPage(1);
-    const filteredMenu = data?.filter((item) => item.name === index);
+  const {
+    data: menuItemsData,
+    totalCount,
+    isLoading: itemsLoading,
+    isError: itemsError,
+    refetch: refetchItems,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCustomerMenuItems(selectedCategoryId, debouncedSearchQuery, 10);
 
-    setMenuIdTable(filteredMenu?.[0]?.id);
-    setFilteredMenu(filteredMenu?.[0]?.items);
+  // Auto-select first category when categories load
+  useEffect(() => {
+    if (categories && categories.length > 0 && !selectedCategoryId) {
+      const firstCategory = categories[0];
+      setSelectedCategoryId(firstCategory.id);
+      setMenuIdTable(firstCategory.name);
+    }
+  }, [categories, selectedCategoryId, setMenuIdTable]);
+
+  // Add waiting time to menu items
+  const menuItems = useMemo(() => {
+    if (!menuItemsData || !Array.isArray(menuItemsData) || !categories)
+      return [];
+
+    const selectedCategory = categories.find(
+      (cat) => cat.id === selectedCategoryId
+    );
+    return menuItemsData.map((item: any) => ({
+      ...item,
+      waitingTimeMinutes: selectedCategory?.waitingTimeMinutes || 0,
+      // Propagate VAT settings from the selected category/section to each item
+      isVatEnabled: (selectedCategory as any)?.isVatEnabled ?? false,
+      vatRate: (selectedCategory as any)?.vatRate ?? 0,
+    }));
+  }, [menuItemsData, categories, selectedCategoryId]);
+
+  const isLoading = categoriesLoading || itemsLoading || menuConfigLoading;
+  const isError = categoriesError || itemsError || menuConfigError;
+
+  const [activeSubCategory, setActiveSubCategory] = useState<string>("");
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+  const [categoryScrollRef, setCategoryScrollRef] =
+    useState<HTMLDivElement | null>(null);
+
+  const handleTabClick = (categoryId: string, categoryName: string) => {
+    setPage(1);
+    setSelectedCategoryId(categoryId);
+    setMenuIdTable(categoryName);
   };
 
-  useEffect(() => {
-    if (data?.[0]?.items) {
-      setFilteredMenu(data[0].items);
+  // Refetch menu data
+  const refetch = async () => {
+    await refetchCategories();
+    if (selectedCategoryId) {
+      await refetchItems();
     }
-  }, [data]);
+  };
 
-  const topContent = useMemo(() => {
-    return <Filters menus={data} handleTabClick={handleTabClick} />;
-  }, [data?.length]);
+  // Infinite scroll handler - load more items from server
+  useEffect(() => {
+    const handleScroll = () => {
+      // Check if user has scrolled near bottom of page
+      const scrollPosition = window.innerHeight + window.scrollY;
+      const documentHeight = document.documentElement.scrollHeight;
+      const threshold = 300; // Load more when 300px from bottom
 
-  const matchingObject = data?.find((category) => category?.id === menuIdTable);
+      if (
+        scrollPosition >= documentHeight - threshold &&
+        hasNextPage &&
+        !isFetchingNextPage
+      ) {
+        fetchNextPage();
+      }
+    };
 
-  const matchingObjectArray = matchingObject
-    ? matchingObject.items
-    : filteredMenu || data?.[0]?.items || [];
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Handle category scroll
+  const scrollCategories = (direction: "left" | "right") => {
+    if (!categoryScrollRef) return;
+    const scrollAmount = 200;
+    const newScrollLeft =
+      direction === "left"
+        ? categoryScrollRef.scrollLeft - scrollAmount
+        : categoryScrollRef.scrollLeft + scrollAmount;
+
+    categoryScrollRef.scrollTo({ left: newScrollLeft, behavior: "smooth" });
+  };
+
+  // Check scroll position
+  const checkScrollPosition = () => {
+    if (!categoryScrollRef) return;
+    setShowLeftArrow(categoryScrollRef.scrollLeft > 0);
+    setShowRightArrow(
+      categoryScrollRef.scrollLeft <
+        categoryScrollRef.scrollWidth - categoryScrollRef.clientWidth - 10
+    );
+  };
+
+  // keep toolbar active state in sync with current menu selection
+  useEffect(() => {
+    if (menuIdTable) {
+      setActiveSubCategory(menuIdTable as string);
+    }
+  }, [menuIdTable]);
+
+  const menuSections = useMemo(() => {
+    return (
+      categories?.map((category: any) => ({
+        id: category.id,
+        name: category.name,
+        totalCount: menuItems?.length || 0, // This would need category-specific counts
+      })) || []
+    );
+  }, [categories, menuItems]);
+
+  // No need for client-side filtering anymore - data is filtered on server
+  const matchingObjectArray = menuItems || [];
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       event.preventDefault();
-      event.returnValue = '';
+      event.returnValue = "";
     };
 
     if (selectedItems.length > 0) {
-      window.addEventListener('beforeunload', handleBeforeUnload);
+      window.addEventListener("beforeunload", handleBeforeUnload);
     }
 
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [selectedItems]);
 
-  if (isError) {
-    return (
-      <div className='h-screen grid place-content-center bg-white'>
-        {' '}
-        <Error imageHeight={'h-32'} onClick={() => refetch()} />
-      </div>
-    );
-  }
-  if (isLoading) {
-    return <SplashScreen businessName={businessName} type='order' />;
-  }
-  const convertActiveTile = (activeTile: number) => {
+  const convertActiveTile = (activeTile: number | undefined) => {
     const previewStyles: { [key: string]: string } = {
-      0: 'List left',
-      1: 'List Right',
-      2: 'Single column 1',
-      3: 'Single column 2',
-      4: 'Double column',
+      0: "List left",
+      1: "List Right",
+      2: "Single column 1",
+      3: "Single column 2",
+      4: "Double column",
     };
 
-    return previewStyles[activeTile];
+    return previewStyles[activeTile?.toString() || "0"];
   };
 
   type Item = {
@@ -124,6 +358,10 @@ const CreateOrder = () => {
     count: number;
     packingCost: number;
     isPacked?: boolean;
+    menuID?: string;
+    waitingTimeMinutes?: number;
+    isVatEnabled?: boolean;
+    vatRate?: number;
   };
 
   const toggleVarietyModal = (menu: any) => {
@@ -137,36 +375,84 @@ const CreateOrder = () => {
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
+      // Look up category VAT settings using menuID
+      const itemCategory = categories?.find(
+        (cat: any) => cat.id === menuItem.menuID
+      );
+      const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+      const vatRate = itemCategory?.vatRate ?? 0;
+
       // setSelectedMenu(menuItem);
-      setSelectedItems((prevItems: any) => [
+      setSelectedItems((prevItems: Item[]) => [
         ...prevItems,
         {
           ...menuItem,
           count: 1,
           isPacked: isItemPacked,
           packingCost: menuItem.isVariety
-            ? selectedMenu.packingCost
+            ? (selectedMenu as any)?.packingCost || 0
             : menuItem.packingCost || 0,
+          // Add VAT metadata from category
+          isVatEnabled,
+          vatRate,
+        },
+      ]);
+    }
+  };
+
+  const handleQuickAdd = (menuItem: Item, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    // Directly add item to cart
+    const existingItem = selectedItems.find((item) => item.id === menuItem.id);
+    if (existingItem) {
+      // If item already exists, increment count
+      handleIncrement(menuItem.id);
+    } else {
+      // Look up category VAT settings using menuID
+      const itemCategory = categories?.find(
+        (cat: any) => cat.id === menuItem.menuID
+      );
+      const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+      const vatRate = itemCategory?.vatRate ?? 0;
+
+      // Add new item to cart
+      setSelectedItems((prevItems: Item[]) => [
+        ...prevItems,
+        {
+          ...menuItem,
+          count: 1,
+          isPacked: false,
+          packingCost: menuItem.packingCost || 0,
+          // Add VAT metadata from category
+          isVatEnabled,
+          vatRate,
         },
       ]);
     }
   };
 
   const handleDecrement = (id: string) => {
-    setSelectedItems((prevItems: any) =>
-      prevItems.map((item: any) => {
-        if (item.id === id && item.count > 1) {
-          return { ...item, count: item.count - 1 };
-        }
-
-        return item;
-      })
+    setSelectedItems(
+      (prevItems: Item[]) =>
+        prevItems
+          .map((item: Item) => {
+            if (item.id === id) {
+              if (item.count > 1) {
+                return { ...item, count: item.count - 1 };
+              } else {
+                // Remove item when count reaches 0
+                return null;
+              }
+            }
+            return item;
+          })
+          .filter((item): item is Item => item !== null) // Remove null items with type guard
     );
   };
 
   const handleIncrement = (id: string) => {
-    setSelectedItems((prevItems) =>
-      prevItems.map((item) =>
+    setSelectedItems((prevItems: Item[]) =>
+      prevItems.map((item: Item) =>
         item.id === id ? { ...item, count: item.count + 1 } : item
       )
     );
@@ -174,188 +460,1257 @@ const CreateOrder = () => {
   const calculateTotalPrice = () => {
     return selectedItems.reduce((acc, item) => {
       const itemTotal = item.price * item.count;
+      // Allow packing even when packingCost is 0 or undefined
       const packingTotal = item.isPacked
-        ? (item.packingCost || 0) * item.count
+        ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
         : 0;
       return acc + itemTotal + packingTotal;
     }, 0);
   };
 
+  // Helper function to check if order items have changed
+  const hasOrderChanged = (original: Item[], current: Item[]) => {
+    if (original.length !== current.length) return true;
+
+    // Create sorted arrays for comparison
+    const sortedOriginal = [...original].sort((a, b) =>
+      a.id.localeCompare(b.id)
+    );
+    const sortedCurrent = [...current].sort((a, b) => a.id.localeCompare(b.id));
+
+    // Check if any item differs
+    for (let i = 0; i < sortedOriginal.length; i++) {
+      const orig = sortedOriginal[i];
+      const curr = sortedCurrent[i];
+
+      if (
+        orig.id !== curr.id ||
+        orig.count !== curr.count ||
+        orig.isPacked !== curr.isPacked
+      ) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const handlePackingCost = (itemId: string, isPacked: boolean) => {
-    setSelectedItems((prevItems) =>
-      prevItems.map((item) =>
+    setSelectedItems((prevItems: Item[]) =>
+      prevItems.map((item: Item) =>
         item.id === itemId ? { ...item, isPacked } : item
       )
     );
   };
 
-  const baseString = 'data:image/jpeg;base64,';
+  const baseString = "data:image/jpeg;base64,";
+
+  // Handle remove item from cart
+  const handleRemoveItem = (id: string) => {
+    setSelectedItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  };
+
+  // Handle opening cart modal
   const handleCheckoutOpen = () => {
     if (selectedItems.length > 0) {
-      if (!selectedMenu || Object.keys(selectedMenu).length === 0) {
-        setSelectedMenu(selectedItems[0]);
-      }
-      onOpen();
+      setIsCartOpen(true);
     }
   };
 
-  return (
-    <main className=' '>
-      <article
-        style={{
-          backgroundColor: menuConfig?.backgroundColour || 'white',
-        }}
-        className='xl:block relative  h-screen   overflow-scroll    shadow-lg'
-      >
-        {menuConfig?.image.length > baseString.length && (
-          <Image
-            fill
-            className='absolute backdrop-brightness-125 bg-cover opacity-25'
-            src={baseString + menuConfig?.image}
-            alt='background'
-          />
-        )}
+  // Handle proceeding to serving info
+  const handleProceedToServingInfo = () => {
+    setIsServingInfoOpen(true);
+  };
 
-        <div className='p-4 pt-6 flex justify-between'>
-          <div>
-            <h1 className='text-[28px] font-[700] text-black relative '>
-              Menu
-            </h1>
-            <p className='text-sm  text-grey600  w-full '>
-              {selectedItems.length > 0
-                ? `${selectedItems.length} items selected`
-                : 'Select items from the menu'}
-            </p>
-          </div>
-          <CustomButton
-            onClick={handleCheckoutOpen}
-            className='py-2 px-4 mb-0 text-white'
-            backgroundColor='bg-primaryColor'
-          >
-            <div className='flex gap-2 items-center justify-center'>
-              {selectedItems.length > 0 && (
-                <span className='font-bold'>
-                  {' '}
-                  {formatPrice(calculateTotalPrice())}{' '}
-                </span>
-              )}
-              <p>{'Proceed'} </p>
-              <HiArrowLongLeft className='text-[22px] rotate-180' />
-            </div>
-          </CustomButton>
-        </div>
-        {topContent}
+  // Handle submitting serving info and placing order
+  const handleSubmitServingInfo = async (servingInfoData: ServingInfoData) => {
+    setOrderLoading(true);
+    setOrderErrors(null);
 
-        <div
-          className={`${
-            togglePreview(convertActiveTile(menuConfig?.layout))?.main
-          } relative  px-4`}
-        >
-          {matchingObjectArray?.map((item) => {
-            const isSelected =
-              selectedItems.find((selected) => selected.id === item.id) ||
-              selectedItems.some((menu) =>
-                item.varieties?.some((variety) => variety.id === menu.id)
+    try {
+      setServingInfo(servingInfoData);
+
+      if (
+        isUpdatingOrder &&
+        !hasOrderChanged(originalOrderItems, selectedItems)
+      ) {
+        setIsServingInfoOpen(false);
+        setIsOrderTrackingOpen(true);
+        setOrderLoading(false);
+        toast.info("No changes detected. Returning to order tracking.");
+        return;
+      }
+
+      // Compute totals with dynamic per-item VAT
+      let subtotal = 0;
+      let packingCost = 0;
+      let vat = 0;
+
+      // Get all unique VAT rates from categories to use as fallback
+      const categoryVatRates = Array.from(
+        new Set(
+          categories
+            ?.map((cat: any) => cat.vatRate)
+            .filter((rate: number) => rate > 0) || []
+        )
+      );
+      const defaultVatRate =
+        categoryVatRates.length > 0 ? categoryVatRates[0] : 0;
+
+      selectedItems.forEach((item: any) => {
+        const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
+        subtotal += itemTotal;
+        let itemPackingTotal = 0;
+        if (item.isPacked && item.packingCost) {
+          itemPackingTotal =
+            (Number(item.packingCost) || 0) * (Number(item.count) || 0);
+          packingCost += itemPackingTotal;
+        }
+
+        // Only apply VAT if isVatEnabled is true and vatRate exists
+        if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
+          const itemSubtotal = itemTotal + itemPackingTotal;
+          // Convert percentage to decimal (e.g., 7.5 -> 0.075)
+          const vatRateDecimal = item.vatRate / 100;
+          const itemVat = itemSubtotal * vatRateDecimal;
+          vat += itemVat;
+        }
+      });
+
+      subtotal = Math.round(subtotal * 100) / 100;
+      packingCost = Math.round(packingCost * 100) / 100;
+      vat = Math.round(vat * 100) / 100;
+      const total = Math.round((subtotal + packingCost + vat) * 100) / 100;
+
+      const orderDetails = selectedItems.map((item) => {
+        return {
+          itemId: item.id,
+          quantity: item.count,
+          unitPrice: item.price,
+          isVariety: item.isVariety || false,
+          isPacked: item.isPacked ?? false,
+          packingCost: item.isPacked ? item.packingCost ?? 0 : 0,
+          menuID: item.menuID,
+          isVatEnabled: item.isVatEnabled ?? false,
+          vatRate: item.vatRate ?? 0,
+        };
+      });
+
+      const payload = {
+        status: 0,
+        placedByName: servingInfoData.name?.trim() || "Anonymous",
+        placedByPhoneNumber: servingInfoData.phoneNumber,
+        quickResponseID: qrId || "",
+        comment: servingInfoData.comment,
+        totalAmount: Math.round(total * 100) / 100,
+        orderDetails,
+      };
+
+      let response;
+
+      if (isUpdatingOrder && orderId) {
+        response = await updateCustomerOrder(orderId, payload);
+      } else {
+        response = await placeCustomerOrder(
+          payload,
+          businessId || "",
+          cooperateID || ""
+        );
+      }
+
+      if (response?.isSuccessful && response?.data) {
+        let orderDataToStore = response.data;
+
+        // Merge the submitted data back into the response
+        // The API may not return isPacked, packingCost, isVatEnabled, vatRate, and menuID, so we need to preserve them
+        if (
+          orderDataToStore.orderDetails &&
+          Array.isArray(orderDataToStore.orderDetails)
+        ) {
+          orderDataToStore.orderDetails = orderDataToStore.orderDetails.map(
+            (detail: any, index: number) => {
+              // Match submittedItem by itemId (not by index) to handle reordering
+              const submittedItem = orderDetails.find(
+                (od: any) => od.itemId === detail.itemID
               );
+              // Find the corresponding item from selectedItems to get VAT metadata
+              // Try multiple matching strategies: by ID, by name
+              const originalItem =
+                selectedItems.find(
+                  (item: any) =>
+                    item.id === detail.itemID ||
+                    item.itemID === detail.itemID ||
+                    item.itemName === detail.itemName
+                ) || selectedItems[index];
 
-            return (
-              <>
-                <div
-                  onClick={() => {
-                    item?.isAvailable ? toggleVarietyModal(item) : null;
-                  }}
-                  key={item.menuID}
-                  className={`${
-                    togglePreview(convertActiveTile(menuConfig?.layout))
-                      ?.container
-                  } ${
-                    convertActiveTile(menuConfig?.layout) === "List Right" &&
-                    menuConfig?.useBackground &&
-                    "flex-row-reverse"
-                  } flex  my-4 text-black cursor-pointer relative`}
-                >
-                  {item?.isAvailable === false && (
-                    <Chip
-                      className={`capitalize absolute ${
-                        togglePreview(convertActiveTile(menuConfig?.layout))
-                          ?.chipPosition
-                      }`}
-                      color={"danger"}
-                      size="sm"
-                      variant="bordered"
-                    >
-                      {"Out of stock"}
-                    </Chip>
-                  )}
-                  {menuConfig?.useBackground && (
-                    <div
-                      className={
-                        togglePreview(convertActiveTile(menuConfig?.layout))
-                          ?.imageContainer
-                      }
-                    >
-                      <Image
-                        className={`bg-cover rounded-lg ${
-                          togglePreview(convertActiveTile(menuConfig?.layout))
-                            ?.imageClass
-                        }`}
-                        width={60}
-                        height={60}
-                        src={item.image ? `${baseString}${item.image}` : noMenu}
-                        alt="menu"
-                      />
-                    </div>
-                  )}
-                  <div
-                    style={{
-                      color: menuConfig?.textColour,
-                    }}
-                    className={`text-[14px]  ${
-                      togglePreview(convertActiveTile(menuConfig?.layout))
-                        ?.textContainer
-                    } flex flex-col justify-center `}
-                  >
-                    <p className="font-[700]">{item.itemName}</p>
-                    <p className="text-[13px]">{item.menuName}</p>
-                    <p className="text-[13px]">{formatPrice(item.price)}</p>
-                    {isSelected && (
-                      <Chip
-                        startContent={<CheckIcon size={18} />}
-                        variant="flat"
-                        classNames={{
-                          base: "bg-primaryColor text-white text-[10px] mt-1",
-                        }}
-                      >
-                        Selected
-                      </Chip>
-                    )}
-                  </div>
-                </div>
-                {togglePreview(convertActiveTile(menuConfig?.layout))
-                  ?.divider && <Divider className="text-[#E4E7EC] h-[1px]" />}
-              </>
+              return {
+                ...detail,
+                isPacked: submittedItem?.isPacked ?? detail.isPacked ?? false,
+                packingCost:
+                  submittedItem?.packingCost ?? detail.packingCost ?? 0,
+                // Preserve VAT metadata and menuID - try all sources in order of preference
+                isVatEnabled:
+                  originalItem?.isVatEnabled ??
+                  submittedItem?.isVatEnabled ??
+                  detail.isVatEnabled ??
+                  false,
+                vatRate:
+                  originalItem?.vatRate ??
+                  submittedItem?.vatRate ??
+                  detail.vatRate ??
+                  0,
+                menuID:
+                  originalItem?.menuID ??
+                  submittedItem?.menuID ??
+                  detail.menuID,
+              };
+            }
+          );
+        }
+
+        // For NEW orders: Extract and store BOTH orderId and reference
+        if (!isUpdatingOrder) {
+          let newOrderId = "";
+          let newReference = "";
+
+          // Extract orderId from orderDetails
+          if (response.data.orderDetails?.[0]?.orderID) {
+            newOrderId = response.data.orderDetails[0].orderID;
+          }
+
+          // Extract reference (this is what we use for tracking)
+          if (response.data.reference) {
+            newReference = response.data.reference;
+          }
+
+          // Set both IDs
+          if (newOrderId) {
+            setOrderId(newOrderId);
+          }
+
+          if (newReference) {
+            setOrderReference(newReference);
+          }
+
+          setIsUpdatingOrder(true);
+        }
+
+        // For UPDATE operations: Keep existing reference, update might return new orderId
+        if (isUpdatingOrder) {
+          // If response has a new orderId, update it
+          if (response.data.orderDetails?.[0]?.orderID) {
+            const updatedOrderId = response.data.orderDetails[0].orderID;
+            if (updatedOrderId !== orderId) {
+              setOrderId(updatedOrderId);
+            }
+          }
+        }
+
+        // Attach VAT metadata for display - always use vatRate from items
+        const enabledRates = Array.from(
+          new Set(
+            selectedItems
+              .filter((i: any) => i.vatRate && i.vatRate > 0)
+              .map((i: any) => Number(i.vatRate))
+          )
+        );
+        if (enabledRates.length > 0) {
+          (orderDataToStore as any).vatRate = enabledRates[0];
+        } else {
+          (orderDataToStore as any).vatRate = 0;
+        }
+
+        setOrderData(orderDataToStore);
+        setIsServingInfoOpen(false);
+        setIsOrderTrackingOpen(true);
+        // DON'T clear selectedItems - keep them so we can go back to edit
+        // The cart already has all the correct data (packing, VAT, etc.)
+
+        toast.success(
+          isUpdatingOrder
+            ? "Order updated successfully!"
+            : "Order placed successfully!"
+        );
+      } else {
+        const errorMessage =
+          response?.error?.responseDescription ||
+          response?.error?.message ||
+          `Failed to ${
+            isUpdatingOrder ? "update" : "place"
+          } order. Please try again.`;
+        setOrderErrors(response?.errors || {});
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      toast.error("Failed to place order. Please try again.");
+    } finally {
+      setOrderLoading(false);
+    }
+  };
+
+  // Handle adding more items from order tracking
+  const handleAddMoreItemsFromTracking = () => {
+    if (orderData && orderData.orderDetails) {
+      const cartItems: Item[] = orderData.orderDetails.map((detail: any) => {
+        const basePrice = detail.unitPrice || 0;
+
+        // Find the menuID by matching itemID with menu items
+        let menuID = detail.menuID;
+        if (!menuID && menuItems?.length > 0) {
+          const matchedMenuItem = menuItems.find(
+            (item: any) => item.id === detail.itemID
+          );
+          if (matchedMenuItem) {
+            menuID = matchedMenuItem.menuID;
+          }
+        }
+
+        // Look up category using menuID to get fresh VAT data
+        const itemCategory = categories?.find((cat: any) => cat.id === menuID);
+        const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+        const vatRate = itemCategory?.vatRate ?? 0;
+
+        return {
+          id: detail.itemID,
+          itemID: detail.itemID,
+          itemName: detail.itemName,
+          menuName: detail.menuName,
+          itemDescription: detail.itemDescription || "",
+          price: basePrice,
+          currency: "NGN",
+          isAvailable: true,
+          hasVariety: detail.isVariety ?? false,
+          image: detail.image || "",
+          isVariety: detail.isVariety ?? false,
+          varieties: detail.varieties || null,
+          count: detail.quantity ?? 1,
+          packingCost: detail.packingCost ?? 0,
+          isPacked: detail.isPacked ?? false,
+          menuID: menuID || "", // Use the found menuID
+          waitingTimeMinutes: detail.waitingTimeMinutes ?? 0,
+          // Add fresh VAT metadata from category lookup
+          isVatEnabled,
+          vatRate,
+        };
+      });
+
+      setSelectedItems(cartItems);
+      setOriginalOrderItems(cartItems);
+
+      if (!isUpdatingOrder) {
+        setIsUpdatingOrder(true);
+      }
+
+      // Ensure we have the orderId from order data
+      if (!orderId && orderData.orderDetails?.[0]?.orderID) {
+        setOrderId(orderData.orderDetails[0].orderID);
+      }
+
+      // Ensure we have the reference
+      if (!orderReference && orderData.reference) {
+        setOrderReference(orderData.reference);
+      }
+
+      if (orderData.placedByName || orderData.placedByPhoneNumber) {
+        setServingInfo({
+          name: orderData.placedByName || "",
+          phoneNumber: orderData.placedByPhoneNumber || "",
+          comment: orderData.comment || "",
+        });
+      }
+    }
+    setIsOrderTrackingOpen(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  // Handle checkout from order tracking - go to confirmation page
+  const handleCheckoutFromTracking = async (updatedOrderData?: any) => {
+    const currentOrderData = updatedOrderData || orderData;
+
+    // Check if we have order data with an orderID (meaning this is an existing order to update)
+    const hasExistingOrder = currentOrderData?.orderDetails?.[0]?.orderID;
+
+    // If cart already has items AND we have an existing order, open cart modal instead of reloading
+    // This preserves all item data (packing, VAT, etc.)
+    if (selectedItems.length > 0 && hasExistingOrder) {
+      // IMPORTANT: Ensure orderId is set from the order data if we don't have it yet
+      const orderIdFromData = currentOrderData.orderDetails[0].orderID;
+      if (!orderId && orderIdFromData) {
+        setOrderId(orderIdFromData);
+      } else if (orderId && orderId !== orderIdFromData) {
+        // Update orderId if it changed
+        setOrderId(orderIdFromData);
+      }
+
+      // Ensure isUpdatingOrder is true (defensive check)
+      if (!isUpdatingOrder) {
+        setIsUpdatingOrder(true);
+      }
+
+      setIsOrderTrackingOpen(false);
+      setIsCartOpen(true);
+      return;
+    }
+
+    // Check if we already have complete order data
+    if (
+      currentOrderData?.orderDetails &&
+      currentOrderData.orderDetails.length > 0
+    ) {
+      // We already have the order data, just transform it
+      const fullOrderData = currentOrderData;
+
+      // Transform order details into cart items format with all necessary fields
+      const cartItems: Item[] = fullOrderData.orderDetails.map(
+        (detail: any) => {
+          const basePrice = detail.unitPrice || 0;
+
+          // Find the menuID by matching itemID with menu items
+          let menuID = detail.menuID;
+          if (!menuID && menuItems?.length > 0) {
+            const matchedMenuItem = menuItems.find(
+              (item: any) => item.id === detail.itemID
             );
-          })}
-        </div>
-      </article>
+            if (matchedMenuItem) {
+              menuID = matchedMenuItem.menuID;
+            }
+          }
 
-      {isOpen && (
-        <CheckoutModal
-          qrId={qrId}
-          handleDecrement={handleDecrement}
-          handleIncrement={handleIncrement}
-          selectedItems={selectedItems}
-          totalPrice={calculateTotalPrice()}
-          onOpenChange={onOpenChange}
-          isOpen={isOpen}
-          selectedMenu={selectedMenu}
-          closeModal={true}
-          businessId={businessId}
-          cooperateID={cooperateID}
-          handlePackingCost={handlePackingCost}
-          setSelectedItems={setSelectedItems}
+          // Look up category using menuID to get fresh VAT data
+          const itemCategory = categories?.find(
+            (cat: any) => cat.id === menuID
+          );
+          const isVatEnabled = itemCategory?.isVatEnabled ?? false;
+          const vatRate = itemCategory?.vatRate ?? 0;
+
+          return {
+            id: detail.itemID,
+            itemID: detail.itemID,
+            itemName: detail.itemName,
+            menuName: detail.menuName,
+            itemDescription: detail.itemDescription || "",
+            price: basePrice,
+            currency: "NGN",
+            isAvailable: true,
+            hasVariety: detail.isVariety ?? false,
+            image: detail.image || "",
+            isVariety: detail.isVariety ?? false,
+            varieties: detail.varieties || null,
+            count: detail.quantity ?? 1,
+            packingCost: detail.packingCost ?? 0,
+            isPacked: detail.isPacked ?? false,
+            menuID: menuID || "", // Use the found menuID
+            waitingTimeMinutes: detail.waitingTimeMinutes ?? 0,
+            // Add fresh VAT metadata from category lookup
+            isVatEnabled,
+            vatRate,
+          };
+        }
+      );
+
+      setSelectedItems(cartItems);
+      setOriginalOrderItems(cartItems); // Store original items for comparison
+      setOrderData(fullOrderData); // Update with full order data
+
+      // Ensure we're in update mode and have the orderId
+      if (!isUpdatingOrder) {
+        setIsUpdatingOrder(true);
+      }
+
+      // Make sure we have the orderId from the order data
+      if (!orderId && fullOrderData.orderDetails?.[0]?.orderID) {
+        setOrderId(fullOrderData.orderDetails[0].orderID);
+      }
+
+      // Extract and store serving info from order data for prefilling
+      if (fullOrderData.placedByName || fullOrderData.placedByPhoneNumber) {
+        setServingInfo({
+          name: fullOrderData.placedByName || "",
+          phoneNumber: fullOrderData.placedByPhoneNumber || "",
+          comment: fullOrderData.comment || "",
+        });
+      }
+
+      setIsOrderTrackingOpen(false);
+      // Open cart modal
+      setTimeout(() => {
+        setIsCartOpen(true);
+      }, 0);
+    } else {
+      toast.error("Unable to load order details. Please try again.");
+    }
+  };
+
+  // Handle track order submission from TrackingDetailsModal
+  const handleTrackOrderSubmit = (orderData: any) => {
+    // Merge VAT metadata from categories since API doesn't return it
+    if (orderData?.orderDetails && Array.isArray(orderData.orderDetails)) {
+      orderData.orderDetails = orderData.orderDetails.map((detail: any) => {
+        // Look up category by menuID to get VAT settings
+        const itemCategory = categories?.find((cat: any) => cat.id === detail.menuID);
+
+        return {
+          ...detail,
+          // Preserve existing VAT data if available, otherwise lookup from category
+          isVatEnabled: detail.isVatEnabled ?? itemCategory?.isVatEnabled ?? false,
+          vatRate: detail.vatRate ?? itemCategory?.vatRate ?? 0,
+          menuID: detail.menuID ?? undefined,
+        };
+      });
+    }
+
+    setOrderData(orderData);
+    setIsTrackingDetailsOpen(false);
+    setIsOrderTrackingOpen(true);
+  };
+
+  // Reset everything when starting fresh
+  const resetOrder = () => {
+    setSelectedItems([]);
+    setOriginalOrderItems([]);
+    setOrderData(null);
+    setIsUpdatingOrder(false);
+    setOrderId(""); // Clear orderId
+    setOrderReference(""); // Clear reference
+    setServingInfo(null);
+  };
+
+  return (
+    <main className="relative min-h-screen bg-white">
+      {/* Header Section with Banner */}
+      {menuConfigLoading ? (
+        <div className="relative w-full">
+          <div className="h-[192px] w-full bg-gray-200 animate-pulse" />
+        </div>
+      ) : (
+        <RestaurantBanner
+          businessName={businessName || ""}
+          menuConfig={menuConfig}
+          showMenuButton={true}
+          onMenuClick={() => setIsMenuOpen(true)}
+          baseString={baseString}
         />
       )}
+
+      {/* Search Bar */}
+      <div className="px-4 py-4 bg-white">
+        {menuConfigLoading ? (
+          <div className="w-full md:max-w-2xl mx-auto h-10 bg-gray-200 rounded-lg animate-pulse" />
+        ) : (
+          <div className="relative w-full md:max-w-2xl mx-auto">
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <IoSearchOutline className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search menu items..."
+              style={{ outlineColor: primaryColor }}
+              className="w-full pl-10 text-black pr-12 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:border-transparent outline-none bg-gray-50"
+            />
+            <div className="absolute inset-y-0 right-3 flex items-center">
+              {searchQuery !== debouncedSearchQuery ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-400" />
+              ) : (
+                <HiOutlineMicrophone className="h-5 w-5 text-gray-400" />
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Category Pills Filter with Arrows */}
+      {menuConfigLoading ? (
+        <div className="px-4 py-3 bg-white">
+          <div className="flex gap-3 overflow-hidden">
+            {[...Array(5)].map((_, index) => (
+              <div
+                key={index}
+                className="flex-shrink-0 h-9 w-24 bg-gray-200 rounded-full animate-pulse"
+              />
+            ))}
+          </div>
+        </div>
+      ) : (
+        categories &&
+        categories.length > 0 && (
+          <div className="relative px-4 py-3 bg-white">
+            {/* Left Arrow */}
+            {showLeftArrow && (
+              <button
+                aria-label="Scroll left"
+                onClick={() => scrollCategories("left")}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
+              >
+                <IoChevronBack className="w-5 h-5 text-gray-700" />
+              </button>
+            )}
+
+            {/* Category Pills */}
+            <div
+              ref={(el) => {
+                if (el && el !== categoryScrollRef) {
+                  setCategoryScrollRef(el);
+                  setTimeout(() => checkScrollPosition(), 100);
+                }
+              }}
+              onScroll={checkScrollPosition}
+              className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
+              {categories.map((category: any) => {
+                const isSelected = selectedCategoryId === category.id;
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => handleTabClick(category.id, category.name)}
+                    style={isSelected ? primaryColorStyle : {}}
+                    className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      isSelected
+                        ? "text-white"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    {category.name}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Right Arrow */}
+            {showRightArrow && (
+              <button
+                aria-label="Scroll right"
+                onClick={() => scrollCategories("right")}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-lg rounded-full p-2 hover:bg-gray-100"
+              >
+                <IoChevronForward className="w-5 h-5 text-gray-700" />
+              </button>
+            )}
+          </div>
+        )
+      )}
+
+      {/* Menu Items - Dynamic Layout */}
+      <div className="pb-20">
+        {/* Loading State - Skeleton Loaders */}
+        {isLoading && (
+          <div className="px-4">
+            {/* Skeleton for grid/list layouts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[...Array(6)].map((_, index) => (
+                <div
+                  key={index}
+                  className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse"
+                >
+                  {/* Image Skeleton */}
+                  <div className="h-48 bg-gray-200"></div>
+
+                  {/* Content Skeleton */}
+                  <div className="p-4 space-y-3">
+                    <div className="h-5 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-full"></div>
+                    <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+                    <div className="flex justify-between items-center mt-4">
+                      <div className="h-6 bg-gray-200 rounded w-20"></div>
+                      <div className="h-10 w-10 bg-gray-200 rounded-full"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {isError && (
+          <div className="flex flex-col items-center justify-center py-20 px-4">
+            <Error
+              imageHeight="h-24"
+              imageWidth="w-24"
+              onClick={() => refetch()}
+              title="Unable to Load Menu"
+              message="We couldn't load the menu at this time. This could be due to a network issue or the menu may be temporarily unavailable. Please check your connection and try again."
+            />
+          </div>
+        )}
+
+        {/* Menu Items */}
+        {!isLoading &&
+          !isError &&
+          (() => {
+            const layoutName = convertActiveTile(menuConfig?.layout);
+            const preview = togglePreview(layoutName);
+            const isGridLayout = [
+              "Double column",
+              "Single column 2",
+              "Single column 1",
+            ].includes(layoutName || "");
+
+            return (
+              <div className={`${preview?.main || "relative px-4"}`}>
+                {matchingObjectArray?.map((item) => {
+                  const isSelected =
+                    selectedItems.find((selected) => selected.id === item.id) ||
+                    selectedItems.some((menu) =>
+                      item.varieties?.some(
+                        (variety: any) => variety.id === menu.id
+                      )
+                    );
+                  const isListLayout = layoutName?.includes("List");
+                  const isCompactGrid = layoutName === "Single column 2";
+
+                  return (
+                    <div
+                      key={item.id || item.menuID}
+                      className={`my-3 relative`}
+                    >
+                      <div
+                        className={`${
+                          isListLayout
+                            ? "flex flex-1 min-h-[120px] items-center gap-3 w-full bg-white rounded-xl p-3 shadow-sm"
+                            : `${preview?.container} flex flex-col h-full`
+                        } ${
+                          !isListLayout && item?.isAvailable && !isViewOnlyMode
+                            ? "pb-10"
+                            : !isListLayout && !item?.isAvailable
+                            ? ""
+                            : ""
+                        } text-black relative transition-all ${
+                          item?.isAvailable && !isViewOnlyMode
+                            ? "cursor-pointer"
+                            : item?.isAvailable
+                            ? ""
+                            : "bg-gray-100 cursor-not-allowed"
+                        }`}
+                      >
+                        {item?.isAvailable === false && (
+                          <Chip
+                            className={`capitalize absolute ${
+                              menuConfig?.useBackground === false &&
+                              (layoutName === "Single column 1" ||
+                                layoutName === "Single column 2" ||
+                                layoutName === "Double column")
+                                ? "bottom-2 right-2"
+                                : preview?.chipPosition
+                            }  z-20`}
+                            color={"danger"}
+                            size="sm"
+                            variant="flat"
+                          >
+                            Out of stock
+                          </Chip>
+                        )}
+
+                        {/* Image for Grid Layouts */}
+                        {(layoutName === "Single column 1" ||
+                          layoutName === "Single column 2" ||
+                          layoutName === "Double column") &&
+                          menuConfig?.useBackground !== false && (
+                            <div
+                              className={`${
+                                preview?.imageContainer || ""
+                              } relative flex items-center justify-center`}
+                              onClick={() => {
+                                if (item?.isAvailable && !isViewOnlyMode) {
+                                  toggleVarietyModal(item);
+                                }
+                              }}
+                            >
+                              <div
+                                style={{
+                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                }}
+                                className={`relative flex items-center justify-center overflow-hidden ${
+                                  preview?.imageClass || "h-48"
+                                }`}
+                              >
+                                {item.image &&
+                                item.image.length > baseString.length ? (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={`${baseString}${item.image}`}
+                                    alt={item.itemName}
+                                  />
+                                ) : (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={noMenu}
+                                    alt="No image available"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Add Items Button - Based on Layout (Hidden in view-only mode) */}
+                        {item?.isAvailable && !isViewOnlyMode && (
+                          <>
+                            {/* All grid layouts: Full-width button at bottom */}
+                            {(layoutName === "Single column 1" ||
+                              layoutName === "Single column 2" ||
+                              layoutName === "Double column") && (
+                              <button
+                                onClick={(e) => handleQuickAdd(item, e)}
+                                style={primaryColorStyle}
+                                className="absolute bottom-0 left-0 right-0 text-white py-2.5 px-3 rounded-b-xl font-medium text-xs hover:opacity-90 transition-all flex items-center justify-center gap-1.5 z-20"
+                              >
+                                <IoAddCircleOutline className="w-4 h-4" />
+                                Add
+                              </button>
+                            )}
+                          </>
+                        )}
+
+                        {/* For List Left: Image on left */}
+                        {layoutName === "List left" &&
+                          menuConfig?.useBackground !== false && (
+                            <div
+                              className={`${
+                                preview?.imageContainer || ""
+                              } relative flex-shrink-0 flex items-center justify-center`}
+                            >
+                              <div
+                                style={{
+                                  background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                }}
+                                className={`relative flex items-center justify-center overflow-hidden ${
+                                  preview?.imageClass || "h-32"
+                                }`}
+                              >
+                                {item.image &&
+                                item.image.length > baseString.length ? (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={`${baseString}${item.image}`}
+                                    alt={item.itemName}
+                                  />
+                                ) : (
+                                  <Image
+                                    fill
+                                    className={`object-cover ${
+                                      !item?.isAvailable
+                                        ? "opacity-40 grayscale"
+                                        : ""
+                                    }`}
+                                    src={noMenu}
+                                    alt="No image available"
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Text Content */}
+                        <div
+                          onClick={() => {
+                            if (item?.isAvailable && !isViewOnlyMode) {
+                              toggleVarietyModal(item);
+                            }
+                          }}
+                          className={`${preview?.textContainer} flex flex-col ${
+                            isListLayout
+                              ? "justify-center flex-1"
+                              : "justify-start"
+                          }`}
+                        >
+                          <p
+                            className={`font-bold ${
+                              isCompactGrid ? "text-xs" : "text-sm"
+                            } line-clamp-1`}
+                          >
+                            {item.itemName}
+                          </p>
+                          <p
+                            className={`text-gray-500 ${
+                              isCompactGrid ? "text-[10px]" : "text-xs"
+                            } line-clamp-2 mt-0.5`}
+                          >
+                            {item.itemDescription ||
+                              "No description available."}
+                          </p>
+                          <p
+                            style={textColorStyle}
+                            className={`font-semibold ${
+                              isCompactGrid ? "text-xs" : "text-sm"
+                            } mt-1`}
+                          >
+                            {formatPrice(item.price)}
+                          </p>
+                          {isSelected && (
+                            <div className="absolute top-2 left-2">
+                              <Chip
+                                startContent={<CheckIcon size={14} />}
+                                variant="flat"
+                                size="sm"
+                                style={primaryColorStyle}
+                                classNames={{
+                                  base: "text-white text-[10px] mt-1.5 h-5",
+                                }}
+                              >
+                                {selectedItems.find(
+                                  (selected) => selected.id === item.id
+                                )?.count || 0}
+                              </Chip>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* For List Right: Image and button grouped on the right */}
+                        {layoutName === "List Right" && (
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            {/* Image */}
+                            {menuConfig?.useBackground !== false && (
+                              <div
+                                className={`${
+                                  preview?.imageContainer || ""
+                                } relative flex items-center justify-center`}
+                              >
+                                <div
+                                  style={{
+                                    background: `linear-gradient(to bottom right, ${primaryColor}1A, ${primaryColor}0D, #F3E8FF)`,
+                                  }}
+                                  className={`relative flex items-center justify-center overflow-hidden ${
+                                    preview?.imageClass || "h-32"
+                                  }`}
+                                >
+                                  {item.image &&
+                                  item.image.length > baseString.length ? (
+                                    <Image
+                                      fill
+                                      className={`object-cover ${
+                                        !item?.isAvailable
+                                          ? "opacity-40 grayscale"
+                                          : ""
+                                      }`}
+                                      src={`${baseString}${item.image}`}
+                                      alt={item.itemName}
+                                    />
+                                  ) : (
+                                    <Image
+                                      fill
+                                      className={`object-cover ${
+                                        !item?.isAvailable
+                                          ? "opacity-40 grayscale"
+                                          : ""
+                                      }`}
+                                      src={noMenu}
+                                      alt="No image available"
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Button - Always reserve space for alignment */}
+                            <div className="flex items-center justify-center w-[48px]">
+                              {item?.isAvailable && !isViewOnlyMode && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleQuickAdd(item, e);
+                                  }}
+                                  style={primaryColorStyle}
+                                  className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+                                  aria-label="Add to cart"
+                                >
+                                  <IoAddCircleOutline className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* List Left Button - on the right side after text */}
+                        {layoutName === "List left" && (
+                          <div className="flex-shrink-0 flex items-center justify-center w-[48px]">
+                            {item?.isAvailable && !isViewOnlyMode && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleQuickAdd(item, e);
+                                }}
+                                style={primaryColorStyle}
+                                className="text-white rounded-lg p-2.5 shadow-lg hover:scale-110 hover:opacity-90 transition-all z-20"
+                                aria-label="Add to cart"
+                              >
+                                <IoAddCircleOutline className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Empty State - No Results */}
+                {matchingObjectArray?.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 px-4 col-span-full">
+                    <div className="text-gray-300 mb-4">
+                      <svg
+                        className="w-24 h-24 mx-auto"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1.5}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                      No items found
+                    </h3>
+                    <p className="text-sm text-gray-500 text-center max-w-md">
+                      {searchQuery
+                        ? `No results for "${searchQuery}". Try a different search term.`
+                        : "No menu items available at the moment."}
+                    </p>
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        style={textColorStyle}
+                        className="mt-4 px-4 py-2 hover:underline text-sm font-medium"
+                      >
+                        Clear search
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+      </div>
+
+      {/* Floating Cart Icon with Badge - Only show on menu browsing page (hidden in view-only mode) */}
+      {!isViewOnlyMode &&
+        selectedItems.length > 0 &&
+        !isCartOpen &&
+        !isServingInfoOpen &&
+        !isOrderTrackingOpen && (
+          <button
+            onClick={handleCheckoutOpen}
+            style={primaryColorStyle}
+            className="fixed bottom-6 right-6 hover:opacity-90 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-105 z-[60]"
+            aria-label="View cart"
+          >
+            <div className="relative">
+              <svg
+                width="22"
+                height="21"
+                viewBox="0 0 22 21"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-7 h-7"
+              >
+                <circle
+                  cx="10.9984"
+                  cy="2.49844"
+                  r="1.5"
+                  stroke="white"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M10.998 6.39648C15.9685 6.39648 19.9978 10.4261 19.998 15.3965V17.7041C19.998 17.9207 19.823 18.0965 19.6064 18.0967H2.39062C2.17401 18.0966 1.99805 17.9207 1.99805 17.7041V15.3965C1.99826 10.4262 6.0278 6.3967 10.998 6.39648Z"
+                  stroke="white"
+                  strokeWidth="1.2"
+                />
+                <path
+                  d="M1.39844 19.8984H20.5984"
+                  stroke="white"
+                  strokeWidth="1.2"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                {selectedItems.reduce((total, item) => total + item.count, 0)}
+              </span>
+            </div>
+          </button>
+        )}
+
+      {/* Hamburger Menu Drawer */}
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-50">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setIsMenuOpen(false)}
+          />
+
+          {/* Menu Drawer */}
+          <div className="absolute top-0 left-0 h-full w-80 bg-white shadow-2xl">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-bold text-black">{businessName}</h2>
+              <button
+                aria-label="Close menu"
+                onClick={() => setIsMenuOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <IoClose className="w-6 h-6 text-gray-700" />
+              </button>
+            </div>
+
+            {/* Menu Items */}
+            <div className="p-4">
+              {/* View Menu - Active */}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  // Scroll to top to show menu
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full flex items-start gap-4 p-4 bg-purple-50 rounded-lg transition-colors text-left"
+              >
+                <div className="p-2 rounded-lg" style={primaryColorStyle}>
+                  <MdOutlineRestaurantMenu className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold" style={textColorStyle}>
+                    View Menu
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Browse our full menu selection
+                  </p>
+                </div>
+              </button>
+
+              {/* Track Order - Hidden in view-only mode */}
+              {!isViewOnlyMode && (
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setIsTrackingDetailsOpen(true);
+                  }}
+                  className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
+                >
+                  <div className="p-2 bg-purple-50 rounded-lg">
+                    <BiPackage className="w-6 h-6" style={textColorStyle} />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-black">Track Order</h3>
+                    <p className="text-sm text-gray-600">
+                      View order preparation in real time
+                    </p>
+                  </div>
+                </button>
+              )}
+
+              {/* Book Reservation */}
+              <a
+                href={`/reservation/select-reservation?businessID=${businessId}&cooperateID=${
+                  cooperateID || ""
+                }&businessName=${businessName}`}
+                onClick={() => setIsMenuOpen(false)}
+                className="w-full flex items-start gap-4 p-4 hover:bg-gray-50 rounded-lg transition-colors text-left mt-2"
+              >
+                <div className="p-2 bg-purple-50 rounded-lg">
+                  <IoCalendarOutline
+                    className="w-6 h-6"
+                    style={textColorStyle}
+                  />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-black">Book Reservation</h3>
+                  <p className="text-sm text-gray-600">
+                    Reserve a table for you and friends
+                  </p>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Modal Flow */}
+      <CartModal
+        isOpen={isCartOpen}
+        onOpenChange={() => setIsCartOpen(false)}
+        selectedItems={selectedItems}
+        handleDecrement={handleDecrement}
+        handleIncrement={handleIncrement}
+        handleRemoveItem={handleRemoveItem}
+        handlePackingCost={handlePackingCost}
+        onProceedToServingInfo={handleProceedToServingInfo}
+        businessName={businessName}
+        menuConfig={menuConfig}
+        baseString={baseString}
+      />
+
+      <ServingInfoModal
+        isOpen={isServingInfoOpen}
+        onOpenChange={() => setIsServingInfoOpen(false)}
+        onSubmit={handleSubmitServingInfo}
+        onBack={() => {
+          setIsServingInfoOpen(false);
+          setIsCartOpen(true);
+        }}
+        loading={orderLoading}
+        errors={orderErrors}
+        businessName={businessName}
+        menuConfig={menuConfig}
+        baseString={baseString}
+        initialData={servingInfo || undefined}
+      />
+
+      <OrderTrackingPage
+        isOpen={isOrderTrackingOpen}
+        onClose={() => {
+          setIsOrderTrackingOpen(false);
+          resetOrder();
+        }}
+        trackingId={orderReference || orderData?.reference || ""}
+        orderStatus={
+          orderData?.status === 0
+            ? "placed"
+            : orderData?.status === 1
+            ? "accepted"
+            : orderData?.status === 2
+            ? "preparing"
+            : "served"
+        }
+        estimatedTime={orderData?.estimatedCompletionTime}
+        onAddMoreItems={handleAddMoreItemsFromTracking}
+        onCheckout={handleCheckoutFromTracking}
+        businessName={businessName}
+        menuConfig={menuConfig}
+        baseString={baseString}
+        orderData={orderData}
+        businessId={businessId || ""}
+        cooperateId={cooperateID || ""}
+      />
+
+      <TrackingDetailsPage
+        isOpen={isTrackingDetailsOpen}
+        onClose={() => setIsTrackingDetailsOpen(false)}
+        onTrackOrder={handleTrackOrderSubmit}
+        businessName={businessName || ""}
+        businessId={businessId || ""}
+        cooperateId={cooperateID || ""}
+        menuConfig={menuConfig}
+        baseString={baseString}
+      />
 
       <ViewModal
         handleCheckoutOpen={handleCheckoutOpen}
@@ -368,6 +1723,7 @@ const CreateOrder = () => {
         handlePackingCost={handlePackingCost}
         toggleVarietyModal={toggleVarietyModal}
         selectedItems={selectedItems}
+        menuConfig={menuConfig}
       />
     </main>
   );

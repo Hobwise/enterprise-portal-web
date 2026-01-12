@@ -15,10 +15,12 @@ import {
 import { Line } from "react-chartjs-2";
 import { BsArrowUpShort } from "react-icons/bs";
 import { IoIosArrowForward } from "react-icons/io";
-import Accepted from "../../../../public/assets/icons/accepted.png";
-import Decline from "../../../../public/assets/icons/canceled.png";
-import Cancel from "../../../../public/assets/icons/declined.png";
-import Like from "../../../../public/assets/icons/like.png";
+import {
+  AcceptedReportIcon,
+  DeclinedReportIcon,
+  CancelledReportIcon,
+  ClosedReportIcon,
+} from "@/public/assets/svg";
 import Star from "../../../../public/assets/icons/star.png";
 import orderIllustration from "../../../../public/assets/images/orderIlustration.png";
 
@@ -99,23 +101,23 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: <Image src={Accepted} alt="accepted" />,
-      title: "ACCEPTED",
-      desc: report?.closedOrdersCount,
+      icon: <AcceptedReportIcon width={20} height={20} />,
+      title: "AWAITING CONFIRMATION ORDER",
+      desc: report?.awaitingConfirmationOrdersCount,
     },
     {
-      icon: <Image src={Decline} alt="decline" />,
-      title: "PENDING",
+      icon: <DeclinedReportIcon width={20} height={20} />,
+      title: "OPEN ORDER",
       desc: report?.openOrdersCount,
     },
     {
-      icon: <Image src={Cancel} alt="cancel" />,
-      title: "CANCELLED",
+      icon: <CancelledReportIcon width={20} height={20} />,
+      title: "CANCELLED ORDER",
       desc: report?.cancelledOrdersCount,
     },
     {
-      icon: <Image src={Like} alt="like" />,
-      title: "CLOSED",
+      icon: <ClosedReportIcon width={20} height={20} />,
+      title: "CLOSED ORDER",
       desc: report?.closedOrdersCount,
     },
   ];
@@ -159,7 +161,7 @@ const ReportDetails = ({ report }: any) => {
           <h3 className=" font-semibold mb-2">Available reports</h3>
           <Divider />
 
-          <div>
+          <div className="h-[180px] overflow-y-auto overflow-x-hidden custom-scrollbar">
             {report?.availableReport.map((item: any) => (
               <div
                 onClick={() =>

@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 
 import {
-  CustomLoading,
   dynamicExportConfig,
   getJsonItemFromLocalStorage,
   notify,
@@ -19,42 +18,34 @@ import ConfirmBooking from "@/components/ui/dashboard/bookings/confirmBooking";
 import CreateBooking from "@/components/ui/dashboard/bookings/createBooking";
 import CreateReservation from "@/components/ui/dashboard/bookings/createReservation";
 import SuccessModal from "@/components/ui/dashboard/bookings/successModal";
-import useBookings from "@/hooks/cachedEndpoints/useBookings";
+import EditBooking from "@/components/ui/dashboard/bookings/editBooking";
+import useAllBookingsData from "@/hooks/cachedEndpoints/useAllBookingsData";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
-import useDateFilter from "@/hooks/useDateFilter";
 import { downloadCSV } from "@/lib/downloadToExcel";
 import { Button, ButtonGroup, Chip, useDisclosure } from "@nextui-org/react";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 import { MdOutlineFileDownload } from "react-icons/md";
 import { VscLoading } from "react-icons/vsc";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import toast from "react-hot-toast";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Bookings: React.FC = () => {
-  const {
-    data,
-    isLoading,
-    isError,
-    refetch,
-    dropdownComponent,
-    datePickerModal,
-  } = useDateFilter(useBookings);
   const businessInformation = getJsonItemFromLocalStorage("business");
 
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const { userRolePermissions, role } = usePermission();
   const [searchQuery, setSearchQuery] = useState("");
   const [loadingExport, setLoadingExport] = useState(false);
-  const [openBookingModal, setOpenBookingModal] = useState(false);
   const [openCreateBookingModal, setOpenCreateBookingModal] = useState(false);
   const [openSuccessModal, setOpenSuccessModal] = useState(false);
 
-  const showBookingModal = () => {
-    setOpenBookingModal(true);
+  const showCreateBookingModal = () => {
+    setOpenCreateBookingModal(true);
   };
-  const closeBookingModal = () => {
-    setOpenBookingModal(false);
+  const closeCreateBookingModal = () => {
+    setOpenCreateBookingModal(false);
   };
   const showSuccessModal = () => {
     setOpenSuccessModal(true);
@@ -62,56 +53,65 @@ const Bookings: React.FC = () => {
   const closeSuccessModal = () => {
     setOpenSuccessModal(false);
   };
-  const showCreateBookingModal = () => {
-    setOpenCreateBookingModal(true);
-  };
-  const closeCreateBookingModal = () => {
-    setOpenCreateBookingModal(false);
-  };
 
-  const { setPage, setTableStatus } = useGlobalContext();
+  const {
+    page,
+    rowsPerPage,
+    tableStatus,
+    setPage,
+    setTableStatus,
+    bookingDetails,
+    isBookingDetailsModalOpen,
+    openBookingDetailsModal,
+    closeBookingDetailsModal,
+    setBookingDetails,
+  } = useGlobalContext();
+
+  const {
+    categories,
+    getCategoryDetails,
+    isLoadingInitial,
+    isError,
+    refetch,
+  } = useAllBookingsData(page, rowsPerPage);
 
   useEffect(() => {
-    refetch();
     setTableStatus("All Bookings");
     setPage(1);
-  }, []);
+  }, [setTableStatus, setPage]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  const filteredItems = useMemo(() => {
-    return data?.map((item) => ({
-      ...item,
-      bookings: item?.bookings?.filter(
-        (item) =>
-          item?.reservationName?.toLowerCase().includes(searchQuery) ||
-          item?.firstName?.toLowerCase().includes(searchQuery) ||
-          item?.lastName?.toLowerCase().includes(searchQuery) ||
-          item?.reference?.toLowerCase().includes(searchQuery) ||
-          item?.emailAddress?.toLowerCase().includes(searchQuery) ||
-          item?.phoneNumber?.toLowerCase().includes(searchQuery) ||
-          item?.bookingDateTime?.toLowerCase().includes(searchQuery)
-      ),
-    }));
-  }, [data, searchQuery]);
+  const currentCategoryName =
+    tableStatus || categories?.[0]?.name || "All Bookings";
+  const currentCategoryDetails = getCategoryDetails(currentCategoryName);
+  const categoryPayload = useMemo(
+    () => ({
+      bookingCategories: categories || [],
+    }),
+    [categories]
+  );
 
-  
+  const data = {
+    categories: categoryPayload,
+    details: currentCategoryDetails,
+  };
 
   const [bookingId, setBookingId] = useState("");
   const [loading, setLoading] = useState(false);
-  const [bookingDetails, setBookingDetails] = useState<any>(null);
   const [completedBooking, setCompletedBooking] = useState<any>(null);
+  const [isEditBookingModal, setIsEditBookingModal] = useState(false);
 
   const updateBookingStatus = async (
     id: number,
     checkingLoading: boolean = true
   ) => {
     setLoading(checkingLoading);
-    const data = await postBookingStatus(bookingDetails?.id, id);
+    const response = await postBookingStatus(bookingDetails?.id, id);
     setLoading(false);
-    if (data?.data?.isSuccessful) {
+    if (response?.data?.isSuccessful) {
       notify({
         title: "Success!",
         text: "Operation successful",
@@ -119,14 +119,23 @@ const Bookings: React.FC = () => {
       });
       refetch();
       setBookingId("");
-      closeBookingModal();
+      closeBookingDetailsModal();
     } else {
       notify({
         title: "Error!",
-        text: data?.response?.data?.error?.responseDescription,
+        text: response?.response?.data?.error?.responseDescription,
         type: "error",
       });
     }
+  };
+
+  const toggleEditBookingModal = () => {
+    setIsEditBookingModal(!isEditBookingModal);
+  };
+
+  const openEditModal = () => {
+    closeBookingDetailsModal();
+    setIsEditBookingModal(true);
   };
 
   const exportCSV = async () => {
@@ -145,7 +154,8 @@ const Bookings: React.FC = () => {
     }
   };
 
-  if (isLoading) return <CustomLoading />;
+  if (isLoadingInitial) return <CustomLoading />;
+
   if (isError) return <Error onClick={() => refetch()} />;
 
   return (
@@ -153,28 +163,20 @@ const Bookings: React.FC = () => {
       <div className="flex flex-row flex-wrap mb-4 xl:mb-8 item-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">
-            {data?.[0]?.bookings.length > 0 ? (
+            {data?.categories.bookingCategories.length > 0 ? (
               <div className="flex items-center">
-                <span>All Bookings</span>
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data?.[0]?.totalCount}
-                </Chip>
+                <span> Bookings</span>
               </div>
             ) : (
               <span>Bookings</span>
             )}
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
-            Showing all bookings
+          Create and Manage Your Bookings
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* {dropdownComponent} */}
-          {data?.[0]?.bookings.length > 0 && (
+          {data?.categories.bookingCategories.length > 0 && (
             <>
               <div>
                 <CustomInput
@@ -190,49 +192,57 @@ const Bookings: React.FC = () => {
                 />
               </div>
 
-              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
+              <div className="flex items-center gap-2">
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}
-                  className="flex text-grey600 bg-white"
+                  className="flex  text-grey600 bg-white border rounded-lg"
                 >
+                  Export
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export csv</p>
                 </Button>
-                {(role === 0 ||
-                  userRolePermissions?.canCreateOrder === true) && (
-                  <Button
-                    onClick={showCreateBookingModal}
-                    className="flex text-grey600 bg-white"
-                  >
-                    <p>Create a booking</p>
+                
+                {(role === 0 || userRolePermissions?.canEditOrder === true) && (
+                  <Button onClick={onOpen} className="flex  text-primaryColor border-primaryColor bg-white border rounded-lg">
+                  
+  
+                    <p>Admit booking</p>
                   </Button>
                 )}
-              </ButtonGroup>
-              {(role === 0 || userRolePermissions?.canEditOrder === true) && (
-                <CustomButton onClick={onOpen} className="flex text-white">
-                  <p>Admit booking</p>
-                </CustomButton>
-              )}
+                {(role === 0 ||
+                  userRolePermissions?.canCreateOrder === true) && (
+                  <CustomButton
+                    onClick={showCreateBookingModal}
+                    className="flex text-white"
+                  >
+                      <IoAddCircleOutline className="text-[22px]" />
+                    <p>Create a booking</p>
+                  </CustomButton>
+                )}
+              </div>
             </>
           )}
         </div>
       </div>
-      {data?.[0]?.bookings.length > 0 ? (
+
+      {data.categories.bookingCategories &&
+      data.categories?.bookingCategories?.length > 0 ? (
         <BookingsList
-          bookings={filteredItems}
+          bookings={data.details || []}
+          categories={data.categories}
           refetch={refetch}
           searchQuery={searchQuery}
+          isLoading={isLoadingInitial}
+          isLoadingInitial={isLoadingInitial}
+          getCategoryDetails={getCategoryDetails}
         />
       ) : (
         <CreateReservation showCreateBookingModal={showCreateBookingModal} />
       )}
-      {/* {datePickerModal} */}
       <CreateBooking
         openCreateBookingModal={openCreateBookingModal}
         closeCreateBookingModal={closeCreateBookingModal}
@@ -246,18 +256,25 @@ const Bookings: React.FC = () => {
         bookingId={bookingId}
         setBookingId={setBookingId}
         onOpenChange={onOpenChange}
-        showBookingModal={showBookingModal}
+        showBookingModal={openBookingDetailsModal}
         setBookingDetails={setBookingDetails}
       />
       <BookingDetails
         setBookingId={setBookingId}
-        openBookingModal={openBookingModal}
-        setOpenBookingModal={setOpenBookingModal}
-        showBookingModal={showBookingModal}
-        closeBookingModal={closeBookingModal}
+        openBookingModal={isBookingDetailsModalOpen}
+        setOpenBookingModal={closeBookingDetailsModal}
+        showBookingModal={openBookingDetailsModal}
+        closeBookingModal={closeBookingDetailsModal}
         updateBookingStatus={updateBookingStatus}
         isLoading={loading}
         bookingDetails={bookingDetails}
+        openEditModal={openEditModal}
+      />
+      <EditBooking
+        eachBooking={bookingDetails}
+        isEditBookingModal={isEditBookingModal}
+        toggleEditBookingModal={toggleEditBookingModal}
+        refetch={refetch}
       />
       <SuccessModal
         bookingDetails={completedBooking}

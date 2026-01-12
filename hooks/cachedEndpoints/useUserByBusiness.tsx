@@ -1,7 +1,7 @@
 'use client';
 import { getUserByBusiness } from '@/app/api/controllers/auth';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 
 interface UserBusiness {
@@ -37,14 +37,14 @@ const useUserByBusiness = () => {
     return responseData?.data?.data as UserBusiness[];
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<UserBusiness[]>(
-    ['userByBusiness', { page, rowsPerPage }],
-    UserByBusiness,
-    {
-      keepPreviousData: true,
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ['userByBusiness', { page, rowsPerPage }],
+    queryFn: UserByBusiness,
+    
+      placeholderData: keepPreviousData,
       refetchOnWindowFocus: false,
-    }
-  );
+    
+  });
 
   return {
     data,

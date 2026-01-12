@@ -81,7 +81,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
 
   return (
     <Modal
-      size="2xl"
+      size="5xl"
       isDismissable={false}
       isOpen={isOpen}
       onOpenChange={handleModalClose}
@@ -90,7 +90,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
         {(onClose) => (
           <>
             <ModalBody>
-              <h2 className="text-[24px] leading-3 mt-8 text-black font-semibold">
+              <h2 className="text-[24px] leading-8 mt-8 text-black font-semibold">
                 Permissions
               </h2>
               <p className="text-sm  text-grey600">
@@ -101,8 +101,8 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                   <SmallLoader />
                 </div>
               ) : (
-                <div className="w-full   border border-gray-300 rounded-lg">
-                  <div className="grid grid-cols-3 p-3  rounded-tl-lg border-b border-gray-300 rounded-tr-lg bg-gray-50 mb-4 text-gray-500 font-bold">
+                <div className="w-full   border border-secondaryGrey rounded-lg">
+                  <div className="grid grid-cols-3 p-3  rounded-tl-lg border-b border-secondaryGrey rounded-tr-lg bg-grey300 mb-4 text-grey500 font-medium">
                     <div className="col-span-1 font-medium ">Actions</div>
                     <div className="col-span-1 text-center font-medium">
                       Manager
@@ -114,7 +114,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                   <ScrollShadow size={0} className="h-[400px] w-full ">
                     {sections.map((section) => (
                       <div key={section.title} className=" px-3">
-                        <div className="font-medium border-b pb-3 border-gray-300 text-primaryColor mt-0 mb-4">
+                        <div className="font-medium border-b pb-3 border-secondaryGrey text-primaryColor mt-0 mb-4">
                           {section.title}
                         </div>
 
@@ -133,7 +133,7 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                           return (
                             <div key={permission.key}>
                               <div className="grid grid-cols-3 items-center ">
-                                <div className="col-span-1 text-gray-500">
+                                <div className="col-span-1 text-grey500">
                                   {permission.label}
                                 </div>
                                 <div className="col-span-1 flex justify-center">
@@ -141,6 +141,10 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                                     size="sm"
                                     isSelected={isManagerRoleChecked}
                                     isDisabled={true}
+                                    classNames={{
+                                      wrapper: "group-data-[selected=true]:bg-[#5f35d2]",
+                                      thumb: isManagerRoleChecked ? "bg-white" : ""
+                                    }}
                                   />
                                 </div>
                                 <div className="col-span-1 flex justify-center">
@@ -156,6 +160,10 @@ const AssignPermission = ({ isOpen, onOpenChange }: any) => {
                                       ) {
                                         handleToggle(permission.key);
                                       }
+                                    }}
+                                    classNames={{
+                                      wrapper: "group-data-[selected=true]:bg-[#5f35d2]",
+                                      thumb: isUserRoleChecked ? "bg-white" : ""
                                     }}
                                   />
                                 </div>

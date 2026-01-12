@@ -8,7 +8,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CiWarning } from "react-icons/ci";
 import { CustomButton } from "./customButton";
 
@@ -16,11 +16,19 @@ const BusinessSettingsDashboardPrompt = () => {
   const { data } = useGetBusiness();
   const router = useRouter();
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
-    if (data?.businessContactNumber === "") {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && data?.businessContactNumber === "") {
       onOpen();
     }
-  }, [data]);
+  }, [data, mounted]);
+
+  if (!mounted) return null;
 
   return (
     <Modal

@@ -20,9 +20,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
-const AddMultipleMenu = ({ selectedMenu }: any) => {
+const AddMultipleMenu = ({ selectedMenu, onSuccess, onClose }: any) => {
   const router = useRouter();
-  const { refetch } = useMenu();
+  const { refetch, forceRefresh } = useMenu();
   const businessInformation = getJsonItemFromLocalStorage("business");
   const [isLoading, setIsLoading] = useState(false);
   const [imageError, setImageError] = useState("");
@@ -38,8 +38,18 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
       toast.success("Upload Successful");
-      refetch();
-      router.push("/dashboard/menu");
+      
+      // Force refetch to clear React Query cache with fresh data
+      await forceRefresh();
+      
+      // Add a small delay to ensure server processing is complete
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          router.push("/dashboard/menu");
+        }
+      }, 1000); // 1 second delay
     } else {
       notify({
         title: "Error!",
@@ -95,16 +105,15 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
   const cells = Array.from({ length: 4 }, (_, cellIndex) => cellIndex + 1);
   return (
     <section>
-      <div className="mt-8">
-        <h1 className="text-[28px] text-black mb-2 leading-8 font-bold">
-          Bulk upload items to your menu
-        </h1>
-        <p className="font-[500]  text-grey600 mb-4">
-          Upload a spreadsheet with the columns formatted in the following
-          order; “Name”, “Description”, “Price”, "Availability"
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-2 font-satoshi">
+          Upload Your Menu Items
+        </h3>
+        <p className="text-sm text-gray-600 font-satoshi">
+          Upload a spreadsheet with columns: "Name", "Description", "Price", "Availability"
         </p>
       </div>
-      <Spacer y={8} />
+      <Spacer y={4} />
       <Table aria-label="Example static collection table">
         <TableHeader>
           <TableColumn>NAME</TableColumn>
@@ -136,18 +145,18 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
           </TableRow>
         </TableBody>
       </Table>
-      <Spacer y={8} />
+      <Spacer y={4} />
       <CustomButton
         className="bg-transparent w-full border border-grey600"
         onClick={() => generateXLSX(excelColumns)}
       >
         Download Sample
       </CustomButton>
-      <Spacer y={4} />
+      <Spacer y={2} />
       <div className="flex justify-center items-center">
-        <label className="cursor-pointer relative bg-primaryColor  rounded-lg font-semibold  w-full h-[55px]  text-center">
-          <span className="absolute top-4 left-[40%]">
-            {isLoading ? "Loading..." : "Upload XLSX"}
+        <label className="cursor-pointer relative bg-primaryColor text-white rounded-lg font-semibold w-full h-[48px] text-center flex items-center justify-center hover:opacity-90 transition-opacity">
+          <span>
+            {isLoading ? "Uploading..." : "Upload XLSX File"}
           </span>
 
           <input
@@ -173,7 +182,7 @@ const AddMultipleMenu = ({ selectedMenu }: any) => {
       >
         {isLoading ? 'Loading' : 'Upload CSV'}
       </CustomButton> */}
-      <Spacer y={8} />
+      <Spacer y={4} />
     </section>
   );
 };

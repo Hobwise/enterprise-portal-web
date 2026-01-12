@@ -3,7 +3,7 @@
 import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 import { Input } from "@nextui-org/react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 interface CustomInputProps {
   type?: string;
@@ -12,8 +12,12 @@ interface CustomInputProps {
   value?: string | number;
   name?: string;
   errorMessage?: any;
+  isInvalid?: boolean;
   size?: "lg" | "md" | "sm";
   classnames?: string;
+  inputTextColor?: string;
+  bgColor?: string;
+  eyeIconStyle?: string;
   placeholder?: string;
   endContent?: JSX.Element | null;
   isRequired?: boolean;
@@ -23,6 +27,8 @@ interface CustomInputProps {
   startContent?: string | JSX.Element;
   min?: string;
   max?: string;
+  autoComplete?: string;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export const CustomInput = ({
@@ -38,13 +44,20 @@ export const CustomInput = ({
   isRequired,
   startContent,
   defaultValue,
+  bgColor = "bg-white",
   classnames = "bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]",
+  inputTextColor = "text-black",
   errorMessage,
+  eyeIconStyle = "text-foreground-500 text-lg",
+  isInvalid,
   size = "lg",
   min,
   max,
+  autoComplete,
+  onFocus,
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
+  const inputRef = useRef<HTMLDivElement>(null);
 
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
@@ -57,9 +70,9 @@ export const CustomInput = ({
       onClick={toggleVisibility}
     >
       {isVisible ? (
-        <IoEyeOutline className="text-foreground-500 text-lg" />
+        <IoEyeOutline className={eyeIconStyle} />
       ) : (
-        <IoEyeOffOutline className="text-foreground-500 text-lg" />
+        <IoEyeOffOutline className={eyeIconStyle} />
       )}
     </button>
   );
@@ -76,44 +89,69 @@ export const CustomInput = ({
     }
   };
 
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Call the passed onFocus handler if provided
+    if (onFocus) {
+      onFocus(e);
+    }
+
+    // Scroll the input into view on mobile devices
+    // Add a small delay to account for keyboard animation
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        });
+      }
+    }, 300);
+  };
+
   return (
-    <Input
-      key="outside"
-      type={type === "password" ? passwordType : type}
-      label={label}
-      value={value}
-      name={name}
-      hidden={hidden}
-      disabled={disabled}
-      onChange={onChange}
-      defaultValue={defaultValue}
-      variant="bordered"
-      classNames={{
-        label: "text-[#000] font-[500] text-[14px]",
-        base: "bg-none",
-        inputWrapper: [
-          `${classnames} ${disabled ? "bg-secondaryGrey" : "bg-white"} `,
-        ],
-        innerWrapper: `bg-none border-none`,
-        input: ["bg-none", "text-black placeholder:text-[14px] bg-none"],
-      }}
-      aria-haspopup="false"
-      autoCorrect="off"
-      placeholder={placeholder}
-      labelPlacement="outside"
-      isRequired={isRequired}
-      spellCheck="false"
-      ng-model="name"
-      autoComplete="new-password"
-      errorMessage={errorMessage}
-      isInvalid={errorMessage && true}
-      size={size}
-      endContent={type === "password" ? passwordEndContent : endContent}
-      startContent={startContent}
-      onCopy={handleCopy}
-      onPaste={handlePaste}
-      min={min}
-      max={max}
-    />
+    <div ref={inputRef}>
+      <Input
+        key="outside"
+        type={type === "password" ? passwordType : type}
+        label={label}
+        value={value}
+        name={name}
+        hidden={hidden}
+        disabled={disabled}
+        onChange={onChange}
+        defaultValue={defaultValue}
+        variant="bordered"
+        classNames={{
+          label: "text-[#000] font-[500] text-[14px]",
+          base: "bg-none",
+          inputWrapper: [
+            `${classnames} ${disabled ? "bg-secondaryGrey" : bgColor} `,
+          ],
+          innerWrapper: `bg-none border-none`,
+          input: [
+            "bg-none",
+            `${inputTextColor}`,
+            "placeholder:text-[14px] bg-none",
+          ],
+        }}
+        autoCorrect="off"
+        placeholder={placeholder}
+        labelPlacement="outside"
+        isRequired={isRequired}
+        spellCheck="false"
+        ng-model="name"
+        autoComplete={autoComplete || "new-password"}
+        errorMessage={errorMessage}
+        isInvalid={isInvalid || (errorMessage && true)}
+        size={size}
+        endContent={type === "password" ? passwordEndContent : endContent}
+        startContent={startContent}
+        onCopy={handleCopy}
+        onPaste={handlePaste}
+        onFocus={handleFocus}
+        min={min}
+        max={max}
+      />
+    </div>
   );
 };

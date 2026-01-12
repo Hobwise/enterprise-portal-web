@@ -31,6 +31,8 @@ import { usePaystackPayment } from "react-paystack";
 import LoadingSpinner from "@/app/dashboard/reservation/[reservationId]/loading";
 import FeatureList from "./FeatureList";
 import { getUser } from "@/app/api/controllers/auth";
+import SubscriptionWarningModal from "./SubscriptionWarningModal";
+import { useDisclosure } from "@nextui-org/react";
 
 export const PricingCards: React.FC<PlansFromParent> = ({
   plans,
@@ -57,6 +59,8 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   const [premiumLoading, setPremiumLoading] = useState(false);
   const [professionalLoading, setProfessionalLoading] = useState(false);
   const [hasActive, setHasActive] = useState(false);
+  const [pendingPlanSelection, setPendingPlanSelection] = useState<number | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   useEffect(() => {
     if (disableButtons) {
@@ -93,9 +97,21 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       ? TYPE_OF_PLAN[2]
       : TYPE_OF_PLAN[3];
 
-  const initializeTrnx = (selectedPlan: number, e: any) => {
-    console.log("initializeTrnx", selectedPlan);
+  const handlePlanSelection = (selectedPlan: number, e: any) => {
     e.preventDefault();
+    
+    // If user has an active subscription and is selecting a different plan
+    if (planType && planType !== selectedPlan) {
+      setPendingPlanSelection(selectedPlan);
+      onOpen(); // Show warning modal
+    } else {
+      initializeTrnx(selectedPlan, e);
+    }
+  };
+
+  const initializeTrnx = (selectedPlan: number, e?: any) => {
+    console.log("initializeTrnx", selectedPlan);
+    if (e) e.preventDefault();
 
     const plans = [null, starterPlan, professionalPlan, premiumPlan];
     const setLoading = [
@@ -193,6 +209,24 @@ export const PricingCards: React.FC<PlansFromParent> = ({
       type: "warning",
     };
     return notify(notificationBody);
+  };
+
+  const handleConfirmPlanChange = () => {
+    if (pendingPlanSelection !== null) {
+      onClose();
+      initializeTrnx(pendingPlanSelection);
+      setPendingPlanSelection(null);
+    }
+  };
+
+  const handleCancelPlanChange = () => {
+    onClose();
+    setPendingPlanSelection(null);
+  };
+
+  const getPlanName = (planId: number) => {
+    const planNames = ["", "Basic", "Professional", "Premium"];
+    return planNames[planId] || "";
   };
 
   return (
@@ -304,11 +338,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 </button>
               ) : (
                 <button
-                  onClick={
-                    hasActive === false
-                      ? (e) => initializeTrnx(index + 1, e)
-                      : activePlan
-                  }
+                  onClick={(e) => handlePlanSelection(index + 1, e)}
                   className="mt-6 w-full mx-auto border border-secondary-500 rounded-lg px-8 py-2 font-normal text-sm text-secondary-500 hover:bg-secondary-500 hover:text-white"
                 >
                   {planLoading[index] ? (
@@ -323,6 +353,18 @@ export const PricingCards: React.FC<PlansFromParent> = ({
         })}
       </div>
       <script src="https://js.paystack.co/v1/inline.js"></script>
+      
+      <SubscriptionWarningModal
+        isOpen={isOpen}
+        onClose={handleCancelPlanChange}
+        onConfirm={handleConfirmPlanChange}
+        currentPlan={getPlanName(planType || 0)}
+        newPlan={getPlanName(pendingPlanSelection || 0)}
+        isLoading={pendingPlanSelection ? 
+          (pendingPlanSelection === 1 ? starterLoading : 
+           pendingPlanSelection === 2 ? professionalLoading : 
+           premiumLoading) : false}
+      />
     </div>
   );
 };

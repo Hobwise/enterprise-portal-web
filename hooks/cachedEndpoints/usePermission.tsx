@@ -4,71 +4,70 @@ import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import useGetRoleByBusiness from "./useGetRoleBusiness";
 
 interface Permission {
+  // Menu permissions
   canViewMenu?: boolean;
   canCreateMenu?: boolean;
   canEditMenu?: boolean;
   canDeleteMenu?: boolean;
+
+  // Campaign permissions
   canViewCampaign?: boolean;
   canCreateCampaign?: boolean;
   canEditCampaign?: boolean;
   canDeleteCampaign?: boolean;
+
+  // Reservation permissions
   canViewReservation?: boolean;
   canCreateReservation?: boolean;
   canEditReservation?: boolean;
   canDeleteReservation?: boolean;
+
+  // User management permissions
+  canViewUser?: boolean;
+  canCreateUser?: boolean;
+  canEditUser?: boolean;
+  canDeleteUser?: boolean;
+
+  // Business permissions
+  canViewBusiness?: boolean;
+  canCreateBusiness?: boolean;
+  canEditBusiness?: boolean;
+  canDeleteBusiness?: boolean;
+
+  // Messages and Dashboard permissions
+  canViewMessages?: boolean;
+  canViewDashboard?: boolean;
+
+  // Payment permissions
+  canViewPayment?: boolean;
+  canEditPayment?: boolean;
+
+  // Report permissions
+  canViewReport?: boolean;
+  canEditReport?: boolean;
+
+  // Booking permissions
+  canViewBooking?: boolean;
+  canEditBooking?: boolean;
+  canCreateBooking?: boolean;
+  canDeleteBooking?: boolean;
+
+  // Order permissions
+  canViewOrder?: boolean;
+  canCreateOrder?: boolean;
+  canEditOrder?: boolean;
+  canDeleteOrder?: boolean;
+
+  // QR Code permissions
+  canViewQR?: boolean;
+  canCreateQR?: boolean;
+  canEditQR?: boolean;
+  canDeleteQR?: boolean;
 }
 
-const extractPermissions = (permissions: any, roleType: string) => {
-  const rolePermissions = permissions?.data?.data[roleType] || {};
-
-  return {
-    canCreateMenu: rolePermissions.canCreateMenu,
-    canViewMenu: rolePermissions.canViewMenu,
-    canEditMenu: rolePermissions.canEditMenu,
-    canDeleteMenu: rolePermissions.canDeleteMenu,
-
-    canViewCampaign: rolePermissions.canViewCampaign,
-    canCreateCampaign: rolePermissions.canCreateCampaign,
-    canEditCampaign: rolePermissions.canEditCampaign,
-    canDeleteCampaign: rolePermissions.canDeleteCampaign,
-
-    canViewReservation: rolePermissions.canViewReservation,
-    canCreateReservation: rolePermissions.canCreateReservation,
-    canEditReservation: rolePermissions.canEditReservation,
-    canDeleteReservation: rolePermissions.canDeleteReservation,
-
-    canViewBusiness: rolePermissions.canViewBusiness,
-    canCreateBusiness: rolePermissions.canCreateBusiness,
-    canEditBusiness: rolePermissions.canEditBusiness,
-    canDeleteBusiness: rolePermissions.canDeleteBusiness,
-
-    canViewOrder: rolePermissions.canViewOrder,
-    canCreateOrder: rolePermissions.canCreateOrder,
-    canEditOrder: rolePermissions.canEditOrder,
-    canDeleteOrder: rolePermissions.canDeleteOrder,
-
-    canViewQR: rolePermissions.canViewQR,
-    canCreateQR: rolePermissions.canCreateQR,
-    canEditQR: rolePermissions.canEditQR,
-    canDeleteQR: rolePermissions.canDeleteQR,
-
-    canViewUser: rolePermissions.canViewUser,
-    canCreateUser: rolePermissions.canCreateUser,
-    canEditUser: rolePermissions.canEditUser,
-    canDeleteUser: rolePermissions.canDeleteUser,
-
-    canViewBooking: rolePermissions.canViewBooking,
-    canCreateBooking: rolePermissions.canCreateBooking,
-    canEditBooking: rolePermissions.canEditBooking,
-
-    canViewPayment: rolePermissions.canViewPayment,
-    canEditPayment: rolePermissions.canEditPayment,
-
-    canViewReport: rolePermissions.canViewReport,
-    canEditReport: rolePermissions.canEditReport,
-
-    canViewDashboard: rolePermissions.canViewDashboard,
-  };
+const extractPermissions = (permission: any, role: string) => {
+  if (!permission) return {};
+  return permission[role] || {};
 };
 
 const usePermission = () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
 import {
   columns,
@@ -16,6 +16,9 @@ import {
   DropdownMenu,
   DropdownSection,
   DropdownTrigger,
+  Selection,
+  SortDescriptor,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -23,12 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from "@nextui-org/react";
+import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 import moment from "moment";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 
 import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { notify, submitBookingStatus } from "@/lib/utils";
+import { useQueryClient } from '@tanstack/react-query';
 import { CiCalendar } from "react-icons/ci";
 import { IoCheckmark } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -41,7 +46,6 @@ const INITIAL_VISIBLE_COLUMNS = [
   "reservationName",
   "firstName",
   "lastName",
-  "reservationName",
   "id",
   "emailAddress",
   "quantity",
@@ -52,62 +56,246 @@ const INITIAL_VISIBLE_COLUMNS = [
   "actions",
 ];
 
-const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
-  const { userRolePermissions, role } = usePermission();
-  const [filteredBooking, setFilteredBooking] = React.useState(
-    bookings[0]?.bookings
+interface BookingItem {
+  reservationName: string;
+  firstName: string;
+  lastName: string;
+  emailAddress: string;
+  phoneNumber: string;
+  reference: string;
+  checkInDateTime: string;
+  checkOutDateTime: string;
+  bookingDateTime: string;
+  bookingStatus: number;
+  statusComment: string;
+  id?: number;
+  dateCreated?: string;
+}
+
+interface BookingCategory {
+  name: string;
+  totalCount: number;
+  bookings: BookingItem[];
+}
+
+interface BookingsListProps {
+  bookings:
+    | BookingItem[]
+    | { bookings?: BookingItem[]; data?: BookingItem[] }
+    | any;
+  categories: { bookingCategories: BookingCategory[] } | any;
+  searchQuery: string;
+  refetch: () => void;
+  isLoading?: boolean;
+  isPending?: boolean;
+  getCategoryDetails?: (categoryName: string) => any;
+  isLoadingInitial?: boolean;
+}
+
+// Status mapping for booking categories
+const getStatusForBookingCategory = (categoryName: string): number | null => {
+  switch (categoryName.toLowerCase()) {
+    case "pending bookings":
+      return 0;
+    case "confirmed bookings":
+    case "incoming bookings":
+      return 1;
+    case "processed bookings":
+      return null;
+    case "today's bookings":
+      return null;
+    case "unsuccessful bookings":
+      return 5;
+    default:
+      return null; // null means show all bookings
+  }
+};
+
+// Function to get filtered bookings based on category and pending state
+const getFilteredBookingDetails = (
+  bookings: any,
+  categories: any,
+  isLoading: boolean,
+  isPending: boolean,
+  selectedCategory: string,
+  searchQuery: string = ""
+): { bookings: BookingItem[]; paginationMeta: any } => {
+  // Default pagination meta structure
+  const defaultPaginationMeta = {
+    totalPages: 1,
+    currentPage: 1,
+    hasNext: false,
+    hasPrevious: false,
+    totalCount: 0,
+  };
+
+  // Check if data is in pending state
+  if (isLoading || isPending || !bookings) {
+    return { bookings: [], paginationMeta: defaultPaginationMeta };
+  }
+
+  // Check if categories array is empty
+  if (
+    !categories?.bookingCategories ||
+    categories?.bookingCategories?.length === 0
+  ) {
+    return { bookings: [], paginationMeta: defaultPaginationMeta };
+  }
+
+  // Check if the selected category has totalCount of 0
+  const selectedCategoryData = categories?.bookingCategories?.find(
+    (cat: BookingCategory) => cat.name === selectedCategory
   );
-  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
+  if (selectedCategoryData && selectedCategoryData.totalCount === 0) {
+    return { bookings: [], paginationMeta: defaultPaginationMeta };
+  }
+
+  // Extract bookings data and pagination metadata
+  let allBookings: BookingItem[] = [];
+  let paginationMeta = { ...defaultPaginationMeta };
+
+  if (Array.isArray(bookings)) {
+    // If bookings is directly an array
+    allBookings = bookings;
+  } else if (bookings?.data?.bookings && Array.isArray(bookings.data.bookings)) {
+    // If bookings has nested structure with data.bookings
+    allBookings = bookings.data.bookings;
+    // Preserve API pagination metadata
+    paginationMeta = {
+      totalPages: bookings.data.totalPages || 1,
+      currentPage: bookings.data.currentPage || 1,
+      hasNext: bookings.data.hasNext || false,
+      hasPrevious: bookings.data.hasPrevious || false,
+      totalCount: bookings.data.totalCount || allBookings.length,
+    };
+  } else if (bookings?.bookings && Array.isArray(bookings.bookings)) {
+    // Alternative structure with direct bookings property
+    allBookings = bookings.bookings;
+    // Check if pagination metadata exists at root level
+    if (bookings.totalPages !== undefined) {
+      paginationMeta = {
+        totalPages: bookings.totalPages || 1,
+        currentPage: bookings.currentPage || 1,
+        hasNext: bookings.hasNext || false,
+        hasPrevious: bookings.hasPrevious || false,
+        totalCount: bookings.totalCount || allBookings.length,
+      };
+    }
+  } else {
+    // Fallback to empty array if no valid data found
+    allBookings = [];
+  }
+
+  // Safety check - ensure allBookings is valid array before filtering
+  if (!Array.isArray(allBookings)) {
+    return { bookings: [], paginationMeta: defaultPaginationMeta };
+  }
+
+  // Get the status filter for the selected category
+  const statusFilter = getStatusForBookingCategory(selectedCategory);
+
+  // Filter by status if not "All Bookings"
+  let filteredByStatus = allBookings;
+  if (statusFilter !== null && Array.isArray(allBookings)) {
+    filteredByStatus = allBookings.filter(
+      (booking: BookingItem) => booking.bookingStatus === statusFilter
+    );
+  }
+
+  // Apply search filter if provided
+  if (searchQuery.trim() && Array.isArray(filteredByStatus)) {
+    filteredByStatus = filteredByStatus.filter(
+      (booking: BookingItem) =>
+        booking.reservationName
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        booking.firstName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.lastName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.reference?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.emailAddress
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        booking.phoneNumber
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        booking.bookingDateTime
+          ?.toLowerCase()
+          .includes(searchQuery.toLowerCase())
+    );
+  }
+
+  return { bookings: filteredByStatus, paginationMeta };
+};
+
+const BookingsList: React.FC<BookingsListProps> = ({
+  bookings,
+  categories,
+  searchQuery,
+  refetch,
+  isLoading = false,
+  isPending = false,
+  getCategoryDetails,
+  isLoadingInitial = false,
+}) => {
+  const { userRolePermissions, role } = usePermission();
+  const queryClient = useQueryClient();
+  const [isOpenDelete, setIsOpenDelete] = React.useState<boolean>(false);
   const [isEditBookingModal, setIsEditBookingModal] =
-    React.useState<Boolean>(false);
-  const [id, setId] = React.useState<Number>();
+    React.useState<boolean>(false);
+  const [id, setId] = React.useState<number>();
   const [eachBooking, setEachBooking] = React.useState<any>(null);
+
+  const {
+    page,
+    rowsPerPage,
+    tableStatus,
+    setTableStatus,
+    setPage,
+    toggleModalDelete,
+    isOpenDelete: globalIsOpenDelete,
+    setIsOpenDelete: globalSetIsOpenDelete,
+    isOpenEdit,
+    toggleModalEdit,
+    setBookingDetails,
+    openBookingDetailsModal,
+  } = useGlobalContext();
 
   const toggleDeleteModal = (id?: number) => {
     setId(id);
     setIsOpenDelete(!isOpenDelete);
   };
+
   const toggleEditBookingModal = (booking: any) => {
     setEachBooking(booking);
     setIsEditBookingModal(!isEditBookingModal);
   };
 
-  const { page, rowsPerPage, tableStatus, setTableStatus, setPage } =
-    useGlobalContext();
-
-  const handleTabClick = (index) => {
+  const handleTabClick = React.useCallback((categoryName: string) => {
+    setTableStatus(categoryName);
     setPage(1);
-    const filteredBooking = bookings.filter((item) => item.name === index);
-    setTableStatus(filteredBooking[0]?.name);
+  }, [setTableStatus, setPage]);
 
-    setFilteredBooking(filteredBooking[0]?.bookings);
-  };
+  const currentCategoryName =
+    tableStatus || categories?.bookingCategories?.[0]?.name || "All Bookings";
+  const currentCategoryData = getCategoryDetails
+    ? getCategoryDetails(currentCategoryName)
+    : null;
 
-  useEffect(() => {
-    if (bookings && searchQuery) {
-      const filteredData = bookings
-        ?.filter(
-          (item) =>
-            item?.reservationName?.toLowerCase().includes(searchQuery) ||
-            item?.firstName?.toLowerCase().includes(searchQuery) ||
-            item?.lastName?.toLowerCase().includes(searchQuery) ||
-            item?.reference?.toLowerCase().includes(searchQuery) ||
-            item?.emailAddress?.toLowerCase().includes(searchQuery) ||
-            item?.phoneNumber?.toLowerCase().includes(searchQuery) ||
-            item?.bookingDateTime?.toLowerCase().includes(searchQuery)
-        )
-        .filter((item) => Object.keys(item).length > 0);
-      setFilteredBooking(filteredData.length > 0 ? filteredData : []);
-    } else {
-      setFilteredBooking(bookings);
-    }
-  }, [searchQuery, bookings]);
-
-  const matchingObject = bookings?.find(
-    (category) => category?.name === tableStatus
+  // Use the new filtered function that includes status filtering
+  const filteredData = getFilteredBookingDetails(
+    currentCategoryData || bookings,
+    categories,
+    isLoading || isLoadingInitial,
+    isPending || false,
+    tableStatus || "All Bookings",
+    searchQuery
   );
 
-  const matchingObjectArray = matchingObject ? matchingObject?.bookings : [];
+  const matchingObject = {
+    data: filteredData.bookings,
+    paginationMeta: filteredData.paginationMeta,
+  };
+
 
   const {
     bottomContent,
@@ -123,212 +311,278 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
+    displayData,
+    isMobile,
   } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
+
+  // Sort the bookings based on sortDescriptor
+  // Use displayData which contains accumulated data on mobile, current page on desktop
+  const sortedBookings = React.useMemo(() => {
+    if (!displayData || displayData.length === 0) {
+      return displayData || [];
+    }
+
+    return [...displayData].sort((a: BookingItem, b: BookingItem) => {
+      let first = a[sortDescriptor.column as keyof BookingItem];
+      let second = b[sortDescriptor.column as keyof BookingItem];
+
+      if (sortDescriptor.column === "bookingDateTime") {
+        first = a["dateCreated"] as string;
+        second = b["dateCreated"] as string;
+      }
+      
+      let cmp = 0;
+      if (first === null || first === undefined) cmp = 1;
+      else if (second === null || second === undefined) cmp = -1;
+      else if (first < second) cmp = -1;
+      else if (first > second) cmp = 1;
+
+      return sortDescriptor.direction === "ascending" ? -cmp : cmp;
+    });
+  }, [displayData, sortDescriptor]);
 
   const [value, setValue] = useState("");
 
-  const handleTabChange = (index) => {
+  const handleTabChange = React.useCallback((index: string) => {
     setValue(index);
-  };
+  }, []);
 
-  const updateBookingStatus = async (status, id) => {
-    const data = await postBookingStatus(id, status);
-    if (data?.data?.isSuccessful) {
+  const updateBookingStatus = async (status: number, id: number) => {
+    const response: any = await postBookingStatus(String(id), status);
+    if (response?.data?.isSuccessful) {
       notify({
         title: "Success!",
         text: "Operation successful",
         type: "success",
       });
+      await queryClient.invalidateQueries('bookingCategories');
+      await queryClient.invalidateQueries(['bookingDetails']);
       refetch();
       status === 3 && toggleDeleteModal();
-    } else if (data?.data?.error) {
+    } else if (response?.data?.error) {
       notify({
         title: "Error!",
-        text: data?.data?.error,
+        text: response?.data?.error,
         type: "error",
       });
     }
   };
 
-  console.log(eachBooking);
-  
+  const renderCell = React.useCallback(
+    (booking: BookingItem, columnKey: string) => {
+      const cellValue = booking[columnKey as keyof BookingItem];
+      
 
-  const renderCell = React.useCallback((booking, columnKey) => {
-    const cellValue = booking[columnKey];
+      switch (columnKey) {
+        case "firstName":
+          return (
+            <div className="text-sm">
+              <p className="font-medium text-black">
+                {booking?.firstName} {booking?.lastName}
+              </p>
+              <p className="text-[13px] text-textGrey">
+                {booking?.phoneNumber}
+              </p>
+            </div>
+          );
 
-    switch (columnKey) {
-      case "firstName":
-        return (
-          <div className="text-sm">
-            <p className="font-medium text-black">
-              {booking?.firstName} {booking?.lastName}
-            </p>
-            <p className="text-[13px] text-textGrey">{booking?.phoneNumber}</p>
-          </div>
-        );
+        case "bookingDateTime":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(booking?.bookingDateTime).format(
+                "MMMM Do YYYY, h:mm:ss a"
+              )}
+            </div>
+          );
+        case "reference":
+          return (
+            <div className="text-textGrey text-sm">{booking.reference}</div>
+          );
+        case "bookingStatus":
+          return (
+            <Chip
+              className="capitalize"
+              color={statusColorMap[booking?.bookingStatus]}
+              size="sm"
+              variant="bordered"
+            >
+              {statusDataMap[booking?.bookingStatus]}
+            </Chip>
+          );
+        case "actions":
+          const dropdownItems = [];
 
-      case "bookingDateTime":
-        return (
-          <div className="text-textGrey text-sm">
-            {moment(booking?.bookingDateTime).format("MMMM Do YYYY, h:mm:ss a")}
-          </div>
-        );
-      case "reference":
-        return <div className="text-textGrey text-sm">{booking.reference}</div>;
-      case "bookingStatus":
-        return (
-          <Chip
-            className="capitalize"
-            color={statusColorMap[booking?.bookingStatus]}
-            size="sm"
-            variant="bordered"
-          >
-            {statusDataMap[booking?.bookingStatus]}
-          </Chip>
-        );
-      case "actions":
-        return (
-          <div className="relative flexjustify-center items-center gap-2">
-            <Dropdown aria-label="drop down" className="">
-              <DropdownTrigger aria-label="actions">
-                <div className="cursor-pointer flex justify-center items-center text-black">
-                  <HiOutlineDotsVertical className="text-[22px] " />
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            booking?.bookingStatus === 1
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="admit"
+                aria-label="admit"
+                onClick={() =>
+                  updateBookingStatus(
+                    submitBookingStatus(booking?.bookingStatus),
+                    booking?.id!
+                  )
+                }
+              >
+                <div className="flex gap-2 items-center text-grey500">
+                  <IoCheckmark className="text-[20px]" />
+                  <p>Admit</p>
                 </div>
-              </DropdownTrigger>
-              <DropdownMenu className="text-black">
-                <DropdownSection>
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 1 && (
-                      <DropdownItem
-                        aria-label="admit"
-                        onClick={() =>
-                          updateBookingStatus(
-                            submitBookingStatus(booking?.bookingStatus),
-                            booking?.id
-                          )
-                        }
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <IoCheckmark className="text-[20px]" />
-                          <p>Admit</p>
-                        </div>
-                      </DropdownItem>
-                    )}
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 0 && (
-                      <DropdownItem
-                        aria-label="confirm booking"
-                        onClick={() =>
-                          updateBookingStatus(
-                            submitBookingStatus(booking?.bookingStatus),
-                            booking?.id
-                          )
-                        }
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <IoCheckmark className="text-[20px]" />
+              </DropdownItem>
+            );
+          }
 
-                          <p>Confirm booking</p>
-                        </div>
-                      </DropdownItem>
-                    )}
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus !== 6 &&
-                    booking?.bookingStatus !== 4 &&
-                    booking?.bookingStatus !== 5 && (
-                      <DropdownItem
-                        aria-label="edit booking"
-                        onClick={() => toggleEditBookingModal(booking)}
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <MdOutlineModeEditOutline className="text-[20px]" />
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            booking?.bookingStatus === 0
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="confirm"
+                aria-label="confirm booking"
+                onClick={() =>
+                  updateBookingStatus(
+                    submitBookingStatus(booking?.bookingStatus),
+                    booking?.id!
+                  )
+                }
+              >
+                <div className="flex gap-2 items-center text-grey500">
+                  <IoCheckmark className="text-[20px]" />
+                  <p>Confirm booking</p>
+                </div>
+              </DropdownItem>
+            );
+          }
 
-                          <p>Edit booking</p>
-                        </div>
-                      </DropdownItem>
-                    )}
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    (booking?.bookingStatus === 0 ||
-                      booking?.bookingStatus === 1) && (
-                      <DropdownItem
-                        aria-label="cancel"
-                        onClick={() => {
-                          toggleDeleteModal(booking?.id);
-                        }}
-                        // onClick={() => updateBookingStatus(3, booking?.id)}
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-danger-500`}
-                        >
-                          <LiaTimesSolid className="text-[20px]" />
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            booking?.bookingStatus !== 6 &&
+            booking?.bookingStatus !== 4 &&
+            booking?.bookingStatus !== 5
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="edit"
+                aria-label="edit booking"
+                onClick={() => toggleEditBookingModal(booking)}
+              >
+                <div className="flex gap-2 items-center text-grey500">
+                  <MdOutlineModeEditOutline className="text-[20px]" />
+                  <p>Edit booking</p>
+                </div>
+              </DropdownItem>
+            );
+          }
 
-                          <p>Cancel booking</p>
-                        </div>
-                      </DropdownItem>
-                    )}
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            (booking?.bookingStatus === 0 || booking?.bookingStatus === 1)
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="cancel"
+                aria-label="cancel"
+                onClick={() => {
+                  toggleDeleteModal(booking?.id);
+                }}
+              >
+                <div className="flex gap-2 items-center text-danger-500">
+                  <LiaTimesSolid className="text-[20px]" />
+                  <p>Cancel booking</p>
+                </div>
+              </DropdownItem>
+            );
+          }
 
-                  {(role === 0 || userRolePermissions?.canEditOrder === true) &&
-                    booking?.bookingStatus === 2 && (
-                      <DropdownItem
-                        aria-label="close booking"
-                        onClick={() =>
-                          updateBookingStatus(
-                            submitBookingStatus(booking?.bookingStatus),
-                            booking?.id
-                          )
-                        }
-                      >
-                        <div
-                          className={` flex gap-2  items-center text-grey500`}
-                        >
-                          <CiCalendar className="text-[20px]" />
+          if (
+            (role === 0 || userRolePermissions?.canEditOrder === true) &&
+            booking?.bookingStatus === 2
+          ) {
+            dropdownItems.push(
+              <DropdownItem
+                key="close"
+                aria-label="close booking"
+                onClick={() =>
+                  updateBookingStatus(
+                    submitBookingStatus(booking?.bookingStatus),
+                    booking?.id!
+                  )
+                }
+              >
+                <div className="flex gap-2 items-center text-grey500">
+                  <CiCalendar className="text-[20px]" />
+                  <p>Close booking</p>
+                </div>
+              </DropdownItem>
+            );
+          }
 
-                          <p>Close booking</p>
-                        </div>
-                      </DropdownItem>
-                    )}
-                </DropdownSection>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        );
-      default:
-        return cellValue;
-    }
-  }, []);
+          return (
+            <div className="relative flex justify-center items-center gap-2">
+              <Dropdown aria-label="drop down" className="">
+                <DropdownTrigger aria-label="actions">
+                  <div className="cursor-pointer flex justify-center items-center text-black">
+                    <HiOutlineDotsVertical className="text-[22px]" />
+                  </div>
+                </DropdownTrigger>
+                <DropdownMenu className="text-black">
+                  <DropdownSection>{dropdownItems}</DropdownSection>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          );
+        default:
+          return cellValue ? String(cellValue) : "";
+      }
+    },
+    [role, userRolePermissions]
+  );
+
+  
 
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        bookings={bookings}
+        bookings={categories?.bookingCategories || []}
         handleTabChange={handleTabChange}
         value={value}
         handleTabClick={handleTabClick}
       />
     );
   }, [
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
-    filteredBooking?.length,
-    hasSearchFilter,
+    categories?.bookingCategories,
+    handleTabChange,
+    value,
+    handleTabClick,
   ]);
 
+  // Determine if we should show loading spinner - only show for initial load
+  const shouldShowLoading = isLoadingInitial && filteredData.bookings.length === 0;
+
+  // Check if data is in pending state
+  const isDataPending =
+    (isLoading || isLoadingInitial || isPending) && !currentCategoryData;
+
+  if (isDataPending) {
+    return (
+      <section className="border border-primaryGrey rounded-lg overflow-hidden">
+        <div className="flex justify-center items-center h-64">
+          <SpinnerLoader size="md" />
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className="border border-primaryGrey rounded-lg">
+    <section className="border border-primaryGrey rounded-lg overflow-hidden">
       <Table
         radius="lg"
         isCompact
         removeWrapper
-        allowsSorting
         aria-label="list of bookings"
         bottomContent={bottomContent}
         topContent={topContent}
@@ -336,10 +590,10 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
         classNames={classNames}
         selectedKeys={selectedKeys}
         // selectionMode='multiple'
-        sortDescriptor={sortDescriptor}
+        sortDescriptor={sortDescriptor as SortDescriptor}
         topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
+        onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+        onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
@@ -354,12 +608,21 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
         </TableHeader>
         <TableBody
           emptyContent={"No booking(s) found"}
-          items={matchingObjectArray}
+          items={shouldShowLoading ? [] : sortedBookings}
+          isLoading={shouldShowLoading}
+          loadingContent={<SpinnerLoader size="md" />}
         >
-          {(item) => (
-            <TableRow key={item?.id}>
+          {(booking: BookingItem) => (
+            <TableRow
+              key={String(booking?.reference || booking?.id)}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => {
+                setBookingDetails(booking);
+                openBookingDetailsModal();
+              }}
+            >
               {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
+                <TableCell>{renderCell(booking, String(columnKey))}</TableCell>
               )}
             </TableRow>
           )}
@@ -376,7 +639,7 @@ const BookingsList = ({ bookings, searchQuery, refetch }: any) => {
       <DeleteModal
         isOpen={isOpenDelete}
         text="Are you sure you want to cancel this booking?"
-        handleDelete={() => updateBookingStatus(3, id)}
+        handleDelete={() => updateBookingStatus(3, id as number)}
         setIsOpen={setIsOpenDelete}
         toggleModal={toggleDeleteModal}
       />

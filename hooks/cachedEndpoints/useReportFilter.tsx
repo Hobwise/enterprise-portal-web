@@ -6,7 +6,7 @@ import {
   getReportPayment,
 } from '@/app/api/controllers/dashboard/report';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const useReportFilter = (
   filterType: number,
@@ -30,8 +30,7 @@ const useReportFilter = (
         filterType,
         startDate,
         endDate,
-        reportType,
-        emailAddress
+        reportType
       );
     } else if (reportFilter === 'payment') {
       return getReportPayment(
@@ -39,8 +38,7 @@ const useReportFilter = (
         filterType,
         startDate,
         endDate,
-        reportType,
-        emailAddress
+        reportType
       );
     } else if (reportFilter === 'booking') {
       return getReportBooking(
@@ -48,8 +46,7 @@ const useReportFilter = (
         filterType,
         startDate,
         endDate,
-        reportType,
-        emailAddress
+        reportType
       );
     } else if (reportFilter === 'audit-logs') {
       return getReportAuditLog(
@@ -57,8 +54,7 @@ const useReportFilter = (
         filterType,
         startDate,
         endDate,
-        reportType,
-        emailAddress
+        reportType
       );
     }
   };
@@ -75,18 +71,18 @@ const useReportFilter = (
     return responseData?.data?.data as any;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>(
-    [
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: [
       'reportFilter',
       { filterType, startDate, endDate, reportType, emailAddress },
     ],
-    fetchReport,
-    {
+    queryFn: fetchReport,
+    
       refetchOnWindowFocus: false,
 
       ...options,
-    }
-  );
+    
+  });
 
   return { data, isLoading, isError, refetch };
 };

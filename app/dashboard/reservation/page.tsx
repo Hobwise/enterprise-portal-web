@@ -13,26 +13,26 @@ import {
   PopoverTrigger,
 } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 
 import Error from "@/components/error";
 import CreateReservation from "@/components/ui/dashboard/reservations/createReservations";
 import ReservationList from "@/components/ui/dashboard/reservations/reservation";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
-import useReservation from "@/hooks/cachedEndpoints/useReservation";
+import useReservation, { ReservationData } from "@/hooks/cachedEndpoints/useReservation";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useTextCopy from "@/hooks/useTextCopy";
 import { companyInfo } from "@/lib/companyInfo";
 import {
-  CustomLoading,
   dynamicExportConfig,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
-import { IoMdAdd } from "react-icons/io";
+import { generateShortReservationUrlBrowser } from "@/lib/urlShortener";
 import { VscCopy, VscLoading } from "react-icons/vsc";
 import { MdOutlineFileDownload } from "react-icons/md";
 import toast from "react-hot-toast";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 // Define TypeScript interfaces for the data structures
 interface ReservationItem {
@@ -97,15 +97,21 @@ const Reservation: React.FC = () => {
       .filter((item) => Object.keys(item).length > 0);
   }, [data, searchQuery]);
 
-  const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(
-    `${
-      companyInfo.webUrl
-    }/reservation/select-reservation?businessName=${encodeURIComponent(
-      business[0]?.businessName
-    )}&businessId=${business[0]?.businessId}&cooperateID=${
-      userInformation.cooperateID
-    }`
-  );
+  // Generate shortened URL for all reservations
+  const shortReservationUrl = useMemo(() => {
+    if (!business?.[0]?.businessId) return "";
+
+    return generateShortReservationUrlBrowser(
+      typeof window !== 'undefined' ? window.location.origin : companyInfo.webUrl,
+      {
+        businessId: business[0]?.businessId,
+        cooperateID: userInformation?.cooperateID,
+        businessName: business[0]?.businessName,
+      }
+    );
+  }, [business, userInformation]);
+
+  const { handleCopyClick, isOpen, setIsOpen } = useTextCopy(shortReservationUrl);
 
   const exportCSV = async (): Promise<void> => {
     setLoadingExport(true);
@@ -125,7 +131,6 @@ const Reservation: React.FC = () => {
 
   // Handle loading state
   if (isLoading) return <CustomLoading />;
-  
   // Handle error state or undefined data
   if (isError || !data) return <Error onClick={() => refetch()} />;
 
@@ -139,20 +144,10 @@ const Reservation: React.FC = () => {
           <div className="text-[24px] leading-8 font-semibold">
             <div className="flex items-center">
               <span>Reservation</span>
-
-              {hasReservations && (
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data.totalCount}
-                </Chip>
-              )}
             </div>
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
-            Showing all Reservations
+          Manage Your reservations 
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -171,19 +166,20 @@ const Reservation: React.FC = () => {
                   placeholder="Search here..."
                 />
               </div>
-              <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-xl">
+              <div className="flex items-center gap-2  rounded-xl">
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}
-                  className="flex text-grey600 bg-white"
+                  className="flex border rounded-lg text-grey600 bg-white"
+                  title="Export"
+                  aria-label="Export"
                 >
+                  Export
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export csv</p>
                 </Button>
                 <Popover
                   showArrow={true}
@@ -193,7 +189,7 @@ const Reservation: React.FC = () => {
                   <PopoverTrigger>
                     <Button
                       onClick={handleCopyClick}
-                      className="flex text-grey600 bg-white"
+                      className="flex border rounded-lg text-grey600 bg-white"
                     >
                       <VscCopy />
                       <p>Copy link</p>
@@ -205,7 +201,7 @@ const Reservation: React.FC = () => {
                     </div>
                   </PopoverContent>
                 </Popover>
-              </ButtonGroup>
+              </div>
             </>
           )}
 
@@ -221,7 +217,7 @@ const Reservation: React.FC = () => {
                   backgroundColor="bg-primaryColor"
                 >
                   <div className="flex gap-2 items-center justify-center">
-                    <IoMdAdd className="text-[22px]" />
+                    <IoAddCircleOutline className="text-[22px]" />
 
                     <p>Add reservation</p>
                   </div>
@@ -236,6 +232,7 @@ const Reservation: React.FC = () => {
           data={data}
           reservation={filteredItems}
           searchQuery={searchQuery}
+          refetch={refetch}
         />
       ) : (
         <CreateReservation />

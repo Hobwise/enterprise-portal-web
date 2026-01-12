@@ -54,6 +54,12 @@ const KycCompliancePage = () => {
     status: determineStatus(option),
   }));
 
+  // Filter out Personal and Business Verification (id 1 and 2)
+  // and show a Coming Soon UI instead
+  const disabledIds = [1, 2];
+  const activeOptions = updatedOptions.filter(option => !disabledIds.includes(option.id));
+  const disabledOptions = updatedOptions.filter(option => disabledIds.includes(option.id));
+
   if (userQuery.isLoading || businessQuery.isLoading) return <p>Loading...</p>;
 
   return (
@@ -64,7 +70,28 @@ const KycCompliancePage = () => {
       </div>
       <div className="flex gap-8">
         <div className="space-y-4">
-          {updatedOptions.map((option) => (
+          {/* Show disabled options with Coming Soon UI */}
+          {disabledOptions.map((option) => (
+            <div
+              key={option.title}
+              className="block w-[400px] min-h-[130px] border border-secondaryGrey rounded-[10px] px-4 py-6 opacity-60 cursor-not-allowed bg-[#f9fafb] relative"
+            >
+              <div className="flex justify-between items-center h-full">
+                <div className="space-y-3">
+                  <p className="font-medium text-sm text-[#101928]">{option.title}</p>
+                  <p className="text-sm text-[#AFAFAF]">{option.description}</p>
+                  <div className="flex items-center w-fit gap-2 h-6 p-2 border border-[#E53030] text-[#E53030] text-[10px] rounded-2xl capitalize bg-[#fbeaea]">
+                    <PiWarningCircleFill />
+                    <span>Coming Soon </span>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-[#AFAFAF] bg-[#f3f3f3] px-3 py-1 rounded-full">Coming Soon</span>
+              </div>
+              <div className="absolute top-2 right-4 text-[#FFD700] text-lg font-bold animate-bounce">🚧</div>
+            </div>
+          ))}
+          {/* Show other options as before */}
+          {activeOptions.map((option) => (
             <Link
               href={`${SETTINGS_URL}/kyc-compliance/${option.id}`}
               key={option.title}
@@ -100,15 +127,7 @@ const KycCompliancePage = () => {
             </Link>
           ))}
         </div>
-        {userQuery.data?.verficationStage === 2 &&
-          userQuery.data?.verificationStage === 2 && (
-            <Image
-              src="/assets/images/completed-kyc.svg"
-              width={300}
-              height={290}
-              alt="KYC Verification completed"
-            />
-          )}
+        {/* Remove completed-kyc image for now since both are disabled */}
       </div>
     </div>
   );

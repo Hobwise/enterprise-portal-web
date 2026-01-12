@@ -1,7 +1,7 @@
 'use client';
 import { getDashboardReport } from '@/app/api/controllers/dashboard/dashboard';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 
 const useDashboardReport = (
   filterType: number,
@@ -25,15 +25,15 @@ const useDashboardReport = (
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>(
-    ['dashboardReport', { filterType, startDate, endDate }],
-    fetchDashboardReport,
-    {
+  const { data, isLoading, isError, refetch } = useQuery<any>({
+    queryKey: ['dashboardReport', { filterType, startDate, endDate }],
+    queryFn: fetchDashboardReport,
+    
       refetchOnWindowFocus: false,
 
       ...options,
-    }
-  );
+    
+  });
 
   return { data, isLoading, isError, refetch };
 };

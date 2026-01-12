@@ -6,7 +6,6 @@ import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { downloadCSV } from "@/lib/downloadToExcel";
 import {
-  CustomLoading,
   dynamicExportConfig,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
@@ -24,6 +23,7 @@ import { MdOutlineFileDownload } from "react-icons/md";
 import toast from "react-hot-toast";
 import { exportGrid } from "@/app/api/controllers/dashboard/menu";
 import { VscLoading } from "react-icons/vsc";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const QRCode: React.FC = () => {
   const router = useRouter();
@@ -83,20 +83,13 @@ const QRCode: React.FC = () => {
             {data?.quickResponses?.length > 0 ? (
               <div className="flex items-center">
                 <span>Quick response</span>
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data?.totalCount}
-                </Chip>
               </div>
             ) : (
               <span>Quick response</span>
             )}
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px]  w-full ">
-            Showing all Quick Response
+          Create and manage your QR
           </p>
         </div>
         <div className="flex items-center flex-wrap gap-3">
@@ -120,14 +113,15 @@ const QRCode: React.FC = () => {
                   disabled={loadingExport}
                   onClick={exportCSV}
                   className="flex text-grey600 bg-white"
+                  title="Export"
+                  aria-label="Export"
                 >
+                  Export
                   {loadingExport ? (
                     <VscLoading className="animate-spin" />
                   ) : (
                     <MdOutlineFileDownload className="text-[22px]" />
                   )}
-
-                  <p>Export csv</p>
                 </Button>
               </ButtonGroup>
             </>

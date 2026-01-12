@@ -3,6 +3,7 @@ import {
   postMarkAllAsRead,
   postMarkAsRead,
 } from '@/app/api/controllers/dashboard/settings';
+import useNotifyCount from '@/hooks/cachedEndpoints/useNotificationCount';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { Avatar, Divider } from '@nextui-org/react';
 import moment from 'moment';
@@ -15,25 +16,26 @@ const Notifications = ({
   loadMore,
   isLoading,
   isError,
-  notifData,
+  notifData = { notifications: [], hasNext: false },
   refetch,
-  refetchCount,
 }: any) => {
   const business = getJsonItemFromLocalStorage('business');
   const router = useRouter();
+  const {refetch: refetchUnreadCount } = useNotifyCount();
 
   const [expandedMessages, setExpandedMessages] = useState<string[]>([]);
 
   const markAsRead = async (id: string) => {
     await postMarkAsRead(id);
     refetch();
-    refetchCount();
+    refetchUnreadCount();
   };
 
+   
   const markAsAllRead = async () => {
     await postMarkAllAsRead(business[0].businessId);
     refetch();
-    refetchCount();
+    refetchUnreadCount();
     setExpandedMessages([]);
   };
 
@@ -44,10 +46,10 @@ const Notifications = ({
       // First expand the message
       setExpandedMessages((prev) => [...prev, id]);
       // Then mark as read without causing a rerender
-      if (
-        !notifData.notifications.find((notif: any) => notif.id === id).isRead
-      ) {
+      const notif = notifData?.notifications?.find((notif: any) => notif.id === id);
+      if (notif && !notif.isRead) {
         markAsRead(id);
+        refetchUnreadCount();
       }
     }
   };
@@ -90,6 +92,8 @@ const Notifications = ({
     return message.length > 50 ? `${message.slice(0, 50)}...` : message;
   };
 
+  if (!notifData?.notifications) return null;
+
   return (
     <article className='md:w-[400px] w-full flex flex-col justify-start text-black p-3'>
       <div className='flex justify-between items-center'>
@@ -103,7 +107,7 @@ const Notifications = ({
         </div>
       </div>
       <div className='max-h-[450px] overflow-scroll'>
-        {notifData.notifications?.map((notif: any) => {
+        {notifData?.notifications?.map((notif: any) => {
           const backgroundColorClass = !notif.isRead
             ? 'bg-[#EAE5FF]'
             : 'bg-white';
@@ -113,6 +117,7 @@ const Notifications = ({
           return (
             <div key={notif.id}>
               <div
+                onClick={() => !notif.isRead && markAsRead(notif.id)}
                 className={`${backgroundColorClass} flex gap-3 cursor-pointer rounded-md  p-3 text-xs`}
               >
                 <div>
@@ -162,7 +167,7 @@ const Notifications = ({
             </div>
           );
         })}
-        {notifData.hasNext && (
+        {notifData?.hasNext && (
           <div className='flex justify-center text-sm'>
             <p
               onClick={loadMore}

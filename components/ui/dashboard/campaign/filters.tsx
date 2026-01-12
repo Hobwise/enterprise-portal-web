@@ -2,6 +2,7 @@
 import { Chip, Tab, Tabs } from '@nextui-org/react';
 
 const Filters = ({ campaigns, handleTabChange, handleTabClick }: any) => {
+  
   return (
     <>
       <div className='flex  relative w-full top-4 px-3  border-b border-primaryGrey justify-between'>
@@ -18,7 +19,7 @@ const Filters = ({ campaigns, handleTabChange, handleTabClick }: any) => {
           aria-label='payment filter'
           onChange={handleTabChange}
         >
-          {campaigns?.map((campaign: any) => {
+          {campaigns?.campaignCategories?.map((campaign: any) => {
             return (
               <Tab
                 key={campaign.name}
@@ -27,7 +28,7 @@ const Filters = ({ campaigns, handleTabChange, handleTabClick }: any) => {
                     onClick={() => handleTabClick(campaign.name)}
                     className='flex items-center h-10 space-x-2 capitalize'
                   >
-                    <span>{campaign.name}</span>
+                    <span>{campaign?.name}</span>
 
                     <Chip
                       classNames={{

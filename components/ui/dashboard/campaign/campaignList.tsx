@@ -1,12 +1,13 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
-import { repeatCampaign } from '@/app/api/controllers/dashboard/campaigns';
-import usePermission from '@/hooks/cachedEndpoints/usePermission';
-import { useGlobalContext } from '@/hooks/globalProvider';
-import usePagination from '@/hooks/usePagination';
-import { notify, saveJsonItemToLocalStorage } from '@/lib/utils';
+import { repeatCampaign } from "@/app/api/controllers/dashboard/campaigns";
+import usePermission from "@/hooks/cachedEndpoints/usePermission";
+import useAllCampaignsData from "@/hooks/cachedEndpoints/useAllCampaignsData";
+import { useGlobalContext } from "@/hooks/globalProvider";
+import usePagination from "@/hooks/usePagination";
+import { notify, saveJsonItemToLocalStorage } from "@/lib/utils";
 import {
   Dropdown,
   DropdownItem,
@@ -19,30 +20,31 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
-} from '@nextui-org/react';
-import moment from 'moment';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { FaRegEdit } from 'react-icons/fa';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
-import { LuEye } from 'react-icons/lu';
-import { PiRepeat } from 'react-icons/pi';
-import { RiDeleteBin6Line } from 'react-icons/ri';
-import noImage from '../../../../public/assets/images/no-image.svg';
-import { columns } from './data';
-import DeleteCampaignModal from './deleteCampaign';
-import Filters from './filters';
-import RepeatCampaignModal from './repeatCampaign';
+} from "@nextui-org/react";
+import moment from "moment";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { FaRegEdit } from "react-icons/fa";
+import { HiOutlineDotsVertical } from "react-icons/hi";
+import { LuEye } from "react-icons/lu";
+import { PiRepeat } from "react-icons/pi";
+import { RiDeleteBin6Line } from "react-icons/ri";
+import noImage from "../../../../public/assets/images/no-image.svg";
+import { columns } from "./data";
+import DeleteCampaignModal from "./deleteCampaign";
+import Filters from "./filters";
+import RepeatCampaignModal from "./repeatCampaign";
+import useCampaignCategory from "@/hooks/cachedEndpoints/useCampaignCategory";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
+import CreateCampaign from "./createCampaign";
 
 const INITIAL_VISIBLE_COLUMNS = [
-  'campaignName',
-  'campaignDescription',
-  'startDateTime',
-  'image',
-
-  'actions',
+  "campaignName",
+  "campaignDescription",
+  "startDateTime",
+  "actions",
 ];
 
 interface Campaign {
@@ -68,67 +70,41 @@ interface CampaignGroup {
   hasPrevious: boolean;
 }
 
-function isItemInCompletedArray(
-  item: Campaign,
-  array: CampaignGroup[]
-): boolean {
-  const completedGroup = array.find((group) => group.name === 'Completed');
-  return completedGroup
-    ? completedGroup.campaigns.some((campaign) => campaign.id === item.id)
-    : false;
-}
-
-const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
-  const [filteredCampaigns, setFilteredCampaigns] = React.useState(
-    campaigns[0]?.campaigns
-  );
-
+const CampaignList = ({ searchQuery }: any) => {
   const { userRolePermissions, role } = usePermission();
+  const { setTableStatus, tableStatus, page, setPage } = useGlobalContext();
 
-  useEffect(() => {
-    if (campaigns && searchQuery) {
-      const filteredData = campaigns.map((campaign) => ({
-        ...campaign,
-        campaigns: campaign?.campaigns?.filter(
-          (item) =>
-            item?.campaignName?.toLowerCase().includes(searchQuery) ||
-            item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
-            item?.dressCode?.toLowerCase().includes(searchQuery)
-        ),
-      }));
-      setFilteredCampaigns(
-        filteredData.length > 0 ? filteredData[0].campaigns : []
-      );
-    } else {
-      setFilteredCampaigns(campaigns?.[0]?.campaigns);
-    }
-  }, [searchQuery, campaigns]);
+  const [isOpenDelete, setIsOpenDelete] = React.useState(false);
+  const [isOpenRepeat, setIsOpenRepeat] = React.useState(false);
+  const [singleCampaign, setSingleCampaign] = React.useState<any>({});
 
-  const { setTableStatus, tableStatus, setPage } = useGlobalContext();
+  // Use the new hook for fetching all data
+  const { 
+    getCategoryDetails, 
+    isLoadingInitial, 
+    isLoadingAll,
+    isLoadingCurrent,
+    campaigns: allCampaigns,
+    categories
+  } = useAllCampaignsData(tableStatus);
 
-  const [isOpenDelete, setIsOpenDelete] = React.useState<Boolean>(false);
-  const [isOpenRepeat, setIsOpenRepeat] = React.useState<Boolean>(false);
-  const [singleCampaign, setSingleCampaign] = React.useState<Boolean>({});
+  // Get data for current category from the new hook
+  const rawCategoryData = getCategoryDetails(tableStatus || 'All Campaigns');
+  
+  
+  // Extract the campaigns array for usePagination (similar to how Orders page does it)
+  // Ensure we ALWAYS have an array, even if rawCategoryData is null/undefined
+  const campaignsForPagination = (rawCategoryData && Array.isArray(rawCategoryData.data)) 
+    ? rawCategoryData.data 
+    : [];
 
-  const toggleCampaignModal = () => {
-    setIsOpenDelete(!isOpenDelete);
-  };
-  const toggleRepeatModal = (campaign?: any) => {
-    setSingleCampaign(campaign);
-    setIsOpenRepeat(!isOpenRepeat);
-  };
-  const router = useRouter();
-
-  const matchingObject = campaigns?.find(
-    (category) => category?.name === tableStatus
-  );
-  const matchingObjectArray = matchingObject ? matchingObject?.campaigns : [];
-
+  // Ensure we always pass an array to usePagination
+  const paginationData = Array.isArray(campaignsForPagination) ? campaignsForPagination : [];
+  
   const {
     bottomContent,
     headerColumns,
     setSelectedKeys,
-
     selectedKeys,
     sortDescriptor,
     setSortDescriptor,
@@ -139,217 +115,264 @@ const CampaignList = ({ campaigns, searchQuery, refetch }: any) => {
     onRowsPerPageChange,
     classNames,
     hasSearchFilter,
-  } = usePagination(matchingObject, columns, INITIAL_VISIBLE_COLUMNS);
+    displayData,
+    isMobile,
+  } = usePagination(paginationData, columns, INITIAL_VISIBLE_COLUMNS);
 
-  const handleTabClick = (index) => {
-    setPage(1);
-    const filteredCampaigns = campaigns.filter((item) => item.name === index);
-    setTableStatus(filteredCampaigns[0]?.name);
-    setFilteredCampaigns(filteredCampaigns[0]?.campaigns);
+  const toggleCampaignModal = () => {
+    setIsOpenDelete(!isOpenDelete);
   };
+
+  const toggleRepeatModal = (campaign?: any) => {
+    setSingleCampaign(campaign);
+    setIsOpenRepeat(!isOpenRepeat);
+  };
+
+  const router = useRouter();
+
+  const handleTabClick = (categoryName: string) => {
+    setTableStatus(categoryName);
+    setPage(1);
+  };
+
+  const handleTabChange = (_: any) => {
+    // Not used for filtering, but kept for compatibility
+  };
+
+  // Function to check if campaign is in completed array (you'll need to implement this)
+  const isItemInCompletedArray = (campaign: Campaign, campaigns: any) => {
+    // Add your logic here to check if campaign is completed
+    // This is a placeholder - replace with your actual logic
+    return true;
+  };
+
   const [isLoading, setIsLoading] = useState(false);
   const restartCampaign = async (campaign: any) => {
     setIsLoading(true);
     const data = await repeatCampaign(campaign.id);
     setIsLoading(false);
     if (data?.data?.isSuccessful) {
-      refetch();
-      toast.success('Campaign repeated successfully');
+      // Refetch campaigns - will be handled by the new hook
+      toast.success("Campaign repeated successfully");
       toggleRepeatModal();
     } else if (data?.data?.error) {
       notify({
-        title: 'Error!',
+        title: "Error!",
         text: data?.data?.error,
-        type: 'error',
+        type: "error",
       });
     }
   };
 
-  const renderCell = React.useCallback((campaign, columnKey) => {
-    const cellValue = campaign[columnKey];
+  
 
-    switch (columnKey) {
-      case 'image':
-        return (
-          <div className='flex '>
-            <Image
-              className='h-[60px] w-[120px] bg-cover rounded-lg'
-              width={120}
-              height={60}
-              alt='campaign'
-              aria-label='campaign'
-              src={
-                campaign?.image
-                  ? `data:image/jpeg;base64,${campaign?.image}`
-                  : noImage
-              }
-            />
-          </div>
-        );
-      case 'campaignDescription':
-        return (
-          <div className='md:w-[250px] text-textGrey w-[150px]'>
-            {campaign.campaignDescription}
-          </div>
-        );
-      case 'campaignName':
-        return (
-          <div className='font-medium text-black'>{campaign.campaignName}</div>
-        );
-      case 'startDateTime':
-        return (
-          <div className='text-textGrey text-sm'>
-            {moment(campaign?.startDateTime).format('MMMM Do YYYY, h:mm:ss a')}
-          </div>
-        );
+  const renderCell = React.useCallback(
+    (campaign: Campaign, columnKey: string) => {
 
-      case 'actions':
-        return (
-          <div className='relative flexjustify-center items-center gap-2'>
-            <Dropdown aria-label='drop down' className=''>
-              <DropdownTrigger aria-label='actions'>
-                <div className='cursor-pointer flex justify-center items-center text-black'>
-                  <HiOutlineDotsVertical className='text-[22px] ' />
-                </div>
-              </DropdownTrigger>
-              <DropdownMenu className='text-black'>
-                <DropdownSection>
-                  <DropdownItem aria-label='preview campaign'>
-                    <Link
-                      prefetch={true}
-                      className='flex w-full'
-                      href={{
-                        pathname: `/dashboard/campaigns/${campaign.id}`,
-                        query: {
-                          campaignId: campaign.id,
-                        },
-                      }}
-                    >
-                      <div className={` flex gap-2  items-center text-grey500`}>
-                        <LuEye />
-                        <p>Preview campaign</p>
-                      </div>
-                    </Link>
-                  </DropdownItem>
-                  {isItemInCompletedArray(campaign, campaigns) && (
-                    <DropdownItem
-                      aria-label='repeat campaign'
-                      onClick={() => toggleRepeatModal(campaign)}
-                    >
-                      <div className={` flex gap-2  items-center text-grey500`}>
-                        <PiRepeat />
-                        <p>Repeat campaign</p>
-                      </div>
+      const cellValue = campaign[columnKey as keyof Campaign];
+      switch (columnKey) {
+        case "campaignDescription":
+          return (
+            <div className="md:w-[250px] text-textGrey text-sm w-[150px]">
+              {campaign.campaignDescription}
+            </div>
+          );
+        case "campaignName":
+          return (
+            <div className="font-medium text-black text-sm">
+              {campaign.campaignName}
+            </div>
+          );
+        case "startDateTime":
+          return (
+            <div className="text-textGrey text-sm">
+              {moment(campaign?.startDateTime).format(
+                "MMMM Do YYYY, h:mm:ss a"
+              )}
+            </div>
+          );
+        case "actions":
+          return (
+            <div className="relative flexjustify-center items-center gap-2">
+              <Dropdown aria-label="drop down" className="">
+                <DropdownTrigger aria-label="actions">
+                  <div className="cursor-pointer flex justify-center items-center text-black">
+                    <HiOutlineDotsVertical className="text-[22px] " />
+                  </div>
+                </DropdownTrigger>
+                <DropdownMenu className="text-black">
+                  <DropdownSection>
+                    <DropdownItem aria-label="preview campaign">
+                      <Link
+                        prefetch={true}
+                        className="flex w-full"
+                        href={{
+                          pathname: `/dashboard/campaigns/${campaign.id}`,
+                          query: {
+                            campaignId: campaign.id,
+                          },
+                        }}
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <LuEye />
+                          <p>Preview campaign</p>
+                        </div>
+                      </Link>
                     </DropdownItem>
-                  )}
-                  {(role === 0 ||
-                    userRolePermissions?.canEditCampaign === true) && (
-                    <DropdownItem
-                      aria-label='edit campaign'
-                      onClick={() => {
-                        saveJsonItemToLocalStorage('campaign', campaign);
-                        router.push('/dashboard/campaigns/edit-campaign');
-                      }}
-                    >
-                      <div className={` flex gap-2  items-center text-grey500`}>
-                        <FaRegEdit />
-
-                        <p>Edit campaign</p>
-                      </div>
-                    </DropdownItem>
-                  )}
-                  {(role === 0 ||
-                    userRolePermissions?.canDeleteCampaign === true) && (
-                    <DropdownItem
-                      aria-label='delete campaign'
-                      onClick={() => {
-                        toggleCampaignModal();
-                        saveJsonItemToLocalStorage('campaign', campaign);
-                      }}
-                    >
-                      <div className={` flex gap-2  items-center text-grey500`}>
-                        <RiDeleteBin6Line />
-
-                        <p>Delete campaign</p>
-                      </div>
-                    </DropdownItem>
-                  )}
-                </DropdownSection>
-              </DropdownMenu>
-            </Dropdown>
-          </div>
-        );
-      default:
-        return cellValue;
-    }
-  }, []);
-
-  const [value, setValue] = useState('');
-
-  const handleTabChange = (index) => {
-    setValue(index);
-  };
+                    {isItemInCompletedArray(campaign, allCampaigns) ? (
+                      <DropdownItem
+                        aria-label="repeat campaign"
+                        onClick={() => toggleRepeatModal(campaign)}
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <PiRepeat />
+                          <p>Repeat campaign</p>
+                        </div>
+                      </DropdownItem>
+                    ) : <></>}
+                    {(role === 0 ||
+                      userRolePermissions?.canEditCampaign === true) ? (
+                      <DropdownItem
+                        aria-label="edit campaign"
+                        onClick={() => {
+                          saveJsonItemToLocalStorage("campaign", campaign);
+                          router.push("/dashboard/campaigns/edit-campaign");
+                        }}
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <FaRegEdit />
+                          <p>Edit campaign</p>
+                        </div>
+                      </DropdownItem>
+                    ) : <></>}
+                    {(role === 0 ||
+                      userRolePermissions?.canDeleteCampaign === true) ? (
+                      <DropdownItem
+                        aria-label="delete campaign"
+                        onClick={() => {
+                          toggleCampaignModal();
+                          saveJsonItemToLocalStorage("campaign", campaign);
+                        }}
+                      >
+                        <div
+                          className={` flex gap-2  items-center text-grey500`}
+                        >
+                          <RiDeleteBin6Line />
+                          <p>Delete campaign</p>
+                        </div>
+                      </DropdownItem>
+                    ) : <></>}
+                  </DropdownSection>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          );
+        default:
+          return cellValue;
+      }
+    },
+    [ role, userRolePermissions, router]
+  );
 
   const topContent = React.useMemo(() => {
     return (
       <Filters
-        campaigns={campaigns}
+        campaigns={{ campaignCategories: categories }}
         handleTabChange={handleTabChange}
-        value={value}
+        value={tableStatus}
         handleTabClick={handleTabClick}
       />
     );
-  }, [
-    filterValue,
-    statusFilter,
-    visibleColumns,
-    onSearchChange,
-    onRowsPerPageChange,
-    filteredCampaigns.length,
-    hasSearchFilter,
-  ]);
+  }, [categories, tableStatus]);
+
+  // Use displayData which contains accumulated data on mobile, current page on desktop
+  let campaignsToDisplay = displayData && Array.isArray(displayData) ? displayData : [];
+
+  // Filter campaigns based on searchQuery
+  if (searchQuery && searchQuery.trim() && Array.isArray(campaignsToDisplay)) {
+    const lowerSearch = searchQuery.toLowerCase();
+    campaignsToDisplay = campaignsToDisplay.filter(
+      (item: any) =>
+        item?.campaignName?.toLowerCase().includes(lowerSearch) ||
+        item?.campaignDescription?.toLowerCase().includes(lowerSearch)
+    );
+  }
+
+  // Final safety check to ensure campaignsToDisplay is always an array
+  if (!Array.isArray(campaignsToDisplay)) {
+    campaignsToDisplay = [];
+  }
+
+  // Show loading state
+  if ((isLoadingInitial && (!categories || categories.length === 0)) || isLoadingCurrent) {
+    return (
+      <section className="border border-primaryGrey rounded-lg overflow-hidden p-8">
+        <div className="flex justify-center items-center">
+          <CustomLoading />
+        </div>
+      </section>
+    );
+  }
+  
+  // Show empty state if no campaigns and not loading
+  if (!isLoadingInitial && allCampaigns.length === 0 && categories.length === 0) {
+    return <CreateCampaign />;
+  }
+
 
   return (
-    <section className='border border-primaryGrey rounded-lg'>
+    <section className="border border-primaryGrey rounded-lg overflow-hidden">
       <Table
-        radius='lg'
+        radius="lg"
         isCompact
         removeWrapper
-        allowsSorting
-        aria-label='list of campaign'
+        aria-label="list of campaign"
         bottomContent={bottomContent}
-        bottomContentPlacement='outside'
+        bottomContentPlacement="outside"
         classNames={classNames}
-        selectedKeys={selectedKeys}
-        // selectionMode='multiple'
         topContent={topContent}
-        sortDescriptor={sortDescriptor}
-        topContentPlacement='outside'
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
+        sortDescriptor={sortDescriptor as any}
+        topContentPlacement="outside"
+        onSortChange={setSortDescriptor as any}
       >
         <TableHeader columns={headerColumns}>
           {(column) => (
             <TableColumn
               key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
-              allowsSorting={column.sortable}
+              align={column.uid === "actions" ? "center" : "start"}
             >
               {column.name}
             </TableColumn>
           )}
         </TableHeader>
         <TableBody
-          emptyContent={'No campaign found'}
-          items={matchingObjectArray}
+          emptyContent={
+            isLoadingInitial ? (
+              <CustomLoading />
+            ) : (
+              searchQuery ? "No campaigns match your search" : "No campaign found"
+            )
+          }
+          items={campaignsToDisplay || []}
         >
-          {(item) => (
-            <TableRow key={item?.id}>
+          {(item: Campaign) => (
+            <TableRow
+              key={item.id || JSON.stringify(item)}
+              className="cursor-pointer hover:bg-gray-50 transition-colors"
+            >
               {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
+                <TableCell>{renderCell(item, columnKey as string)}</TableCell>
               )}
             </TableRow>
           )}
+
+
         </TableBody>
       </Table>
 

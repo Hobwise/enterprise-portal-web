@@ -15,9 +15,11 @@ import {
 import { Line } from "react-chartjs-2";
 import { BsArrowUpShort } from "react-icons/bs";
 import { IoIosArrowForward } from "react-icons/io";
-import Accepted from "../../../../public/assets/icons/accepted.png";
-import Decline from "../../../../public/assets/icons/canceled.png";
-import Cancel from "../../../../public/assets/icons/declined.png";
+import {
+  AcceptedReportIcon,
+  DeclinedReportIcon,
+  CancelledReportIcon,
+} from "@/public/assets/svg";
 import Star from "../../../../public/assets/icons/star.png";
 import bookingIllustration from "../../../../public/assets/images/bookingIllustration.png";
 
@@ -100,22 +102,22 @@ const ReportDetails = ({ report }: any) => {
   };
   const reportData = [
     {
-      icon: <Image src={Accepted} alt="accepted" />,
+      icon: <AcceptedReportIcon width={20} height={20} />,
       title: "CONFIRMED",
       desc: report?.confirmedBookingCount,
     },
     {
-      icon: <Image src={Decline} alt="pending" />,
+      icon: <DeclinedReportIcon width={20} height={20} />,
       title: "COMPLETED",
       desc: report?.completedBookingCount,
     },
     {
-      icon: <Image src={Cancel} alt="faile" />,
+      icon: <CancelledReportIcon width={20} height={20} />,
       title: "CANCELED",
       desc: report?.failedBookingCount,
     },
     {
-      icon: <Image src={Decline} alt="expired" />,
+      icon: <DeclinedReportIcon width={20} height={20} />,
       title: "EXPIRED",
       desc: report?.expiredBookingCount,
     },
@@ -160,7 +162,7 @@ const ReportDetails = ({ report }: any) => {
           <h3 className=" font-semibold mb-2">Available reports</h3>
           <Divider />
 
-          <div>
+          <div className="h-[180px] overflow-y-auto overflow-x-hidden custom-scrollbar">
             {report?.availableReport.map((item: any) => (
               <div
                 onClick={() =>

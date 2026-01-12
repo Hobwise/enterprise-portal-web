@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation } from "react-query";
+import { useMutation } from '@tanstack/react-query';
 import {
   getJsonItemFromLocalStorage,
   imageCompressOptions,

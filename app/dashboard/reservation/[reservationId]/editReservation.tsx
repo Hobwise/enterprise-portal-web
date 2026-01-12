@@ -76,6 +76,7 @@ const EditReservation = ({
       allowSystemAdvert: reservationItem?.allowSystemAdvert || !true,
       numberOfSeat: reservationItem?.numberOfSeat || 1,
     });
+    setSelectedImage("");
   }, [reservationItem]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -233,9 +234,7 @@ const EditReservation = ({
         toggleModalEdit();
       }}
     >
-      <ModalContent   classNames={{
-        wrapper: " z-[9999]",
-      }}>
+      <ModalContent>
         {(onClose) => (
           <>
             <ModalBody>
@@ -324,7 +323,7 @@ const EditReservation = ({
                     onChange={handleInputChange}
                     name="reservationName"
                     label="Name of reservation"
-                    placeholder="name of reservation"
+                    placeholder="Name of reservation"
                   />
                   <Spacer y={6} />
                   <CustomTextArea

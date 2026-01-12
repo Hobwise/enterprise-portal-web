@@ -1,7 +1,7 @@
 "use client";
 import { getMenuConfiguration } from "@/app/api/controllers/dashboard/menu";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
-import { useQuery } from "react-query";
+import { useQuery } from '@tanstack/react-query';
 
 interface DesignOptions {
   layout: number;
@@ -19,22 +19,20 @@ const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
     ? businessInformation[0]?.businessId
     : businessIdOutsideApp;
   const getMenuConfig = async () => {
-    const responseData = await getMenuConfiguration(
-      businessId,
-
-      cooperateID
-    );
+    const responseData = await getMenuConfiguration(businessId, cooperateID);
 
     return responseData?.data?.data as DesignOptions;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<DesignOptions>(
-    "menuConfig",
-    getMenuConfig,
-    {
-      refetchOnWindowFocus: false,
-    }
-  );
+  const { data, isLoading, isError, refetch } = useQuery<DesignOptions>({
+    queryKey: ["menuConfig", businessId, cooperateID],
+    queryFn: getMenuConfig,
+    enabled: !!businessId,
+    retry: 2,
+    refetchOnWindowFocus: true, // Enable refetch on tab focus for mobile
+    refetchOnMount: true, // Always refetch on component mount
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   return {
     data,

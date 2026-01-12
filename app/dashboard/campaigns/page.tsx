@@ -1,35 +1,35 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { Chip } from "@nextui-org/react";
 import { useRouter } from "next/navigation";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 
 import Error from "@/components/error";
 import CampaignList from "@/components/ui/dashboard/campaign/campaignList";
 import CreateCampaign from "@/components/ui/dashboard/campaign/createCampaign";
-import useCampaign from "@/hooks/cachedEndpoints/useCampaign";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { useGlobalContext } from "@/hooks/globalProvider";
-import { CustomLoading } from "@/lib/utils";
 import { IoMdAdd } from "react-icons/io";
+import { CustomLoading } from "@/components/ui/dashboard/CustomLoading";
 
 const Compaigns: React.FC = () => {
   const router = useRouter();
 
   const { userRolePermissions, role } = usePermission();
 
-  const { data, isLoading, isError, refetch } = useCampaign();
+  // Data fetching is now handled by CampaignList component internally  
 
   const { setPage, setTableStatus } = useGlobalContext();
 
   useEffect(() => {
     setTableStatus("All Campaigns");
     setPage(1);
-  }, []);
+  }, [setTableStatus, setPage]);
+
+
 
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -37,20 +37,9 @@ const Compaigns: React.FC = () => {
     setSearchQuery(event.target.value.toLowerCase());
   };
 
-  const filteredItems = useMemo(() => {
-    return data?.map((item) => ({
-      ...item,
-      campaigns: item?.campaigns?.filter(
-        (item) =>
-          item?.campaignName?.toLowerCase().includes(searchQuery) ||
-          item?.campaignDescription?.toLowerCase().includes(searchQuery) ||
-          item?.dressCode?.toLowerCase().includes(searchQuery)
-      ),
-    }));
-  }, [data, searchQuery]);
 
-  if (isLoading) return <CustomLoading />;
-  if (isError) return <Error onClick={() => refetch()} />;
+ 
+  // Loading and error states are now handled by CampaignList component
 
   return (
     <>
@@ -60,23 +49,16 @@ const Compaigns: React.FC = () => {
             <div className="flex items-center">
               <span>Campaigns</span>
 
-              {data?.[0]?.campaigns?.length > 0 && (
-                <Chip
-                  classNames={{
-                    base: ` ml-2 text-xs h-7 font-[600] w-5 bg-[#EAE5FF] text-primaryColor`,
-                  }}
-                >
-                  {data?.[0]?.totalCount}
-                </Chip>
-              )}
+              {/* Campaign count will be handled by CampaignList component */}
             </div>
           </div>
           <p className="text-sm  text-grey600  xl:w-[231px] w-full ">
-            Showing all campaigns
+          Manage Your Business Campaigns
+
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {data?.[0]?.campaigns?.length > 0 && (
+          {/* Always show search input */ true && (
             <>
               <div>
                 <CustomInput
@@ -96,7 +78,7 @@ const Compaigns: React.FC = () => {
 
           {(role === 0 || userRolePermissions?.canCreateCampaign === true) && (
             <>
-              {data?.[0]?.campaigns?.length > 0 && (
+              {/* Always show create button */ true && (
                 <CustomButton
                   onClick={() =>
                     router.push("/dashboard/campaigns/create-campaign")
@@ -105,7 +87,7 @@ const Compaigns: React.FC = () => {
                   backgroundColor="bg-primaryColor"
                 >
                   <div className="flex gap-2 items-center justify-center">
-                    <IoMdAdd className="text-[22px]" />
+                     <IoAddCircleOutline className="text-[22px]" />
 
                     <p>Add campaign</p>
                   </div>
@@ -115,15 +97,9 @@ const Compaigns: React.FC = () => {
           )}
         </div>
       </div>
-      {data?.[0]?.campaigns?.length > 0 ? (
-        <CampaignList
-          campaigns={filteredItems}
-          searchQuery={searchQuery}
-          refetch={refetch}
-        />
-      ) : (
-        <CreateCampaign />
-      )}
+      <CampaignList
+        searchQuery={searchQuery}
+      />
     </>
   );
 };
