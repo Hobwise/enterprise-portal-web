@@ -38,3 +38,8 @@ next-env.d.ts
 
 .vercel
 .qodo
+
+# browser automation tools
+/b
+/.browser-sessions/
+/.browser-screenshots/
