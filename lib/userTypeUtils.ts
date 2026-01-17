@@ -39,8 +39,8 @@ export const isCategoryUser = (userInfo: UserInformation | null): boolean => {
   if (!userInfo) return false;
 
   return (
-    userInfo.role === 1 &&
-    userInfo.staffType === 2 &&
+    Number(userInfo.role) === 1 &&
+    Number(userInfo.staffType) === 2 &&
     !!userInfo.assignedCategoryId &&
     userInfo.assignedCategoryId !== "" &&
     userInfo.assignedCategoryId !== "POS"
@@ -52,7 +52,7 @@ export const isCategoryUser = (userInfo: UserInformation | null): boolean => {
  */
 export const isAdmin = (userInfo: UserInformation | null): boolean => {
   if (!userInfo) return false;
-  return userInfo.role === 0;
+  return Number(userInfo.role) === 0;
 };
 
 /**
@@ -60,7 +60,7 @@ export const isAdmin = (userInfo: UserInformation | null): boolean => {
  */
 export const isStaffUser = (userInfo: UserInformation | null): boolean => {
   if (!userInfo) return false;
-  return userInfo.role === 1 && !isPOSUser(userInfo) && !isCategoryUser(userInfo);
+  return Number(userInfo.role) === 1 && !isPOSUser(userInfo) && !isCategoryUser(userInfo);
 };
 
 /**

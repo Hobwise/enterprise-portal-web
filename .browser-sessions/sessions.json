@@ -1,0 +1,100 @@
+{
+  "version": 2,
+  "sessions": {
+    "31a77cf8": {
+      "id": "31a77cf8",
+      "created": "2026-01-16T23:53:11.965Z",
+      "lastUsed": "2026-01-17T09:49:22.335Z",
+      "activeTabId": "tab_cf9a2956",
+      "tabs": {
+        "tab_cf9a2956": {
+          "id": "tab_cf9a2956",
+          "targetId": "48A122F1CCA522B1B14410701D85D19D",
+          "wsUrl": "ws://localhost:9222/devtools/page/48A122F1CCA522B1B14410701D85D19D",
+          "url": "chrome://newtab/",
+          "title": "New tab",
+          "created": "2026-01-16T23:53:11.965Z",
+          "lastUsed": "2026-01-16T23:53:11.965Z",
+          "index": 0
+        }
+      },
+      "url": "http://localhost:3000/auth/login",
+      "title": "Hobwise | Log in to Hobwise"
+    },
+    "dd93ae3a": {
+      "id": "dd93ae3a",
+      "created": "2026-01-17T10:00:38.717Z",
+      "lastUsed": "2026-01-17T10:20:18.419Z",
+      "activeTabId": "tab_d5b207ee",
+      "tabs": {
+        "tab_d5b207ee": {
+          "id": "tab_d5b207ee",
+          "targetId": "48A122F1CCA522B1B14410701D85D19D",
+          "wsUrl": "ws://localhost:9222/devtools/page/48A122F1CCA522B1B14410701D85D19D",
+          "url": "http://localhost:3000/dashboard/inventory",
+          "title": "(467) Hobwise | Dashboard",
+          "created": "2026-01-17T10:00:38.717Z",
+          "lastUsed": "2026-01-17T10:00:38.717Z",
+          "index": 0
+        }
+      },
+      "url": "http://localhost:3000/dashboard/inventory",
+      "title": ""
+    },
+    "0941b085": {
+      "id": "0941b085",
+      "created": "2026-01-17T10:21:54.736Z",
+      "lastUsed": "2026-01-17T10:21:54.736Z",
+      "activeTabId": "tab_4a571858",
+      "tabs": {
+        "tab_4a571858": {
+          "id": "tab_4a571858",
+          "targetId": "48A122F1CCA522B1B14410701D85D19D",
+          "wsUrl": "ws://localhost:9222/devtools/page/48A122F1CCA522B1B14410701D85D19D",
+          "url": "http://localhost:3000/dashboard/inventory",
+          "title": "Hobwise - Restaurant &amp; Hospitality Management Platform",
+          "created": "2026-01-17T10:21:54.736Z",
+          "lastUsed": "2026-01-17T10:21:54.736Z",
+          "index": 0
+        }
+      }
+    },
+    "9c3da80d": {
+      "id": "9c3da80d",
+      "created": "2026-01-17T10:29:10.314Z",
+      "lastUsed": "2026-01-17T10:29:10.314Z",
+      "activeTabId": "tab_ec46dfb6",
+      "tabs": {
+        "tab_ec46dfb6": {
+          "id": "tab_ec46dfb6",
+          "targetId": "F7DB05903922098EF24F2645357715F7",
+          "wsUrl": "ws://localhost:9222/devtools/page/F7DB05903922098EF24F2645357715F7",
+          "url": "http://localhost:3000/dashboard/inventory",
+          "title": "Hobwise - Restaurant &amp; Hospitality Management Platform",
+          "created": "2026-01-17T10:29:10.314Z",
+          "lastUsed": "2026-01-17T10:29:10.314Z",
+          "index": 0
+        }
+      }
+    },
+    "119bc952": {
+      "id": "119bc952",
+      "created": "2026-01-17T10:41:47.559Z",
+      "lastUsed": "2026-01-17T10:41:47.559Z",
+      "activeTabId": "tab_0e10e80d",
+      "tabs": {
+        "tab_0e10e80d": {
+          "id": "tab_0e10e80d",
+          "targetId": "F7DB05903922098EF24F2645357715F7",
+          "wsUrl": "ws://localhost:9222/devtools/page/F7DB05903922098EF24F2645357715F7",
+          "url": "http://localhost:3000/dashboard/inventory",
+          "title": "Hobwise - Restaurant &amp; Hospitality Management Platform",
+          "created": "2026-01-17T10:41:47.559Z",
+          "lastUsed": "2026-01-17T10:41:47.559Z",
+          "index": 0
+        }
+      }
+    }
+  },
+  "defaultSession": "31a77cf8"
+}

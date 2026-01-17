@@ -1,5 +1,5 @@
 'use client';
-import { SideNavItem } from './types';
+import { SideNavItem, SideNavSection } from './types';
 import {
   DashboardSidebar,
   OrderSidebar,
@@ -10,6 +10,15 @@ import {
   PaymentSidebar,
   ReportSidebar,
   SettingsIcon,
+  InventoryDashboardIcon,
+  ItemIcon,
+  SupplierIcon,
+  PurchaseRequestIcon,
+  StockTransferIcon,
+  StockAdjustmentIcon,
+  InventoryCountIcon,
+  HistoryIcon,
+  StockAnalysisIcon,
 } from "@/public/assets/svg";
 import Menu from '../../../public/assets/icons/menu.png';
 
@@ -61,6 +70,72 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
   },
 ];
 
+// Inventory Manager navigation items
+export const INVENTORY_ITEMS: SideNavItem[] = [
+  {
+    title: "Dashboard",
+    path: "/dashboard/inventory",
+    icon: <InventoryDashboardIcon />,
+  },
+  {
+    title: "Item",
+    path: "/dashboard/inventory/items",
+    icon: <ItemIcon />,
+  },
+  {
+    title: "Supplier",
+    path: "/dashboard/inventory/suppliers",
+    icon: <SupplierIcon />,
+  },
+  {
+    title: "Purchase Request",
+    path: "/dashboard/inventory/purchase-request",
+    icon: <PurchaseRequestIcon />,
+  },
+  {
+    title: "Stock Transfer",
+    path: "/dashboard/inventory/stock-transfer",
+    icon: <StockTransferIcon />,
+  },
+  {
+    title: "Stock Adjustment",
+    path: "/dashboard/inventory/stock-adjustment",
+    icon: <StockAdjustmentIcon />,
+  },
+  {
+    title: "Inventory Count",
+    path: "/dashboard/inventory/inventory-count",
+    icon: <InventoryCountIcon />,
+  },
+  {
+    title: "History",
+    path: "/dashboard/inventory/history",
+    icon: <HistoryIcon />,
+  },
+  {
+    title: "Stock Analysis",
+    path: "/dashboard/inventory/stock-analysis",
+    icon: <StockAnalysisIcon />,
+  },
+];
+
+// Section-based navigation configuration
+export const SIDENAV_CONFIG: SideNavSection[] = [
+  {
+    sectionTitle: "ORDER MANAGER",
+    collapsible: true,
+    defaultExpanded: true,
+    items: SIDENAV_ITEMS,
+  },
+  {
+    sectionTitle: "INVENTORY MANAGER",
+    collapsible: true,
+    defaultExpanded: true,
+    requiredRole: 0, // Manager only (role 0)
+    items: INVENTORY_ITEMS,
+  },
+];
+
 export const headerRouteMapping = {
   settings: {
     title: 'Settings',
@@ -85,6 +160,10 @@ export const headerRouteMapping = {
   campaigns: {
     title: 'Campaigns',
     icon: <CampaignSidebar />,
+  },
+  inventory: {
+    title: 'Inventory',
+    icon: <InventoryDashboardIcon />,
   },
   report: {
     title: 'Reports',
