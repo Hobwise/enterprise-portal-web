@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -10,9 +10,10 @@ import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } fr
 import { useDisclosure } from '@nextui-org/react';
 import { motion, useCycle } from 'framer-motion';
 import { FiLogOut } from 'react-icons/fi';
+import { IoIosArrowDown } from 'react-icons/io';
 import LogoutModal from '../logoutModal';
-import { SIDENAV_ITEMS } from './constants';
-import { SideNavItem } from './types';
+import { SIDENAV_ITEMS, SIDENAV_CONFIG } from './constants';
+import { SideNavItem, SideNavSection } from './types';
 
 type MenuItemWithSubMenuProps = {
   item: SideNavItem;
@@ -51,6 +52,19 @@ const HeaderMobile = () => {
   const isPOSUser = checkIsPOSUser(userInformation);
   const isCategoryUser = checkIsCategoryUser(userInformation);
 
+  // Get user role (0 = Manager, 1 = Staff)
+  const userRole = userInformation?.role;
+
+  // Filter sections based on user role
+  const filteredSections = useMemo(() => {
+    return SIDENAV_CONFIG.filter((section) => {
+      if (section.requiredRole !== undefined && userRole !== section.requiredRole) {
+        return false;
+      }
+      return true;
+    });
+  }, [userRole]);
+
   if (isPOSUser || isCategoryUser) {
     return null;
   }
@@ -73,34 +87,15 @@ const HeaderMobile = () => {
         variants={variants}
         className='absolute grid w-full gap-3 px-10 py-16 max-h-screen overflow-y-auto'
       >
-        {SIDENAV_ITEMS.map((item, idx) => {
-          const isLastItem = idx === SIDENAV_ITEMS.length - 1;
-
-          return (
-            <div key={idx}>
-              {item.submenu ? (
-                <MenuItemWithSubMenu item={item} toggleOpen={toggleOpen} />
-              ) : (
-                <MenuItem>
-                  <Link
-                    prefetch={true}
-                    href={item?.path}
-                    onClick={() => toggleOpen()}
-                    className={`flex w-full text-white text-xl ${
-                      item?.path === pathname ? 'font-bold' : ''
-                    }`}
-                  >
-                    {item?.title}
-                  </Link>
-                </MenuItem>
-              )}
-
-              {!isLastItem && (
-                <MenuItem className='my-3 h-px w-full bg-gray-300' />
-              )}
-            </div>
-          );
-        })}
+        {filteredSections.map((section, sectionIdx) => (
+          <MobileSectionGroup
+            key={sectionIdx}
+            section={section}
+            pathname={pathname}
+            toggleOpen={toggleOpen}
+            isLastSection={sectionIdx === filteredSections.length - 1}
+          />
+        ))}
       </motion.ul>
       <MenuToggle toggle={toggleOpen} />
       <div
@@ -222,6 +217,97 @@ const MenuItemWithSubMenu: React.FC<MenuItemWithSubMenuProps> = ({
         )}
       </div>
     </>
+  );
+};
+
+// Mobile Section Group Component for collapsible sections
+const MobileSectionGroup = ({
+  section,
+  pathname,
+  toggleOpen,
+  isLastSection,
+}: {
+  section: SideNavSection;
+  pathname: string;
+  toggleOpen: () => void;
+  isLastSection: boolean;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`mobile-sidebar-section-${section.sectionTitle}`);
+      if (stored !== null) {
+        return stored === 'true';
+      }
+    }
+    return section.defaultExpanded ?? true;
+  });
+
+  const toggleSection = () => {
+    const newState = !isExpanded;
+    setIsExpanded(newState);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`mobile-sidebar-section-${section.sectionTitle}`, String(newState));
+    }
+  };
+
+  return (
+    <div className="mb-4">
+      {/* Section Header */}
+      <MenuItem>
+        <button
+          onClick={section.collapsible ? toggleSection : undefined}
+          className={`flex items-center justify-between w-full text-sm font-semibold uppercase tracking-wider text-gray-400 ${
+            section.collapsible ? 'cursor-pointer' : 'cursor-default'
+          }`}
+        >
+          <span>{section.sectionTitle}</span>
+          {section.collapsible && (
+            <IoIosArrowDown
+              className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            />
+          )}
+        </button>
+      </MenuItem>
+
+      {/* Section Items */}
+      {isExpanded && (
+        <div className="mt-2 space-y-2">
+          {section.items.map((item, idx) => {
+            const isLastItem = idx === section.items.length - 1;
+
+            return (
+              <div key={idx}>
+                {item.submenu ? (
+                  <MenuItemWithSubMenu item={item} toggleOpen={toggleOpen} />
+                ) : (
+                  <MenuItem>
+                    <Link
+                      prefetch={true}
+                      href={item?.path}
+                      onClick={() => toggleOpen()}
+                      className={`flex w-full text-white text-xl ${
+                        item?.path === pathname ? 'font-bold' : ''
+                      }`}
+                    >
+                      {item?.title}
+                    </Link>
+                  </MenuItem>
+                )}
+
+                {!isLastItem && (
+                  <MenuItem className='my-3 h-px w-full bg-gray-600' />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Section Divider */}
+      {!isLastSection && (
+        <MenuItem className='my-4 h-px w-full bg-gray-300' />
+      )}
+    </div>
   );
 };
 

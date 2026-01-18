@@ -34,9 +34,9 @@ import { GoPlus } from "react-icons/go";
 import { IoIosArrowDown } from "react-icons/io";
 import { PiBookOpenTextLight } from "react-icons/pi";
 
-import { SIDENAV_ITEMS } from "./constants";
+import { SIDENAV_ITEMS, SIDENAV_CONFIG } from "./constants";
 import AddBusiness from "./settings/addBusiness";
-import { SideNavItem } from "./types";
+import { SideNavItem, SideNavSection } from "./types";
 
 const SideNav = () => {
   const { isOpen, onOpenChange } = useDisclosure();
@@ -141,6 +141,59 @@ const SideNav = () => {
   const canAccessMultipleLocations =
     subscription?.planCapabilities?.canAccessMultipleLocations;
 
+  // Filter items based on permissions
+  const filterItemsByPermission = useCallback((items: SideNavItem[]) => {
+    if (role !== 1) return items; // Admin (role 0) sees all items
+
+    const permissionMap: Record<string, boolean | undefined> = {
+      "Menu": userRolePermissions?.canViewMenu,
+      "Campaigns": userRolePermissions?.canViewCampaign,
+      "Reservation": userRolePermissions?.canViewReservation,
+      "Payments": userRolePermissions?.canViewPayment,
+      "Orders": userRolePermissions?.canViewOrder,
+      "Reports": userRolePermissions?.canViewReport,
+      "Bookings": userRolePermissions?.canViewBooking,
+      "Dashboard": userRolePermissions?.canViewDashboard,
+      "Quick Response": userRolePermissions?.canViewQR,
+    };
+
+    return items.filter((item) => {
+      const hasPermission = permissionMap[item.title];
+      return hasPermission !== false;
+    });
+  }, [role, userRolePermissions]);
+
+  // Filter sections based on role and permissions
+  const filteredSections = useMemo(() => {
+    if (isPermissionsLoading || !isMounted) return [];
+
+    // If Category user, don't show any sidebar items
+    if (isCategoryUserState) {
+      return [];
+    }
+
+    // If POS user, show only POS and Orders navigation (no sections)
+    if (isPOSUserState) {
+      return [];
+    }
+
+    // Filter sections based on role requirement
+    return SIDENAV_CONFIG
+      .filter((section) => {
+        // Check if section requires specific role
+        if (section.requiredRole !== undefined && Number(role) !== section.requiredRole) {
+          return false;
+        }
+        return true;
+      })
+      .map((section) => ({
+        ...section,
+        items: filterItemsByPermission(section.items),
+      }))
+      .filter((section) => section.items.length > 0); // Only show sections with items
+  }, [isPermissionsLoading, role, isMounted, isPOSUserState, isCategoryUserState, filterItemsByPermission]);
+
+  // Legacy flat items for POS users
   const filteredItems = useMemo(() => {
     if (isPermissionsLoading || !isMounted) return [];
 
@@ -165,27 +218,8 @@ const SideNav = () => {
       ];
     }
 
-    // Regular filtering for non-POS/non-Category users
-    return SIDENAV_ITEMS.filter((item) => {
-      // Early return if not role 1 (admin permissions)
-      if (role !== 1) return true;
-
-      const permissionMap: Record<string, boolean | undefined> = {
-        "Menu": userRolePermissions?.canViewMenu,
-        "Campaigns": userRolePermissions?.canViewCampaign,
-        "Reservation": userRolePermissions?.canViewReservation,
-        "Payments": userRolePermissions?.canViewPayment,
-        "Orders": userRolePermissions?.canViewOrder,
-        "Reports": userRolePermissions?.canViewReport,
-        "Bookings": userRolePermissions?.canViewBooking,
-        "Dashboard": userRolePermissions?.canViewDashboard,
-        "Quick Response": userRolePermissions?.canViewQR,
-      };
-
-      const hasPermission = permissionMap[item.title];
-      return hasPermission !== false; // Allow if permission is true or undefined
-    });
-  }, [isPermissionsLoading, role, userRolePermissions, isMounted, isPOSUserState, isCategoryUserState]);
+    return [];
+  }, [isPermissionsLoading, isMounted, isPOSUserState, isCategoryUserState]);
 
   return (
     <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
@@ -214,7 +248,7 @@ const SideNav = () => {
             {isPermissionsLoading ? (
               <div className="md:w-[272px] bg-black h-screen flex-1 fixed z-30 hidden md:flex flex-col">
               <div className="flex flex-col gap-4 w-full h-full relative">
-             
+
                 <div className="space-y-4 px-4 mt-4">
                   {[1, 2, 3, 4, 5, 6,7,8,9].map((item) => (
                     <div key={item} className="flex items-center gap-6">
@@ -225,10 +259,16 @@ const SideNav = () => {
                 </div>
               </div>
             </div>
-            ) : (
+            ) : isPOSUserState ? (
+              // Render flat items for POS users
               filteredItems.map((item, idx) => {
                 return <MenuItem key={idx} item={item} pathname={pathname} />;
               })
+            ) : (
+              // Render section-based navigation for regular users
+              filteredSections.map((section, idx) => (
+                <SectionGroup key={idx} section={section} pathname={pathname} />
+              ))
             )}
           </div>
         </div>
@@ -358,6 +398,62 @@ const SideNav = () => {
 };
 
 export default SideNav;
+
+// SectionGroup component for collapsible sidebar sections
+const SectionGroup = memo(({ section, pathname }: { section: SideNavSection; pathname: string }) => {
+  // Initialize state from localStorage or default
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(`sidebar-section-${section.sectionTitle}`);
+      if (stored !== null) {
+        return stored === 'true';
+      }
+    }
+    return section.defaultExpanded ?? true;
+  });
+
+  const toggleSection = useCallback(() => {
+    const newState = !isExpanded;
+    setIsExpanded(newState);
+    // Persist to localStorage
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`sidebar-section-${section.sectionTitle}`, String(newState));
+    }
+  }, [isExpanded, section.sectionTitle]);
+
+  // Check if any item in this section is active
+  const hasActiveItem = section.items.some(item => pathname === item.path || pathname.startsWith(item.path + '/'));
+
+  return (
+    <div className="mb-2">
+      {/* Section Header */}
+      <button
+        onClick={section.collapsible ? toggleSection : undefined}
+        className={`flex items-center justify-between w-full px-6 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
+          hasActiveItem ? 'text-white bg-[#5F35D2]' : 'text-gray-400 hover:text-white'
+        } ${section.collapsible ? 'cursor-pointer' : 'cursor-default'}`}
+      >
+        <span>{section.sectionTitle}</span>
+        {section.collapsible && (
+          <IoIosArrowDown
+            className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+          />
+        )}
+      </button>
+
+      {/* Section Items */}
+      {isExpanded && (
+        <div className="flex flex-col space-y-1 mt-1">
+          {section.items.map((item, idx) => (
+            <MenuItem key={idx} item={item} pathname={pathname} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+});
+
+SectionGroup.displayName = 'SectionGroup';
 
 const MenuItem = memo(({ item, pathname }: { item: SideNavItem; pathname: string }) => {
   const [subMenuOpen, setSubMenuOpen] = useState(false);

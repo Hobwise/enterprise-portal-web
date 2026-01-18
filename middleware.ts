@@ -101,6 +101,15 @@ export function middleware(request: NextRequest) {
       // Allow category users to access business-activities
       return NextResponse.next();
     }
+
+    // Inventory Manager routes - Manager only (UserRole === "Manager")
+    if (pathname.startsWith('/dashboard/inventory')) {
+      const userRole = jwtPayload?.UserRole;
+      // Only managers can access inventory routes
+      if (userRole !== 'Manager') {
+        return NextResponse.rewrite(new URL("/dashboard/unauthorized", request.url));
+      }
+    }
   }
 
   const matchedBaseRoute = Object.keys(routePermissions).find((route) =>

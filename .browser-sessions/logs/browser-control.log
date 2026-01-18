@@ -1,0 +1,35 @@
+[2026-01-16T23:50:38.564Z] screenshot  -> ERROR: Session not found: 33cc51c8
+[2026-01-16T23:50:49.590Z] session init -> ERROR: fetch failed
+[2026-01-17T00:51:28+01:00] Executing: screenshot (session: none)
+[2026-01-16T23:51:39.062Z] session init -> ERROR: fetch failed
+[2026-01-16T23:53:11.968Z] session init -> OK (50ms)
+[2026-01-16T23:53:20.288Z] navigate http://localhost:3000/dashboard/inventory -> ERROR: Session not found: 33cc51c8
+[2026-01-16T23:53:42.826Z] navigate http://localhost:3000/dashboard/inventory -> OK (12654ms)
+[2026-01-16T23:54:25.403Z] screenshot  -> OK (2343ms)
+[2026-01-17T00:57:17+01:00] Executing: screenshot (session: 31a77cf8)
+[2026-01-16T23:57:33.615Z] screenshot  -> OK (586ms)
+[2026-01-17T00:01:06.606Z] refresh  -> OK (30803ms)
+[2026-01-17T00:01:43.952Z] screenshot  -> OK (3750ms)
+[2026-01-17T09:48:14.745Z] navigate http://localhost:3000/dashboard -> OK (52192ms)
+[2026-01-17T09:49:22.338Z] navigate http://localhost:3000/dashboard/inventory -> OK (33285ms)
+[2026-01-17T09:49:56.460Z] screenshot  -> OK (702ms)
+[2026-01-17T09:52:57.950Z] screenshot  -> OK (1856ms)
+[2026-01-17T09:55:48.609Z] eval JSON.stringify(JSON.parse(localStorage.getItem('userInformation'))) -> OK (674ms)
+[2026-01-17T09:58:54.396Z] refresh  -> ERROR: Command timeout: Runtime.evaluate
+[2026-01-17T10:00:00.378Z] navigate http://localhost:3000/dashboard/inventory -> ERROR: Command timeout: Page.enable
+[2026-01-17T10:00:38.733Z] session init -> OK (823ms)
+[2026-01-17T10:00:53.790Z] screenshot  -> ERROR: Session not found: 33cc51c8
+[2026-01-17T10:01:55.410Z] navigate http://localhost:3000/dashboard/inventory -> OK (36964ms)
+[2026-01-17T10:02:48.338Z] screenshot  -> ERROR: CDP Error: Cannot take screenshot with 0 width.
+[2026-01-17T10:04:17.091Z] screenshot  -> OK (906ms)
+[2026-01-17T10:20:19.031Z] refresh  -> OK (51811ms)
+[2026-01-17T10:20:41.960Z] screenshot  -> ERROR: CDP Error: Cannot take screenshot with 0 width.
+[2026-01-17T10:21:54.742Z] session init -> OK (1021ms)
+[2026-01-17T10:24:07.520Z] refresh  -> ERROR: Command timeout: Runtime.evaluate
+[2026-01-17T10:25:26.875Z] navigate http://localhost:3000/dashboard/inventory -> ERROR: Command timeout: Runtime.enable
+[2026-01-17T10:26:31.462Z] screenshot  -> ERROR: Command timeout: Page.enable
+[2026-01-17T10:29:10.323Z] session init -> OK (295ms)
+[2026-01-17T10:29:54.383Z] screenshot  -> OK (12844ms)
+[2026-01-17T10:32:24.620Z] navigate http://localhost:3000/dashboard/inventory -> ERROR: Command timeout: Page.navigate
+[2026-01-17T10:41:47.561Z] session init -> OK (241ms)
+[2026-01-17T10:42:14.049Z] screenshot  -> OK (1819ms)
