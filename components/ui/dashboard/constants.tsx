@@ -85,7 +85,7 @@ export const INVENTORY_ITEMS: SideNavItem[] = [
   {
     title: "Supplier",
     path: "/dashboard/inventory/suppliers",
-    icon: <SupplierIcon />,
+    icon: <SupplierIcon fill='#fff' />,
   },
   {
     title: "Purchase Request",
@@ -160,6 +160,10 @@ export const headerRouteMapping = {
   campaigns: {
     title: 'Campaigns',
     icon: <CampaignSidebar />,
+  },
+  'inventory/suppliers': {
+    title: 'Suppliers',
+    icon: <SupplierIcon fill='#494E58' />,
   },
   inventory: {
     title: 'Inventory',

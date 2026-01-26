@@ -4,6 +4,7 @@ import { IoEyeOffOutline, IoEyeOutline } from "react-icons/io5";
 
 import { Input } from "@nextui-org/react";
 import { useState, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface CustomInputProps {
   type?: string;
@@ -15,6 +16,13 @@ interface CustomInputProps {
   isInvalid?: boolean;
   size?: "lg" | "md" | "sm";
   classnames?: string;
+  classNames?: {
+    base?: string;
+    label?: string;
+    inputWrapper?: string;
+    innerWrapper?: string;
+    input?: string;
+  };
   inputTextColor?: string;
   bgColor?: string;
   eyeIconStyle?: string;
@@ -46,6 +54,7 @@ export const CustomInput = ({
   defaultValue,
   bgColor = "bg-white",
   classnames = "bg-none rounded-[6px] shadow-none  hover:border-[#C3ADFF] focus:border-[#C3ADFF]",
+  classNames: propClassNames,
   inputTextColor = "text-black",
   errorMessage,
   eyeIconStyle = "text-foreground-500 text-lg",
@@ -122,17 +131,20 @@ export const CustomInput = ({
         defaultValue={defaultValue}
         variant="bordered"
         classNames={{
-          label: "text-[#000] font-[500] text-[14px]",
-          base: "bg-none",
-          inputWrapper: [
-            `${classnames} ${disabled ? "bg-secondaryGrey" : bgColor} `,
-          ],
-          innerWrapper: `bg-none border-none`,
-          input: [
+          label: cn("text-[#000] font-[500] text-[14px]", propClassNames?.label),
+          base: cn("bg-none", propClassNames?.base),
+          inputWrapper: cn(
+            classnames,
+            disabled ? "bg-secondaryGrey" : bgColor,
+            propClassNames?.inputWrapper
+          ),
+          innerWrapper: cn("bg-none border-none", propClassNames?.innerWrapper),
+          input: cn(
             "bg-none",
-            `${inputTextColor}`,
+            inputTextColor,
             "placeholder:text-[14px] bg-none",
-          ],
+            propClassNames?.input
+          ),
         }}
         autoCorrect="off"
         placeholder={placeholder}
