@@ -114,4 +114,7 @@ export const DASHBOARD = {
   manage: "api/v1/Subscription/manaage-url",
   intializeTransaction: "api/v1/Transaction/initialise",
   completeTransaction: "api/v1/Transaction/complete",
+  // Suppliers
+  supplier: "api/v1/Supplier",
+  supplierByBusiness: "api/v1/Supplier/by-business",
 };
