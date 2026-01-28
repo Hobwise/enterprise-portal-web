@@ -193,6 +193,45 @@ const SideNav = () => {
       .filter((section) => section.items.length > 0); // Only show sections with items
   }, [isPermissionsLoading, role, isMounted, isPOSUserState, isCategoryUserState, filterItemsByPermission]);
 
+  // Accordion state — only one section open at a time
+  const [expandedSection, setExpandedSection] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sidebar-accordion-expanded');
+    }
+    return null;
+  });
+
+  // Initialize expanded section when filteredSections first loads
+  useEffect(() => {
+    if (filteredSections.length === 0) return;
+    if (expandedSection && filteredSections.some(s => s.sectionTitle === expandedSection)) return;
+
+    const activeSection = filteredSections.find(s =>
+      s.items.some(item => pathname === item.path || pathname.startsWith(item.path + '/'))
+    );
+    const title = activeSection?.sectionTitle ?? filteredSections[0].sectionTitle;
+    setExpandedSection(title);
+    localStorage.setItem('sidebar-accordion-expanded', title);
+  }, [filteredSections]);
+
+  // Auto-expand the section containing the active route when pathname changes
+  useEffect(() => {
+    if (filteredSections.length === 0) return;
+    const activeSection = filteredSections.find(s =>
+      s.items.some(item => pathname === item.path || pathname.startsWith(item.path + '/'))
+    );
+    if (activeSection && activeSection.sectionTitle !== expandedSection) {
+      setExpandedSection(activeSection.sectionTitle);
+      localStorage.setItem('sidebar-accordion-expanded', activeSection.sectionTitle);
+    }
+  }, [pathname, filteredSections]);
+
+  const handleSectionToggle = useCallback((title: string) => {
+    if (title === expandedSection) return;
+    setExpandedSection(title);
+    localStorage.setItem('sidebar-accordion-expanded', title);
+  }, [expandedSection]);
+
   // Legacy flat items for POS users
   const filteredItems = useMemo(() => {
     if (isPermissionsLoading || !isMounted) return [];
@@ -266,8 +305,14 @@ const SideNav = () => {
               })
             ) : (
               // Render section-based navigation for regular users
-              filteredSections.map((section, idx) => (
-                <SectionGroup key={idx} section={section} pathname={pathname} />
+              filteredSections.map((section) => (
+                <SectionGroup
+                  key={section.sectionTitle}
+                  section={section}
+                  pathname={pathname}
+                  isExpanded={expandedSection === section.sectionTitle}
+                  onToggle={handleSectionToggle}
+                />
               ))
             )}
           </div>
@@ -399,28 +444,18 @@ const SideNav = () => {
 
 export default SideNav;
 
-// SectionGroup component for collapsible sidebar sections
-const SectionGroup = memo(({ section, pathname }: { section: SideNavSection; pathname: string }) => {
-  // Initialize state from localStorage or default
-  const [isExpanded, setIsExpanded] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(`sidebar-section-${section.sectionTitle}`);
-      if (stored !== null) {
-        return stored === 'true';
-      }
-    }
-    return section.defaultExpanded ?? true;
-  });
-
-  const toggleSection = useCallback(() => {
-    const newState = !isExpanded;
-    setIsExpanded(newState);
-    // Persist to localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`sidebar-section-${section.sectionTitle}`, String(newState));
-    }
-  }, [isExpanded, section.sectionTitle]);
-
+// SectionGroup component for collapsible sidebar sections (accordion-controlled)
+const SectionGroup = memo(({
+  section,
+  pathname,
+  isExpanded,
+  onToggle,
+}: {
+  section: SideNavSection;
+  pathname: string;
+  isExpanded: boolean;
+  onToggle: (title: string) => void;
+}) => {
   // Check if any item in this section is active
   const hasActiveItem = section.items.some(item => pathname === item.path || pathname.startsWith(item.path + '/'));
 
@@ -428,7 +463,7 @@ const SectionGroup = memo(({ section, pathname }: { section: SideNavSection; pat
     <div className="mb-2">
       {/* Section Header */}
       <button
-        onClick={section.collapsible ? toggleSection : undefined}
+        onClick={section.collapsible ? () => onToggle(section.sectionTitle) : undefined}
         className={`flex items-center justify-between w-full px-6 py-2 text-xs font-semibold uppercase tracking-wider transition-colors ${
           hasActiveItem ? 'text-white bg-[#5F35D2]' : 'text-gray-400 hover:text-white'
         } ${section.collapsible ? 'cursor-pointer' : 'cursor-default'}`}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -65,6 +65,45 @@ const HeaderMobile = () => {
     });
   }, [userRole]);
 
+  // Accordion state — only one section open at a time
+  const [expandedSection, setExpandedSection] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('mobile-sidebar-accordion-expanded');
+    }
+    return null;
+  });
+
+  // Initialize expanded section when filteredSections first loads
+  useEffect(() => {
+    if (filteredSections.length === 0) return;
+    if (expandedSection && filteredSections.some(s => s.sectionTitle === expandedSection)) return;
+
+    const activeSection = filteredSections.find(s =>
+      s.items.some(item => pathname === item.path || pathname.startsWith(item.path + '/'))
+    );
+    const title = activeSection?.sectionTitle ?? filteredSections[0].sectionTitle;
+    setExpandedSection(title);
+    localStorage.setItem('mobile-sidebar-accordion-expanded', title);
+  }, [filteredSections]);
+
+  // Auto-expand the section containing the active route when pathname changes
+  useEffect(() => {
+    if (filteredSections.length === 0) return;
+    const activeSection = filteredSections.find(s =>
+      s.items.some(item => pathname === item.path || pathname.startsWith(item.path + '/'))
+    );
+    if (activeSection && activeSection.sectionTitle !== expandedSection) {
+      setExpandedSection(activeSection.sectionTitle);
+      localStorage.setItem('mobile-sidebar-accordion-expanded', activeSection.sectionTitle);
+    }
+  }, [pathname, filteredSections]);
+
+  const handleSectionToggle = useCallback((title: string) => {
+    if (title === expandedSection) return;
+    setExpandedSection(title);
+    localStorage.setItem('mobile-sidebar-accordion-expanded', title);
+  }, [expandedSection]);
+
   if (isPOSUser || isCategoryUser) {
     return null;
   }
@@ -89,11 +128,13 @@ const HeaderMobile = () => {
       >
         {filteredSections.map((section, sectionIdx) => (
           <MobileSectionGroup
-            key={sectionIdx}
+            key={section.sectionTitle}
             section={section}
             pathname={pathname}
             toggleOpen={toggleOpen}
             isLastSection={sectionIdx === filteredSections.length - 1}
+            isExpanded={expandedSection === section.sectionTitle}
+            onToggle={handleSectionToggle}
           />
         ))}
       </motion.ul>
@@ -220,42 +261,28 @@ const MenuItemWithSubMenu: React.FC<MenuItemWithSubMenuProps> = ({
   );
 };
 
-// Mobile Section Group Component for collapsible sections
+// Mobile Section Group Component for collapsible sections (accordion-controlled)
 const MobileSectionGroup = ({
   section,
   pathname,
   toggleOpen,
   isLastSection,
+  isExpanded,
+  onToggle,
 }: {
   section: SideNavSection;
   pathname: string;
   toggleOpen: () => void;
   isLastSection: boolean;
+  isExpanded: boolean;
+  onToggle: (title: string) => void;
 }) => {
-  const [isExpanded, setIsExpanded] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(`mobile-sidebar-section-${section.sectionTitle}`);
-      if (stored !== null) {
-        return stored === 'true';
-      }
-    }
-    return section.defaultExpanded ?? true;
-  });
-
-  const toggleSection = () => {
-    const newState = !isExpanded;
-    setIsExpanded(newState);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(`mobile-sidebar-section-${section.sectionTitle}`, String(newState));
-    }
-  };
-
   return (
     <div className="mb-4">
       {/* Section Header */}
       <MenuItem>
         <button
-          onClick={section.collapsible ? toggleSection : undefined}
+          onClick={section.collapsible ? () => onToggle(section.sectionTitle) : undefined}
           className={`flex items-center justify-between w-full text-sm font-semibold uppercase tracking-wider text-gray-400 ${
             section.collapsible ? 'cursor-pointer' : 'cursor-default'
           }`}
