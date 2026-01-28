@@ -31,6 +31,10 @@ import {
 import { useRouter } from 'next/navigation';
 import { MdKeyboardArrowDown } from 'react-icons/md';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
+import {
+  getJsonItemFromLocalStorage,
+  saveJsonItemToLocalStorage,
+} from "@/lib/utils";
 
 interface TabItem {
   id: string;
@@ -110,7 +114,19 @@ const Reports: React.FC = () => {
     }
   };
 
-  const [selectedTab, setSelectedTab] = useState<string>("orders");
+  const [selectedTab, setSelectedTab] = useState<string>(() => {
+    // Read the selected tab from localStorage on mount
+    const savedTab = getJsonItemFromLocalStorage("selectedReportTab");
+    return savedTab || "orders";
+  });
+
+  // Update selectedTab when it changes in localStorage
+  useEffect(() => {
+    const savedTab = getJsonItemFromLocalStorage("selectedReportTab");
+    if (savedTab) {
+      setSelectedTab(savedTab);
+    }
+  }, []);
 
   if (isLoading) return <CustomLoading />;
   if (isError) {
@@ -162,7 +178,9 @@ const Reports: React.FC = () => {
               )}
             </div>
             <div className="flex gap-2 items-center">
-              <p className="text-sm text-grey600">Track and monitor business activites</p>
+              <p className="text-sm text-grey600">
+                Track and monitor business activites
+              </p>
               <Dropdown isDisabled={isLoading}>
                 <DropdownTrigger>
                   <Button
@@ -210,7 +228,12 @@ const Reports: React.FC = () => {
                 aria-label="report tabs"
                 items={tabs}
                 selectedKey={selectedTab}
-                onSelectionChange={(key) => setSelectedTab(key as string)}
+                onSelectionChange={(key) => {
+                  const tabKey = key as string;
+                  setSelectedTab(tabKey);
+                  // Save the selected tab to localStorage
+                  saveJsonItemToLocalStorage("selectedReportTab", tabKey);
+                }}
               >
                 {(item) => <Tab key={item.id} title={item.label} />}
               </Tabs>

@@ -102,22 +102,22 @@ const ReportDetails = ({ report }: any) => {
   const reportData = [
     {
       icon: <AcceptedReportIcon width={20} height={20} />,
-      title: "ACCEPTED",
-      desc: report?.closedOrdersCount,
+      title: "AWAITING CONFIRMATION ORDER",
+      desc: report?.awaitingConfirmationOrdersCount,
     },
     {
       icon: <DeclinedReportIcon width={20} height={20} />,
-      title: "PENDING",
+      title: "OPEN ORDER",
       desc: report?.openOrdersCount,
     },
     {
       icon: <CancelledReportIcon width={20} height={20} />,
-      title: "CANCELLED",
+      title: "CANCELLED ORDER",
       desc: report?.cancelledOrdersCount,
     },
     {
       icon: <ClosedReportIcon width={20} height={20} />,
-      title: "CLOSED",
+      title: "CLOSED ORDER",
       desc: report?.closedOrdersCount,
     },
   ];
@@ -161,7 +161,7 @@ const ReportDetails = ({ report }: any) => {
           <h3 className=" font-semibold mb-2">Available reports</h3>
           <Divider />
 
-          <div>
+          <div className="h-[180px] overflow-y-auto overflow-x-hidden custom-scrollbar">
             {report?.availableReport.map((item: any) => (
               <div
                 onClick={() =>

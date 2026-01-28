@@ -16,8 +16,9 @@ import {
   formatDateTimeForPayload2,
   getJsonItemFromLocalStorage,
   notify,
-} from '@/lib/utils';
-import { getLocalTimeZone, today } from '@internationalized/date';
+  saveJsonItemToLocalStorage,
+} from "@/lib/utils";
+import { getLocalTimeZone, today } from "@internationalized/date";
 import {
   Button,
   DateRangePicker,
@@ -29,11 +30,11 @@ import {
   ModalBody,
   ModalContent,
   useDisclosure,
-} from '@nextui-org/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import { IoIosArrowRoundBack } from 'react-icons/io';
-import { MdKeyboardArrowDown } from 'react-icons/md';
+} from "@nextui-org/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { IoIosArrowRoundBack } from "react-icons/io";
+import { MdKeyboardArrowDown } from "react-icons/md";
 
 interface ReportObject {
   reportName: string;
@@ -181,7 +182,7 @@ const Activity = () => {
   };
 
   useEffect(() => {
-    if (shouldFetchReport && selectedValue !== 'Custom date') {
+    if (shouldFetchReport && selectedValue !== "Custom date") {
       setPreviousSelectedValue(selectedValue);
     }
   }, [shouldFetchReport, selectedValue]);
@@ -214,60 +215,60 @@ const Activity = () => {
 
   return (
     <main>
-      <div className='flex flex-row flex-wrap  justify-between'>
+      <div className="flex flex-row flex-wrap  justify-between">
         <div>
-          <div className='text-[24px] leading-8 font-semibold'>
+          <div className="text-[24px] leading-8 font-semibold">
             <span>Reports</span>
           </div>
-          <div className='flex gap-2 flex-wrap'>
-            <div className='flex gap-2 items-center'>
-              <p className='text-sm  text-grey600  '>A summary of activities</p>
+          <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 items-center">
+              <p className="text-sm  text-grey600  ">A summary of activities</p>
               <Dropdown isDisabled={isLoading}>
                 <DropdownTrigger>
                   <Button
                     endContent={<MdKeyboardArrowDown />}
                     disableRipple
-                    className='font-[600] bg-background/30 p-0 capitalize text-black'
+                    className="font-[600] bg-background/30 p-0 capitalize text-black"
                   >
                     {selectedValue}
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label='Single selection example'
-                  variant='flat'
+                  aria-label="Single selection example"
+                  variant="flat"
                   disallowEmptySelection
-                  selectionMode='single'
-                  className='text-black'
+                  selectionMode="single"
+                  className="text-black"
                   selectedKeys={selectedKeys}
                   onSelectionChange={setSelectedKeys}
                 >
-                  <DropdownItem key='Today'>Today</DropdownItem>
-                  <DropdownItem key='This week'>This week</DropdownItem>
-                  <DropdownItem key='This year'>This year</DropdownItem>
+                  <DropdownItem key="Today">Today</DropdownItem>
+                  <DropdownItem key="This week">This week</DropdownItem>
+                  <DropdownItem key="This year">This year</DropdownItem>
 
-                  <DropdownItem onClick={() => onOpen()} key='Custom date'>
+                  <DropdownItem onClick={() => onOpen()} key="Custom date">
                     Custom date
                   </DropdownItem>
                 </DropdownMenu>
               </Dropdown>
             </div>
-            <div className='flex gap-2 items-center'>
+            <div className="flex gap-2 items-center">
               <Dropdown isDisabled={isLoading}>
                 <DropdownTrigger>
                   <Button
                     endContent={<MdKeyboardArrowDown />}
                     disableRipple
-                    className='font-[600] bg-background/30 p-0 capitalize text-black'
+                    className="font-[600] bg-background/30 p-0 capitalize text-black"
                   >
                     {selectedReportObject.reportName}
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu
-                  aria-label='Report selection'
-                  variant='flat'
+                  aria-label="Report selection"
+                  variant="flat"
                   disallowEmptySelection
-                  selectionMode='single'
-                  className='text-black'
+                  selectionMode="single"
+                  className="text-black"
                   selectedKeys={new Set([selectedReportObject.reportName])}
                   onSelectionChange={(keys) => {
                     const selectedReportName = Array.from(keys)[0] as string;
@@ -406,10 +407,22 @@ const Activity = () => {
           )} */}
         </div>
         <Button
-          onClick={() => router.back()}
-          className='flex text-grey600 bg-white'
+          onClick={() => {
+            const routeToTabMap: Record<string, string> = {
+              orders: "orders",
+              payment: "payments",
+              booking: "bookings",
+              "audit-logs": "users",
+            };
+            const selectedTab = routeToTabMap[reportFilter?.route] || "orders";
+
+            saveJsonItemToLocalStorage("selectedReportTab", selectedTab);
+
+            router.push("/dashboard/reports");
+          }}
+          className="flex text-grey600 bg-white"
         >
-          <IoIosArrowRoundBack className='text-[22px]' />
+          <IoIosArrowRoundBack className="text-[22px]" />
 
           <p>Go back</p>
         </Button>
@@ -460,7 +473,7 @@ const Activity = () => {
         </CustomButton>
       </div> */}
 
-      {reportFilter?.route === 'orders' && (
+      {reportFilter?.route === "orders" && (
         <ActivityTableOrder
           data={data}
           reportName={selectedReportObject?.reportName}
@@ -472,7 +485,7 @@ const Activity = () => {
           exportFile={exportFile}
         />
       )}
-      {reportFilter?.route === 'booking' && (
+      {reportFilter?.route === "booking" && (
         <ActivityTableBooking
           reportName={selectedReportObject?.reportName}
           data={data}
@@ -484,7 +497,7 @@ const Activity = () => {
           exportFile={exportFile}
         />
       )}
-      {reportFilter?.route === 'payment' && (
+      {reportFilter?.route === "payment" && (
         <ActivityTablePayment
           reportName={selectedReportObject?.reportName}
           data={data}
@@ -496,7 +509,7 @@ const Activity = () => {
           exportFile={exportFile}
         />
       )}
-      {reportFilter?.route === 'audit-logs' && (
+      {reportFilter?.route === "audit-logs" && (
         <ActivityTableAudit
           reportName={selectedReportObject?.reportName}
           data={data}
@@ -511,27 +524,27 @@ const Activity = () => {
       <Modal
         isDismissable={false}
         classNames={{
-          base: 'absolute top-12',
+          base: "absolute top-12",
         }}
-        size='sm'
+        size="sm"
         isOpen={isOpen}
         onOpenChange={onOpenChange}
       >
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalBody className='px-4 py-6'>
+              <ModalBody className="px-4 py-6">
                 <DateRangePicker
-                  radius='sm'
+                  radius="sm"
                   maxValue={today(getLocalTimeZone())}
                   value={value}
                   onChange={handleDateChange}
                   visibleMonths={2}
-                  variant='faded'
-                  pageBehavior='single'
-                  label='Select date range'
+                  variant="faded"
+                  pageBehavior="single"
+                  label="Select date range"
                   showMonthAndYearPickers
-                  labelPlacement='outside'
+                  labelPlacement="outside"
                 />
               </ModalBody>
             </>

@@ -115,27 +115,27 @@ const INITIAL_VISIBLE_COLUMNS7 = [
   'bookingFee',
 ];
 const columns7 = [
-  { name: "Customer Name", uid: "firstName" },
-  { name: "Customer Phone Number ", uid: "phoneNumber" },
-  { name: "Customer Email Address", uid: "emailAddress" },
-  { name: "Booking Fee", uid: "bookingFee" },
-  { name: "Booking Date", uid: "bookingDateTime" },
-  { name: "Status", uid: "bookingStatus" },
+  { name: "CUSTOMER NAME", uid: "firstName" },
+  { name: "CUSTOMER PHONE NUMBER", uid: "phoneNumber" },
+  { name: "CUSTOMER EMAIL ADDRESS", uid: "emailAddress" },
+  { name: "BOOKING FEE", uid: "bookingFee" },
+  { name: "BOOKING DATE", uid: "bookingDateTime" },
+  { name: "STATUS", uid: "bookingStatus" },
 ];
 
 const columns8 = [
   { name: "RESERVATION NAME", uid: "reservationName" },
-  { name: "Total Booking Amount", uid: "totalBookingFee" },
-  { name: "Total Bookings", uid: "totalBookings" },
-  { name: "Date Updated", uid: "dateUpdated" },
+  { name: "TOTAL BOOKING AMOUNT", uid: "totalBookingFee" },
+  { name: "TOTAL BOOKINGS", uid: "totalBookings" },
+  { name: "DATE UPDATED", uid: "dateUpdated" },
 ];
 
 const columns9 = [
-  { name: "Customer Name", uid: "customerFirstName" },
-  { name: "Customer Phone Number", uid: "customerPhoneNumber" },
-  { name: "Customer Email Address", uid: "customerEmailAddress" },
-  { name: "Total Booking Fee", uid: "totalBookingFee" },
-  { name: "Total Bookings", uid: "totalBookings" },
+  { name: "CUSTOMER NAME", uid: "customerFirstName" },
+  { name: "CUSTOMER PHONE NUMBER", uid: "customerPhoneNumber" },
+  { name: "CUSTOMER EMAIL ADDRESS", uid: "customerEmailAddress" },
+  { name: "TOTAL BOOKING FEE", uid: "totalBookingFee" },
+  { name: "TOTAL BOOKINGS", uid: "totalBookings" },
 ];
 
 const INITIAL_VISIBLE_COLUMNS10 = [
@@ -149,10 +149,10 @@ const INITIAL_VISIBLE_COLUMNS10 = [
 
 const columns10 = [
   { name: "RESERVATION NAME", uid: "reservationName" },
-  { name: "Quantity", uid: "reservationCapacity" },
-  { name: "Occupancy Rate", uid: "occupancyRate" },
-  { name: "Total Bookings", uid: "totalBookings" },
-  { name: "Average Daily Utilization", uid: "averageDailyUtilization" },
+  { name: "QUANTITY", uid: "reservationCapacity" },
+  { name: "OCCUPANCY RATE", uid: "occupancyRate" },
+  { name: "TOTAL BOOKINGS", uid: "totalBookings" },
+  { name: "AVERAGE DAILY UTILIZATION", uid: "averageDailyUtilization" },
 ];
 
 const ActivityTableBooking = ({
@@ -220,7 +220,7 @@ const ActivityTableBooking = ({
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortDescriptor, setSortDescriptor] = useState({
-    column: "dateCreated",
+    column: undefined,
     direction: "ascending",
   });
 
@@ -274,9 +274,15 @@ const ActivityTableBooking = ({
   }, [page, filteredItems]);
 
   const sortedItems = useMemo(() => {
+    // Only sort if a column is selected
+    if (!sortDescriptor.column) {
+      return items;
+    }
+
+    const column = sortDescriptor.column as string;
     return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
+      const first = a[column];
+      const second = b[column];
       let cmp = 0;
 
       if (typeof first === "string" && typeof second === "string") {
@@ -297,7 +303,7 @@ const ActivityTableBooking = ({
     switch (columnKey) {
       case "firstName":
         return (
-          <div className="flex text-black font-medium items-center gap-2 text-sm cursor-pointer">
+          <div className="flex text-textGrey items-center gap-2 text-sm cursor-pointer">
             <span>
               {booking.firstName} {booking.lastName}
             </span>
@@ -452,63 +458,71 @@ const ActivityTableBooking = ({
           </p>
           <p className="text-xs text-danger-500">{data?.message}</p>
         </div>
-        <Table
-          radius="lg"
-          isCompact
-          removeWrapper
-          allowsSorting
-          aria-label="list of bookings"
-          bottomContent={
-            isLoading || items?.length === 0 ? (
-              ""
-            ) : (
-              <PaginationComponent
-                data={items}
-                page={page}
-                setPage={setPage}
-                pages={pages}
-              />
-            )
-          }
-          bottomContentPlacement="outside"
-          classNames={classNames}
-          selectedKeys={selectedKeys}
-          // selectionMode='multiple'
-          sortDescriptor={sortDescriptor}
-          // topContent={topContent}
-          topContentPlacement="outside"
-          onSelectionChange={setSelectedKeys}
-          onSortChange={setSortDescriptor}
-        >
-          <TableHeader columns={columns?.column}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === "actions" ? "center" : "start"}
-                allowsSorting={column.sortable}
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            style={{
-              textAlign: "center",
+        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            allowsSorting
+            aria-label="list of bookings"
+            bottomContent={
+              isLoading || items?.length === 0 ? (
+                ""
+              ) : (
+                <PaginationComponent
+                  data={items}
+                  page={page}
+                  setPage={setPage}
+                  pages={pages}
+                />
+              )
+            }
+            bottomContentPlacement="outside"
+            classNames={{
+              ...classNames,
+              th: [
+                ...(Array.isArray(classNames?.th) ? classNames.th : []),
+                "sticky top-0 z-10 bg-white border-b border-divider",
+              ],
             }}
-            emptyContent={"No items found"}
-            items={sortedItems || []}
-            isLoading={isLoading}
-            loadingContent={<SmallLoader />}
+            selectedKeys={selectedKeys}
+            // selectionMode='multiple'
+            sortDescriptor={sortDescriptor}
+            // topContent={topContent}
+            topContentPlacement="outside"
+            onSelectionChange={setSelectedKeys}
+            onSortChange={setSortDescriptor}
           >
-            {(item: any, index: any) => (
-              <TableRow key={`row-${index}`}>
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, columnKey)}</TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            <TableHeader columns={columns?.column}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.uid === "actions" ? "center" : "start"}
+                  allowsSorting={column.sortable}
+                >
+                  {column.name}
+                </TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              style={{
+                textAlign: "center",
+              }}
+              emptyContent={"No items found"}
+              items={sortedItems || []}
+              isLoading={isLoading}
+              loadingContent={<SmallLoader />}
+            >
+              {(item: any, index: any) => (
+                <TableRow key={`row-${index}`}>
+                  {(columnKey) => (
+                    <TableCell>{renderCell(item, columnKey)}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </section>
 
       <Modal
