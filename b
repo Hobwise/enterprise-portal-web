@@ -56,6 +56,10 @@ Browser Control Tool - CDP-based browser automation
 
 Usage: ./b <command> [args...]
 
+Browser Management:
+  launch [url]                Launch a fresh Brave browser with debugging
+  browser close               Close the browser instance
+
 Session Management:
   session init              Initialize a new browser session
   session list              List all active sessions
@@ -133,6 +137,20 @@ fi
 
 # Resolve session
 SESSION_ID=$(resolve_session)
+
+# Handle shortcuts
+COMMAND="$1"
+shift
+case "$COMMAND" in
+  launch)
+    # Shortcut: ./b launch [url] -> ./b browser launch [url]
+    set -- "browser" "launch" "$@"
+    COMMAND="browser"
+    ;;
+  *)
+    set -- "$COMMAND" "$@"
+    ;;
+esac
 
 # Log the command
 log "Executing: $* (session: ${SESSION_ID:-none})"

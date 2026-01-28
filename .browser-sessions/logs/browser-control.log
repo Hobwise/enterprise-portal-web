@@ -33,3 +33,5 @@
 [2026-01-17T10:32:24.620Z] navigate http://localhost:3000/dashboard/inventory -> ERROR: Command timeout: Page.navigate
 [2026-01-17T10:41:47.561Z] session init -> OK (241ms)
 [2026-01-17T10:42:14.049Z] screenshot  -> OK (1819ms)
+[2026-01-25T10:47:45+01:00] Executing: screenshot http://localhost:8000 /tmp/landing-page.png (session: 31a77cf8)
+[2026-01-25T10:48:16+01:00] Executing: screenshot http://localhost:8000 /tmp/landing-page.png (session: 31a77cf8)

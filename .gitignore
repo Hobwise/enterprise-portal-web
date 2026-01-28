@@ -43,3 +43,4 @@ next-env.d.ts
 /b
 /.browser-sessions/
 /.browser-screenshots/
+/browser-control.cjs

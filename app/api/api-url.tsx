@@ -114,7 +114,15 @@ export const DASHBOARD = {
   manage: "api/v1/Subscription/manaage-url",
   intializeTransaction: "api/v1/Transaction/initialise",
   completeTransaction: "api/v1/Transaction/complete",
-  // Suppliers
-  supplier: "api/v1/Supplier",
+  // Inventory
+  inventory: "api/v1/Inventory",
+  inventoryByBusiness: "api/v1/Inventory/by-business",
+  inventoryItems: "api/v1/Inventory/items",
+  inventoryItem: "api/v1/Inventory/item",
+  inventoryCategories: "api/v1/Inventory/categories",
+  inventoryItemUnit: "api/v1/Inventory/item-unit",
+  inventoryRecipe: "api/v1/Inventory/recipe",
+  inventoryRecipeByBusiness: "api/v1/Inventory/recipe/by-business",
   supplierByBusiness: "api/v1/Supplier/by-business",
+  unitByBusiness: "api/v1/Unit/by-business",
 };
