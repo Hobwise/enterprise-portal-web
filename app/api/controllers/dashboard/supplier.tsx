@@ -26,8 +26,8 @@ export async function createSupplier(businessId: string, payload: SupplierPayloa
 }
 
 
-export async function getSuppliersByBusiness(businessId: string) {
-  const headers = businessId ? { businessId } : {};
+export async function getSuppliersByBusiness(businessId: string, clientParameters: any) {
+  const headers = businessId ? { businessId, clientParameters: JSON.stringify(clientParameters) } : {};
 
   try {
     const data = await api.get(DASHBOARD.supplierByBusiness, {
@@ -76,6 +76,20 @@ export async function deleteSupplier(supplierId: string) {
 
   try {
     const data = await api.delete(DASHBOARD.supplier, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function mapSupplierItems(businessId: string, supplierId: string, items: { id: string, name: string }[]) {
+  const headers = businessId ? { businessId, supplierId } : {};
+
+  try {
+    const data = await api.post(DASHBOARD.mapSupplierItem, items, {
       headers,
     });
 

@@ -124,5 +124,10 @@ export const DASHBOARD = {
   inventoryRecipe: "api/v1/Inventory/recipe",
   inventoryRecipeByBusiness: "api/v1/Inventory/recipe/by-business",
   supplierByBusiness: "api/v1/Supplier/by-business",
+  mapSupplierItem: "api/v1/Supplier/map-item",
+};
+
+export const INVENTORY = {
+  inventoryByBusiness: "api/v1/Inventory/by-business",
   unitByBusiness: "api/v1/Unit/by-business",
 };
