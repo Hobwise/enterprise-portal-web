@@ -18,9 +18,13 @@ export default function SuppliersPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
   const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null);
+
+  const selectedSupplier = React.useMemo(() => {
+    return suppliers.find(s => s.id === selectedSupplierId) || null;
+  }, [suppliers, selectedSupplierId]);
 
   const handleCreateSupplier = async (formData: SupplierFormData) => {
     try {
@@ -95,7 +99,7 @@ export default function SuppliersPage() {
   };
 
   const handleViewSupplier = (supplier: Supplier) => {
-      setSelectedSupplier(supplier);
+      setSelectedSupplierId(supplier.id);
       setIsDetailModalOpen(true);
   };
 

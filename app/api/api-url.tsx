@@ -117,4 +117,9 @@ export const DASHBOARD = {
   // Suppliers
   supplier: "api/v1/Supplier",
   supplierByBusiness: "api/v1/Supplier/by-business",
+  mapSupplierItem: "api/v1/Supplier/map-item",
+};
+
+export const INVENTORY = {
+  inventoryByBusiness: "api/v1/Inventory/by-business",
 };

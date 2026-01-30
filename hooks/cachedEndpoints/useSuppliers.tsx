@@ -1,5 +1,6 @@
 'use client';
-import { getSuppliersByBusiness, createSupplier, updateSupplier, deleteSupplier, SupplierPayload } from '@/app/api/controllers/dashboard/supplier';
+import { useState } from 'react';
+import { getSuppliersByBusiness, createSupplier, updateSupplier, deleteSupplier, mapSupplierItems, SupplierPayload } from '@/app/api/controllers/dashboard/supplier';
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchQueryConfig } from "@/lib/queryConfig";
@@ -23,12 +24,23 @@ const useSuppliers = () => {
   const businessInformation = getJsonItemFromLocalStorage("business");
   const businessId = businessInformation?.[0]?.businessId;
 
+  // Pagination state
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState("");
+  const [pageSize, setPageSize] = useState(10);
+
   // Fetch all suppliers
   const getAllSuppliers = async () => {
     if (!businessId) return [];
     
+    const clientParameters = {
+      page,
+      search,
+      pageSize,
+    };
+
     try {
-      const response = await getSuppliersByBusiness(businessId);
+      const response = await getSuppliersByBusiness(businessId, clientParameters);
       
       if (response?.data?.data) {
         return response.data.data;
@@ -42,10 +54,10 @@ const useSuppliers = () => {
   };
 
   const { data, isLoading, isError, refetch } = useQuery<Supplier[]>({
-    queryKey: ["suppliers", businessId],
+    queryKey: ["suppliers", businessId, page, search, pageSize],
     queryFn: async () => {
       const apiData = await getAllSuppliers();
-      // Map API data to UI Supplier type
+     
       return apiData.map((s: any) => ({
         id: s.id,
         supplierId: s.supplierId || s.id,
@@ -54,7 +66,10 @@ const useSuppliers = () => {
         email: s.emailAddress,
         address: s.physicalAddress,
         phoneNumber: s.phoneNumber,
-        items: s.items || [],
+        items: (s.items || []).map((i: any) => ({
+          id: i.id, 
+          name: i.name || i.itemName // Handle potential naming differences
+        })),
         status: s.isActive ? 'active' : 'inactive',
       }));
     },
@@ -132,6 +147,25 @@ const useSuppliers = () => {
     });
   };
 
+  const mapSupplierItemsMutation = useMutation({
+    mutationFn: async ({ supplierId, items }: { supplierId: string; items: { id: string; name: string }[] }) => {
+      if (!businessId) throw new Error('Business ID not found');
+      return mapSupplierItems(businessId, supplierId, items);
+    },
+    onSuccess: (response) => {
+      if (response?.data?.isSuccessful) {
+        toast.success('Items mapped successfully');
+        queryClient.invalidateQueries({ queryKey: ["suppliers", businessId] });
+      } else {
+        toast.error(response?.data?.error || 'Failed to map items');
+      }
+    },
+    onError: (error) => {
+      console.error('Error mapping items:', error);
+      toast.error('Failed to map items');
+    },
+  });
+
   return {
     data: data || [],
     isLoading,
@@ -144,9 +178,18 @@ const useSuppliers = () => {
     isUpdating: updateSupplierMutation.isPending,
     deleteSupplier: deleteSupplierMutation.mutate,
     isDeleting: deleteSupplierMutation.isPending,
+    mapSupplierItems: mapSupplierItemsMutation.mutate,
+    isMappingItems: mapSupplierItemsMutation.isPending,
+    // Pagination
+    page,
+    setPage,
+    search,
+    setSearch,
+    pageSize,
+    setPageSize,
   };
 };
 
-// ... existing code ...
+
 
 export default useSuppliers;

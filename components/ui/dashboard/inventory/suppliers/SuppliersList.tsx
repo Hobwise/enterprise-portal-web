@@ -20,6 +20,7 @@ import { Supplier } from "./types";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { SupplierIcon } from "@/public/assets/svg";
 import useMobile from "@/hooks/useMobile";
+import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
 
 interface SuppliersListProps {
   suppliers: Supplier[];
@@ -30,13 +31,12 @@ interface SuppliersListProps {
 }
 
 const columns = [
-  { name: "Supplier ID", uid: "supplierId" },
-  { name: "Supplier Name", uid: "name" },
-  { name: "Company Name", uid: "companyName" },
-  { name: "Email Address", uid: "email" },
-  { name: "Address", uid: "address" },
-  { name: "Phone Number", uid: "phoneNumber" },
-  { name: "Status", uid: "status" },
+  { name: "SUPPLIER NAME", uid: "name" },
+  { name: "COMPANY NAME", uid: "companyName" },
+  { name: "EMAIL ADDRESS", uid: "email" },
+  { name: "ADDRESS", uid: "address" },
+  { name: "PHONE NUMBER", uid: "phoneNumber" },
+  { name: "STATUS", uid: "status" },
 ];
 
 const SuppliersList: React.FC<SuppliersListProps> = ({
@@ -80,9 +80,16 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
       const cellValue = user[columnKey as keyof Supplier];
 
       switch (columnKey) {
+        case "name":
+          return (
+            <div className="flex items-center gap-2">
+             
+              <span className="text-sm font-semibold text-gray-900">{cellValue}</span>
+            </div>
+          );
         case "status":
           return (
-            <div className="relative flex justify-end items-center gap-2">
+            <div className="relative flex justify-center items-center gap-2">
               <Dropdown>
                 <DropdownTrigger>
                   <Button className="border-gray-200 border" isIconOnly size="sm" variant="light">
@@ -120,8 +127,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
         <div className="flex justify-between gap-3 items-end">
           <div className="flex gap-4 items-center flex-1">
             <div className="bg-gray-200 p-2 rounded-md">
-
-            <SupplierIcon className="w-5 h-5 text-[#494E58]" />
+                <SupplierIcon className="w-5 h-5 text-[#494E58]" />
             </div>
             <span className="text-md text-gray-500">{suppliers.length} Suppliers</span>
           </div>
@@ -146,19 +152,53 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
         </div>
       </div>
     );
-  }, [filterValue, onSearchChange, suppliers.length, onAddSupplier]);
+  }, [filterValue, onSearchChange, suppliers.length, onAddSupplier, isMobile]);
 
   return (
-    <div className="space-y-4">
+    <section >
       {topContent}
+      
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+
+     
       <Table
+        radius="lg"
+        isCompact
+        removeWrapper
         aria-label="Suppliers table"
+        topContentPlacement="outside"
         classNames={{
-          wrapper: "p-0 shadow-none rounded-none",
-          th: "bg-[#F9FAFB] text-[#475467] font-medium text-xs py-4 rounded-none",
-          td: "py-3 text-sm",
-          tr: "border-b border-gray-100",
+          wrapper: ["max-h-[382px]"],
+          th: [
+            "text-default-500",
+            "text-xs",
+            "border-b ",
+            "border-divider",
+            "py-4",
+            "rounded-none",
+            "bg-gray-100",
+          ],
+          tr: "border-b border-divider last:border-none rounded-none",
+          td: [
+            "py-3",
+            "text-gray-500",
+          ],
         }}
+        bottomContent={
+            <div className="flex w-full justify-center">
+                 <CustomPagination
+                    currentPage={page}
+                    totalPages={Math.ceil(filteredItems.length / rowsPerPage) || 1}
+                    hasNext={page < Math.ceil(filteredItems.length / rowsPerPage)}
+                    hasPrevious={page > 1}
+                    totalCount={filteredItems.length}
+                    pageSize={rowsPerPage}
+                    onPageChange={setPage}
+                    onNext={() => setPage((p) => (p < Math.ceil(filteredItems.length / rowsPerPage) ? p + 1 : p))}
+                    onPrevious={() => setPage((p) => (p > 1 ? p - 1 : p))}
+                />
+            </div>
+        }
       >
         <TableHeader columns={columns}>
           {(column) => (
@@ -167,7 +207,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody items={items}>
+        <TableBody items={items} emptyContent={"No suppliers found"}>
           {(item) => (
             <TableRow key={item.id} className="cursor-pointer hover:bg-gray-50" onClick={() => onViewSupplier(item)}>
               {(columnKey) => (
@@ -176,49 +216,8 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             </TableRow>
           )}
         </TableBody>
-      </Table>
-      
-      {/* Pagination */}
-      <div className="flex w-full p-4 justify-between items-center bg-gray-50">
-        <span className="text-sm text-gray-500">
-          Page {page} of {Math.ceil(filteredItems.length / rowsPerPage) || 1}
-        </span>
-        <div className="flex items-center gap-1">
-          {/* Page numbers */}
-          {Array.from({ length: Math.min(Math.ceil(filteredItems.length / rowsPerPage), 5) }, (_, i) => i + 1).map((num) => (
-            <Button
-              key={num}
-              size="sm"
-              variant={page === num ? "solid" : "flat"}
-              className={page === num ? "bg-primaryColor text-white min-w-8" : "bg-transparent min-w-8"}
-              onPress={() => setPage(num)}
-            >
-              {num}
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="bordered"
-            onPress={() => setPage((p) => (p > 1 ? p - 1 : p))}
-            isDisabled={page === 1}
-            className="border-gray-300 cursor-pointer"
-          >
-            ← Previous
-          </Button>
-          <Button
-            size="sm"
-            variant="bordered"
-            onPress={() => setPage((p) => (p < Math.ceil(filteredItems.length / rowsPerPage) ? p + 1 : p))}
-            isDisabled={page >= Math.ceil(filteredItems.length / rowsPerPage)}
-            className="border-gray-300 cursor-pointer"
-          >
-            Next →
-          </Button>
-        </div>
-      </div>
-    </div>
+      </Table> </div>
+    </section>
   );
 };
 
