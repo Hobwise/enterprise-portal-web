@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import useInventoryItems from '@/hooks/cachedEndpoints/useInventoryItems';
-import { deleteInventoryItem, InventoryItem } from '@/app/api/controllers/dashboard/inventory';
+import { deleteInventoryItem, InventoryItem, PendingRecipeTracking } from '@/app/api/controllers/dashboard/inventory';
 import EditInventoryItemModal from '@/components/ui/dashboard/inventory/modals/EditInventoryItemModal';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useGlobalContext } from '@/hooks/globalProvider';
@@ -13,6 +13,8 @@ import InventoryItemsTable from '@/components/ui/dashboard/inventory/InventoryIt
 import AddInventoryItemModal from '@/components/ui/dashboard/inventory/modals/AddInventoryItemModal';
 import AddRecipeModal from '@/components/ui/dashboard/inventory/modals/AddRecipeModal';
 import InventoryItemDetailsModal from '@/components/ui/dashboard/inventory/modals/InventoryItemDetailsModal';
+import BatchProductionModal from '@/components/ui/dashboard/inventory/modals/BatchProductionModal';
+import RecipeRequiredModal from '@/components/ui/dashboard/inventory/modals/RecipeRequiredModal';
 import DeleteModal from '@/components/ui/deleteModal';
 
 export default function ItemsPage() {
@@ -32,22 +34,26 @@ export default function ItemsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
   const [pendingProducedItemId, setPendingProducedItemId] = useState<string | null>(null);
+  const [pendingTracking, setPendingTracking] = useState<PendingRecipeTracking | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isBatchProductionModalOpen, setIsBatchProductionModalOpen] = useState(false);
+  const [isRecipeRequiredModalOpen, setIsRecipeRequiredModalOpen] = useState(false);
 
   // Recipe enforcement via localStorage
   useEffect(() => {
-    const pending = localStorage.getItem('pendingProducedItemId');
+    const pending = localStorage.getItem('pendingRecipeTracking');
     if (pending) {
       try {
-        const itemId = JSON.parse(pending);
-        setPendingProducedItemId(itemId);
+        const tracking = JSON.parse(pending) as PendingRecipeTracking;
+        setPendingTracking(tracking);
+        setPendingProducedItemId(tracking.inventoryItemId);
         setIsRecipeModalOpen(true);
       } catch {
-        localStorage.removeItem('pendingProducedItemId');
+        localStorage.removeItem('pendingRecipeTracking');
       }
     }
   }, []);
@@ -139,21 +145,40 @@ export default function ItemsPage() {
     refetch();
   }, [refetch]);
 
-  const handleOpenRecipeModal = useCallback((producedItemId: string) => {
-    setPendingProducedItemId(producedItemId);
+  const handleOpenRecipeModal = useCallback((tracking: PendingRecipeTracking) => {
+    setPendingTracking(tracking);
+    setPendingProducedItemId(tracking.inventoryItemId);
     setIsRecipeModalOpen(true);
   }, []);
 
-  const handleRecipeCloseWithoutCompletion = useCallback((itemId: string) => {
-    localStorage.setItem('pendingProducedItemId', JSON.stringify(itemId));
+  const handleRecipeCloseWithoutCompletion = useCallback((tracking: PendingRecipeTracking) => {
+    localStorage.setItem('pendingRecipeTracking', JSON.stringify(tracking));
+    setPendingTracking(tracking);
   }, []);
 
   const handleRecipeSuccess = useCallback(() => {
-    localStorage.removeItem('pendingProducedItemId');
+    localStorage.removeItem('pendingRecipeTracking');
+    setPendingTracking(null);
     setPendingProducedItemId(null);
     setIsRecipeModalOpen(false);
+    setIsRecipeRequiredModalOpen(false);
     refetch();
   }, [refetch]);
+
+  const handleBatchProduction = useCallback((item: InventoryItem) => {
+    setSelectedItem(item);
+    setIsBatchProductionModalOpen(true);
+  }, []);
+
+  const handleBatchProductionSuccess = useCallback(() => {
+    setIsBatchProductionModalOpen(false);
+    setSelectedItem(null);
+    refetch();
+  }, [refetch]);
+
+  const handleRowClick = useCallback((item: InventoryItem) => {
+    router.push(`/dashboard/inventory/items/${item.id}`);
+  }, [router]);
 
   // Client-side filtering
   const filteredData = useMemo(() => {
@@ -187,7 +212,7 @@ export default function ItemsPage() {
   const totalItems = filteredData.length;
 
   return (
-    <div className="min-h-screen font-satoshi  bg-gray-50">
+    <div className="min-h-screen font-satoshi">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header with search, filters, and action buttons */}
         <div className="">
@@ -211,9 +236,10 @@ export default function ItemsPage() {
           <InventoryItemsTable
             data={filteredData}
             isLoading={isLoading}
-            onViewItem={handleViewItem}
+            onViewItem={handleRowClick}
             onEditItem={handleEditItem}
             onDeleteItem={handleDeleteClick}
+            onBatchProduction={handleBatchProduction}
           />
         </div>
       </div>
@@ -232,6 +258,8 @@ export default function ItemsPage() {
         onOpenChange={setIsRecipeModalOpen}
         onSuccess={handleRecipeSuccess}
         producedInventoryItemID={pendingProducedItemId || undefined}
+        trackingId={pendingTracking?.trackingId}
+        itemName={pendingTracking?.itemName}
         onCloseWithoutCompletion={handleRecipeCloseWithoutCompletion}
       />
 
@@ -261,6 +289,36 @@ export default function ItemsPage() {
         handleDelete={handleDeleteConfirm}
         isLoading={isDeleting}
         text={`Are you sure you want to delete "${selectedItem?.name}"?`}
+      />
+
+      {/* Batch Production Modal */}
+      <BatchProductionModal
+        isOpen={isBatchProductionModalOpen}
+        onOpenChange={setIsBatchProductionModalOpen}
+        onSuccess={handleBatchProductionSuccess}
+        item={selectedItem}
+      />
+
+      {/* Recipe Required Modal */}
+      <RecipeRequiredModal
+        isOpen={isRecipeRequiredModalOpen}
+        onOpenChange={setIsRecipeRequiredModalOpen}
+        onAddRecipe={() => {
+          setIsRecipeRequiredModalOpen(false);
+          if (selectedItem) {
+            const trackingData: PendingRecipeTracking = {
+              trackingId: crypto.randomUUID(),
+              inventoryItemId: selectedItem.id,
+              itemName: selectedItem.name,
+              createdAt: new Date().toISOString(),
+            };
+            localStorage.setItem('pendingRecipeTracking', JSON.stringify(trackingData));
+            setPendingTracking(trackingData);
+            setPendingProducedItemId(selectedItem.id);
+            setIsRecipeModalOpen(true);
+          }
+        }}
+        itemName={selectedItem?.name || ''}
       />
     </div>
   );

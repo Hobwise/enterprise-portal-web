@@ -44,3 +44,6 @@ next-env.d.ts
 /.browser-sessions/
 /.browser-screenshots/
 /browser-control.cjs
+/cmds/
+/lib/cdp.cjs
+/lib/sessions.cjs

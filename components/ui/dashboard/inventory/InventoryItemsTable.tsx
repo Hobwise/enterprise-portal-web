@@ -28,6 +28,7 @@ interface InventoryItemsTableProps {
   onViewItem: (item: InventoryItem) => void;
   onEditItem: (item: InventoryItem) => void;
   onDeleteItem: (item: InventoryItem) => void;
+  onBatchProduction?: (item: InventoryItem) => void;
 }
 
 const formatCurrency = (amount: number) => {
@@ -56,6 +57,7 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
   onViewItem,
   onEditItem,
   onDeleteItem,
+  onBatchProduction,
 }) => {
   const {
     bottomContent,
@@ -153,6 +155,17 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
                       <p>Edit Item</p>
                     </div>
                   </DropdownItem>
+                  {item.itemType === InventoryItemType.Produced && onBatchProduction && (
+                    <DropdownItem
+                      key="batch"
+                      onClick={() => onBatchProduction(item)}
+                      aria-label="batch production"
+                    >
+                      <div className="flex gap-2 items-center text-grey500">
+                        <p>Batch Production</p>
+                      </div>
+                    </DropdownItem>
+                  )}
                   <DropdownItem
                     key="delete"
                     onClick={() => onDeleteItem(item)}
@@ -172,7 +185,7 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
           return <div className="text-sm text-textGrey">{String(cellValue)}</div>;
       }
     },
-    [onViewItem, onEditItem, onDeleteItem]
+    [onViewItem, onEditItem, onDeleteItem, onBatchProduction]
   );
 
   const shouldShowLoading = isLoading && (!displayData || displayData.length === 0);
@@ -213,10 +226,11 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
             <TableRow
               key={String(item.id)}
               className="cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={() => onViewItem(item)}
             >
               {(columnKey) => (
-                <TableCell>
+                <TableCell
+                  onClick={columnKey !== 'actions' ? () => onViewItem(item) : undefined}
+                >
                   {renderCell(item, String(columnKey))}
                 </TableCell>
               )}
