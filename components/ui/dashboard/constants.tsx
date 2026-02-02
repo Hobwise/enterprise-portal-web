@@ -83,6 +83,11 @@ export const INVENTORY_ITEMS: SideNavItem[] = [
     icon: <ItemIcon />,
   },
   {
+    title: "Units",
+    path: "/dashboard/inventory/items/units",
+    icon: <ItemIcon />,
+  },
+  {
     title: "Supplier",
     path: "/dashboard/inventory/suppliers",
     icon: <SupplierIcon fill='#fff' />,

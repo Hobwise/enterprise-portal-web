@@ -123,6 +123,11 @@ export const DASHBOARD = {
   inventoryItemUnit: "api/v1/Inventory/item-unit",
   inventoryRecipe: "api/v1/Inventory/recipe",
   inventoryRecipeByBusiness: "api/v1/Inventory/recipe/by-business",
+  inventoryRecipeDetails: "api/v1/Inventory/recipe/details",
+  inventoryRecipeByItem: "api/v1/Inventory/recipe/by-item",
+  inventoryRecipeProduceBatch: "api/v1/Inventory/recipe/produce-batch",
+  inventoryBatchProduction: "api/v1/Inventory/batch-production",
   supplierByBusiness: "api/v1/Supplier/by-business",
   unitByBusiness: "api/v1/Unit/by-business",
+  unit: "api/v1/Unit",
 };
