@@ -1,4 +1,5 @@
-import { INVENTORY } from '../../api-url';
+import { z } from 'zod';
+import { DASHBOARD } from '../../api-url';
 import api, { handleError } from '../../apiService';
 
 // Types
@@ -383,14 +384,128 @@ export async function saveRecipe(
   ingredients: { ingredientId: string; quantity: number }[]
 ) {
   const headers = businessId ? { businessId } : {};
-export async function getInventoryItems(businessId: string, clientParameters: any) {
-  const headers = businessId ? { businessId, clientParameters: JSON.stringify(clientParameters) } : {};
 
   try {
-    const data = await api.get(INVENTORY.inventoryByBusiness, {
+    const data = await api.post(
+      DASHBOARD.inventoryRecipe,
+      { itemId, ingredients },
+      { headers }
+    );
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getItemRecipe(businessId: string, itemId: string) {
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.get(
+      `${DASHBOARD.inventoryRecipe}?itemId=${itemId}`,
+      { headers }
+    );
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function createItemUnit(
+  businessId: string,
+  payload: CreateItemUnitPayload
+) {
+  const validatedFields = createItemUnitSchema.safeParse(payload);
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.post(DASHBOARD.inventoryItemUnit, payload, {
       headers,
     });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
 
+export async function createRecipe(
+  businessId: string,
+  payload: CreateRecipePayload
+) {
+  const validatedFields = createRecipeSchema.safeParse({
+    name: payload.name,
+    producedInventoryItemID: payload.producedInventoryItemID,
+    outputQuantity: payload.outputQuantity,
+    outputQuantityUnitId: payload.outputQuantityUnitId,
+    recipeType: payload.recipeType,
+    isActive: payload.isActive,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const headers = businessId ? { businessId } : {};
+
+  try {
+    const data = await api.post(DASHBOARD.inventoryRecipe, payload, {
+      headers,
+    });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function updateRecipe(
+  businessId: string,
+  recipeId: string,
+  payload: CreateRecipePayload
+) {
+  const validatedFields = createRecipeSchema.safeParse({
+    name: payload.name,
+    producedInventoryItemID: payload.producedInventoryItemID,
+    outputQuantity: payload.outputQuantity,
+    outputQuantityUnitId: payload.outputQuantityUnitId,
+    recipeType: payload.recipeType,
+    isActive: payload.isActive,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+  if (recipeId) headers.recipeId = recipeId;
+
+  try {
+    const data = await api.put(DASHBOARD.inventoryRecipe, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getRecipesByBusiness(businessId: string) {
+  const headers: Record<string, string> = {
+    clientParameters: 'page,1,pageSize,100',
+  };
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.get(DASHBOARD.inventoryRecipeByBusiness, { headers });
     return data;
   } catch (error) {
     handleError(error, false);
