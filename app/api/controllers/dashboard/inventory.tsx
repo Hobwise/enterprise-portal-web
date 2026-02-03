@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { DASHBOARD } from '../../api-url';
+import { DASHBOARD, INVENTORY } from '../../api-url';
 import api, { handleError } from '../../apiService';
 
 // Types
@@ -358,7 +358,7 @@ export async function getSuppliers(businessId: string) {
 export async function getUnitsByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
   try {
-    const data = await api.get(DASHBOARD.unitByBusiness, { headers });
+    const data = await api.get(INVENTORY.unitByBusiness, { headers });
     return data;
   } catch (error) {
     handleError(error, false);
@@ -549,7 +549,7 @@ export async function getUnits(
   if (businessId) headers.businessId = businessId;
 
   try {
-    const data = await api.get(DASHBOARD.unitByBusiness, { headers });
+    const data = await api.get(INVENTORY.unitByBusiness, { headers });
     return data;
   } catch (error) {
     handleError(error, false);
