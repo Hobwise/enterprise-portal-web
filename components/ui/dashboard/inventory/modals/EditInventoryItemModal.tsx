@@ -12,7 +12,7 @@ import {
   getRecipesByBusiness,
 } from '@/app/api/controllers/dashboard/inventory';
 import type { InventoryItem, Recipe } from '@/app/api/controllers/dashboard/inventory';
-import { useSuppliers, useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
+import { useSuppliers, useUnitsByBusiness, useInventoryItem } from '@/hooks/cachedEndpoints/useInventoryItems';
 import AddRecipeModal from './AddRecipeModal';
 import EditRecipeModal from './EditRecipeModal';
 
@@ -58,21 +58,27 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
   const { data: suppliers, isLoading: suppliersLoading } = useSuppliers();
   const { data: unitsByBusiness, isLoading: unitsByBusinessLoading } = useUnitsByBusiness();
 
+  // Fetch full item details for editing
+  const { data: fullItemData, isLoading: itemLoading } = useInventoryItem(
+    isOpen && item ? item.id : null
+  );
+
   // Pre-fill form when item changes
   useEffect(() => {
-    if (item && isOpen) {
-      setName(item.name || '');
-      setDescription(item.description || '');
-      setItemType(item.itemType);
-      setStrictnessLevel(item.strictnessLevel);
-      setReorderLevel(String(item.reorderLevel || 0));
-      setReorderQuantity(String(item.reorderQuantity || 0));
-      setAverageCostPerBaseUnit(String(item.averageCostPerUnit || 0));
-      setIsActive(item.isActive);
-      setUnitId(item.unitId || '');
-      setSupplierId(item.supplierId || '');
+    const sourceItem = fullItemData || item;
+    if (sourceItem && isOpen) {
+      setName(sourceItem.name || '');
+      setDescription(sourceItem.description || '');
+      setItemType(sourceItem.itemType);
+      setStrictnessLevel(sourceItem.strictnessLevel);
+      setReorderLevel(String(sourceItem.reorderLevel || 0));
+      setReorderQuantity(String(sourceItem.reorderQuantity || 0));
+      setAverageCostPerBaseUnit(String(sourceItem.averageCostPerUnit || 0));
+      setIsActive(sourceItem.isActive);
+      setUnitId(sourceItem.unitId || '');
+      setSupplierId(sourceItem.supplierId || '');
     }
-  }, [item, isOpen]);
+  }, [fullItemData, item, isOpen]);
 
   // Reset step when modal closes
   useEffect(() => {
@@ -200,6 +206,11 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
       </div>
 
       {/* Form */}
+      {itemLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Spinner size="lg" color="secondary" />
+        </div>
+      ) : (
       <div className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Item Name */}
@@ -506,6 +517,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
           </button>
         </div>
       </div>
+      )}
     </>
   );
 
