@@ -206,7 +206,8 @@ export const useUnitsByBusiness = () => {
     try {
       const response = await getUnitsByBusiness(businessId);
       if (response?.data?.isSuccessful) {
-        return response.data.data as InventoryUnit[];
+        const result = response.data.data;
+        return Array.isArray(result) ? result as InventoryUnit[] : [];
       }
       return [];
     } catch (error) {
@@ -234,7 +235,10 @@ export const useSuppliers = () => {
     try {
       const response = await getSuppliers(businessId);
       if (response?.data?.isSuccessful) {
-        return response.data.data as Supplier[];
+        const result = response.data.data;
+        if (Array.isArray(result)) return result as Supplier[];
+        if (result?.items && Array.isArray(result.items)) return result.items as Supplier[];
+        return [];
       }
       return [];
     } catch (error) {

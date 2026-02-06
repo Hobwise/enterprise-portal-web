@@ -69,7 +69,7 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
               id: d.id || '',
               recipeID: d.recipeID || '',
               inventoryItemID: itemId,
-              inventoryItemName: d.inventoryItemName || availableIngredients.find(i => i.id === itemId)?.name || itemId,
+              inventoryItemName: d.inventoryItemName || (Array.isArray(availableIngredients) ? availableIngredients.find(i => i.id === itemId)?.name : undefined) || itemId,
               quantityUsed: d.quantityUsed,
             };
           })
@@ -98,7 +98,7 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
       return;
     }
 
-    const ingredient = availableIngredients.find((i) => i.id === newIngredientId);
+    const ingredient = Array.isArray(availableIngredients) && availableIngredients.find((i) => i.id === newIngredientId);
     if (!ingredient) return;
 
     setDetails([
@@ -291,7 +291,7 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
                         className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                       >
                         <option value="">Select unit</option>
-                        {units.map((unit) => (
+                        {Array.isArray(units) && units.map((unit) => (
                           <option key={unit.id} value={unit.id}>
                             {unit.name}
                           </option>
@@ -404,7 +404,7 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                         >
                           <option value="">Select item</option>
-                          {availableIngredients
+                          {Array.isArray(availableIngredients) && availableIngredients
                             .filter(
                               (i) =>
                                 !details.some(
