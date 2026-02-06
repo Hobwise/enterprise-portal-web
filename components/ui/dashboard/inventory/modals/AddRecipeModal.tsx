@@ -93,15 +93,15 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
 
   // Populate form when editing an existing recipe
   useEffect(() => {
-    if (isOpen && existingRecipe && availableIngredients.length > 0) {
+    if (isOpen && existingRecipe && Array.isArray(availableIngredients) && availableIngredients.length > 0) {
       setName(existingRecipe.name);
       setOutputQuantity(String(existingRecipe.outputQuantity));
       setOutputQuantityUnitId(existingRecipe.outputQuantityUnitId);
       setRecipeType(existingRecipe.recipeType);
       setIsActive(existingRecipe.isActive);
       // Map details with ingredient names from availableIngredients
-      const mappedDetails = existingRecipe.details.map((d) => {
-        const ingredient = availableIngredients.find((i) => i.id === d.inventoryItemID);
+      const mappedDetails = (existingRecipe.details || []).map((d) => {
+        const ingredient = Array.isArray(availableIngredients) && availableIngredients.find((i) => i.id === d.inventoryItemID);
         return {
           id: d.id,
           recipeID: d.recipeID,
@@ -179,7 +179,7 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
       return;
     }
 
-    const ingredient = availableIngredients.find((i) => i.id === newIngredientId);
+    const ingredient = Array.isArray(availableIngredients) && availableIngredients.find((i) => i.id === newIngredientId);
     if (!ingredient) return;
 
     setDetails([
@@ -352,7 +352,7 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                         className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none ${errors.outputQuantityUnitId ? 'border-red-500' : 'border-gray-200'}`}
                       >
                         <option value="">Select unit</option>
-                        {units.map((unit) => (
+                        {Array.isArray(units) && units.map((unit) => (
                           <option key={unit.id} value={unit.id}>
                             {unit.name}
                           </option>
@@ -476,7 +476,7 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                         {/* Dropdown suggestions */}
                         {showIngredientDropdown && !ingredientsLoading && (
                           <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                            {availableIngredients
+                            {Array.isArray(availableIngredients) && availableIngredients
                               .filter(
                                 (i) =>
                                   !details.some((d) => d.inventoryItemID === i.id) &&
@@ -498,11 +498,11 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                                   {ingredient.name}
                                 </button>
                               ))}
-                            {availableIngredients.filter(
+                            {(!Array.isArray(availableIngredients) || availableIngredients.filter(
                               (i) =>
                                 !details.some((d) => d.inventoryItemID === i.id) &&
                                 i.name.toLowerCase().includes(newIngredientSearch.toLowerCase())
-                            ).length === 0 && !newIngredientSearch.trim() && (
+                            ).length === 0) && !newIngredientSearch.trim() && (
                               <div className="px-4 py-3 text-sm text-gray-500">
                                 Type to search or create ingredient
                               </div>

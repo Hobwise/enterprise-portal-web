@@ -104,7 +104,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
     setEditRecipeType(recipe.recipeType);
     setEditIsActive(recipe.isActive);
     setEditDetails(
-      recipe.details.map((d) => ({
+      (recipe.details || []).map((d) => ({
         inventoryItemID: d.inventoryItemId || d.inventoryItemID || '',
         inventoryItemName: d.inventoryItemName || getIngredientName(d.inventoryItemId || d.inventoryItemID || ''),
         quantityUsed: d.quantityUsed,
@@ -140,7 +140,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
       return;
     }
 
-    const ingredient = availableIngredients.find((i) => i.id === newIngredientId);
+    const ingredient = Array.isArray(availableIngredients) && availableIngredients.find((i) => i.id === newIngredientId);
     if (!ingredient) return;
 
     setEditDetails([
@@ -274,7 +274,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
   };
 
   const getIngredientName = (inventoryItemID: string) => {
-    const ingredient = availableIngredients.find((i) => i.id === inventoryItemID);
+    const ingredient = Array.isArray(availableIngredients) ? availableIngredients.find((i) => i.id === inventoryItemID) : undefined;
     return ingredient?.name || inventoryItemID;
   };
 
@@ -386,7 +386,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                             >
                               <option value="">Select unit</option>
-                              {units.map((unit) => (
+                              {Array.isArray(units) && units.map((unit) => (
                                 <option key={unit.id} value={unit.id}>
                                   {unit.name}
                                 </option>
@@ -507,7 +507,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                               {/* Dropdown suggestions */}
                               {showIngredientDropdown && (
                                 <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                                  {availableIngredients
+                                  {Array.isArray(availableIngredients) && availableIngredients
                                     .filter(
                                       (i) =>
                                         !editDetails.some((d) => d.inventoryItemID === i.id) &&
@@ -529,11 +529,11 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                                         {ingredient.name}
                                       </button>
                                     ))}
-                                  {availableIngredients.filter(
+                                  {(!Array.isArray(availableIngredients) || availableIngredients.filter(
                                     (i) =>
                                       !editDetails.some((d) => d.inventoryItemID === i.id) &&
                                       i.name.toLowerCase().includes(newIngredientSearch.toLowerCase())
-                                  ).length === 0 && (
+                                  ).length === 0) && (
                                     <div className="px-4 py-3 text-sm text-gray-500">
                                       No matching ingredients found
                                     </div>

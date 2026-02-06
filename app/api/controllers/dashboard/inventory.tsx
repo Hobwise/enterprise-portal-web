@@ -357,7 +357,7 @@ export async function deleteInventoryItem(businessId: string, itemId: string) {
 export async function getSuppliers(businessId: string) {
   const headers = businessId ? { businessId } : {};
   try {
-    const data = await api.get(DASHBOARD.supplierByBusiness, { headers });
+    const data = await api.get(`${DASHBOARD.supplierByBusiness}?Page=1&PageSize=100`, { headers });
     return data;
   } catch (error) {
     handleError(error, false);

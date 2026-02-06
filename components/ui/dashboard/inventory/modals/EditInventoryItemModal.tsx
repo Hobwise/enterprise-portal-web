@@ -240,7 +240,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
               >
                 <option value="">Select unit</option>
-                {unitsByBusiness.map((u) => (
+                {Array.isArray(unitsByBusiness) && unitsByBusiness.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name}
                   </option>
@@ -349,7 +349,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
               >
                 <option value="">Select supplier</option>
-                {suppliers.map((s) => (
+                {Array.isArray(suppliers) && suppliers.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
                   </option>
