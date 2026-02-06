@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, RefreshCw } from 'lucide-react';
 
 interface InventoryItemsHeaderProps {
   totalItems: number;
@@ -68,6 +68,19 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
             className="object-contain hidden lg:block"
           />
 
+          {onSyncItems && syncItemsCount > 0 && (
+            <button
+              onClick={onSyncItems}
+              className="flex items-center gap-2 px-5 py-3 border border-[#5F35D2] text-[#5F35D2] rounded-xl hover:bg-[#5F35D2]/5 font-medium transition-all duration-200"
+            >
+              <RefreshCw className="w-5 h-5" />
+              <span>Sync Items</span>
+              <span className="bg-[#5F35D2] text-white text-xs rounded-full px-2 py-0.5 min-w-[24px]">
+                {syncItemsCount}
+              </span>
+            </button>
+          )}
+
           {onCustomizeMeasurements && (
             <button
               onClick={onCustomizeMeasurements}
@@ -99,21 +112,8 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
         </div>
       </div>
 
-      {/* Row 2: Sync Items, Search and Filters */}
+      {/* Row 2: Search and Filters */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
-        {/* Sync Items Link */}
-        {onSyncItems && syncItemsCount > 0 && (
-          <button
-            onClick={onSyncItems}
-            className="flex items-center gap-2 text-[#5F35D2] font-medium hover:underline"
-          >
-            <span>Sync Items</span>
-            <span className="bg-[#5F35D2] text-white text-xs rounded-full px-2 py-0.5 min-w-[24px]">
-              {syncItemsCount}
-            </span>
-          </button>
-        )}
-
         {/* Search Input */}
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />

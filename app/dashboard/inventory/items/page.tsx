@@ -16,6 +16,7 @@ import InventoryItemDetailsModal from '@/components/ui/dashboard/inventory/modal
 import BatchProductionModal from '@/components/ui/dashboard/inventory/modals/BatchProductionModal';
 import RecipeRequiredModal from '@/components/ui/dashboard/inventory/modals/RecipeRequiredModal';
 import DeleteModal from '@/components/ui/deleteModal';
+import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 
 export default function ItemsPage() {
   const router = useRouter();
@@ -30,6 +31,18 @@ export default function ItemsPage() {
   // Debounced search for API
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  // Debounce search effect - also reset page when search changes
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (debouncedSearch !== searchQuery) {
+        setPage(1);
+        setDebouncedSearch(searchQuery);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, debouncedSearch, setPage]);
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
@@ -43,40 +56,53 @@ export default function ItemsPage() {
   const [isBatchProductionModalOpen, setIsBatchProductionModalOpen] = useState(false);
   const [isRecipeRequiredModalOpen, setIsRecipeRequiredModalOpen] = useState(false);
 
-  // Recipe enforcement via localStorage
-  useEffect(() => {
-    const pending = localStorage.getItem('pendingRecipeTracking');
-    if (pending) {
-      try {
-        const tracking = JSON.parse(pending) as PendingRecipeTracking;
-        setPendingTracking(tracking);
-        setPendingProducedItemId(tracking.inventoryItemId);
-        setIsRecipeModalOpen(true);
-      } catch {
-        localStorage.removeItem('pendingRecipeTracking');
-      }
-    }
-  }, []);
-
   // Fetch inventory items
-  const { data, isLoading, refetch } = useInventoryItems({
+  const {
+    data,
+    isLoading,
+    refetch,
+    totalCount,
+    totalPages,
+    currentPage,
+    hasNext,
+    hasPrevious,
+  } = useInventoryItems({
     page,
     pageSize,
     search: debouncedSearch,
   });
 
-  // Handle search with debounce
+  // Recipe enforcement via localStorage
+  useEffect(() => {
+    // Wait for data to load before processing localStorage
+    if (isLoading || !data) return;
+
+    const pending = localStorage.getItem('pendingRecipeTracking');
+    if (pending) {
+      try {
+        const tracking = JSON.parse(pending) as PendingRecipeTracking;
+
+        // Validate item ID exists in actual API data
+        const itemExists = data.some(item => item.id === tracking.inventoryItemId);
+
+        if (itemExists) {
+          setPendingTracking(tracking);
+          setPendingProducedItemId(tracking.inventoryItemId);
+          setIsRecipeModalOpen(true);
+        } else {
+          // Item not found in API data - clear stale localStorage
+          localStorage.removeItem('pendingRecipeTracking');
+        }
+      } catch {
+        localStorage.removeItem('pendingRecipeTracking');
+      }
+    }
+  }, [isLoading, data]);
+
+  // Handle search change
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value);
-    setPage(1);
-
-    // Debounce the API call
-    const timeoutId = setTimeout(() => {
-      setDebouncedSearch(value);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [setPage]);
+  }, []);
 
   // Item actions
   const handleAddItem = useCallback(() => {
@@ -95,6 +121,7 @@ export default function ItemsPage() {
   }, []);
 
   const handleEditSuccess = useCallback(() => {
+    toast.success('Item updated successfully');
     setIsEditModalOpen(false);
     setSelectedItem(null);
     refetch();
@@ -142,6 +169,7 @@ export default function ItemsPage() {
   }, [selectedItem, refetch]);
 
   const handleAddSuccess = useCallback(() => {
+    toast.success('Item added successfully');
     refetch();
   }, [refetch]);
 
@@ -157,6 +185,7 @@ export default function ItemsPage() {
   }, []);
 
   const handleRecipeSuccess = useCallback(() => {
+    toast.success('Recipe created successfully');
     localStorage.removeItem('pendingRecipeTracking');
     setPendingTracking(null);
     setPendingProducedItemId(null);
@@ -171,6 +200,7 @@ export default function ItemsPage() {
   }, []);
 
   const handleBatchProductionSuccess = useCallback(() => {
+    toast.success('Batch production completed successfully');
     setIsBatchProductionModalOpen(false);
     setSelectedItem(null);
     refetch();
@@ -180,10 +210,20 @@ export default function ItemsPage() {
     router.push(`/dashboard/inventory/items/${item.id}`);
   }, [router]);
 
-  // Client-side filtering
-  const filteredData = useMemo(() => {
+  // Client-side filtering (including search)
+  const filteredItems = useMemo(() => {
     if (!data) return [];
     let items = data;
+
+    // Client-side search filter
+    if (searchQuery.trim()) {
+      const searchLower = searchQuery.toLowerCase().trim();
+      items = items.filter((item) =>
+        item.name?.toLowerCase().includes(searchLower) ||
+        item.id?.toLowerCase().includes(searchLower) ||
+        item.description?.toLowerCase().includes(searchLower)
+      );
+    }
 
     if (itemTypeFilter !== 'all') {
       items = items.filter((item) => item.itemType === Number(itemTypeFilter));
@@ -191,14 +231,14 @@ export default function ItemsPage() {
 
     if (stockLevelFilter !== 'all') {
       items = items.filter((item) => {
-        const hasStocks = item.stocks && item.stocks.length > 0;
+        const stockLevel = item.stockLevel ?? 0;
         switch (stockLevelFilter) {
           case 'in-stock':
-            return hasStocks;
+            return stockLevel > 0;
           case 'low-stock':
-            return hasStocks && item.reorderLevel > 0;
+            return stockLevel > 0 && stockLevel <= item.reorderLevel;
           case 'out-of-stock':
-            return !hasStocks;
+            return stockLevel === 0;
           default:
             return true;
         }
@@ -206,10 +246,36 @@ export default function ItemsPage() {
     }
 
     return items;
-  }, [data, itemTypeFilter, stockLevelFilter]);
+  }, [data, searchQuery, itemTypeFilter, stockLevelFilter]);
 
-  // Computed values
-  const totalItems = filteredData.length;
+  // Structure data with pagination info for usePagination hook
+  const tableData = useMemo(() => {
+    // If we're filtering client-side (search, itemType, or stockLevel), we need to handle pagination ourselves
+    const isClientFiltering = searchQuery.trim() !== '' || itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
+
+    if (isClientFiltering) {
+      // When filtering client-side, return simple array (usePagination will handle it)
+      return filteredItems;
+    }
+
+    // When not filtering, pass full pagination info from API
+    return {
+      data: filteredItems,
+      totalCount,
+      totalPages,
+      currentPage,
+      hasNext,
+      hasPrevious,
+    };
+  }, [filteredItems, searchQuery, itemTypeFilter, stockLevelFilter, totalCount, totalPages, currentPage, hasNext, hasPrevious]);
+
+  // Computed values - use filtered count when client-side filtering, otherwise API count
+  const isClientFiltering = searchQuery.trim() !== '' || itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
+  const totalItems = isClientFiltering ? filteredItems.length : (totalCount || filteredItems.length);
+
+  if (isLoading && (!data || data.length === 0) && page === 1) {
+    return <CustomLoading />;
+  }
 
   return (
     <div className="min-h-screen font-satoshi">
@@ -234,7 +300,7 @@ export default function ItemsPage() {
         {/* Items Table */}
         <div className="bg-white rounded-2xl  overflow-hidden">
           <InventoryItemsTable
-            data={filteredData}
+            data={tableData}
             isLoading={isLoading}
             onViewItem={handleRowClick}
             onEditItem={handleEditItem}

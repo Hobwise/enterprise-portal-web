@@ -218,8 +218,8 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
         recipeType,
         isActive,
         details: details.map((d) => ({
-          ...(d.id && { id: d.id }),
-          recipeID: isEditMode && existingRecipe ? existingRecipe.id : crypto.randomUUID(),
+          id: d.id || '',
+          recipeID: isEditMode && existingRecipe ? existingRecipe.id : '',
           inventoryItemID: d.inventoryItemID,
           quantityUsed: d.quantityUsed,
         })),
@@ -383,37 +383,6 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                     )}
                   </div>
 
-                  {/* Recipe Type */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Recipe Type
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={recipeType}
-                        onChange={(e) => setRecipeType(Number(e.target.value))}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-                      >
-                        <option value={0}>Standard</option>
-                        <option value={1}>Custom</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Active Toggle */}

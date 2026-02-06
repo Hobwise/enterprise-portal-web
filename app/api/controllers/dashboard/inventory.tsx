@@ -73,14 +73,22 @@ export type InventoryItem = {
   averageCostPerUnit: number;
   isActive: boolean;
   isDeleted: boolean;
+  allowTracking?: boolean;
+  stockLevel: number;
+  stockStatus: string;
   unitId: string;
+  unitName?: string;
+  unitCode?: string;
   unit: string | null;
   supplierId: string;
+  supplierName?: string;
   supplier: string | null;
   cooperateID: string;
   businessID: string;
   itemUnits: ItemUnit[];
   stocks: any[];
+  recipe?: any;
+  units?: any[];
   dateCreated: string;
   dateUpdated: string;
 };
@@ -164,7 +172,9 @@ export type CreateRecipePayload = {
 export type RecipeDetail = {
   id?: string;
   recipeID?: string;
-  inventoryItemID: string;
+  inventoryItemID?: string;
+  inventoryItemId?: string;
+  inventoryItemName?: string;
   quantityUsed: number;
 };
 
@@ -239,14 +249,13 @@ export async function getInventoryItems(
   pageSize: number = 10,
   search?: string
 ) {
-  let clientParameters = `page,${page},pageSize,${pageSize}`;
-  if (search) clientParameters += `,search,${search}`;
-
-  const headers: Record<string, string> = { clientParameters };
+  const headers: Record<string, string> = {};
   if (businessId) headers.businessId = businessId;
 
   try {
-    const data = await api.get(DASHBOARD.inventoryByBusiness, { headers });
+    let url = `${DASHBOARD.inventoryByBusiness}?Page=${page}&PageSize=${pageSize}&SortBy=dateCreated&SortOrder=desc`;
+    if (search) url += `&Search=${encodeURIComponent(search)}`;
+    const data = await api.get(url, { headers });
     return data;
   } catch (error) {
     handleError(error, false);

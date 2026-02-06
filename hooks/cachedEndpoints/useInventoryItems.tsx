@@ -24,13 +24,23 @@ type UseInventoryItemsParams = {
   search?: string;
 };
 
+type InventoryItemsResult = {
+  items: InventoryItem[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+};
+
 const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
   const { page = 1, pageSize = 10, search } = params;
 
   const businessInformation = getJsonItemFromLocalStorage('business');
   const businessId = businessInformation ? businessInformation[0]?.businessId : '';
 
-  const fetchInventoryItems = async () => {
+  const fetchInventoryItems = async (): Promise<InventoryItemsResult> => {
     try {
       const response = await getInventoryItems(
         businessId,
@@ -40,17 +50,62 @@ const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
       );
 
       if (!response?.data?.isSuccessful) {
-        return [];
+        return {
+          items: [],
+          totalCount: 0,
+          pageSize,
+          currentPage: page,
+          totalPages: 1,
+          hasNext: false,
+          hasPrevious: false,
+        };
       }
 
-      return response.data.data as InventoryItem[];
+      const responseData = response.data;
+      const data = responseData.data;
+
+      // Extract items - could be array or nested in .items
+      const rawItems = Array.isArray(data) ? data : (data?.items || []);
+
+      // Sort items by dateCreated (newest first) as fallback if API doesn't sort
+      const items = [...rawItems].sort((a, b) => {
+        const dateA = new Date(a.dateCreated).getTime();
+        const dateB = new Date(b.dateCreated).getTime();
+        return dateB - dateA;
+      });
+
+      // Extract pagination from response.data level (not response.data.data)
+      // The API returns pagination metadata at the response.data level
+      const totalCount = responseData.totalCount ?? data?.totalCount ?? items.length;
+      const totalPages = responseData.totalPages ?? data?.totalPages ?? (Math.ceil(totalCount / pageSize) || 1);
+      const currentPageNum = responseData.currentPage ?? data?.currentPage ?? page;
+      const hasNextPage = responseData.hasNext ?? data?.hasNext ?? (currentPageNum < totalPages);
+      const hasPreviousPage = responseData.hasPrevious ?? data?.hasPrevious ?? (page > 1);
+
+      return {
+        items: items as InventoryItem[],
+        totalCount,
+        pageSize: responseData.pageSize ?? data?.pageSize ?? pageSize,
+        currentPage: currentPageNum,
+        totalPages,
+        hasNext: hasNextPage,
+        hasPrevious: hasPreviousPage,
+      };
     } catch (error) {
       console.error('Error fetching inventory items:', error);
-      return [];
+      return {
+        items: [],
+        totalCount: 0,
+        pageSize,
+        currentPage: page,
+        totalPages: 1,
+        hasNext: false,
+        hasPrevious: false,
+      };
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<InventoryItem[]>({
+  const { data, isLoading, isError, refetch } = useQuery<InventoryItemsResult>({
     queryKey: ['inventoryItems', { page, pageSize, search }],
     queryFn: fetchInventoryItems,
     ...fetchQueryConfig(),
@@ -58,7 +113,12 @@ const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
   });
 
   return {
-    data,
+    data: data?.items || [],
+    totalCount: data?.totalCount || 0,
+    totalPages: data?.totalPages || 1,
+    currentPage: data?.currentPage || page,
+    hasNext: data?.hasNext || false,
+    hasPrevious: data?.hasPrevious || false,
     isLoading,
     isError,
     refetch,
