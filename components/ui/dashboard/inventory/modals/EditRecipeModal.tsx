@@ -64,14 +64,12 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
       if (existingRecipe.details && existingRecipe.details.length > 0) {
         setDetails(
           existingRecipe.details.map((d) => {
-            const ingredient = availableIngredients.find(
-              (i) => i.id === d.inventoryItemID
-            );
+            const itemId = d.inventoryItemId || d.inventoryItemID || '';
             return {
-              id: d.id,
-              recipeID: d.recipeID,
-              inventoryItemID: d.inventoryItemID,
-              inventoryItemName: ingredient?.name || d.inventoryItemID,
+              id: d.id || '',
+              recipeID: d.recipeID || '',
+              inventoryItemID: itemId,
+              inventoryItemName: d.inventoryItemName || availableIngredients.find(i => i.id === itemId)?.name || itemId,
               quantityUsed: d.quantityUsed,
             };
           })
@@ -122,7 +120,27 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
     setDetails(details.filter((d) => d.inventoryItemID !== inventoryItemID));
   };
 
+  const handleUpdateDetailQuantity = (inventoryItemID: string, newQuantity: number) => {
+    setDetails(details.map((d) =>
+      d.inventoryItemID === inventoryItemID
+        ? { ...d, quantityUsed: newQuantity }
+        : d
+    ));
+  };
+
   const handleSubmit = async () => {
+    // Validate existingRecipe
+    if (!existingRecipe) {
+      toast.error('Recipe data not found. Please close and try again.');
+      return;
+    }
+
+    // Validate producedInventoryItemID
+    if (!producedInventoryItemID) {
+      toast.error('Invalid recipe configuration. Please close and try again.');
+      return;
+    }
+
     if (!name.trim()) {
       toast.error('Recipe name is required');
       return;
@@ -136,7 +154,14 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
       return;
     }
     if (details.length === 0) {
-      toast.error('Please add at least one detail row');
+      toast.error('Please add at least one ingredient');
+      return;
+    }
+
+    // Validate ingredient quantities
+    const invalidIngredient = details.find((d) => d.quantityUsed <= 0);
+    if (invalidIngredient) {
+      toast.error(`Invalid quantity for ingredient: ${invalidIngredient.inventoryItemName}. Quantity must be greater than 0.`);
       return;
     }
 
@@ -294,37 +319,6 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
                     </div>
                   </div>
 
-                  {/* Recipe Type */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Recipe Type
-                    </label>
-                    <div className="relative">
-                      <select
-                        value={recipeType}
-                        onChange={(e) => setRecipeType(Number(e.target.value))}
-                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-                      >
-                        <option value={0}>Standard</option>
-                        <option value={1}>Custom</option>
-                      </select>
-                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                        <svg
-                          className="w-5 h-5 text-gray-400"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Active Toggle */}
@@ -365,7 +359,16 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
                           {details.map((detail) => (
                             <tr key={detail.inventoryItemID} className="border-b border-gray-100">
                               <td className="py-3 px-2 text-gray-700">{detail.inventoryItemName}</td>
-                              <td className="py-3 px-2 text-right text-gray-700">{detail.quantityUsed}</td>
+                              <td className="py-3 px-2 text-right text-gray-700">
+                                <input
+                                  type="number"
+                                  value={detail.quantityUsed}
+                                  onChange={(e) => handleUpdateDetailQuantity(detail.inventoryItemID, parseFloat(e.target.value) || 0)}
+                                  min="0.001"
+                                  step="0.001"
+                                  className="w-20 px-2 py-1 text-right border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2]"
+                                />
+                              </td>
                               <td className="py-3 px-2 text-right">
                                 <button
                                   onClick={() => handleRemoveDetail(detail.inventoryItemID)}
@@ -461,6 +464,7 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
                 {/* Submit Button */}
                 <div className="flex justify-center pt-4">
                   <button
+                    type="button"
                     onClick={handleSubmit}
                     disabled={loading}
                     className="flex items-center gap-2 px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"

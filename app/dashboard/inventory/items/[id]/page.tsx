@@ -39,6 +39,7 @@ import AddRecipeModal from '@/components/ui/dashboard/inventory/modals/AddRecipe
 import ViewRecipeModal from '@/components/ui/dashboard/inventory/modals/ViewRecipeModal';
 import BatchProductionModal from '@/components/ui/dashboard/inventory/modals/BatchProductionModal';
 import RecipeRequiredModal from '@/components/ui/dashboard/inventory/modals/RecipeRequiredModal';
+import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 
 interface FormData {
   name: string;
@@ -231,12 +232,8 @@ export default function ItemDetailPage() {
     [unitsByBusiness]
   );
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen font-satoshi bg-gray-50 flex items-center justify-center">
-        <Spinner size="lg" color="secondary" />
-      </div>
-    );
+  if (isLoading || unitsLoading || suppliersLoading) {
+    return <CustomLoading />;
   }
 
   if (!item) {
@@ -552,7 +549,8 @@ export default function ItemDetailPage() {
                       val === '' ? null : (Number(val) as InventoryItemType)
                     );
                   }}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Select item type</option>
                   <option value={InventoryItemType.Direct}>Direct</option>
@@ -633,7 +631,7 @@ export default function ItemDetailPage() {
         {/* Unit Conversions Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <ItemUnitsTable
-            itemUnits={item.itemUnits || []}
+            itemUnits={item.units || []}
             primaryUnitId={item.unitId}
             costPerUnit={item.averageCostPerUnit}
             unitsByBusiness={unitsByBusiness}
@@ -649,6 +647,7 @@ export default function ItemDetailPage() {
         isOpen={isAddRecipeOpen}
         onOpenChange={setIsAddRecipeOpen}
         onSuccess={() => {
+          toast.success('Recipe added successfully');
           setIsAddRecipeOpen(false);
           // Re-fetch recipes to update hasRecipe state
           const business = getJsonItemFromLocalStorage('business');
@@ -679,6 +678,7 @@ export default function ItemDetailPage() {
         isOpen={isBatchProductionOpen}
         onOpenChange={setIsBatchProductionOpen}
         onSuccess={() => {
+          toast.success('Batch production completed successfully');
           refetch();
           // Re-fetch recipes to update state
           const business = getJsonItemFromLocalStorage('business');

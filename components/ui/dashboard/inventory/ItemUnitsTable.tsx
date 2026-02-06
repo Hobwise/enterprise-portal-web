@@ -124,7 +124,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
     { key: 'unit', label: 'Unit' },
     { key: 'purchase', label: 'Purchase' },
     { key: 'consumption', label: 'Consumption' },
-    { key: 'baseEquiv', label: 'Base Equiv.' },
+    { key: 'baseEquiv', label: 'Base Equivalent' },
     { key: 'actions', label: 'Actions' },
   ];
 
@@ -385,7 +385,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
     itemUnits.forEach((itemUnit) => {
       const unitInfo = getUnitInfo(itemUnit.unitId);
       allRows.push({
-        id: itemUnit.id,
+        id: itemUnit.id || itemUnit.unitId,
         isPrimary: false,
         unitId: itemUnit.unitId,
         unitName: itemUnit.unitName || unitInfo.name,
@@ -611,7 +611,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         if (row.isPrimary) {
           return (
             <div className="text-sm text-gray-600">
-              1 <span className="text-gray-400">(base)</span>
+              1 {getPrimaryUnitName().toLowerCase()}
             </div>
           );
         }

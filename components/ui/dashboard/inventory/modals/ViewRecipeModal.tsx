@@ -105,8 +105,8 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
     setEditIsActive(recipe.isActive);
     setEditDetails(
       recipe.details.map((d) => ({
-        inventoryItemID: d.inventoryItemID,
-        inventoryItemName: getIngredientName(d.inventoryItemID),
+        inventoryItemID: d.inventoryItemId || d.inventoryItemID || '',
+        inventoryItemName: d.inventoryItemName || getIngredientName(d.inventoryItemId || d.inventoryItemID || ''),
         quantityUsed: d.quantityUsed,
       }))
     );
@@ -162,43 +162,93 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
     setEditDetails(editDetails.filter((d) => d.inventoryItemID !== inventoryItemID));
   };
 
+  const handleUpdateDetailQuantity = (inventoryItemID: string, newQuantity: number) => {
+    setEditDetails(editDetails.map((d) =>
+      d.inventoryItemID === inventoryItemID
+        ? { ...d, quantityUsed: newQuantity }
+        : d
+    ));
+  };
+
   const handleSave = async () => {
-    if (!recipe) return;
+    console.log('handleSave called');
+    // Close dropdown to prevent any overlay issues
+    setShowIngredientDropdown(false);
+
+    // Add error for null recipe
+    if (!recipe) {
+      console.log('FAILED: recipe is null');
+      toast.error('Recipe data not found. Please close and try again.');
+      return;
+    }
+    console.log('recipe:', recipe);
+
+    // Validate producedInventoryItemID - check both casings
+    const producedItemId = recipe.producedInventoryItemID || (recipe as any).producedInventoryItemId;
+    if (!producedItemId) {
+      console.log('FAILED: producedInventoryItemID is missing', recipe);
+      toast.error('Invalid recipe configuration. Please close and try again.');
+      return;
+    }
 
     if (!editName.trim()) {
+      console.log('FAILED: editName is empty', editName);
       toast.error('Recipe name is required');
       return;
     }
     if (!editOutputQuantity || parseFloat(editOutputQuantity) <= 0) {
+      console.log('FAILED: editOutputQuantity invalid', editOutputQuantity);
       toast.error('Please enter a valid output quantity');
       return;
     }
     if (!editOutputQuantityUnitId) {
+      console.log('FAILED: editOutputQuantityUnitId is empty', editOutputQuantityUnitId);
       toast.error('Please select an output unit');
       return;
     }
     if (editDetails.length === 0) {
+      console.log('FAILED: editDetails is empty', editDetails);
       toast.error('Please add at least one ingredient');
       return;
     }
 
+    // Validate ingredient quantities
+    const invalidIngredient = editDetails.find((d) => d.quantityUsed <= 0);
+    if (invalidIngredient) {
+      console.log('FAILED: invalid ingredient quantity', invalidIngredient);
+      toast.error(`Invalid quantity for ingredient: ${invalidIngredient.inventoryItemName}. Quantity must be greater than 0.`);
+      return;
+    }
+
+    console.log('Validation passed, calling API...');
     setSaving(true);
     try {
       const business = getJsonItemFromLocalStorage('business');
+      console.log('Business:', business);
+      console.log('Recipe ID:', recipe.id);
       const payload: CreateRecipePayload = {
         name: editName.trim(),
-        producedInventoryItemID: recipe.producedInventoryItemID,
+        producedInventoryItemID: producedItemId,
         outputQuantity: parseFloat(editOutputQuantity),
         outputQuantityUnitId: editOutputQuantityUnitId,
         recipeType: editRecipeType,
         isActive: editIsActive,
         details: editDetails.map((d) => ({
+          recipeID: recipe.id,
           inventoryItemID: d.inventoryItemID,
           quantityUsed: d.quantityUsed,
         })),
       };
 
+      console.log('Payload:', payload);
       const response = await updateRecipe(business[0]?.businessId, recipe.id, payload);
+      console.log('API Response:', response);
+
+      // Handle undefined response (API returned undefined on error)
+      if (!response) {
+        toast.error('Failed to update recipe. Please try again.');
+        return;
+      }
 
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
@@ -364,37 +414,6 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                           </div>
                         </div>
 
-                        {/* Recipe Type */}
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Recipe Type
-                          </label>
-                          <div className="relative">
-                            <select
-                              value={editRecipeType}
-                              onChange={(e) => setEditRecipeType(Number(e.target.value))}
-                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-                            >
-                              <option value={0}>Standard</option>
-                              <option value={1}>Custom</option>
-                            </select>
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                              <svg
-                                className="w-5 h-5 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 9l-7 7-7-7"
-                                />
-                              </svg>
-                            </div>
-                          </div>
-                        </div>
                       </div>
 
                       {/* Active Toggle */}
@@ -435,7 +454,16 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                                 {editDetails.map((detail) => (
                                   <tr key={detail.inventoryItemID} className="border-b border-gray-100">
                                     <td className="py-3 px-2 text-gray-700">{detail.inventoryItemName}</td>
-                                    <td className="py-3 px-2 text-right text-gray-700">{detail.quantityUsed}</td>
+                                    <td className="py-3 px-2 text-right text-gray-700">
+                                      <input
+                                        type="number"
+                                        value={detail.quantityUsed}
+                                        onChange={(e) => handleUpdateDetailQuantity(detail.inventoryItemID, parseFloat(e.target.value) || 0)}
+                                        min="0.001"
+                                        step="0.001"
+                                        className="w-20 px-2 py-1 text-right border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2]"
+                                      />
+                                    </td>
                                     <td className="py-3 px-2 text-right">
                                       <button
                                         onClick={() => handleRemoveDetail(detail.inventoryItemID)}
@@ -540,6 +568,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                       {/* Action Buttons */}
                       <div className="flex justify-center gap-3 pt-4">
                         <button
+                          type="button"
                           onClick={exitEditMode}
                           disabled={saving}
                           className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all duration-200 disabled:opacity-50"
@@ -547,9 +576,10 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                           Cancel
                         </button>
                         <button
+                          type="button"
                           onClick={handleSave}
                           disabled={saving}
-                          className="flex items-center gap-2 px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+                          className="flex items-center gap-2 px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 active:scale-[0.97] active:bg-[#4A2AAF] font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-lg hover:shadow-xl"
                         >
                           {saving ? (
                             <>
@@ -600,18 +630,9 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                           </div>
                           <div>
                             <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                              Type & Status
+                              Status
                             </p>
                             <div className="flex items-center gap-2">
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                  recipe.recipeType === 0
-                                    ? 'bg-blue-100 text-blue-800'
-                                    : 'bg-purple-100 text-purple-800'
-                                }`}
-                              >
-                                {recipe.recipeType === 0 ? 'Standard' : 'Custom'}
-                              </span>
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                   recipe.isActive
@@ -647,11 +668,11 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                               <tbody>
                                 {recipe.details.map((detail) => (
                                   <tr
-                                    key={detail.id || detail.inventoryItemID}
+                                    key={detail.id || detail.inventoryItemId || detail.inventoryItemID}
                                     className="border-b border-gray-100 last:border-b-0"
                                   >
                                     <td className="py-3 px-4 text-gray-700">
-                                      {getIngredientName(detail.inventoryItemID)}
+                                      {detail.inventoryItemName || getIngredientName(detail.inventoryItemId || detail.inventoryItemID || '')}
                                     </td>
                                     <td className="py-3 px-4 text-right text-gray-700 font-medium">
                                       {detail.quantityUsed}

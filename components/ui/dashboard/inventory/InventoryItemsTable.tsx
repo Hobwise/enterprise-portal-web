@@ -31,13 +31,6 @@ interface InventoryItemsTableProps {
   onBatchProduction?: (item: InventoryItem) => void;
 }
 
-const formatCurrency = (amount: number) => {
-  return amount.toLocaleString('en-NG', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-};
-
 const getItemTypeLabel = (type: InventoryItemType) => {
   switch (type) {
     case InventoryItemType.Direct:
@@ -68,7 +61,10 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
     setSortDescriptor,
     classNames,
     displayData,
-  } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS);
+  } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS, {
+    column: 'dateCreated',
+    direction: 'descending',
+  });
 
   const sortedItems = React.useMemo(() => {
     if (!displayData || displayData.length === 0) {
@@ -102,19 +98,15 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
           );
         case 'itemType':
           return (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-textGrey">
               {getItemTypeLabel(item.itemType)}
             </div>
           );
-        case 'averageCostPerUnit':
-          return (
-            <div className="text-sm text-gray-700">
-              {formatCurrency(item.averageCostPerUnit)}
-            </div>
-          );
+        case 'stockLevel':
+          return <div className="text-sm text-textGrey">{item.stockLevel ?? 0}</div>;
         case 'reorderLevel':
           return (
-            <div className="text-sm text-gray-700">{item.reorderLevel}</div>
+            <div className="text-sm text-textGrey">{item.reorderLevel}</div>
           );
         case 'isActive':
           return (
@@ -192,52 +184,54 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
 
   return (
     <section className="border border-primaryGrey rounded-lg overflow-hidden">
-      <Table
-        radius="lg"
-        isCompact
-        removeWrapper
-        aria-label="list of inventory items"
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={classNames}
-        selectedKeys={selectedKeys}
-        sortDescriptor={sortDescriptor as SortDescriptor}
-        onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-        onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === 'actions' ? 'center' : 'start'}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
-          )}
-        </TableHeader>
-        <TableBody
-          emptyContent={"No inventory items found"}
-          items={shouldShowLoading ? [] : sortedItems}
-          isLoading={shouldShowLoading}
-          loadingContent={<SpinnerLoader size="md" />}
+      <div className="overflow-x-auto">
+        <Table
+          radius="lg"
+          isCompact
+          removeWrapper
+          aria-label="list of inventory items"
+          bottomContent={bottomContent}
+          bottomContentPlacement="outside"
+          classNames={classNames}
+          selectedKeys={selectedKeys}
+          sortDescriptor={sortDescriptor as SortDescriptor}
+          onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+          onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
         >
-          {(item: InventoryItem) => (
-            <TableRow
-              key={String(item.id)}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              {(columnKey) => (
-                <TableCell
-                  onClick={columnKey !== 'actions' ? () => onViewItem(item) : undefined}
-                >
-                  {renderCell(item, String(columnKey))}
-                </TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === 'actions' ? 'center' : 'start'}
+                allowsSorting={column.sortable}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            emptyContent={"No inventory items found"}
+            items={shouldShowLoading ? [] : sortedItems}
+            isLoading={shouldShowLoading}
+            loadingContent={<SpinnerLoader size="md" />}
+          >
+            {(item: InventoryItem) => (
+              <TableRow
+                key={String(item.id)}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+              >
+                {(columnKey) => (
+                  <TableCell
+                    onClick={columnKey !== 'actions' ? () => onViewItem(item) : undefined}
+                  >
+                    {renderCell(item, String(columnKey))}
+                  </TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
     </section>
   );
 };

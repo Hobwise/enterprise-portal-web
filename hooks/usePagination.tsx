@@ -5,7 +5,7 @@ import { IoIosArrowForward } from 'react-icons/io';
 import { useGlobalContext } from './globalProvider';
 import { useMobile } from './useMobile';
 
-function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColumn: string[] = []) {
+function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColumn: string[] = [], initialSortDescriptor?: { column: string; direction: string }) {
   const { page, setPage, rowsPerPage, setRowsPerPage } = useGlobalContext();
 
   // Mobile detection
@@ -133,10 +133,9 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
   const [visibleColumns, setVisibleColumns] = React.useState(
     new Set(visibleColumn)
   );
-  const [sortDescriptor, setSortDescriptor] = React.useState({
-    column: 'dateUpdated',
-    direction: 'descending',
-  });
+  const [sortDescriptor, setSortDescriptor] = React.useState(
+    initialSortDescriptor ?? { column: 'dateCreated', direction: 'descending' }
+  );
 
   // Memoize the renderItem function
   const renderItem = useCallback(
