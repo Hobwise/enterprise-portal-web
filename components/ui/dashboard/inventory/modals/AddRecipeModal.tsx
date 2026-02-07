@@ -295,7 +295,7 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Recipe Name */}
-                  <div>
+                  <div className="md:col-span-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Recipe Name
                     </label>
@@ -384,7 +384,6 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                   </div>
 
                 </div>
-
                 {/* Active Toggle */}
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                   <div>
@@ -401,6 +400,7 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                     }}
                   />
                 </div>
+
 
                 {/* Recipe Details Section */}
                 <div className="border-t border-gray-100 pt-6">

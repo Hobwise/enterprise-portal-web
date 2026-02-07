@@ -108,14 +108,6 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
           return (
             <div className="text-sm text-textGrey">{item.reorderLevel}</div>
           );
-        case 'isActive':
-          return (
-            <div className="text-sm">
-              <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                {item.isActive ? 'Active' : 'Inactive'}
-              </span>
-            </div>
-          );
         case 'actions':
           return (
             <div

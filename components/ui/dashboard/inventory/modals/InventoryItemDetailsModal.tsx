@@ -201,7 +201,7 @@ const InventoryItemDetailsModal: React.FC<InventoryItemDetailsModalProps> = ({
                       )}
 
                       {/* Key Metrics */}
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="bg-[#5F35D2]/5 rounded-xl p-4">
                           <p className="text-xs text-gray-500 font-medium mb-1">
                             Avg Cost / Unit
@@ -220,10 +220,18 @@ const InventoryItemDetailsModal: React.FC<InventoryItemDetailsModalProps> = ({
                         </div>
                         <div className="bg-gray-50 rounded-xl p-4">
                           <p className="text-xs text-gray-500 font-medium mb-1">
-                            Reorder Quantity
+                            Stock Level
                           </p>
                           <p className="text-xl font-bold text-gray-800">
-                            {displayItem.reorderQuantity}
+                            {displayItem.stockLevel}
+                          </p>
+                        </div>
+                        <div className="bg-gray-50 rounded-xl p-4">
+                          <p className="text-xs text-gray-500 font-medium mb-1">
+                            Stock Status
+                          </p>
+                          <p className="text-xl font-bold text-gray-800">
+                            {displayItem.stockStatus}
                           </p>
                         </div>
                       </div>

@@ -3,7 +3,6 @@ export const columns = [
   { name: "ITEM TYPE", uid: "itemType", sortable: true },
   { name: "STOCK LEVEL", uid: "stockLevel", sortable: true },
   { name: "REORDER LEVEL", uid: "reorderLevel", sortable: true },
-  { name: "STATUS", uid: "isActive", sortable: true },
   { name: "", uid: "actions", sortable: false },
 ];
 
@@ -12,6 +11,5 @@ export const INITIAL_VISIBLE_COLUMNS = [
   "itemType",
   "stockLevel",
   "reorderLevel",
-  "isActive",
   "actions",
 ];
