@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
-import { X, BookOpen, Pencil, Save, Plus, Trash2 } from 'lucide-react';
+import { X, BookOpen, Pencil, Save, Plus, Trash2, FlaskConical, History } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getRecipeByItem, updateRecipe, CreateRecipePayload } from '@/app/api/controllers/dashboard/inventory';
 import type { Recipe } from '@/app/api/controllers/dashboard/inventory';
@@ -23,6 +23,8 @@ type LocalRecipeDetail = {
   quantityUsed: number;
 };
 
+type ViewTab = 'ingredients' | 'history';
+
 const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
   isOpen,
   onOpenChange,
@@ -32,6 +34,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
 }) => {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<ViewTab>('ingredients');
 
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
@@ -75,6 +78,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
   useEffect(() => {
     if (isOpen && itemId) {
       fetchRecipe();
+      setActiveTab('ingredients');
     } else {
       setRecipe(null);
       setIsEditMode(false);
@@ -171,61 +175,45 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
   };
 
   const handleSave = async () => {
-    console.log('handleSave called');
-    // Close dropdown to prevent any overlay issues
     setShowIngredientDropdown(false);
 
-    // Add error for null recipe
     if (!recipe) {
-      console.log('FAILED: recipe is null');
       toast.error('Recipe data not found. Please close and try again.');
       return;
     }
-    console.log('recipe:', recipe);
 
-    // Validate producedInventoryItemID - check both casings
     const producedItemId = recipe.producedInventoryItemID || (recipe as any).producedInventoryItemId;
     if (!producedItemId) {
-      console.log('FAILED: producedInventoryItemID is missing', recipe);
       toast.error('Invalid recipe configuration. Please close and try again.');
       return;
     }
 
     if (!editName.trim()) {
-      console.log('FAILED: editName is empty', editName);
       toast.error('Recipe name is required');
       return;
     }
     if (!editOutputQuantity || parseFloat(editOutputQuantity) <= 0) {
-      console.log('FAILED: editOutputQuantity invalid', editOutputQuantity);
       toast.error('Please enter a valid output quantity');
       return;
     }
     if (!editOutputQuantityUnitId) {
-      console.log('FAILED: editOutputQuantityUnitId is empty', editOutputQuantityUnitId);
       toast.error('Please select an output unit');
       return;
     }
     if (editDetails.length === 0) {
-      console.log('FAILED: editDetails is empty', editDetails);
       toast.error('Please add at least one ingredient');
       return;
     }
 
-    // Validate ingredient quantities
     const invalidIngredient = editDetails.find((d) => d.quantityUsed <= 0);
     if (invalidIngredient) {
-      console.log('FAILED: invalid ingredient quantity', invalidIngredient);
       toast.error(`Invalid quantity for ingredient: ${invalidIngredient.inventoryItemName}. Quantity must be greater than 0.`);
       return;
     }
 
-    console.log('Validation passed, calling API...');
     setSaving(true);
     try {
       const business = getJsonItemFromLocalStorage('business');
-      console.log('Business:', business);
-      console.log('Recipe ID:', recipe.id);
       const payload: CreateRecipePayload = {
         name: editName.trim(),
         producedInventoryItemID: producedItemId,
@@ -240,11 +228,8 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
         })),
       };
 
-      console.log('Payload:', payload);
       const response = await updateRecipe(business[0]?.businessId, recipe.id, payload);
-      console.log('API Response:', response);
 
-      // Handle undefined response (API returned undefined on error)
       if (!response) {
         toast.error('Failed to update recipe. Please try again.');
         return;
@@ -278,14 +263,27 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
     return ingredient?.name || inventoryItemID;
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
     });
   };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 2,
+    }).format(value);
+  };
+
+  const productionHistory = recipe?.productionHistory || [];
 
   return (
     <Modal
@@ -340,12 +338,12 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                 ) : recipe ? (
                   isEditMode ? (
                     /* EDIT MODE */
-                    <div className="space-y-6">
+                    <div className="space-y-4">
                       {/* Basic Info */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         {/* Recipe Name */}
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                             Recipe Name
                           </label>
                           <input
@@ -353,13 +351,13 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
                             placeholder="Enter recipe name"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                           />
                         </div>
 
                         {/* Output Quantity */}
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                             Output Quantity
                           </label>
                           <input
@@ -369,13 +367,13 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                             placeholder="0"
                             min="0.001"
                             step="0.001"
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                            className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                           />
                         </div>
 
                         {/* Output Unit */}
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1.5">
                             Output Unit
                           </label>
                           <div className="relative">
@@ -383,7 +381,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                               value={editOutputQuantityUnitId}
                               onChange={(e) => setEditOutputQuantityUnitId(e.target.value)}
                               disabled={unitsLoading}
-                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                             >
                               <option value="">Select unit</option>
                               {Array.isArray(units) && units.map((unit) => (
@@ -413,14 +411,13 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                             </div>
                           </div>
                         </div>
-
                       </div>
 
                       {/* Active Toggle */}
-                      <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
                         <div>
-                          <p className="font-medium text-gray-700">Active</p>
-                          <p className="text-sm text-gray-500">
+                          <p className="font-medium text-gray-700 text-sm">Active</p>
+                          <p className="text-xs text-gray-500">
                             Enable or disable this recipe
                           </p>
                         </div>
@@ -434,8 +431,8 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                       </div>
 
                       {/* Ingredients Section */}
-                      <div className="border-t border-gray-100 pt-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                      <div className="border-t border-gray-100 pt-4">
+                        <h3 className="text-base font-semibold text-gray-800 mb-3">
                           Ingredients
                         </h3>
 
@@ -647,100 +644,147 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Ingredients Table */}
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                          Ingredients
-                        </h3>
-                        {recipe.details && recipe.details.length > 0 ? (
-                          <div className="border border-gray-200 rounded-xl overflow-hidden">
-                            <table className="w-full text-sm">
-                              <thead className="bg-gray-50">
-                                <tr className="border-b border-gray-200">
-                                  <th className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                                    Ingredient
-                                  </th>
-                                  <th className="text-right py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                                    Quantity Used
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {recipe.details.map((detail) => (
-                                  <tr
-                                    key={detail.id || detail.inventoryItemId || detail.inventoryItemID}
-                                    className="border-b border-gray-100 last:border-b-0"
-                                  >
-                                    <td className="py-3 px-4 text-gray-700">
-                                      {detail.inventoryItemName || getIngredientName(detail.inventoryItemId || detail.inventoryItemID || '')}
-                                    </td>
-                                    <td className="py-3 px-4 text-right text-gray-700 font-medium">
-                                      {detail.quantityUsed}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <div className="border border-gray-200 rounded-xl p-6 text-center">
-                            <p className="text-sm text-gray-500">
-                              No ingredients listed
-                            </p>
-                          </div>
-                        )}
+                      {/* Tabs */}
+                      <div className="border-b border-gray-200">
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => setActiveTab('ingredients')}
+                            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+                              activeTab === 'ingredients'
+                                ? 'border-[#5F35D2] text-[#5F35D2]'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            <FlaskConical className="w-4 h-4" />
+                            Ingredients
+                            {recipe.details && recipe.details.length > 0 && (
+                              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                                activeTab === 'ingredients'
+                                  ? 'bg-[#5F35D2]/10 text-[#5F35D2]'
+                                  : 'bg-gray-100 text-gray-500'
+                              }`}>
+                                {recipe.details.length}
+                              </span>
+                            )}
+                          </button>
+                          <button
+                            onClick={() => setActiveTab('history')}
+                            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+                              activeTab === 'history'
+                                ? 'border-[#5F35D2] text-[#5F35D2]'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                            }`}
+                          >
+                            <History className="w-4 h-4" />
+                            Production History
+                            {productionHistory.length > 0 && (
+                              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                                activeTab === 'history'
+                                  ? 'bg-[#5F35D2]/10 text-[#5F35D2]'
+                                  : 'bg-gray-100 text-gray-500'
+                              }`}>
+                                {productionHistory.length}
+                              </span>
+                            )}
+                          </button>
+                        </div>
                       </div>
 
-                      {/* Production History Table */}
-                      <div>
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-                          Production History
-                        </h3>
-                        {recipe.productionHistory &&
-                        recipe.productionHistory.length > 0 ? (
-                          <div className="border border-gray-200 rounded-xl overflow-hidden">
-                            <table className="w-full text-sm">
-                              <thead className="bg-gray-50">
-                                <tr className="border-b border-gray-200">
-                                  <th className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                                    Date
-                                  </th>
-                                  <th className="text-right py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                                    Quantity
-                                  </th>
-                                  <th className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                                    Produced By
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {recipe.productionHistory.map((record) => (
-                                  <tr
-                                    key={record.id}
-                                    className="border-b border-gray-100 last:border-b-0"
-                                  >
-                                    <td className="py-3 px-4 text-gray-700">
-                                      {formatDate(record.dateProduced)}
-                                    </td>
-                                    <td className="py-3 px-4 text-right text-gray-700 font-medium">
-                                      {record.quantity}
-                                    </td>
-                                    <td className="py-3 px-4 text-gray-700">
-                                      {record.producedByName || record.producedBy}
-                                    </td>
+                      {/* Tab Content */}
+                      {activeTab === 'ingredients' && (
+                        <div>
+                          {recipe.details && recipe.details.length > 0 ? (
+                            <div className="border border-gray-200 rounded-xl overflow-hidden">
+                              <table className="w-full text-sm">
+                                <thead className="bg-gray-50">
+                                  <tr className="border-b border-gray-200">
+                                    <th className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                                      Ingredient
+                                    </th>
+                                    <th className="text-right py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                                      Quantity Used
+                                    </th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ) : (
-                          <div className="border border-gray-200 rounded-xl p-6 text-center">
-                            <p className="text-sm text-gray-500">
-                              No production history
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                                </thead>
+                                <tbody>
+                                  {recipe.details.map((detail) => (
+                                    <tr
+                                      key={detail.id || detail.inventoryItemId || detail.inventoryItemID}
+                                      className="border-b border-gray-100 last:border-b-0"
+                                    >
+                                      <td className="py-3 px-4 text-gray-700">
+                                        {detail.inventoryItemName || getIngredientName(detail.inventoryItemId || detail.inventoryItemID || '')}
+                                      </td>
+                                      <td className="py-3 px-4 text-right text-gray-700 font-medium">
+                                        {detail.quantityUsed}{' '}
+                                        <span className="text-gray-400 text-xs">
+                                          {recipe.outputQuantityUnitName || recipe.outputQuantityUnitCode || ''}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="border border-gray-200 rounded-xl p-8 text-center">
+                              <FlaskConical className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                              <p className="text-sm text-gray-500">
+                                No ingredients listed
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {activeTab === 'history' && (
+                        <div>
+                          {productionHistory.length > 0 ? (
+                            <div className="border border-gray-200 rounded-xl overflow-hidden">
+                              <table className="w-full text-sm">
+                                <thead className="bg-gray-50">
+                                  <tr className="border-b border-gray-200">
+                                    <th className="text-left py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                                      Date
+                                    </th>
+                                    <th className="text-right py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                                      Quantity Produced
+                                    </th>
+                                    <th className="text-right py-3 px-4 font-semibold text-gray-600 text-xs uppercase tracking-wide">
+                                      Total Cost
+                                    </th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {productionHistory.map((record) => (
+                                    <tr
+                                      key={record.id}
+                                      className="border-b border-gray-100 last:border-b-0"
+                                    >
+                                      <td className="py-3 px-4 text-gray-700">
+                                        {formatDateTime(record.dateCreated || record.dateProduced || '')}
+                                      </td>
+                                      <td className="py-3 px-4 text-right text-gray-700 font-medium">
+                                        {record.quantityProduced ?? record.quantity ?? '-'}
+                                      </td>
+                                      <td className="py-3 px-4 text-right text-gray-700 font-medium">
+                                        {record.totalCost != null ? formatCurrency(record.totalCost) : '-'}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          ) : (
+                            <div className="border border-gray-200 rounded-xl p-8 text-center">
+                              <History className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                              <p className="text-sm text-gray-500">
+                                No production history yet
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )
                 ) : (

@@ -30,8 +30,7 @@ import {
   InventoryItemType,
   updateInventoryItem,
   CreateInventoryPayload,
-  getRecipesByBusiness,
-  Recipe,
+  getRecipeByItem,
 } from '@/app/api/controllers/dashboard/inventory';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import ItemUnitsTable from '@/components/ui/dashboard/inventory/ItemUnitsTable';
@@ -47,7 +46,6 @@ interface FormData {
   description: string;
   costPerUnit: string;
   reorderLevel: string;
-  reorderQuantity: string;
   supplierId: string;
   itemType: InventoryItemType | null;
   isActive: boolean;
@@ -60,7 +58,6 @@ const initialFormData: FormData = {
   description: '',
   costPerUnit: '',
   reorderLevel: '',
-  reorderQuantity: '',
   supplierId: '',
   itemType: null,
   isActive: true,
@@ -88,9 +85,9 @@ export default function ItemDetailPage() {
   const [isBatchProductionOpen, setIsBatchProductionOpen] = useState(false);
   const [isRecipeRequiredOpen, setIsRecipeRequiredOpen] = useState(false);
 
-  // Recipe state
-  const [itemRecipes, setItemRecipes] = useState<Recipe[]>([]);
-  const [recipesLoading, setRecipesLoading] = useState(false);
+  // Recipe state — checked via getRecipeByItem endpoint
+  const [hasRecipe, setHasRecipe] = useState(false);
+  const [recipesChecked, setRecipesChecked] = useState(false);
 
   // Populate form when item loads
   useEffect(() => {
@@ -101,7 +98,6 @@ export default function ItemDetailPage() {
         description: item.description || '',
         costPerUnit: String(item.averageCostPerUnit || 0),
         reorderLevel: String(item.reorderLevel || 0),
-        reorderQuantity: String(item.reorderQuantity || 0),
         supplierId: item.supplierId || '',
         itemType: item.itemType,
         isActive: item.isActive,
@@ -111,22 +107,24 @@ export default function ItemDetailPage() {
     }
   }, [item]);
 
-  // Fetch recipes for Produced items
+  // Check recipe existence via getRecipeByItem endpoint
   useEffect(() => {
     if (item && item.itemType === InventoryItemType.Produced) {
-      setRecipesLoading(true);
+      setRecipesChecked(false);
       const business = getJsonItemFromLocalStorage('business');
-      getRecipesByBusiness(business[0]?.businessId)
+      getRecipeByItem(business[0]?.businessId, item.id)
         .then((response) => {
-          if (response?.data?.isSuccessful) {
-            const allRecipes: Recipe[] = response.data.data || [];
-            const filtered = allRecipes.filter(
-              (r) => r.producedInventoryItemID === item.id
-            );
-            setItemRecipes(filtered);
-          }
+          setHasRecipe(!!(response?.data?.isSuccessful && response.data.data));
         })
-        .finally(() => setRecipesLoading(false));
+        .catch(() => {
+          setHasRecipe(false);
+        })
+        .finally(() => {
+          setRecipesChecked(true);
+        });
+    } else if (item) {
+      setHasRecipe(false);
+      setRecipesChecked(true);
     }
   }, [item]);
 
@@ -135,12 +133,12 @@ export default function ItemDetailPage() {
     if (
       item &&
       item.itemType === InventoryItemType.Produced &&
-      !recipesLoading &&
-      itemRecipes.length === 0
+      recipesChecked &&
+      !hasRecipe
     ) {
       setIsAddRecipeOpen(true);
     }
-  }, [item, recipesLoading, itemRecipes]);
+  }, [item, recipesChecked, hasRecipe]);
 
   const handleFieldChange = useCallback(
     <K extends keyof FormData>(field: K, value: FormData[K]) => {
@@ -177,7 +175,7 @@ export default function ItemDetailPage() {
         itemType: formData.itemType,
         strictnessLevel: formData.strictnessLevel,
         reorderLevel: formData.reorderLevel ? parseFloat(formData.reorderLevel) : 0,
-        reorderQuantity: formData.reorderQuantity ? parseFloat(formData.reorderQuantity) : 0,
+        reorderQuantity: 0,
         averageCostPerBaseUnit: parseFloat(formData.costPerUnit),
         isActive: formData.isActive,
         unitId: formData.unitId,
@@ -254,7 +252,6 @@ export default function ItemDetailPage() {
 
   const primaryUnitName = item.unit || getUnitName(item.unitId) || '-';
   const isProducedItem = item.itemType === InventoryItemType.Produced;
-  const hasRecipe = itemRecipes.length > 0;
 
   return (
     <div className="min-h-screen font-satoshi ">
@@ -269,7 +266,7 @@ export default function ItemDetailPage() {
         </button>
 
         {/* Recipe Required Banner for Produced items without a recipe */}
-        {isProducedItem && !hasRecipe && !recipesLoading && (
+        {isProducedItem && !hasRecipe && recipesChecked && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-500" />
@@ -368,154 +365,218 @@ export default function ItemDetailPage() {
 
         {/* Item Details Form */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Item Name */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Item Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => handleFieldChange('name', e.target.value)}
-                placeholder="Enter item name"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-              />
-            </div>
+          {/* Basic Information */}
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Item Name */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Item Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  placeholder="Enter item name"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                />
+              </div>
 
-            {/* Primary Unit */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Primary Unit <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  id="primary-unit-select"
-                  value={formData.unitId}
-                  onChange={(e) => handleFieldChange('unitId', e.target.value)}
-                  disabled={unitsLoading}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-                >
-                  <option value="">Select unit</option>
-                  {unitsByBusiness.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  {unitsLoading ? (
-                    <Spinner size="sm" color="secondary" />
-                  ) : (
-                    <svg
-                      className="w-5 h-5 text-gray-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
-                  )}
+              {/* Primary Unit */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Primary Unit <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    id="primary-unit-select"
+                    value={formData.unitId}
+                    onChange={(e) => handleFieldChange('unitId', e.target.value)}
+                    disabled={unitsLoading}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                  >
+                    <option value="">Select unit</option>
+                    {unitsByBusiness.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    {unitsLoading ? (
+                      <Spinner size="sm" color="secondary" />
+                    ) : (
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Description - full width */}
-            <div className="md:col-span-2">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => handleFieldChange('description', e.target.value)}
-                placeholder="Enter item description"
-                rows={3}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 resize-none"
-              />
-            </div>
-
-            {/* Cost Per Unit */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Cost Per Unit <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold">
-                  &#x20A6;
-                </span>
-                <input
-                  type="number"
-                  value={formData.costPerUnit}
-                  onChange={(e) => handleFieldChange('costPerUnit', e.target.value)}
-                  placeholder="0.00"
-                  min="0"
-                  step="0.01"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+              {/* Description - full width */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => handleFieldChange('description', e.target.value)}
+                  placeholder="Enter item description"
+                  rows={3}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 resize-none"
                 />
               </div>
             </div>
+          </div>
 
-            {/* Reorder Level */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Reorder Level
-              </label>
-              <input
-                type="number"
-                value={formData.reorderLevel}
-                onChange={(e) => handleFieldChange('reorderLevel', e.target.value)}
-                placeholder="0"
-                min="0"
-                step="1"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-              />
+          {/* Pricing & Stock */}
+          <div className="border-t border-gray-100 pt-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Cost Per Unit */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Cost Per Unit <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold">
+                    &#x20A6;
+                  </span>
+                  <input
+                    type="number"
+                    value={formData.costPerUnit}
+                    onChange={(e) => handleFieldChange('costPerUnit', e.target.value)}
+                    placeholder="0.00"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                  />
+                </div>
+              </div>
+
+              {/* Reorder Level */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Reorder Level
+                </label>
+                <input
+                  type="number"
+                  value={formData.reorderLevel}
+                  onChange={(e) => handleFieldChange('reorderLevel', e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  step="1"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                />
+              </div>
+
+              {/* Stock Level (disabled) */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Stock Level
+                </label>
+                <input
+                  type="number"
+                  value={item.stockLevel ?? ''}
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 bg-gray-100 cursor-not-allowed opacity-70"
+                />
+              </div>
+
+              {/* Stock Status (disabled) */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Stock Status
+                </label>
+                <input
+                  type="text"
+                  value={item.stockStatus ?? ''}
+                  disabled
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 bg-gray-100 cursor-not-allowed opacity-70"
+                />
+              </div>
             </div>
+          </div>
 
-            {/* Reorder Quantity */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Reorder Quantity
-              </label>
-              <input
-                type="number"
-                value={formData.reorderQuantity}
-                onChange={(e) => handleFieldChange('reorderQuantity', e.target.value)}
-                placeholder="0"
-                min="0"
-                step="1"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-              />
-            </div>
+          {/* Classification */}
+          <div className="border-t border-gray-100 pt-4 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Supplier */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Supplier
+                  <span className="text-gray-400 font-normal ml-1">(optional)</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={formData.supplierId}
+                    onChange={(e) => handleFieldChange('supplierId', e.target.value)}
+                    disabled={suppliersLoading}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                  >
+                    <option value="">Select supplier</option>
+                    {suppliers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    {suppliersLoading ? (
+                      <Spinner size="sm" color="secondary" />
+                    ) : (
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    )}
+                  </div>
+                </div>
+              </div>
 
-            {/* Supplier */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Supplier
-                <span className="text-gray-400 font-normal ml-1">(optional)</span>
-              </label>
-              <div className="relative">
-                <select
-                  value={formData.supplierId}
-                  onChange={(e) => handleFieldChange('supplierId', e.target.value)}
-                  disabled={suppliersLoading}
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-                >
-                  <option value="">Select supplier</option>
-                  {suppliers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  {suppliersLoading ? (
-                    <Spinner size="sm" color="secondary" />
-                  ) : (
+              {/* Item Type (disabled) */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Item Type <span className="text-red-500">*</span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={formData.itemType === null ? '' : formData.itemType}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      handleFieldChange(
+                        'itemType',
+                        val === '' ? null : (Number(val) as InventoryItemType)
+                      );
+                    }}
+                    disabled
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 bg-gray-100 cursor-not-allowed opacity-70 appearance-none"
+                  >
+                    <option value="">Select item type</option>
+                    <option value={InventoryItemType.Direct}>Direct</option>
+                    <option value={InventoryItemType.Ingredient}>Ingredient</option>
+                    <option value={InventoryItemType.Produced}>Produced</option>
+                  </select>
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <svg
                       className="w-5 h-5 text-gray-400"
                       fill="none"
@@ -529,48 +590,7 @@ export default function ItemDetailPage() {
                         d="M19 9l-7 7-7-7"
                       />
                     </svg>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Item Type */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Item Type <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  value={formData.itemType === null ? '' : formData.itemType}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    handleFieldChange(
-                      'itemType',
-                      val === '' ? null : (Number(val) as InventoryItemType)
-                    );
-                  }}
-                  disabled
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <option value="">Select item type</option>
-                  <option value={InventoryItemType.Direct}>Direct</option>
-                  <option value={InventoryItemType.Ingredient}>Ingredient</option>
-                  <option value={InventoryItemType.Produced}>Produced</option>
-                </select>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
+                  </div>
                 </div>
               </div>
             </div>
@@ -649,20 +669,11 @@ export default function ItemDetailPage() {
         onSuccess={() => {
           toast.success('Recipe added successfully');
           setIsAddRecipeOpen(false);
-          // Re-fetch recipes to update hasRecipe state
-          const business = getJsonItemFromLocalStorage('business');
-          getRecipesByBusiness(business[0]?.businessId).then((response) => {
-            if (response?.data?.isSuccessful) {
-              const allRecipes: Recipe[] = response.data.data || [];
-              setItemRecipes(
-                allRecipes.filter((r) => r.producedInventoryItemID === item?.id)
-              );
-            }
-          });
+          setRecipesChecked(false);
           refetch();
         }}
         producedInventoryItemID={item.id}
-        existingRecipe={itemRecipes[0]}
+        existingRecipe={undefined}
       />
 
       {/* View Recipe Modal */}
@@ -679,17 +690,8 @@ export default function ItemDetailPage() {
         onOpenChange={setIsBatchProductionOpen}
         onSuccess={() => {
           toast.success('Batch production completed successfully');
+          setRecipesChecked(false);
           refetch();
-          // Re-fetch recipes to update state
-          const business = getJsonItemFromLocalStorage('business');
-          getRecipesByBusiness(business[0]?.businessId).then((response) => {
-            if (response?.data?.isSuccessful) {
-              const allRecipes: Recipe[] = response.data.data || [];
-              setItemRecipes(
-                allRecipes.filter((r) => r.producedInventoryItemID === item?.id)
-              );
-            }
-          });
         }}
         item={item}
       />

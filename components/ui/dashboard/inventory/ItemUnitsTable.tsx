@@ -96,7 +96,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
     const unit = unitsByBusiness.find((u) => u.id === unitId);
     return {
       name: unit?.name || '',
-      code: unit?.abbreviation || '',
+      code: unit?.code || '',
     };
   };
 
@@ -311,7 +311,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
     try {
       const business = getJsonItemFromLocalStorage('business');
       // Use abbreviation if available, otherwise fallback to unit name or extract from ID
-      const unitCode = selectedUnit.abbreviation ||
+      const unitCode = selectedUnit.code ||
         (selectedUnit.id.startsWith('UNIT_') ? selectedUnit.id.replace('UNIT_', '') : selectedUnit.name.substring(0, 3).toUpperCase());
       const payload: CreateItemUnitPayload = {
         inventoryItemId,
@@ -412,7 +412,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         isNewRow: true,
         unitId: newUnitData.unitId,
         unitName: selectedUnit?.name || '',
-        unitCode: selectedUnit?.abbreviation || '',
+        unitCode: selectedUnit?.code || '',
         isPurchasable: newUnitData.isPurchasable,
         isConsumable: newUnitData.isConsumable,
         baseUnitEquivalent: parseFloat(newUnitData.baseUnitEquivalent) || 0,
@@ -452,7 +452,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
                 <option value="">Select unit</option>
                 {availableUnits.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.name} ({u.abbreviation})
+                    {u.name} ({u.code})
                   </option>
                 ))}
               </select>

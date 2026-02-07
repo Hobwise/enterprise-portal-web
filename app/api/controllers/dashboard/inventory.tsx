@@ -103,8 +103,18 @@ export type RecipeIngredient = {
 
 export type InventoryUnit = {
   id: string;
+  code: string;
   name: string;
-  abbreviation: string;
+  unitCategory: number;
+  isBaseUnit: boolean;
+  isSystem: boolean;
+  isActive: boolean;
+  businessID: string | null;
+  cooperateID: string | null;
+  fromConversions: any[];
+  toConversions: any[];
+  dateCreated: string;
+  dateUpdated: string;
 };
 
 export type Supplier = {
@@ -209,6 +219,7 @@ export type CreateGlobalUnitPayload = {
   name: string;
   code: string;
   category: number;
+  isActive: boolean;
 };
 
 export type UpdateItemUnitPayload = {
@@ -228,12 +239,15 @@ export type ProduceBatchPayload = {
 
 export type BatchProductionRecord = {
   id: string;
-  recipeId: string;
-  recipeName: string;
-  quantity: number;
-  producedBy: string;
-  producedByName: string;
-  dateProduced: string;
+  recipeId?: string;
+  recipeName?: string;
+  quantity?: number;
+  quantityProduced?: number;
+  totalCost?: number;
+  producedBy?: string;
+  producedByName?: string;
+  dateProduced?: string;
+  dateCreated?: string;
 };
 
 export type RecipeWithHistory = {
@@ -367,7 +381,7 @@ export async function getSuppliers(businessId: string) {
 export async function getUnitsByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
   try {
-    const data = await api.get(INVENTORY.unitByBusiness, { headers });
+    const data = await api.get(`${INVENTORY.unitByBusiness}?Page=1&PageSize=100`, { headers });
     return data;
   } catch (error) {
     handleError(error, false);
@@ -558,7 +572,7 @@ export async function getUnits(
   if (businessId) headers.businessId = businessId;
 
   try {
-    const data = await api.get(INVENTORY.unitByBusiness, { headers });
+    const data = await api.get(`${INVENTORY.unitByBusiness}?Page=1&PageSize=100`, { headers });
     return data;
   } catch (error) {
     handleError(error, false);

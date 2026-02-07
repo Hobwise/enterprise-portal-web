@@ -50,8 +50,13 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
     try {
       const business = getJsonItemFromLocalStorage('business');
       const response = await getUnitsByBusiness(business[0]?.businessId);
-      if (response?.data?.data) {
-        setUnits(response.data.data);
+      if (response?.data?.isSuccessful) {
+        const result = response.data.data;
+        if (Array.isArray(result)) {
+          setUnits(result);
+        } else if (result?.units && Array.isArray(result.units)) {
+          setUnits(result.units);
+        }
       }
     } catch (error) {
       console.error('Error fetching units:', error);

@@ -207,7 +207,9 @@ export const useUnitsByBusiness = () => {
       const response = await getUnitsByBusiness(businessId);
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
-        return Array.isArray(result) ? result as InventoryUnit[] : [];
+        if (Array.isArray(result)) return result as InventoryUnit[];
+        if (result?.units && Array.isArray(result.units)) return result.units as InventoryUnit[];
+        return [];
       }
       return [];
     } catch (error) {
@@ -217,11 +219,12 @@ export const useUnitsByBusiness = () => {
   };
 
   const { data, isLoading, isError, refetch } = useQuery<InventoryUnit[]>({
-    queryKey: ['unitsByBusiness'],
+    queryKey: ['unitsByBusiness', businessId],
     queryFn: fetchUnits,
     ...fetchQueryConfig(),
     staleTime: 30 * 60 * 1000,
     retry: 1,
+    enabled: !!businessId,
   });
 
   return { data: data || [], isLoading, isError, refetch };
@@ -237,7 +240,7 @@ export const useSuppliers = () => {
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
         if (Array.isArray(result)) return result as Supplier[];
-        if (result?.items && Array.isArray(result.items)) return result.items as Supplier[];
+        if (result?.suppliers && Array.isArray(result.suppliers)) return result.suppliers as Supplier[];
         return [];
       }
       return [];
@@ -248,11 +251,12 @@ export const useSuppliers = () => {
   };
 
   const { data, isLoading, isError, refetch } = useQuery<Supplier[]>({
-    queryKey: ['suppliers'],
+    queryKey: ['suppliers', businessId],
     queryFn: fetchSuppliers,
     ...fetchQueryConfig(),
     staleTime: 30 * 60 * 1000,
     retry: 1,
+    enabled: !!businessId,
   });
 
   return { data: data || [], isLoading, isError, refetch };

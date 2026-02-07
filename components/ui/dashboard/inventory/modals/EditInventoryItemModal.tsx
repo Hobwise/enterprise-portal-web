@@ -37,7 +37,6 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
   const [itemType, setItemType] = useState<InventoryItemType | null>(null);
   const [strictnessLevel, setStrictnessLevel] = useState<number>(0);
   const [reorderLevel, setReorderLevel] = useState('');
-  const [reorderQuantity, setReorderQuantity] = useState('');
   const [averageCostPerBaseUnit, setAverageCostPerBaseUnit] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [unitId, setUnitId] = useState('');
@@ -72,7 +71,6 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
       setItemType(sourceItem.itemType);
       setStrictnessLevel(sourceItem.strictnessLevel);
       setReorderLevel(String(sourceItem.reorderLevel || 0));
-      setReorderQuantity(String(sourceItem.reorderQuantity || 0));
       setAverageCostPerBaseUnit(String(sourceItem.averageCostPerUnit || 0));
       setIsActive(sourceItem.isActive);
       setUnitId(sourceItem.unitId || '');
@@ -134,7 +132,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
         itemType,
         strictnessLevel,
         reorderLevel: reorderLevel ? parseFloat(reorderLevel) : 0,
-        reorderQuantity: reorderQuantity ? parseFloat(reorderQuantity) : 0,
+        reorderQuantity: 0,
         averageCostPerBaseUnit: parseFloat(averageCostPerBaseUnit),
         isActive,
         unitId,
@@ -212,153 +210,213 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
         </div>
       ) : (
       <div className="p-6 space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Item Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Item Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter item name"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-            />
-          </div>
+        {/* Basic Information */}
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Item Name */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Item Name
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter item name"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+              />
+            </div>
 
-          {/* Unit */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Unit
-            </label>
-            <div className="relative">
-              <select
-                value={unitId}
-                onChange={(e) => setUnitId(e.target.value)}
-                disabled={unitsByBusinessLoading}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-              >
-                <option value="">Select unit</option>
-                {Array.isArray(unitsByBusiness) && unitsByBusiness.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                {unitsByBusinessLoading ? (
-                  <Spinner size="sm" color="secondary" />
-                ) : (
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                )}
+            {/* Unit */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Unit
+              </label>
+              <div className="relative">
+                <select
+                  value={unitId}
+                  onChange={(e) => setUnitId(e.target.value)}
+                  disabled={unitsByBusinessLoading}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                >
+                  <option value="">Select unit</option>
+                  {Array.isArray(unitsByBusiness) && unitsByBusiness.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  {unitsByBusinessLoading ? (
+                    <Spinner size="sm" color="secondary" />
+                  ) : (
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Description - full width */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter item description"
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 resize-none"
-            />
-          </div>
-
-          {/* Average Cost Per Base Unit */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Average Cost Per Base Unit
-            </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold">
-                &#x20A6;
-              </span>
-              <input
-                type="number"
-                value={averageCostPerBaseUnit}
-                onChange={(e) => setAverageCostPerBaseUnit(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+            {/* Description - full width */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter item description"
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 resize-none"
               />
             </div>
           </div>
+        </div>
 
-          {/* Reorder Level */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Reorder Level
-            </label>
-            <input
-              type="number"
-              value={reorderLevel}
-              onChange={(e) => setReorderLevel(e.target.value)}
-              placeholder="0"
-              min="0"
-              step="1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-            />
+        {/* Pricing & Stock */}
+        <div className="border-t border-gray-100 pt-4 mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Average Cost Per Base Unit */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Average Cost Per Base Unit
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold">
+                  &#x20A6;
+                </span>
+                <input
+                  type="number"
+                  value={averageCostPerBaseUnit}
+                  onChange={(e) => setAverageCostPerBaseUnit(e.target.value)}
+                  placeholder="0.00"
+                  min="0"
+                  step="0.01"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                />
+              </div>
+            </div>
+
+            {/* Reorder Level */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Reorder Level
+              </label>
+              <input
+                type="number"
+                value={reorderLevel}
+                onChange={(e) => setReorderLevel(e.target.value)}
+                placeholder="0"
+                min="0"
+                step="1"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+              />
+            </div>
+
+            {/* Stock Level (disabled) */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Stock Level
+              </label>
+              <input
+                type="number"
+                value={(fullItemData || item)?.stockLevel ?? ''}
+                disabled
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 bg-gray-100 cursor-not-allowed opacity-70"
+              />
+            </div>
+
+            {/* Stock Status (disabled) */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Stock Status
+              </label>
+              <input
+                type="text"
+                value={(fullItemData || item)?.stockStatus ?? ''}
+                disabled
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-700 bg-gray-100 cursor-not-allowed opacity-70"
+              />
+            </div>
           </div>
+        </div>
 
-          {/* Reorder Quantity */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Reorder Quantity
-            </label>
-            <input
-              type="number"
-              value={reorderQuantity}
-              onChange={(e) => setReorderQuantity(e.target.value)}
-              placeholder="0"
-              min="0"
-              step="1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-            />
-          </div>
+        {/* Classification */}
+        <div className="border-t border-gray-100 pt-4 mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Supplier Name */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Supplier Name
+                <span className="text-gray-400 font-normal ml-1">(optional)</span>
+              </label>
+              <div className="relative">
+                <select
+                  value={supplierId}
+                  onChange={(e) => setSupplierId(e.target.value)}
+                  disabled={suppliersLoading}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                >
+                  <option value="">Select supplier</option>
+                  {Array.isArray(suppliers) && suppliers.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  {suppliersLoading ? (
+                    <Spinner size="sm" color="secondary" />
+                  ) : (
+                    <svg
+                      className="w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
 
-          {/* Supplier Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Supplier Name
-              <span className="text-gray-400 font-normal ml-1">(optional)</span>
-            </label>
-            <div className="relative">
-              <select
-                value={supplierId}
-                onChange={(e) => setSupplierId(e.target.value)}
-                disabled={suppliersLoading}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-              >
-                <option value="">Select supplier</option>
-                {Array.isArray(suppliers) && suppliers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                {suppliersLoading ? (
-                  <Spinner size="sm" color="secondary" />
-                ) : (
+            {/* Item Type */}
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Item Type
+              </label>
+              <div className="relative">
+                <select
+                  value={itemType === null ? '' : itemType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setItemType(val === '' ? null : Number(val) as InventoryItemType);
+                  }}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                >
+                  <option value="">Select item type</option>
+                  <option value={InventoryItemType.Direct}>Direct</option>
+                  <option value={InventoryItemType.Ingredient}>Ingredient</option>
+                  <option value={InventoryItemType.Produced}>Produced</option>
+                </select>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                   <svg
                     className="w-5 h-5 text-gray-400"
                     fill="none"
@@ -372,44 +430,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
                       d="M19 9l-7 7-7-7"
                     />
                   </svg>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Item Type */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Item Type
-            </label>
-            <div className="relative">
-              <select
-                value={itemType === null ? '' : itemType}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setItemType(val === '' ? null : Number(val) as InventoryItemType);
-                }}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-              >
-                <option value="">Select item type</option>
-                <option value={InventoryItemType.Direct}>Direct</option>
-                <option value={InventoryItemType.Ingredient}>Ingredient</option>
-                <option value={InventoryItemType.Produced}>Produced</option>
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                </div>
               </div>
             </div>
           </div>
