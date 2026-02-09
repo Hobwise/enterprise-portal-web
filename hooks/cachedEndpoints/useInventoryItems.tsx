@@ -8,11 +8,13 @@ import {
   getUnitsByBusiness,
   getUnits,
   getRecipeDetails,
+  getMenuSummary,
   InventoryItem,
   InventoryUnit,
   Supplier,
   ItemUnit,
   RecipeWithHistory,
+  MenuSummaryCategory,
 } from '@/app/api/controllers/dashboard/inventory';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
@@ -355,6 +357,43 @@ export const useRecipeDetails = (recipeId: string | null) => {
   });
 
   return { data, isLoading, isError, refetch };
+};
+
+export const useMenuSummary = () => {
+  const businessInformation = getJsonItemFromLocalStorage('business');
+  const businessId = businessInformation ? businessInformation[0]?.businessId : '';
+
+  const fetchMenuSummary = async (): Promise<MenuSummaryCategory[]> => {
+    try {
+      const response = await getMenuSummary(businessId);
+      if (response?.data?.isSuccessful) {
+        const result = response.data.data;
+        return Array.isArray(result) ? result : [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching menu summary:', error);
+      return [];
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<MenuSummaryCategory[]>({
+    queryKey: ['menuSummary', businessId],
+    queryFn: fetchMenuSummary,
+    ...fetchQueryConfig(),
+    retry: 1,
+    enabled: !!businessId,
+  });
+
+  const totalItemCount = (data || []).reduce((sum, cat) => sum + cat.itemCount, 0);
+
+  return {
+    data: data || [],
+    isLoading,
+    isError,
+    refetch,
+    totalItemCount,
+  };
 };
 
 export default useInventoryItems;

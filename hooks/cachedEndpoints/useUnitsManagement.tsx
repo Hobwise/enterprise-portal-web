@@ -7,10 +7,9 @@ import {
   CreateGlobalUnitPayload,
   InventoryUnit,
 } from '@/app/api/controllers/dashboard/inventory';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchQueryConfig } from '@/lib/queryConfig';
-import { toast } from 'sonner';
 
 const useUnitsManagement = () => {
   const queryClient = useQueryClient();
@@ -54,16 +53,16 @@ const useUnitsManagement = () => {
     },
     onSuccess: (response) => {
       if (response?.data?.isSuccessful) {
-        toast.success('Unit created successfully');
+        notify({ title: 'Success!', text: 'Unit created successfully', type: 'success' });
         queryClient.invalidateQueries({ queryKey: ['unitsManagement', businessId] });
         queryClient.invalidateQueries({ queryKey: ['unitsByBusiness'] });
       } else {
-        toast.error(response?.data?.error || 'Failed to create unit');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to create unit', type: 'error' });
       }
     },
     onError: (error) => {
       console.error('Error creating unit:', error);
-      toast.error('Failed to create unit');
+      notify({ title: 'Error!', text: 'Failed to create unit', type: 'error' });
     },
   });
 
@@ -81,16 +80,16 @@ const useUnitsManagement = () => {
     },
     onSuccess: (response) => {
       if (response?.data?.isSuccessful) {
-        toast.success('Unit updated successfully');
+        notify({ title: 'Success!', text: 'Unit updated successfully', type: 'success' });
         queryClient.invalidateQueries({ queryKey: ['unitsManagement', businessId] });
         queryClient.invalidateQueries({ queryKey: ['unitsByBusiness'] });
       } else {
-        toast.error(response?.data?.error || 'Failed to update unit');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to update unit', type: 'error' });
       }
     },
     onError: (error) => {
       console.error('Error updating unit:', error);
-      toast.error('Failed to update unit');
+      notify({ title: 'Error!', text: 'Failed to update unit', type: 'error' });
     },
   });
 
@@ -102,16 +101,16 @@ const useUnitsManagement = () => {
     },
     onSuccess: (response) => {
       if (response?.data?.isSuccessful) {
-        toast.success('Unit deleted successfully');
+        notify({ title: 'Success!', text: 'Unit deleted successfully', type: 'success' });
         queryClient.invalidateQueries({ queryKey: ['unitsManagement', businessId] });
         queryClient.invalidateQueries({ queryKey: ['unitsByBusiness'] });
       } else {
-        toast.error(response?.data?.error || 'Failed to delete unit');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to delete unit', type: 'error' });
       }
     },
     onError: (error) => {
       console.error('Error deleting unit:', error);
-      toast.error('Failed to delete unit');
+      notify({ title: 'Error!', text: 'Failed to delete unit', type: 'error' });
     },
   });
 

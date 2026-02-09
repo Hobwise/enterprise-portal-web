@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
 import { X, Plus, Package, Trash2 } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   updateRecipe,
   CreateRecipePayload,
@@ -85,16 +84,16 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
 
   const handleAddDetail = () => {
     if (!newIngredientId) {
-      toast.error('Please select an inventory item');
+      notify({ title: 'Error!', text: 'Please select an inventory item', type: 'error' });
       return;
     }
     if (!newQuantityUsed || parseFloat(newQuantityUsed) <= 0) {
-      toast.error('Please enter a valid quantity');
+      notify({ title: 'Error!', text: 'Please enter a valid quantity', type: 'error' });
       return;
     }
 
     if (details.some((d) => d.inventoryItemID === newIngredientId)) {
-      toast.error('This item is already added');
+      notify({ title: 'Error!', text: 'This item is already added', type: 'error' });
       return;
     }
 
@@ -131,37 +130,37 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
   const handleSubmit = async () => {
     // Validate existingRecipe
     if (!existingRecipe) {
-      toast.error('Recipe data not found. Please close and try again.');
+      notify({ title: 'Error!', text: 'Recipe data not found. Please close and try again.', type: 'error' });
       return;
     }
 
     // Validate producedInventoryItemID
     if (!producedInventoryItemID) {
-      toast.error('Invalid recipe configuration. Please close and try again.');
+      notify({ title: 'Error!', text: 'Invalid recipe configuration. Please close and try again.', type: 'error' });
       return;
     }
 
     if (!name.trim()) {
-      toast.error('Recipe name is required');
+      notify({ title: 'Error!', text: 'Recipe name is required', type: 'error' });
       return;
     }
     if (!outputQuantity || parseFloat(outputQuantity) <= 0) {
-      toast.error('Please enter a valid output quantity');
+      notify({ title: 'Error!', text: 'Please enter a valid output quantity', type: 'error' });
       return;
     }
     if (!outputQuantityUnitId) {
-      toast.error('Please select an output unit');
+      notify({ title: 'Error!', text: 'Please select an output unit', type: 'error' });
       return;
     }
     if (details.length === 0) {
-      toast.error('Please add at least one ingredient');
+      notify({ title: 'Error!', text: 'Please add at least one ingredient', type: 'error' });
       return;
     }
 
     // Validate ingredient quantities
     const invalidIngredient = details.find((d) => d.quantityUsed <= 0);
     if (invalidIngredient) {
-      toast.error(`Invalid quantity for ingredient: ${invalidIngredient.inventoryItemName}. Quantity must be greater than 0.`);
+      notify({ title: 'Error!', text: `Invalid quantity for ingredient: ${invalidIngredient.inventoryItemName}. Quantity must be greater than 0.`, type: 'error' });
       return;
     }
 
@@ -192,19 +191,19 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
-        toast.error(errorMessage || 'Please check your input values');
+        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
         return;
       }
 
       if (response?.data?.isSuccessful) {
-        toast.success('Recipe updated successfully');
+        notify({ title: 'Success!', text: 'Recipe updated successfully', type: 'success' });
         onSuccess();
       } else {
-        toast.error(response?.data?.error || 'Failed to update recipe');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to update recipe', type: 'error' });
       }
     } catch (error) {
       console.error('Error updating recipe:', error);
-      toast.error('Failed to update recipe');
+      notify({ title: 'Error!', text: 'Failed to update recipe', type: 'error' });
     } finally {
       setLoading(false);
     }

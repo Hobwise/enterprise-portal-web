@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Plus, RefreshCw } from 'lucide-react';
+import { Search, Plus, RefreshCw, Ruler } from 'lucide-react';
 
 interface InventoryItemsHeaderProps {
   totalItems: number;
@@ -71,11 +71,11 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
           {onSyncItems && syncItemsCount > 0 && (
             <button
               onClick={onSyncItems}
-              className="flex items-center gap-2 px-5 py-3 border border-[#5F35D2] text-[#5F35D2] rounded-xl hover:bg-[#5F35D2]/5 font-medium transition-all duration-200"
+              title="Sync Items"
+              className="relative flex items-center justify-center w-11 h-11 border border-[#5F35D2] text-[#5F35D2] rounded-xl hover:bg-[#5F35D2]/5 transition-all duration-200"
             >
               <RefreshCw className="w-5 h-5" />
-              <span>Sync Items</span>
-              <span className="bg-[#5F35D2] text-white text-xs rounded-full px-2 py-0.5 min-w-[24px]">
+              <span className="absolute -top-1.5 -right-1.5 bg-[#5F35D2] text-white text-[10px] rounded-full px-1.5 py-0.5 min-w-[20px] text-center leading-none">
                 {syncItemsCount}
               </span>
             </button>
@@ -84,22 +84,10 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
           {onCustomizeMeasurements && (
             <button
               onClick={onCustomizeMeasurements}
-              className="flex items-center gap-2 px-5 py-3 border border-[#5F35D2] text-[#5F35D2] rounded-xl hover:bg-[#5F35D2]/5 font-medium transition-all duration-200"
+              title="Customize Measurements"
+              className="flex items-center justify-center w-11 h-11 border border-[#5F35D2] text-[#5F35D2] rounded-xl hover:bg-[#5F35D2]/5 transition-all duration-200"
             >
-              <span>Customize Measurements</span>
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"
-                />
-              </svg>
+              <Ruler className="w-5 h-5" />
             </button>
           )}
           <button

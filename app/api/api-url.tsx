@@ -129,6 +129,10 @@ export const DASHBOARD = {
   inventoryBatchProduction: "api/v1/Inventory/batch-production",
   supplierByBusiness: "api/v1/Supplier/by-business",
   mapSupplierItem: "api/v1/Supplier/map-item",
+  // Inventory Wizard
+  inventoryWizardMenuSummary: "api/v1/InventoryWizard/menu-summary",
+  inventoryWizardPredict: "api/v1/InventoryWizard/predict",
+  inventoryWizardSynchronize: "api/v1/InventoryWizard/synchronize",
 };
 
 export const INVENTORY = {

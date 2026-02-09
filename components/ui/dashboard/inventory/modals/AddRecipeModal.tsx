@@ -3,8 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
 import { X, Package, Trash2, Plus } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   createRecipe,
   updateRecipe,
@@ -105,8 +104,8 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
         return {
           id: d.id,
           recipeID: d.recipeID,
-          inventoryItemID: d.inventoryItemID,
-          inventoryItemName: ingredient?.name || 'Unknown',
+          inventoryItemID: d.inventoryItemID ?? '',
+          inventoryItemName: (ingredient && ingredient.name) || 'Unknown',
           quantityUsed: d.quantityUsed,
         };
       });
@@ -166,16 +165,16 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
 
   const handleAddDetail = () => {
     if (!newIngredientId) {
-      toast.error('Please select an inventory item');
+      notify({ title: 'Error!', text: 'Please select an inventory item', type: 'error' });
       return;
     }
     if (!newQuantityUsed || parseFloat(newQuantityUsed) <= 0) {
-      toast.error('Please enter a valid quantity');
+      notify({ title: 'Error!', text: 'Please enter a valid quantity', type: 'error' });
       return;
     }
 
     if (details.some((d) => d.inventoryItemID === newIngredientId)) {
-      toast.error('This item is already added');
+      notify({ title: 'Error!', text: 'This item is already added', type: 'error' });
       return;
     }
 
@@ -235,22 +234,22 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
-        toast.error(errorMessage || 'Please check your input values');
+        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
         return;
       }
 
       if (response?.data?.isSuccessful) {
-        toast.success(isEditMode ? 'Recipe updated successfully' : 'Recipe created successfully');
+        notify({ title: 'Success!', text: isEditMode ? 'Recipe updated successfully' : 'Recipe created successfully', type: 'success' });
         submittedRef.current = true;
         localStorage.removeItem('pendingRecipeTracking');
         onSuccess();
         onOpenChange(false);
       } else {
-        toast.error(response?.data?.error || (isEditMode ? 'Failed to update recipe' : 'Failed to create recipe'));
+        notify({ title: 'Error!', text: response?.data?.error || (isEditMode ? 'Failed to update recipe' : 'Failed to create recipe'), type: 'error' });
       }
     } catch (error) {
       console.error(isEditMode ? 'Error updating recipe:' : 'Error creating recipe:', error);
-      toast.error(isEditMode ? 'Failed to update recipe' : 'Failed to create recipe');
+      notify({ title: 'Error!', text: isEditMode ? 'Failed to update recipe' : 'Failed to create recipe', type: 'error' });
     } finally {
       setLoading(false);
     }

@@ -4,8 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
 import { X, Package } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   createInventoryItem,
   CreateInventoryPayload,
@@ -66,19 +65,19 @@ const AddInventoryItemModal: React.FC<AddInventoryItemModalProps> = ({
 
   const handleSubmitItem = async () => {
     if (!name.trim()) {
-      toast.error('Item name is required');
+      notify({ title: 'Error!', text: 'Item name is required', type: 'error' });
       return;
     }
 if (!unitId) {
-      toast.error('Please select a unit');
+      notify({ title: 'Error!', text: 'Please select a unit', type: 'error' });
       return;
     }
 if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
-      toast.error('Please enter a valid average cost per base unit');
+      notify({ title: 'Error!', text: 'Please enter a valid average cost per base unit', type: 'error' });
       return;
     }
     if (itemType === null) {
-      toast.error('Please select an item type');
+      notify({ title: 'Error!', text: 'Please select an item type', type: 'error' });
       return;
     }
 
@@ -103,13 +102,13 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
-        toast.error(errorMessage || 'Please check your input values');
+        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
         return;
       }
 
       if (response?.data?.isSuccessful) {
         const newItemId = response.data.data?.id;
-        toast.success('Item registered successfully');
+        notify({ title: 'Success!', text: 'Item registered successfully', type: 'success' });
 
         if (itemType === InventoryItemType.Produced) {
           const trackingData: PendingRecipeTracking = {
@@ -131,11 +130,11 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
           router.push(`/dashboard/inventory/items/${newItemId}`);
         }
       } else {
-        toast.error(response?.data?.error || 'Failed to register item');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to register item', type: 'error' });
       }
     } catch (error) {
       console.error('Error creating inventory item:', error);
-      toast.error('Failed to register item');
+      notify({ title: 'Error!', text: 'Failed to register item', type: 'error' });
     } finally {
       setLoading(false);
     }

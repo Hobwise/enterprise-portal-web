@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalBody, Spinner } from '@nextui-org/react';
 import { X, Factory, ChefHat } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   produceBatch,
   getRecipeByItem,
@@ -65,12 +64,12 @@ const BatchProductionModal: React.FC<BatchProductionModalProps> = ({
 
   const handleProduce = async () => {
     if (!recipe) {
-      toast.error('No recipe found for this item');
+      notify({ title: 'Error!', text: 'No recipe found for this item', type: 'error' });
       return;
     }
 
     if (!quantity || parseFloat(quantity) <= 0) {
-      toast.error('Please enter a valid quantity');
+      notify({ title: 'Error!', text: 'Please enter a valid quantity', type: 'error' });
       return;
     }
 
@@ -83,16 +82,16 @@ const BatchProductionModal: React.FC<BatchProductionModalProps> = ({
       });
 
       if (response?.data?.isSuccessful) {
-        toast.success('Batch produced successfully');
+        notify({ title: 'Success!', text: 'Batch produced successfully', type: 'success' });
         setQuantity('');
         onSuccess();
         onOpenChange(false);
       } else {
-        toast.error(response?.data?.error || 'Failed to produce batch');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to produce batch', type: 'error' });
       }
     } catch (error) {
       console.error('Error producing batch:', error);
-      toast.error('Failed to produce batch');
+      notify({ title: 'Error!', text: 'Failed to produce batch', type: 'error' });
     } finally {
       setProducing(false);
     }
