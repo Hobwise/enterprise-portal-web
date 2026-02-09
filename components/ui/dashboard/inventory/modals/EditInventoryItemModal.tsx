@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
 import { X, Package, Plus, Pencil, BookOpen } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import {
   updateInventoryItem,
   CreateInventoryPayload,
@@ -107,19 +106,19 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('Item name is required');
+      notify({ title: 'Error!', text: 'Item name is required', type: 'error' });
       return;
     }
     if (!unitId) {
-      toast.error('Please select a unit');
+      notify({ title: 'Error!', text: 'Please select a unit', type: 'error' });
       return;
     }
     if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
-      toast.error('Please enter a valid average cost per base unit');
+      notify({ title: 'Error!', text: 'Please enter a valid average cost per base unit', type: 'error' });
       return;
     }
     if (itemType === null) {
-      toast.error('Please select an item type');
+      notify({ title: 'Error!', text: 'Please select an item type', type: 'error' });
       return;
     }
 
@@ -148,12 +147,12 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
-        toast.error(errorMessage || 'Please check your input values');
+        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
         return;
       }
 
       if (response?.data?.isSuccessful) {
-        toast.success('Item updated successfully');
+        notify({ title: 'Success!', text: 'Item updated successfully', type: 'success' });
 
         if (itemType === InventoryItemType.Produced) {
           setStep('manage-recipes');
@@ -163,11 +162,11 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
           onSuccess();
         }
       } else {
-        toast.error(response?.data?.error || 'Failed to update item');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to update item', type: 'error' });
       }
     } catch (error) {
       console.error('Error updating inventory item:', error);
-      toast.error('Failed to update item');
+      notify({ title: 'Error!', text: 'Failed to update item', type: 'error' });
     } finally {
       setLoading(false);
     }

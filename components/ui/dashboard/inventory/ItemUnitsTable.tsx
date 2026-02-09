@@ -12,7 +12,7 @@ import {
   Spinner,
 } from '@nextui-org/react';
 import { Pencil, Trash2, Check, X, Plus } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { notify } from '@/lib/utils';
 import type { ItemUnit, InventoryUnit } from '@/app/api/controllers/dashboard/inventory';
 import {
   createItemUnit,
@@ -116,7 +116,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
   useEffect(() => {
     if (isAddingUnit && availableUnits.length === 0) {
       setIsAddingUnit(false);
-      toast.error('No additional units available to add');
+      notify({ title: 'Error!', text: 'No additional units available to add', type: 'error' });
     }
   }, [isAddingUnit, availableUnits.length]);
 
@@ -154,11 +154,11 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         if (response?.data?.isSuccessful) {
           onRefetch();
         } else {
-          toast.error(response?.data?.error || 'Failed to update');
+          notify({ title: 'Error!', text: response?.data?.error || 'Failed to update', type: 'error' });
         }
       } catch (error) {
         console.error('Error updating unit:', error);
-        toast.error('Failed to update');
+        notify({ title: 'Error!', text: 'Failed to update', type: 'error' });
       } finally {
         setUpdatingToggles(prev => {
           const next = new Set(prev);
@@ -195,7 +195,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
     async (itemUnit: ItemUnit) => {
       const baseEquiv = parseFloat(editData.baseUnitEquivalent);
       if (isNaN(baseEquiv) || baseEquiv <= 0) {
-        toast.error('Base equivalent must be a positive number');
+        notify({ title: 'Error!', text: 'Base equivalent must be a positive number', type: 'error' });
         return;
       }
 
@@ -219,15 +219,15 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         );
 
         if (response?.data?.isSuccessful) {
-          toast.success('Unit updated successfully');
+          notify({ title: 'Success!', text: 'Unit updated successfully', type: 'success' });
           setEditingUnitId(null);
           onRefetch();
         } else {
-          toast.error(response?.data?.error || 'Failed to update unit');
+          notify({ title: 'Error!', text: response?.data?.error || 'Failed to update unit', type: 'error' });
         }
       } catch (error) {
         console.error('Error updating unit:', error);
-        toast.error('Failed to update unit');
+        notify({ title: 'Error!', text: 'Failed to update unit', type: 'error' });
       } finally {
         setIsSavingEdit(false);
       }
@@ -253,16 +253,16 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
       );
 
       if (response?.data?.isSuccessful) {
-        toast.success('Unit deleted successfully');
+        notify({ title: 'Success!', text: 'Unit deleted successfully', type: 'success' });
         setDeleteModalOpen(false);
         setUnitToDelete(null);
         onRefetch();
       } else {
-        toast.error(response?.data?.error || 'Failed to delete unit');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to delete unit', type: 'error' });
       }
     } catch (error) {
       console.error('Error deleting unit:', error);
-      toast.error('Failed to delete unit');
+      notify({ title: 'Error!', text: 'Failed to delete unit', type: 'error' });
     } finally {
       setIsDeleting(false);
     }
@@ -291,19 +291,19 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
 
   const handleSaveNewUnit = useCallback(async () => {
     if (!newUnitData.unitId) {
-      toast.error('Please select a unit');
+      notify({ title: 'Error!', text: 'Please select a unit', type: 'error' });
       return;
     }
 
     const baseEquiv = parseFloat(newUnitData.baseUnitEquivalent);
     if (isNaN(baseEquiv) || baseEquiv <= 0) {
-      toast.error('Base equivalent must be a positive number');
+      notify({ title: 'Error!', text: 'Base equivalent must be a positive number', type: 'error' });
       return;
     }
 
     const selectedUnit = unitsByBusiness.find((u) => u.id === newUnitData.unitId);
     if (!selectedUnit) {
-      toast.error('Invalid unit selected');
+      notify({ title: 'Error!', text: 'Invalid unit selected', type: 'error' });
       return;
     }
 
@@ -328,12 +328,12 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
-        toast.error(errorMessage || 'Please check your input values');
+        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
         return;
       }
 
       if (response?.data?.isSuccessful) {
-        toast.success('Unit added successfully');
+        notify({ title: 'Success!', text: 'Unit added successfully', type: 'success' });
         setIsAddingUnit(false);
         setNewUnitData({
           unitId: '',
@@ -343,11 +343,11 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         });
         onRefetch();
       } else {
-        toast.error(response?.data?.error || 'Failed to add unit');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to add unit', type: 'error' });
       }
     } catch (error) {
       console.error('Error adding unit:', error);
-      toast.error('Failed to add unit');
+      notify({ title: 'Error!', text: 'Failed to add unit', type: 'error' });
     } finally {
       setIsSavingNew(false);
     }
@@ -681,7 +681,7 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  toast.error('Primary unit cannot be deleted');
+                  notify({ title: 'Error!', text: 'Primary unit cannot be deleted', type: 'error' });
                 }}
                 onMouseDown={(e) => e.stopPropagation()}
                 className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"

@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
 import { X, Ruler } from 'lucide-react';
-import toast from 'react-hot-toast';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { createItemUnit, CreateItemUnitPayload, getUnitsByBusiness } from '@/app/api/controllers/dashboard/inventory';
 
 interface AddUnitModalProps {
@@ -60,7 +59,7 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
       }
     } catch (error) {
       console.error('Error fetching units:', error);
-      toast.error('Failed to load units');
+      notify({ title: 'Error!', text: 'Failed to load units', type: 'error' });
     } finally {
       setLoadingUnits(false);
     }
@@ -75,13 +74,13 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
 
   const handleSubmit = async () => {
     if (!selectedUnitId) {
-      toast.error('Please select a unit');
+      notify({ title: 'Error!', text: 'Please select a unit', type: 'error' });
       return;
     }
 
     const selectedUnit = units.find((u) => u.id === selectedUnitId);
     if (!selectedUnit) {
-      toast.error('Selected unit not found');
+      notify({ title: 'Error!', text: 'Selected unit not found', type: 'error' });
       return;
     }
 
@@ -103,22 +102,22 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
-        toast.error(errorMessage || 'Please check your input values');
+        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
         return;
       }
 
       if (response && 'data' in response && response.data?.isSuccessful) {
-        toast.success('Unit created successfully');
+        notify({ title: 'Success!', text: 'Unit created successfully', type: 'success' });
         onSuccess();
         onOpenChange(false);
       } else if (response && 'data' in response) {
-        toast.error(response.data?.error || 'Failed to create unit');
+        notify({ title: 'Error!', text: response.data?.error || 'Failed to create unit', type: 'error' });
       } else {
-        toast.error('Failed to create unit');
+        notify({ title: 'Error!', text: 'Failed to create unit', type: 'error' });
       }
     } catch (error) {
       console.error('Error creating unit:', error);
-      toast.error('Failed to create unit');
+      notify({ title: 'Error!', text: 'Failed to create unit', type: 'error' });
     } finally {
       setLoading(false);
     }

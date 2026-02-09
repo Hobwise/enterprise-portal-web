@@ -255,6 +255,45 @@ export type RecipeWithHistory = {
   productionHistory: BatchProductionRecord[];
 };
 
+// Menu Summary types (Inventory Wizard)
+export type MenuSummaryItem = {
+  itemId: string;
+  itemName: string;
+  itemDescription: string;
+};
+
+export type MenuSummaryCategory = {
+  menuId: string;
+  menuName: string;
+  itemCount: number;
+  items: MenuSummaryItem[];
+};
+
+// Inventory Wizard Predict types
+export type PredictInventoryPayload = {
+  menuItemId: string;
+  menuItemName: string;
+  menuName: string;
+  itemDescription: string;
+}[];
+
+export type PredictedInventoryItem = {
+  menuItemId: string;
+  menuItemName: string;
+  menuName: string;
+  suggestedInventoryItemName: string;
+  suggestedUnitCategory: number;
+  suggestedUnitCode: string;
+  suggestedUnitName: string;
+  suggestedUnitId: string;
+  suggestedItemType: number;
+  confidenceScore: number;
+  matchedKeywords: string;
+  predictionSource: string;
+  itemTypeConfidence: number;
+  itemTypeMatchedKeywords: string;
+};
+
 // API Functions
 
 export async function getInventoryItems(
@@ -683,5 +722,58 @@ export async function getRecipeDetails(businessId: string, recipeId: string) {
     return data;
   } catch (error) {
     handleError(error, false);
+  }
+}
+
+export async function getMenuSummary(businessId: string) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.get(DASHBOARD.inventoryWizardMenuSummary, { headers });
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export type SynchronizeInventoryPayload = {
+  menuItemId: string;
+  inventoryItemName: string;
+  unitCategory: number;
+  unitId: string;
+  itemType: number;
+  strictnessLevel: number;
+  openingStock: number;
+  supplierId: string;
+}[];
+
+export async function predictInventoryItems(
+  businessId: string,
+  payload: PredictInventoryPayload
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.post(DASHBOARD.inventoryWizardPredict, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function synchronizeInventoryItems(
+  businessId: string,
+  payload: SynchronizeInventoryPayload
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.post(DASHBOARD.inventoryWizardSynchronize, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
   }
 }

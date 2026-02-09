@@ -3,10 +3,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
 import { X, BookOpen, Pencil, Save, Plus, Trash2, FlaskConical, History } from 'lucide-react';
-import toast from 'react-hot-toast';
 import { getRecipeByItem, updateRecipe, CreateRecipePayload } from '@/app/api/controllers/dashboard/inventory';
 import type { Recipe } from '@/app/api/controllers/dashboard/inventory';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { useIngredients, useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
 
 interface ViewRecipeModalProps {
@@ -131,16 +130,16 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
 
   const handleAddDetail = () => {
     if (!newIngredientId) {
-      toast.error('Please select an inventory item');
+      notify({ title: 'Error!', text: 'Please select an inventory item', type: 'error' });
       return;
     }
     if (!newQuantityUsed || parseFloat(newQuantityUsed) <= 0) {
-      toast.error('Please enter a valid quantity');
+      notify({ title: 'Error!', text: 'Please enter a valid quantity', type: 'error' });
       return;
     }
 
     if (editDetails.some((d) => d.inventoryItemID === newIngredientId)) {
-      toast.error('This item is already added');
+      notify({ title: 'Error!', text: 'This item is already added', type: 'error' });
       return;
     }
 
@@ -178,36 +177,36 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
     setShowIngredientDropdown(false);
 
     if (!recipe) {
-      toast.error('Recipe data not found. Please close and try again.');
+      notify({ title: 'Error!', text: 'Recipe data not found. Please close and try again.', type: 'error' });
       return;
     }
 
     const producedItemId = recipe.producedInventoryItemID || (recipe as any).producedInventoryItemId;
     if (!producedItemId) {
-      toast.error('Invalid recipe configuration. Please close and try again.');
+      notify({ title: 'Error!', text: 'Invalid recipe configuration. Please close and try again.', type: 'error' });
       return;
     }
 
     if (!editName.trim()) {
-      toast.error('Recipe name is required');
+      notify({ title: 'Error!', text: 'Recipe name is required', type: 'error' });
       return;
     }
     if (!editOutputQuantity || parseFloat(editOutputQuantity) <= 0) {
-      toast.error('Please enter a valid output quantity');
+      notify({ title: 'Error!', text: 'Please enter a valid output quantity', type: 'error' });
       return;
     }
     if (!editOutputQuantityUnitId) {
-      toast.error('Please select an output unit');
+      notify({ title: 'Error!', text: 'Please select an output unit', type: 'error' });
       return;
     }
     if (editDetails.length === 0) {
-      toast.error('Please add at least one ingredient');
+      notify({ title: 'Error!', text: 'Please add at least one ingredient', type: 'error' });
       return;
     }
 
     const invalidIngredient = editDetails.find((d) => d.quantityUsed <= 0);
     if (invalidIngredient) {
-      toast.error(`Invalid quantity for ingredient: ${invalidIngredient.inventoryItemName}. Quantity must be greater than 0.`);
+      notify({ title: 'Error!', text: `Invalid quantity for ingredient: ${invalidIngredient.inventoryItemName}. Quantity must be greater than 0.`, type: 'error' });
       return;
     }
 
@@ -231,28 +230,28 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
       const response = await updateRecipe(business[0]?.businessId, recipe.id, payload);
 
       if (!response) {
-        toast.error('Failed to update recipe. Please try again.');
+        notify({ title: 'Error!', text: 'Failed to update recipe. Please try again.', type: 'error' });
         return;
       }
 
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
-        toast.error(errorMessage || 'Please check your input values');
+        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
         return;
       }
 
       if (response?.data?.isSuccessful) {
-        toast.success('Recipe updated successfully');
+        notify({ title: 'Success!', text: 'Recipe updated successfully', type: 'success' });
         exitEditMode();
         await fetchRecipe();
         onSuccess?.();
       } else {
-        toast.error(response?.data?.error || 'Failed to update recipe');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to update recipe', type: 'error' });
       }
     } catch (error) {
       console.error('Error updating recipe:', error);
-      toast.error('Failed to update recipe');
+      notify({ title: 'Error!', text: 'Failed to update recipe', type: 'error' });
     } finally {
       setSaving(false);
     }

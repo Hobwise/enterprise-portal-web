@@ -2,11 +2,10 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import useInventoryItems from '@/hooks/cachedEndpoints/useInventoryItems';
+import useInventoryItems, { useMenuSummary } from '@/hooks/cachedEndpoints/useInventoryItems';
 import { deleteInventoryItem, InventoryItem, PendingRecipeTracking } from '@/app/api/controllers/dashboard/inventory';
 import EditInventoryItemModal from '@/components/ui/dashboard/inventory/modals/EditInventoryItemModal';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { useGlobalContext } from '@/hooks/globalProvider';
 import InventoryItemsHeader from '@/components/ui/dashboard/inventory/InventoryItemsHeader';
 import InventoryItemsTable from '@/components/ui/dashboard/inventory/InventoryItemsTable';
@@ -17,6 +16,7 @@ import BatchProductionModal from '@/components/ui/dashboard/inventory/modals/Bat
 import RecipeRequiredModal from '@/components/ui/dashboard/inventory/modals/RecipeRequiredModal';
 import DeleteModal from '@/components/ui/deleteModal';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
+import SyncMenuItemsModal from '@/components/ui/dashboard/inventory/modals/SyncMenuItemsModal';
 
 export default function ItemsPage() {
   const router = useRouter();
@@ -55,6 +55,7 @@ export default function ItemsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isBatchProductionModalOpen, setIsBatchProductionModalOpen] = useState(false);
   const [isRecipeRequiredModalOpen, setIsRecipeRequiredModalOpen] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   // Fetch inventory items
   const {
@@ -71,6 +72,13 @@ export default function ItemsPage() {
     pageSize,
     search: debouncedSearch,
   });
+
+  // Menu summary for sync button
+  const {
+    data: menuSummaryData,
+    isLoading: menuSummaryLoading,
+    totalItemCount: syncItemsCount,
+  } = useMenuSummary();
 
   // Recipe enforcement via localStorage
   useEffect(() => {
@@ -121,7 +129,7 @@ export default function ItemsPage() {
   }, []);
 
   const handleEditSuccess = useCallback(() => {
-    toast.success('Item updated successfully');
+    notify({ title: 'Success!', text: 'Item updated successfully', type: 'success' });
     setIsEditModalOpen(false);
     setSelectedItem(null);
     refetch();
@@ -132,9 +140,13 @@ export default function ItemsPage() {
   }, [router]);
 
   const handleSyncItems = useCallback(() => {
-    // TODO: Implement sync items functionality
-    toast('Sync Items functionality coming soon');
+    setIsSyncModalOpen(true);
   }, []);
+
+  const handleSyncConfirm = useCallback(() => {
+    setIsSyncModalOpen(false);
+    refetch();
+  }, [refetch]);
 
   const handleDeleteClick = useCallback((item: InventoryItem) => {
     setSelectedItem(item);
@@ -153,23 +165,23 @@ export default function ItemsPage() {
       );
 
       if (response?.data?.isSuccessful) {
-        toast.success('Item deleted successfully');
+        notify({ title: 'Success!', text: 'Item deleted successfully', type: 'success' });
         setIsDeleteModalOpen(false);
         setSelectedItem(null);
         refetch();
       } else {
-        toast.error(response?.data?.error || 'Failed to delete item');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to delete item', type: 'error' });
       }
     } catch (error) {
       console.error('Error deleting item:', error);
-      toast.error('Failed to delete item');
+      notify({ title: 'Error!', text: 'Failed to delete item', type: 'error' });
     } finally {
       setIsDeleting(false);
     }
   }, [selectedItem, refetch]);
 
   const handleAddSuccess = useCallback(() => {
-    toast.success('Item added successfully');
+    notify({ title: 'Success!', text: 'Item added successfully', type: 'success' });
     refetch();
   }, [refetch]);
 
@@ -185,7 +197,7 @@ export default function ItemsPage() {
   }, []);
 
   const handleRecipeSuccess = useCallback(() => {
-    toast.success('Recipe created successfully');
+    notify({ title: 'Success!', text: 'Recipe created successfully', type: 'success' });
     localStorage.removeItem('pendingRecipeTracking');
     setPendingTracking(null);
     setPendingProducedItemId(null);
@@ -200,7 +212,7 @@ export default function ItemsPage() {
   }, []);
 
   const handleBatchProductionSuccess = useCallback(() => {
-    toast.success('Batch production completed successfully');
+    notify({ title: 'Success!', text: 'Batch production completed successfully', type: 'success' });
     setIsBatchProductionModalOpen(false);
     setSelectedItem(null);
     refetch();
@@ -292,7 +304,7 @@ export default function ItemsPage() {
             onStockLevelFilterChange={setStockLevelFilter}
             onAddItem={handleAddItem}
             onCustomizeMeasurements={handleCustomizeMeasurements}
-            syncItemsCount={48}
+            syncItemsCount={syncItemsCount}
             onSyncItems={handleSyncItems}
           />
         </div>
@@ -363,6 +375,15 @@ export default function ItemsPage() {
         onOpenChange={setIsBatchProductionModalOpen}
         onSuccess={handleBatchProductionSuccess}
         item={selectedItem}
+      />
+
+      {/* Sync Menu Items Modal */}
+      <SyncMenuItemsModal
+        isOpen={isSyncModalOpen}
+        onOpenChange={setIsSyncModalOpen}
+        data={menuSummaryData}
+        isLoading={menuSummaryLoading}
+        onSync={handleSyncConfirm}
       />
 
       {/* Recipe Required Modal */}
