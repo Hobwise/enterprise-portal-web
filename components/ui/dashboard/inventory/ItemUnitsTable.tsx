@@ -355,7 +355,6 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
 
   // Build rows
   const rows = React.useMemo(() => {
-    const primaryUnit = getUnitInfo(primaryUnitId);
     const allRows: {
       id: string;
       isPrimary: boolean;
@@ -369,20 +368,8 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
       originalUnit?: ItemUnit;
     }[] = [];
 
-    // Add primary unit as first row
-    allRows.push({
-      id: 'primary',
-      isPrimary: true,
-      unitId: primaryUnitId,
-      unitName: primaryUnit.name,
-      unitCode: primaryUnit.code,
-      isPurchasable: true,
-      isConsumable: true,
-      baseUnitEquivalent: 1,
-    });
-
-    // Add item units
-    itemUnits.forEach((itemUnit) => {
+    // Add item units (exclude primary unit)
+    itemUnits.filter((iu) => iu.unitId !== primaryUnitId).forEach((itemUnit) => {
       const unitInfo = getUnitInfo(itemUnit.unitId);
       allRows.push({
         id: itemUnit.id || itemUnit.unitId,
@@ -804,11 +791,20 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         </div>
         <button
           onClick={handleStartAddUnit}
-          disabled={isAddingUnit || availableUnits.length === 0}
+          disabled={isAddingUnit || isSavingNew || availableUnits.length === 0}
           className="flex items-center gap-2 px-4 py-2.5 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Plus className="w-4 h-4" />
-          Add Unit
+          {isSavingNew ? (
+            <>
+              <Spinner size="sm" color="current" />
+              <span>Adding...</span>
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" />
+              Add Unit
+            </>
+          )}
         </button>
       </div>
 

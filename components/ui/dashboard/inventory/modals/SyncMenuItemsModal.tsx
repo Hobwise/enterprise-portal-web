@@ -603,7 +603,6 @@ const ConfirmStep: React.FC<ConfirmStepProps> = ({
                 <tr className="bg-[#5F35D2]/[0.04] border-b border-gray-200">
                   <th className="text-left py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">Item Name</th>
                   <th className="text-left py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">Item Type</th>
-                  <th className="text-left py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">Category</th>
                   <th className="text-left py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">Unit</th>
                   <th className="text-left py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">Supplier</th>
                   <th className="text-left py-3 px-3 font-semibold text-gray-600 whitespace-nowrap">Strictness</th>
@@ -632,7 +631,6 @@ const ConfirmStep: React.FC<ConfirmStepProps> = ({
                         <option value={InventoryItemType.Produced}>Produced</option>
                       </select>
                     </td>
-                    <td className="py-3 px-3 text-gray-600 whitespace-nowrap">{item.menuName}</td>
                     <td className="py-2 px-3">
                       <select
                         value={editableData[idx]?.unitId ?? ''}

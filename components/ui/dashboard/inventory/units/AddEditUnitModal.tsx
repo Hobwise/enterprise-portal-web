@@ -80,7 +80,9 @@ const AddEditUnitModal: React.FC<AddEditUnitModalProps> = ({
   const handleInputChange =
     (field: 'name' | 'code') =>
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFormData((prev) => ({ ...prev, [field]: e.target.value }));
+      const value = e.target.value;
+      if (field === 'code' && value.length > 3) return;
+      setFormData((prev) => ({ ...prev, [field]: value }));
       if (errors[field]) {
         setErrors((prev) => ({ ...prev, [field]: undefined }));
       }

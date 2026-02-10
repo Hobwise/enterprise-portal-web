@@ -115,6 +115,7 @@ export const DASHBOARD = {
   intializeTransaction: "api/v1/Transaction/initialise",
   completeTransaction: "api/v1/Transaction/complete",
   // Inventory
+  unit: "api/v1/Unit",
   inventory: "api/v1/Inventory",
   inventoryByBusiness: "api/v1/Inventory/by-business",
   inventoryItems: "api/v1/Inventory/items",

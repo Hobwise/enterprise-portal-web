@@ -12,15 +12,25 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  DropdownSection,
   SortDescriptor,
   Selection,
+  Chip,
 } from '@nextui-org/react';
-import { HiOutlineDotsVertical } from 'react-icons/hi';
+import {
+  Pencil,
+  MoreHorizontal,
+  Eye,
+  Factory,
+  Trash2,
+  AlertTriangle,
+} from 'lucide-react';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import usePagination from '@/hooks/usePagination';
 import { columns, INITIAL_VISIBLE_COLUMNS } from './data';
 import { InventoryItemType } from '@/app/api/controllers/dashboard/inventory';
 import type { InventoryItem } from '@/app/api/controllers/dashboard/inventory';
+
 
 interface InventoryItemsTableProps {
   data: any;
@@ -42,6 +52,18 @@ const getItemTypeLabel = (type: InventoryItemType) => {
     default:
       return String(type);
   }
+};
+
+const getStockPercentage = (stockLevel: number, reorderLevel: number): number => {
+  const fullCapacity = reorderLevel * 4;
+  if (fullCapacity <= 0) return stockLevel > 0 ? 100 : 0;
+  return Math.min(100, Math.max(0, (stockLevel / fullCapacity) * 100));
+};
+
+const getStockBarColor = (stockLevel: number, reorderLevel: number): string => {
+  if (stockLevel === 0) return 'bg-red-500';
+  if (stockLevel <= reorderLevel) return 'bg-amber-500';
+  return 'bg-emerald-500';
 };
 
 const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
@@ -98,15 +120,59 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
           );
         case 'itemType':
           return (
-            <div className="text-sm text-textGrey">
+            <div className="text-sm text-black">
               {getItemTypeLabel(item.itemType)}
             </div>
           );
-        case 'stockLevel':
-          return <div className="text-sm text-textGrey">{item.stockLevel ?? 0}</div>;
+        case 'stockLevel': {
+          const stock = item.stockLevel ?? 0;
+          const reorder = item.reorderLevel ?? 0;
+          const percentage = getStockPercentage(stock, reorder);
+          const barColor = getStockBarColor(stock, reorder);
+          const isLowStock = stock > 0 && stock <= reorder;
+          const isOutOfStock = stock === 0;
+
+          return (
+            <div className="flex flex-col gap-1.5 min-w-[120px]">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-black">{stock}</span>
+                {isOutOfStock && (
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    color="danger"
+                    startContent={<AlertTriangle size={12} />}
+                    classNames={{ base: 'h-5 px-1.5', content: 'text-xs font-medium px-0.5' }}
+                  >
+                    Out of Stock
+                  </Chip>
+                )}
+                {isLowStock && (
+                  <Chip
+                    size="sm"
+                    variant="flat"
+                    color="warning"
+                    startContent={<AlertTriangle size={12} />}
+                    classNames={{ base: 'h-5 px-1.5', content: 'text-xs font-medium px-0.5' }}
+                  >
+                    Low Stock
+                  </Chip>
+                )}
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
+                <div
+                  className={`h-1.5 rounded-full transition-all ${barColor}`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+          );
+        }
         case 'reorderLevel':
           return (
-            <div className="text-sm text-textGrey">{item.reorderLevel}</div>
+            <div className="text-sm text-black">
+              {item.averageCostPerUnit}
+            </div>
           );
         case 'actions':
           return (
@@ -116,51 +182,50 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
             >
               <Dropdown>
                 <DropdownTrigger aria-label="actions">
-                  <div className="cursor-pointer flex justify-center items-center text-black">
-                    <HiOutlineDotsVertical className="text-[22px]" />
+                  <div className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100">
+                    <MoreHorizontal size={18} />
                   </div>
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Item actions" className="text-black">
-                  <DropdownItem
-                    key="view"
-                    onClick={() => onViewItem(item)}
-                    aria-label="view item"
-                  >
-                    <div className="flex gap-2 items-center text-grey500">
-                      <p>View Details</p>
-                    </div>
-                  </DropdownItem>
-                  <DropdownItem
-                    key="edit"
-                    onClick={() => onEditItem(item)}
-                    aria-label="edit item"
-                  >
-                    <div className="flex gap-2 items-center text-grey500">
-                      <p>Edit Item</p>
-                    </div>
-                  </DropdownItem>
-                  {item.itemType === InventoryItemType.Produced && onBatchProduction && (
                     <DropdownItem
-                      key="batch"
-                      onClick={() => onBatchProduction(item)}
-                      aria-label="batch production"
+                      key="edit"
+                      startContent={<Pencil size={16} />}
+                      onPress={() => onEditItem(item)}
+                      aria-label="edit item"
                     >
-                      <div className="flex gap-2 items-center text-grey500">
-                        <p>Batch Production</p>
-                      </div>
+                      Edit
                     </DropdownItem>
-                  )}
-                  <DropdownItem
-                    key="delete"
-                    onClick={() => onDeleteItem(item)}
-                    aria-label="delete item"
-                    className="text-danger"
-                    color="danger"
-                  >
-                    <div className="flex gap-2 items-center">
-                      <p>Delete Item</p>
-                    </div>
-                  </DropdownItem>
+
+                  <DropdownSection title="">
+                    <DropdownItem
+                      key="view"
+                      startContent={<Eye size={16} />}
+                      onPress={() => onViewItem(item)}
+                      aria-label="view item"
+                    >
+                      View Details
+                    </DropdownItem>
+                    {item.itemType === InventoryItemType.Produced && onBatchProduction ? (
+                      <DropdownItem
+                        key="batch"
+                        startContent={<Factory size={16} />}
+                        onPress={() => onBatchProduction(item)}
+                        aria-label="batch production"
+                      >
+                        Batch Production
+                      </DropdownItem>
+                    ) : null}
+                    <DropdownItem
+                      key="delete"
+                      startContent={<Trash2 size={16} />}
+                      onPress={() => onDeleteItem(item)}
+                      aria-label="delete item"
+                      className="text-danger"
+                      color="danger"
+                    >
+                      Delete
+                    </DropdownItem>
+                  </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
             </div>
