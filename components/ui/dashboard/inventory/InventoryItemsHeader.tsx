@@ -60,13 +60,13 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
         <div className="flex items-center gap-3">
           {/* Wizard Hat Decoration */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          {/* <img
             src="/assets/images/witch-hat.png"
             alt="Decoration"
             width={48}
             height={48}
             className="object-contain hidden lg:block"
-          />
+          /> */}
 
           {onSyncItems && syncItemsCount > 0 && (
             <button

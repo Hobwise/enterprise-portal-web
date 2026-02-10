@@ -1,17 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowLeft } from 'lucide-react';
 import UnitsList from '@/components/ui/dashboard/inventory/units/UnitsList';
 import NoUnits from '@/components/ui/dashboard/inventory/units/NoUnits';
 import AddEditUnitModal, {
   UnitFormData,
 } from '@/components/ui/dashboard/inventory/units/AddEditUnitModal';
-import DeleteUnitModal from '@/components/ui/dashboard/inventory/units/DeleteUnitModal';
+import DeleteModal from '@/components/ui/deleteModal';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 import useUnitsManagement from '@/hooks/cachedEndpoints/useUnitsManagement';
 import type { InventoryUnit } from '@/app/api/controllers/dashboard/inventory';
 
 export default function MeasurementsPage() {
+  const router = useRouter();
+
   const {
     data: units,
     isLoading,
@@ -121,6 +125,13 @@ export default function MeasurementsPage() {
 
   return (
     <div className="h-full flex flex-col">
+      <button
+        onClick={() => router.push('/dashboard/inventory/items')}
+        className="flex items-center gap-2 text-gray-600 hover:text-[#5F35D2] transition-colors mb-4"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm font-medium">Back to Items</span>
+      </button>
       <div className="flex-1">
         {units.length > 0 ? (
           <UnitsList
@@ -146,12 +157,12 @@ export default function MeasurementsPage() {
         initialData={editingUnit}
       />
 
-      <DeleteUnitModal
+      <DeleteModal
         isOpen={isDeleteModalOpen}
-        onOpenChange={setIsDeleteModalOpen}
-        onConfirm={handleDeleteUnit}
-        unit={unitToDelete}
+        toggleModal={() => setIsDeleteModalOpen(false)}
+        handleDelete={handleDeleteUnit}
         isLoading={isDeleting}
+        text={`Are you sure you want to delete "${unitToDelete?.name}"? This action cannot be undone.`}
       />
     </div>
   );

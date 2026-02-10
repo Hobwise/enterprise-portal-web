@@ -206,6 +206,7 @@ export default function ItemsPage() {
     refetch();
   }, [refetch]);
 
+ 
   const handleBatchProduction = useCallback((item: InventoryItem) => {
     setSelectedItem(item);
     setIsBatchProductionModalOpen(true);

@@ -58,7 +58,9 @@ const UnitsList: React.FC<UnitsListProps> = ({
   const hasSearchFilter = Boolean(filterValue);
 
   const filteredItems = useMemo(() => {
-    let filtered = [...units];
+    let filtered = [...units].sort(
+      (a, b) => new Date(b.dateCreated).getTime() - new Date(a.dateCreated).getTime()
+    );
 
     if (hasSearchFilter) {
       filtered = filtered.filter(
@@ -81,10 +83,7 @@ const UnitsList: React.FC<UnitsListProps> = ({
     classNames,
     displayData,
     isMobile,
-  } = usePagination(filteredItems, columns, INITIAL_VISIBLE_COLUMNS, {
-    column: 'name',
-    direction: 'ascending',
-  });
+  } = usePagination(filteredItems, columns, INITIAL_VISIBLE_COLUMNS);
 
   const sortedItems = React.useMemo(() => {
     if (!displayData || displayData.length === 0) {
@@ -159,7 +158,7 @@ const UnitsList: React.FC<UnitsListProps> = ({
                   <DropdownItem
                     key="edit"
                     isDisabled={unit.isSystem}
-                    onClick={() => onEditUnit(unit)}
+                    onPress={() => onEditUnit(unit)}
                     className="text-black"
                   >
                     Edit
@@ -167,7 +166,7 @@ const UnitsList: React.FC<UnitsListProps> = ({
                   <DropdownItem
                     key="delete"
                     isDisabled={unit.isSystem}
-                    onClick={() => onDeleteUnit(unit)}
+                    onPress={() => onDeleteUnit(unit)}
                     className="text-danger"
                     color="danger"
                   >
