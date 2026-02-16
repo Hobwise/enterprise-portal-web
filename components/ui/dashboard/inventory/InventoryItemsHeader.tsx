@@ -15,6 +15,7 @@ interface InventoryItemsHeaderProps {
   onCustomizeMeasurements?: () => void;
   syncItemsCount?: number;
   onSyncItems?: () => void;
+  onWizardClick?: () => void;
 }
 
 const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
@@ -29,6 +30,7 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
   onCustomizeMeasurements,
   syncItemsCount = 0,
   onSyncItems,
+  onWizardClick,
 }) => {
   return (
     <div className="space-y-6">
@@ -58,15 +60,16 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
 
         {/* Action Buttons with Wizard Hat */}
         <div className="flex items-center gap-3">
-          {/* Wizard Hat Decoration */}
+          {/* Wizard Hat — clickable to open Hobwise Wizard */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          {/* <img
+          <img
             src="/assets/images/witch-hat.png"
-            alt="Decoration"
+            alt="Hobwise Wizard"
             width={48}
             height={48}
-            className="object-contain hidden lg:block"
-          /> */}
+            onClick={onWizardClick}
+            className="object-contain hidden lg:block cursor-pointer hover:scale-110 transition-transform"
+          />
 
           {onSyncItems && syncItemsCount > 0 && (
             <button

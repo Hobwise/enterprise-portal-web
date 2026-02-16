@@ -38,10 +38,12 @@ const SupplierSearchCard: React.FC<SupplierSearchCardProps> = ({
         aria-label="Select supplier"
       >
         {suppliers.map((supplier) => (
-          <SelectItem key={supplier.supplierId} textValue={supplier.companyName}>
+          <SelectItem key={supplier.supplierId} textValue={supplier.companyName || supplier.name}>
             <div className="flex flex-col">
-              <span className="text-sm font-medium">{supplier.companyName}</span>
-              <span className="text-xs text-gray-400">{supplier.name}</span>
+              <span className="text-sm font-medium text-gray-800">{supplier.companyName || supplier.name}</span>
+              {supplier.companyName && supplier.name && (
+                <span className="text-xs text-gray-500">{supplier.name}</span>
+              )}
             </div>
           </SelectItem>
         ))}

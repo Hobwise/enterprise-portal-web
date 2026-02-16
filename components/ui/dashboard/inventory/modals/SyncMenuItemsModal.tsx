@@ -13,7 +13,6 @@ import {
   InventoryItemType,
 } from '@/app/api/controllers/dashboard/inventory';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
-import { toast } from 'sonner';
 import { useSuppliers, useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
 
 type ModalStep = 'select' | 'processing' | 'confirm';
@@ -226,13 +225,13 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
       const response = await synchronizeInventoryItems(businessId, payload);
 
       if (response?.data?.isSuccessful) {
-        toast.success('Items synced to inventory successfully');
+        notify({ title: 'Success!', text: 'Items synced to inventory successfully', type: 'success' });
         onSync();
       } else {
-        toast.error(response?.data?.error || 'Failed to sync items to inventory');
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to sync items to inventory', type: 'error' });
       }
     } catch (error) {
-      toast.error('Failed to sync items to inventory. Please try again.');
+      // Interceptor already shows error toast
     } finally {
       setIsSyncing(false);
     }

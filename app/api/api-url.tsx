@@ -128,12 +128,19 @@ export const DASHBOARD = {
   inventoryRecipeByItem: "api/v1/Inventory/recipe/by-item",
   inventoryRecipeProduceBatch: "api/v1/Inventory/recipe/produce-batch",
   inventoryBatchProduction: "api/v1/Inventory/batch-production",
+  supplier: "api/v1/Supplier",
   supplierByBusiness: "api/v1/Supplier/by-business",
   mapSupplierItem: "api/v1/Supplier/map-item",
+  // Purchase Order
+  purchaseOrder: "api/v1/PurchaseOrder",
+  purchaseOrderByBusiness: "api/v1/PurchaseOrder/by-business",
+  purchaseOrderReceive: "api/v1/PurchaseOrder/receive",
+  purchaseOrderSendMail: "api/v1/PurchaseOrder/send-mail",
   // Inventory Wizard
   inventoryWizardMenuSummary: "api/v1/InventoryWizard/menu-summary",
   inventoryWizardPredict: "api/v1/InventoryWizard/predict",
   inventoryWizardSynchronize: "api/v1/InventoryWizard/synchronize",
+  inventoryWizardSetup: "api/v1/InventoryWizard/setup",
 };
 
 export const INVENTORY = {

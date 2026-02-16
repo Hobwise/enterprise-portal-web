@@ -34,8 +34,10 @@ const AddInventoryItemModal: React.FC<AddInventoryItemModalProps> = ({
   const [itemType, setItemType] = useState<InventoryItemType | null>(null);
   const [strictnessLevel, setStrictnessLevel] = useState<number>(0);
   const [reorderLevel, setReorderLevel] = useState('');
+  const [openingStock, setOpeningStock] = useState('');
   const [averageCostPerBaseUnit, setAverageCostPerBaseUnit] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [allowTracking, setAllowTracking] = useState(true);
   const [unitId, setUnitId] = useState('');
   const [supplierId, setSupplierId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -57,8 +59,10 @@ const AddInventoryItemModal: React.FC<AddInventoryItemModalProps> = ({
     setItemType(null);
     setStrictnessLevel(0);
     setReorderLevel('');
+    setOpeningStock('');
     setAverageCostPerBaseUnit('');
     setIsActive(true);
+    setAllowTracking(true);
     setUnitId('');
     setSupplierId('');
   };
@@ -89,10 +93,12 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
         description: description.trim(),
         itemType,
         strictnessLevel,
+        openingStock: openingStock ? parseFloat(openingStock) : 0,
         reorderLevel: reorderLevel ? parseFloat(reorderLevel) : 0,
         reorderQuantity: 0,
         averageCostPerBaseUnit: parseFloat(averageCostPerBaseUnit),
         isActive,
+        allowTracking,
         unitId,
         ...(supplierId ? { supplierId } : {}),
       };
@@ -217,7 +223,7 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
 
       {/* Pricing & Stock */}
       <div className="border-t border-gray-100 pt-4 mt-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Average Cost Per Base Unit */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -254,6 +260,22 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
             />
           </div>
+
+          {/* Opening Stock */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Opening Stock
+            </label>
+            <input
+              type="number"
+              value={openingStock}
+              onChange={(e) => setOpeningStock(e.target.value)}
+              placeholder="0"
+              min="0"
+              step="1"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+            />
+          </div>
         </div>
       </div>
 
@@ -264,7 +286,6 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Supplier Name
-              <span className="text-gray-400 font-normal ml-1">(optional)</span>
             </label>
             <div className="relative">
               <select
@@ -358,6 +379,23 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
           <Switch
             isSelected={isActive}
             onValueChange={setIsActive}
+            classNames={{
+              wrapper: 'group-data-[selected=true]:bg-green-500',
+            }}
+          />
+        </div>
+
+        {/* Allow Tracking Toggle */}
+        <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-xl">
+          <div>
+            <p className="font-medium text-gray-700">Allow Tracking</p>
+            <p className="text-sm text-gray-500">
+              Track stock levels and movements for this item
+            </p>
+          </div>
+          <Switch
+            isSelected={allowTracking}
+            onValueChange={setAllowTracking}
             classNames={{
               wrapper: 'group-data-[selected=true]:bg-green-500',
             }}

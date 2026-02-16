@@ -9,12 +9,11 @@ export const supplierItemColumns = [
 ];
 
 export const historyColumns = [
+  { name: "REFERENCE", uid: "reference" },
   { name: "REQUEST DATE", uid: "requestDate" },
-  { name: "REQUEST ID", uid: "requestId" },
   { name: "SUPPLIER NAME", uid: "supplierName" },
   { name: "COMPANY NAME", uid: "companyName" },
-  { name: "EXPECTED DELIVERY", uid: "expectedDeliveryDate" },
-  { name: "NO. OF ITEMS", uid: "numberOfItems" },
+  { name: "ITEMS", uid: "numberOfItems" },
   { name: "TOTAL COST", uid: "totalCost" },
   { name: "STATUS", uid: "status" },
   { name: "ACTIONS", uid: "actions" },

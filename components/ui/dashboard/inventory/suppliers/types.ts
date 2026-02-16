@@ -13,4 +13,5 @@ export interface Supplier {
     phoneNumber: string;
     items: SupplierItem[];
     status: 'active' | 'inactive';
+    dateCreated?: string;
 }
