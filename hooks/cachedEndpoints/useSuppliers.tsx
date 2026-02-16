@@ -43,7 +43,7 @@ const useSuppliers = () => {
       const response = await getSuppliersByBusiness(businessId, clientParameters);
       
       if (response?.data?.data) {
-        return response.data.data;
+        return response.data.data.suppliers;
       }
       
       return [];
@@ -67,10 +67,11 @@ const useSuppliers = () => {
         address: s.physicalAddress,
         phoneNumber: s.phoneNumber,
         items: (s.items || []).map((i: any) => ({
-          id: i.id, 
+          id: i.id,
           name: i.name || i.itemName // Handle potential naming differences
         })),
         status: s.isActive ? 'active' : 'inactive',
+        dateCreated: s.dateCreated,
       }));
     },
     enabled: !!businessId,

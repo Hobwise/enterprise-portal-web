@@ -12,7 +12,7 @@ const NoSupplierItems: React.FC = () => {
         <h2 className="text-xl font-bold text-[#3D424A] mb-2">
           No Supplier Items Registered
         </h2>
-        <p className="text-[#98A2B3]">
+        <p className="text-[#424242]">
           Select a supplier to view their inventory items. You can then select items to include in your purchase order.
         </p>
       </div>

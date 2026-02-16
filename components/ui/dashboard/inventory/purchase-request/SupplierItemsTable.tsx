@@ -8,10 +8,13 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Checkbox,
+  Input,
+  Chip,
+  Selection,
 } from "@nextui-org/react";
 import { CustomButton } from "@/components/customButton";
 import { FaArrowRight } from "react-icons/fa6";
+import { IoSearchOutline } from "react-icons/io5";
 import { SupplierInventoryItem } from "./types";
 import { supplierItemColumns } from "./data";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
@@ -30,32 +33,38 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
   onCustomize,
 }) => {
   const [page, setPage] = useState(1);
+  const [filterValue, setFilterValue] = useState("");
   const rowsPerPage = 10;
+
+  const filteredItems = useMemo(() => {
+    if (!filterValue.trim()) return items;
+    const query = filterValue.toLowerCase();
+    return items.filter(
+      (item) =>
+        item.name.toLowerCase().includes(query) ||
+        item.unitName.toLowerCase().includes(query) ||
+        item.status.toLowerCase().includes(query)
+    );
+  }, [items, filterValue]);
+
+  const totalPages = Math.ceil(filteredItems.length / rowsPerPage) || 1;
 
   const paginatedItems = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
-    return items.slice(start, start + rowsPerPage);
-  }, [items, page]);
+    return filteredItems.slice(start, start + rowsPerPage);
+  }, [filteredItems, page]);
 
-  const allSelected = items.length > 0 && selectedItems.size === items.length;
-  const someSelected = selectedItems.size > 0 && selectedItems.size < items.length;
-
-  const handleSelectAll = () => {
-    if (allSelected) {
-      onSelectionChange(new Set());
+  const handleSelectionChange = (keys: Selection) => {
+    if (keys === "all") {
+      onSelectionChange(new Set(filteredItems.map((i) => i.id)));
     } else {
-      onSelectionChange(new Set(items.map((i) => i.id)));
+      onSelectionChange(new Set(keys as Set<string>));
     }
   };
 
-  const handleSelectItem = (id: string) => {
-    const next = new Set(selectedItems);
-    if (next.has(id)) {
-      next.delete(id);
-    } else {
-      next.add(id);
-    }
-    onSelectionChange(next);
+  const handleFilterChange = (value: string) => {
+    setFilterValue(value);
+    setPage(1);
   };
 
   const formatCurrency = (value: number) => {
@@ -66,26 +75,30 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
     switch (columnKey) {
       case "id":
         return (
-          <div className="flex items-center gap-2">
-            <Checkbox
-              isSelected={selectedItems.has(item.id)}
-              onValueChange={() => handleSelectItem(item.id)}
-              size="sm"
-              color="secondary"
-            />
-            <span className="text-sm text-gray-500">{item.id.slice(0, 8)}</span>
-          </div>
+          <span className="text-sm text-gray-500">{item.id.slice(0, 8)}</span>
         );
       case "name":
-        return <span className="text-sm font-semibold text-gray-900">{item.name}</span>;
+        return (
+          <span className="text-sm font-semibold text-gray-900">
+            {item.name}
+          </span>
+        );
       case "unitName":
         return <span className="text-sm text-gray-500">{item.unitName}</span>;
       case "costPerUnit":
-        return <span className="text-sm text-gray-500">{formatCurrency(item.costPerUnit)}</span>;
+        return (
+          <span className="text-sm text-gray-500">
+            {formatCurrency(item.costPerUnit)}
+          </span>
+        );
       case "optimumStock":
-        return <span className="text-sm text-gray-500">{item.optimumStock}</span>;
+        return (
+          <span className="text-sm text-gray-500">{item.optimumStock}</span>
+        );
       case "currentStock":
-        return <span className="text-sm text-gray-500">{item.currentStock}</span>;
+        return (
+          <span className="text-sm text-gray-500">{item.currentStock}</span>
+        );
       case "status":
         return (
           <span
@@ -104,18 +117,45 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
   return (
     <div className="mb-8">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-[#3D424A]">Supplier Items</h3>
-        <span className="text-sm text-gray-400">{items.length} items</span>
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-semibold text-[#3D424A]">
+            Supplier Items
+          </h3>
+          {selectedItems.size > 0 && (
+            <Chip size="sm" color="secondary" variant="flat">
+              {selectedItems.size} selected
+            </Chip>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <Input
+            isClearable
+            className="w-64"
+            placeholder="Search items..."
+            startContent={<IoSearchOutline className="text-default-400" />}
+            size="sm"
+            value={filterValue}
+            onValueChange={handleFilterChange}
+            onClear={() => handleFilterChange("")}
+          />
+          <span className="text-sm text-gray-400">
+            {filteredItems.length} items
+          </span>
+        </div>
       </div>
 
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-primaryGrey rounded-lg overflow-hidden">
         <Table
           radius="lg"
           isCompact
           removeWrapper
           aria-label="Supplier inventory items"
+          selectionMode="multiple"
+          selectedKeys={selectedItems}
+          onSelectionChange={handleSelectionChange}
+          color="secondary"
           classNames={{
-            wrapper: ["max-h-[400px]"],
+            wrapper: ["max-h-[382px]"],
             th: [
               "text-default-500",
               "text-xs",
@@ -123,59 +163,43 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
               "border-divider",
               "py-4",
               "rounded-none",
-              "bg-gray-100",
+              "bg-grey300",
             ],
-            tr: "border-b border-divider last:border-none rounded-none",
-            td: ["py-3", "text-gray-500"],
+            tr: "border-b border-divider rounded-none",
+            td: ["py-3", "text-textGrey"],
           }}
           bottomContent={
             <div className="flex w-full justify-center">
               <CustomPagination
                 currentPage={page}
-                totalPages={Math.ceil(items.length / rowsPerPage) || 1}
-                hasNext={page < Math.ceil(items.length / rowsPerPage)}
+                totalPages={totalPages}
+                hasNext={page < totalPages}
                 hasPrevious={page > 1}
-                totalCount={items.length}
+                totalCount={filteredItems.length}
                 pageSize={rowsPerPage}
                 onPageChange={setPage}
                 onNext={() =>
-                  setPage((p) =>
-                    p < Math.ceil(items.length / rowsPerPage) ? p + 1 : p
-                  )
+                  setPage((p) => (p < totalPages ? p + 1 : p))
                 }
                 onPrevious={() => setPage((p) => (p > 1 ? p - 1 : p))}
               />
             </div>
           }
         >
-          <TableHeader>
-            <TableColumn>
-              <Checkbox
-                isSelected={allSelected}
-                isIndeterminate={someSelected}
-                onValueChange={handleSelectAll}
-                size="sm"
-                color="secondary"
-              />
-            </TableColumn>
-            {supplierItemColumns.map((col) => (
-              <TableColumn key={col.uid}>{col.name}</TableColumn>
-            ))}
+          <TableHeader columns={supplierItemColumns}>
+            {(col) => <TableColumn key={col.uid}>{col.name}</TableColumn>}
           </TableHeader>
-          <TableBody items={paginatedItems} emptyContent="No items found for this supplier">
+          <TableBody
+            items={paginatedItems}
+            emptyContent="No items found for this supplier"
+          >
             {(item) => (
-              <TableRow key={item.id} className="cursor-pointer hover:bg-gray-50">
-                <TableCell>
-                  <Checkbox
-                    isSelected={selectedItems.has(item.id)}
-                    onValueChange={() => handleSelectItem(item.id)}
-                    size="sm"
-                    color="secondary"
-                  />
-                </TableCell>
-                {supplierItemColumns.map((col) => (
-                  <TableCell key={col.uid}>{renderCell(item, col.uid)}</TableCell>
-                ))}
+              <TableRow key={item.id}>
+                {(columnKey) => (
+                  <TableCell>
+                    {renderCell(item, columnKey as string)}
+                  </TableCell>
+                )}
               </TableRow>
             )}
           </TableBody>

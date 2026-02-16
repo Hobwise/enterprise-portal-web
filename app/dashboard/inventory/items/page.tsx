@@ -17,6 +17,7 @@ import RecipeRequiredModal from '@/components/ui/dashboard/inventory/modals/Reci
 import DeleteModal from '@/components/ui/deleteModal';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 import SyncMenuItemsModal from '@/components/ui/dashboard/inventory/modals/SyncMenuItemsModal';
+import HobwiseWizard from '@/components/ui/dashboard/inventory/wizard/HobwiseWizard';
 
 export default function ItemsPage() {
   const router = useRouter();
@@ -56,6 +57,7 @@ export default function ItemsPage() {
   const [isBatchProductionModalOpen, setIsBatchProductionModalOpen] = useState(false);
   const [isRecipeRequiredModalOpen, setIsRecipeRequiredModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
   // Fetch inventory items
   const {
@@ -286,8 +288,31 @@ export default function ItemsPage() {
   const isClientFiltering = searchQuery.trim() !== '' || itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
   const totalItems = isClientFiltering ? filteredItems.length : (totalCount || filteredItems.length);
 
+  // Wizard visibility logic
+  const isEmptyInventory = !isLoading && totalCount === 0;
+  const shouldShowWizard = showWizard || isEmptyInventory;
+
+  const handleWizardComplete = useCallback(() => {
+    setShowWizard(false);
+    refetch();
+  }, [refetch]);
+
   if (isLoading && (!data || data.length === 0) && page === 1) {
     return <CustomLoading />;
+  }
+
+  if (shouldShowWizard) {
+    return (
+      <div className="min-h-screen font-satoshi">
+        <div className="max-w-7xl mx-auto space-y-6">
+          <HobwiseWizard
+            menuSummaryData={menuSummaryData}
+            menuSummaryLoading={menuSummaryLoading}
+            onComplete={handleWizardComplete}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -307,6 +332,7 @@ export default function ItemsPage() {
             onCustomizeMeasurements={handleCustomizeMeasurements}
             syncItemsCount={syncItemsCount}
             onSyncItems={handleSyncItems}
+            onWizardClick={() => setShowWizard(true)}
           />
         </div>
 

@@ -45,9 +45,11 @@ interface FormData {
   description: string;
   costPerUnit: string;
   reorderLevel: string;
+  openingStock: string;
   supplierId: string;
   itemType: InventoryItemType | null;
   isActive: boolean;
+  allowTracking: boolean;
   strictnessLevel: number;
 }
 
@@ -57,9 +59,11 @@ const initialFormData: FormData = {
   description: '',
   costPerUnit: '',
   reorderLevel: '',
+  openingStock: '',
   supplierId: '',
   itemType: null,
   isActive: true,
+  allowTracking: true,
   strictnessLevel: 0,
 };
 
@@ -97,9 +101,11 @@ export default function ItemDetailPage() {
         description: item.description || '',
         costPerUnit: String(item.averageCostPerUnit || 0),
         reorderLevel: String(item.reorderLevel || 0),
+        openingStock: String(item.openingStock || 0),
         supplierId: item.supplierId || '',
         itemType: item.itemType,
         isActive: item.isActive,
+        allowTracking: item.allowTracking ?? true,
         strictnessLevel: item.strictnessLevel,
       });
       setIsFormDirty(false);
@@ -173,10 +179,12 @@ export default function ItemDetailPage() {
         description: formData.description.trim(),
         itemType: formData.itemType,
         strictnessLevel: formData.strictnessLevel,
+        openingStock: formData.openingStock ? parseFloat(formData.openingStock) : 0,
         reorderLevel: formData.reorderLevel ? parseFloat(formData.reorderLevel) : 0,
         reorderQuantity: 0,
         averageCostPerBaseUnit: parseFloat(formData.costPerUnit),
         isActive: formData.isActive,
+        allowTracking: formData.allowTracking,
         unitId: formData.unitId,
         ...(formData.supplierId ? { supplierId: formData.supplierId } : {}),
       };
@@ -441,7 +449,7 @@ export default function ItemDetailPage() {
 
           {/* Pricing & Stock */}
           <div className="border-t border-gray-100 pt-4 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Cost Per Unit */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -479,6 +487,24 @@ export default function ItemDetailPage() {
                 />
               </div>
 
+              {/* Opening Stock */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Opening Stock
+                </label>
+                <input
+                  type="number"
+                  value={formData.openingStock}
+                  onChange={(e) => handleFieldChange('openingStock', e.target.value)}
+                  placeholder="0"
+                  min="0"
+                  step="1"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               {/* Stock Level (disabled) */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -609,6 +635,23 @@ export default function ItemDetailPage() {
                 <Switch
                   isSelected={formData.isActive}
                   onValueChange={(value) => handleFieldChange('isActive', value)}
+                  classNames={{
+                    wrapper: 'group-data-[selected=true]:bg-green-500',
+                  }}
+                />
+              </div>
+
+              {/* Allow Tracking Toggle */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div>
+                  <p className="font-medium text-gray-700">Allow Tracking</p>
+                  <p className="text-sm text-gray-500">
+                    Track stock levels and movements for this item
+                  </p>
+                </div>
+                <Switch
+                  isSelected={formData.allowTracking}
+                  onValueChange={(value) => handleFieldChange('allowTracking', value)}
                   classNames={{
                     wrapper: 'group-data-[selected=true]:bg-green-500',
                   }}

@@ -74,6 +74,7 @@ export type InventoryItem = {
   isActive: boolean;
   isDeleted: boolean;
   allowTracking?: boolean;
+  openingStock?: number;
   stockLevel: number;
   stockStatus: string;
   unitId: string;
@@ -141,10 +142,12 @@ export type CreateInventoryPayload = {
   description: string;
   itemType: number;
   strictnessLevel: number;
+  openingStock: number;
   reorderLevel: number;
   reorderQuantity: number;
   averageCostPerBaseUnit: number;
   isActive: boolean;
+  allowTracking: boolean;
   unitId: string;
   supplierId?: string;
 };
@@ -253,6 +256,41 @@ export type BatchProductionRecord = {
 export type RecipeWithHistory = {
   recipe: Recipe;
   productionHistory: BatchProductionRecord[];
+};
+
+// Inventory Wizard Setup types
+export type WizardSetupItem = {
+  name: string;
+  description: string;
+  itemType: number;
+  strictnessLevel: number;
+  openingStock: number;
+  reorderLevel: number;
+  reorderQuantity: number;
+  averageCostPerBaseUnit: number;
+  isActive: boolean;
+  allowTracking: boolean;
+  unitId: string;
+  supplierId: string;
+};
+
+export type WizardSetupRecipe = {
+  name: string;
+  producedInventoryItemID: string;
+  outputQuantity: number;
+  outputQuantityUnitId: string;
+  recipeType: number;
+  isActive: boolean;
+  details: { id: string; recipeID: string; inventoryItemID: string; quantityUsed: number }[];
+};
+
+export type WizardSetupPayload = {
+  allowInventorySync: boolean;
+  enabled: boolean;
+  currentStep: number;
+  inventoryStrictnessLevel: number;
+  items: WizardSetupItem[];
+  recipes: WizardSetupRecipe[];
 };
 
 // Menu Summary types (Inventory Wizard)
@@ -772,6 +810,30 @@ export async function synchronizeInventoryItems(
 
   try {
     const data = await api.post(DASHBOARD.inventoryWizardSynchronize, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getInventoryWizardSetup(businessId: string) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.get(DASHBOARD.inventoryWizardSetup, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function saveInventoryWizardSetup(businessId: string, payload: WizardSetupPayload) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.post(DASHBOARD.inventoryWizardSetup, payload, { headers });
     return data;
   } catch (error) {
     handleError(error);
