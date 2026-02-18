@@ -29,11 +29,22 @@ interface WizardData {
   inventorySyncEnabled: boolean;
   strictnessLevel: number;
   itemName: string;
+  description: string;
   unitId: string;
   costPerUnit: string;
   itemType: InventoryItemType | null;
+  openingStock: string;
+  reorderLevel: string;
+  reorderQuantity: string;
+  isActive: boolean;
+  allowTracking: boolean;
+  supplierId: string;
   createdItemId: string | null;
   recipeDetails: LocalRecipeDetail[];
+  recipeName: string;
+  outputQuantity: string;
+  outputQuantityUnitId: string;
+  recipeType: number;
 }
 
 interface HobwiseWizardProps {
@@ -46,11 +57,22 @@ const INITIAL_WIZARD_DATA: WizardData = {
   inventorySyncEnabled: false,
   strictnessLevel: 0,
   itemName: '',
+  description: '',
   unitId: '',
   costPerUnit: '',
   itemType: null,
+  openingStock: '',
+  reorderLevel: '',
+  reorderQuantity: '',
+  isActive: true,
+  allowTracking: true,
+  supplierId: '',
   createdItemId: null,
   recipeDetails: [],
+  recipeName: '',
+  outputQuantity: '1',
+  outputQuantityUnitId: '',
+  recipeType: 0,
 };
 
 const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
@@ -83,17 +105,31 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
           setStep(saved.currentStep);
 
           const firstItem = saved.items?.[0];
+          const firstRecipe = saved.recipes?.[0];
           setData((prev) => ({
             ...prev,
             inventorySyncEnabled: saved.allowInventorySync ?? prev.inventorySyncEnabled,
             strictnessLevel: saved.inventoryStrictnessLevel ?? prev.strictnessLevel,
             ...(firstItem && {
               itemName: firstItem.name ?? '',
+              description: firstItem.description ?? '',
               unitId: firstItem.unitId ?? '',
               costPerUnit: firstItem.averageCostPerBaseUnit != null
                 ? String(firstItem.averageCostPerBaseUnit)
                 : '',
               itemType: firstItem.itemType ?? null,
+              openingStock: firstItem.openingStock ? String(firstItem.openingStock) : '',
+              reorderLevel: firstItem.reorderLevel ? String(firstItem.reorderLevel) : '',
+              reorderQuantity: firstItem.reorderQuantity ? String(firstItem.reorderQuantity) : '',
+              isActive: firstItem.isActive ?? true,
+              allowTracking: firstItem.allowTracking ?? true,
+              supplierId: firstItem.supplierId ?? '',
+            }),
+            ...(firstRecipe && {
+              recipeName: firstRecipe.name ?? '',
+              outputQuantity: firstRecipe.outputQuantity != null ? String(firstRecipe.outputQuantity) : '1',
+              outputQuantityUnitId: firstRecipe.outputQuantityUnitId ?? '',
+              recipeType: firstRecipe.recipeType ?? 0,
             }),
           }));
         }
@@ -114,60 +150,56 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
   // Build and POST wizard state to persist progress
   const saveProgress = useCallback(
     async (currentStep: number, overrides?: Partial<WizardData>) => {
-      try {
-        const business = getJsonItemFromLocalStorage('business');
-        const businessId = business?.[0]?.businessId;
-        if (!businessId) return;
+      const business = getJsonItemFromLocalStorage('business');
+      const businessId = business?.[0]?.businessId;
+      if (!businessId) return;
 
-        const current = { ...data, ...overrides };
+      const current = { ...data, ...overrides };
 
-        const payload: WizardSetupPayload = {
-          allowInventorySync: current.inventorySyncEnabled,
-          enabled: true,
-          currentStep,
-          inventoryStrictnessLevel: current.strictnessLevel,
-          items: current.itemName
-            ? [
-                {
-                  name: current.itemName,
-                  description: '',
-                  itemType: current.itemType ?? 0,
-                  strictnessLevel: current.strictnessLevel,
-                  openingStock: 0,
-                  reorderLevel: 0,
-                  reorderQuantity: 0,
-                  averageCostPerBaseUnit: parseFloat(current.costPerUnit) || 0,
-                  isActive: true,
-                  allowTracking: false,
-                  unitId: current.unitId,
-                  supplierId: '',
-                },
-              ]
-            : [],
-          recipes: current.recipeDetails.length > 0
-            ? [
-                {
-                  name: current.itemName,
-                  producedInventoryItemID: current.createdItemId ?? '',
-                  outputQuantity: 1,
-                  outputQuantityUnitId: current.unitId,
-                  recipeType: 0,
-                  isActive: true,
-                  details: current.recipeDetails.map((d) => ({
-                    id: '',
-                    recipeID: '',
-                    inventoryItemID: d.inventoryItemID,
-                    quantityUsed: d.quantityUsed,
-                  })),
-                },
-              ]
-            : [],
-        };
+      const payload: WizardSetupPayload = {
+        allowInventorySync: current.inventorySyncEnabled,
+        enabled: true,
+        currentStep,
+        inventoryStrictnessLevel: current.strictnessLevel,
+        items: current.itemName
+          ? [
+              {
+                name: current.itemName,
+                description: current.description,
+                itemType: current.itemType ?? 0,
+                strictnessLevel: current.strictnessLevel,
+                openingStock: parseFloat(current.openingStock) || 0,
+                reorderLevel: parseFloat(current.reorderLevel) || 0,
+                reorderQuantity: parseFloat(current.reorderQuantity) || 0,
+                averageCostPerBaseUnit: parseFloat(current.costPerUnit) || 0,
+                isActive: current.isActive,
+                allowTracking: current.allowTracking,
+                unitId: current.unitId,
+                supplierId: current.supplierId,
+              },
+            ]
+          : [],
+        recipes: current.recipeDetails.length > 0
+          ? [
+              {
+                name: current.recipeName || `${current.itemName} Recipe`,
+                producedInventoryItemID: current.createdItemId ?? '',
+                outputQuantity: parseFloat(current.outputQuantity) || 1,
+                outputQuantityUnitId: current.outputQuantityUnitId || current.unitId,
+                recipeType: current.recipeType,
+                isActive: true,
+                details: current.recipeDetails.map((d) => ({
+                  id: '',
+                  recipeID: '',
+                  inventoryItemID: d.inventoryItemID,
+                  quantityUsed: d.quantityUsed,
+                })),
+              },
+            ]
+          : [],
+      };
 
-        return await saveInventoryWizardSetup(businessId, payload);
-      } catch {
-        // Non-blocking — don't interrupt the wizard flow
-      }
+      return await saveInventoryWizardSetup(businessId, payload);
     },
     [data]
   );
@@ -188,17 +220,8 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
     : '';
 
   const handleAddMoreItems = useCallback(() => {
-    // Reset steps 4-6 data but keep sync + strictness
-    setData((prev) => ({
-      ...prev,
-      itemName: '',
-      unitId: '',
-      costPerUnit: '',
-      itemType: null,
-      createdItemId: null,
-      recipeDetails: [],
-    }));
-    setStep(4);
+    setData(INITIAL_WIZARD_DATA);
+    setStep(1);
   }, []);
 
   const handleViewInventoryList = useCallback(() => {
@@ -251,9 +274,16 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
       return (
         <AddItemStep
           itemName={data.itemName}
+          description={data.description}
           unitId={data.unitId}
           costPerUnit={data.costPerUnit}
           itemType={data.itemType}
+          openingStock={data.openingStock}
+          reorderLevel={data.reorderLevel}
+          reorderQuantity={data.reorderQuantity}
+          isActive={data.isActive}
+          allowTracking={data.allowTracking}
+          supplierId={data.supplierId}
           createdItemId={data.createdItemId}
           strictnessLevel={data.strictnessLevel}
           onUpdate={(partial) => updateData(partial)}
@@ -270,7 +300,15 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
           createdItemName={data.itemName}
           itemType={data.itemType}
           recipeDetails={data.recipeDetails}
+          recipeName={data.recipeName}
+          outputQuantity={data.outputQuantity}
+          outputQuantityUnitId={data.outputQuantityUnitId}
+          recipeType={data.recipeType}
           onUpdateRecipeDetails={(details) => updateData({ recipeDetails: details })}
+          onUpdateRecipeName={(val) => updateData({ recipeName: val })}
+          onUpdateOutputQuantity={(val) => updateData({ outputQuantity: val })}
+          onUpdateOutputQuantityUnitId={(val) => updateData({ outputQuantityUnitId: val })}
+          onUpdateRecipeType={(val) => updateData({ recipeType: val })}
           onNext={goNext}
           onBack={goBack}
         />
@@ -280,20 +318,30 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
       return (
         <PreviewStep
           itemName={data.itemName}
+          description={data.description}
           unitId={data.unitId}
           unitName={unitName}
           costPerUnit={data.costPerUnit}
           itemType={data.itemType}
+          openingStock={data.openingStock}
+          reorderLevel={data.reorderLevel}
+          reorderQuantity={data.reorderQuantity}
+          isActive={data.isActive}
+          allowTracking={data.allowTracking}
+          supplierId={data.supplierId}
           strictnessLevel={data.strictnessLevel}
           inventorySyncEnabled={data.inventorySyncEnabled}
           recipeDetails={data.recipeDetails}
-          onNext={goNext}
+          recipeName={data.recipeName}
+          outputQuantity={data.outputQuantity}
+          outputQuantityUnitId={data.outputQuantityUnitId}
+          recipeType={data.recipeType}
+          onNext={() => setStep(7)}
           onBack={goBack}
         />
       );
 
     case 7:
-      // Success screen
       return (
         <SuccessStep
           createdItemId={data.createdItemId}

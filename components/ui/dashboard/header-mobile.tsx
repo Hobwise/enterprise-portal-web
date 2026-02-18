@@ -86,17 +86,6 @@ const HeaderMobile = () => {
     localStorage.setItem('mobile-sidebar-accordion-expanded', title);
   }, [filteredSections]);
 
-  // Auto-expand the section containing the active route when pathname changes
-  useEffect(() => {
-    if (filteredSections.length === 0) return;
-    const activeSection = filteredSections.find(s =>
-      s.items.some(item => pathname === item.path || pathname.startsWith(item.path + '/'))
-    );
-    if (activeSection && activeSection.sectionTitle !== expandedSection) {
-      setExpandedSection(activeSection.sectionTitle);
-      localStorage.setItem('mobile-sidebar-accordion-expanded', activeSection.sectionTitle);
-    }
-  }, [pathname, filteredSections]);
 
   const handleSectionToggle = useCallback((title: string) => {
     if (title === expandedSection) return;

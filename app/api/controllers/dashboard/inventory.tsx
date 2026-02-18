@@ -839,3 +839,23 @@ export async function saveInventoryWizardSetup(businessId: string, payload: Wiza
     handleError(error);
   }
 }
+
+export type CreateItemWithRecipePayload = {
+  item: WizardSetupItem;
+  recipe: WizardSetupRecipe | null;
+  isWizardSetup: boolean;
+};
+
+export async function createItemWithRecipe(
+  businessId: string,
+  payload: CreateItemWithRecipePayload
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+  try {
+    const data = await api.post(DASHBOARD.inventoryCreateItemWithRecipe, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}

@@ -1,26 +1,40 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Spinner } from '@nextui-org/react';
+import { Spinner, Switch } from '@nextui-org/react';
 import {
   InventoryItemType,
 } from '@/app/api/controllers/dashboard/inventory';
-import { useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
+import { useUnitsByBusiness, useSuppliers } from '@/hooks/cachedEndpoints/useInventoryItems';
 import WizardHeader from '../WizardHeader';
 import { notify } from '@/lib/utils';
 
 interface AddItemStepProps {
   itemName: string;
+  description: string;
   unitId: string;
   costPerUnit: string;
   itemType: InventoryItemType | null;
+  openingStock: string;
+  reorderLevel: string;
+  reorderQuantity: string;
+  isActive: boolean;
+  allowTracking: boolean;
+  supplierId: string;
   createdItemId: string | null;
   strictnessLevel: number;
   onUpdate: (data: {
     itemName?: string;
+    description?: string;
     unitId?: string;
     costPerUnit?: string;
     itemType?: InventoryItemType | null;
+    openingStock?: string;
+    reorderLevel?: string;
+    reorderQuantity?: string;
+    isActive?: boolean;
+    allowTracking?: boolean;
+    supplierId?: string;
     createdItemId?: string | null;
   }) => void;
   onNext: () => void;
@@ -30,9 +44,16 @@ interface AddItemStepProps {
 
 const AddItemStep: React.FC<AddItemStepProps> = ({
   itemName,
+  description,
   unitId,
   costPerUnit,
   itemType,
+  openingStock,
+  reorderLevel,
+  reorderQuantity,
+  isActive,
+  allowTracking,
+  supplierId,
   createdItemId,
   strictnessLevel,
   onUpdate,
@@ -42,6 +63,7 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const { data: unitsByBusiness, isLoading: unitsByBusinessLoading } = useUnitsByBusiness();
+  const { data: suppliers, isLoading: suppliersLoading } = useSuppliers();
 
   const handleSubmit = async () => {
     if (!itemName.trim()) {
@@ -174,9 +196,9 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
             </div>
           </div>
 
-          {/* Row 2: Item Type */}
-          <div className="mb-6">
-            <div className="sm:w-1/2">
+          {/* Row 2: Item Type & Supplier */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Item Type
               </label>
@@ -202,6 +224,131 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
                   </svg>
                 </div>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Supplier
+              </label>
+              <div className="relative">
+                <select
+                  value={supplierId}
+                  onChange={(e) => onUpdate({ supplierId: e.target.value })}
+                  disabled={suppliersLoading}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 appearance-none"
+                >
+                  <option value="">Select supplier</option>
+                  {Array.isArray(suppliers) &&
+                    suppliers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                </select>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  {suppliersLoading ? (
+                    <Spinner size="sm" color="secondary" />
+                  ) : (
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Row 3: Description */}
+          <div className="mb-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Description
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => onUpdate({ description: e.target.value })}
+              placeholder="Enter item description (optional)"
+              rows={3}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 resize-none"
+            />
+          </div>
+
+          {/* Row 4: Opening Stock, Reorder Level, Reorder Quantity */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Opening Stock
+              </label>
+              <input
+                type="number"
+                value={openingStock}
+                onChange={(e) => onUpdate({ openingStock: e.target.value })}
+                placeholder="0"
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Reorder Level
+              </label>
+              <input
+                type="number"
+                value={reorderLevel}
+                onChange={(e) => onUpdate({ reorderLevel: e.target.value })}
+                placeholder="0"
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Reorder Quantity
+              </label>
+              <input
+                type="number"
+                value={reorderQuantity}
+                onChange={(e) => onUpdate({ reorderQuantity: e.target.value })}
+                placeholder="0"
+                min="0"
+                step="0.01"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200"
+              />
+            </div>
+          </div>
+
+          {/* Row 5: Toggles */}
+          <div className="border-t border-gray-100 pt-4 mb-6 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-gray-700">Active</p>
+                <p className="text-sm text-gray-500">
+                  Enable or disable this inventory item
+                </p>
+              </div>
+              <Switch
+                isSelected={isActive}
+                onValueChange={(val) => onUpdate({ isActive: val })}
+                classNames={{
+                  wrapper: 'group-data-[selected=true]:bg-green-500',
+                }}
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-gray-700">Allow Tracking</p>
+                <p className="text-sm text-gray-500">
+                  Track stock levels and movements for this item
+                </p>
+              </div>
+              <Switch
+                isSelected={allowTracking}
+                onValueChange={(val) => onUpdate({ allowTracking: val })}
+                classNames={{
+                  wrapper: 'group-data-[selected=true]:bg-green-500',
+                }}
+              />
             </div>
           </div>
 

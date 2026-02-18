@@ -10,7 +10,7 @@ export const supplierItemColumns = [
 
 export const historyColumns = [
   { name: "REFERENCE", uid: "reference" },
-  { name: "REQUEST DATE", uid: "requestDate" },
+  { name: "ORDER DATE", uid: "requestDate" },
   { name: "SUPPLIER NAME", uid: "supplierName" },
   { name: "COMPANY NAME", uid: "companyName" },
   { name: "ITEMS", uid: "numberOfItems" },

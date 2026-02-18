@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
-import { Switch } from '@nextui-org/react';
-import { InventoryItemType } from '@/app/api/controllers/dashboard/inventory';
+import React, { useState } from 'react';
+import { Spinner, Switch } from '@nextui-org/react';
+import { InventoryItemType, createItemWithRecipe } from '@/app/api/controllers/dashboard/inventory';
+import { useSuppliers, useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
+import { notify, getJsonItemFromLocalStorage } from '@/lib/utils';
 import WizardHeader from '../WizardHeader';
 
 type LocalRecipeDetail = {
@@ -13,13 +15,24 @@ type LocalRecipeDetail = {
 
 interface PreviewStepProps {
   itemName: string;
+  description: string;
   unitId: string;
   unitName: string;
   costPerUnit: string;
   itemType: InventoryItemType | null;
+  openingStock: string;
+  reorderLevel: string;
+  reorderQuantity: string;
+  isActive: boolean;
+  allowTracking: boolean;
+  supplierId: string;
   strictnessLevel: number;
   inventorySyncEnabled: boolean;
   recipeDetails: LocalRecipeDetail[];
+  recipeName: string;
+  outputQuantity: string;
+  outputQuantityUnitId: string;
+  recipeType: number;
   onNext: () => void;
   onBack: () => void;
 }
@@ -39,15 +52,38 @@ const getItemTypeLabel = (itemType: InventoryItemType | null): string => {
 
 const PreviewStep: React.FC<PreviewStepProps> = ({
   itemName,
+  description,
+  unitId,
   unitName,
   costPerUnit,
   itemType,
+  openingStock,
+  reorderLevel,
+  reorderQuantity,
+  isActive,
+  allowTracking,
+  supplierId,
   strictnessLevel,
   inventorySyncEnabled,
   recipeDetails,
+  recipeName,
+  outputQuantity,
+  outputQuantityUnitId,
+  recipeType,
   onNext,
   onBack,
 }) => {
+  const [saving, setSaving] = useState(false);
+  const { data: suppliers } = useSuppliers();
+  const { data: unitsByBusiness } = useUnitsByBusiness();
+
+  const supplierName = Array.isArray(suppliers)
+    ? suppliers.find((s) => s.id === supplierId)?.name ?? ''
+    : '';
+
+  const outputUnitName = Array.isArray(unitsByBusiness)
+    ? unitsByBusiness.find((u) => u.id === outputQuantityUnitId)?.name ?? ''
+    : '';
   return (
     <div className="min-h-[70vh] bg-[#EBE8F9] rounded-2xl p-6 sm:p-10 flex flex-col">
       {/* Header: Hat left, Indicator right */}
@@ -88,8 +124,8 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
             </div>
           </div>
 
-          {/* Row 2: Item Type, Item Category */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Row 2: Item Type, Supplier */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">Item Type</label>
               <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
@@ -97,10 +133,68 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Item Category</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Supplier</label>
               <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
-                {getItemTypeLabel(itemType)}
+                {supplierName || '—'}
               </p>
+            </div>
+          </div>
+
+          {/* Row 3: Description */}
+          {description && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-500 mb-1">Description</label>
+              <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
+                {description}
+              </p>
+            </div>
+          )}
+
+          {/* Row 4: Opening Stock, Reorder Level, Reorder Quantity */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Opening Stock</label>
+              <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
+                {openingStock || '0'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Reorder Level</label>
+              <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
+                {reorderLevel || '0'}
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Reorder Quantity</label>
+              <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
+                {reorderQuantity || '0'}
+              </p>
+            </div>
+          </div>
+
+          {/* Row 5: Active & Tracking toggles */}
+          <div className="border-t border-gray-100 pt-3 flex gap-6">
+            <div className="flex items-center gap-2">
+              <Switch
+                isSelected={isActive}
+                isDisabled
+                size="sm"
+                classNames={{
+                  wrapper: 'group-data-[selected=true]:bg-green-500',
+                }}
+              />
+              <span className="text-sm text-gray-700">Active</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                isSelected={allowTracking}
+                isDisabled
+                size="sm"
+                classNames={{
+                  wrapper: 'group-data-[selected=true]:bg-green-500',
+                }}
+              />
+              <span className="text-sm text-gray-700">Allow Tracking</span>
             </div>
           </div>
         </div>
@@ -109,7 +203,25 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* LEFT: Recipe Card */}
           <div className="bg-white rounded-xl border border-gray-200 border-l-4 border-l-[#5F35D2] p-5">
-            <h3 className="font-semibold text-gray-800 mb-3">Recipe</h3>
+            <h3 className="font-semibold text-gray-800 mb-1">Recipe</h3>
+            {recipeName && (
+              <p className="text-sm text-gray-500 mb-3">{recipeName}</p>
+            )}
+
+            {/* Recipe config summary */}
+            {recipeDetails.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div>
+                  <p className="text-xs text-gray-500">Output Qty</p>
+                  <p className="text-sm font-medium text-gray-700">{outputQuantity || '1'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Output Unit</p>
+                  <p className="text-sm font-medium text-gray-700">{outputUnitName || '—'}</p>
+                </div>
+              </div>
+            )}
+
             {recipeDetails.length > 0 ? (
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {recipeDetails.map((detail) => (
@@ -187,17 +299,78 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
       <div className="flex justify-between items-center w-full mt-auto pt-8">
         <button
           onClick={onBack}
+          disabled={saving}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-800 font-medium transition-colors"
         >
           <span>&larr;</span>
           <span>Back</span>
         </button>
         <button
-          onClick={onNext}
-          className="flex items-center gap-2 px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-semibold transition-all duration-200"
+          onClick={async () => {
+            setSaving(true);
+            try {
+              const business = getJsonItemFromLocalStorage('business');
+              const businessId = business?.[0]?.businessId;
+
+              const response = await createItemWithRecipe(businessId, {
+                item: {
+                  name: itemName,
+                  description,
+                  itemType: itemType ?? 0,
+                  strictnessLevel,
+                  openingStock: parseFloat(openingStock) || 0,
+                  reorderLevel: parseFloat(reorderLevel) || 0,
+                  reorderQuantity: parseFloat(reorderQuantity) || 0,
+                  averageCostPerBaseUnit: parseFloat(costPerUnit) || 0,
+                  isActive,
+                  allowTracking,
+                  unitId,
+                  supplierId,
+                },
+                recipe: recipeDetails.length > 0 ? {
+                  name: recipeName || `${itemName} Recipe`,
+                  producedInventoryItemID: '',
+                  outputQuantity: parseFloat(outputQuantity) || 1,
+                  outputQuantityUnitId: outputQuantityUnitId || unitId,
+                  recipeType,
+                  isActive: true,
+                  details: recipeDetails.map(d => ({
+                    id: '',
+                    recipeID: '',
+                    inventoryItemID: d.inventoryItemID,
+                    quantityUsed: d.quantityUsed,
+                  })),
+                } : null,
+                isWizardSetup: true,
+              });
+
+              if (response?.data?.isSuccessful) {
+                notify({ title: 'Success!', text: 'Item saved successfully', type: 'success' });
+                onNext();
+              } else {
+                notify({ title: 'Error!', text: response?.data?.error || 'Failed to save item', type: 'error' });
+              }
+            } catch (error) {
+              console.error('Error saving item:', error);
+              notify({ title: 'Error!', text: 'Something went wrong. Please try again.', type: 'error' });
+            } finally {
+              setSaving(false);
+            }
+          }}
+          disabled={saving}
+          className="flex items-center gap-2 px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
         >
-          <span>Save to Item List</span>
-          <span>&rarr;</span>
+          {saving ? (
+            <>
+              <Spinner size="sm" color="current" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <span>Save to Item List</span>
+              <span>&rarr;</span>
+            </>
+          )}
         </button>
       </div>
     </div>

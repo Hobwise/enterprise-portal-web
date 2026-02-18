@@ -135,7 +135,7 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
           return (
             <div className="flex flex-col gap-1.5 min-w-[120px]">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-black">{stock}</span>
+                <span className="text-sm font-medium text-black">{stock} {item.unitName || ''}</span>
                 {isOutOfStock && (
                   <Chip
                     size="sm"
@@ -171,7 +171,7 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
         case 'reorderLevel':
           return (
             <div className="text-sm text-black">
-              {item.averageCostPerUnit}
+              {item.reorderLevel}
             </div>
           );
         case 'actions':

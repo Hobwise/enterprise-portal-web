@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Spinner } from '@nextui-org/react';
+import { LuPlus, LuHistory } from 'react-icons/lu';
 
 import { useQuery } from '@tanstack/react-query';
 import useSuppliers from '@/hooks/cachedEndpoints/useSuppliers';
@@ -34,7 +35,6 @@ import CustomizePurchaseModal from '@/components/ui/dashboard/inventory/purchase
 import SendEmailModal from '@/components/ui/dashboard/inventory/purchase-request/SendEmailModal';
 import PurchaseSuccessModal from '@/components/ui/dashboard/inventory/purchase-request/PurchaseSuccessModal';
 import ReceivedItemsModal from '@/components/ui/dashboard/inventory/purchase-request/ReceivedItemsModal';
-import ViewPurchaseRequestModal from '@/components/ui/dashboard/inventory/purchase-request/ViewPurchaseRequestModal';
 
 
 export default function PurchaseRequestPage() {
@@ -46,6 +46,9 @@ export default function PurchaseRequestPage() {
   const businessId = businessInformation?.[0]?.businessId;
   const userInformation = getJsonItemFromLocalStorage('userInformation');
 
+  // Tab state
+  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
+
   // State
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [purchaseOrderId, setPurchaseOrderId] = useState<string | null>(null);
@@ -54,13 +57,11 @@ export default function PurchaseRequestPage() {
   // Purchase order history pagination state
   const [historyPage, setHistoryPage] = useState(1);
   const [historyPageSize] = useState(10);
-  const [historySearch, setHistorySearch] = useState('');
-
   // Fetch real purchase orders
   const { data: purchaseOrdersData, refetch: refetchOrders } = useQuery<{ orders: PurchaseRequest[]; totalCount: number }>({
-    queryKey: ['purchaseOrderHistory', businessId, historyPage, historyPageSize, historySearch],
+    queryKey: ['purchaseOrderHistory', businessId, historyPage, historyPageSize],
     queryFn: async () => {
-      const response = await getPurchaseOrdersByBusiness(businessId, historyPage, historyPageSize, historySearch || undefined);
+      const response = await getPurchaseOrdersByBusiness(businessId, historyPage, historyPageSize);
       const responseBody = response?.data;
       // Handle paginated response: { data: { items: [...], totalCount }, isSuccessful }
       const paginated = responseBody?.data;
@@ -113,6 +114,10 @@ export default function PurchaseRequestPage() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [receivingStock, setReceivingStock] = useState(false);
   const [fetchingOrderDetails, setFetchingOrderDetails] = useState(false);
+  const [duplicatingOrder, setDuplicatingOrder] = useState(false);
+  const [cancellingOrder, setCancellingOrder] = useState(false);
+
+  const isActionLoading = fetchingOrderDetails || duplicatingOrder || cancellingOrder;
 
   // Derived data
   const selectedSupplier: Supplier | null = useMemo(
@@ -315,6 +320,7 @@ export default function PurchaseRequestPage() {
   };
 
   const handleDuplicateRequest = async (request: PurchaseRequest) => {
+    setDuplicatingOrder(true);
     try {
       // Fetch full PO details first
       const detailResponse = await getPurchaseOrder(request.requestId);
@@ -329,10 +335,13 @@ export default function PurchaseRequestPage() {
       }
     } catch {
       // Interceptor already shows error toast
+    } finally {
+      setDuplicatingOrder(false);
     }
   };
 
   const handleCancelRequest = async (request: PurchaseRequest) => {
+    setCancellingOrder(true);
     try {
       const response = await cancelPurchaseOrder(request.requestId);
       if (response?.data?.isSuccessful) {
@@ -343,6 +352,8 @@ export default function PurchaseRequestPage() {
       }
     } catch {
       // Interceptor already shows error toast
+    } finally {
+      setCancellingOrder(false);
     }
   };
 
@@ -381,45 +392,84 @@ export default function PurchaseRequestPage() {
     <div className="w-full px-4 py-6">
       <PurchaseRequestHeader />
 
-      <SupplierSearchCard
-        suppliers={suppliers}
-        selectedSupplierId={selectedSupplierId}
-        onSupplierSelect={handleSupplierSelect}
-        isLoading={suppliersLoading}
-      />
+      {/* Tabs */}
+      <div className="flex items-center gap-1 mb-6 border-b border-gray-200">
+        <button
+          onClick={() => setActiveTab('create')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+            activeTab === 'create'
+              ? 'border-[#5F35D2] text-[#5F35D2]'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          <LuPlus size={16} />
+          Create Order
+        </button>
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
+            activeTab === 'history'
+              ? 'border-[#5F35D2] text-[#5F35D2]'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`}
+        >
+          <LuHistory size={16} />
+          Order History
+          {purchaseOrdersTotalCount > 0 && (
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+              activeTab === 'history'
+                ? 'bg-[#5F35D2]/10 text-[#5F35D2]'
+                : 'bg-gray-100 text-gray-500'
+            }`}>
+              {purchaseOrdersTotalCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-      {selectedSupplierId && isLoadingSupplierItems ? (
-        <div className="flex flex-col items-center justify-center w-full bg-white rounded-lg p-8 min-h-[300px] mb-8">
-          <Spinner size="lg" color="secondary" />
-          <p className="text-sm text-gray-500 mt-4">Loading supplier items...</p>
-        </div>
-      ) : selectedSupplierId && supplierItems.length > 0 ? (
-        <SupplierItemsTable
-          items={supplierItems}
-          selectedItems={selectedItemIds}
-          onSelectionChange={setSelectedItemIds}
-          onCustomize={handleCustomize}
-        />
-      ) : (
-        <div className="mb-8">
-          <NoSupplierItems />
-        </div>
+      {/* Tab Content */}
+      {activeTab === 'create' && (
+        <>
+          <SupplierSearchCard
+            suppliers={suppliers}
+            selectedSupplierId={selectedSupplierId}
+            onSupplierSelect={handleSupplierSelect}
+            isLoading={suppliersLoading}
+          />
+
+          {selectedSupplierId && isLoadingSupplierItems ? (
+            <div className="flex flex-col items-center justify-center w-full bg-white rounded-lg p-8 min-h-[300px]">
+              <Spinner size="lg" color="secondary" />
+              <p className="text-sm text-gray-500 mt-4">Loading supplier items...</p>
+            </div>
+          ) : selectedSupplierId && supplierItems.length > 0 ? (
+            <SupplierItemsTable
+              items={supplierItems}
+              selectedItems={selectedItemIds}
+              onSelectionChange={setSelectedItemIds}
+              onCustomize={handleCustomize}
+            />
+          ) : (
+            <NoSupplierItems />
+          )}
+        </>
       )}
 
-      <PurchaseRequestHistoryTable
-        data={purchaseOrders}
-        onViewRequest={handleViewRequest}
-        onReceiveRequest={handleReceiveRequest}
-        onDuplicateRequest={handleDuplicateRequest}
-        onCancelRequest={handleCancelRequest}
-        onSendMail={handleSendMailFromHistory}
-        currentPage={historyPage}
-        totalCount={purchaseOrdersTotalCount}
-        pageSize={historyPageSize}
-        onPageChange={setHistoryPage}
-        searchValue={historySearch}
-        onSearchChange={(val) => { setHistorySearch(val); setHistoryPage(1); }}
-      />
+      {activeTab === 'history' && (
+        <PurchaseRequestHistoryTable
+          data={purchaseOrders}
+          onViewRequest={handleViewRequest}
+          onReceiveRequest={handleReceiveRequest}
+          onDuplicateRequest={handleDuplicateRequest}
+          onCancelRequest={handleCancelRequest}
+          onSendMail={handleSendMailFromHistory}
+          currentPage={historyPage}
+          totalCount={purchaseOrdersTotalCount}
+          pageSize={historyPageSize}
+          onPageChange={setHistoryPage}
+          isActionLoading={isActionLoading}
+        />
+      )}
 
       {/* Modals */}
       <CustomizePurchaseModal
@@ -458,11 +508,6 @@ export default function PurchaseRequestPage() {
         isLoading={receivingStock}
       />
 
-      <ViewPurchaseRequestModal
-        isOpen={viewModalOpen}
-        onOpenChange={setViewModalOpen}
-        purchaseRequest={selectedPurchaseRequest}
-      />
     </div>
   );
 }
