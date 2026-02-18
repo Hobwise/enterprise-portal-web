@@ -128,6 +128,11 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
   };
 
+  const formatCurrencyPdf = (value: number) => {
+    const formatted = value.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return `N${formatted}`;
+  };
+
   const handleDownloadPdf = useCallback(() => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -137,7 +142,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     // Title
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.text("Purchase Requisition", margin, y);
+    doc.text("Purchase Order", margin, y);
     y += 10;
 
     // Divider line
@@ -163,9 +168,9 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
       doc.text(value, x, yPos);
     };
 
-    // Row 1: Request ID, Date, Expected Delivery
-    drawLabel("Request ID", col1, y);
-    drawLabel("Request Date", col2, y);
+    // Row 1: Order ID, Date, Expected Delivery
+    drawLabel("Order ID", col1, y);
+    drawLabel("Order Date", col2, y);
     drawLabel("Expected Delivery", col3, y);
     y += 5;
     drawValue(requestId, col1, y);
@@ -233,10 +238,12 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
       i + 1,
       item.itemName,
       item.unitName,
-      formatCurrency(item.costPerUnit),
+      formatCurrencyPdf(item.costPerUnit),
       item.requiredStock,
-      formatCurrency(item.cost),
+      formatCurrencyPdf(item.cost),
     ]);
+
+    const tableWidth = pageWidth - margin * 2;
 
     autoTable(doc, {
       startY: y,
@@ -251,10 +258,12 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
       },
       bodyStyles: { fontSize: 9, textColor: 60 },
       columnStyles: {
-        0: { cellWidth: 10, halign: "center" },
-        3: { halign: "right" },
-        4: { halign: "center" },
-        5: { halign: "right" },
+        0: { cellWidth: tableWidth * 0.06, halign: "center" },
+        1: { cellWidth: tableWidth * 0.34 },
+        2: { cellWidth: tableWidth * 0.12 },
+        3: { cellWidth: tableWidth * 0.16, halign: "left" },
+        4: { cellWidth: tableWidth * 0.16, halign: "center" },
+        5: { cellWidth: tableWidth * 0.16, halign: "left" },
       },
       margin: { left: margin, right: margin },
     });
@@ -271,7 +280,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     doc.text("Sub Total", labelX, y);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(50);
-    doc.text(formatCurrency(subTotal), valueX, y, { align: "right" });
+    doc.text(formatCurrencyPdf(subTotal), valueX, y, { align: "right" });
     y += 7;
 
     if (vatEnabled && vatPercent > 0) {
@@ -280,7 +289,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
       doc.text(`VAT (${vatPercent}%)`, labelX, y);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(50);
-      doc.text(formatCurrency(vat), valueX, y, { align: "right" });
+      doc.text(formatCurrencyPdf(vat), valueX, y, { align: "right" });
       y += 7;
     }
 
@@ -290,7 +299,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
       doc.text(additionalCostLabel || "Additional Cost", labelX, y);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(50);
-      doc.text(formatCurrency(additionalCost), valueX, y, { align: "right" });
+      doc.text(formatCurrencyPdf(additionalCost), valueX, y, { align: "right" });
       y += 7;
     }
 
@@ -303,7 +312,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     doc.setFont("helvetica", "bold");
     doc.setTextColor(30);
     doc.text("Grand Total", labelX, y);
-    doc.text(formatCurrency(grandTotal), valueX, y, { align: "right" });
+    doc.text(formatCurrencyPdf(grandTotal), valueX, y, { align: "right" });
 
     doc.save(`${requestId}.pdf`);
   }, [
@@ -311,7 +320,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     requestorEmail, supplier, businessName, businessAddress,
     businessCity, businessState, businessPhone, deliveryAddress,
     subTotal, vat, vatPercent, vatEnabled, additionalCost,
-    additionalCostLabel, grandTotal, formatCurrency,
+    additionalCostLabel, grandTotal,
   ]);
 
   const handleSend = () => {
@@ -444,22 +453,22 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                   <table className="w-full">
                     <thead className="bg-grey300">
                       <tr>
-                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 ">
+                        <th className="text-[10px] text-default-500 text-left px-2 font-medium border-b border-divider py-2 ">
                           ITEM NAME
                         </th>
-                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 ">
+                        <th className="text-[10px] text-default-500 text-left px-2 font-medium border-b border-divider py-2 ">
                           UNIT
                         </th>
-                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 ">
+                        <th className="text-[10px] text-default-500 text-left px-2 font-medium border-b border-divider py-2 ">
                           COST/UNIT
                         </th>
-                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-center">
+                        <th className="text-[10px] text-default-500 text-left px-2 font-medium border-b border-divider py-2 ">
                           QTY REQUIRED
                         </th>
-                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 ">
+                        <th className="text-[10px] text-default-500 text-left px-2 font-medium border-b border-divider py-2 ">
                           AMOUNT
                         </th>
-                        <th className=""></th>
+                        <th className="border-b border-divider "></th>
                       </tr>
                     </thead>
                     <tbody>
