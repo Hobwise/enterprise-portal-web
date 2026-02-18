@@ -8,13 +8,12 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Input,
   Chip,
   Selection,
 } from "@nextui-org/react";
 import { CustomButton } from "@/components/customButton";
 import { FaArrowRight } from "react-icons/fa6";
-import { IoSearchOutline } from "react-icons/io5";
+import { IoSearchOutline, IoCloseCircle } from "react-icons/io5";
 import { SupplierInventoryItem } from "./types";
 import { supplierItemColumns } from "./data";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
@@ -41,9 +40,9 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
     const query = filterValue.toLowerCase();
     return items.filter(
       (item) =>
-        item.name.toLowerCase().includes(query) ||
-        item.unitName.toLowerCase().includes(query) ||
-        item.status.toLowerCase().includes(query)
+        (item.name || '').toLowerCase().includes(query) ||
+        (item.unitName || '').toLowerCase().includes(query) ||
+        (item.status || '').toLowerCase().includes(query)
     );
   }, [items, filterValue]);
 
@@ -128,16 +127,24 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
           )}
         </div>
         <div className="flex items-center gap-3">
-          <Input
-            isClearable
-            className="w-64"
-            placeholder="Search items..."
-            startContent={<IoSearchOutline className="text-default-400" />}
-            size="sm"
-            value={filterValue}
-            onValueChange={handleFilterChange}
-            onClear={() => handleFilterChange("")}
-          />
+          <div className="relative w-64">
+            <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
+            <input
+              type="text"
+              placeholder="Search items..."
+              value={filterValue}
+              onChange={(e) => handleFilterChange(e.target.value)}
+              className="w-full border border-gray-200 rounded-lg pl-9 pr-8 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2]"
+            />
+            {filterValue && (
+              <button
+                onClick={() => handleFilterChange("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <IoCloseCircle size={16} />
+              </button>
+            )}
+          </div>
           <span className="text-sm text-gray-400">
             {filteredItems.length} items
           </span>

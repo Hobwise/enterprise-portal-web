@@ -4,16 +4,15 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Modal,
   ModalContent,
-  ModalHeader,
   ModalBody,
   ModalFooter,
   Button,
-  Chip,
+  Checkbox,
   Divider,
   Spinner,
 } from "@nextui-org/react";
 import { IoClose } from "react-icons/io5";
-import { Download } from "lucide-react";
+import { Download, ChevronDown } from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { SupplierInventoryItem, PurchaseRequestItem } from "./types";
@@ -50,7 +49,8 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
   const [items, setItems] = useState<PurchaseRequestItem[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
-  const [vatPercent, setVatPercent] = useState(7.5);
+  const [vatEnabled, setVatEnabled] = useState(false);
+  const [vatPercent, setVatPercent] = useState(0);
   const [additionalCostLabel, setAdditionalCostLabel] = useState("");
   const [additionalCost, setAdditionalCost] = useState(0);
 
@@ -63,11 +63,16 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
 
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const businessInfo = getJsonItemFromLocalStorage("business");
+  const business = businessInfo?.[0];
   const requestorName = userInformation
     ? `${userInformation.firstName || ""} ${userInformation.lastName || ""}`.trim()
     : "N/A";
   const requestorEmail = userInformation?.email || "";
-  const businessName = businessInfo?.[0]?.businessName || "My Business";
+  const businessName = business?.businessName || "My Business";
+  const businessAddress = business?.businessAddress || "";
+  const businessCity = business?.city || "";
+  const businessState = business?.state || "";
+  const businessPhone = business?.businessContactNumber || "";
 
   // Generate a pseudo request ID
   const requestId = useMemo(() => {
@@ -87,12 +92,16 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
           cost: 0,
         }))
       );
+      // Pre-populate delivery address from business location
+      const parts = [businessAddress, businessCity, businessState].filter(Boolean);
+      setDeliveryAddress(parts.join(", "));
       setExpectedDate("");
-      setVatPercent(7.5);
+      setVatEnabled(false);
+      setVatPercent(0);
       setAdditionalCostLabel("");
       setAdditionalCost(0);
     }
-  }, [isOpen, selectedItems, supplier?.address]);
+  }, [isOpen, selectedItems, businessAddress, businessCity, businessState]);
 
   const updateRequiredStock = (index: number, value: number) => {
     setItems((prev) =>
@@ -112,7 +121,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     () => items.reduce((sum, item) => sum + item.cost, 0),
     [items]
   );
-  const vat = useMemo(() => subTotal * (vatPercent / 100), [subTotal, vatPercent]);
+  const vat = useMemo(() => vatEnabled ? subTotal * (vatPercent / 100) : 0, [subTotal, vatPercent, vatEnabled]);
   const grandTotal = useMemo(() => subTotal + vat + additionalCost, [subTotal, vat, additionalCost]);
 
   const formatCurrency = (value: number) => {
@@ -154,7 +163,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
       doc.text(value, x, yPos);
     };
 
-    // Row 1
+    // Row 1: Request ID, Date, Expected Delivery
     drawLabel("Request ID", col1, y);
     drawLabel("Request Date", col2, y);
     drawLabel("Expected Delivery", col3, y);
@@ -162,24 +171,55 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     drawValue(requestId, col1, y);
     drawValue(todayFormatted, col2, y);
     drawValue(expectedDate || "N/A", col3, y);
-    y += 8;
+    y += 10;
 
-    // Row 2
-    drawLabel("Requestor", col1, y);
-    drawLabel("Supplier", col2, y);
-    drawLabel("Company", col3, y);
-    y += 5;
-    drawValue(requestorName, col1, y);
-    drawValue(supplier?.companyName || "N/A", col2, y);
-    drawValue(supplier?.companyName || businessName, col3, y);
-    y += 5;
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(140);
+    // VENDOR / SHIP TO table
+    const halfWidth = (pageWidth - margin * 2 - 4) / 2;
+    const vendorX = col1;
+    const shipX = col1 + halfWidth + 4;
+
+    // Header bars
+    doc.setFillColor(61, 66, 74);
+    doc.rect(vendorX, y, halfWidth, 7, "F");
+    doc.rect(shipX, y, halfWidth, 7, "F");
+    doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    doc.text(requestorEmail, col1, y);
-    doc.text(`${supplier?.name || ""} - ${supplier?.email || ""}`, col2, y);
-    if (supplier?.address) doc.text(supplier.address, col3, y);
-    y += 8;
+    doc.setTextColor(255);
+    doc.text("VENDOR", vendorX + 4, y + 5);
+    doc.text("SHIP TO", shipX + 4, y + 5);
+    y += 10;
+
+    // Vendor details
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(60);
+    doc.setFontSize(9);
+    const vendorLines = [
+      supplier?.name || "N/A",
+      supplier?.companyName || "N/A",
+      supplier?.address || "",
+      supplier?.email || "",
+      supplier?.phoneNumber || "",
+    ].filter(Boolean);
+    vendorLines.forEach((line) => {
+      doc.text(line, vendorX + 4, y);
+      y += 5;
+    });
+
+    // Ship To details (reset y for right column)
+    let shipY = y - vendorLines.length * 5;
+    const shipLines = [
+      requestorName,
+      businessName,
+      businessAddress,
+      [businessCity, businessState].filter(Boolean).join(", "),
+      businessPhone,
+    ].filter(Boolean);
+    shipLines.forEach((line) => {
+      doc.text(line, shipX + 4, shipY);
+      shipY += 5;
+    });
+
+    y = Math.max(y, shipY) + 5;
 
     // Delivery address
     doc.setFontSize(9);
@@ -234,13 +274,15 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     doc.text(formatCurrency(subTotal), valueX, y, { align: "right" });
     y += 7;
 
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(100);
-    doc.text(`VAT (${vatPercent}%)`, labelX, y);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(50);
-    doc.text(formatCurrency(vat), valueX, y, { align: "right" });
-    y += 7;
+    if (vatEnabled && vatPercent > 0) {
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100);
+      doc.text(`VAT (${vatPercent}%)`, labelX, y);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(50);
+      doc.text(formatCurrency(vat), valueX, y, { align: "right" });
+      y += 7;
+    }
 
     if (additionalCost > 0) {
       doc.setFont("helvetica", "normal");
@@ -266,9 +308,10 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     doc.save(`${requestId}.pdf`);
   }, [
     items, requestId, todayFormatted, expectedDate, requestorName,
-    requestorEmail, supplier, businessName, deliveryAddress,
-    subTotal, vat, vatPercent, additionalCost, additionalCostLabel,
-    grandTotal, formatCurrency,
+    requestorEmail, supplier, businessName, businessAddress,
+    businessCity, businessState, businessPhone, deliveryAddress,
+    subTotal, vat, vatPercent, vatEnabled, additionalCost,
+    additionalCostLabel, grandTotal, formatCurrency,
   ]);
 
   const handleSend = () => {
@@ -288,16 +331,11 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
       return;
     }
 
-    if (!deliveryAddress.trim()) {
-      notify({ title: "Error!", text: "Please enter a delivery address", type: "error" });
-      return;
-    }
-
     onSend({
       items,
       deliveryAddress,
       expectedDate,
-      vatPercent,
+      vatPercent: vatEnabled ? vatPercent : 0,
       vatAmount: vat,
       additionalCostLabel,
       additionalCost,
@@ -317,46 +355,20 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
       <ModalContent>
         {(onClose) => (
           <>
-            {/* <ModalHeader className="flex items-center justify-between pb-0 pt-6 px-8">
-              <div className="flex items-center gap-3">
-                <h2 className="text-xl font-bold text-[#3D424A]">
-                  Purchase Requisition
-                </h2>
-                <Chip size="sm" color="warning" variant="flat">
-                  Draft
-                </Chip>
-              </div>
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <IoClose size={20} className="text-gray-500" />
-              </button>
-            </ModalHeader> */}
-
             <ModalBody className="px-4 py-4">
-              {/* Header Info Section */}
-              <div className="bg-gray-50 rounded-xl p-6 ">
-                <div className="grid grid-cols-3 gap-x-8 gap-y-5">
-                  {/* Row 1 */}
+              {/* Top row: Date, Expected Delivery */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="grid grid-cols-2 gap-x-6 mb-3">
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
-                      Request ID
-                    </p>
-                    <p className="text-sm font-semibold text-[#3D424A]">
-                      {requestId}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
                       Request Date
                     </p>
-                    <p className="text-sm font-medium text-gray-700">
+                    <p className="text-xs font-medium text-gray-700">
                       {todayFormatted}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
                       Expected Delivery
                     </p>
                     <input
@@ -364,61 +376,66 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                       value={expectedDate}
                       onChange={(e) => setExpectedDate(e.target.value)}
                       min={today}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-sm text-gray-700 bg-white"
+                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-xs text-gray-700 bg-white"
                     />
                   </div>
+                </div>
 
-                  {/* Row 2 */}
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
-                      Requestor
-                    </p>
-                    <p className="text-sm font-medium text-gray-700">
-                      {requestorName}
-                    </p>
-                    <p className="text-xs text-gray-400">{requestorEmail}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
-                      Supplier
-                    </p>
-                    <p className="text-sm font-medium text-gray-700">
-                      {supplier?.companyName || "N/A"}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {supplier?.name} &middot; {supplier?.email}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
-                      Company
-                    </p>
-                    <p className="text-sm font-medium text-gray-700">
-                      {supplier?.companyName || businessName}
-                    </p>
-                    {supplier?.address && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        {supplier.address}
+                {/* VENDOR / SHIP TO two-column layout */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* VENDOR column */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-[#3D424A] px-3 py-1.5">
+                      <p className="text-[10px] font-semibold text-white uppercase tracking-wide">
+                        Vendor
                       </p>
-                    )}
+                    </div>
+                    <div className="px-3 py-2 space-y-0.5">
+                      <p className="text-xs font-medium text-gray-700">
+                        {supplier?.name || "N/A"}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {supplier?.companyName || "N/A"}
+                      </p>
+                      {supplier?.address && (
+                        <p className="text-xs text-gray-500">{supplier.address}</p>
+                      )}
+                      {supplier?.email && (
+                        <p className="text-xs text-gray-500">{supplier.email}</p>
+                      )}
+                      {supplier?.phoneNumber && (
+                        <p className="text-xs text-gray-500">{supplier.phoneNumber}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* SHIP TO column */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-[#3D424A] px-3 py-1.5">
+                      <p className="text-[10px] font-semibold text-white uppercase tracking-wide">
+                        Ship To
+                      </p>
+                    </div>
+                    <div className="px-3 py-2 space-y-0.5">
+                      <p className="text-xs font-medium text-gray-700">
+                        {requestorName}
+                      </p>
+                      <p className="text-xs text-gray-600">{businessName}</p>
+                      {(businessCity || businessState) && (
+                        <p className="text-xs text-gray-500">
+                          {[businessCity, businessState].filter(Boolean).join(", ")}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <Divider className="my-3" />
-
-                {/* Shipping Address */}
-                <div>
-                  <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">
-                    Shipping / Delivery Address
-                  </p>
-                  <input
-                    type="text"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    placeholder="Enter delivery address"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-sm text-gray-700 bg-white"
-                  />
-                </div>
+              {/* Scroll indicator */}
+              <div className="flex items-center justify-center gap-1.5 text-gray-400 py-1">
+                <ChevronDown size={14} className="animate-bounce" />
+                <span className="text-[10px] uppercase tracking-wider">Scroll to view items & totals</span>
+                <ChevronDown size={14} className="animate-bounce" />
               </div>
 
               {/* Items Table */}
@@ -427,22 +444,22 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                   <table className="w-full">
                     <thead className="bg-grey300">
                       <tr>
-                        <th className="text-xs text-default-500 font-medium border-b border-divider py-4 px-4 text-left">
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 ">
                           ITEM NAME
                         </th>
-                        <th className="text-xs text-default-500 font-medium border-b border-divider py-4 px-4 text-left">
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 ">
                           UNIT
                         </th>
-                        <th className="text-xs text-default-500 font-medium border-b border-divider py-4 px-4 text-right">
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 ">
                           COST/UNIT
                         </th>
-                        <th className="text-xs text-default-500 font-medium border-b border-divider py-4 px-4 text-center">
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-center">
                           QTY REQUIRED
                         </th>
-                        <th className="text-xs text-default-500 font-medium border-b border-divider py-4 px-4 text-right">
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 ">
                           AMOUNT
                         </th>
-                        <th className="w-10"></th>
+                        <th className=""></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -451,23 +468,23 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                           key={item.id}
                           className="border-b border-divider hover:bg-gray-50 transition-colors"
                         >
-                          <td className="py-3 px-4">
-                            <span className="text-sm text-textGrey">
+                          <td className="py-2 px-3">
+                            <span className="text-xs text-textGrey">
                               {item.itemName}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            <span className="text-sm text-textGrey">
+                          <td className="py-2 px-3">
+                            <span className="text-xs text-textGrey">
                               {item.unitName}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-right">
-                            <span className="text-sm text-textGrey">
+                          <td className="py-2 px-3 ">
+                            <span className="text-xs text-textGrey">
                               {formatCurrency(item.costPerUnit)}
                             </span>
                           </td>
-                          <td className="py-3 px-4">
-                            <div className="flex justify-center">
+                          <td className="py-2 px-3">
+                            <div className="flex ">
                               <input
                                 type="number"
                                 min={0}
@@ -478,22 +495,22 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                                     parseInt(e.target.value) || 0
                                   )
                                 }
-                                className="w-20 px-3 py-1.5 border text-black border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
+                                className="w-16 px-2 py-1 border text-black border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
                                 placeholder="0"
                               />
                             </div>
                           </td>
-                          <td className="py-3 px-4 text-right">
-                            <span className="text-sm text-textGrey">
+                          <td className="py-2 px-3 ">
+                            <span className="text-xs text-textGrey">
                               {formatCurrency(item.cost)}
                             </span>
                           </td>
-                          <td className="py-3 px-1">
+                          <td className="py-2 px-3">
                             <button
                               onClick={() => removeItem(index)}
-                              className="p-1 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                              className="p-0.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
                             >
-                              <IoClose size={16} />
+                              <IoClose size={14} />
                             </button>
                           </td>
                         </tr>
@@ -502,7 +519,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                         <tr>
                           <td
                             colSpan={6}
-                            className="py-8 text-center text-sm text-gray-400"
+                            className="py-6 text-center text-xs text-gray-400"
                           >
                             No items added
                           </td>
@@ -514,34 +531,51 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
               </div>
             </ModalBody>
 
-            <ModalFooter className="flex flex-col px-4 pb-3 pt-4 border-t border-gray-100">
+            <ModalFooter className="flex flex-col px-4 pb-3 pt-3 border-t border-gray-100">
               {/* Totals */}
-              <div className="w-full flex justify-end mb-5">
-                <div className="w-72 space-y-2">
-                  <div className="flex justify-between text-sm">
+              <div className="w-full flex justify-end mb-3">
+                <div className="w-72 space-y-1.5">
+                  <div className="flex justify-between text-xs">
                     <span className="text-gray-400">Sub Total</span>
                     <span className="font-medium text-gray-700">
                       {formatCurrency(subTotal)}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center gap-1 text-gray-400">
-                      <span>VAT (</span>
-                      <input
-                        type="number"
-                        min={0}
-                        step={0.1}
-                        value={vatPercent}
-                        onChange={(e) => setVatPercent(parseFloat(e.target.value) || 0)}
-                        className="w-14 px-1.5 py-0.5 border border-gray-200 rounded text-sm text-center text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
+                  <div className="flex justify-between items-center text-xs">
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        size="sm"
+                        isSelected={vatEnabled}
+                        onValueChange={(checked) => {
+                          setVatEnabled(checked);
+                          if (!checked) setVatPercent(0);
+                        }}
+                        classNames={{
+                          wrapper: "after:bg-[#5F35D2]",
+                        }}
                       />
-                      <span>%)</span>
+                      {vatEnabled ? (
+                        <div className="flex items-center gap-1 text-gray-400">
+                          <span>VAT (</span>
+                          <input
+                            type="number"
+                            min={0}
+                            step={0.1}
+                            value={vatPercent}
+                            onChange={(e) => setVatPercent(parseFloat(e.target.value) || 0)}
+                            className="w-14 px-1.5 py-0.5 border border-gray-200 rounded text-sm text-center text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
+                          />
+                          <span>%)</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">Enable VAT</span>
+                      )}
                     </div>
                     <span className="font-medium text-gray-700">
                       {formatCurrency(vat)}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center text-sm gap-2">
+                  <div className="flex justify-between items-center text-xs gap-2">
                     <input
                       type="text"
                       value={additionalCostLabel}
@@ -555,15 +589,15 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                       value={additionalCost || ""}
                       onChange={(e) => setAdditionalCost(parseFloat(e.target.value) || 0)}
                       placeholder="0.00"
-                      className="w-28 px-2 py-0.5 border border-gray-200 rounded text-sm text-right font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
+                      className="w-28 px-2 py-0.5 border border-gray-200 rounded text-sm  font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
                     />
                   </div>
                   <Divider />
-                  <div className="flex justify-between text-sm pt-1">
+                  <div className="flex justify-between text-xs pt-1">
                     <span className="font-semibold text-[#3D424A]">
                       Grand Total
                     </span>
-                    <span className="font-bold text-[#3D424A] text-base">
+                    <span className="font-bold text-[#3D424A] text-sm">
                       {formatCurrency(grandTotal)}
                     </span>
                   </div>

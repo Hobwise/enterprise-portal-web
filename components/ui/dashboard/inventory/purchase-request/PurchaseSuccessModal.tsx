@@ -8,7 +8,8 @@ import {
   ModalFooter,
   Button,
 } from "@nextui-org/react";
-import { CheckCircle, Send, X } from "lucide-react";
+import { CheckCircle, Send } from "lucide-react";
+import { IoClose } from "react-icons/io5";
 
 interface PurchaseSuccessModalProps {
   isOpen: boolean;
@@ -30,74 +31,53 @@ const PurchaseSuccessModal: React.FC<PurchaseSuccessModalProps> = ({
       onOpenChange={onOpenChange}
       size="lg"
       hideCloseButton
-      classNames={{
-        wrapper: "items-center justify-center",
-        backdrop: "bg-black/60 backdrop-blur-sm",
-        base: "border border-gray-200",
-      }}
     >
-      <ModalContent className="bg-white rounded-2xl shadow-2xl">
+      <ModalContent>
         {() => (
           <>
-            <ModalBody className="p-0">
-              {/* Header */}
-              <div className="relative bg-gradient-to-br from-green-50 to-green-100/50 p-8 rounded-t-2xl border-b border-green-200/30">
+            <ModalBody className="px-4 py-4">
+              {/* Close button */}
+              <div className="flex justify-end">
                 <button
                   onClick={onClose}
-                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-all duration-200"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <IoClose size={18} className="text-gray-500" />
                 </button>
-
-                <div className="flex flex-col items-center">
-                  <div className="relative mb-6">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
-                      <div className="w-16 h-16 bg-green-200 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-10 h-10 text-green-600" />
-                      </div>
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-600 rounded-full flex items-center justify-center animate-pulse">
-                      <CheckCircle className="w-4 h-4 text-white" />
-                    </div>
-                  </div>
-
-                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    Request Sent Successfully!
-                  </h2>
-
-                  <div className="w-16 h-1 bg-gradient-to-r from-green-400 to-green-600 rounded-full"></div>
-                </div>
               </div>
 
-              {/* Content */}
-              <div className="px-8 py-6">
-                <div className="text-center">
-                  <p className="text-gray-700 text-lg leading-relaxed max-w-md mx-auto">
-                    Your purchase request has been saved. Would you like to
-                    notify the supplier?
-                  </p>
+              {/* Success icon & message */}
+              <div className="flex flex-col items-center py-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
+
+                <h2 className="text-sm font-bold text-[#3D424A] mb-2">
+                  Order Sent Successfully!
+                </h2>
+
+                <p className="text-xs text-gray-500 text-center max-w-sm">
+                  Your purchase order has been saved. Would you like to
+                  notify the supplier?
+                </p>
               </div>
             </ModalBody>
 
-            <ModalFooter className="px-8 pb-8 pt-0">
-              <div className="flex justify-center w-full gap-4">
+            <ModalFooter className="flex px-4 pb-3 pt-3 border-t border-gray-100">
+              <div className="flex justify-center w-full gap-3">
                 <Button
-                  onClick={onClose}
-                  className="bg-gray-200 text-gray-700 font-semibold px-8 py-6 rounded-xl hover:bg-gray-300 transform hover:scale-105 transition-all duration-200"
-                  size="lg"
+                  variant="bordered"
+                  className="border-primaryColor text-primaryColor font-medium rounded-lg px-6"
+                  onPress={onClose}
                 >
                   Close
                 </Button>
                 <Button
-                  onClick={onNotifySupplier}
-                  className="bg-gradient-to-r from-[#5F35D2] to-[#4A2AAF] text-white font-semibold px-8 py-6 rounded-xl hover:from-[#4A2AAF] hover:to-[#3D2291] transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-                  size="lg"
+                  className="bg-primaryColor text-white font-medium rounded-lg px-6"
+                  onPress={onNotifySupplier}
+                  startContent={<Send size={14} />}
                 >
-                  <div className="flex items-center gap-2">
-                    <Send className="w-5 h-5" />
-                    <span>Notify Supplier</span>
-                  </div>
+                  Notify Supplier
                 </Button>
               </div>
             </ModalFooter>

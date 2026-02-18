@@ -10,6 +10,7 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import { IoClose } from "react-icons/io5";
+import { LuMail } from "react-icons/lu";
 import { Paperclip, FileText, X } from "lucide-react";
 
 interface SendEmailModalProps {
@@ -25,13 +26,12 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
   isOpen,
   onOpenChange,
   supplierEmail,
-  businessName,
   onSend,
   isLoading,
 }) => {
   const [to, setTo] = useState("");
   const [cc, setCc] = useState("");
-  const [subject, setSubject] = useState("Purchase Request");
+  const [subject, setSubject] = useState("Purchase Order");
   const [message, setMessage] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +40,7 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
     if (isOpen) {
       setTo(supplierEmail);
       setCc("");
-      setSubject("Purchase Request");
+      setSubject("Purchase Order");
       setMessage("");
       setAttachment(null);
     }
@@ -50,73 +50,109 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
     onSend(to, cc, subject, message, attachment);
   };
 
+  const inputClassName =
+    "w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2]";
+
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="lg" hideCloseButton>
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalBody className="px-6 pt-6 pb-4">
-        
+            <ModalBody className="px-4 py-4">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 bg-[#5F35D2]/10 rounded-lg flex items-center justify-center">
+                    <LuMail size={16} className="text-[#5F35D2]" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-[#3D424A]">
+                      Send Email to Supplier
+                    </h2>
+                    <p className="text-xs text-gray-400 font-normal">
+                      Notify the supplier about this purchase order
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <IoClose size={18} className="text-gray-500" />
+                </button>
+              </div>
 
-              {/* Field rows */}
-              <div className="divide-y divide-gray-200">
-                <div className="flex items-center gap-4 py-3">
-                  <label className="text-sm text-gray-500 w-16 shrink-0">Send to:</label>
+              {/* Form fields */}
+              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
+                    Send To
+                  </p>
                   <input
                     type="email"
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
-                    className="flex-1 text-sm text-gray-800 bg-transparent focus:outline-none"
+                    placeholder="supplier@email.com"
+                    className={inputClassName}
                   />
                 </div>
-                <div className="flex items-center gap-4 py-3">
-                  <label className="text-sm text-gray-500 w-16 shrink-0">CC:</label>
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
+                    CC
+                  </p>
                   <input
                     type="email"
                     value={cc}
                     onChange={(e) => setCc(e.target.value)}
-                    placeholder=""
-                    className="flex-1 text-sm text-gray-800 bg-transparent focus:outline-none"
+                    placeholder="Optional"
+                    className={inputClassName}
                   />
                 </div>
-                <div className="flex items-center gap-4 py-3">
-                  <label className="text-sm text-gray-500 w-16 shrink-0">Subject:</label>
+                <div>
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
+                    Subject
+                  </p>
                   <input
                     type="text"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="flex-1 text-sm text-gray-800 bg-transparent focus:outline-none"
+                    className={inputClassName}
                   />
                 </div>
               </div>
 
-              {/* Attachment card — only shown when a file is attached */}
+              {/* Attachment card */}
               {attachment && (
-                <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 rounded-xl border border-gray-200 mt-4">
-                  <FileText size={20} className="text-gray-400 shrink-0" />
-                  <span className="text-sm text-gray-700 flex-1 truncate">
+                <div className="flex items-center gap-3 px-3 py-2 bg-gray-50 rounded-xl border border-gray-200 mt-1">
+                  <FileText size={16} className="text-gray-400 shrink-0" />
+                  <span className="text-xs text-gray-700 flex-1 truncate">
                     {attachment.name}
                   </span>
                   <button
                     onClick={() => setAttachment(null)}
-                    className="p-1 hover:bg-gray-200 rounded-full transition-colors shrink-0"
+                    className="p-0.5 hover:bg-gray-200 rounded-full transition-colors shrink-0"
                   >
-                    <X size={16} className="text-gray-400" />
+                    <X size={14} className="text-gray-400" />
                   </button>
                 </div>
               )}
 
               {/* Message textarea */}
-              <textarea
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={5}
-                placeholder="Add a message"
-                className="w-full px-4 py-3 mt-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-sm text-gray-700 bg-white resize-none"
-              />
+              <div className="mt-1">
+                <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
+                  Message
+                </p>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={5}
+                  placeholder="Add a message to the supplier..."
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-sm text-gray-700 bg-white resize-none"
+                />
+              </div>
             </ModalBody>
 
-            <ModalFooter className="px-6 pb-6 pt-2 flex items-center justify-between">
+            <ModalFooter className="px-4 pb-3 pt-3 border-t border-gray-100 flex items-center justify-between">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -129,12 +165,13 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <Paperclip size={22} className="text-gray-400 hover:text-gray-600" />
+                <Paperclip size={16} />
+                <span>Attach file</span>
               </button>
               <Button
-                className="bg-primaryColor text-white font-medium rounded-xl px-8"
+                className="bg-primaryColor text-white font-medium rounded-lg px-6"
                 onPress={handleSend}
                 isDisabled={isLoading}
               >

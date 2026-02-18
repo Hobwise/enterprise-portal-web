@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   Table,
   TableHeader,
@@ -14,9 +14,10 @@ import {
   DropdownMenu,
   DropdownItem,
   Chip,
+  Spinner,
 } from "@nextui-org/react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import { LuEye, LuPackageCheck, LuCopy, LuXCircle, LuMail } from "react-icons/lu";
+import { LuEye, LuPackageCheck, LuCopy, LuXCircle, LuMail, LuSearch } from "react-icons/lu";
 import { PurchaseRequest, PurchaseRequestStatus } from "./types";
 import { historyColumns } from "./data";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
@@ -33,8 +34,7 @@ interface PurchaseRequestHistoryTableProps {
   totalCount: number;
   pageSize: number;
   onPageChange: (page: number) => void;
-  searchValue?: string;
-  onSearchChange?: (value: string) => void;
+  isActionLoading?: boolean;
 }
 
 const statusColorMap: Record<PurchaseRequestStatus, { bg: string; text: string }> = {
@@ -55,9 +55,22 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   totalCount,
   pageSize,
   onPageChange,
-  searchValue,
-  onSearchChange,
+  isActionLoading,
 }) => {
+  const [filterValue, setFilterValue] = useState("");
+
+  const filteredData = useMemo(() => {
+    if (!filterValue.trim()) return data;
+    const query = filterValue.toLowerCase();
+    return data.filter(
+      (item) =>
+        (item.reference || "").toLowerCase().includes(query) ||
+        (item.supplierName || "").toLowerCase().includes(query) ||
+        (item.companyName || "").toLowerCase().includes(query) ||
+        (item.status || "").toLowerCase().includes(query)
+    );
+  }, [data, filterValue]);
+
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const formatCurrency = (value: number) => {
@@ -99,6 +112,12 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       }
       case "actions": {
         const isPending = item.status === "Pending";
+        const actionItems = [
+          ...(isPending ? [{ key: "receive", label: "Receive PO", icon: <LuPackageCheck size={16} />, className: "text-gray-900", onPress: () => onReceiveRequest(item) }] : []),
+          { key: "duplicate", label: "Duplicate PO", icon: <LuCopy size={16} />, className: "text-gray-900", onPress: () => onDuplicateRequest(item) },
+          ...(isPending ? [{ key: "cancel", label: "Cancel", icon: <LuXCircle size={16} />, className: "text-danger", onPress: () => onCancelRequest(item) }] : []),
+          ...(isPending ? [{ key: "sendmail", label: "Send Mail to Supplier", icon: <LuMail size={16} />, className: "text-gray-900", onPress: () => onSendMail(item) }] : []),
+        ];
         return (
           <div className="relative flex justify-center items-center gap-2">
             <Dropdown>
@@ -107,28 +126,12 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                   <HiOutlineDotsVertical className="text-gray-700" />
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu aria-label="Actions">
-                <DropdownItem key="view" className="text-gray-900" startContent={<LuEye size={16} />} onPress={() => onViewRequest(item)}>
-                  View Details
-                </DropdownItem>
-                {isPending ? (
-                  <DropdownItem key="receive" className="text-gray-900" startContent={<LuPackageCheck size={16} />} onPress={() => onReceiveRequest(item)}>
-                    Receive PO
+              <DropdownMenu aria-label="Actions" items={actionItems}>
+                {(action) => (
+                  <DropdownItem key={action.key} className={action.className} startContent={action.icon} onPress={action.onPress}>
+                    {action.label}
                   </DropdownItem>
-                ) : null}
-                <DropdownItem key="duplicate" className="text-gray-900" startContent={<LuCopy size={16} />} onPress={() => onDuplicateRequest(item)}>
-                  Duplicate PO
-                </DropdownItem>
-                {isPending ? (
-                  <DropdownItem key="cancel" className="text-danger" startContent={<LuXCircle size={16} />} onPress={() => onCancelRequest(item)}>
-                    Cancel
-                  </DropdownItem>
-                ) : null}
-                {isPending ? (
-                  <DropdownItem key="sendmail" className="text-gray-900" startContent={<LuMail size={16} />} onPress={() => onSendMail(item)}>
-                    Send Mail to Supplier
-                  </DropdownItem>
-                ) : null}
+                )}
               </DropdownMenu>
             </Dropdown>
           </div>
@@ -142,26 +145,30 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-[#3D424A]">Purchase Request History</h3>
-        <div className="flex items-center gap-4">
-          {onSearchChange && (
-            <input
-              type="text"
-              placeholder="Search orders..."
-              value={searchValue || ""}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-300"
-            />
-          )}
+        <h3 className="text-lg font-semibold text-[#3D424A]">Purchase Order History</h3>
+        <div className="relative">
+          <LuSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+            className="border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] w-64"
+          />
         </div>
       </div>
 
-      <div className="border border-primaryGrey rounded-lg overflow-hidden">
+      <div className="relative border border-primaryGrey rounded-lg overflow-hidden">
+        {isActionLoading && (
+          <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
+            <Spinner size="lg" color="secondary" />
+          </div>
+        )}
         <Table
           radius="lg"
           isCompact
           removeWrapper
-          aria-label="Purchase request history"
+          aria-label="Purchase order history"
           classNames={{
             wrapper: ["max-h-[382px]"],
             th: [
@@ -199,7 +206,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
               </TableColumn>
             ))}
           </TableHeader>
-          <TableBody items={data} emptyContent="No purchase requests yet">
+          <TableBody items={filteredData} emptyContent="No purchase orders yet">
             {(item) => (
               <TableRow key={item.requestId} className="cursor-pointer hover:bg-gray-50">
                 {historyColumns.map((col) => (

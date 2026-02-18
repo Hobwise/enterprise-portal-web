@@ -312,7 +312,14 @@ export default function ItemDetailPage() {
               {/* {isProducedItem && ( */}
                 <Dropdown className="text-black">
                   <DropdownTrigger>
-                    <button className="flex items-center gap-2 px-4 py-2.5 border border-[#5F35D2] text-[#5F35D2] rounded-xl  font-semibold transition-all duration-200">
+                    <button
+                      disabled={!isProducedItem}
+                      className={`flex items-center gap-2 px-4 py-2.5 border rounded-xl font-semibold transition-all duration-200 ${
+                        isProducedItem
+                          ? 'border-[#5F35D2] text-[#5F35D2]'
+                          : 'border-gray-300 text-gray-400 cursor-not-allowed opacity-50'
+                      }`}
+                    >
                       <Settings className="w-4 h-4" />
                       Manage Recipe
                       <ChevronDown className="w-4 h-4" />

@@ -3,9 +3,9 @@ import { SupplierIcon } from "@/public/assets/svg";
 
 const NoSupplierItems: React.FC = () => {
   return (
-    <div className="flex flex-col items-center justify-center w-full bg-white rounded-lg p-8 min-h-[300px]">
+    <div className="flex flex-col items-center justify-center w-full bg-white rounded-lg min-h-[250px]">
       <div className="flex flex-col items-center max-w-md text-center">
-        <div className="p-3 bg-[#EAE5FF] rounded-lg flex items-center justify-center mb-6">
+        <div className="p-3 bg-[#EAE5FF] rounded-lg flex items-center justify-center">
           <SupplierIcon className="text-primaryColor" />
         </div>
 
@@ -19,5 +19,15 @@ const NoSupplierItems: React.FC = () => {
     </div>
   );
 };
+
+
+
+
+
+
+
+
+
+
 
 export default NoSupplierItems;
