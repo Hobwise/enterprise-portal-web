@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Modal,
   ModalContent,
@@ -11,7 +11,7 @@ import {
 } from "@nextui-org/react";
 import { IoClose } from "react-icons/io5";
 import { LuMail } from "react-icons/lu";
-import { Paperclip, FileText, X } from "lucide-react";
+import { Paperclip, FileText, X, Bold, Italic, Underline, List, ListOrdered } from "lucide-react";
 
 interface SendEmailModalProps {
   isOpen: boolean;
@@ -32,22 +32,31 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
   const [to, setTo] = useState("");
   const [cc, setCc] = useState("");
   const [subject, setSubject] = useState("Purchase Order");
-  const [message, setMessage] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
       setTo(supplierEmail);
       setCc("");
       setSubject("Purchase Order");
-      setMessage("");
       setAttachment(null);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = "";
+      }
     }
   }, [isOpen, supplierEmail]);
 
+  const execCommand = useCallback((command: string, value?: string) => {
+    document.execCommand(command, false, value);
+    editorRef.current?.focus();
+  }, []);
+
   const handleSend = () => {
-    onSend(to, cc, subject, message, attachment);
+    const htmlContent = editorRef.current?.innerHTML || "";
+    const emailHtml = `<div style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333333;">${htmlContent}</div>`;
+    onSend(to, cc, subject, emailHtml, attachment);
   };
 
   const inputClassName =
@@ -137,18 +146,67 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
                 </div>
               )}
 
-              {/* Message textarea */}
+              {/* Message editor */}
               <div className="mt-1">
                 <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">
                   Message
                 </p>
-                <textarea
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  rows={5}
-                  placeholder="Add a message to the supplier..."
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-sm text-gray-700 bg-white resize-none"
-                />
+                <div className="border border-gray-200 rounded-lg overflow-hidden focus-within:ring-2 focus-within:ring-[#5F35D2]/20 focus-within:border-[#5F35D2]">
+                  <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-gray-200 bg-gray-50">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => execCommand("bold")}
+                      className="p-1.5 rounded hover:bg-gray-200 transition-colors text-gray-600"
+                      title="Bold"
+                    >
+                      <Bold size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => execCommand("italic")}
+                      className="p-1.5 rounded hover:bg-gray-200 transition-colors text-gray-600"
+                      title="Italic"
+                    >
+                      <Italic size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => execCommand("underline")}
+                      className="p-1.5 rounded hover:bg-gray-200 transition-colors text-gray-600"
+                      title="Underline"
+                    >
+                      <Underline size={14} />
+                    </button>
+                    <div className="w-px h-4 bg-gray-300 mx-1" />
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => execCommand("insertUnorderedList")}
+                      className="p-1.5 rounded hover:bg-gray-200 transition-colors text-gray-600"
+                      title="Bullet list"
+                    >
+                      <List size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => execCommand("insertOrderedList")}
+                      className="p-1.5 rounded hover:bg-gray-200 transition-colors text-gray-600"
+                      title="Numbered list"
+                    >
+                      <ListOrdered size={14} />
+                    </button>
+                  </div>
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    data-placeholder="Add a message to the supplier..."
+                    className="w-full min-h-[120px] max-h-[200px] overflow-y-auto px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
+                  />
+                </div>
               </div>
             </ModalBody>
 

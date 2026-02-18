@@ -13,11 +13,12 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  DropdownSection,
   Chip,
   Spinner,
 } from "@nextui-org/react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import { LuEye, LuPackageCheck, LuCopy, LuXCircle, LuMail, LuSearch } from "react-icons/lu";
+import { LuPackageCheck, LuCopy, LuXCircle, LuMail, LuSearch } from "react-icons/lu";
 import { PurchaseRequest, PurchaseRequestStatus } from "./types";
 import { historyColumns } from "./data";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
@@ -112,12 +113,6 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       }
       case "actions": {
         const isPending = item.status === "Pending";
-        const actionItems = [
-          ...(isPending ? [{ key: "receive", label: "Receive PO", icon: <LuPackageCheck size={16} />, className: "text-gray-900", onPress: () => onReceiveRequest(item) }] : []),
-          { key: "duplicate", label: "Duplicate PO", icon: <LuCopy size={16} />, className: "text-gray-900", onPress: () => onDuplicateRequest(item) },
-          ...(isPending ? [{ key: "cancel", label: "Cancel", icon: <LuXCircle size={16} />, className: "text-danger", onPress: () => onCancelRequest(item) }] : []),
-          ...(isPending ? [{ key: "sendmail", label: "Send Mail to Supplier", icon: <LuMail size={16} />, className: "text-gray-900", onPress: () => onSendMail(item) }] : []),
-        ];
         return (
           <div className="relative flex justify-center items-center gap-2">
             <Dropdown>
@@ -126,12 +121,27 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                   <HiOutlineDotsVertical className="text-gray-700" />
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu aria-label="Actions" items={actionItems}>
-                {(action) => (
-                  <DropdownItem key={action.key} className={action.className} startContent={action.icon} onPress={action.onPress}>
-                    {action.label}
+              <DropdownMenu aria-label="Actions">
+                <DropdownSection showDivider={false}>
+                  {(isPending && (
+                    <DropdownItem key="receive" className="text-gray-900" startContent={<LuPackageCheck size={16} />} onPress={() => onReceiveRequest(item)}>
+                      Receive PO
+                    </DropdownItem>
+                  )) as any}
+                  <DropdownItem key="duplicate" className="text-gray-900" startContent={<LuCopy size={16} />} onPress={() => onDuplicateRequest(item)}>
+                    Duplicate PO
                   </DropdownItem>
-                )}
+                  {(isPending && (
+                    <DropdownItem key="cancel" className="text-danger" startContent={<LuXCircle size={16} />} onPress={() => onCancelRequest(item)}>
+                      Cancel
+                    </DropdownItem>
+                  )) as any}
+                  {(isPending && (
+                    <DropdownItem key="sendmail" className="text-gray-900" startContent={<LuMail size={16} />} onPress={() => onSendMail(item)}>
+                      Send Mail to Supplier
+                    </DropdownItem>
+                  )) as any}
+                </DropdownSection>
               </DropdownMenu>
             </Dropdown>
           </div>
