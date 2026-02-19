@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   Table,
   TableHeader,
@@ -13,6 +13,7 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  DropdownSection,
   Chip,
   Spinner,
 } from "@nextui-org/react";
@@ -46,7 +47,6 @@ const statusColorMap: Record<PurchaseRequestStatus, { bg: string; text: string }
 
 const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = ({
   data,
-  onViewRequest,
   onReceiveRequest,
   onDuplicateRequest,
   onCancelRequest,
@@ -77,7 +77,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
     return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
   };
 
-  const renderCell = (item: PurchaseRequest, columnKey: string) => {
+  const renderCell = useCallback((item: PurchaseRequest, columnKey: string) => {
     switch (columnKey) {
       case "reference":
         return <span className="text-sm font-medium text-gray-900">{item.reference || item.requestId}</span>;
@@ -113,35 +113,44 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       case "actions": {
         const isPending = item.status === "Pending";
         return (
-          <div className="relative flex justify-center items-center gap-2">
+          <div
+            className="relative flex justify-center items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Dropdown>
               <DropdownTrigger>
                 <Button className="border-gray-300 border" isIconOnly size="sm" variant="light">
                   <HiOutlineDotsVertical className="text-gray-700" />
                 </Button>
               </DropdownTrigger>
-              {isPending ? (
-                <DropdownMenu aria-label="Actions">
-                  <DropdownItem key="receive" className="text-gray-900" startContent={<LuPackageCheck size={16} />} onPress={() => onReceiveRequest(item)}>
-                    Receive PO
-                  </DropdownItem>
+              <DropdownMenu aria-label="Actions">
+                <DropdownSection>
+                  {
+                    (isPending && (
+                      <DropdownItem key="receive" className="text-gray-900" startContent={<LuPackageCheck size={16} />} onPress={() => onReceiveRequest(item)}>
+                        Receive PO
+                      </DropdownItem>
+                    )) as any
+                  }
                   <DropdownItem key="duplicate" className="text-gray-900" startContent={<LuCopy size={16} />} onPress={() => onDuplicateRequest(item)}>
                     Duplicate PO
                   </DropdownItem>
-                  <DropdownItem key="cancel" className="text-danger" startContent={<LuXCircle size={16} />} onPress={() => onCancelRequest(item)}>
-                    Cancel
-                  </DropdownItem>
-                  <DropdownItem key="sendmail" className="text-gray-900" startContent={<LuMail size={16} />} onPress={() => onSendMail(item)}>
-                    Send Mail to Supplier
-                  </DropdownItem>
-                </DropdownMenu>
-              ) : (
-                <DropdownMenu aria-label="Actions">
-                  <DropdownItem key="duplicate" className="text-gray-900" startContent={<LuCopy size={16} />} onPress={() => onDuplicateRequest(item)}>
-                    Duplicate PO
-                  </DropdownItem>
-                </DropdownMenu>
-              )}
+                  {
+                    (isPending && (
+                      <DropdownItem key="cancel" className="text-danger" startContent={<LuXCircle size={16} />} onPress={() => onCancelRequest(item)}>
+                        Cancel
+                      </DropdownItem>
+                    )) as any
+                  }
+                  {
+                    (isPending && (
+                      <DropdownItem key="sendmail" className="text-gray-900" startContent={<LuMail size={16} />} onPress={() => onSendMail(item)}>
+                        Send Mail to Supplier
+                      </DropdownItem>
+                    )) as any
+                  }
+                </DropdownSection>
+              </DropdownMenu>
             </Dropdown>
           </div>
         );
@@ -149,7 +158,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       default:
         return null;
     }
-  };
+  }, [onReceiveRequest, onDuplicateRequest, onCancelRequest, onSendMail]);
 
   return (
     <div>
@@ -208,19 +217,19 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
             </div>
           }
         >
-          <TableHeader>
-            {historyColumns.map((col) => (
-              <TableColumn key={col.uid} align={col.uid === "actions" ? "center" : "start"}>
-                {col.name}
+          <TableHeader columns={historyColumns}>
+            {(column) => (
+              <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
+                {column.name}
               </TableColumn>
-            ))}
+            )}
           </TableHeader>
           <TableBody items={filteredData} emptyContent="No purchase orders yet">
             {(item) => (
               <TableRow key={item.requestId} className="cursor-pointer hover:bg-gray-50">
-                {historyColumns.map((col) => (
-                  <TableCell key={col.uid}>{renderCell(item, col.uid)}</TableCell>
-                ))}
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, String(columnKey))}</TableCell>
+                )}
               </TableRow>
             )}
           </TableBody>
