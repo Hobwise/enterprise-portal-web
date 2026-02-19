@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   Table,
   TableHeader,
@@ -8,12 +9,6 @@ import {
   TableBody,
   TableRow,
   TableCell,
-  Button,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  DropdownSection,
   Chip,
   Spinner,
 } from "@nextui-org/react";
@@ -58,6 +53,30 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   isActionLoading,
 }) => {
   const [filterValue, setFilterValue] = useState("");
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<(requestId: string, e: React.MouseEvent<HTMLButtonElement>) => void>(() => {});
+
+  toggleRef.current = (requestId: string, e: React.MouseEvent<HTMLButtonElement>) => {
+    if (openDropdown === requestId) {
+      setOpenDropdown(null);
+      return;
+    }
+    const rect = e.currentTarget.getBoundingClientRect();
+    setDropdownPos({ top: rect.bottom + 4, left: rect.right });
+    setOpenDropdown(requestId);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!filterValue.trim()) return data;
@@ -76,6 +95,9 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   const formatCurrency = (value: number) => {
     return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
   };
+
+  // Find the active item for the portal dropdown
+  const activeItem = openDropdown ? filteredData.find((item) => item.requestId === openDropdown) : null;
 
   const renderCell = useCallback((item: PurchaseRequest, columnKey: string) => {
     switch (columnKey) {
@@ -110,55 +132,24 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
           </Chip>
         );
       }
-      case "actions": {
-        const isPending = item.status === "Pending";
+      case "actions":
         return (
           <div
             className="relative flex justify-center items-center gap-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <Dropdown>
-              <DropdownTrigger>
-                <Button className="border-gray-300 border" isIconOnly size="sm" variant="light">
-                  <HiOutlineDotsVertical className="text-gray-700" />
-                </Button>
-              </DropdownTrigger>
-              <DropdownMenu aria-label="Actions">
-                <DropdownSection>
-                  {
-                    (isPending && (
-                      <DropdownItem key="receive" className="text-gray-900" startContent={<LuPackageCheck size={16} />} onPress={() => onReceiveRequest(item)}>
-                        Receive PO
-                      </DropdownItem>
-                    )) as any
-                  }
-                  <DropdownItem key="duplicate" className="text-gray-900" startContent={<LuCopy size={16} />} onPress={() => onDuplicateRequest(item)}>
-                    Duplicate PO
-                  </DropdownItem>
-                  {
-                    (isPending && (
-                      <DropdownItem key="cancel" className="text-danger" startContent={<LuXCircle size={16} />} onPress={() => onCancelRequest(item)}>
-                        Cancel
-                      </DropdownItem>
-                    )) as any
-                  }
-                  {
-                    (isPending && (
-                      <DropdownItem key="sendmail" className="text-gray-900" startContent={<LuMail size={16} />} onPress={() => onSendMail(item)}>
-                        Send Mail to Supplier
-                      </DropdownItem>
-                    )) as any
-                  }
-                </DropdownSection>
-              </DropdownMenu>
-            </Dropdown>
+            <button
+              className="border border-gray-300 rounded-lg p-1.5 hover:bg-gray-100 transition-colors"
+              onClick={(e) => toggleRef.current(item.requestId, e)}
+            >
+              <HiOutlineDotsVertical className="text-[22px] text-gray-700" />
+            </button>
           </div>
         );
-      }
       default:
         return null;
     }
-  }, [onReceiveRequest, onDuplicateRequest, onCancelRequest, onSendMail]);
+  }, []);
 
   return (
     <div>
@@ -235,6 +226,51 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
           </TableBody>
         </Table>
       </div>
+
+      {/* Dropdown portal — rendered outside the Table so state changes always take effect */}
+      {activeItem && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed z-[9999] w-[200px] bg-white rounded-lg shadow-xl py-1"
+          style={{ top: dropdownPos.top, left: dropdownPos.left, transform: "translateX(-100%)" }}
+        >
+          {activeItem.status === "Pending" && (
+            <button
+              className="w-full flex gap-3 items-center px-3 py-2 text-sm text-grey500 hover:bg-default-100 transition-colors whitespace-nowrap"
+              onClick={() => { setOpenDropdown(null); onReceiveRequest(activeItem); }}
+            >
+              <LuPackageCheck className="text-[18px]" />
+              <p>Receive PO</p>
+            </button>
+          )}
+          <button
+            className="w-full flex gap-3 items-center px-3 py-2 text-sm text-grey500 hover:bg-default-100 transition-colors whitespace-nowrap"
+            onClick={() => { setOpenDropdown(null); onDuplicateRequest(activeItem); }}
+          >
+            <LuCopy className="text-[18px]" />
+            <p>Duplicate PO</p>
+          </button>
+          {activeItem.status === "Pending" && (
+            <button
+              className="w-full flex gap-3 items-center px-3 py-2 text-sm text-danger-500 hover:bg-default-100 transition-colors whitespace-nowrap"
+              onClick={() => { setOpenDropdown(null); onCancelRequest(activeItem); }}
+            >
+              <LuXCircle className="text-[18px]" />
+              <p>Cancel</p>
+            </button>
+          )}
+          {activeItem.status === "Pending" && (
+            <button
+              className="w-full flex gap-3 items-center px-3 py-2 text-sm text-grey500 hover:bg-default-100 transition-colors whitespace-nowrap"
+              onClick={() => { setOpenDropdown(null); onSendMail(activeItem); }}
+            >
+              <LuMail className="text-[18px]" />
+              <p>Send Mail to Supplier</p>
+            </button>
+          )}
+        </div>,
+        document.body
+      )}
     </div>
   );
 };
