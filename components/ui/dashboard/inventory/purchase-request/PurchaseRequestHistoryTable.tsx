@@ -13,7 +13,6 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
-  DropdownSection,
   Chip,
   Spinner,
 } from "@nextui-org/react";
@@ -121,30 +120,28 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                   <HiOutlineDotsVertical className="text-gray-700" />
                 </Button>
               </DropdownTrigger>
-              <DropdownMenu aria-label="Actions">
-                <DropdownSection showDivider={false}>
-                  {[
-                    isPending ? (
-                      <DropdownItem key="receive" className="text-gray-900" startContent={<LuPackageCheck size={16} />} onPress={() => onReceiveRequest(item)}>
-                        Receive PO
-                      </DropdownItem>
-                    ) : null,
-                    <DropdownItem key="duplicate" className="text-gray-900" startContent={<LuCopy size={16} />} onPress={() => onDuplicateRequest(item)}>
-                      Duplicate PO
-                    </DropdownItem>,
-                    isPending ? (
-                      <DropdownItem key="cancel" className="text-danger" startContent={<LuXCircle size={16} />} onPress={() => onCancelRequest(item)}>
-                        Cancel
-                      </DropdownItem>
-                    ) : null,
-                    isPending ? (
-                      <DropdownItem key="sendmail" className="text-gray-900" startContent={<LuMail size={16} />} onPress={() => onSendMail(item)}>
-                        Send Mail to Supplier
-                      </DropdownItem>
-                    ) : null,
-                  ].filter(Boolean) as React.ReactElement[]}
-                </DropdownSection>
-              </DropdownMenu>
+              {isPending ? (
+                <DropdownMenu aria-label="Actions">
+                  <DropdownItem key="receive" className="text-gray-900" startContent={<LuPackageCheck size={16} />} onPress={() => onReceiveRequest(item)}>
+                    Receive PO
+                  </DropdownItem>
+                  <DropdownItem key="duplicate" className="text-gray-900" startContent={<LuCopy size={16} />} onPress={() => onDuplicateRequest(item)}>
+                    Duplicate PO
+                  </DropdownItem>
+                  <DropdownItem key="cancel" className="text-danger" startContent={<LuXCircle size={16} />} onPress={() => onCancelRequest(item)}>
+                    Cancel
+                  </DropdownItem>
+                  <DropdownItem key="sendmail" className="text-gray-900" startContent={<LuMail size={16} />} onPress={() => onSendMail(item)}>
+                    Send Mail to Supplier
+                  </DropdownItem>
+                </DropdownMenu>
+              ) : (
+                <DropdownMenu aria-label="Actions">
+                  <DropdownItem key="duplicate" className="text-gray-900" startContent={<LuCopy size={16} />} onPress={() => onDuplicateRequest(item)}>
+                    Duplicate PO
+                  </DropdownItem>
+                </DropdownMenu>
+              )}
             </Dropdown>
           </div>
         );
