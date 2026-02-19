@@ -205,7 +205,7 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
                     >
                       View Details
                     </DropdownItem>
-                    {item.itemType === InventoryItemType.Produced && onBatchProduction ? (
+                    {item.itemType === InventoryItemType.Produced && onBatchProduction && (
                       <DropdownItem
                         key="batch"
                         startContent={<Factory size={16} />}
@@ -214,7 +214,7 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
                       >
                         Batch Production
                       </DropdownItem>
-                    ) : null}
+                    )}
                     <DropdownItem
                       key="delete"
                       startContent={<Trash2 size={16} />}
