@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from "react";
-import { createPortal } from "react-dom";
+import React, { useState, useMemo } from "react";
 import {
   Table,
   TableHeader,
@@ -9,10 +8,15 @@ import {
   TableBody,
   TableRow,
   TableCell,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  DropdownSection,
   Chip,
   Spinner,
 } from "@nextui-org/react";
-import { HiOutlineDotsVertical } from "react-icons/hi";
+import { MoreHorizontal } from "lucide-react";
 import { LuPackageCheck, LuCopy, LuXCircle, LuMail, LuSearch } from "react-icons/lu";
 import { PurchaseRequest, PurchaseRequestStatus } from "./types";
 import { historyColumns } from "./data";
@@ -25,7 +29,6 @@ interface PurchaseRequestHistoryTableProps {
   onDuplicateRequest: (request: PurchaseRequest) => void;
   onCancelRequest: (request: PurchaseRequest) => void;
   onSendMail: (request: PurchaseRequest) => void;
-  // Server-side pagination
   currentPage: number;
   totalCount: number;
   pageSize: number;
@@ -53,30 +56,6 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   isActionLoading,
 }) => {
   const [filterValue, setFilterValue] = useState("");
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const toggleRef = useRef<(requestId: string, e: React.MouseEvent<HTMLButtonElement>) => void>(() => {});
-
-  toggleRef.current = (requestId: string, e: React.MouseEvent<HTMLButtonElement>) => {
-    if (openDropdown === requestId) {
-      setOpenDropdown(null);
-      return;
-    }
-    const rect = e.currentTarget.getBoundingClientRect();
-    setDropdownPos({ top: rect.bottom + 4, left: rect.right });
-    setOpenDropdown(requestId);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpenDropdown(null);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const filteredData = useMemo(() => {
     if (!filterValue.trim()) return data;
@@ -96,60 +75,107 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
     return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
   };
 
-  // Find the active item for the portal dropdown
-  const activeItem = openDropdown ? filteredData.find((item) => item.requestId === openDropdown) : null;
+  const renderCell = React.useCallback(
+    (item: PurchaseRequest, columnKey: string) => {
+      const isPending = item.status === "Pending";
 
-  const renderCell = useCallback((item: PurchaseRequest, columnKey: string) => {
-    switch (columnKey) {
-      case "reference":
-        return <span className="text-sm font-medium text-gray-900">{item.reference || item.requestId}</span>;
-      case "requestDate":
-        return <span className="text-sm text-gray-500">{item.requestDate}</span>;
-      case "requestId":
-        return <span className="text-sm font-medium text-gray-900">{item.requestId}</span>;
-      case "supplierName":
-        return <span className="text-sm text-gray-500">{item.supplierName}</span>;
-      case "companyName":
-        return <span className="text-sm text-gray-500">{item.companyName}</span>;
-      case "expectedDeliveryDate":
-        return <span className="text-sm text-gray-500">{item.expectedDeliveryDate}</span>;
-      case "numberOfItems":
-        return <span className="text-sm text-gray-500">{item.numberOfItems}</span>;
-      case "totalCost":
-        return <span className="text-sm text-gray-500">{formatCurrency(item.totalCost)}</span>;
-      case "status": {
-        const colors = statusColorMap[item.status];
-        return (
-          <Chip
-            size="sm"
-            variant="flat"
-            classNames={{
-              base: `${colors.bg} ${colors.text}`,
-              content: "font-medium text-xs",
-            }}
-          >
-            {item.status}
-          </Chip>
-        );
-      }
-      case "actions":
-        return (
-          <div
-            className="relative flex justify-center items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              className="border border-gray-300 rounded-lg p-1.5 hover:bg-gray-100 transition-colors"
-              onClick={(e) => toggleRef.current(item.requestId, e)}
+      switch (columnKey) {
+        case "reference":
+          return <span className="text-sm font-medium text-gray-900">{item.reference || item.requestId}</span>;
+        case "requestDate":
+          return <span className="text-sm text-gray-500">{item.requestDate}</span>;
+        case "requestId":
+          return <span className="text-sm font-medium text-gray-900">{item.requestId}</span>;
+        case "supplierName":
+          return <span className="text-sm text-gray-500">{item.supplierName}</span>;
+        case "companyName":
+          return <span className="text-sm text-gray-500">{item.companyName}</span>;
+        case "expectedDeliveryDate":
+          return <span className="text-sm text-gray-500">{item.expectedDeliveryDate}</span>;
+        case "numberOfItems":
+          return <span className="text-sm text-gray-500">{item.numberOfItems}</span>;
+        case "totalCost":
+          return <span className="text-sm text-gray-500">{formatCurrency(item.totalCost)}</span>;
+        case "status": {
+          const colors = statusColorMap[item.status];
+          return (
+            <Chip
+              size="sm"
+              variant="flat"
+              classNames={{
+                base: `${colors.bg} ${colors.text}`,
+                content: "font-medium text-xs",
+              }}
             >
-              <HiOutlineDotsVertical className="text-[22px] text-gray-700" />
-            </button>
-          </div>
-        );
-      default:
-        return null;
-    }
-  }, []);
+              {item.status}
+            </Chip>
+          );
+        }
+        case "actions":
+          return (
+            <div
+              className="relative flex justify-center items-center gap-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Dropdown>
+                <DropdownTrigger aria-label="actions">
+                  <div className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100">
+                    <MoreHorizontal size={18} />
+                  </div>
+                </DropdownTrigger>
+                <DropdownMenu aria-label="Purchase order actions" className="text-black">
+                  <DropdownItem
+                    key="duplicate"
+                    startContent={<LuCopy size={16} />}
+                    onPress={() => onDuplicateRequest(item)}
+                    aria-label="duplicate order"
+                  >
+                    Duplicate PO
+                  </DropdownItem>
+                  <DropdownSection title="">
+                    {isPending && (
+                      <DropdownItem
+                        key="receive"
+                        startContent={<LuPackageCheck size={16} />}
+                        onPress={() => onReceiveRequest(item)}
+                        aria-label="receive order"
+                      >
+                        Receive PO
+                      </DropdownItem>
+                    )}
+                    {isPending && (
+                      <DropdownItem
+                        key="sendmail"
+                        startContent={<LuMail size={16} />}
+                        onPress={() => onSendMail(item)}
+                        aria-label="send mail"
+                      >
+                        Send Mail to Supplier
+                      </DropdownItem>
+                    )}
+                    {isPending && (
+                      <DropdownItem
+                        key="cancel"
+                        startContent={<LuXCircle size={16} />}
+                        onPress={() => onCancelRequest(item)}
+                        aria-label="cancel order"
+                        className="text-danger"
+                        color="danger"
+                      >
+                        Cancel
+                      </DropdownItem>
+                    )}
+                  </DropdownSection>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          );
+        default:
+          return null;
+      }
+    },
+    [onReceiveRequest, onDuplicateRequest, onCancelRequest, onSendMail]
+  );
 
   return (
     <div>
@@ -208,69 +234,24 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
             </div>
           }
         >
-          <TableHeader columns={historyColumns}>
-            {(column) => (
-              <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
-                {column.name}
+          <TableHeader>
+            {historyColumns.map((col) => (
+              <TableColumn key={col.uid} align={col.uid === "actions" ? "center" : "start"}>
+                {col.name}
               </TableColumn>
-            )}
+            ))}
           </TableHeader>
           <TableBody items={filteredData} emptyContent="No purchase orders yet">
             {(item) => (
               <TableRow key={item.requestId} className="cursor-pointer hover:bg-gray-50">
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, String(columnKey))}</TableCell>
-                )}
+                {historyColumns.map((col) => (
+                  <TableCell key={col.uid}>{renderCell(item, col.uid)}</TableCell>
+                ))}
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-
-      {/* Dropdown portal — rendered outside the Table so state changes always take effect */}
-      {activeItem && createPortal(
-        <div
-          ref={dropdownRef}
-          className="fixed z-[9999] w-[200px] bg-white rounded-lg shadow-xl py-1"
-          style={{ top: dropdownPos.top, left: dropdownPos.left, transform: "translateX(-100%)" }}
-        >
-          {activeItem.status === "Pending" && (
-            <button
-              className="w-full flex gap-3 items-center px-3 py-2 text-sm text-grey500 hover:bg-default-100 transition-colors whitespace-nowrap"
-              onClick={() => { setOpenDropdown(null); onReceiveRequest(activeItem); }}
-            >
-              <LuPackageCheck className="text-[18px]" />
-              <p>Receive PO</p>
-            </button>
-          )}
-          <button
-            className="w-full flex gap-3 items-center px-3 py-2 text-sm text-grey500 hover:bg-default-100 transition-colors whitespace-nowrap"
-            onClick={() => { setOpenDropdown(null); onDuplicateRequest(activeItem); }}
-          >
-            <LuCopy className="text-[18px]" />
-            <p>Duplicate PO</p>
-          </button>
-          {activeItem.status === "Pending" && (
-            <button
-              className="w-full flex gap-3 items-center px-3 py-2 text-sm text-danger-500 hover:bg-default-100 transition-colors whitespace-nowrap"
-              onClick={() => { setOpenDropdown(null); onCancelRequest(activeItem); }}
-            >
-              <LuXCircle className="text-[18px]" />
-              <p>Cancel</p>
-            </button>
-          )}
-          {activeItem.status === "Pending" && (
-            <button
-              className="w-full flex gap-3 items-center px-3 py-2 text-sm text-grey500 hover:bg-default-100 transition-colors whitespace-nowrap"
-              onClick={() => { setOpenDropdown(null); onSendMail(activeItem); }}
-            >
-              <LuMail className="text-[18px]" />
-              <p>Send Mail to Supplier</p>
-            </button>
-          )}
-        </div>,
-        document.body
-      )}
     </div>
   );
 };
