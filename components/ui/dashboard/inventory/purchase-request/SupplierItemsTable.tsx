@@ -41,7 +41,7 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
     return items.filter(
       (item) =>
         (item.name || '').toLowerCase().includes(query) ||
-        (item.unitName || '').toLowerCase().includes(query) ||
+        (item.itemType || '').toLowerCase().includes(query) ||
         (item.status || '').toLowerCase().includes(query)
     );
   }, [items, filterValue]);
@@ -72,37 +72,25 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
 
   const renderCell = (item: SupplierInventoryItem, columnKey: string) => {
     switch (columnKey) {
-      case "id":
-        return (
-          <span className="text-sm text-gray-500">{item.id.slice(0, 8)}</span>
-        );
       case "name":
         return (
           <span className="text-sm font-semibold text-gray-900">
             {item.name}
           </span>
         );
-      case "unitName":
-        return <span className="text-sm text-gray-500">{item.unitName}</span>;
+      case "itemType":
+        return <span className="text-sm text-gray-500">{item.itemType}</span>;
       case "costPerUnit":
         return (
           <span className="text-sm text-gray-500">
             {formatCurrency(item.costPerUnit)}
           </span>
         );
-      case "optimumStock":
-        return (
-          <span className="text-sm text-gray-500">{item.optimumStock}</span>
-        );
-      case "currentStock":
-        return (
-          <span className="text-sm text-gray-500">{item.currentStock}</span>
-        );
       case "status":
         return (
           <span
             className={`text-sm font-medium ${
-              item.status === "Low" ? "text-red-500" : "text-green-500"
+              item.status === "Active" ? "text-green-500" : "text-red-500"
             }`}
           >
             {item.status}
@@ -175,23 +163,6 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
             tr: "border-b border-divider rounded-none",
             td: ["py-3", "text-textGrey"],
           }}
-          bottomContent={
-            <div className="flex w-full justify-center">
-              <CustomPagination
-                currentPage={page}
-                totalPages={totalPages}
-                hasNext={page < totalPages}
-                hasPrevious={page > 1}
-                totalCount={filteredItems.length}
-                pageSize={rowsPerPage}
-                onPageChange={setPage}
-                onNext={() =>
-                  setPage((p) => (p < totalPages ? p + 1 : p))
-                }
-                onPrevious={() => setPage((p) => (p > 1 ? p - 1 : p))}
-              />
-            </div>
-          }
         >
           <TableHeader columns={supplierItemColumns}>
             {(col) => <TableColumn key={col.uid}>{col.name}</TableColumn>}
@@ -212,6 +183,24 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex w-full justify-center mt-4">
+          <CustomPagination
+            currentPage={page}
+            totalPages={totalPages}
+            hasNext={page < totalPages}
+            hasPrevious={page > 1}
+            totalCount={filteredItems.length}
+            pageSize={rowsPerPage}
+            onPageChange={setPage}
+            onNext={() =>
+              setPage((p) => (p < totalPages ? p + 1 : p))
+            }
+            onPrevious={() => setPage((p) => (p > 1 ? p - 1 : p))}
+          />
+        </div>
+      )}
 
       <div className="flex justify-end mt-4">
         <CustomButton

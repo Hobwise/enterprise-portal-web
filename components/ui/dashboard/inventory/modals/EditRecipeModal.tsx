@@ -8,6 +8,7 @@ import {
   updateRecipe,
   CreateRecipePayload,
   Recipe,
+  InventoryItemType,
 } from '@/app/api/controllers/dashboard/inventory';
 import { useUnitsByBusiness, useIngredients } from '@/hooks/cachedEndpoints/useInventoryItems';
 
@@ -188,6 +189,8 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
         payload
       );
 
+      if (!response) return;
+
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
@@ -203,7 +206,6 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
       }
     } catch (error) {
       console.error('Error updating recipe:', error);
-      notify({ title: 'Error!', text: 'Failed to update recipe', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -406,6 +408,7 @@ const EditRecipeModal: React.FC<EditRecipeModalProps> = ({
                           {Array.isArray(availableIngredients) && availableIngredients
                             .filter(
                               (i) =>
+                                i.itemType !== InventoryItemType.Produced &&
                                 !details.some(
                                   (d) => d.inventoryItemID === i.id
                                 )

@@ -81,6 +81,8 @@ const BatchProductionModal: React.FC<BatchProductionModalProps> = ({
         producedQuantityMultiplier: parseFloat(quantity),
       });
 
+      if (!response) return;
+
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Batch produced successfully', type: 'success' });
         setQuantity('');
@@ -91,7 +93,6 @@ const BatchProductionModal: React.FC<BatchProductionModalProps> = ({
       }
     } catch (error) {
       console.error('Error producing batch:', error);
-      notify({ title: 'Error!', text: 'Failed to produce batch', type: 'error' });
     } finally {
       setProducing(false);
     }

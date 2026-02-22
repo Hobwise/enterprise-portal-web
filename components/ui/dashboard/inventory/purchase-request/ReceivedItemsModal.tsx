@@ -142,7 +142,7 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
                 <div className="grid grid-cols-2 gap-3">
                   {/* VENDOR column */}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="bg-[#3D424A] px-3 py-1.5">
+                    <div className="bg-primaryColor px-3 py-1.5">
                       <p className="text-[10px] font-semibold text-white uppercase tracking-wide">Vendor</p>
                     </div>
                     <div className="px-3 py-2 space-y-0.5">
@@ -162,7 +162,7 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
 
                   {/* SHIP TO column */}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="bg-[#3D424A] px-3 py-1.5">
+                    <div className="bg-primaryColor px-3 py-1.5">
                       <p className="text-[10px] font-semibold text-white uppercase tracking-wide">Ship To</p>
                     </div>
                     <div className="px-3 py-2 space-y-0.5">

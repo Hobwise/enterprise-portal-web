@@ -260,6 +260,7 @@ const BuildRecipeStep: React.FC<BuildRecipeStepProps> = ({
                       availableIngredients
                         .filter(
                           (i) =>
+                            i.itemType !== InventoryItemType.Produced &&
                             !recipeDetails.some((d) => d.inventoryItemID === i.id) &&
                             i.name.toLowerCase().includes(newIngredientSearch.toLowerCase())
                         )

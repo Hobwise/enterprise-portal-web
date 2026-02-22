@@ -344,6 +344,8 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                 isWizardSetup: true,
               });
 
+              if (!response) return;
+
               if (response?.data?.isSuccessful) {
                 notify({ title: 'Success!', text: 'Item saved successfully', type: 'success' });
                 onNext();
@@ -352,7 +354,6 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
               }
             } catch (error) {
               console.error('Error saving item:', error);
-              notify({ title: 'Error!', text: 'Something went wrong. Please try again.', type: 'error' });
             } finally {
               setSaving(false);
             }

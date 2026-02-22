@@ -184,7 +184,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     const shipX = col1 + halfWidth + 4;
 
     // Header bars
-    doc.setFillColor(61, 66, 74);
+    doc.setFillColor(95, 53, 210);
     doc.rect(vendorX, y, halfWidth, 7, "F");
     doc.rect(shipX, y, halfWidth, 7, "F");
     doc.setFont("helvetica", "bold");
@@ -368,14 +368,14 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
               {/* Top row: Date, Expected Delivery */}
               <div className="bg-gray-50 rounded-xl p-4">
                 <div className="grid grid-cols-2 gap-x-6 mb-3">
-                  <div>
+                  {/* <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
                       Request Date
                     </p>
                     <p className="text-xs font-medium text-gray-700">
                       {todayFormatted}
                     </p>
-                  </div>
+                  </div> */}
                   <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
                       Expected Delivery
@@ -394,7 +394,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                 <div className="grid grid-cols-2 gap-3">
                   {/* VENDOR column */}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="bg-[#3D424A] px-3 py-1.5">
+                    <div className="bg-primaryColor px-3 py-1.5">
                       <p className="text-[10px] font-semibold text-white uppercase tracking-wide">
                         Vendor
                       </p>
@@ -420,7 +420,7 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
 
                   {/* SHIP TO column */}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="bg-[#3D424A] px-3 py-1.5">
+                    <div className="bg-primaryColor px-3 py-1.5">
                       <p className="text-[10px] font-semibold text-white uppercase tracking-wide">
                         Ship To
                       </p>

@@ -25,6 +25,7 @@ import {
   PurchaseRequest,
   PurchaseRequestItem,
   purchaseOrderStatusMap,
+  itemTypeLabels,
 } from '@/components/ui/dashboard/inventory/purchase-request/types';
 import PurchaseRequestHeader from '@/components/ui/dashboard/inventory/purchase-request/PurchaseRequestHeader';
 import SupplierSearchCard from '@/components/ui/dashboard/inventory/purchase-request/SupplierSearchCard';
@@ -142,19 +143,14 @@ export default function PurchaseRequestPage() {
       const items = response?.data?.data?.items;
       if (!Array.isArray(items)) return [];
 
-      return items.map((item: any) => {
-        const currentStock = item.stock ?? 0;
-        const optimumStock = item.reorderLevel ?? 0;
-        return {
+      return items.map((item: any) => ({
           id: item.id,
           name: item.name,
+          itemType: itemTypeLabels[Number(item.itemType)] || String(item.itemType),
           unitName: unitMap.get(item.unitId) || item.unit || 'N/A',
           costPerUnit: item.averageCostPerUnit ?? 0,
-          optimumStock,
-          currentStock,
-          status: (currentStock < optimumStock ? 'Low' : 'Optimum') as 'Low' | 'Optimum',
-        };
-      });
+          status: (item.isActive ? 'Active' : 'Inactive') as 'Active' | 'Inactive',
+      }));
     },
     enabled: !!selectedSupplierId,
     ...fetchQueryConfig(),

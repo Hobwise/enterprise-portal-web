@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
 import { X, BookOpen, Pencil, Save, Plus, Trash2, FlaskConical, History } from 'lucide-react';
-import { getRecipeByItem, updateRecipe, CreateRecipePayload } from '@/app/api/controllers/dashboard/inventory';
+import { getRecipeByItem, updateRecipe, CreateRecipePayload, InventoryItemType } from '@/app/api/controllers/dashboard/inventory';
 import type { Recipe } from '@/app/api/controllers/dashboard/inventory';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { useIngredients, useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
@@ -229,10 +229,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
 
       const response = await updateRecipe(business[0]?.businessId, recipe.id, payload);
 
-      if (!response) {
-        notify({ title: 'Error!', text: 'Failed to update recipe. Please try again.', type: 'error' });
-        return;
-      }
+      if (!response) return;
 
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
@@ -251,7 +248,6 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
       }
     } catch (error) {
       console.error('Error updating recipe:', error);
-      notify({ title: 'Error!', text: 'Failed to update recipe', type: 'error' });
     } finally {
       setSaving(false);
     }
@@ -506,6 +502,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                                   {Array.isArray(availableIngredients) && availableIngredients
                                     .filter(
                                       (i) =>
+                                        i.itemType !== InventoryItemType.Produced &&
                                         !editDetails.some((d) => d.inventoryItemID === i.id) &&
                                         i.name.toLowerCase().includes(newIngredientSearch.toLowerCase())
                                     )

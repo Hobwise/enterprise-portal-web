@@ -1,9 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
-import { X, Package, Trash2, Plus } from 'lucide-react';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  Modal,
+  ModalContent,
+  ModalBody,
+  Spinner,
+  Switch,
+} from "@nextui-org/react";
+import { X, Package, Trash2, Plus } from "lucide-react";
+import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import {
   createRecipe,
   updateRecipe,
@@ -11,8 +17,12 @@ import {
   RecipeDetail,
   PendingRecipeTracking,
   Recipe,
-} from '@/app/api/controllers/dashboard/inventory';
-import { useUnitsByBusiness, useIngredients } from '@/hooks/cachedEndpoints/useInventoryItems';
+  InventoryItemType,
+} from "@/app/api/controllers/dashboard/inventory";
+import {
+  useUnitsByBusiness,
+  useIngredients,
+} from "@/hooks/cachedEndpoints/useInventoryItems";
 
 interface AddRecipeModalProps {
   isOpen: boolean;
@@ -46,9 +56,9 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
   // Detect edit mode
   const isEditMode = !!existingRecipe;
   // Form state
-  const [name, setName] = useState('');
-  const [outputQuantity, setOutputQuantity] = useState('');
-  const [outputQuantityUnitId, setOutputQuantityUnitId] = useState('');
+  const [name, setName] = useState("");
+  const [outputQuantity, setOutputQuantity] = useState("");
+  const [outputQuantityUnitId, setOutputQuantityUnitId] = useState("");
   const [recipeType, setRecipeType] = useState<number>(0);
   const [isActive, setIsActive] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -65,34 +75,51 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
 
   // Recipe details state
   const [details, setDetails] = useState<LocalRecipeDetail[]>([]);
-  const [newIngredientId, setNewIngredientId] = useState('');
-  const [newIngredientSearch, setNewIngredientSearch] = useState('');
+  const [newIngredientId, setNewIngredientId] = useState("");
+  const [newIngredientSearch, setNewIngredientSearch] = useState("");
   const [showIngredientDropdown, setShowIngredientDropdown] = useState(false);
-  const [newQuantityUsed, setNewQuantityUsed] = useState('');
+  const [newQuantityUsed, setNewQuantityUsed] = useState("");
 
   // Hooks
   const { data: units, isLoading: unitsLoading } = useUnitsByBusiness();
-  const { data: availableIngredients, isLoading: ingredientsLoading } = useIngredients();
+  const { data: availableIngredients, isLoading: ingredientsLoading } =
+    useIngredients();
 
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      if (!submittedRef.current && producedInventoryItemID && trackingId && onCloseWithoutCompletion) {
+      if (
+        !submittedRef.current &&
+        producedInventoryItemID &&
+        trackingId &&
+        onCloseWithoutCompletion
+      ) {
         const tracking: PendingRecipeTracking = {
           trackingId,
           inventoryItemId: producedInventoryItemID,
-          itemName: itemName || '',
+          itemName: itemName || "",
           createdAt: new Date().toISOString(),
         };
         onCloseWithoutCompletion(tracking);
       }
       resetForm();
     }
-  }, [isOpen, producedInventoryItemID, trackingId, itemName, onCloseWithoutCompletion]);
+  }, [
+    isOpen,
+    producedInventoryItemID,
+    trackingId,
+    itemName,
+    onCloseWithoutCompletion,
+  ]);
 
   // Populate form when editing an existing recipe
   useEffect(() => {
-    if (isOpen && existingRecipe && Array.isArray(availableIngredients) && availableIngredients.length > 0) {
+    if (
+      isOpen &&
+      existingRecipe &&
+      Array.isArray(availableIngredients) &&
+      availableIngredients.length > 0
+    ) {
       setName(existingRecipe.name);
       setOutputQuantity(String(existingRecipe.outputQuantity));
       setOutputQuantityUnitId(existingRecipe.outputQuantityUnitId);
@@ -100,12 +127,14 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
       setIsActive(existingRecipe.isActive);
       // Map details with ingredient names from availableIngredients
       const mappedDetails = (existingRecipe.details || []).map((d) => {
-        const ingredient = Array.isArray(availableIngredients) && availableIngredients.find((i) => i.id === d.inventoryItemID);
+        const ingredient =
+          Array.isArray(availableIngredients) &&
+          availableIngredients.find((i) => i.id === d.inventoryItemID);
         return {
           id: d.id,
           recipeID: d.recipeID,
-          inventoryItemID: d.inventoryItemID ?? '',
-          inventoryItemName: (ingredient && ingredient.name) || 'Unknown',
+          inventoryItemID: d.inventoryItemID ?? "",
+          inventoryItemName: (ingredient && ingredient.name) || "Unknown",
           quantityUsed: d.quantityUsed,
         };
       });
@@ -124,22 +153,22 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   const resetForm = () => {
-    setName('');
-    setOutputQuantity('');
-    setOutputQuantityUnitId('');
+    setName("");
+    setOutputQuantity("");
+    setOutputQuantityUnitId("");
     setRecipeType(0);
     setIsActive(true);
     submittedRef.current = false;
     setDetails([]);
-    setNewIngredientId('');
-    setNewIngredientSearch('');
+    setNewIngredientId("");
+    setNewIngredientSearch("");
     setShowIngredientDropdown(false);
-    setNewQuantityUsed('');
+    setNewQuantityUsed("");
     setErrors({});
   };
 
@@ -147,16 +176,16 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
     const newErrors: typeof errors = {};
 
     if (!name.trim()) {
-      newErrors.name = 'Recipe name is required';
+      newErrors.name = "Recipe name is required";
     }
     if (!outputQuantity || parseFloat(outputQuantity) <= 0) {
-      newErrors.outputQuantity = 'Please enter a valid output quantity';
+      newErrors.outputQuantity = "Please enter a valid output quantity";
     }
     if (!outputQuantityUnitId) {
-      newErrors.outputQuantityUnitId = 'Please select an output unit';
+      newErrors.outputQuantityUnitId = "Please select an output unit";
     }
     if (details.length === 0) {
-      newErrors.details = 'Please add at least one ingredient';
+      newErrors.details = "Please add at least one ingredient";
     }
 
     setErrors(newErrors);
@@ -165,20 +194,34 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
 
   const handleAddDetail = () => {
     if (!newIngredientId) {
-      notify({ title: 'Error!', text: 'Please select an inventory item', type: 'error' });
+      notify({
+        title: "Error!",
+        text: "Please select an inventory item",
+        type: "error",
+      });
       return;
     }
     if (!newQuantityUsed || parseFloat(newQuantityUsed) <= 0) {
-      notify({ title: 'Error!', text: 'Please enter a valid quantity', type: 'error' });
+      notify({
+        title: "Error!",
+        text: "Please enter a valid quantity",
+        type: "error",
+      });
       return;
     }
 
     if (details.some((d) => d.inventoryItemID === newIngredientId)) {
-      notify({ title: 'Error!', text: 'This item is already added', type: 'error' });
+      notify({
+        title: "Error!",
+        text: "This item is already added",
+        type: "error",
+      });
       return;
     }
 
-    const ingredient = Array.isArray(availableIngredients) && availableIngredients.find((i) => i.id === newIngredientId);
+    const ingredient =
+      Array.isArray(availableIngredients) &&
+      availableIngredients.find((i) => i.id === newIngredientId);
     if (!ingredient) return;
 
     setDetails([
@@ -189,12 +232,12 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
         quantityUsed: parseFloat(newQuantityUsed),
       },
     ]);
-    setErrors(prev => ({ ...prev, details: undefined }));
+    setErrors((prev) => ({ ...prev, details: undefined }));
 
-    setNewIngredientId('');
-    setNewIngredientSearch('');
+    setNewIngredientId("");
+    setNewIngredientSearch("");
     setShowIngredientDropdown(false);
-    setNewQuantityUsed('');
+    setNewQuantityUsed("");
   };
 
   const handleRemoveDetail = (inventoryItemID: string) => {
@@ -208,17 +251,20 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
 
     setLoading(true);
     try {
-      const business = getJsonItemFromLocalStorage('business');
+      const business = getJsonItemFromLocalStorage("business");
       const payload: CreateRecipePayload = {
         name: name.trim(),
-        producedInventoryItemID: producedInventoryItemID || existingRecipe?.producedInventoryItemID || '',
+        producedInventoryItemID:
+          producedInventoryItemID ||
+          existingRecipe?.producedInventoryItemID ||
+          "",
         outputQuantity: parseFloat(outputQuantity),
         outputQuantityUnitId,
         recipeType,
         isActive,
         details: details.map((d) => ({
-          id: d.id || '',
-          recipeID: isEditMode && existingRecipe ? existingRecipe.id : '',
+          id: d.id || "",
+          recipeID: isEditMode && existingRecipe ? existingRecipe.id : "",
           inventoryItemID: d.inventoryItemID,
           quantityUsed: d.quantityUsed,
         })),
@@ -226,30 +272,56 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
 
       let response;
       if (isEditMode && existingRecipe) {
-        response = await updateRecipe(business[0]?.businessId, existingRecipe.id, payload);
+        response = await updateRecipe(
+          business[0]?.businessId,
+          existingRecipe.id,
+          payload,
+        );
       } else {
         response = await createRecipe(business[0]?.businessId, payload);
       }
 
-      if (response && 'errors' in response) {
+      if (!response) return;
+
+      if (response && "errors" in response) {
         const errors = response.errors as Record<string, string[]>;
-        const errorMessage = Object.values(errors).flat().join(', ');
-        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
+        const errorMessage = Object.values(errors).flat().join(", ");
+        notify({
+          title: "Error!",
+          text: errorMessage || "Please check your input values",
+          type: "error",
+        });
         return;
       }
 
       if (response?.data?.isSuccessful) {
-        notify({ title: 'Success!', text: isEditMode ? 'Recipe updated successfully' : 'Recipe created successfully', type: 'success' });
+        notify({
+          title: "Success!",
+          text: isEditMode
+            ? "Recipe updated successfully"
+            : "Recipe created successfully",
+          type: "success",
+        });
         submittedRef.current = true;
-        localStorage.removeItem('pendingRecipeTracking');
+        localStorage.removeItem("pendingRecipeTracking");
         onSuccess();
         onOpenChange(false);
       } else {
-        notify({ title: 'Error!', text: response?.data?.error || (isEditMode ? 'Failed to update recipe' : 'Failed to create recipe'), type: 'error' });
+        notify({
+          title: "Error!",
+          text:
+            response?.data?.error ||
+            (isEditMode
+              ? "Failed to update recipe"
+              : "Failed to create recipe"),
+          type: "error",
+        });
       }
     } catch (error) {
-      console.error(isEditMode ? 'Error updating recipe:' : 'Error creating recipe:', error);
-      notify({ title: 'Error!', text: isEditMode ? 'Failed to update recipe' : 'Failed to create recipe', type: 'error' });
+      console.error(
+        isEditMode ? "Error updating recipe:" : "Error creating recipe:",
+        error,
+      );
     } finally {
       setLoading(false);
     }
@@ -275,10 +347,12 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                   </div>
                   <div>
                     <h2 className="text-xl font-bold text-gray-800">
-                      {isEditMode ? 'Edit Recipe' : 'Add Recipe'}
+                      {isEditMode ? "Edit Recipe" : "Add Recipe"}
                     </h2>
                     <p className="text-sm text-gray-500">
-                      {isEditMode ? 'Update the recipe for the produced item' : 'Create a recipe for the produced item'}
+                      {isEditMode
+                        ? "Update the recipe for the produced item"
+                        : "Create a recipe for the produced item"}
                     </p>
                   </div>
                 </div>
@@ -303,10 +377,10 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                       value={name}
                       onChange={(e) => {
                         setName(e.target.value);
-                        setErrors(prev => ({ ...prev, name: undefined }));
+                        setErrors((prev) => ({ ...prev, name: undefined }));
                       }}
                       placeholder="Enter recipe name"
-                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 ${errors.name ? 'border-red-500' : 'border-gray-200'}`}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 ${errors.name ? "border-red-500" : "border-gray-200"}`}
                     />
                     {errors.name && (
                       <p className="text-red-500 text-sm mt-1">{errors.name}</p>
@@ -323,15 +397,20 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                       value={outputQuantity}
                       onChange={(e) => {
                         setOutputQuantity(e.target.value);
-                        setErrors(prev => ({ ...prev, outputQuantity: undefined }));
+                        setErrors((prev) => ({
+                          ...prev,
+                          outputQuantity: undefined,
+                        }));
                       }}
                       placeholder="0"
                       min="0.001"
                       step="0.001"
-                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 ${errors.outputQuantity ? 'border-red-500' : 'border-gray-200'}`}
+                      className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 ${errors.outputQuantity ? "border-red-500" : "border-gray-200"}`}
                     />
                     {errors.outputQuantity && (
-                      <p className="text-red-500 text-sm mt-1">{errors.outputQuantity}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.outputQuantity}
+                      </p>
                     )}
                   </div>
 
@@ -345,17 +424,21 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                         value={outputQuantityUnitId}
                         onChange={(e) => {
                           setOutputQuantityUnitId(e.target.value);
-                          setErrors(prev => ({ ...prev, outputQuantityUnitId: undefined }));
+                          setErrors((prev) => ({
+                            ...prev,
+                            outputQuantityUnitId: undefined,
+                          }));
                         }}
                         disabled={unitsLoading}
-                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none ${errors.outputQuantityUnitId ? 'border-red-500' : 'border-gray-200'}`}
+                        className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none ${errors.outputQuantityUnitId ? "border-red-500" : "border-gray-200"}`}
                       >
                         <option value="">Select unit</option>
-                        {Array.isArray(units) && units.map((unit) => (
-                          <option key={unit.id} value={unit.id}>
-                            {unit.name}
-                          </option>
-                        ))}
+                        {Array.isArray(units) &&
+                          units.map((unit) => (
+                            <option key={unit.id} value={unit.id}>
+                              {unit.name}
+                            </option>
+                          ))}
                       </select>
                       <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                         {unitsLoading ? (
@@ -378,10 +461,11 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                       </div>
                     </div>
                     {errors.outputQuantityUnitId && (
-                      <p className="text-red-500 text-sm mt-1">{errors.outputQuantityUnitId}</p>
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.outputQuantityUnitId}
+                      </p>
                     )}
                   </div>
-
                 </div>
                 {/* Active Toggle */}
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
@@ -395,11 +479,10 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                     isSelected={isActive}
                     onValueChange={setIsActive}
                     classNames={{
-                      wrapper: 'group-data-[selected=true]:bg-green-500',
+                      wrapper: "group-data-[selected=true]:bg-green-500",
                     }}
                   />
                 </div>
-
 
                 {/* Recipe Details Section */}
                 <div className="border-t border-gray-100 pt-6">
@@ -407,7 +490,9 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                     Recipe Details
                   </h3>
                   {errors.details && (
-                    <p className="text-red-500 text-sm mb-4">{errors.details}</p>
+                    <p className="text-red-500 text-sm mb-4">
+                      {errors.details}
+                    </p>
                   )}
 
                   {/* Details table */}
@@ -416,19 +501,34 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b border-gray-200">
-                            <th className="text-left py-3 px-2 font-semibold text-gray-700">Inventory Item</th>
-                            <th className="text-right py-3 px-2 font-semibold text-gray-700">Quantity Used</th>
-                            <th className="text-right py-3 px-2 font-semibold text-gray-700">Action</th>
+                            <th className="text-left py-3 px-2 font-semibold text-gray-700">
+                              Inventory Item
+                            </th>
+                            <th className="text-right py-3 px-2 font-semibold text-gray-700">
+                              Quantity Used
+                            </th>
+                            <th className="text-right py-3 px-2 font-semibold text-gray-700">
+                              Action
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {details.map((detail) => (
-                            <tr key={detail.inventoryItemID} className="border-b border-gray-100">
-                              <td className="py-3 px-2 text-gray-700">{detail.inventoryItemName}</td>
-                              <td className="py-3 px-2 text-right text-gray-700">{detail.quantityUsed}</td>
+                            <tr
+                              key={detail.inventoryItemID}
+                              className="border-b border-gray-100"
+                            >
+                              <td className="py-3 px-2 text-gray-700">
+                                {detail.inventoryItemName}
+                              </td>
+                              <td className="py-3 px-2 text-right text-gray-700">
+                                {detail.quantityUsed}
+                              </td>
                               <td className="py-3 px-2 text-right">
                                 <button
-                                  onClick={() => handleRemoveDetail(detail.inventoryItemID)}
+                                  onClick={() =>
+                                    handleRemoveDetail(detail.inventoryItemID)
+                                  }
                                   className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                                 >
                                   <Trash2 className="w-4 h-4" />
@@ -453,13 +553,16 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                     </div>
 
                     <div className="flex gap-3">
-                      <div className="flex-1 relative" ref={ingredientDropdownRef}>
+                      <div
+                        className="flex-1 relative"
+                        ref={ingredientDropdownRef}
+                      >
                         <input
                           type="text"
                           value={newIngredientSearch}
                           onChange={(e) => {
                             setNewIngredientSearch(e.target.value);
-                            setNewIngredientId('');
+                            setNewIngredientId("");
                             setShowIngredientDropdown(true);
                           }}
                           onFocus={() => setShowIngredientDropdown(true)}
@@ -475,37 +578,53 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                         {/* Dropdown suggestions */}
                         {showIngredientDropdown && !ingredientsLoading && (
                           <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                            {Array.isArray(availableIngredients) && availableIngredients
-                              .filter(
+                            {Array.isArray(availableIngredients) &&
+                              availableIngredients
+                                .filter(
+                                  (i) =>
+                                    i.itemType !== InventoryItemType.Produced &&
+                                    !details.some(
+                                      (d) => d.inventoryItemID === i.id,
+                                    ) &&
+                                    i.name
+                                      .toLowerCase()
+                                      .includes(
+                                        newIngredientSearch.toLowerCase(),
+                                      ),
+                                )
+                                .map((ingredient) => (
+                                  <button
+                                    key={ingredient.id}
+                                    type="button"
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setNewIngredientId(ingredient.id);
+                                      setNewIngredientSearch(ingredient.name);
+                                      setShowIngredientDropdown(false);
+                                    }}
+                                    className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#5F35D2]/10 hover:text-[#5F35D2] transition-colors"
+                                  >
+                                    {ingredient.name}
+                                  </button>
+                                ))}
+                            {(!Array.isArray(availableIngredients) ||
+                              availableIngredients.filter(
                                 (i) =>
-                                  !details.some((d) => d.inventoryItemID === i.id) &&
-                                  i.name.toLowerCase().includes(newIngredientSearch.toLowerCase())
-                              )
-                              .map((ingredient) => (
-                                <button
-                                  key={ingredient.id}
-                                  type="button"
-                                  onMouseDown={(e) => e.stopPropagation()}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setNewIngredientId(ingredient.id);
-                                    setNewIngredientSearch(ingredient.name);
-                                    setShowIngredientDropdown(false);
-                                  }}
-                                  className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-[#5F35D2]/10 hover:text-[#5F35D2] transition-colors"
-                                >
-                                  {ingredient.name}
-                                </button>
-                              ))}
-                            {(!Array.isArray(availableIngredients) || availableIngredients.filter(
-                              (i) =>
-                                !details.some((d) => d.inventoryItemID === i.id) &&
-                                i.name.toLowerCase().includes(newIngredientSearch.toLowerCase())
-                            ).length === 0) && !newIngredientSearch.trim() && (
-                              <div className="px-4 py-3 text-sm text-gray-500">
-                                Type to search or create ingredient
-                              </div>
-                            )}
+                                  !details.some(
+                                    (d) => d.inventoryItemID === i.id,
+                                  ) &&
+                                  i.name
+                                    .toLowerCase()
+                                    .includes(
+                                      newIngredientSearch.toLowerCase(),
+                                    ),
+                              ).length === 0) &&
+                              !newIngredientSearch.trim() && (
+                                <div className="px-4 py-3 text-sm text-gray-500">
+                                  Type to search or create ingredient
+                                </div>
+                              )}
                           </div>
                         )}
                       </div>
@@ -520,16 +639,15 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                         />
                       </div>
+                      <button
+                        type="button"
+                        onClick={handleAddDetail}
+                        className=" flex items-center w-16 text-sm justify-center gap-2 px-4 py-3 bg-[#5B5B5B] text-white rounded-xl hover:bg-[#4A4A4A] font-semibold transition-all duration-200"
+                      >
+                        <span>Add </span>
+                        <Plus className="w-4 h-4" />
+                      </button>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={handleAddDetail}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#5B5B5B] text-white rounded-xl hover:bg-[#4A4A4A] font-semibold transition-all duration-200"
-                    >
-                      <span>Add Ingredient</span>
-                      <Plus className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
 
@@ -543,11 +661,15 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                     {loading ? (
                       <>
                         <Spinner size="sm" color="current" />
-                        <span>{isEditMode ? 'Saving...' : 'Creating Recipe...'}</span>
+                        <span>
+                          {isEditMode ? "Saving..." : "Creating Recipe..."}
+                        </span>
                       </>
                     ) : (
                       <>
-                        <span>{isEditMode ? 'Save Changes' : 'Create Recipe'}</span>
+                        <span>
+                          {isEditMode ? "Save Changes" : "Create Recipe"}
+                        </span>
                         <svg
                           className="w-5 h-5"
                           fill="none"

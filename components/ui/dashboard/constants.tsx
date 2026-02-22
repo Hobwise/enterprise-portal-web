@@ -20,6 +20,7 @@ import {
   HistoryIcon,
   StockAnalysisIcon,
 } from "@/public/assets/svg";
+import Image from 'next/image';
 import Menu from '../../../public/assets/icons/menu.png';
 
 export const SIDENAV_ITEMS: SideNavItem[] = [
@@ -81,6 +82,13 @@ export const INVENTORY_ITEMS: SideNavItem[] = [
     title: "Item",
     path: "/dashboard/inventory/items",
     icon: <ItemIcon />,
+    submenu: true,
+    subMenuItems: [
+      { title: "All Items", path: "/dashboard/inventory/items" },
+      { title: "Wizard", path: "/dashboard/inventory/items/wizard" },
+      { title: "Sync Menu Items", path: "/dashboard/inventory/items/sync-menu" },
+      { title: "Measurements", path: "/dashboard/inventory/items/measurements" },
+    ],
   },
   {
     title: "Supplier",
@@ -143,7 +151,7 @@ export const headerRouteMapping = {
   },
   menu: {
     title: 'Menu',
-    icon: Menu,
+    icon: <Image src={Menu} alt="Menu" width={20} height={20} />,
   },
   orders: {
     title: 'Orders',

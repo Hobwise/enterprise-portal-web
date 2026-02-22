@@ -1,14 +1,11 @@
+import React from "react";
 import {
   Modal,
   ModalContent,
-  ModalHeader,
   ModalBody,
-  ModalFooter,
-  Button,
   Spinner,
 } from "@nextui-org/react";
-import React from "react";
-import { X } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import { Supplier } from "./types";
 
 interface DeleteSupplierModalProps {
@@ -32,57 +29,74 @@ const DeleteSupplierModal: React.FC<DeleteSupplierModalProps> = ({
     <Modal
       isOpen={isOpen}
       onOpenChange={onOpenChange}
-      size="md"
+      size="lg"
       hideCloseButton
-      classNames={{
-        base: "max-w-md",
-      }}
     >
-      <ModalContent>
+      <ModalContent className="bg-white rounded-2xl shadow-2xl border border-gray-200">
         {(onClose) => (
-          <>
-            <ModalHeader className="flex items-center justify-between">
-              <div className="flex-1 text-center">
-                <h2 className="text-xl font-bold text-[#3D424A]">
-                  Delete Supplier
-                </h2>
+          <ModalBody className="p-0">
+            <div className="bg-white rounded-2xl w-full">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center">
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-800">
+                      Delete Supplier
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      This action cannot be undone
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={onClose}
+                  disabled={isLoading}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
               </div>
-              <Button
-                isIconOnly
-                variant="light"
-                onPress={onClose}
-                className="text-gray-500 hover:text-gray-700"
-                isDisabled={isLoading}
-              >
-                <X size={20} />
-              </Button>
-            </ModalHeader>
-            <ModalBody className="px-6 py-6 text-center">
-              <p className="text-gray-600">
-                Are you sure you want to delete <span className="font-semibold text-gray-900">{supplier.name}</span>?
-                <br />
-                This action cannot be undone.
-              </p>
-            </ModalBody>
-            <ModalFooter className="flex justify-center gap-4 pb-6">
-              <Button
-                variant="bordered"
-                onPress={onClose}
-                isDisabled={isLoading}
-                className="font-medium text-gray-700 border-gray-300 min-w-[100px]"
-              >
-                Cancel
-              </Button>
-              <Button
-                color="danger"
-                onPress={onConfirm}
-                isLoading={isLoading}
-                className="font-medium text-white min-w-[100px]"
-              >
-                Delete
-              </Button>
-            </ModalFooter>
-          </>
+
+              {/* Body */}
+              <div className="p-6">
+                <p className="text-gray-600">
+                  Are you sure you want to delete{" "}
+                  <span className="font-semibold text-gray-900">
+                    {supplier.name}
+                  </span>
+                  ? This action cannot be undone.
+                </p>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end gap-3 px-6 pb-6">
+                <button
+                  onClick={onClose}
+                  disabled={isLoading}
+                  className="px-6 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 font-semibold transition-all duration-200 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={onConfirm}
+                  disabled={isLoading}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {isLoading ? (
+                    <>
+                      <Spinner size="sm" color="current" />
+                      <span>Deleting...</span>
+                    </>
+                  ) : (
+                    <span>Delete</span>
+                  )}
+                </button>
+              </div>
+            </div>
+          </ModalBody>
         )}
       </ModalContent>
     </Modal>
