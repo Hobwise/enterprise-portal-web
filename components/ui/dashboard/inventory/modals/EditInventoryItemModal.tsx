@@ -150,6 +150,8 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
         payload
       );
 
+      if (!response) return;
+
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
@@ -172,7 +174,6 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
       }
     } catch (error) {
       console.error('Error updating inventory item:', error);
-      notify({ title: 'Error!', text: 'Failed to update item', type: 'error' });
     } finally {
       setLoading(false);
     }

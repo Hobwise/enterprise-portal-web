@@ -110,8 +110,12 @@ const Header = ({ ispos }: any) => {
   const navItem = SIDENAV_ITEMS.filter((item) => item.path === pathname)[0];
 
   const routeOutsideSidebar = () => {
+    const segments = pathname.split('/').filter(Boolean);
     for (const [key, value] of Object.entries(headerRouteMapping)) {
-      if (pathname.includes(key)) {
+      const keySegments = key.split('/').filter(Boolean);
+      // Match if all key segments appear consecutively in the pathname segments
+      const idx = segments.indexOf(keySegments[0]);
+      if (idx !== -1 && keySegments.every((seg, i) => segments[idx + i] === seg)) {
         return value;
       }
     }

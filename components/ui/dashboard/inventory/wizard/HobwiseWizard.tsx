@@ -102,8 +102,7 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
         const saved = response?.data?.data;
 
         if (saved && saved.currentStep > 0) {
-          setStep(saved.currentStep);
-
+          // Always start at step 1 when user opens the wizard
           const firstItem = saved.items?.[0];
           const firstRecipe = saved.recipes?.[0];
           setData((prev) => ({

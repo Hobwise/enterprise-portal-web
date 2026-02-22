@@ -99,6 +99,8 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
 
       const response = await createItemUnit(business[0]?.businessId, payload);
 
+      if (!response) return;
+
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
@@ -110,14 +112,11 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
         notify({ title: 'Success!', text: 'Unit created successfully', type: 'success' });
         onSuccess();
         onOpenChange(false);
-      } else if (response && 'data' in response) {
-        notify({ title: 'Error!', text: response.data?.error || 'Failed to create unit', type: 'error' });
       } else {
-        notify({ title: 'Error!', text: 'Failed to create unit', type: 'error' });
+        notify({ title: 'Error!', text: response.data?.error || 'Failed to create unit', type: 'error' });
       }
     } catch (error) {
       console.error('Error creating unit:', error);
-      notify({ title: 'Error!', text: 'Failed to create unit', type: 'error' });
     } finally {
       setLoading(false);
     }

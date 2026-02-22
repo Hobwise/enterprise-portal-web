@@ -480,10 +480,20 @@ const SectionGroup = memo(({
 SectionGroup.displayName = 'SectionGroup';
 
 const MenuItem = memo(({ item, pathname }: { item: SideNavItem; pathname: string }) => {
-  const [subMenuOpen, setSubMenuOpen] = useState(false);
+  // Auto-expand submenu when any sub-item path matches the current pathname
+  const isSubItemActive = item.submenu && item.subMenuItems?.some(
+    (sub) => sub.path === pathname || pathname.startsWith(sub.path + '/')
+  );
+  const [subMenuOpen, setSubMenuOpen] = useState(!!isSubItemActive);
+
+  // Keep submenu in sync when pathname changes
+  useEffect(() => {
+    if (isSubItemActive) setSubMenuOpen(true);
+  }, [isSubItemActive]);
+
   const toggleSubMenu = useCallback(() => {
-    setSubMenuOpen(!subMenuOpen);
-  }, [subMenuOpen]);
+    setSubMenuOpen((prev) => !prev);
+  }, []);
 
   return (
     <div>
@@ -491,30 +501,31 @@ const MenuItem = memo(({ item, pathname }: { item: SideNavItem; pathname: string
         <>
           <button
             onClick={toggleSubMenu}
-            className={`flex flex-row items-center p-2 rounded-lg  w-full justify-between  ${
-              pathname.includes(item.path) ? "bg-zinc-100" : ""
+            className={`text-white flex flex-row items-center py-[13px] px-6 rounded-[4px] w-full justify-between transition hover:bg-[#2B3342] ${
+              isSubItemActive ? "bg-[#2B3342]" : ""
             }`}
           >
             <div className="flex flex-row space-x-4 items-center">
               {item.icon}
-              <span className="font-semibold text-xl  flex">{item.title}</span>
+              <span className="font-[400] text-[14px] flex">{item.title}</span>
             </div>
 
-            <div className={`${subMenuOpen ? "rotate-180" : ""} flex`}>
-              {/* <Icon icon='lucide:chevron-down' width='24' height='24' /> */}
-            </div>
+            <IoIosArrowDown
+              className={`text-[14px] text-gray-400 transition-transform duration-200 ${subMenuOpen ? "rotate-180" : ""}`}
+            />
           </button>
 
           {subMenuOpen && (
-            <div className="my-2 ml-12 flex flex-col space-y-4">
+            <div className="flex flex-col ml-6 border-l border-gray-700">
               {item.subMenuItems?.map((subItem, idx) => {
+                const isActive = subItem.path === pathname;
                 return (
                   <Link
                     prefetch={true}
                     key={idx}
                     href={subItem.path}
-                    className={`text-white ${
-                      subItem.path === pathname ? "font-bold" : ""
+                    className={`text-white py-[10px] pl-8 pr-6 rounded-r-[4px] text-[13px] transition hover:bg-[#2B3342] ${
+                      isActive ? "bg-[#2B3342] font-[500]" : "font-[400] text-gray-300"
                     }`}
                   >
                     <span>{subItem.title}</span>

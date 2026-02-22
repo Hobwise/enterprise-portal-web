@@ -105,6 +105,8 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
 
       const response = await createInventoryItem(business[0]?.businessId, payload);
 
+      if (!response) return;
+
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
@@ -140,7 +142,6 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
       }
     } catch (error) {
       console.error('Error creating inventory item:', error);
-      notify({ title: 'Error!', text: 'Failed to register item', type: 'error' });
     } finally {
       setLoading(false);
     }

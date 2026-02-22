@@ -64,7 +64,6 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       (item) =>
         (item.reference || "").toLowerCase().includes(query) ||
         (item.supplierName || "").toLowerCase().includes(query) ||
-        (item.companyName || "").toLowerCase().includes(query) ||
         (item.status || "").toLowerCase().includes(query)
     );
   }, [data, filterValue]);
@@ -88,8 +87,6 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
           return <span className="text-sm font-medium text-gray-900">{item.requestId}</span>;
         case "supplierName":
           return <span className="text-sm text-gray-500">{item.supplierName}</span>;
-        case "companyName":
-          return <span className="text-sm text-gray-500">{item.companyName}</span>;
         case "expectedDeliveryDate":
           return <span className="text-sm text-gray-500">{item.expectedDeliveryDate}</span>;
         case "numberOfItems":
@@ -124,16 +121,18 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                   </div>
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Purchase order actions" className="text-black">
-                  <DropdownItem
-                    key="duplicate"
-                    startContent={<LuCopy size={16} />}
-                    onPress={() => onDuplicateRequest(item)}
-                    aria-label="duplicate order"
-                  >
-                    Duplicate PO
-                  </DropdownItem>
                   <DropdownSection title="">
-                    {isPending && (
+                    <DropdownItem
+                      key="duplicate"
+                      startContent={<LuCopy size={16} />}
+                      onPress={() => onDuplicateRequest(item)}
+                      aria-label="duplicate order"
+                    >
+                      Duplicate PO
+                    </DropdownItem>
+                    {/* {isPending && (
+                    )} */}
+                    
                       <DropdownItem
                         key="receive"
                         startContent={<LuPackageCheck size={16} />}
@@ -142,8 +141,8 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                       >
                         Receive PO
                       </DropdownItem>
-                    )}
-                    {isPending && (
+                    {/* {isPending && (
+                    )} */}
                       <DropdownItem
                         key="sendmail"
                         startContent={<LuMail size={16} />}
@@ -152,8 +151,8 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                       >
                         Send Mail to Supplier
                       </DropdownItem>
-                    )}
-                    {isPending && (
+                    {/* {isPending && (
+                    )} */}
                       <DropdownItem
                         key="cancel"
                         startContent={<LuXCircle size={16} />}
@@ -164,14 +163,13 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                       >
                         Cancel
                       </DropdownItem>
-                    )}
                   </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
             </div>
           );
         default:
-          return null;
+          return "nothing show";
       }
     },
     [onReceiveRequest, onDuplicateRequest, onCancelRequest, onSendMail]

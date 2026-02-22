@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Plus, RefreshCw, Ruler } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 
 interface InventoryItemsHeaderProps {
   totalItems: number;
@@ -12,10 +12,6 @@ interface InventoryItemsHeaderProps {
   stockLevelFilter: string;
   onStockLevelFilterChange: (value: string) => void;
   onAddItem: () => void;
-  onCustomizeMeasurements?: () => void;
-  syncItemsCount?: number;
-  onSyncItems?: () => void;
-  onWizardClick?: () => void;
 }
 
 const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
@@ -27,10 +23,6 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
   stockLevelFilter,
   onStockLevelFilterChange,
   onAddItem,
-  onCustomizeMeasurements,
-  syncItemsCount = 0,
-  onSyncItems,
-  onWizardClick,
 }) => {
   return (
     <div className="space-y-6">
@@ -58,41 +50,8 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
           </span>
         </div>
 
-        {/* Action Buttons with Wizard Hat */}
+        {/* Action Button */}
         <div className="flex items-center gap-3">
-          {/* Wizard Hat — clickable to open Hobwise Wizard */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/assets/images/witch-hat.png"
-            alt="Hobwise Wizard"
-            width={48}
-            height={48}
-            onClick={onWizardClick}
-            className="object-contain hidden lg:block cursor-pointer hover:scale-110 transition-transform"
-          />
-
-          {onSyncItems && syncItemsCount > 0 && (
-            <button
-              onClick={onSyncItems}
-              title="Sync Items"
-              className="relative flex items-center justify-center w-11 h-11 border border-[#5F35D2] text-[#5F35D2] rounded-xl hover:bg-[#5F35D2]/5 transition-all duration-200"
-            >
-              <RefreshCw className="w-5 h-5" />
-              <span className="absolute -top-1.5 -right-1.5 bg-[#5F35D2] text-white text-[10px] rounded-full px-1.5 py-0.5 min-w-[20px] text-center leading-none">
-                {syncItemsCount}
-              </span>
-            </button>
-          )}
-
-          {onCustomizeMeasurements && (
-            <button
-              onClick={onCustomizeMeasurements}
-              title="Customize Measurements"
-              className="flex items-center justify-center w-11 h-11 border border-[#5F35D2] text-[#5F35D2] rounded-xl hover:bg-[#5F35D2]/5 transition-all duration-200"
-            >
-              <Ruler className="w-5 h-5" />
-            </button>
-          )}
           <button
             onClick={onAddItem}
             className="flex items-center gap-2 px-5 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-medium transition-all duration-200"

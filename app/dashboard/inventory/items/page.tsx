@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import useInventoryItems, { useMenuSummary } from '@/hooks/cachedEndpoints/useInventoryItems';
+import useInventoryItems from '@/hooks/cachedEndpoints/useInventoryItems';
 import { deleteInventoryItem, InventoryItem, PendingRecipeTracking } from '@/app/api/controllers/dashboard/inventory';
 import EditInventoryItemModal from '@/components/ui/dashboard/inventory/modals/EditInventoryItemModal';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
@@ -16,8 +16,6 @@ import BatchProductionModal from '@/components/ui/dashboard/inventory/modals/Bat
 import RecipeRequiredModal from '@/components/ui/dashboard/inventory/modals/RecipeRequiredModal';
 import DeleteModal from '@/components/ui/deleteModal';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
-import SyncMenuItemsModal from '@/components/ui/dashboard/inventory/modals/SyncMenuItemsModal';
-import HobwiseWizard from '@/components/ui/dashboard/inventory/wizard/HobwiseWizard';
 
 export default function ItemsPage() {
   const router = useRouter();
@@ -56,8 +54,6 @@ export default function ItemsPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isBatchProductionModalOpen, setIsBatchProductionModalOpen] = useState(false);
   const [isRecipeRequiredModalOpen, setIsRecipeRequiredModalOpen] = useState(false);
-  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
-  const [showWizard, setShowWizard] = useState(false);
 
   // Fetch inventory items
   const {
@@ -74,13 +70,6 @@ export default function ItemsPage() {
     pageSize,
     search: debouncedSearch,
   });
-
-  // Menu summary for sync button
-  const {
-    data: menuSummaryData,
-    isLoading: menuSummaryLoading,
-    totalItemCount: syncItemsCount,
-  } = useMenuSummary();
 
   // Recipe enforcement via localStorage
   useEffect(() => {
@@ -137,19 +126,6 @@ export default function ItemsPage() {
     refetch();
   }, [refetch]);
 
-  const handleCustomizeMeasurements = useCallback(() => {
-    router.push('/dashboard/inventory/items/measurements');
-  }, [router]);
-
-  const handleSyncItems = useCallback(() => {
-    setIsSyncModalOpen(true);
-  }, []);
-
-  const handleSyncConfirm = useCallback(() => {
-    setIsSyncModalOpen(false);
-    refetch();
-  }, [refetch]);
-
   const handleDeleteClick = useCallback((item: InventoryItem) => {
     setSelectedItem(item);
     setIsDeleteModalOpen(true);
@@ -166,6 +142,8 @@ export default function ItemsPage() {
         selectedItem.id
       );
 
+      if (!response) return;
+
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Item deleted successfully', type: 'success' });
         setIsDeleteModalOpen(false);
@@ -176,7 +154,6 @@ export default function ItemsPage() {
       }
     } catch (error) {
       console.error('Error deleting item:', error);
-      notify({ title: 'Error!', text: 'Failed to delete item', type: 'error' });
     } finally {
       setIsDeleting(false);
     }
@@ -288,31 +265,8 @@ export default function ItemsPage() {
   const isClientFiltering = searchQuery.trim() !== '' || itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
   const totalItems = isClientFiltering ? filteredItems.length : (totalCount || filteredItems.length);
 
-  // Wizard visibility logic
-  const isEmptyInventory = !isLoading && totalCount === 0;
-  const shouldShowWizard = showWizard || isEmptyInventory;
-
-  const handleWizardComplete = useCallback(() => {
-    setShowWizard(false);
-    refetch();
-  }, [refetch]);
-
   if (isLoading && (!data || data.length === 0) && page === 1) {
     return <CustomLoading />;
-  }
-
-  if (shouldShowWizard) {
-    return (
-      <div className="min-h-screen font-satoshi">
-        <div className="max-w-7xl mx-auto space-y-6">
-          <HobwiseWizard
-            menuSummaryData={menuSummaryData}
-            menuSummaryLoading={menuSummaryLoading}
-            onComplete={handleWizardComplete}
-          />
-        </div>
-      </div>
-    );
   }
 
   return (
@@ -329,10 +283,6 @@ export default function ItemsPage() {
             stockLevelFilter={stockLevelFilter}
             onStockLevelFilterChange={setStockLevelFilter}
             onAddItem={handleAddItem}
-            onCustomizeMeasurements={handleCustomizeMeasurements}
-            syncItemsCount={syncItemsCount}
-            onSyncItems={handleSyncItems}
-            onWizardClick={() => setShowWizard(true)}
           />
         </div>
 
@@ -402,15 +352,6 @@ export default function ItemsPage() {
         onOpenChange={setIsBatchProductionModalOpen}
         onSuccess={handleBatchProductionSuccess}
         item={selectedItem}
-      />
-
-      {/* Sync Menu Items Modal */}
-      <SyncMenuItemsModal
-        isOpen={isSyncModalOpen}
-        onOpenChange={setIsSyncModalOpen}
-        data={menuSummaryData}
-        isLoading={menuSummaryLoading}
-        onSync={handleSyncConfirm}
       />
 
       {/* Recipe Required Modal */}

@@ -104,6 +104,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
         const response = await predictInventoryItems(businessId, payload);
 
         if (abortRef.current) return;
+        if (!response) return;
 
         if (response?.data?.isSuccessful) {
           const items = response.data.data || response.data;
@@ -131,11 +132,6 @@ const SyncStep: React.FC<SyncStepProps> = ({
         }
       } catch (error) {
         if (abortRef.current) return;
-        notify({
-          title: 'Error',
-          text: 'Failed to analyze menu items. Please try again.',
-          type: 'error',
-        });
         setPhase('select');
       }
     };
@@ -249,6 +245,8 @@ const SyncStep: React.FC<SyncStepProps> = ({
     try {
       const response = await synchronizeInventoryItems(businessId, payload);
 
+      if (!response) return;
+
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Items synced to inventory successfully', type: 'success' });
         onSyncComplete();
@@ -256,7 +254,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
         notify({ title: 'Error!', text: response?.data?.error || 'Failed to sync items to inventory', type: 'error' });
       }
     } catch (error) {
-      // Interceptor already shows error toast
+      // handleError already shows error toast
     } finally {
       setIsSyncing(false);
     }

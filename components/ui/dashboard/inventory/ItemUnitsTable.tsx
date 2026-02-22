@@ -151,6 +151,8 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
           payload
         );
 
+        if (!response) return;
+
         if (response?.data?.isSuccessful) {
           onRefetch();
         } else {
@@ -158,7 +160,6 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         }
       } catch (error) {
         console.error('Error updating unit:', error);
-        notify({ title: 'Error!', text: 'Failed to update', type: 'error' });
       } finally {
         setUpdatingToggles(prev => {
           const next = new Set(prev);
@@ -218,6 +219,8 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
           payload
         );
 
+        if (!response) return;
+
         if (response?.data?.isSuccessful) {
           notify({ title: 'Success!', text: 'Unit updated successfully', type: 'success' });
           setEditingUnitId(null);
@@ -227,7 +230,6 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         }
       } catch (error) {
         console.error('Error updating unit:', error);
-        notify({ title: 'Error!', text: 'Failed to update unit', type: 'error' });
       } finally {
         setIsSavingEdit(false);
       }
@@ -252,6 +254,8 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
         unitToDelete.id
       );
 
+      if (!response) return;
+
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Unit deleted successfully', type: 'success' });
         setDeleteModalOpen(false);
@@ -262,7 +266,6 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
       }
     } catch (error) {
       console.error('Error deleting unit:', error);
-      notify({ title: 'Error!', text: 'Failed to delete unit', type: 'error' });
     } finally {
       setIsDeleting(false);
     }
@@ -325,6 +328,8 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
 
       const response = await createItemUnit(business[0]?.businessId, payload);
 
+      if (!response) return;
+
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
@@ -347,7 +352,6 @@ const ItemUnitsTable: React.FC<ItemUnitsTableProps> = ({
       }
     } catch (error) {
       console.error('Error adding unit:', error);
-      notify({ title: 'Error!', text: 'Failed to add unit', type: 'error' });
     } finally {
       setIsSavingNew(false);
     }

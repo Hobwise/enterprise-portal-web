@@ -109,6 +109,7 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
         const response = await predictInventoryItems(businessId, payload);
 
         if (abortRef.current) return;
+        if (!response) return;
 
         if (response?.data?.isSuccessful) {
           const items = response.data.data || response.data;
@@ -134,11 +135,6 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
         }
       } catch (error) {
         if (abortRef.current) return;
-        notify({
-          title: 'Error',
-          text: 'Failed to analyze menu items. Please try again.',
-          type: 'error',
-        });
         setStep('select');
       }
     };
@@ -224,6 +220,8 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
     try {
       const response = await synchronizeInventoryItems(businessId, payload);
 
+      if (!response) return;
+
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Items synced to inventory successfully', type: 'success' });
         onSync();
@@ -231,7 +229,7 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
         notify({ title: 'Error!', text: response?.data?.error || 'Failed to sync items to inventory', type: 'error' });
       }
     } catch (error) {
-      // Interceptor already shows error toast
+      // handleError already shows error toast
     } finally {
       setIsSyncing(false);
     }
@@ -747,3 +745,7 @@ const Checkbox: React.FC<{ checked: boolean; indeterminate?: boolean }> = ({
 };
 
 export default SyncMenuItemsModal;
+
+// Named exports for standalone page usage
+export { SelectStep, ProcessingStep, ConfirmStep, Checkbox };
+export type { SelectStepProps, ProcessingStepProps, ConfirmStepProps, EditableItemData, ModalStep };

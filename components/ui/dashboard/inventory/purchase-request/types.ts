@@ -7,14 +7,15 @@ export const purchaseOrderStatusMap: Record<number, PurchaseRequestStatus> = {
   3: 'Received',
 };
 
+export const itemTypeLabels = ['Direct', 'Ingredient', 'Produced'];
+
 export interface SupplierInventoryItem {
   id: string;
   name: string;
+  itemType: string;
   unitName: string;
   costPerUnit: number;
-  optimumStock: number;
-  currentStock: number;
-  status: 'Low' | 'Optimum';
+  status: 'Active' | 'Inactive';
 }
 
 export interface PurchaseRequestItem {

@@ -195,6 +195,8 @@ export default function ItemDetailPage() {
         payload
       );
 
+      if (!response) return;
+
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
@@ -211,7 +213,6 @@ export default function ItemDetailPage() {
       }
     } catch (error) {
       console.error('Error updating inventory item:', error);
-      notify({ title: 'Error!', text: 'Failed to update item', type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -399,7 +400,7 @@ export default function ItemDetailPage() {
               {/* Primary Unit */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Primary Unit <span className="text-red-500">*</span>
+                   Unit <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <select
@@ -456,7 +457,7 @@ export default function ItemDetailPage() {
 
           {/* Pricing & Stock */}
           <div className="border-t border-gray-100 pt-4 mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Cost Per Unit */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -495,20 +496,7 @@ export default function ItemDetailPage() {
               </div>
 
               {/* Opening Stock */}
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Opening Stock
-                </label>
-                <input
-                  type="number"
-                  value={formData.openingStock}
-                  onChange={(e) => handleFieldChange('openingStock', e.target.value)}
-                  placeholder="0"
-                  min="0"
-                  step="1"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-                />
-              </div>
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
