@@ -220,8 +220,29 @@ export default function PurchaseRequestPage() {
     }
   };
 
-  const handleNotifySupplier = () => {
+  const handleNotifySupplier = async () => {
     setSuccessModalOpen(false);
+    if (purchaseOrderId) {
+      setFetchingOrderDetails(true);
+      try {
+        const fullOrder = await fetchFullPurchaseOrder({
+          requestId: purchaseOrderId,
+          supplierName: selectedSupplier?.name || '',
+          companyName: selectedSupplier?.companyName || '',
+          requestDate: new Date().toLocaleDateString('en-GB'),
+          expectedDeliveryDate: '',
+          numberOfItems: 0,
+          totalCost: 0,
+          status: 'Pending',
+          items: [],
+          deliveryAddress: '',
+          supplierEmail: selectedSupplier?.email || '',
+        });
+        setSelectedPurchaseRequest(fullOrder);
+      } finally {
+        setFetchingOrderDetails(false);
+      }
+    }
     setSendEmailModalOpen(true);
   };
 
@@ -353,9 +374,15 @@ export default function PurchaseRequestPage() {
     }
   };
 
-  const handleSendMailFromHistory = (request: PurchaseRequest) => {
+  const handleSendMailFromHistory = async (request: PurchaseRequest) => {
     setPurchaseOrderId(request.requestId);
-    setSelectedPurchaseRequest(request);
+    setFetchingOrderDetails(true);
+    try {
+      const fullOrder = await fetchFullPurchaseOrder(request);
+      setSelectedPurchaseRequest(fullOrder);
+    } finally {
+      setFetchingOrderDetails(false);
+    }
     setSendEmailModalOpen(true);
   };
 
@@ -491,6 +518,7 @@ export default function PurchaseRequestPage() {
         businessName="My Business"
         onSend={handleSendEmail}
         isLoading={sendingEmail}
+        purchaseOrderData={selectedPurchaseRequest}
       />
 
       <ReceivedItemsModal

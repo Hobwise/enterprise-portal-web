@@ -12,6 +12,8 @@ import {
 import { IoClose } from "react-icons/io5";
 import { LuMail } from "react-icons/lu";
 import { Paperclip, FileText, X, Bold, Italic, Underline, List, ListOrdered } from "lucide-react";
+import { PurchaseRequest } from "./types";
+import { generatePurchaseOrderPdfFile } from "./generatePurchaseOrderPdf";
 
 interface SendEmailModalProps {
   isOpen: boolean;
@@ -20,6 +22,7 @@ interface SendEmailModalProps {
   businessName: string;
   onSend: (to: string, cc: string, subject: string, message: string, attachment: File | null) => void;
   isLoading?: boolean;
+  purchaseOrderData?: PurchaseRequest | null;
 }
 
 const SendEmailModal: React.FC<SendEmailModalProps> = ({
@@ -28,6 +31,7 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
   supplierEmail,
   onSend,
   isLoading,
+  purchaseOrderData,
 }) => {
   const [to, setTo] = useState("");
   const [cc, setCc] = useState("");
@@ -41,12 +45,23 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
       setTo(supplierEmail);
       setCc("");
       setSubject("Purchase Order");
-      setAttachment(null);
       if (editorRef.current) {
         editorRef.current.innerHTML = "";
       }
+
+      // Auto-generate PDF attachment from purchase order data
+      if (purchaseOrderData && purchaseOrderData.items.length > 0) {
+        try {
+          const pdfFile = generatePurchaseOrderPdfFile(purchaseOrderData);
+          setAttachment(pdfFile);
+        } catch {
+          setAttachment(null);
+        }
+      } else {
+        setAttachment(null);
+      }
     }
-  }, [isOpen, supplierEmail]);
+  }, [isOpen, supplierEmail, purchaseOrderData]);
 
   const execCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);

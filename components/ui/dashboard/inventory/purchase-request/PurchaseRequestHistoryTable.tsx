@@ -130,39 +130,40 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                     >
                       Duplicate PO
                     </DropdownItem>
-                    {/* {isPending && (
-                    )} */}
-                    
-                      <DropdownItem
-                        key="receive"
-                        startContent={<LuPackageCheck size={16} />}
-                        onPress={() => onReceiveRequest(item)}
-                        aria-label="receive order"
-                      >
-                        Receive PO
-                      </DropdownItem>
-                    {/* {isPending && (
-                    )} */}
-                      <DropdownItem
-                        key="sendmail"
-                        startContent={<LuMail size={16} />}
-                        onPress={() => onSendMail(item)}
-                        aria-label="send mail"
-                      >
-                        Send Mail to Supplier
-                      </DropdownItem>
-                    {/* {isPending && (
-                    )} */}
-                      <DropdownItem
-                        key="cancel"
-                        startContent={<LuXCircle size={16} />}
-                        onPress={() => onCancelRequest(item)}
-                        aria-label="cancel order"
-                        className="text-danger"
-                        color="danger"
-                      >
-                        Cancel
-                      </DropdownItem>
+                    {
+                      (isPending && (
+                        <DropdownItem
+                          key="receive"
+                          startContent={<LuPackageCheck size={16} />}
+                          onPress={() => onReceiveRequest(item)}
+                          aria-label="receive order"
+                        >
+                          Receive PO
+                        </DropdownItem>
+                      )) as any
+                    }
+                    {
+                      (isPending && (
+                        <DropdownItem
+                          key="sendmail"
+                          startContent={<LuMail size={16} />}
+                          onPress={() => onSendMail(item)}
+                          aria-label="send mail"
+                        >
+                          Send Mail to Supplier
+                        </DropdownItem>
+                      )) as any
+                    }
+                    <DropdownItem
+                      key="cancel"
+                      startContent={<LuXCircle size={16} />}
+                      onPress={() => onCancelRequest(item)}
+                      aria-label="cancel order"
+                      className="text-danger"
+                      color="danger"
+                    >
+                      Cancel
+                    </DropdownItem>
                   </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
@@ -232,19 +233,19 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
             </div>
           }
         >
-          <TableHeader>
-            {historyColumns.map((col) => (
-              <TableColumn key={col.uid} align={col.uid === "actions" ? "center" : "start"}>
-                {col.name}
+          <TableHeader columns={historyColumns}>
+            {(column) => (
+              <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
+                {column.name}
               </TableColumn>
-            ))}
+            )}
           </TableHeader>
           <TableBody items={filteredData} emptyContent="No purchase orders yet">
             {(item) => (
               <TableRow key={item.requestId} className="cursor-pointer hover:bg-gray-50">
-                {historyColumns.map((col) => (
-                  <TableCell key={col.uid}>{renderCell(item, col.uid)}</TableCell>
-                ))}
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, String(columnKey))}</TableCell>
+                )}
               </TableRow>
             )}
           </TableBody>
