@@ -329,7 +329,6 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
           allowTracking={data.allowTracking}
           supplierId={data.supplierId}
           strictnessLevel={data.strictnessLevel}
-          inventorySyncEnabled={data.inventorySyncEnabled}
           recipeDetails={data.recipeDetails}
           recipeName={data.recipeName}
           outputQuantity={data.outputQuantity}

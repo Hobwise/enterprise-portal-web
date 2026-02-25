@@ -545,16 +545,15 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                               />
                             </div>
-                          </div>
-
                           <button
                             type="button"
                             onClick={handleAddDetail}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#5B5B5B] text-white rounded-xl hover:bg-[#4A4A4A] font-semibold transition-all duration-200"
+                            className="w- flex items-center justify-center gap-2 px-4 py-3 bg-[#5B5B5B] text-white rounded-xl hover:bg-[#4A4A4A] font-semibold transition-all duration-200"
                           >
-                            <span>Add Ingredient</span>
                             <Plus className="w-4 h-4" />
                           </button>
+                          </div>
+
                         </div>
                       </div>
 

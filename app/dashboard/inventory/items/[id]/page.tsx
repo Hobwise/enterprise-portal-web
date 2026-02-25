@@ -327,32 +327,20 @@ export default function ItemDetailPage() {
                     </button>
                   </DropdownTrigger>
                   <DropdownMenu aria-label="Recipe actions">
-                    {/* {!hasRecipe ? ( */}
-                      {/* <DropdownItem
-                        key="add"
-                        startContent={<Plus className="w-4 h-4" />}
-                        onPress={() => setIsAddRecipeOpen(true)}
-                      >
-                        Edit Recipe
-                      </DropdownItem> */}
-                    {/* // ) : ( */}
-                      <>
-                        <DropdownItem
-                          key="view"
-                          startContent={<BookOpen className="w-4 h-4" />}
-                          onPress={() => setIsViewRecipeOpen(true)}
-                        >
-                          View Recipe
-                        </DropdownItem>
-                        <DropdownItem
-                          key="produce"
-                          startContent={<Package className="w-4 h-4" />}
-                          onPress={() => setIsBatchProductionOpen(true)}
-                        >
-                          Produce Batch
-                        </DropdownItem>
-                      </>
-                    {/* )} */}
+                    <DropdownItem
+                      key="view"
+                      startContent={<BookOpen className="w-4 h-4" />}
+                      onPress={() => setIsViewRecipeOpen(true)}
+                    >
+                      View Recipe
+                    </DropdownItem>
+                    <DropdownItem
+                      key="produce"
+                      startContent={<Package className="w-4 h-4" />}
+                      onPress={() => setIsBatchProductionOpen(true)}
+                    >
+                      Produce Batch
+                    </DropdownItem>
                   </DropdownMenu>
                 </Dropdown>
               {/* // )} */}

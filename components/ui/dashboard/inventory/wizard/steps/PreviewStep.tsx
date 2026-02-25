@@ -27,7 +27,6 @@ interface PreviewStepProps {
   allowTracking: boolean;
   supplierId: string;
   strictnessLevel: number;
-  inventorySyncEnabled: boolean;
   recipeDetails: LocalRecipeDetail[];
   recipeName: string;
   outputQuantity: string;
@@ -64,7 +63,6 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
   allowTracking,
   supplierId,
   strictnessLevel,
-  inventorySyncEnabled,
   recipeDetails,
   recipeName,
   outputQuantity,
@@ -150,8 +148,8 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
             </div>
           )}
 
-          {/* Row 4: Opening Stock, Reorder Level, Reorder Quantity */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          {/* Row 4: Opening Stock, Reorder Level */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-500 mb-1">Opening Stock</label>
               <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
@@ -162,12 +160,6 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
               <label className="block text-sm font-medium text-gray-500 mb-1">Reorder Level</label>
               <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
                 {reorderLevel || '0'}
-              </p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Reorder Quantity</label>
-              <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
-                {reorderQuantity || '0'}
               </p>
             </div>
           </div>
@@ -249,27 +241,6 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
 
           {/* RIGHT: Settings Cards */}
           <div className="space-y-4">
-            {/* Inventory Sync Card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">
-              <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center shrink-0">
-                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-800 text-sm">Inventory Sync</p>
-                <p className="text-xs text-gray-500">Click to enable</p>
-              </div>
-              <Switch
-                isSelected={inventorySyncEnabled}
-                isDisabled
-                size="sm"
-                classNames={{
-                  wrapper: 'group-data-[selected=true]:bg-[#5F35D2]',
-                }}
-              />
-            </div>
-
             {/* Mode Badge Card */}
             <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${

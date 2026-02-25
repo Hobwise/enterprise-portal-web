@@ -25,10 +25,7 @@ const useUnitsManagement = () => {
 
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
-        if (Array.isArray(result)) return result as InventoryUnit[];
-        if (result?.units && Array.isArray(result.units))
-          return result.units as InventoryUnit[];
-        return [];
+        return Array.isArray(result) ? result as InventoryUnit[] : [];
       }
 
       return [];
@@ -78,10 +75,28 @@ const useUnitsManagement = () => {
       if (!businessId) throw new Error('Business ID not found');
       return updateUnit(businessId, unitId, payload);
     },
-    onSuccess: (response) => {
+    onSuccess: (response, variables) => {
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Unit updated successfully', type: 'success' });
-        queryClient.invalidateQueries({ queryKey: ['unitsManagement', businessId] });
+        // Update the measurements cache directly so inactive units remain visible
+        queryClient.setQueryData<InventoryUnit[]>(
+          ['unitsManagement', businessId],
+          (old) => {
+            if (!old) return old;
+            return old.map((unit) =>
+              unit.id === variables.unitId
+                ? {
+                    ...unit,
+                    name: variables.payload.name,
+                    code: variables.payload.code,
+                    unitCategory: variables.payload.category,
+                    isActive: variables.payload.isActive,
+                  }
+                : unit
+            );
+          }
+        );
+        // Refresh dropdown caches so only active units appear in selects
         queryClient.invalidateQueries({ queryKey: ['unitsByBusiness'] });
       } else {
         notify({ title: 'Error!', text: response?.data?.error || 'Failed to update unit', type: 'error' });

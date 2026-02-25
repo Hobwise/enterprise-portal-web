@@ -171,11 +171,6 @@ export const useIngredients = () => {
       const response = await getIngredients(businessId);
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
-        // Handle paginated response - items are in the 'items' property
-        if (result && typeof result === 'object' && 'items' in result) {
-          return result.items as InventoryItem[];
-        }
-        // Fallback if response is already an array
         return Array.isArray(result) ? result : [];
       }
       return [];
@@ -189,7 +184,9 @@ export const useIngredients = () => {
     queryKey: ['ingredients'],
     queryFn: fetchIngredients,
     ...fetchQueryConfig(),
+    staleTime: 30 * 60 * 1000,
     retry: 1,
+    enabled: !!businessId,
   });
 
   return {
@@ -209,9 +206,7 @@ export const useUnitsByBusiness = () => {
       const response = await getUnitsByBusiness(businessId);
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
-        if (Array.isArray(result)) return result as InventoryUnit[];
-        if (result?.units && Array.isArray(result.units)) return result.units as InventoryUnit[];
-        return [];
+        return Array.isArray(result) ? result as InventoryUnit[] : [];
       }
       return [];
     } catch (error) {
@@ -241,9 +236,7 @@ export const useSuppliers = () => {
       const response = await getSuppliers(businessId);
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
-        if (Array.isArray(result)) return result as Supplier[];
-        if (result?.suppliers && Array.isArray(result.suppliers)) return result.suppliers as Supplier[];
-        return [];
+        return Array.isArray(result) ? result as Supplier[] : [];
       }
       return [];
     } catch (error) {

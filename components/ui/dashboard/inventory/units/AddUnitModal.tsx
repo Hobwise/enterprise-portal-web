@@ -53,8 +53,6 @@ const AddUnitModal: React.FC<AddUnitModalProps> = ({
         const result = response.data.data;
         if (Array.isArray(result)) {
           setUnits(result);
-        } else if (result?.units && Array.isArray(result.units)) {
-          setUnits(result.units);
         }
       }
     } catch (error) {

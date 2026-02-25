@@ -120,7 +120,6 @@ export default function ItemsPage() {
   }, []);
 
   const handleEditSuccess = useCallback(() => {
-    notify({ title: 'Success!', text: 'Item updated successfully', type: 'success' });
     setIsEditModalOpen(false);
     setSelectedItem(null);
     refetch();
@@ -202,20 +201,10 @@ export default function ItemsPage() {
     router.push(`/dashboard/inventory/items/${item.id}`);
   }, [router]);
 
-  // Client-side filtering (including search)
+  // Client-side filtering (itemType and stockLevel only — search is handled by the backend)
   const filteredItems = useMemo(() => {
     if (!data) return [];
     let items = data;
-
-    // Client-side search filter
-    if (searchQuery.trim()) {
-      const searchLower = searchQuery.toLowerCase().trim();
-      items = items.filter((item) =>
-        item.name?.toLowerCase().includes(searchLower) ||
-        item.id?.toLowerCase().includes(searchLower) ||
-        item.description?.toLowerCase().includes(searchLower)
-      );
-    }
 
     if (itemTypeFilter !== 'all') {
       items = items.filter((item) => item.itemType === Number(itemTypeFilter));
@@ -238,12 +227,12 @@ export default function ItemsPage() {
     }
 
     return items;
-  }, [data, searchQuery, itemTypeFilter, stockLevelFilter]);
+  }, [data, itemTypeFilter, stockLevelFilter]);
 
   // Structure data with pagination info for usePagination hook
   const tableData = useMemo(() => {
     // If we're filtering client-side (search, itemType, or stockLevel), we need to handle pagination ourselves
-    const isClientFiltering = searchQuery.trim() !== '' || itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
+    const isClientFiltering = itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
 
     if (isClientFiltering) {
       // When filtering client-side, return simple array (usePagination will handle it)
@@ -259,10 +248,10 @@ export default function ItemsPage() {
       hasNext,
       hasPrevious,
     };
-  }, [filteredItems, searchQuery, itemTypeFilter, stockLevelFilter, totalCount, totalPages, currentPage, hasNext, hasPrevious]);
+  }, [filteredItems, itemTypeFilter, stockLevelFilter, totalCount, totalPages, currentPage, hasNext, hasPrevious]);
 
   // Computed values - use filtered count when client-side filtering, otherwise API count
-  const isClientFiltering = searchQuery.trim() !== '' || itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
+  const isClientFiltering = itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
   const totalItems = isClientFiltering ? filteredItems.length : (totalCount || filteredItems.length);
 
   if (isLoading && (!data || data.length === 0) && page === 1) {

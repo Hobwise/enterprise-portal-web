@@ -116,8 +116,10 @@ export const DASHBOARD = {
   completeTransaction: "api/v1/Transaction/complete",
   // Inventory
   unit: "api/v1/Unit",
+  unitLov: "api/v1/Unit/lov",
   inventory: "api/v1/Inventory",
   inventoryByBusiness: "api/v1/Inventory/by-business",
+  inventoryLov: "api/v1/Inventory/lov",
   inventoryItems: "api/v1/Inventory/items",
   inventoryItem: "api/v1/Inventory/item",
   inventoryCategories: "api/v1/Inventory/categories",
@@ -131,6 +133,7 @@ export const DASHBOARD = {
   inventoryBatchProduction: "api/v1/Inventory/batch-production",
   supplier: "api/v1/Supplier",
   supplierByBusiness: "api/v1/Supplier/by-business",
+  supplierLov: "api/v1/Supplier/lov",
   mapSupplierItem: "api/v1/Supplier/map-item",
   // Purchase Order
   purchaseOrder: "api/v1/PurchaseOrder",
@@ -147,5 +150,6 @@ export const DASHBOARD = {
 export const INVENTORY = {
   inventoryByBusiness: "api/v1/Inventory/by-business",
   unitByBusiness: "api/v1/Unit/by-business",
+  unitLov: "api/v1/Unit/lov",
   unit: "api/v1/Unit",
 };

@@ -130,8 +130,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                     >
                       Duplicate PO
                     </DropdownItem>
-                    {
-                      (isPending && (
+                  
                         <DropdownItem
                           key="receive"
                           startContent={<LuPackageCheck size={16} />}
@@ -140,10 +139,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                         >
                           Receive PO
                         </DropdownItem>
-                      )) as any
-                    }
-                    {
-                      (isPending && (
+             
                         <DropdownItem
                           key="sendmail"
                           startContent={<LuMail size={16} />}
@@ -152,8 +148,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                         >
                           Send Mail to Supplier
                         </DropdownItem>
-                      )) as any
-                    }
+                   
                     <DropdownItem
                       key="cancel"
                       startContent={<LuXCircle size={16} />}

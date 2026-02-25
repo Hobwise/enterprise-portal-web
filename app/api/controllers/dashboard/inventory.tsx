@@ -448,7 +448,7 @@ export async function deleteInventoryItem(businessId: string, itemId: string) {
 export async function getSuppliers(businessId: string) {
   const headers = businessId ? { businessId } : {};
   try {
-    const data = await api.get(`${DASHBOARD.supplierByBusiness}?Page=1&PageSize=100`, { headers });
+    const data = await api.get(DASHBOARD.supplierLov, { headers });
     return data;
   } catch (error) {
     handleError(error, false);
@@ -458,7 +458,7 @@ export async function getSuppliers(businessId: string) {
 export async function getUnitsByBusiness(businessId: string) {
   const headers = businessId ? { businessId } : {};
   try {
-    const data = await api.get(`${INVENTORY.unitByBusiness}?Page=1&PageSize=100`, { headers });
+    const data = await api.get(INVENTORY.unitLov, { headers });
     return data;
   } catch (error) {
     handleError(error, false);
@@ -466,12 +466,11 @@ export async function getUnitsByBusiness(businessId: string) {
 }
 
 export async function getIngredients(businessId: string) {
-  const clientParameters = 'page,1,pageSize,100';
-  const headers: Record<string, string> = { clientParameters };
+  const headers: Record<string, string> = {};
   if (businessId) headers.businessId = businessId;
 
   try {
-    const data = await api.get(DASHBOARD.inventoryByBusiness, { headers });
+    const data = await api.get(DASHBOARD.inventoryLov, { headers });
     return data;
   } catch (error) {
     handleError(error, false);

@@ -6,6 +6,7 @@ import Container from "@/components/dashboardContainer";
 import { SubscriptionNoticePopup } from "@/components/ui/dashboard/subscription-notification";
 import { Suspense, useEffect } from "react";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useIngredients, useUnitsByBusiness, useSuppliers } from "@/hooks/cachedEndpoints/useInventoryItems";
 
 // Component to initialize subscription early in the render cycle
 function SubscriptionInitializer() {
@@ -24,6 +25,14 @@ function SubscriptionInitializer() {
   return null; // This component doesn't render anything
 }
 
+// Pre-fetch inventory LOV endpoints so all inventory pages get instant cache hits
+function InventoryLovInitializer() {
+  useIngredients();
+  useUnitsByBusiness();
+  useSuppliers();
+  return null;
+}
+
 export default function DashboardLayout({
   children,
 }: {
@@ -33,6 +42,7 @@ export default function DashboardLayout({
     <AdminPrivateRoute>
       <div className="font-satoshi">
         <SubscriptionInitializer />
+        <InventoryLovInitializer />
         <Container>{children}</Container>
         <Suspense fallback={null}>
           <BusinessSettingsDashboardPrompt />
