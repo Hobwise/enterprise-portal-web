@@ -87,9 +87,16 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
     try {
       const response = await saveProgress(4, {
         itemName,
+        description,
         unitId,
         costPerUnit,
         itemType,
+        openingStock,
+        reorderLevel,
+        reorderQuantity,
+        isActive,
+        allowTracking,
+        supplierId,
       });
 
       if (response && 'errors' in response) {
@@ -162,7 +169,7 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
                 >
                   <option value="">Select unit</option>
                   {Array.isArray(unitsByBusiness) &&
-                    unitsByBusiness.map((u) => (
+                    [...unitsByBusiness].sort((a, b) => a.name.localeCompare(b.name)).map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.name}
                       </option>
@@ -272,8 +279,8 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
             />
           </div>
 
-          {/* Row 4: Opening Stock, Reorder Level, Reorder Quantity */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          {/* Row 4: Opening Stock, Reorder Level */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Opening Stock
@@ -296,20 +303,6 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
                 type="number"
                 value={reorderLevel}
                 onChange={(e) => onUpdate({ reorderLevel: e.target.value })}
-                placeholder="0"
-                min="0"
-                step="0.01"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Reorder Quantity
-              </label>
-              <input
-                type="number"
-                value={reorderQuantity}
-                onChange={(e) => onUpdate({ reorderQuantity: e.target.value })}
                 placeholder="0"
                 min="0"
                 step="0.01"
@@ -351,26 +344,8 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
               />
             </div>
           </div>
-
-          {/* Save Button inside card */}
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex items-center gap-2 px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-          >
-            {loading ? (
-              <>
-                <Spinner size="sm" color="current" />
-                <span>Saving...</span>
-              </>
-            ) : (
-              <>
-                <span>Save & Continue</span>
-                <span>&rarr;</span>
-              </>
-            )}
-          </button>
         </div>
+
       </div>
 
       {/* Navigation Buttons */}
@@ -382,6 +357,23 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
         >
           <span>&larr;</span>
           <span>Back</span>
+        </button>
+        <button
+          onClick={handleSubmit}
+          disabled={loading}
+          className="flex items-center gap-2 px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+        >
+          {loading ? (
+            <>
+              <Spinner size="sm" color="current" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <span>Save & Continue</span>
+              <span>&rarr;</span>
+            </>
+          )}
         </button>
       </div>
     </div>

@@ -14,6 +14,7 @@ import {
   DropdownTrigger,
   DropdownMenu,
   DropdownItem,
+  Chip,
 } from "@nextui-org/react";
 import { Search } from "lucide-react";
 import { Supplier } from "./types";
@@ -37,6 +38,7 @@ const columns = [
   { name: "ADDRESS", uid: "address" },
   { name: "PHONE NUMBER", uid: "phoneNumber" },
   { name: "STATUS", uid: "status" },
+  { name: "", uid: "actions" },
 ];
 
 const SuppliersList: React.FC<SuppliersListProps> = ({
@@ -89,6 +91,17 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
           );
         case "status":
           return (
+            <Chip
+              size="sm"
+              variant="flat"
+              color={user.status === "active" ? "success" : "danger"}
+              classNames={{ base: "h-6 px-2", content: "text-xs font-medium" }}
+            >
+              {user.status === "active" ? "Active" : "Inactive"}
+            </Chip>
+          );
+        case "actions":
+          return (
             <div className="relative flex justify-center items-center gap-2">
               <Dropdown>
                 <DropdownTrigger>
@@ -105,7 +118,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             </div>
           );
         default:
-          return cellValue;
+          return typeof cellValue === "string" ? cellValue : "—";
       }
     },
     [onViewSupplier, onEditSupplier, onDeleteSupplier]
@@ -146,7 +159,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
                 variant="bordered"
             />
             <Button color="secondary" className="bg-primaryColor rounded-lg text-white font-medium" endContent={<span className="text-lg">+</span>} onPress={onAddSupplier}>
-             {isMobile ? "" : "Add New Item"}
+             {isMobile ? "" : "Add New Supplier"}
             </Button>
           </div>
         </div>
@@ -202,7 +215,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
       >
         <TableHeader columns={columns}>
           {(column) => (
-            <TableColumn key={column.uid} align={column.uid === "status" ? "center" : "start"}>
+            <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
               {column.name}
             </TableColumn>
           )}

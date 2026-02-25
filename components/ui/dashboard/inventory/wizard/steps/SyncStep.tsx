@@ -19,6 +19,7 @@ import WizardHeader from '../WizardHeader';
 type Phase = 'toggle' | 'select' | 'processing' | 'confirm';
 
 type EditableItemData = {
+  itemName: string;
   costPerUnit: string;
   salesPrice: string;
   itemType: string;
@@ -112,6 +113,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
           setPredictedItems(itemsArray);
           setEditableData(
             itemsArray.map((item) => ({
+              itemName: item.suggestedInventoryItemName || '',
               costPerUnit: '',
               salesPrice: '',
               itemType: String(item.suggestedItemType ?? 0),
@@ -226,7 +228,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
 
     const payload: SynchronizeInventoryPayload = predictedItems.map((item, idx) => ({
       menuItemId: item.menuItemId,
-      inventoryItemName: item.suggestedInventoryItemName,
+      inventoryItemName: editableData[idx]?.itemName?.trim() || item.suggestedInventoryItemName,
       unitCategory: item.suggestedUnitCategory,
       unitId: editableData[idx]?.unitId || item.suggestedUnitId || '',
       itemType: editableData[idx]?.itemType
@@ -671,8 +673,20 @@ const SyncStep: React.FC<SyncStepProps> = ({
                           idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
                         }`}
                       >
-                        <td className="py-3 px-3 text-gray-800 font-medium whitespace-nowrap">
-                          {item.suggestedInventoryItemName}
+                        <td className="py-2 px-3">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs text-gray-400 truncate" title={item.menuItemName}>
+                              {item.menuItemName}
+                            </span>
+                            <input
+                              type="text"
+                              value={editableData[idx]?.itemName ?? item.suggestedInventoryItemName}
+                              onChange={(e) =>
+                                handleEditableChange(idx, 'itemName', e.target.value)
+                              }
+                              className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#5F35D2] focus:border-[#5F35D2] bg-white font-medium"
+                            />
+                          </div>
                         </td>
                         <td className="py-2 px-3">
                           <select

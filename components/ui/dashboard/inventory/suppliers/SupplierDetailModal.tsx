@@ -5,10 +5,18 @@ import {
   ModalBody,
   Spinner,
 } from "@nextui-org/react";
-import { X, Plus, Trash2, Eye, Pencil } from "lucide-react";
+import { X, Plus, Eye, Pencil, Package } from "lucide-react";
 import { Supplier } from "./types";
-import useInventory from "@/hooks/cachedEndpoints/useInventory";
-import useSuppliers from "@/hooks/cachedEndpoints/useSuppliers";
+import { useIngredients } from "@/hooks/cachedEndpoints/useInventoryItems";
+import useSuppliers, { useSupplierDetail } from "@/hooks/cachedEndpoints/useSuppliers";
+
+type MappedItem = {
+  id: string;
+  name: string;
+  itemType?: string;
+  costPerUnit?: number;
+  unitName?: string;
+};
 
 interface SupplierDetailModalProps {
   isOpen: boolean;
@@ -23,22 +31,34 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
   supplier,
   onEdit,
 }) => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const { items: inventoryItems } = useInventory(searchTerm);
+  const { data: inventoryItems } = useIngredients();
   const { mapSupplierItems, isMappingItems } = useSuppliers();
+  const { data: supplierDetail, isLoading: isLoadingDetail } = useSupplierDetail(
+    isOpen && supplier ? supplier.supplierId : undefined
+  );
 
-  const [mappedItems, setMappedItems] = useState<{ id: string; name: string }[]>([]);
+  const [mappedItems, setMappedItems] = useState<MappedItem[]>([]);
   const [selectedItemId, setSelectedItemId] = useState<string>("");
   const [isModified, setIsModified] = useState(false);
 
   useEffect(() => {
-    if (supplier?.items) {
+    if (supplierDetail?.items) {
+      setMappedItems(
+        supplierDetail.items.map((i: any) => ({
+          id: i.id,
+          name: i.name || i.itemName,
+          itemType: i.itemType,
+          costPerUnit: i.costPerUnit,
+          unitName: i.unitName,
+        }))
+      );
+    } else if (supplier?.items) {
       setMappedItems(supplier.items);
     } else {
       setMappedItems([]);
     }
     setIsModified(false);
-  }, [supplier]);
+  }, [supplierDetail, supplier]);
 
   const handleAddItem = () => {
     if (!selectedItemId) return;
@@ -47,15 +67,10 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
     const isAlreadyAdded = mappedItems.some(item => item.id === selectedItemId);
 
     if (itemToAdd && !isAlreadyAdded) {
-      setMappedItems(prev => [...prev, { id: itemToAdd.id, name: itemToAdd.itemName }]);
+      setMappedItems(prev => [...prev, { id: itemToAdd.id, name: itemToAdd.name }]);
       setSelectedItemId("");
       setIsModified(true);
     }
-  };
-
-  const handleRemoveItem = (itemId: string) => {
-    setMappedItems(prev => prev.filter(item => item.id !== itemId));
-    setIsModified(true);
   };
 
   const handleSaveItems = () => {
@@ -139,17 +154,32 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                     Supplier Items
                   </label>
                   <div className="flex flex-col gap-2 bg-gray-50 p-4 rounded-xl max-h-[260px] overflow-y-auto">
-                    {mappedItems.length > 0 ? (
+                    {isLoadingDetail ? (
+                      <div className="flex items-center justify-center py-4">
+                        <Spinner size="sm" color="primary" />
+                      </div>
+                    ) : mappedItems.length > 0 ? (
                       mappedItems.map((item) => (
-                        <div key={item.id} className="bg-white rounded-lg p-2 text-center text-gray-800 text-sm shrink-0 relative group border border-gray-100">
-                          {item.name}
-                          <button
-                            onClick={() => handleRemoveItem(item.id)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1"
-                            title="Remove item"
-                          >
-                            <X size={14} />
-                          </button>
+                        <div key={item.id} className="bg-white rounded-lg px-3 py-2.5 shrink-0 border border-gray-100 flex items-center gap-3">
+                          <div className="w-8 h-8 bg-[#5F35D2]/10 rounded-lg flex items-center justify-center shrink-0">
+                            <Package className="w-4 h-4 text-[#5F35D2]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-800 truncate">{item.name}</p>
+                            {(item.itemType || item.unitName || item.costPerUnit != null) && (
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {item.itemType && (
+                                  <span className="text-xs text-gray-500">{item.itemType}</span>
+                                )}
+                                {item.unitName && (
+                                  <span className="text-xs text-gray-400">· {item.unitName}</span>
+                                )}
+                                {item.costPerUnit != null && item.costPerUnit > 0 && (
+                                  <span className="text-xs text-gray-400">· ₦{item.costPerUnit.toLocaleString("en-NG", { minimumFractionDigits: 2 })}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       ))
                     ) : (
@@ -172,7 +202,7 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                           <option value="">Add item...</option>
                           {inventoryItems.map((item) => (
                             <option key={item.id} value={item.id}>
-                              {item.itemName}
+                              {item.name}
                             </option>
                           ))}
                         </select>

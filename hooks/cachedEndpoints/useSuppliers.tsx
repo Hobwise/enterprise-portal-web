@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { getSuppliersByBusiness, createSupplier, updateSupplier, deleteSupplier, mapSupplierItems, SupplierPayload } from '@/app/api/controllers/dashboard/supplier';
+import { getSuppliersByBusiness, getSupplier, createSupplier, updateSupplier, deleteSupplier, mapSupplierItems, SupplierPayload } from '@/app/api/controllers/dashboard/supplier';
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchQueryConfig } from "@/lib/queryConfig";
@@ -157,6 +157,7 @@ const useSuppliers = () => {
       if (response?.data?.isSuccessful) {
         toast.success('Items mapped successfully');
         queryClient.invalidateQueries({ queryKey: ["suppliers", businessId] });
+        queryClient.invalidateQueries({ queryKey: ["supplier"] });
       } else {
         toast.error(response?.data?.error || 'Failed to map items');
       }
@@ -192,5 +193,19 @@ const useSuppliers = () => {
 };
 
 
+
+export const useSupplierDetail = (supplierId: string | undefined) => {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["supplier", supplierId],
+    queryFn: async () => {
+      const response = await getSupplier(supplierId!);
+      return response?.data?.data;
+    },
+    enabled: !!supplierId,
+    ...fetchQueryConfig(),
+  });
+
+  return { data, isLoading, isError };
+};
 
 export default useSuppliers;
