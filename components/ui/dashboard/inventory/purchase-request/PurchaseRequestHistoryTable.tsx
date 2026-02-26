@@ -122,48 +122,46 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Purchase order actions" className="text-black">
                   <DropdownSection title="">
-                    {[
+                    <DropdownItem
+                      key="duplicate"
+                      startContent={<LuCopy size={16} />}
+                      onPress={() => onDuplicateRequest(item)}
+                      aria-label="duplicate order"
+                    >
+                      Duplicate PO
+                    </DropdownItem>
+                    {isPending && (
                       <DropdownItem
-                        key="duplicate"
-                        startContent={<LuCopy size={16} />}
-                        onPress={() => onDuplicateRequest(item)}
-                        aria-label="duplicate order"
+                        key="receive"
+                        startContent={<LuPackageCheck size={16} />}
+                        onPress={() => onReceiveRequest(item)}
+                        aria-label="receive order"
                       >
-                        Duplicate PO
-                      </DropdownItem>,
-                      isPending ? (
-                        <DropdownItem
-                          key="receive"
-                          startContent={<LuPackageCheck size={16} />}
-                          onPress={() => onReceiveRequest(item)}
-                          aria-label="receive order"
-                        >
-                          Receive PO
-                        </DropdownItem>
-                      ) : null,
-                      isPending ? (
-                        <DropdownItem
-                          key="sendmail"
-                          startContent={<LuMail size={16} />}
-                          onPress={() => onSendMail(item)}
-                          aria-label="send mail"
-                        >
-                          Send Mail to Supplier
-                        </DropdownItem>
-                      ) : null,
-                      isPending ? (
-                        <DropdownItem
-                          key="cancel"
-                          startContent={<LuXCircle size={16} />}
-                          onPress={() => onCancelRequest(item)}
-                          aria-label="cancel order"
-                          className="text-danger"
-                          color="danger"
-                        >
-                          Cancel
-                        </DropdownItem>
-                      ) : null,
-                    ].filter(Boolean) as React.ReactElement[]}
+                        Receive PO
+                      </DropdownItem>
+                    )}
+                    {isPending && (
+                      <DropdownItem
+                        key="sendmail"
+                        startContent={<LuMail size={16} />}
+                        onPress={() => onSendMail(item)}
+                        aria-label="send mail"
+                      >
+                        Send Mail to Supplier
+                      </DropdownItem>
+                    )}
+                    {isPending && (
+                      <DropdownItem
+                        key="cancel"
+                        startContent={<LuXCircle size={16} />}
+                        onPress={() => onCancelRequest(item)}
+                        aria-label="cancel order"
+                        className="text-danger"
+                        color="danger"
+                      >
+                        Cancel
+                      </DropdownItem>
+                    )}
                   </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
