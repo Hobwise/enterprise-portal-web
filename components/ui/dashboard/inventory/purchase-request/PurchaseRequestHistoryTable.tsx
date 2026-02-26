@@ -122,15 +122,16 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Purchase order actions" className="text-black">
                   <DropdownSection title="">
-                    <DropdownItem
-                      key="duplicate"
-                      startContent={<LuCopy size={16} />}
-                      onPress={() => onDuplicateRequest(item)}
-                      aria-label="duplicate order"
-                    >
-                      Duplicate PO
-                    </DropdownItem>
-                  
+                    {[
+                      <DropdownItem
+                        key="duplicate"
+                        startContent={<LuCopy size={16} />}
+                        onPress={() => onDuplicateRequest(item)}
+                        aria-label="duplicate order"
+                      >
+                        Duplicate PO
+                      </DropdownItem>,
+                      isPending ? (
                         <DropdownItem
                           key="receive"
                           startContent={<LuPackageCheck size={16} />}
@@ -139,7 +140,8 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                         >
                           Receive PO
                         </DropdownItem>
-             
+                      ) : null,
+                      isPending ? (
                         <DropdownItem
                           key="sendmail"
                           startContent={<LuMail size={16} />}
@@ -148,17 +150,20 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                         >
                           Send Mail to Supplier
                         </DropdownItem>
-                   
-                    <DropdownItem
-                      key="cancel"
-                      startContent={<LuXCircle size={16} />}
-                      onPress={() => onCancelRequest(item)}
-                      aria-label="cancel order"
-                      className="text-danger"
-                      color="danger"
-                    >
-                      Cancel
-                    </DropdownItem>
+                      ) : null,
+                      isPending ? (
+                        <DropdownItem
+                          key="cancel"
+                          startContent={<LuXCircle size={16} />}
+                          onPress={() => onCancelRequest(item)}
+                          aria-label="cancel order"
+                          className="text-danger"
+                          color="danger"
+                        >
+                          Cancel
+                        </DropdownItem>
+                      ) : null,
+                    ].filter(Boolean) as React.ReactElement[]}
                   </DropdownSection>
                 </DropdownMenu>
               </Dropdown>
@@ -187,7 +192,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
         </div>
       </div>
 
-      <div className="relative border border-primaryGrey rounded-lg overflow-hidden">
+      <div className="relative border border-primaryGrey rounded-lg overflow-visible">
         {isActionLoading && (
           <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
             <Spinner size="lg" color="secondary" />
