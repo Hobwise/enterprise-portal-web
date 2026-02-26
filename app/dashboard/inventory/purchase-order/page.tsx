@@ -212,9 +212,11 @@ export default function PurchaseRequestPage() {
         setCustomizeModalOpen(false);
         setSuccessModalOpen(true);
         refetchOrders();
-      } else {
+      } else if (response) {
         notify({ title: 'Error!', text: response?.data?.error?.responseDescription || 'Failed to create purchase order', type: 'error' });
       }
+    } catch {
+      // handleError in the API controller already shows an error toast
     } finally {
       setSendingPurchase(false);
     }
@@ -247,6 +249,11 @@ export default function PurchaseRequestPage() {
   };
 
   const handleSendEmail = async (to: string, cc: string, subject: string, message: string, attachment: File | null) => {
+    if (!to.trim()) {
+      notify({ title: 'Error!', text: 'Please enter the supplier email address', type: 'error' });
+      return;
+    }
+
     setSendingEmail(true);
     try {
       const formData = new FormData();
@@ -254,7 +261,9 @@ export default function PurchaseRequestPage() {
       formData.append('To', to);
       formData.append('From', userInformation?.email || '');
       formData.append('Subject', subject);
-      formData.append('Cc', cc);
+      if (cc.trim()) {
+        formData.append('Cc', cc);
+      }
       formData.append('Content', message);
       if (attachment) {
         formData.append('Attachment', attachment);
@@ -264,9 +273,11 @@ export default function PurchaseRequestPage() {
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Purchase request email sent successfully', type: 'success' });
         setSendEmailModalOpen(false);
-      } else {
+      } else if (response) {
         notify({ title: 'Error!', text: response?.data?.error?.responseDescription || 'Failed to send email', type: 'error' });
       }
+    } catch {
+      // handleError in the API controller already shows an error toast
     } finally {
       setSendingEmail(false);
     }
@@ -347,7 +358,7 @@ export default function PurchaseRequestPage() {
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Purchase order duplicated successfully', type: 'success' });
         refetchOrders();
-      } else {
+      } else if (response) {
         notify({ title: 'Error!', text: response?.data?.error?.responseDescription || 'Failed to duplicate purchase order', type: 'error' });
       }
     } catch {
@@ -364,7 +375,7 @@ export default function PurchaseRequestPage() {
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Purchase order cancelled successfully', type: 'success' });
         refetchOrders();
-      } else {
+      } else if (response) {
         notify({ title: 'Error!', text: response?.data?.error?.responseDescription || 'Failed to cancel purchase order', type: 'error' });
       }
     } catch {
@@ -403,9 +414,11 @@ export default function PurchaseRequestPage() {
         notify({ title: 'Success!', text: 'Stock items received successfully', type: 'success' });
         setReceivedModalOpen(false);
         refetchOrders();
-      } else {
+      } else if (response) {
         notify({ title: 'Error!', text: response?.data?.error?.responseDescription || 'Failed to receive stock items', type: 'error' });
       }
+    } catch {
+      // handleError in the API controller already shows an error toast
     } finally {
       setReceivingStock(false);
     }
