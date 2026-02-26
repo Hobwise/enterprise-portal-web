@@ -1,21 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
-  DropdownSection,
-  Chip,
-  Spinner,
-} from "@nextui-org/react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { LuPackageCheck, LuCopy, LuXCircle, LuMail, LuSearch } from "react-icons/lu";
 import { PurchaseRequest, PurchaseRequestStatus } from "./types";
@@ -56,6 +41,18 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   isActionLoading,
 }) => {
   const [filterValue, setFilterValue] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const filteredData = useMemo(() => {
     if (!filterValue.trim()) return data;
@@ -71,108 +68,99 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const formatCurrency = (value: number) => {
-    return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
+    return `₦${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
   };
 
-  const renderCell = React.useCallback(
-    (item: PurchaseRequest, columnKey: string) => {
-      const isPending = item.status === "Pending";
+  const renderCell = (item: PurchaseRequest, columnKey: string) => {
+    const isPending = item.status === "Pending";
 
-      switch (columnKey) {
-        case "reference":
-          return <span className="text-sm font-medium text-gray-900">{item.reference || item.requestId}</span>;
-        case "requestDate":
-          return <span className="text-sm text-gray-500">{item.requestDate}</span>;
-        case "requestId":
-          return <span className="text-sm font-medium text-gray-900">{item.requestId}</span>;
-        case "supplierName":
-          return <span className="text-sm text-gray-500">{item.supplierName}</span>;
-        case "expectedDeliveryDate":
-          return <span className="text-sm text-gray-500">{item.expectedDeliveryDate}</span>;
-        case "numberOfItems":
-          return <span className="text-sm text-gray-500">{item.numberOfItems}</span>;
-        case "totalCost":
-          return <span className="text-sm text-gray-500">{formatCurrency(item.totalCost)}</span>;
-        case "status": {
-          const colors = statusColorMap[item.status];
-          return (
-            <Chip
-              size="sm"
-              variant="flat"
-              classNames={{
-                base: `${colors.bg} ${colors.text}`,
-                content: "font-medium text-xs",
-              }}
-            >
-              {item.status}
-            </Chip>
-          );
-        }
-        case "actions":
-          return (
-            <div
-              className="relative flex justify-center items-center gap-2"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Dropdown>
-                <DropdownTrigger aria-label="actions">
-                  <div className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100">
-                    <MoreHorizontal size={18} />
-                  </div>
-                </DropdownTrigger>
-                <DropdownMenu aria-label="Purchase order actions" className="text-black">
-                  <DropdownSection title="">
-                    <DropdownItem
-                      key="duplicate"
-                      startContent={<LuCopy size={16} />}
-                      onPress={() => onDuplicateRequest(item)}
-                      aria-label="duplicate order"
-                    >
-                      Duplicate PO
-                    </DropdownItem>
-                    {isPending && (
-                      <DropdownItem
-                        key="receive"
-                        startContent={<LuPackageCheck size={16} />}
-                        onPress={() => onReceiveRequest(item)}
-                        aria-label="receive order"
-                      >
-                        Receive PO
-                      </DropdownItem>
-                    )}
-                    {isPending && (
-                      <DropdownItem
-                        key="sendmail"
-                        startContent={<LuMail size={16} />}
-                        onPress={() => onSendMail(item)}
-                        aria-label="send mail"
-                      >
-                        Send Mail to Supplier
-                      </DropdownItem>
-                    )}
-                    {isPending && (
-                      <DropdownItem
-                        key="cancel"
-                        startContent={<LuXCircle size={16} />}
-                        onPress={() => onCancelRequest(item)}
-                        aria-label="cancel order"
-                        className="text-danger"
-                        color="danger"
-                      >
-                        Cancel
-                      </DropdownItem>
-                    )}
-                  </DropdownSection>
-                </DropdownMenu>
-              </Dropdown>
-            </div>
-          );
-        default:
-          return "nothing show";
+    switch (columnKey) {
+      case "reference":
+        return <span className="text-sm font-medium text-gray-900">{item.reference || item.requestId}</span>;
+      case "requestDate":
+        return <span className="text-sm text-gray-500">{item.requestDate}</span>;
+      case "requestId":
+        return <span className="text-sm font-medium text-gray-900">{item.requestId}</span>;
+      case "supplierName":
+        return <span className="text-sm text-gray-500">{item.supplierName}</span>;
+      case "expectedDeliveryDate":
+        return <span className="text-sm text-gray-500">{item.expectedDeliveryDate}</span>;
+      case "numberOfItems":
+        return <span className="text-sm text-gray-500">{item.numberOfItems}</span>;
+      case "totalCost":
+        return <span className="text-sm text-gray-500">{formatCurrency(item.totalCost)}</span>;
+      case "status": {
+        const colors = statusColorMap[item.status];
+        return (
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium text-xs ${colors.bg} ${colors.text}`}>
+            {item.status}
+          </span>
+        );
       }
-    },
-    [onReceiveRequest, onDuplicateRequest, onCancelRequest, onSendMail]
-  );
+      case "actions":
+        return (
+          <div
+            className="relative flex justify-center items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div ref={openMenuId === item.requestId ? menuRef : undefined}>
+              <button
+                type="button"
+                aria-label="actions"
+                className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
+                onClick={() => setOpenMenuId(openMenuId === item.requestId ? null : item.requestId)}
+              >
+                <MoreHorizontal size={18} />
+              </button>
+              {openMenuId === item.requestId && (
+                <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] bg-white rounded-lg shadow-lg border border-gray-200 py-1">
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                    onClick={() => { setOpenMenuId(null); onDuplicateRequest(item); }}
+                  >
+                    <LuCopy size={16} />
+                    Duplicate PO
+                  </button>
+                  {isPending && (
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => { setOpenMenuId(null); onReceiveRequest(item); }}
+                    >
+                      <LuPackageCheck size={16} />
+                      Receive PO
+                    </button>
+                  )}
+                  {isPending && (
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      onClick={() => { setOpenMenuId(null); onSendMail(item); }}
+                    >
+                      <LuMail size={16} />
+                      Send Mail to Supplier
+                    </button>
+                  )}
+                  {isPending && (
+                    <button
+                      type="button"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                      onClick={() => { setOpenMenuId(null); onCancelRequest(item); }}
+                    >
+                      <LuXCircle size={16} />
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <div>
@@ -193,61 +181,62 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       <div className="relative border border-primaryGrey rounded-lg overflow-visible">
         {isActionLoading && (
           <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
-            <Spinner size="lg" color="secondary" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
           </div>
         )}
-        <Table
-          radius="lg"
-          isCompact
-          removeWrapper
-          aria-label="Purchase order history"
-          classNames={{
-            wrapper: ["max-h-[382px]"],
-            th: [
-              "text-default-500",
-              "text-xs",
-              "border-b",
-              "border-divider",
-              "py-4",
-              "rounded-none",
-              "bg-grey300",
-            ],
-            tr: "border-b border-divider rounded-none",
-            td: ["py-3", "text-textGrey"],
-          }}
-          bottomContent={
-            <div className="flex w-full justify-center">
-              <CustomPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                hasNext={currentPage < totalPages}
-                hasPrevious={currentPage > 1}
-                totalCount={totalCount}
-                pageSize={pageSize}
-                onPageChange={onPageChange}
-                onNext={() => onPageChange(Math.min(currentPage + 1, totalPages))}
-                onPrevious={() => onPageChange(Math.max(currentPage - 1, 1))}
-              />
-            </div>
-          }
-        >
-          <TableHeader columns={historyColumns}>
-            {(column) => (
-              <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody items={filteredData} emptyContent="No purchase orders yet">
-            {(item) => (
-              <TableRow key={item.requestId} className="cursor-pointer hover:bg-gray-50">
-                {(columnKey) => (
-                  <TableCell>{renderCell(item, String(columnKey))}</TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <div className="max-h-[382px] overflow-auto">
+          <table className="w-full" aria-label="Purchase order history">
+            <thead>
+              <tr className="border-b border-divider">
+                {historyColumns.map((column) => (
+                  <th
+                    key={column.uid}
+                    className={`text-default-500 text-xs border-b border-divider py-4 px-3 bg-grey300 font-medium ${
+                      column.uid === "actions" ? "text-center" : "text-left"
+                    }`}
+                  >
+                    {column.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td colSpan={historyColumns.length} className="text-center py-8 text-gray-400 text-sm">
+                    No purchase orders yet
+                  </td>
+                </tr>
+              ) : (
+                filteredData.map((item) => (
+                  <tr
+                    key={item.requestId}
+                    className="border-b border-divider cursor-pointer hover:bg-gray-50"
+                  >
+                    {historyColumns.map((column) => (
+                      <td key={column.uid} className="py-3 px-3 text-textGrey">
+                        {renderCell(item, column.uid)}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="flex w-full justify-center">
+          <CustomPagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            hasNext={currentPage < totalPages}
+            hasPrevious={currentPage > 1}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            onPageChange={onPageChange}
+            onNext={() => onPageChange(Math.min(currentPage + 1, totalPages))}
+            onPrevious={() => onPageChange(Math.max(currentPage - 1, 1))}
+          />
+        </div>
       </div>
     </div>
   );
