@@ -712,7 +712,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
                           >
                             <option value="">Select unit</option>
                             {Array.isArray(unitsByBusiness) &&
-                              unitsByBusiness.map((u) => (
+                              unitsByBusiness.filter((u) => u.isActive).map((u) => (
                                 <option key={u.id} value={u.id}>
                                   {u.name}
                                 </option>

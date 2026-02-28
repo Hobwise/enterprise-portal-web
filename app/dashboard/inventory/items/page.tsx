@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import useInventoryItems from '@/hooks/cachedEndpoints/useInventoryItems';
 import { deleteInventoryItem, InventoryItem, PendingRecipeTracking } from '@/app/api/controllers/dashboard/inventory';
@@ -19,6 +20,7 @@ import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 
 export default function ItemsPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { page, setPage } = useGlobalContext();
 
   // Filter state
@@ -161,7 +163,8 @@ export default function ItemsPage() {
   const handleAddSuccess = useCallback(() => {
     notify({ title: 'Success!', text: 'Item added successfully', type: 'success' });
     refetch();
-  }, [refetch]);
+    queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+  }, [refetch, queryClient]);
 
   const handleOpenRecipeModal = useCallback((tracking: PendingRecipeTracking) => {
     setPendingTracking(tracking);

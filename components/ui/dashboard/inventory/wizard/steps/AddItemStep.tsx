@@ -169,7 +169,7 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
                 >
                   <option value="">Select unit</option>
                   {Array.isArray(unitsByBusiness) &&
-                    [...unitsByBusiness].sort((a, b) => a.name.localeCompare(b.name)).map((u) => (
+                    [...unitsByBusiness].filter((u) => u.isActive).sort((a, b) => a.name.localeCompare(b.name)).map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.name}
                       </option>

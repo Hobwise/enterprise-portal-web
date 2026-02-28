@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Spinner } from '@nextui-org/react';
 import { LuPlus, LuHistory } from 'react-icons/lu';
 
@@ -47,8 +47,8 @@ export default function PurchaseRequestPage() {
   const businessId = businessInformation?.[0]?.businessId;
   const userInformation = getJsonItemFromLocalStorage('userInformation');
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
+  // Tab state — default set after purchase orders load
+  const [activeTab, setActiveTab] = useState<'create' | 'history' | null>(null);
 
   // State
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
@@ -59,7 +59,7 @@ export default function PurchaseRequestPage() {
   const [historyPage, setHistoryPage] = useState(1);
   const [historyPageSize] = useState(10);
   // Fetch real purchase orders
-  const { data: purchaseOrdersData, refetch: refetchOrders } = useQuery<{ orders: PurchaseRequest[]; totalCount: number }>({
+  const { data: purchaseOrdersData, refetch: refetchOrders, isLoading: ordersLoading } = useQuery<{ orders: PurchaseRequest[]; totalCount: number }>({
     queryKey: ['purchaseOrderHistory', businessId, historyPage, historyPageSize],
     queryFn: async () => {
       const response = await getPurchaseOrdersByBusiness(businessId, historyPage, historyPageSize);
@@ -101,6 +101,15 @@ export default function PurchaseRequestPage() {
 
   const purchaseOrders = purchaseOrdersData?.orders ?? [];
   const purchaseOrdersTotalCount = purchaseOrdersData?.totalCount ?? 0;
+
+  // Set default tab once orders data loads
+  useEffect(() => {
+    if (activeTab !== null || ordersLoading) return;
+    setActiveTab(purchaseOrdersTotalCount > 0 ? 'history' : 'create');
+  }, [ordersLoading, purchaseOrdersTotalCount, activeTab]);
+
+  // Resolve tab for rendering (show nothing until decided)
+  const resolvedTab = activeTab ?? (ordersLoading ? null : 'create');
 
   // Modal states
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false);
@@ -257,13 +266,11 @@ export default function PurchaseRequestPage() {
     setSendingEmail(true);
     try {
       const formData = new FormData();
-      formData.append('PurchaseOrderId', purchaseOrderId || '');
+      formData.append('OrderId', purchaseOrderId || '');
       formData.append('To', to);
       formData.append('From', userInformation?.email || '');
       formData.append('Subject', subject);
-      if (cc.trim()) {
-        formData.append('Cc', cc);
-      }
+      formData.append('Cc', cc.trim());
       formData.append('Content', message);
       if (attachment) {
         formData.append('Attachment', attachment);
@@ -433,7 +440,7 @@ export default function PurchaseRequestPage() {
         <button
           onClick={() => setActiveTab('create')}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
-            activeTab === 'create'
+            resolvedTab === 'create'
               ? 'border-[#5F35D2] text-[#5F35D2]'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           }`}
@@ -444,7 +451,7 @@ export default function PurchaseRequestPage() {
         <button
           onClick={() => setActiveTab('history')}
           className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
-            activeTab === 'history'
+            resolvedTab === 'history'
               ? 'border-[#5F35D2] text-[#5F35D2]'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           }`}
@@ -453,7 +460,7 @@ export default function PurchaseRequestPage() {
           Order History
           {purchaseOrdersTotalCount > 0 && (
             <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-              activeTab === 'history'
+              resolvedTab === 'history'
                 ? 'bg-[#5F35D2]/10 text-[#5F35D2]'
                 : 'bg-gray-100 text-gray-500'
             }`}>
@@ -464,7 +471,7 @@ export default function PurchaseRequestPage() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'create' && (
+      {resolvedTab === 'create' && (
         <>
           <SupplierSearchCard
             suppliers={suppliers}
@@ -485,13 +492,15 @@ export default function PurchaseRequestPage() {
               onSelectionChange={setSelectedItemIds}
               onCustomize={handleCustomize}
             />
+          ) : selectedSupplierId ? (
+            <NoSupplierItems hasSupplier />
           ) : (
             <NoSupplierItems />
           )}
         </>
       )}
 
-      {activeTab === 'history' && (
+      {resolvedTab === 'history' && (
         <PurchaseRequestHistoryTable
           data={purchaseOrders}
           onViewRequest={handleViewRequest}

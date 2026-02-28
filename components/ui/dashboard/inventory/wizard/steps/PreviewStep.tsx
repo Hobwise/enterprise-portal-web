@@ -292,7 +292,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                   openingStock: parseFloat(openingStock) || 0,
                   reorderLevel: parseFloat(reorderLevel) || 0,
                   reorderQuantity: parseFloat(reorderQuantity) || 0,
-                  averageCostPerBaseUnit: parseFloat(costPerUnit) || 0,
+                  averageCostPerUnit: parseFloat(costPerUnit) || 0,
                   isActive,
                   allowTracking,
                   unitId,

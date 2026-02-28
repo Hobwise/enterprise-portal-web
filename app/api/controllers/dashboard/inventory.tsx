@@ -22,7 +22,7 @@ const createInventorySchema = z.object({
   name: z.string().trim().min(1, 'Item name is required'),
   unitId: z.string().trim().min(1, 'Unit is required'),
   itemType: z.number().min(0),
-  averageCostPerBaseUnit: z.number().min(0, 'Cost must be positive'),
+  averageCostPerUnit: z.number().min(0, 'Cost must be positive'),
   reorderLevel: z.number().min(0),
   reorderQuantity: z.number().min(0),
   strictnessLevel: z.number().min(0),
@@ -145,7 +145,7 @@ export type CreateInventoryPayload = {
   openingStock: number;
   reorderLevel: number;
   reorderQuantity: number;
-  averageCostPerBaseUnit: number;
+  averageCostPerUnit: number;
   isActive: boolean;
   allowTracking: boolean;
   unitId: string;
@@ -267,7 +267,7 @@ export type WizardSetupItem = {
   openingStock: number;
   reorderLevel: number;
   reorderQuantity: number;
-  averageCostPerBaseUnit: number;
+  averageCostPerUnit: number;
   isActive: boolean;
   allowTracking: boolean;
   unitId: string;
@@ -374,7 +374,7 @@ export async function createInventoryItem(
     name: payload.name,
     unitId: payload.unitId,
     itemType: payload.itemType,
-    averageCostPerBaseUnit: payload.averageCostPerBaseUnit,
+    averageCostPerUnit: payload.averageCostPerUnit,
     reorderLevel: payload.reorderLevel,
     reorderQuantity: payload.reorderQuantity,
     strictnessLevel: payload.strictnessLevel,
@@ -407,7 +407,7 @@ export async function updateInventoryItem(
     name: payload.name,
     unitId: payload.unitId,
     itemType: payload.itemType,
-    averageCostPerBaseUnit: payload.averageCostPerBaseUnit,
+    averageCostPerUnit: payload.averageCostPerUnit,
     reorderLevel: payload.reorderLevel,
     reorderQuantity: payload.reorderQuantity,
     strictnessLevel: payload.strictnessLevel,

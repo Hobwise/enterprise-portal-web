@@ -182,7 +182,7 @@ export default function ItemDetailPage() {
         openingStock: formData.openingStock ? parseFloat(formData.openingStock) : 0,
         reorderLevel: formData.reorderLevel ? parseFloat(formData.reorderLevel) : 0,
         reorderQuantity: 0,
-        averageCostPerBaseUnit: parseFloat(formData.costPerUnit),
+        averageCostPerUnit: parseFloat(formData.costPerUnit),
         isActive: formData.isActive,
         allowTracking: formData.allowTracking,
         unitId: formData.unitId,
@@ -399,7 +399,7 @@ export default function ItemDetailPage() {
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                   >
                     <option value="">Select unit</option>
-                    {unitsByBusiness.map((u) => (
+                    {unitsByBusiness.filter((u) => u.isActive).map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.name}
                       </option>

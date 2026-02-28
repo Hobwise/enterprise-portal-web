@@ -9,7 +9,7 @@ import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination"
 
 interface PurchaseRequestHistoryTableProps {
   data: PurchaseRequest[];
-  onViewRequest: (request: PurchaseRequest) => void;
+  onViewRequest?: (request: PurchaseRequest) => void;
   onReceiveRequest: (request: PurchaseRequest) => void;
   onDuplicateRequest: (request: PurchaseRequest) => void;
   onCancelRequest: (request: PurchaseRequest) => void;
@@ -90,7 +90,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       case "totalCost":
         return <span className="text-sm text-gray-500">{formatCurrency(item.totalCost)}</span>;
       case "status": {
-        const colors = statusColorMap[item.status];
+        const colors = statusColorMap[item.status] || statusColorMap.Pending;
         return (
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium text-xs ${colors.bg} ${colors.text}`}>
             {item.status}

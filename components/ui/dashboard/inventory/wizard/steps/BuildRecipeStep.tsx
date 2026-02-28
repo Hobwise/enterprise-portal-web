@@ -179,7 +179,7 @@ const BuildRecipeStep: React.FC<BuildRecipeStepProps> = ({
                 >
                   <option value="">Select unit</option>
                   {Array.isArray(units) &&
-                    units.map((u) => (
+                    units.filter((u) => u.isActive).map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.name}
                       </option>
@@ -260,7 +260,7 @@ const BuildRecipeStep: React.FC<BuildRecipeStepProps> = ({
                       availableIngredients
                         .filter(
                           (i) =>
-                            i.itemType !== InventoryItemType.Produced &&
+                            i.itemType === InventoryItemType.Ingredient &&
                             !recipeDetails.some((d) => d.inventoryItemID === i.id) &&
                             i.name.toLowerCase().includes(newIngredientSearch.toLowerCase())
                         )

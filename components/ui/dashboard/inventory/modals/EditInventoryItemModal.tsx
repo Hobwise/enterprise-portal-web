@@ -137,7 +137,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
         openingStock: openingStock ? parseFloat(openingStock) : 0,
         reorderLevel: reorderLevel ? parseFloat(reorderLevel) : 0,
         reorderQuantity: 0,
-        averageCostPerBaseUnit: parseFloat(averageCostPerBaseUnit),
+        averageCostPerUnit: parseFloat(averageCostPerBaseUnit),
         isActive,
         allowTracking,
         unitId,
@@ -246,7 +246,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                 >
                   <option value="">Select unit</option>
-                  {Array.isArray(unitsByBusiness) && [...unitsByBusiness].sort((a, b) => a.name.localeCompare(b.name)).map((u) => (
+                  {Array.isArray(unitsByBusiness) && [...unitsByBusiness].filter((u) => u.isActive).sort((a, b) => a.name.localeCompare(b.name)).map((u) => (
                     <option key={u.id} value={u.id}>
                       {u.name}
                     </option>

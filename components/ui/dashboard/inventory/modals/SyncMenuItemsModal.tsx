@@ -117,7 +117,7 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
           const itemsArray = Array.isArray(items) ? items : [];
           setPredictedItems(itemsArray);
           setEditableData(itemsArray.map((item) => ({
-            itemName: item.suggestedInventoryItemName ?? '',
+            itemName: item.menuItemName ?? '',
             costPerUnit: '',
             salesPrice: '',
             itemType: String(item.suggestedItemType ?? 0),
@@ -209,7 +209,7 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
 
     const payload: SynchronizeInventoryPayload = predictedItems.map((item, idx) => ({
       menuItemId: item.menuItemId,
-      inventoryItemName: editableData[idx]?.itemName || item.suggestedInventoryItemName,
+      inventoryItemName: editableData[idx]?.itemName || item.menuItemName,
       unitCategory: item.suggestedUnitCategory,
       unitId: editableData[idx]?.unitId || item.suggestedUnitId || '',
       itemType: editableData[idx]?.itemType ? Number(editableData[idx].itemType) : (item.suggestedItemType ?? 0),
@@ -617,17 +617,12 @@ const ConfirmStep: React.FC<ConfirmStepProps> = ({
                     }`}
                   >
                     <td className="py-2 px-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-xs text-gray-400 truncate" title={item.menuItemName}>
-                          {item.menuItemName}
-                        </span>
-                        <input
-                          type="text"
-                          value={editableData[idx]?.itemName ?? item.suggestedInventoryItemName}
-                          onChange={(e) => handleInputChange(idx, 'itemName', e.target.value)}
-                          className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#5F35D2] focus:border-[#5F35D2] bg-white font-medium"
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        value={editableData[idx]?.itemName ?? item.menuItemName}
+                        onChange={(e) => handleInputChange(idx, 'itemName', e.target.value)}
+                        className={selectClass}
+                      />
                     </td>
                     <td className="py-2 px-3">
                       <select
@@ -648,7 +643,7 @@ const ConfirmStep: React.FC<ConfirmStepProps> = ({
                         className={selectClass}
                       >
                         <option value="">Select unit</option>
-                        {Array.isArray(unitsByBusiness) && unitsByBusiness.map((u) => (
+                        {Array.isArray(unitsByBusiness) && unitsByBusiness.filter((u) => u.isActive).map((u) => (
                           <option key={u.id} value={u.id}>{u.name}</option>
                         ))}
                       </select>

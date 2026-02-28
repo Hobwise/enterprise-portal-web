@@ -131,7 +131,9 @@ api.interceptors.request.use(async (config) => {
     config.headers['userId'] = userId;
   }
 
-  const isMultipartFormData = config.headers['Content-Type'] === 'multipart/form-data';
+  const isMultipartFormData =
+    config.headers['Content-Type'] === 'multipart/form-data' ||
+    (typeof FormData !== 'undefined' && config.data instanceof FormData);
   if (isMultipartFormData) {
     delete config.headers['Content-Type'];
   }
