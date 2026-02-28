@@ -5,7 +5,6 @@ import {
   getInventoryItem,
   getIngredients,
   getSuppliers,
-  getUnitsByBusiness,
   getUnits,
   getRecipeDetails,
   getMenuSummary,
@@ -203,10 +202,11 @@ export const useUnitsByBusiness = () => {
 
   const fetchUnits = async () => {
     try {
-      const response = await getUnitsByBusiness(businessId);
+      const response = await getUnits(businessId);
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
-        return Array.isArray(result) ? result as InventoryUnit[] : [];
+        const units = result?.units ?? result;
+        return Array.isArray(units) ? units as InventoryUnit[] : [];
       }
       return [];
     } catch (error) {

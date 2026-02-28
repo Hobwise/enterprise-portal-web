@@ -502,7 +502,7 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                                   {Array.isArray(availableIngredients) && availableIngredients
                                     .filter(
                                       (i) =>
-                                        i.itemType !== InventoryItemType.Produced &&
+                                        i.itemType === InventoryItemType.Ingredient &&
                                         !editDetails.some((d) => d.inventoryItemID === i.id) &&
                                         i.name.toLowerCase().includes(newIngredientSearch.toLowerCase())
                                     )

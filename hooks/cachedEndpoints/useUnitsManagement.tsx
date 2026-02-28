@@ -1,6 +1,6 @@
 'use client';
 import {
-  getUnitsByBusiness,
+  getUnits,
   createUnit,
   updateUnit,
   deleteUnit,
@@ -21,11 +21,12 @@ const useUnitsManagement = () => {
     if (!businessId) return [];
 
     try {
-      const response = await getUnitsByBusiness(businessId);
+      const response = await getUnits(businessId);
 
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
-        return Array.isArray(result) ? result as InventoryUnit[] : [];
+        const units = result?.units ?? result;
+        return Array.isArray(units) ? units as InventoryUnit[] : [];
       }
 
       return [];

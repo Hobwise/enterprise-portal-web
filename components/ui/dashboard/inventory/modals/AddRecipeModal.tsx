@@ -434,7 +434,7 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                       >
                         <option value="">Select unit</option>
                         {Array.isArray(units) &&
-                          units.map((unit) => (
+                          units.filter((unit) => unit.isActive).map((unit) => (
                             <option key={unit.id} value={unit.id}>
                               {unit.name}
                             </option>
@@ -582,7 +582,7 @@ const AddRecipeModal: React.FC<AddRecipeModalProps> = ({
                               availableIngredients
                                 .filter(
                                   (i) =>
-                                    i.itemType !== InventoryItemType.Produced &&
+                                    i.itemType === InventoryItemType.Ingredient &&
                                     !details.some(
                                       (d) => d.inventoryItemID === i.id,
                                     ) &&

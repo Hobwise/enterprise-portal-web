@@ -113,8 +113,8 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
               itemName: firstItem.name ?? '',
               description: firstItem.description ?? '',
               unitId: firstItem.unitId ?? '',
-              costPerUnit: firstItem.averageCostPerBaseUnit != null
-                ? String(firstItem.averageCostPerBaseUnit)
+              costPerUnit: firstItem.averageCostPerUnit != null
+                ? String(firstItem.averageCostPerUnit)
                 : '',
               itemType: firstItem.itemType ?? null,
               openingStock: firstItem.openingStock ? String(firstItem.openingStock) : '',
@@ -170,7 +170,7 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
                 openingStock: parseFloat(current.openingStock) || 0,
                 reorderLevel: parseFloat(current.reorderLevel) || 0,
                 reorderQuantity: parseFloat(current.reorderQuantity) || 0,
-                averageCostPerBaseUnit: parseFloat(current.costPerUnit) || 0,
+                averageCostPerUnit: parseFloat(current.costPerUnit) || 0,
                 isActive: current.isActive,
                 allowTracking: current.allowTracking,
                 unitId: current.unitId,

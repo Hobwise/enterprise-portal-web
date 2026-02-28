@@ -136,9 +136,7 @@ export async function updatePurchaseOrder(purchaseOrderId: string, businessId: s
 
 export async function sendPurchaseOrderMail(formData: FormData) {
   try {
-    const data = await api.post(DASHBOARD.purchaseOrderSendMail, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const data = await api.post(DASHBOARD.purchaseOrderSendMail, formData);
 
     return data;
   } catch (error) {
