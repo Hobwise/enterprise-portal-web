@@ -78,7 +78,13 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   };
 
   const toggleMenu = useCallback((requestId: string) => {
-    setOpenMenuId((prev) => (prev === requestId ? null : requestId));
+    try {
+      if (!requestId) return;
+      setOpenMenuId((prev) => (prev === requestId ? null : requestId));
+    } catch (error) {
+      console.error("Error toggling menu:", error);
+      setOpenMenuId(null);
+    }
   }, []);
 
   const renderCell = (item: PurchaseRequest, columnKey: string) => {
@@ -120,7 +126,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                 type="button"
                 aria-label="actions"
                 className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
-                onClick={() => toggleMenu(item.purchaseOrderId)}
+                onClick={() => toggleMenu(item?.purchaseOrderId)}
               >
                 <MoreHorizontal size={18} />
               </button>
