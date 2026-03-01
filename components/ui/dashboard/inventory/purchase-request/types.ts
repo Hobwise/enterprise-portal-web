@@ -28,6 +28,7 @@ export interface PurchaseRequestItem {
 }
 
 export interface PurchaseRequest {
+  purchaseOrderId: string;
   requestId: string;
   supplierId?: string;
   reference?: string;

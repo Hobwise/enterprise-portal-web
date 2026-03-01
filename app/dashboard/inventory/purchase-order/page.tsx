@@ -71,6 +71,7 @@ export default function PurchaseRequestPage() {
       const items = Array.isArray(rawItems) ? rawItems : [];
       return {
         orders: items.map((o: any) => ({
+          purchaseOrderId: o.purchaseOrderId || '',
           requestId: o.purchaseOrderId || o.id || '',
           supplierId: o.supplierId || '',
           supplierName: o.supplierName || '',
@@ -253,6 +254,7 @@ export default function PurchaseRequestPage() {
       setFetchingOrderDetails(true);
       try {
         const fullOrder = await fetchFullPurchaseOrder({
+          purchaseOrderId: purchaseOrderId,
           requestId: purchaseOrderId,
           supplierName: selectedSupplier?.name || '',
           companyName: selectedSupplier?.companyName || '',
