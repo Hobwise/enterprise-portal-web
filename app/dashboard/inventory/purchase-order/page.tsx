@@ -17,6 +17,7 @@ import {
   receivePurchaseOrder,
   sendPurchaseOrderMail,
 } from '@/app/api/controllers/dashboard/purchaseOrder';
+import { getInventoryItems } from '@/app/api/controllers/dashboard/inventory';
 import { fetchQueryConfig } from '@/lib/queryConfig';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { Supplier } from '@/components/ui/dashboard/inventory/suppliers/types';
@@ -145,19 +146,34 @@ export default function PurchaseRequestPage() {
   }, [units]);
 
   // Fetch supplier data (including items) when a supplier is selected
+  // Also fetch inventory items in parallel to get accurate cost per unit
   const { data: supplierItems = [], isFetching: isLoadingSupplierItems } = useQuery<SupplierInventoryItem[]>({
     queryKey: ['supplier', selectedSupplierId],
     queryFn: async () => {
-      const response = await getSupplier(selectedSupplierId);
-      const items = response?.data?.data?.items;
+      const [supplierResponse, inventoryResponse] = await Promise.all([
+        getSupplier(selectedSupplierId),
+        getInventoryItems(businessId, 1, 1000),
+      ]);
+
+      const items = supplierResponse?.data?.data?.items;
       if (!Array.isArray(items)) return [];
+
+      // Build cost lookup from inventory items
+      const invData = inventoryResponse?.data?.data;
+      const invItems = Array.isArray(invData) ? invData : (invData?.items || []);
+      const costMap = new Map<string, number>();
+      for (const inv of invItems) {
+        if (inv.id && inv.averageCostPerUnit) {
+          costMap.set(inv.id, inv.averageCostPerUnit);
+        }
+      }
 
       return items.map((item: any) => ({
           id: item.id,
           name: item.name,
           itemType: itemTypeLabels[Number(item.itemType)] || String(item.itemType),
           unitName: unitMap.get(item.unitId) || item.unit || 'N/A',
-          costPerUnit: item.averageCostPerUnit ?? 0,
+          costPerUnit: item.averageCostPerUnit || costMap.get(item.id) || 0,
           status: (item.isActive ? 'Active' : 'Inactive') as 'Active' | 'Inactive',
       }));
     },

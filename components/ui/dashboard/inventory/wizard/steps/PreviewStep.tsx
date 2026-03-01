@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { Spinner, Switch } from '@nextui-org/react';
 import { InventoryItemType, createItemWithRecipe } from '@/app/api/controllers/dashboard/inventory';
 import { useSuppliers, useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
-import { notify, getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { toast } from 'sonner';
 import WizardHeader from '../WizardHeader';
 
 type LocalRecipeDetail = {
@@ -289,9 +290,9 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
                   description,
                   itemType: itemType ?? 0,
                   strictnessLevel,
-                  openingStock: parseFloat(openingStock) || 0,
-                  reorderLevel: parseFloat(reorderLevel) || 0,
-                  reorderQuantity: parseFloat(reorderQuantity) || 0,
+                  openingStock: Math.round(Number(openingStock)) || 0,
+                  reorderLevel: Math.round(Number(reorderLevel)) || 0,
+                  reorderQuantity: Math.round(Number(reorderQuantity)) || 0,
                   averageCostPerUnit: parseFloat(costPerUnit) || 0,
                   isActive,
                   allowTracking,
@@ -318,10 +319,10 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
               if (!response) return;
 
               if (response?.data?.isSuccessful) {
-                notify({ title: 'Success!', text: 'Item saved successfully', type: 'success' });
+                toast.success('Item saved successfully');
                 onNext();
               } else {
-                notify({ title: 'Error!', text: response?.data?.error || 'Failed to save item', type: 'error' });
+                toast.error(response?.data?.error || 'Failed to save item');
               }
             } catch (error) {
               console.error('Error saving item:', error);

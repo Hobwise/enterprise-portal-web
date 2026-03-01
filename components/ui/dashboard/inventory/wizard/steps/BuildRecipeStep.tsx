@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Spinner } from '@nextui-org/react';
 import { Plus } from 'lucide-react';
 
-import { notify } from '@/lib/utils';
+import { toast } from 'sonner';
 import { InventoryItemType } from '@/app/api/controllers/dashboard/inventory';
 import { useUnitsByBusiness, useIngredients } from '@/hooks/cachedEndpoints/useInventoryItems';
 import WizardHeader from '../WizardHeader';
@@ -72,15 +72,15 @@ const BuildRecipeStep: React.FC<BuildRecipeStepProps> = ({
 
   const handleAddIngredient = useCallback(() => {
     if (!newIngredientId) {
-      notify({ title: 'Error!', text: 'Please select an ingredient', type: 'error' });
+      toast.error('Please select an ingredient');
       return;
     }
     if (!newQty || parseFloat(newQty) <= 0) {
-      notify({ title: 'Error!', text: 'Please enter a valid quantity', type: 'error' });
+      toast.error('Please enter a valid quantity');
       return;
     }
     if (recipeDetails.some((d) => d.inventoryItemID === newIngredientId)) {
-      notify({ title: 'Error!', text: 'This ingredient is already added', type: 'error' });
+      toast.error('This ingredient is already added');
       return;
     }
 
@@ -105,7 +105,7 @@ const BuildRecipeStep: React.FC<BuildRecipeStepProps> = ({
 
   const handleSaveRecipe = () => {
     if (recipeDetails.length === 0) {
-      notify({ title: 'Error!', text: 'Please add at least one ingredient', type: 'error' });
+      toast.error('Please add at least one ingredient');
       return;
     }
     onNext();

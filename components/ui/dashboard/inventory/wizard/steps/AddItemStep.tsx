@@ -7,7 +7,7 @@ import {
 } from '@/app/api/controllers/dashboard/inventory';
 import { useUnitsByBusiness, useSuppliers } from '@/hooks/cachedEndpoints/useInventoryItems';
 import WizardHeader from '../WizardHeader';
-import { notify } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface AddItemStepProps {
   itemName: string;
@@ -67,19 +67,19 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
 
   const handleSubmit = async () => {
     if (!itemName.trim()) {
-      notify({ title: 'Error!', text: 'Item name is required', type: 'error' });
+      toast.error('Item name is required');
       return;
     }
     if (!unitId) {
-      notify({ title: 'Error!', text: 'Please select a unit', type: 'error' });
+      toast.error('Please select a unit');
       return;
     }
     if (!costPerUnit || parseFloat(costPerUnit) < 0) {
-      notify({ title: 'Error!', text: 'Please enter a valid cost per unit', type: 'error' });
+      toast.error('Please enter a valid cost per unit');
       return;
     }
     if (itemType === null) {
-      notify({ title: 'Error!', text: 'Please select an item type', type: 'error' });
+      toast.error('Please select an item type');
       return;
     }
 
@@ -102,7 +102,7 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
       if (response && 'errors' in response) {
         const errors = response.errors as Record<string, string[]>;
         const errorMessage = Object.values(errors).flat().join(', ');
-        notify({ title: 'Error!', text: errorMessage || 'Please check your input values', type: 'error' });
+        toast.error(errorMessage || 'Please check your input values');
         return;
       }
 
@@ -113,7 +113,7 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
         }
         onNext();
       } else {
-        notify({ title: 'Error!', text: response?.data?.error || 'Failed to setup inventory', type: 'error' });
+        toast.error(response?.data?.error || 'Failed to setup inventory');
       }
     } catch (error) {
       console.error('Error setting up inventory wizard:', error);
@@ -291,7 +291,7 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
                 onChange={(e) => onUpdate({ openingStock: e.target.value })}
                 placeholder="0"
                 min="0"
-                step="0.01"
+                step="1"
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200"
               />
             </div>
@@ -305,7 +305,7 @@ const AddItemStep: React.FC<AddItemStepProps> = ({
                 onChange={(e) => onUpdate({ reorderLevel: e.target.value })}
                 placeholder="0"
                 min="0"
-                step="0.01"
+                step="1"
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200"
               />
             </div>

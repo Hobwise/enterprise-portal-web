@@ -12,7 +12,8 @@ import {
   SynchronizeInventoryPayload,
   InventoryItemType,
 } from '@/app/api/controllers/dashboard/inventory';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { toast } from 'sonner';
 import { useSuppliers, useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
 import WizardHeader from '../WizardHeader';
 
@@ -125,11 +126,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
           );
           setPhase('confirm');
         } else {
-          notify({
-            title: 'Error',
-            text: response?.data?.error || 'Failed to predict inventory items',
-            type: 'error',
-          });
+          toast.error(response?.data?.error || 'Failed to predict inventory items');
           setPhase('select');
         }
       } catch (error) {
@@ -204,7 +201,6 @@ const SyncStep: React.FC<SyncStepProps> = ({
   };
 
   const handleSaveAndContinue = () => {
-    localStorage.setItem('hobwiseInventorySyncEnabled', JSON.stringify(inventorySyncEnabled));
     onNext();
   };
 
@@ -250,10 +246,10 @@ const SyncStep: React.FC<SyncStepProps> = ({
       if (!response) return;
 
       if (response?.data?.isSuccessful) {
-        notify({ title: 'Success!', text: 'Items synced to inventory successfully', type: 'success' });
+        toast.success('Items synced to inventory successfully');
         onSyncComplete();
       } else {
-        notify({ title: 'Error!', text: response?.data?.error || 'Failed to sync items to inventory', type: 'error' });
+        toast.error(response?.data?.error || 'Failed to sync items to inventory');
       }
     } catch (error) {
       // handleError already shows error toast

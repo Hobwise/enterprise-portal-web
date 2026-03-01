@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { LuPackageCheck, LuCopy, LuXCircle, LuMail, LuSearch } from "react-icons/lu";
 import { PurchaseRequest, PurchaseRequestStatus } from "./types";
@@ -28,6 +28,8 @@ const statusColorMap: Record<PurchaseRequestStatus, { bg: string; text: string }
   Received:  { bg: "bg-green-100",  text: "text-green-600" },
 };
 
+const defaultColors = { bg: "bg-yellow-100", text: "text-yellow-600" };
+
 const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = ({
   data,
   onReceiveRequest,
@@ -42,36 +44,45 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
 }) => {
   const [filterValue, setFilterValue] = useState("");
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
 
+  // Close dropdown on any outside click — no ref needed
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setOpenMenuId(null);
-      }
+    if (!openMenuId) return;
+    const handleClose = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target?.closest?.('[data-menu-container]')) return;
+      setOpenMenuId(null);
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClose);
+    return () => document.removeEventListener("mousedown", handleClose);
+  }, [openMenuId]);
 
   const filteredData = useMemo(() => {
+    if (!data) return [];
     if (!filterValue.trim()) return data;
     const query = filterValue.toLowerCase();
     return data.filter(
       (item) =>
-        (item.reference || "").toLowerCase().includes(query) ||
+        item &&
+        ((item.reference || "").toLowerCase().includes(query) ||
         (item.supplierName || "").toLowerCase().includes(query) ||
-        (item.status || "").toLowerCase().includes(query)
+        (item.status || "").toLowerCase().includes(query))
     );
   }, [data, filterValue]);
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const formatCurrency = (value: number) => {
-    return `₦${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
+    const num = typeof value === "number" && !isNaN(value) ? value : 0;
+    return `₦${num.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
   };
 
+  const toggleMenu = useCallback((requestId: string) => {
+    setOpenMenuId((prev) => (prev === requestId ? null : requestId));
+  }, []);
+
   const renderCell = (item: PurchaseRequest, columnKey: string) => {
+    if (!item) return null;
     const isPending = item.status === "Pending";
 
     switch (columnKey) {
@@ -90,29 +101,30 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       case "totalCost":
         return <span className="text-sm text-gray-500">{formatCurrency(item.totalCost)}</span>;
       case "status": {
-        const colors = statusColorMap[item.status] || statusColorMap.Pending;
+        const colors = statusColorMap[item.status] || defaultColors;
         return (
           <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium text-xs ${colors.bg} ${colors.text}`}>
-            {item.status}
+            {item.status || "Unknown"}
           </span>
         );
       }
-      case "actions":
+      case "actions": {
+        const isOpen = openMenuId === item.requestId;
         return (
           <div
             className="relative flex justify-center items-center gap-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <div ref={openMenuId === item.requestId ? menuRef : undefined}>
+            <div data-menu-container>
               <button
                 type="button"
                 aria-label="actions"
                 className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
-                onClick={() => setOpenMenuId(openMenuId === item.requestId ? null : item.requestId)}
+                onClick={() => toggleMenu(item.requestId)}
               >
                 <MoreHorizontal size={18} />
               </button>
-              {openMenuId === item.requestId && (
+              {isOpen && (
                 <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] bg-white rounded-lg shadow-lg border border-gray-200 py-1">
                   <button
                     type="button"
@@ -157,6 +169,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
             </div>
           </div>
         );
+      }
       default:
         return null;
     }
@@ -208,9 +221,9 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item) => (
+                filteredData.map((item, index) => (
                   <tr
-                    key={item.requestId}
+                    key={item?.requestId || index}
                     className="border-b border-divider cursor-pointer hover:bg-gray-50"
                   >
                     {historyColumns.map((column) => (

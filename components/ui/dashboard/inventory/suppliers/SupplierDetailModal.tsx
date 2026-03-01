@@ -200,11 +200,13 @@ const SupplierDetailModal: React.FC<SupplierDetailModalProps> = ({
                           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none text-sm"
                         >
                           <option value="">Add item...</option>
-                          {inventoryItems.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
+                          {inventoryItems
+                            .filter((item) => !mappedItems.some((m) => m.id === item.id))
+                            .map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
                         </select>
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                           <svg
