@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Spinner } from '@nextui-org/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import {
   InventoryItemType,
@@ -84,8 +85,17 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
   const [data, setData] = useState<WizardData>(INITIAL_WIZARD_DATA);
   const [restoring, setRestoring] = useState(true);
   const hasFetched = useRef(false);
+  const queryClient = useQueryClient();
 
   const { data: unitsByBusiness } = useUnitsByBusiness();
+
+  // Invalidate cached queries on mount so wizard always gets fresh data
+  useEffect(() => {
+    queryClient.invalidateQueries({ queryKey: ['menuSummary'] });
+    queryClient.invalidateQueries({ queryKey: ['unitsByBusiness'] });
+    queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+    queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+  }, [queryClient]);
 
   // Restore saved wizard state on mount
   useEffect(() => {
@@ -167,9 +177,9 @@ const HobwiseWizard: React.FC<HobwiseWizardProps> = ({
                 description: current.description,
                 itemType: current.itemType ?? 0,
                 strictnessLevel: current.strictnessLevel,
-                openingStock: parseFloat(current.openingStock) || 0,
-                reorderLevel: parseFloat(current.reorderLevel) || 0,
-                reorderQuantity: parseFloat(current.reorderQuantity) || 0,
+                openingStock: Math.round(Number(current.openingStock)) || 0,
+                reorderLevel: Math.round(Number(current.reorderLevel)) || 0,
+                reorderQuantity: Math.round(Number(current.reorderQuantity)) || 0,
                 averageCostPerUnit: parseFloat(current.costPerUnit) || 0,
                 isActive: current.isActive,
                 allowTracking: current.allowTracking,
