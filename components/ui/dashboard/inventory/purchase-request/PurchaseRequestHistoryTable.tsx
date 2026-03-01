@@ -109,7 +109,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
         );
       }
       case "actions": {
-        const isOpen = openMenuId === item.requestId;
+        const isOpen = openMenuId === item.purchaseOrderId;
         return (
           <div
             className="relative flex justify-center items-center gap-2"
@@ -120,7 +120,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                 type="button"
                 aria-label="actions"
                 className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
-                onClick={() => toggleMenu(item.requestId)}
+                onClick={() => toggleMenu(item.purchaseOrderId)}
               >
                 <MoreHorizontal size={18} />
               </button>
