@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import { LuPackageCheck, LuCopy, LuXCircle, LuMail, LuSearch } from "react-icons/lu";
+import { LuPackageCheck, LuCopy, LuMail, LuSearch } from "react-icons/lu";
+import { XCircle } from "lucide-react";
 import {
   Chip,
   Dropdown,
@@ -147,7 +148,7 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                           </DropdownItem>,
                           <DropdownItem key="cancel" className="text-danger" color="danger" onClick={() => onCancelRequest(item)}>
                             <div className="flex gap-3 items-center">
-                              <LuXCircle size={16} />
+                              <XCircle size={16} />
                               <p>Cancel</p>
                             </div>
                           </DropdownItem>,
