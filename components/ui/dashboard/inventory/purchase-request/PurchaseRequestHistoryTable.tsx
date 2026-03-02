@@ -1,8 +1,22 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { MoreHorizontal } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { HiOutlineDotsVertical } from "react-icons/hi";
 import { LuPackageCheck, LuCopy, LuXCircle, LuMail, LuSearch } from "react-icons/lu";
+import {
+  Chip,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownSection,
+  DropdownTrigger,
+  Table,
+  TableBody,
+  TableCell,
+  TableColumn,
+  TableHeader,
+  TableRow,
+} from "@nextui-org/react";
 import { PurchaseRequest, PurchaseRequestStatus } from "./types";
 import { historyColumns } from "./data";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
@@ -21,14 +35,15 @@ interface PurchaseRequestHistoryTableProps {
   isActionLoading?: boolean;
 }
 
-const statusColorMap: Record<PurchaseRequestStatus, { bg: string; text: string }> = {
-  Pending:   { bg: "bg-yellow-100", text: "text-yellow-600" },
-  Cancelled: { bg: "bg-red-100",    text: "text-red-600" },
-  Closed:    { bg: "bg-gray-100",   text: "text-gray-600" },
-  Received:  { bg: "bg-green-100",  text: "text-green-600" },
+const statusColorMap: Record<
+  PurchaseRequestStatus,
+  "warning" | "danger" | "default" | "success"
+> = {
+  Pending: "warning",
+  Cancelled: "danger",
+  Closed: "default",
+  Received: "success",
 };
-
-const defaultColors = { bg: "bg-yellow-100", text: "text-yellow-600" };
 
 const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = ({
   data,
@@ -43,19 +58,6 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   isActionLoading,
 }) => {
   const [filterValue, setFilterValue] = useState("");
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-
-  // Close dropdown on any outside click — no ref needed
-  useEffect(() => {
-    if (!openMenuId) return;
-    const handleClose = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target?.closest?.('[data-menu-container]')) return;
-      setOpenMenuId(null);
-    };
-    document.addEventListener("mousedown", handleClose);
-    return () => document.removeEventListener("mousedown", handleClose);
-  }, [openMenuId]);
 
   const filteredData = useMemo(() => {
     if (!data) return [];
@@ -77,16 +79,6 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
     return `₦${num.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
   };
 
-  const toggleMenu = useCallback((requestId: string) => {
-    try {
-      if (!requestId) return;
-      setOpenMenuId((prev) => (prev === requestId ? null : requestId));
-    } catch (error) {
-      console.error("Error toggling menu:", error);
-      setOpenMenuId(null);
-    }
-  }, []);
-
   const renderCell = (item: PurchaseRequest, columnKey: string) => {
     if (!item) return null;
     const isPending = item.status === "Pending";
@@ -106,76 +98,67 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
         return <span className="text-sm text-gray-500">{item.numberOfItems}</span>;
       case "totalCost":
         return <span className="text-sm text-gray-500">{formatCurrency(item.totalCost)}</span>;
-      case "status": {
-        const colors = statusColorMap[item.status] || defaultColors;
+      case "status":
         return (
-          <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-medium text-xs ${colors.bg} ${colors.text}`}>
-            {item.status || "Unknown"}
-          </span>
-        );
-      }
-      case "actions": {
-        const isOpen = openMenuId === item.purchaseOrderId;
-        return (
-          <div
-            className="relative flex justify-center items-center gap-2"
-            onClick={(e) => e.stopPropagation()}
+          <Chip
+            className="capitalize"
+            color={statusColorMap[item.status] || "warning"}
+            size="sm"
+            variant="bordered"
           >
-            <div data-menu-container>
-              <button
-                type="button"
-                aria-label="actions"
-                className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
-                onClick={() => toggleMenu(item?.purchaseOrderId)}
-              >
-                <MoreHorizontal size={18} />
-              </button>
-              {isOpen && (
-                <div className="absolute right-0 top-full mt-1 z-50 min-w-[200px] bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                  <button
-                    type="button"
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                    onClick={() => { setOpenMenuId(null); onDuplicateRequest(item); }}
-                  >
-                    <LuCopy size={16} />
-                    Duplicate PO
-                  </button>
-                  {isPending && (
-                    <button
-                      type="button"
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => { setOpenMenuId(null); onReceiveRequest(item); }}
-                    >
-                      <LuPackageCheck size={16} />
-                      Receive PO
-                    </button>
-                  )}
-                  {isPending && (
-                    <button
-                      type="button"
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                      onClick={() => { setOpenMenuId(null); onSendMail(item); }}
-                    >
-                      <LuMail size={16} />
-                      Send Mail to Supplier
-                    </button>
-                  )}
-                  {isPending && (
-                    <button
-                      type="button"
-                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                      onClick={() => { setOpenMenuId(null); onCancelRequest(item); }}
-                    >
-                      <LuXCircle size={16} />
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
+            {item.status || "Unknown"}
+          </Chip>
+        );
+      case "actions":
+        return (
+          <div className="relative flex justify-center items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            <Dropdown>
+              <DropdownTrigger>
+                <button
+                  type="button"
+                  aria-label="actions"
+                  className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
+                >
+                  <HiOutlineDotsVertical />
+                </button>
+              </DropdownTrigger>
+              <DropdownMenu className="text-black">
+                <DropdownSection>
+                  {[
+                    <DropdownItem key="duplicate" onClick={() => onDuplicateRequest(item)}>
+                      <div className="flex gap-3 items-center">
+                        <LuCopy size={16} />
+                        <p>Duplicate PO</p>
+                      </div>
+                    </DropdownItem>,
+                    ...(isPending
+                      ? [
+                          <DropdownItem key="receive" onClick={() => onReceiveRequest(item)}>
+                            <div className="flex gap-3 items-center">
+                              <LuPackageCheck size={16} />
+                              <p>Receive PO</p>
+                            </div>
+                          </DropdownItem>,
+                          <DropdownItem key="sendmail" onClick={() => onSendMail(item)}>
+                            <div className="flex gap-3 items-center">
+                              <LuMail size={16} />
+                              <p>Send Mail to Supplier</p>
+                            </div>
+                          </DropdownItem>,
+                          <DropdownItem key="cancel" className="text-danger" color="danger" onClick={() => onCancelRequest(item)}>
+                            <div className="flex gap-3 items-center">
+                              <LuXCircle size={16} />
+                              <p>Cancel</p>
+                            </div>
+                          </DropdownItem>,
+                        ]
+                      : []),
+                  ]}
+                </DropdownSection>
+              </DropdownMenu>
+            </Dropdown>
           </div>
         );
-      }
       default:
         return null;
     }
@@ -204,44 +187,53 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
           </div>
         )}
         <div className="max-h-[382px] overflow-auto">
-          <table className="w-full" aria-label="Purchase order history">
-            <thead>
-              <tr className="border-b border-divider">
-                {historyColumns.map((column) => (
-                  <th
-                    key={column.uid}
-                    className={`text-default-500 text-xs border-b border-divider py-4 px-3 bg-grey300 font-medium ${
-                      column.uid === "actions" ? "text-center" : "text-left"
-                    }`}
-                  >
-                    {column.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td colSpan={historyColumns.length} className="text-center py-8 text-gray-400 text-sm">
-                    No purchase orders yet
-                  </td>
-                </tr>
-              ) : (
-                filteredData.map((item, index) => (
-                  <tr
-                    key={item?.requestId || index}
-                    className="border-b border-divider cursor-pointer hover:bg-gray-50"
-                  >
-                    {historyColumns.map((column) => (
-                      <td key={column.uid} className="py-3 px-3 text-textGrey">
-                        {renderCell(item, column.uid)}
-                      </td>
-                    ))}
-                  </tr>
-                ))
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            aria-label="Purchase order history"
+            classNames={{
+              th: [
+                "text-default-500",
+                "text-xs",
+                "border-b",
+                "border-divider",
+                "py-4",
+                "rounded-none",
+                "bg-grey300",
+              ],
+              tr: "border-b border-divider rounded-none",
+              td: [
+                "py-3",
+                "text-textGrey",
+                "group-data-[first=true]:first:before:rounded-none",
+                "group-data-[first=true]:last:before:rounded-none",
+                "group-data-[middle=true]:before:rounded-none",
+                "group-data-[last=true]:first:before:rounded-none",
+                "group-data-[last=true]:last:before:rounded-none",
+              ],
+            }}
+          >
+            <TableHeader columns={historyColumns}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.uid === "actions" ? "center" : "start"}
+                >
+                  {column.name}
+                </TableColumn>
               )}
-            </tbody>
-          </table>
+            </TableHeader>
+            <TableBody items={filteredData} emptyContent="No purchase orders yet">
+              {(item) => (
+                <TableRow key={item.purchaseOrderId || item.requestId}>
+                  {(columnKey) => (
+                    <TableCell>{renderCell(item, String(columnKey))}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
         <div className="flex w-full justify-center">
           <CustomPagination
