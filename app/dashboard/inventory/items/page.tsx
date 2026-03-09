@@ -44,6 +44,11 @@ export default function ItemsPage() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery, debouncedSearch, setPage]);
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [itemTypeFilter, stockLevelFilter, setPage]);
+
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
@@ -71,6 +76,8 @@ export default function ItemsPage() {
     page,
     pageSize,
     search: debouncedSearch,
+    itemType: itemTypeFilter,
+    stockStatus: stockLevelFilter,
   });
 
   // Recipe enforcement via localStorage
@@ -204,58 +211,20 @@ export default function ItemsPage() {
     router.push(`/dashboard/inventory/items/${item.id}`);
   }, [router]);
 
-  // Client-side filtering (itemType and stockLevel only — search is handled by the backend)
-  const filteredItems = useMemo(() => {
-    if (!data) return [];
-    let items = data;
-
-    if (itemTypeFilter !== 'all') {
-      items = items.filter((item) => item.itemType === Number(itemTypeFilter));
-    }
-
-    if (stockLevelFilter !== 'all') {
-      items = items.filter((item) => {
-        const stockLevel = item.stockLevel ?? 0;
-        switch (stockLevelFilter) {
-          case 'in-stock':
-            return stockLevel > 0;
-          case 'low-stock':
-            return stockLevel > 0 && stockLevel <= item.reorderLevel;
-          case 'out-of-stock':
-            return stockLevel === 0;
-          default:
-            return true;
-        }
-      });
-    }
-
-    return items;
-  }, [data, itemTypeFilter, stockLevelFilter]);
-
   // Structure data with pagination info for usePagination hook
   const tableData = useMemo(() => {
-    // If we're filtering client-side (search, itemType, or stockLevel), we need to handle pagination ourselves
-    const isClientFiltering = itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
-
-    if (isClientFiltering) {
-      // When filtering client-side, return simple array (usePagination will handle it)
-      return filteredItems;
-    }
-
-    // When not filtering, pass full pagination info from API
     return {
-      data: filteredItems,
+      data: data || [],
       totalCount,
       totalPages,
       currentPage,
       hasNext,
       hasPrevious,
     };
-  }, [filteredItems, itemTypeFilter, stockLevelFilter, totalCount, totalPages, currentPage, hasNext, hasPrevious]);
+  }, [data, totalCount, totalPages, currentPage, hasNext, hasPrevious]);
 
-  // Computed values - use filtered count when client-side filtering, otherwise API count
-  const isClientFiltering = itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
-  const totalItems = isClientFiltering ? filteredItems.length : (totalCount || filteredItems.length);
+  // Computed values
+  const totalItems = totalCount || (data?.length || 0);
 
   if (isLoading && (!data || data.length === 0) && page === 1) {
     return <CustomLoading />;

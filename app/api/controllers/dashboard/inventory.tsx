@@ -338,7 +338,9 @@ export async function getInventoryItems(
   businessId: string,
   page: number = 1,
   pageSize: number = 10,
-  search?: string
+  search?: string,
+  itemType?: string,
+  stockStatus?: string
 ) {
   const headers: Record<string, string> = {};
   if (businessId) headers.businessId = businessId;
@@ -346,6 +348,8 @@ export async function getInventoryItems(
   try {
     let url = `${DASHBOARD.inventoryByBusiness}?Page=${page}&PageSize=${pageSize}&SortBy=dateCreated&SortOrder=desc`;
     if (search) url += `&Search=${encodeURIComponent(search)}`;
+    if (itemType && itemType !== 'all') url += `&ItemType=${itemType}`;
+    if (stockStatus && stockStatus !== 'all') url += `&StockStatus=${stockStatus}`;
     const data = await api.get(url, { headers });
     return data;
   } catch (error) {
