@@ -37,6 +37,7 @@ import CustomizePurchaseModal from '@/components/ui/dashboard/inventory/purchase
 import SendEmailModal from '@/components/ui/dashboard/inventory/purchase-request/SendEmailModal';
 import PurchaseSuccessModal from '@/components/ui/dashboard/inventory/purchase-request/PurchaseSuccessModal';
 import ReceivedItemsModal from '@/components/ui/dashboard/inventory/purchase-request/ReceivedItemsModal';
+import ViewPurchaseRequestModal from '@/components/ui/dashboard/inventory/purchase-request/ViewPurchaseRequestModal';
 
 
 export default function PurchaseRequestPage() {
@@ -572,6 +573,11 @@ export default function PurchaseRequestPage() {
         isLoading={receivingStock}
       />
 
+      <ViewPurchaseRequestModal
+        isOpen={viewModalOpen}
+        onOpenChange={setViewModalOpen}
+        purchaseRequest={selectedPurchaseRequest}
+      />
     </div>
   );
 }

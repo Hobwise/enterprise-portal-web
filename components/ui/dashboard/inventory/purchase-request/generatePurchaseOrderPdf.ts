@@ -59,12 +59,12 @@ export function generatePurchaseOrderPdfFile(order: PurchaseRequest): File {
     doc.text(value, x, yPos);
   };
 
-  // Row 1: Order ID, Date, Expected Delivery
-  drawLabel("Order ID", col1, y);
+  // Row 1: Reference, Date, Expected Delivery
+  drawLabel("Reference", col1, y);
   drawLabel("Order Date", col2, y);
   drawLabel("Expected Delivery", col3, y);
   y += 5;
-  drawValue(order.requestId || "N/A", col1, y);
+  drawValue(order.reference || "N/A", col1, y);
   drawValue(order.requestDate || "N/A", col2, y);
   drawValue(order.expectedDeliveryDate || "N/A", col3, y);
   y += 10;
@@ -216,6 +216,6 @@ export function generatePurchaseOrderPdfFile(order: PurchaseRequest): File {
 
   // Return as File object
   const pdfBlob = doc.output("blob");
-  const fileName = `${order.requestId || "purchase-order"}.pdf`;
+  const fileName = `${order.reference || "purchase-order"}.pdf`;
   return new File([pdfBlob], fileName, { type: "application/pdf" });
 }

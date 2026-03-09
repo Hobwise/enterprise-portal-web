@@ -348,8 +348,8 @@ export async function getInventoryItems(
   try {
     let url = `${DASHBOARD.inventoryByBusiness}?Page=${page}&PageSize=${pageSize}&SortBy=dateCreated&SortOrder=desc`;
     if (search) url += `&Search=${encodeURIComponent(search)}`;
-    if (itemType && itemType !== 'all') url += `&ItemType=${itemType}`;
-    if (stockStatus && stockStatus !== 'all') url += `&StockStatus=${stockStatus}`;
+    if (itemType && itemType !== 'all') url += `&itemType=${itemType}`;
+    if (stockStatus && stockStatus !== 'all') url += `&stockStatus=${stockStatus}`;
     const data = await api.get(url, { headers });
     return data;
   } catch (error) {

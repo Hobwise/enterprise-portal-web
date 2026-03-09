@@ -32,6 +32,19 @@ export default function ItemsPage() {
   // Debounced search for API
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
+  // When any filter/search is active, fetch a larger single page so
+  // filtering works across the full dataset instead of the current page only
+  const isFiltered = useMemo(
+    () =>
+      (debouncedSearch && debouncedSearch.trim().length > 0) ||
+      itemTypeFilter !== 'all' ||
+      stockLevelFilter !== 'all',
+    [debouncedSearch, itemTypeFilter, stockLevelFilter]
+  );
+
+  const effectivePage = isFiltered ? 1 : page;
+  const effectivePageSize = isFiltered ? 1000 : pageSize;
+
   // Debounce search effect - also reset page when search changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -73,8 +86,8 @@ export default function ItemsPage() {
     hasNext,
     hasPrevious,
   } = useInventoryItems({
-    page,
-    pageSize,
+    page: effectivePage,
+    pageSize: effectivePageSize,
     search: debouncedSearch,
     itemType: itemTypeFilter,
     stockStatus: stockLevelFilter,
@@ -224,7 +237,7 @@ export default function ItemsPage() {
   }, [data, totalCount, totalPages, currentPage, hasNext, hasPrevious]);
 
   // Computed values
-  const totalItems = totalCount || (data?.length || 0);
+  const totalItems = totalCount || 0;
 
   if (isLoading && (!data || data.length === 0) && page === 1) {
     return <CustomLoading />;
