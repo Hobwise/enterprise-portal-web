@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import { LuPackageCheck, LuCopy, LuMail, LuSearch } from "react-icons/lu";
+import { LuPackageCheck, LuCopy, LuMail, LuSearch, LuEye } from "react-icons/lu";
 import { XCircle } from "lucide-react";
 import {
   Chip,
@@ -48,6 +48,7 @@ const statusColorMap: Record<
 
 const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = ({
   data,
+  onViewRequest,
   onReceiveRequest,
   onDuplicateRequest,
   onCancelRequest,
@@ -126,6 +127,12 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
               <DropdownMenu className="text-black">
                 <DropdownSection>
                   {[
+                    <DropdownItem key="view" onClick={() => onViewRequest?.(item)}>
+                      <div className="flex gap-3 items-center">
+                        <LuEye size={16} />
+                        <p>View PO</p>
+                      </div>
+                    </DropdownItem>,
                     <DropdownItem key="duplicate" onClick={() => onDuplicateRequest(item)}>
                       <div className="flex gap-3 items-center">
                         <LuCopy size={16} />

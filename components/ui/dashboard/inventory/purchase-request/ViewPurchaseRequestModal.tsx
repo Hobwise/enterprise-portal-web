@@ -58,26 +58,7 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
             <ModalBody className="px-4 py-4">
               {/* Header */}
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-3">
-                  <div>
-                    <h2 className="text-sm font-bold text-[#3D424A]">
-                      {purchaseRequest.companyName}
-                    </h2>
-                    <p className="text-xs text-gray-400 font-normal">
-                      {purchaseRequest.supplierName}
-                    </p>
-                  </div>
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    classNames={{
-                      base: `${colors.bg} ${colors.text}`,
-                      content: "font-medium text-xs",
-                    }}
-                  >
-                    {purchaseRequest.status}
-                  </Chip>
-                </div>
+              
                 <button
                   onClick={onClose}
                   className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
@@ -107,7 +88,7 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {/* VENDOR column */}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="bg-primaryColor px-3 py-1.5">
@@ -128,20 +109,7 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                     </div>
                   </div>
 
-                  {/* SHIP TO column */}
-                  <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="bg-primaryColor px-3 py-1.5">
-                      <p className="text-[10px] font-semibold text-white uppercase tracking-wide">Ship To</p>
-                    </div>
-                    <div className="px-3 py-2 space-y-0.5">
-                      {purchaseRequest.contactName && (
-                        <p className="text-xs font-medium text-gray-700">{purchaseRequest.contactName}</p>
-                      )}
-                      <p className="text-xs text-gray-600">
-                        {purchaseRequest.deliveryAddress || "N/A"}
-                      </p>
-                    </div>
-                  </div>
+  
                 </div>
               </div>
 

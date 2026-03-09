@@ -23,6 +23,8 @@ type UseInventoryItemsParams = {
   page?: number;
   pageSize?: number;
   search?: string;
+  itemType?: string;
+  stockStatus?: string;
 };
 
 type InventoryItemsResult = {
@@ -36,7 +38,7 @@ type InventoryItemsResult = {
 };
 
 const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
-  const { page = 1, pageSize = 10, search } = params;
+  const { page = 1, pageSize = 10, search, itemType, stockStatus } = params;
 
   const businessInformation = getJsonItemFromLocalStorage('business');
   const businessId = businessInformation ? businessInformation[0]?.businessId : '';
@@ -47,7 +49,9 @@ const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
         businessId,
         page,
         pageSize,
-        search
+        search,
+        itemType,
+        stockStatus
       );
 
       if (!response?.data?.isSuccessful) {
@@ -107,7 +111,7 @@ const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
   };
 
   const { data, isLoading, isError, refetch } = useQuery<InventoryItemsResult>({
-    queryKey: ['inventoryItems', { page, pageSize, search }],
+    queryKey: ['inventoryItems', { page, pageSize, search, itemType, stockStatus }],
     queryFn: fetchInventoryItems,
     ...fetchQueryConfig(),
     retry: 1,

@@ -16,7 +16,7 @@ import {
   DropdownItem,
   Chip,
 } from "@nextui-org/react";
-import { Search } from "lucide-react";
+import { MoreHorizontal, Search } from "lucide-react";
 import { Supplier } from "./types";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { SupplierIcon } from "@/public/assets/svg";
@@ -105,8 +105,8 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             <div className="relative flex justify-center items-center gap-2">
               <Dropdown>
                 <DropdownTrigger>
-                  <Button className="border-gray-200 border" isIconOnly size="sm" variant="light">
-                    <HiOutlineDotsVertical className="text-default-300" />
+                  <Button className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100" isIconOnly size="sm" variant="light">
+                   <MoreHorizontal size={18} />
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu>
