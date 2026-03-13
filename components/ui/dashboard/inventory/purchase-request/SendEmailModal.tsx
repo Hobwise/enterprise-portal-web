@@ -35,6 +35,7 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
 }) => {
   const [to, setTo] = useState("");
   const [cc, setCc] = useState("");
+  const [ccError, setCcError] = useState("");
   const [subject, setSubject] = useState("Purchase Order");
   const [attachment, setAttachment] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +45,7 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
     if (isOpen) {
       setTo(supplierEmail);
       setCc("");
+      setCcError("");
       setSubject("Purchase Order");
       if (editorRef.current) {
         editorRef.current.innerHTML = "";
@@ -68,7 +70,16 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
     editorRef.current?.focus();
   }, []);
 
+  const isValidEmail = (email: string) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const handleSend = () => {
+    const trimmedCc = cc.trim();
+    if (trimmedCc && !isValidEmail(trimmedCc)) {
+      setCcError("Please enter a valid email address");
+      return;
+    }
+    setCcError("");
     const htmlContent = editorRef.current?.innerHTML || "";
     const emailHtml = `<div style="font-family: Arial, sans-serif; font-size: 14px; line-height: 1.6; color: #333333;">${htmlContent}</div>`;
     onSend(to, cc, subject, emailHtml, attachment);
@@ -127,10 +138,11 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
                   <input
                     type="email"
                     value={cc}
-                    onChange={(e) => setCc(e.target.value)}
+                    onChange={(e) => { setCc(e.target.value); setCcError(""); }}
                     placeholder="Optional"
-                    className={inputClassName}
+                    className={`${inputClassName}${ccError ? " border-red-400 focus:ring-red-200 focus:border-red-400" : ""}`}
                   />
+                  {ccError && <p className="text-[10px] text-red-500 mt-1">{ccError}</p>}
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-1">

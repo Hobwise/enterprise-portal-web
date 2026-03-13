@@ -32,18 +32,27 @@ export default function ItemsPage() {
   // Debounced search for API
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // When any filter/search is active, fetch a larger single page so
-  // filtering works across the full dataset instead of the current page only
-  const isFiltered = useMemo(
-    () =>
-      (debouncedSearch && debouncedSearch.trim().length > 0) ||
-      itemTypeFilter !== 'all' ||
-      stockLevelFilter !== 'all',
-    [debouncedSearch, itemTypeFilter, stockLevelFilter]
-  );
+  // Map dropdown values to search-friendly labels
+  const typeLabels: Record<string, string> = {
+    '0': 'Direct',
+    '1': 'Ingredient',
+    '2': 'Produced',
+  };
 
-  const effectivePage = isFiltered ? 1 : page;
-  const effectivePageSize = isFiltered ? 1000 : pageSize;
+  const stockLabels: Record<string, string> = {
+    'in-stock': 'In Stock',
+    'low-stock': 'Low Stock',
+    'out-of-stock': 'Out of Stock',
+  };
+
+  // Combine text search + dropdown selections into a single Search param
+  const combinedSearch = useMemo(() => {
+    const parts: string[] = [];
+    if (debouncedSearch.trim()) parts.push(debouncedSearch.trim());
+    if (itemTypeFilter !== 'all' && typeLabels[itemTypeFilter]) parts.push(typeLabels[itemTypeFilter]);
+    if (stockLevelFilter !== 'all' && stockLabels[stockLevelFilter]) parts.push(stockLabels[stockLevelFilter]);
+    return parts.join(' ') || undefined;
+  }, [debouncedSearch, itemTypeFilter, stockLevelFilter]);
 
   // Debounce search effect - also reset page when search changes
   useEffect(() => {
@@ -86,11 +95,9 @@ export default function ItemsPage() {
     hasNext,
     hasPrevious,
   } = useInventoryItems({
-    page: effectivePage,
-    pageSize: effectivePageSize,
-    search: debouncedSearch,
-    itemType: itemTypeFilter,
-    stockStatus: stockLevelFilter,
+    page,
+    pageSize,
+    search: combinedSearch,
   });
 
   // Recipe enforcement via localStorage

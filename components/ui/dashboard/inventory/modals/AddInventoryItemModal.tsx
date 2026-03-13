@@ -116,8 +116,6 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
 
       if (response?.data?.isSuccessful) {
         const newItemId = response.data.data?.id;
-        notify({ title: 'Success!', text: 'Item registered successfully', type: 'success' });
-
         if (itemType === InventoryItemType.Produced) {
           const trackingData: PendingRecipeTracking = {
             trackingId: crypto.randomUUID(),

@@ -238,6 +238,7 @@ export default function PurchaseRequestPage() {
         setPurchaseOrderId(response.data.data?.id || response.data.data);
         setCustomizeModalOpen(false);
         setSuccessModalOpen(true);
+        setActiveTab('history');
         refetchOrders();
       } else if (response) {
         notify({ title: 'Error!', text: response?.data?.error?.responseDescription || 'Failed to create purchase order', type: 'error' });
@@ -376,11 +377,7 @@ export default function PurchaseRequestPage() {
   const handleDuplicateRequest = async (request: PurchaseRequest) => {
     setDuplicatingOrder(true);
     try {
-      // Fetch full PO details first
-      const detailResponse = await getPurchaseOrder(request.requestId);
-      const poData = detailResponse?.data?.data;
-
-      const response = await duplicatePurchaseOrder(request.requestId, businessId, poData || {});
+      const response = await duplicatePurchaseOrder(request.requestId, businessId);
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Purchase order duplicated successfully', type: 'success' });
         refetchOrders();

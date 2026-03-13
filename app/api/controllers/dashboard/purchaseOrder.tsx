@@ -60,13 +60,13 @@ export async function getPurchaseOrder(purchaseOrderId: string) {
   }
 }
 
-export async function duplicatePurchaseOrder(purchaseOrderId: string, businessId: string, payload?: any) {
+export async function duplicatePurchaseOrder(purchaseOrderId: string, businessId: string) {
   const headers: Record<string, string> = {};
   if (purchaseOrderId) headers.purchaseOrderId = purchaseOrderId;
   if (businessId) headers.businessId = businessId;
 
   try {
-    const data = await api.put(DASHBOARD.purchaseOrder, payload || {}, {
+    const data = await api.post(DASHBOARD.purchaseOrderDuplicate, {}, {
       headers,
     });
 
