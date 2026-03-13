@@ -135,11 +135,16 @@ export const DASHBOARD = {
   supplierByBusiness: "api/v1/Supplier/by-business",
   supplierLov: "api/v1/Supplier/lov",
   mapSupplierItem: "api/v1/Supplier/map-item",
+  stockTransfer: "api/v1/TransferOrder",
+  stockTransferByBusiness: "api/v1/TransferOrder/by-business",
+  stockTransferIncoming: "api/v1/TransferOrder/incoming",
+  stockTransferReceive: "api/v1/TransferOrder/receive",
   // Purchase Order
   purchaseOrder: "api/v1/PurchaseOrder",
   purchaseOrderByBusiness: "api/v1/PurchaseOrder/by-business",
   purchaseOrderReceive: "api/v1/PurchaseOrder/receive",
   purchaseOrderSendMail: "api/v1/PurchaseOrder/send-mail",
+  purchaseOrderDuplicate: "api/v1/PurchaseOrder/duplicate",
   // Inventory Wizard
   inventoryWizardMenuSummary: "api/v1/InventoryWizard/menu-summary",
   inventoryWizardPredict: "api/v1/InventoryWizard/predict",

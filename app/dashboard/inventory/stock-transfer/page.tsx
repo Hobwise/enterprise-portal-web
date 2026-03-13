@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Table,
   TableHeader,
@@ -13,18 +14,40 @@ import {
   Chip,
   Select,
   SelectItem,
+  Autocomplete,
+  AutocompleteItem,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+  DropdownSection,
 } from "@nextui-org/react";
 import {
   Search,
   Plus,
-  MoreHorizontal,
   ArrowLeft,
   ArrowRight,
   X,
   ChevronDown,
+  Eye,
+  Pencil,
+  Trash2,
 } from "lucide-react";
+import { HiOutlineDotsVertical } from "react-icons/hi";
 import { StockTransferIcon } from "@/public/assets/svg";
-import { cn } from "@/lib/utils";
+import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
+import useInventoryItems, {
+  useIngredients,
+} from "@/hooks/cachedEndpoints/useInventoryItems";
+import {
+  createStockTransfer,
+  getIncomingTransfers,
+  getStockTransferDetails,
+  getStockTransfersByBusiness,
+  confirmStockTransfer,
+} from "@/app/api/controllers/dashboard/inventory";
+import { fetchQueryConfig } from "@/lib/queryConfig";
 
 type Step = "list" | "select" | "initiate";
 
@@ -64,7 +87,10 @@ interface TransferItem {
   unit: string;
   currentStock: number;
   transferQty: number;
+  cost: number;
+  destinationId?: string;
   destinationName?: string;
+  destinationUnit?: string;
 }
 
 const mockTransfers: StockTransfer[] = [
@@ -120,53 +146,6 @@ const mockTransfers: StockTransfer[] = [
   },
 ];
 
-const mockIncoming: IncomingTransfer[] = [
-  {
-    id: "1",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    receivedFrom: "Ikeja Business",
-    certification: "Unverified",
-    itemCount: 7,
-    status: "Confirm",
-  },
-  {
-    id: "2",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    receivedFrom: "Lekki 1 Business",
-    certification: "Unverified",
-    itemCount: 5,
-    status: "Confirm",
-  },
-  {
-    id: "3",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    receivedFrom: "Ajah Business",
-    certification: "Verified",
-    itemCount: 12,
-    status: "Verified",
-  },
-  {
-    id: "4",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    receivedFrom: "Victoria Island Business",
-    certification: "Verified",
-    itemCount: 9,
-    status: "Verified",
-  },
-  {
-    id: "5",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    receivedFrom: "Ikoyi Business",
-    certification: "Verified",
-    itemCount: 5,
-    status: "Verified",
-  },
-];
 
 const mockActivities: ActivityLogItem[] = [
   {
@@ -254,14 +233,6 @@ const mockItems: TransferItem[] = [
     currentStock: 10,
     transferQty: 0,
   },
-];
-
-const businesses = [
-  { label: "Cubana Restaurants and Grills Ikeja", value: "ikeja" },
-  { label: "Lekki 1 Business", value: "lekki1" },
-  { label: "Ajah Business", value: "ajah" },
-  { label: "Victoria Island Business", value: "vi" },
-  { label: "Ikoyi Business", value: "ikoyi" },
 ];
 
 const MarylandIcon = () => (
@@ -369,26 +340,204 @@ const ActivityLogIcon = ({ active }: { active?: boolean }) => (
 );
 
 export default function StockTransferPage() {
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>("list");
   const [activeTab, setActiveTab] = useState("Stock Transfer");
-  const [selectedBusiness, setSelectedBusiness] = useState("ikeja");
-  const [selectedItems, setSelectedItems] = useState<TransferItem[]>(
-    mockItems.slice(0, 6),
-  );
+  const [selectedBusiness, setSelectedBusiness] = useState("");
+  const [selectedItems, setSelectedItems] = useState<TransferItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [destSearchQuery, setDestSearchQuery] = useState("");
   const [transferStage, setTransferStage] = useState(1); // 1: Initial, 2: In-Transit, 3: Delivered, 4: Verified, 5: Completed
-  const [incomingTransfers, setIncomingTransfers] =
-    useState<IncomingTransfer[]>(mockIncoming);
+  const [isLoading, setIsLoading] = useState(false);
   const [selectedIncoming, setSelectedIncoming] =
     useState<IncomingTransfer | null>(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  const currentBusiness = useMemo(
+    () => getJsonItemFromLocalStorage("business")?.[0],
+    [],
+  );
+  const currentBusinessId = currentBusiness?.businessId;
+  const currentBusinessName = currentBusiness?.name || "Current Business";
+
+  const { data: incomingData, isLoading: incomingLoading } = useQuery({
+    queryKey: ["incomingTransfers", currentBusinessId],
+    queryFn: async () => {
+      const response = await getIncomingTransfers(currentBusinessId);
+      const responseBody = response?.data;
+      const paginated = responseBody?.data;
+      const rawItems = paginated?.items ?? [];
+      const items = Array.isArray(rawItems) ? rawItems : [];
+      return items.map((o: any) => ({
+        id: o.id || "",
+        issueDate: o.dateUpdated
+          ? new Date(o.dateUpdated).toLocaleDateString("en-GB")
+          : "-",
+        transferId: o.reference || "",
+        receivedFrom: o.sourceBusinessName || "",
+        certification:
+          o.status === 0
+            ? ("Unverified" as const)
+            : ("Verified" as const),
+        itemCount: o.numberOfItems ?? 0,
+        status:
+          o.status === 0 ? ("Confirm" as const) : ("Verified" as const),
+      }));
+    },
+    enabled: !!currentBusinessId,
+    ...fetchQueryConfig(),
+  });
+
+  const incomingTransfers: IncomingTransfer[] = Array.isArray(incomingData) ? incomingData : [];
+
+  const { data: transfersData, isLoading: transfersLoading } = useQuery({
+    queryKey: ["stockTransfersByBusiness", currentBusinessId],
+    queryFn: async () => {
+      const response = await getStockTransfersByBusiness(currentBusinessId);
+      const paginated = response?.data?.data;
+      const rawItems = paginated?.items ?? [];
+      return Array.isArray(rawItems) ? rawItems : [];
+    },
+    enabled: !!currentBusinessId,
+    ...fetchQueryConfig(),
+  });
+
+  const stockTransfers: StockTransfer[] = useMemo(() => {
+    if (!transfersData || !Array.isArray(transfersData)) return [];
+    return transfersData.map((o: any) => ({
+      id: o.id || "",
+      issueDate: o.dateUpdated
+        ? new Date(o.dateUpdated).toLocaleDateString("en-GB")
+        : "-",
+      transferId: o.reference || "",
+      route: `${currentBusinessName} → ${o.destinationBusinessName || ""}`,
+      status:
+        o.status === 0
+          ? ("Draft" as const)
+          : o.status === 1
+            ? ("In Transit" as const)
+            : ("Delivered" as const),
+      staff: "-",
+      itemCount: o.numberOfItems ?? 0,
+      certification:
+        o.status === 0
+          ? ("Pending" as const)
+          : o.status === 1
+            ? ("Pending" as const)
+            : ("Unverified" as const),
+    }));
+  }, [transfersData, currentBusinessName]);
+
+  const activityItems: ActivityLogItem[] = useMemo(() => {
+    if (!transfersData || !Array.isArray(transfersData)) return [];
+    return transfersData.map((o: any) => {
+      const ref = o.reference || "";
+      const dest = o.destinationBusinessName || "";
+      const date = o.dateUpdated
+        ? new Date(o.dateUpdated).toLocaleString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "-";
+      let type: ActivityLogItem["type"] = "created";
+      let title = "Transfer Created";
+      let description = `Stock Transfer ${ref} created to ${dest}`;
+      if (o.status === 1) {
+        type = "initiated";
+        title = "Transfer Initiated";
+        description = `Stock Transfer ${ref} initiated and is in transit to ${dest}`;
+      } else if (o.status === 2) {
+        type = "completed";
+        title = "Transfer Completed";
+        description = `Stock Transfer ${ref} delivered to ${dest}`;
+      }
+      return {
+        id: o.id || "",
+        type,
+        title,
+        id_tag: ref,
+        description,
+        timestamp: date,
+      };
+    });
+  }, [transfersData]);
+
+  const {
+    data: incomingDetails,
+    isLoading: incomingDetailsLoading,
+  } = useQuery({
+    queryKey: ["stockTransferDetails", selectedIncoming?.id],
+    queryFn: async () => {
+      const response = await getStockTransferDetails(selectedIncoming!.id);
+      return response?.data?.data;
+    },
+    enabled: !!selectedIncoming,
+    ...fetchQueryConfig(),
+  });
+
+  const incomingDetailItems = useMemo(() => {
+    const details = incomingDetails as any;
+    if (!details?.orderDetails) return [];
+    return details.orderDetails.map((d: any) => ({
+      id: d.sourceInventoryItemID || d.destinationInventoryItemID,
+      name: d.sourceInventoryItemName || "",
+      destinationName: d.destinationInventoryItemName || "",
+      unit: d.inventoryUnitName || "",
+      transferQty: d.quantity ?? 0,
+      cost: d.itemCost ?? 0,
+    }));
+  }, [incomingDetails]);
+
+  const transferDetail = incomingDetails as any;
+
+  const { data: businessList, isLoading: businessesLoading } =
+    useGetBusinessByCooperate();
+  const { data: sourceItemsData, isLoading: sourceItemsLoading } =
+    useInventoryItems({
+      pageSize: 1000,
+      businessIdOverride: currentBusinessId,
+    });
+  const sourceItems = sourceItemsData || [];
+
+  const { data: destinationItems, isLoading: destinationItemsLoading } =
+    useIngredients({
+      businessId: selectedBusiness,
+      search: destSearchQuery,
+      enabled: step === "initiate" && !!selectedBusiness,
+    });
+
+  const businesses = useMemo(() => {
+    return (businessList || [])
+      .filter((b: any) => b.id !== currentBusinessId)
+      .map((b: any) => ({
+        label: b.name,
+        value: b.id,
+      }));
+  }, [businessList, currentBusinessId]);
+
+  React.useEffect(() => {
+    setSelectedItems([]);
+  }, [selectedBusiness]);
+
+  React.useEffect(() => {
+    if (step === "initiate" && transferStage === 1) {
+      console.log("On 'Initiate or save transfer' step:");
+      console.log("Current Business ID:", currentBusinessId);
+      console.log("Selected Business ID (Destination):", selectedBusiness);
+      console.log("Search Query/Business ID from search:", searchQuery);
+    }
+  }, [step, transferStage, currentBusinessId, selectedBusiness, searchQuery]);
 
   const filteredTransfers = useMemo(() => {
-    return mockTransfers.filter(
+    return stockTransfers.filter(
       (t) =>
         t.transferId.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.route.toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [searchQuery]);
+  }, [searchQuery, stockTransfers]);
 
   const filteredIncoming = useMemo(() => {
     return incomingTransfers.filter(
@@ -402,9 +551,138 @@ export default function StockTransferPage() {
     setStep("select");
   };
 
-  const handleSelectItem = (item: TransferItem) => {
+  const handleSelectItem = (item: any) => {
     if (!selectedItems.find((i) => i.id === item.id)) {
-      setSelectedItems([...selectedItems, item]);
+      setSelectedItems([
+        ...selectedItems,
+        {
+          id: item.id,
+          name: item.name,
+          unit: item.unitName || "Unit",
+          currentStock: item.stockLevel,
+          transferQty: 0,
+          cost: item.averageCostPerUnit || 0,
+        },
+      ]);
+    }
+  };
+
+  const handleUpdateItemDestination = (
+    sourceId: string,
+    destinationItem: any,
+  ) => {
+    setSelectedItems((prev) =>
+      prev.map((item) =>
+        item.id === sourceId
+          ? {
+              ...item,
+              destinationId: destinationItem.id,
+              destinationName: destinationItem.name,
+              destinationUnit:
+                destinationItem.unitName || destinationItem.unit || item.unit,
+            }
+          : item,
+      ),
+    );
+  };
+
+  const updateTransferQty = (id: string, qty: number) => {
+    setSelectedItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, transferQty: qty } : item,
+      ),
+    );
+  };
+
+  const handleInitiateTransfer = async (isVerification = false) => {
+    console.log("Current Business ID:", currentBusinessId);
+    console.log("Selected Business ID (Destination):", selectedBusiness);
+    console.log("Search Query/Business ID from search:", searchQuery);
+
+    if (!selectedBusiness || selectedItems.length === 0) {
+      notify({
+        title: "Error",
+        text: "Please select a destination business and at least one item.",
+        type: "error",
+      });
+      return;
+    }
+
+    const missingDestinations = selectedItems.filter((i) => !i.destinationId);
+    if (missingDestinations.length > 0) {
+      notify({
+        title: "Error",
+        text: "Please map all source items to destination items.",
+        type: "error",
+      });
+      return;
+    }
+
+    const invalidQty = selectedItems.filter((i) => i.transferQty <= 0);
+    if (invalidQty.length > 0) {
+      notify({
+        title: "Error",
+        text: "Please enter a valid transfer quantity for all items.",
+        type: "error",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const totalAmount = selectedItems.reduce(
+        (sum, item) => sum + item.transferQty * item.cost,
+        0,
+      );
+
+      const payload = {
+        destinationBusinessId: selectedBusiness,
+        sourceBusinessId: currentBusinessId,
+        expectedDate: new Date().toISOString(),
+        additionalCostName: "",
+        additionalCost: 0,
+        totalAmount: totalAmount,
+        vatAmount: 0,
+        vatRate: 0,
+        isVatApplied: false,
+        orderDetails: selectedItems.map((item) => ({
+          destinationInventoryItemID: item.destinationId!,
+          sourceInventoryItemID: item.id,
+          quantity: item.transferQty,
+          itemCost: item.cost,
+        })),
+      };
+
+      const response = await createStockTransfer(currentBusinessId, payload);
+      if (response?.data?.isSuccessful) {
+        notify({
+          title: "Success",
+          text: isVerification
+            ? "Stock transfer verified successfully."
+            : "Stock transfer initiated successfully.",
+          type: "success",
+        });
+        if (isVerification) {
+          setTransferStage(5); // Move to Completed stage
+        } else {
+          setTransferStage(2); // Move to In-Transit stage
+        }
+      } else {
+        notify({
+          title: "Error",
+          text: response?.data?.error || "Failed to process stock transfer.",
+          type: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error processing transfer:", error);
+      notify({
+        title: "Error",
+        text: "An error occurred while processing the stock transfer.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -414,19 +692,63 @@ export default function StockTransferPage() {
 
   const handleProceedToInitiate = () => {
     if (selectedBusiness && selectedItems.length > 0) {
+      console.log(
+        "Proceeding to Initiate - Current Business ID:",
+        currentBusinessId,
+      );
+      console.log(
+        "Proceeding to Initiate - Selected Business ID (Destination):",
+        selectedBusiness,
+      );
+      console.log(
+        "Proceeding to Initiate - Search Query/Business ID from search:",
+        searchQuery,
+      );
       setStep("initiate");
     }
   };
 
-  const handleConfirmIncoming = (transferId: string) => {
-    setIncomingTransfers((prev) =>
-      prev.map((t) =>
-        t.id === transferId
-          ? { ...t, status: "Verified", certification: "Verified" }
-          : t,
-      ),
+  const handleSaveDraft = () => {
+    console.log("Saving Draft - Current Business ID:", currentBusinessId);
+    console.log(
+      "Saving Draft - Selected Business ID (Destination):",
+      selectedBusiness,
     );
-    setSelectedIncoming(null);
+    console.log(
+      "Saving Draft - Search Query/Business ID from search:",
+      searchQuery,
+    );
+    notify({
+      title: "Success",
+      text: "Transfer saved as draft.",
+      type: "success",
+    });
+    setStep("list");
+  };
+
+  const handleConfirmIncoming = async (transferId: string) => {
+    setConfirmLoading(true);
+    try {
+      const response = await confirmStockTransfer(currentBusinessId, transferId);
+      if (response?.data?.isSuccessful || response?.status === 200) {
+        notify({
+          title: "Success",
+          text: "Transfer confirmed successfully.",
+          type: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: ["incomingTransfers"] });
+        queryClient.invalidateQueries({ queryKey: ["stockTransferDetails", transferId] });
+        setSelectedIncoming(null);
+      }
+    } catch (error) {
+      notify({
+        title: "Error",
+        text: "Failed to confirm transfer. Please try again.",
+        type: "error",
+      });
+    } finally {
+      setConfirmLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -446,12 +768,6 @@ export default function StockTransferPage() {
 
   const ProgressIndicator = ({ currentStage }: { currentStage: number }) => {
     const stages = ["Created", "Initiated", "Delivered", "Verified"];
-    const dates = [
-      "Mar 2, 2026 07 : 48am",
-      "Mar 2, 2026 07 : 48am",
-      "Mar 2, 2026 09 : 15am",
-      "Mar 2, 2026 09 : 25am",
-    ];
 
     return (
       <div className="flex items-center gap-2 mb-8 mt-4 overflow-x-auto">
@@ -489,11 +805,6 @@ export default function StockTransferPage() {
                   >
                     {label}
                   </span>
-                  {isActive && (
-                    <span className="text-[10px] text-[#667085] whitespace-nowrap">
-                      {dates[index]}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -558,7 +869,9 @@ export default function StockTransferPage() {
         <div className="flex items-center gap-2 text-sm text-[#475467]">
           <MarylandIcon />
           Current Store:{" "}
-          <span className="font-semibold text-[#101828]">Maryland</span>
+          <span className="font-semibold text-[#101828]">
+            {currentBusinessName}
+          </span>
         </div>
       </div>
 
@@ -625,10 +938,18 @@ export default function StockTransferPage() {
               <SelectItem className="text-[#344054]" key="draft" value="draft">
                 Draft
               </SelectItem>
-              <SelectItem className="text-[#344054]" key="transit" value="transit">
+              <SelectItem
+                className="text-[#344054]"
+                key="transit"
+                value="transit"
+              >
                 In Transit
               </SelectItem>
-              <SelectItem className="text-[#344054]" key="delivered" value="delivered">
+              <SelectItem
+                className="text-[#344054]"
+                key="delivered"
+                value="delivered"
+              >
                 Delivered
               </SelectItem>
             </Select>
@@ -636,6 +957,7 @@ export default function StockTransferPage() {
               placeholder="Business"
               className="w-44"
               variant="bordered"
+              isLoading={businessesLoading}
               selectedKeys={selectedBusiness ? [selectedBusiness] : []}
               onSelectionChange={(keys) =>
                 setSelectedBusiness(Array.from(keys)[0] as string)
@@ -652,7 +974,11 @@ export default function StockTransferPage() {
               selectorIcon={<ChevronDown className="w-4 h-4 text-[#98A2B3]" />}
             >
               {businesses.map((b) => (
-                <SelectItem className="text-[#344054]" key={b.value} value={b.value}>
+                <SelectItem
+                  className="text-[#344054]"
+                  key={b.value}
+                  value={b.value}
+                >
                   {b.label}
                 </SelectItem>
               ))}
@@ -672,9 +998,11 @@ export default function StockTransferPage() {
               <Table
                 aria-label="Stock Transfer History"
                 removeWrapper
+                isCompact
                 classNames={{
-                  th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-4 px-6 uppercase tracking-wider",
-                  td: "py-4 px-6 text-sm text-[#344054] border-b border-[#F2F4F7]",
+                  th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
+                  tr: "border-b border-divider rounded-none",
+                  td: "py-3 text-textGrey group-data-[first=true]:first:before:rounded-none group-data-[first=true]:last:before:rounded-none group-data-[middle=true]:before:rounded-none group-data-[last=true]:first:before:rounded-none group-data-[last=true]:last:before:rounded-none",
                 }}
               >
                 <TableHeader>
@@ -717,9 +1045,42 @@ export default function StockTransferPage() {
                         {renderCertification(item.certification)}
                       </TableCell>
                       <TableCell>
-                        <button className="p-2 hover:bg-[#F9FAFB] rounded-full text-[#667085] transition-colors">
-                          <MoreHorizontal className="w-5 h-5" />
-                        </button>
+                        <div
+                          className="relative flex justify-center items-center gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Dropdown>
+                            <DropdownTrigger aria-label="actions">
+                              <div className="cursor-pointer flex justify-center items-center text-black">
+                                <HiOutlineDotsVertical className="text-[22px]" />
+                              </div>
+                            </DropdownTrigger>
+                            <DropdownMenu aria-label="Transfer actions" className="text-black">
+                              <DropdownSection>
+                                <DropdownItem
+                                  key="view"
+                                  startContent={<Eye size={16} />}
+                                >
+                                  View Details
+                                </DropdownItem>
+                                <DropdownItem
+                                  key="edit"
+                                  startContent={<Pencil size={16} />}
+                                >
+                                  Edit
+                                </DropdownItem>
+                                <DropdownItem
+                                  key="delete"
+                                  startContent={<Trash2 size={16} />}
+                                  className="text-danger"
+                                  color="danger"
+                                >
+                                  Delete
+                                </DropdownItem>
+                              </DropdownSection>
+                            </DropdownMenu>
+                          </Dropdown>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -731,16 +1092,17 @@ export default function StockTransferPage() {
               <Table
                 aria-label="Incoming Transfers List"
                 removeWrapper
+                isCompact
                 classNames={{
-                  th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-4 px-6 uppercase tracking-wider",
-                  td: "py-4 px-6 text-sm text-[#344054] border-b border-[#F2F4F7]",
+                  th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
+                  tr: "border-b border-divider rounded-none",
+                  td: "py-3 text-textGrey group-data-[first=true]:first:before:rounded-none group-data-[first=true]:last:before:rounded-none group-data-[middle=true]:before:rounded-none group-data-[last=true]:first:before:rounded-none group-data-[last=true]:last:before:rounded-none",
                 }}
               >
                 <TableHeader>
                   <TableColumn>Issue Date</TableColumn>
                   <TableColumn>Transfer ID</TableColumn>
                   <TableColumn>Received From</TableColumn>
-                  <TableColumn>Cerification</TableColumn>
                   <TableColumn>No. of Items</TableColumn>
                   <TableColumn align="center">Status</TableColumn>
                 </TableHeader>
@@ -753,18 +1115,6 @@ export default function StockTransferPage() {
                       </TableCell>
                       <TableCell className="font-semibold text-[#101828]">
                         {transfer.receivedFrom}
-                      </TableCell>
-                      <TableCell>
-                        <span
-                          className={cn(
-                            "font-bold text-sm",
-                            transfer.certification === "Unverified"
-                              ? "text-[#F5A623]"
-                              : "text-[#16AB60]",
-                          )}
-                        >
-                          {transfer.certification}
-                        </span>
                       </TableCell>
                       <TableCell className="font-bold">
                         {transfer.itemCount}
@@ -828,7 +1178,7 @@ export default function StockTransferPage() {
 
             {activeTab === "Activity Log" && (
               <div className="flex flex-col gap-6 p-8">
-                {mockActivities.map((activity) => (
+                {activityItems.map((activity) => (
                   <div
                     key={activity.id}
                     className="flex items-start gap-4 pb-6 border-b border-[#F2F4F7] last:border-0"
@@ -890,6 +1240,7 @@ export default function StockTransferPage() {
               </p>
               <Select
                 placeholder="Select Business"
+                isLoading={businessesLoading}
                 selectedKeys={selectedBusiness ? [selectedBusiness] : []}
                 onSelectionChange={(keys) =>
                   setSelectedBusiness(Array.from(keys)[0] as string)
@@ -905,7 +1256,11 @@ export default function StockTransferPage() {
                 }}
               >
                 {businesses.map((b) => (
-                  <SelectItem className="text-[#344054]" key={b.value} value={b.value}>
+                  <SelectItem
+                    className="text-[#344054]"
+                    key={b.value}
+                    value={b.value}
+                  >
                     {b.label}
                   </SelectItem>
                 ))}
@@ -914,31 +1269,63 @@ export default function StockTransferPage() {
 
             <div className="bg-white p-8 rounded-2xl border border-[#E4E7EC] shadow-sm flex flex-col gap-6">
               <div className="relative">
-                <Input
+                <Autocomplete
                   placeholder="Search and add Items"
                   variant="bordered"
+                  isLoading={sourceItemsLoading}
+                  isDisabled={!selectedBusiness}
                   classNames={{
-                    inputWrapper:
-                      "bg-[#F2F4F7] border-none h-[56px] rounded-lg px-6 shadow-none",
-                    input:
-                      "text-[#101828] font-medium placeholder:text-[#98A2B3] text-sm",
+                    base: "w-full",
+                    listboxWrapper: "max-h-[300px]",
                   }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      const input = (
-                        e.target as HTMLInputElement
-                      ).value.toLowerCase();
-                      const item = mockItems.find((i) =>
-                        i.name.toLowerCase().includes(input),
+                  inputProps={{
+                    classNames: {
+                      inputWrapper:
+                        "bg-[#F2F4F7] border-none h-[56px] rounded-lg px-6 shadow-none",
+                      input:
+                        "text-[#101828] font-medium placeholder:text-[#98A2B3] text-sm",
+                    },
+                  }}
+                  onSelectionChange={(key) => {
+                    if (key) {
+                      const item = (sourceItems || []).find(
+                        (i: any) => i.id === key,
                       );
-                      if (item) handleSelectItem(item);
-                      (e.target as HTMLInputElement).value = "";
+                      if (item) {
+                        handleSelectItem({
+                          id: item.id,
+                          name: item.name,
+                          unit: item.unitName || "Unit",
+                          currentStock: item.stockLevel,
+                          transferQty: 0,
+                        });
+                      }
                     }
                   }}
-                  endContent={
-                    <Search className="w-5 h-5 text-[#98A2B3] cursor-pointer" />
-                  }
-                />
+                  selectorIcon={<Search className="w-5 h-5 text-[#98A2B3]" />}
+                >
+                  {(sourceItems || [])
+                    .filter(
+                      (item: any) =>
+                        !selectedItems.find((i) => i.id === item.id),
+                    )
+                    .map((item: any) => (
+                      <AutocompleteItem
+                        key={item.id}
+                        value={item.id}
+                        textValue={item.name}
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-[#101828]">
+                            {item.name}
+                          </span>
+                          <span className="text-xs text-[#667085]">
+                            Stock: {item.stockLevel} {item.unitName || "Units"}
+                          </span>
+                        </div>
+                      </AutocompleteItem>
+                    ))}
+                </Autocomplete>
               </div>
 
               <div className="flex flex-wrap gap-3">
@@ -963,7 +1350,17 @@ export default function StockTransferPage() {
 
               <Button
                 isDisabled={!selectedBusiness || selectedItems.length === 0}
-                onClick={handleProceedToInitiate}
+                onClick={() => {
+                  console.log(
+                    "Stock Transfer (Step 1) - Current Business ID:",
+                    currentBusinessId,
+                  );
+                  console.log(
+                    "Stock Transfer (Step 1) - Destination Business ID (Selected):",
+                    selectedBusiness,
+                  );
+                  handleProceedToInitiate();
+                }}
                 className={cn(
                   "w-full rounded-xl py-5 font-bold text-base gap-3 transition-all",
                   selectedBusiness && selectedItems.length > 0
@@ -990,7 +1387,9 @@ export default function StockTransferPage() {
                 <ArrowLeft className="w-5 h-5 text-[#344054]" />
               </button>
               <h1 className="text-[20px] font-bold text-[#101828]">
-                {transferStage === 1 ? "Initiate or save transfer" : "4541STR"}
+                {transferStage === 1
+                  ? "Initiate or save transfer"
+                  : "Stock Transfer"}
               </h1>
             </div>
             {transferStage < 5 && (
@@ -1025,17 +1424,14 @@ export default function StockTransferPage() {
             )}
           </div>
 
-          <div>
-            <h2 className="text-[24px] font-bold text-[#1D2939] tracking-tight">
-              {transferStage === 1 ? "4541STR" : ""}
-            </h2>
-            <div className="flex items-center gap-3 mt-1.5 font-medium text-[#667085]">
-              <span className="text-[#101828]">Maryland Business</span>
-              <ArrowRight className="w-3 h-3" strokeWidth={3} />
-              <span className="text-[#101828]">
-                {businesses.find((b) => b.value === selectedBusiness)?.label}
-              </span>
-            </div>
+          <div className="flex items-center gap-3 mt-1.5 font-medium text-[#667085]">
+            <span className="text-[#101828] font-bold">
+              {currentBusinessName}
+            </span>
+            <ArrowRight className="w-3 h-3" strokeWidth={3} />
+            <span className="text-[#101828] font-bold">
+              {businesses.find((b) => b.value === selectedBusiness)?.label}
+            </span>
           </div>
 
           {transferStage > 1 && (
@@ -1071,21 +1467,76 @@ export default function StockTransferPage() {
                           <SwapIcon />
                         </TableCell>
                         <TableCell>
-                          {item.destinationName ? (
-                            <span className="text-[#101828]">
-                              {item.destinationName}
-                            </span>
-                          ) : (
-                            <div className="flex items-center gap-2 text-[#98A2B3] bg-[#F2F4F7] px-3 py-2.5 rounded-lg border border-dashed border-[#D0D5DD] font-medium w-full min-w-[140px]">
-                              Search Item name <Search className="w-4 h-4" />
-                            </div>
-                          )}
+                          <Autocomplete
+                            placeholder="Search Item name"
+                            variant="bordered"
+                            isLoading={destinationItemsLoading}
+                            defaultSelectedKey={item.destinationId}
+                            onInputChange={(value) => setDestSearchQuery(value)}
+                            onSelectionChange={(key) => {
+                              if (key) {
+                                const destItem = (destinationItems || []).find(
+                                  (i: any) => i.id === key,
+                                );
+                                if (destItem) {
+                                  handleUpdateItemDestination(
+                                    item.id,
+                                    destItem,
+                                  );
+                                }
+                              }
+                            }}
+                            classNames={{
+                              base: "min-w-[180px]",
+                              listboxWrapper: "max-h-[200px]",
+                            }}
+                            inputProps={{
+                              classNames: {
+                                inputWrapper: cn(
+                                  "bg-[#F2F4F7] h-[44px] rounded-lg px-3 shadow-none border-dashed border-[#D0D5DD]",
+                                  item.destinationName
+                                    ? "border-none"
+                                    : "border",
+                                ),
+                                input:
+                                  "text-[#101828] font-medium placeholder:text-[#98A2B3] text-sm",
+                              },
+                            }}
+                            selectorIcon={
+                              <Search className="w-4 h-4 text-[#98A2B3]" />
+                            }
+                          >
+                            {(destinationItems || []).map((destItem: any) => (
+                              <AutocompleteItem
+                                key={destItem.id}
+                                value={destItem.id}
+                                textValue={destItem.name}
+                              >
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold text-[#101828]">
+                                    {destItem.name}
+                                  </span>
+                                  {(destItem.unitName || destItem.unit) && (
+                                    <span className="text-xs text-[#667085]">
+                                      Unit: {destItem.unitName || destItem.unit}
+                                    </span>
+                                  )}
+                                </div>
+                              </AutocompleteItem>
+                            ))}
+                          </Autocomplete>
                         </TableCell>
-                        <TableCell>{item.unit}</TableCell>
+                        <TableCell>
+                          {item.destinationUnit || item.unit}
+                        </TableCell>
                         <TableCell>
                           <Input
                             type="number"
-                            defaultValue="35"
+                            placeholder="0"
+                            value={item.transferQty.toString()}
+                            onValueChange={(val) =>
+                              updateTransferQty(item.id, Number(val))
+                            }
                             classNames={{
                               input: "text-center font-bold text-[#101828]",
                               inputWrapper:
@@ -1138,7 +1589,7 @@ export default function StockTransferPage() {
                         <TableCell>{item.unit}</TableCell>
                         <TableCell>
                           <span className="text-[#101828] ml-8 font-bold">
-                            35
+                            {item.transferQty || 0}
                           </span>
                         </TableCell>
                       </TableRow>
@@ -1164,7 +1615,7 @@ export default function StockTransferPage() {
                       Created At:
                     </span>
                     <span className="font-bold text-[#475467]">
-                      Maryland Business
+                      {currentBusinessName}
                     </span>
                   </div>
                   {transferStage > 1 && (
@@ -1173,7 +1624,8 @@ export default function StockTransferPage() {
                         Created By:
                       </span>
                       <span className="font-bold text-[#475467]">
-                        Adams (Admin)
+                        {getJsonItemFromLocalStorage("business")?.[0]
+                          ?.staffName || "Staff"}
                       </span>
                     </div>
                   )}
@@ -1183,11 +1635,9 @@ export default function StockTransferPage() {
                     </span>
                     <span className="font-bold text-[#475467]">
                       {
-                        businesses
-                          .find((b) => b.value === selectedBusiness)
-                          ?.label.split(" Business")[0]
-                      }{" "}
-                      Business
+                        businesses.find((b) => b.value === selectedBusiness)
+                          ?.label
+                      }
                     </span>
                   </div>
                   {transferStage > 1 && (
@@ -1241,23 +1691,25 @@ export default function StockTransferPage() {
                       {selectedItems.length}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#667085] font-medium">
-                      Items Value:
-                    </span>
-                    <span className="font-bold text-[#101828] text-base">
-                      N450,000.00
-                    </span>
-                  </div>
                 </div>
 
                 <div className="flex flex-col gap-4">
                   {transferStage < 5 && (
                     <Button
-                      onClick={() => setTransferStage(transferStage + 1)}
+                      onClick={() => {
+                        if (transferStage === 1) {
+                          handleInitiateTransfer(false);
+                        } else if (transferStage === 4) {
+                          handleInitiateTransfer(true);
+                        } else {
+                          setTransferStage(transferStage + 1);
+                        }
+                      }}
+                      isLoading={isLoading}
+                      isDisabled={isLoading}
                       className="w-full bg-[#5F35D2] text-white rounded-lg py-4 font-bold text-sm gap-3 shadow-none"
                       endContent={
-                        transferStage < 4 ? (
+                        transferStage < 4 && !isLoading ? (
                           <ArrowRight className="w-4 h-4" />
                         ) : null
                       }
@@ -1296,6 +1748,7 @@ export default function StockTransferPage() {
                   )}
                   {transferStage === 1 && (
                     <Button
+                      onClick={handleSaveDraft}
                       className="w-full bg-[#D0D5DD] text-white rounded-lg py-4 font-bold text-sm gap-3 shadow-none"
                       endContent={<ArrowRight className="w-4 h-4" />}
                     >
@@ -1320,7 +1773,7 @@ export default function StockTransferPage() {
                   <ArrowLeft className="w-5 h-5 text-[#344054]" />
                 </button>
                 <h1 className="text-[20px] font-bold text-[#101828]">
-                  {selectedIncoming.transferId}
+                  Stock Transfer
                 </h1>
               </div>
               {selectedIncoming.status === "Verified" && (
@@ -1356,11 +1809,11 @@ export default function StockTransferPage() {
           <div>
             <div className="flex items-center gap-3 mt-1.5 font-medium text-[#667085]">
               <span className="text-[#101828] font-bold">
-                Maryland Business
+                {selectedIncoming.receivedFrom}
               </span>
               <ArrowRight className="w-3 h-3" strokeWidth={3} />
               <span className="text-[#101828] font-bold">
-                {selectedIncoming.receivedFrom}
+                {transferDetail?.destinationBusinessName || currentBusinessName}
               </span>
             </div>
           </div>
@@ -1371,6 +1824,11 @@ export default function StockTransferPage() {
 
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full relative">
+              {incomingDetailsLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F35D2]" />
+                </div>
+              ) : (
               <Table
                 aria-label="View Transfer List"
                 removeWrapper
@@ -1387,7 +1845,7 @@ export default function StockTransferPage() {
                   <TableColumn>Transfer Quantity</TableColumn>
                 </TableHeader>
                 <TableBody>
-                  {selectedItems.map((item) => (
+                  {incomingDetailItems.map((item: any) => (
                     <TableRow key={item.id}>
                       <TableCell className="text-[#101828]">
                         {item.name}
@@ -1397,19 +1855,20 @@ export default function StockTransferPage() {
                       </TableCell>
                       <TableCell>
                         <span className="text-[#101828]">
-                          {item.destinationName || "New Item name"}
+                          {item.destinationName || item.name}
                         </span>
                       </TableCell>
                       <TableCell>{item.unit}</TableCell>
                       <TableCell>
                         <span className="text-[#101828] ml-8 font-bold">
-                          {item.id === "1" ? "35" : "10"}
+                          {item.transferQty || 0}
                         </span>
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
+              )}
               {/* Scrollbar UI as seen in the design */}
               <div className="absolute right-0 top-[60px] bottom-0 w-[6px] bg-[#F2F4F7] rounded-full mx-1">
                 <div className="w-full h-20 bg-[#D0D5DD] rounded-full" />
@@ -1425,18 +1884,10 @@ export default function StockTransferPage() {
                 <div className="flex flex-col gap-4 text-xs">
                   <div className="flex justify-between items-center">
                     <span className="text-[#667085] font-medium">
-                      Created At:
+                      Source:
                     </span>
                     <span className="font-bold text-[#475467]">
-                      Maryland Business
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#667085] font-medium">
-                      Created By:
-                    </span>
-                    <span className="font-bold text-[#475467]">
-                      Adams (Admin)
+                      {selectedIncoming.receivedFrom}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
@@ -1444,12 +1895,27 @@ export default function StockTransferPage() {
                       Destination:
                     </span>
                     <span className="font-bold text-[#475467]">
-                      {selectedIncoming.receivedFrom}
+                      {transferDetail?.destinationBusinessName || currentBusinessName}
                     </span>
                   </div>
+                  {transferDetail?.reference && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#667085] font-medium">
+                        Reference:
+                      </span>
+                      <span className="font-bold text-[#475467]">
+                        {transferDetail?.reference}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-[#667085] font-medium">Status:</span>
-                    <span className="font-bold text-[#101828]">Completed</span>
+                    <span className={cn(
+                      "font-bold",
+                      transferDetail?.status === 0 ? "text-[#101828]" : "text-[#16AB60]",
+                    )}>
+                      {transferDetail?.status === 0 ? "Pending" : "Completed"}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-[#667085] font-medium">
@@ -1474,15 +1940,7 @@ export default function StockTransferPage() {
                       Number of Items:
                     </span>
                     <span className="font-bold text-[#101828] text-base">
-                      {selectedIncoming.itemCount}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#667085] font-medium">
-                      Items Value:
-                    </span>
-                    <span className="font-bold text-[#101828] text-base">
-                      N450,000.00
+                      {incomingDetailItems.length || selectedIncoming.itemCount}
                     </span>
                   </div>
                 </div>
@@ -1491,8 +1949,11 @@ export default function StockTransferPage() {
                   {selectedIncoming.status === "Confirm" && (
                     <Button
                       onClick={() => handleConfirmIncoming(selectedIncoming.id)}
+                      isLoading={confirmLoading}
+                      isDisabled={confirmLoading}
                       className="w-full bg-[#5F35D2] text-white rounded-lg py-4 font-bold text-sm gap-3 shadow-none"
                       endContent={
+                        !confirmLoading ? (
                         <svg
                           width="14"
                           height="14"
@@ -1505,6 +1966,7 @@ export default function StockTransferPage() {
                         >
                           <polyline points="20 6 9 17 4 12" />
                         </svg>
+                        ) : undefined
                       }
                     >
                       Confirm

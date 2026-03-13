@@ -121,13 +121,13 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  if (cooperateID) {
+  if (cooperateID && !config.headers['cooperateId']) {
     config.headers['cooperateId'] = cooperateID;
   }
-  if (businessId) {
+  if (businessId && !config.headers['businessId']) {
     config.headers['businessId'] = businessId;
   }
-  if (userId) {
+  if (userId && !config.headers['userId']) {
     config.headers['userId'] = userId;
   }
 

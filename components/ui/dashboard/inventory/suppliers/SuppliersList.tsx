@@ -16,7 +16,7 @@ import {
   DropdownItem,
   Chip,
 } from "@nextui-org/react";
-import { MoreHorizontal, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { Supplier } from "./types";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { SupplierIcon } from "@/public/assets/svg";
@@ -102,12 +102,12 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
           );
         case "actions":
           return (
-            <div className="relative flex justify-center items-center gap-2">
+            <div className="relative flex justify-center items-center gap-2" onClick={(e) => e.stopPropagation()}>
               <Dropdown>
-                <DropdownTrigger>
-                  <Button className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100" isIconOnly size="sm" variant="light">
-                   <MoreHorizontal size={18} />
-                  </Button>
+                <DropdownTrigger aria-label="actions">
+                  <div className="cursor-pointer flex justify-center items-center text-black">
+                    <HiOutlineDotsVertical className="text-[22px]" />
+                  </div>
                 </DropdownTrigger>
                 <DropdownMenu>
                   <DropdownItem className="text-gray-900" onClick={() => onViewSupplier(user)}>View Details</DropdownItem>
@@ -185,16 +185,21 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
           th: [
             "text-default-500",
             "text-xs",
-            "border-b ",
+            "border-b",
             "border-divider",
             "py-4",
             "rounded-none",
-            "bg-gray-100",
+            "bg-grey300",
           ],
-          tr: "border-b border-divider last:border-none rounded-none",
+          tr: "border-b border-divider rounded-none",
           td: [
             "py-3",
-            "text-gray-500",
+            "text-textGrey",
+            "group-data-[first=true]:first:before:rounded-none",
+            "group-data-[first=true]:last:before:rounded-none",
+            "group-data-[middle=true]:before:rounded-none",
+            "group-data-[last=true]:first:before:rounded-none",
+            "group-data-[last=true]:last:before:rounded-none",
           ],
         }}
         bottomContent={

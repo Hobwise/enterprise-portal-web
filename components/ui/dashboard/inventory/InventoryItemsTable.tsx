@@ -19,12 +19,12 @@ import {
 } from '@nextui-org/react';
 import {
   Pencil,
-  MoreHorizontal,
   Eye,
   Factory,
   Trash2,
   AlertTriangle,
 } from 'lucide-react';
+import { HiOutlineDotsVertical } from 'react-icons/hi';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import usePagination from '@/hooks/usePagination';
 import { columns, INITIAL_VISIBLE_COLUMNS } from './data';
@@ -182,8 +182,8 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
             >
               <Dropdown>
                 <DropdownTrigger aria-label="actions">
-                  <div className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100">
-                    <MoreHorizontal size={18} />
+                  <div className="cursor-pointer flex justify-center items-center text-black">
+                    <HiOutlineDotsVertical className="text-[22px]" />
                   </div>
                 </DropdownTrigger>
                 <DropdownMenu aria-label="Item actions" className="text-black">

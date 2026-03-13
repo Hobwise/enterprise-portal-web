@@ -339,8 +339,6 @@ export async function getInventoryItems(
   page: number = 1,
   pageSize: number = 10,
   search?: string,
-  itemType?: string,
-  stockStatus?: string
 ) {
   const headers: Record<string, string> = {};
   if (businessId) headers.businessId = businessId;
@@ -348,8 +346,6 @@ export async function getInventoryItems(
   try {
     let url = `${DASHBOARD.inventoryByBusiness}?Page=${page}&PageSize=${pageSize}&SortBy=dateCreated&SortOrder=desc`;
     if (search) url += `&Search=${encodeURIComponent(search)}`;
-    if (itemType && itemType !== 'all') url += `&itemType=${itemType}`;
-    if (stockStatus && stockStatus !== 'all') url += `&stockStatus=${stockStatus}`;
     const data = await api.get(url, { headers });
     return data;
   } catch (error) {
@@ -469,12 +465,16 @@ export async function getUnitsByBusiness(businessId: string) {
   }
 }
 
-export async function getIngredients(businessId: string) {
+export async function getIngredients(businessId: string, search?: string) {
   const headers: Record<string, string> = {};
   if (businessId) headers.businessId = businessId;
 
   try {
-    const data = await api.get(DASHBOARD.inventoryLov, { headers });
+    let url = DASHBOARD.inventoryLov;
+    if (search) {
+      url += `?Search=${encodeURIComponent(search)}`;
+    }
+    const data = await api.get(url, { headers });
     return data;
   } catch (error) {
     handleError(error, false);
@@ -849,6 +849,26 @@ export type CreateItemWithRecipePayload = {
   isWizardSetup: boolean;
 };
 
+export type StockTransferOrderDetail = {
+  destinationInventoryItemID: string;
+  sourceInventoryItemID: string;
+  quantity: number;
+  itemCost: number;
+};
+
+export type CreateStockTransferPayload = {
+  destinationBusinessId: string;
+  sourceBusinessId: string;
+  expectedDate: string;
+  additionalCostName: string;
+  additionalCost: number;
+  totalAmount: number;
+  vatAmount: number;
+  vatRate: number;
+  isVatApplied: boolean;
+  orderDetails: StockTransferOrderDetail[];
+};
+
 export async function createItemWithRecipe(
   businessId: string,
   payload: CreateItemWithRecipePayload
@@ -860,5 +880,83 @@ export async function createItemWithRecipe(
     return data;
   } catch (error) {
     handleError(error);
+  }
+}
+
+export async function createStockTransfer(
+  businessId: string,
+  payload: CreateStockTransferPayload
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.post(DASHBOARD.stockTransfer, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getStockTransfersByBusiness(
+  businessId: string,
+  page: number = 1,
+  pageSize: number = 10,
+  search?: string
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    let url = `${DASHBOARD.stockTransferByBusiness}?Page=${page}&PageSize=${pageSize}`;
+    if (search) url += `&Search=${encodeURIComponent(search)}`;
+    const data = await api.get(url, { headers });
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function confirmStockTransfer(businessId: string, transferOrderId: string) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+  if (transferOrderId) headers.transferOrderId = transferOrderId;
+
+  try {
+    const data = await api.post(DASHBOARD.stockTransferReceive, {}, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function getStockTransferDetails(transferOrderId: string) {
+  const headers: Record<string, string> = {};
+  if (transferOrderId) headers.transferOrderId = transferOrderId;
+
+  try {
+    const data = await api.get(DASHBOARD.stockTransfer, { headers });
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getIncomingTransfers(
+  businessId: string,
+  page: number = 1,
+  pageSize: number = 10,
+  search?: string
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    let url = `${DASHBOARD.stockTransferIncoming}?Page=${page}&PageSize=${pageSize}`;
+    if (search) url += `&Search=${encodeURIComponent(search)}`;
+    const data = await api.get(url, { headers });
+    return data;
+  } catch (error) {
+    handleError(error, false);
   }
 }
