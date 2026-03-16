@@ -18,11 +18,14 @@ interface ViewPurchaseRequestModalProps {
   purchaseRequest: PurchaseRequest | null;
 }
 
-const statusColorMap: Record<PurchaseRequestStatus, { bg: string; text: string }> = {
-  Pending:   { bg: "bg-yellow-100", text: "text-yellow-600" },
-  Cancelled: { bg: "bg-red-100",    text: "text-red-600" },
-  Closed:    { bg: "bg-gray-100",   text: "text-gray-600" },
-  Received:  { bg: "bg-green-100",  text: "text-green-600" },
+const statusColorMap: Record<
+  PurchaseRequestStatus,
+  { bg: string; text: string }
+> = {
+  Pending: { bg: "bg-yellow-100", text: "text-yellow-600" },
+  Cancelled: { bg: "bg-red-100", text: "text-red-600" },
+  Closed: { bg: "bg-gray-100", text: "text-gray-600" },
+  Received: { bg: "bg-green-100", text: "text-green-600" },
 };
 
 const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
@@ -36,11 +39,14 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
 
   if (!purchaseRequest) return null;
 
-  const subTotal = purchaseRequest.subTotalAmount ?? purchaseRequest.items.reduce((sum, item) => sum + item.cost, 0);
+  const subTotal =
+    purchaseRequest.subTotalAmount ??
+    purchaseRequest.items.reduce((sum, item) => sum + item.cost, 0);
   const vatRate = purchaseRequest.vatRate ?? 0;
   const vat = purchaseRequest.vatAmount ?? 0;
   const additionalCost = purchaseRequest.additionalCost ?? 0;
-  const additionalCostName = purchaseRequest.additionalCostName || 'Additional Cost';
+  const additionalCostName =
+    purchaseRequest.additionalCostName || "Additional Cost";
   const grandTotal = purchaseRequest.totalCost;
   const colors = statusColorMap[purchaseRequest.status];
 
@@ -58,7 +64,6 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
             <ModalBody className="px-4 py-4">
               {/* Header */}
               <div className="flex items-center justify-between mb-2">
-              
                 <button
                   onClick={onClose}
                   className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
@@ -71,20 +76,36 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
               <div className="bg-gray-50 rounded-xl p-4">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 mb-3">
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Reference</p>
-                    <p className="text-xs font-medium text-gray-700">{purchaseRequest.reference || "N/A"}</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                      Reference
+                    </p>
+                    <p className="text-xs font-medium text-gray-700">
+                      {purchaseRequest.reference || "N/A"}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Order Date</p>
-                    <p className="text-xs font-medium text-gray-700">{purchaseRequest.requestDate}</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                      Order Date
+                    </p>
+                    <p className="text-xs font-medium text-gray-700">
+                      {purchaseRequest.requestDate}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Expected Delivery</p>
-                    <p className="text-xs font-medium text-gray-700">{purchaseRequest.expectedDeliveryDate}</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                      Expected Delivery
+                    </p>
+                    <p className="text-xs font-medium text-gray-700">
+                      {purchaseRequest.expectedDeliveryDate}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">Total Cost</p>
-                    <p className="text-xs font-medium text-gray-700">{formatCurrency(purchaseRequest.totalCost)}</p>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                      Total Cost
+                    </p>
+                    <p className="text-xs font-medium text-gray-700">
+                      {formatCurrency(purchaseRequest.totalCost)}
+                    </p>
                   </div>
                 </div>
 
@@ -92,24 +113,34 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                   {/* VENDOR column */}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="bg-primaryColor px-3 py-1.5">
-                      <p className="text-[10px] font-semibold text-white uppercase tracking-wide">Vendor</p>
+                      <p className="text-[10px] font-semibold text-white uppercase tracking-wide">
+                        Vendor
+                      </p>
                     </div>
                     <div className="px-3 py-2 space-y-0.5">
-                      <p className="text-xs font-medium text-gray-700">{purchaseRequest.supplierName}</p>
-                      <p className="text-xs text-gray-600">{purchaseRequest.companyName}</p>
+                      <p className="text-xs font-medium text-gray-700">
+                        {purchaseRequest.supplierName}
+                      </p>
+                      <p className="text-xs text-gray-600">
+                        {purchaseRequest.companyName}
+                      </p>
                       {purchaseRequest.supplierAddress && (
-                        <p className="text-xs text-gray-500">{purchaseRequest.supplierAddress}</p>
+                        <p className="text-xs text-gray-500">
+                          {purchaseRequest.supplierAddress}
+                        </p>
                       )}
                       {purchaseRequest.supplierEmail && (
-                        <p className="text-xs text-gray-500">{purchaseRequest.supplierEmail}</p>
+                        <p className="text-xs text-gray-500">
+                          {purchaseRequest.supplierEmail}
+                        </p>
                       )}
                       {purchaseRequest.supplierPhone && (
-                        <p className="text-xs text-gray-500">{purchaseRequest.supplierPhone}</p>
+                        <p className="text-xs text-gray-500">
+                          {purchaseRequest.supplierPhone}
+                        </p>
                       )}
                     </div>
                   </div>
-
-  
                 </div>
               </div>
 
@@ -142,10 +173,14 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                         className="border-b border-divider hover:bg-gray-50 transition-colors"
                       >
                         <td className="py-2 px-3">
-                          <span className="text-xs text-textGrey">{item.itemName}</span>
+                          <span className="text-xs text-textGrey">
+                            {item.itemName}
+                          </span>
                         </td>
                         <td className="py-2 px-3">
-                          <span className="text-xs text-textGrey">{item.unitName}</span>
+                          <span className="text-xs text-textGrey">
+                            {item.unitName}
+                          </span>
                         </td>
                         <td className="py-2 px-3 text-right">
                           <span className="text-xs text-textGrey">
@@ -153,7 +188,9 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                           </span>
                         </td>
                         <td className="py-2 px-3 text-center">
-                          <span className="text-xs text-textGrey">{item.requiredStock}</span>
+                          <span className="text-xs text-textGrey">
+                            {item.requiredStock}
+                          </span>
                         </td>
                         <td className="py-2 px-3 text-right">
                           <span className="text-xs text-textGrey">
@@ -186,7 +223,9 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                   )}
                   {additionalCost > 0 && (
                     <div className="flex justify-between text-xs">
-                      <span className="text-gray-400">{additionalCostName}</span>
+                      <span className="text-gray-400">
+                        {additionalCostName}
+                      </span>
                       <span className="font-medium text-gray-700">
                         {formatCurrency(additionalCost)}
                       </span>

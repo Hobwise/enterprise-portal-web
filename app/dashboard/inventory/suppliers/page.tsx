@@ -12,7 +12,11 @@ import useSuppliers from '@/hooks/cachedEndpoints/useSuppliers';
 import DeleteSupplierModal from '@/components/ui/dashboard/inventory/suppliers/DeleteSupplierModal';
 
 export default function SuppliersPage() {
-  const { data: suppliers, isLoading, createSupplier, isCreating, updateSupplier, isUpdating, deleteSupplier, isDeleting, isError, refetch } = useSuppliers();
+  const {
+    data: suppliers, isLoading, createSupplier, isCreating, updateSupplier, isUpdating,
+    deleteSupplier, isDeleting, isError, refetch,
+    page, setPage, totalCount, totalPages, hasNext, hasPrevious, pageSize, search, setSearch,
+  } = useSuppliers();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -130,12 +134,20 @@ export default function SuppliersPage() {
     <div className='h-full flex flex-col'>
       <div className="flex-1">
         {suppliers.length > 0 ? (
-            <SuppliersList 
-                suppliers={suppliers} 
+            <SuppliersList
+                suppliers={suppliers}
                 onAddSupplier={handleOpenAddModal}
                 onViewSupplier={handleViewSupplier}
                 onEditSupplier={handleOpenEditModal}
                 onDeleteSupplier={handleOpenDeleteModal}
+                totalCount={totalCount}
+                totalPages={totalPages}
+                currentPage={page}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                isLoading={isLoading}
+                search={search}
+                onSearchChange={setSearch}
             />
         ) : (
             <NoSuppliers onRegister={handleOpenAddModal} />

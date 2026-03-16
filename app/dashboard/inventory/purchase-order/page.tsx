@@ -229,7 +229,7 @@ export default function PurchaseRequestPage() {
         orderDetails: data.items.map((item) => ({
           inventoryItemID: item.id,
           requestedQuantity: item.requiredStock,
-          purchaseCost: item.cost,
+          purchaseCost: item.costPerUnit,
         })),
       };
 

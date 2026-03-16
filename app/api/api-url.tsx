@@ -136,6 +136,8 @@ export const DASHBOARD = {
   supplierLov: "api/v1/Supplier/lov",
   mapSupplierItem: "api/v1/Supplier/map-item",
   stockTransfer: "api/v1/TransferOrder",
+  stockTransferCancel: "api/v1/TransferOrder/cancel",
+  stockTransferSendMail: "api/v1/TransferOrder/send-mail",
   stockTransferByBusiness: "api/v1/TransferOrder/by-business",
   stockTransferIncoming: "api/v1/TransferOrder/incoming",
   stockTransferReceive: "api/v1/TransferOrder/receive",
