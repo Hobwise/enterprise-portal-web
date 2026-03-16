@@ -32,6 +32,8 @@ import {
   Eye,
   Pencil,
   Trash2,
+  Mail,
+  XCircle,
 } from "lucide-react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { StockTransferIcon } from "@/public/assets/svg";
@@ -46,8 +48,14 @@ import {
   getStockTransferDetails,
   getStockTransfersByBusiness,
   confirmStockTransfer,
+  cancelStockTransfer,
+  sendStockTransferMail,
+  deleteStockTransfer,
 } from "@/app/api/controllers/dashboard/inventory";
+import SendEmailModal from "@/components/ui/dashboard/inventory/purchase-request/SendEmailModal";
 import { fetchQueryConfig } from "@/lib/queryConfig";
+import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
+import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 
 type Step = "list" | "select" | "initiate";
 
@@ -55,11 +63,9 @@ interface StockTransfer {
   id: string;
   issueDate: string;
   transferId: string;
-  route: string;
-  status: "Draft" | "In Transit" | "Delivered";
-  staff: string;
+  destinationBusinessName: string;
+  status: "In Transit" | "Delivered";
   itemCount: number;
-  certification: "Pending" | "Unverified" | "Verified";
 }
 
 interface IncomingTransfer {
@@ -92,148 +98,6 @@ interface TransferItem {
   destinationName?: string;
   destinationUnit?: string;
 }
-
-const mockTransfers: StockTransfer[] = [
-  {
-    id: "1",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    route: "Maryland Business → Ikeja Business",
-    status: "Draft",
-    staff: "Esther O.",
-    itemCount: 7,
-    certification: "Pending",
-  },
-  {
-    id: "2",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    route: "Maryland Business → Lekki 1 Business",
-    status: "In Transit",
-    staff: "David K.",
-    itemCount: 5,
-    certification: "Pending",
-  },
-  {
-    id: "3",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    route: "Maryland Business → Ajah Business",
-    status: "In Transit",
-    staff: "Sophia B.",
-    itemCount: 12,
-    certification: "Pending",
-  },
-  {
-    id: "4",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    route: "Maryland Business → Victoria Island B...",
-    status: "Delivered",
-    staff: "Akin J.",
-    itemCount: 9,
-    certification: "Unverified",
-  },
-  {
-    id: "5",
-    issueDate: "1/02/2026",
-    transferId: "454ISTR",
-    route: "Maryland Business → Ikoyi Business",
-    status: "Delivered",
-    staff: "Manuel",
-    itemCount: 5,
-    certification: "Verified",
-  },
-];
-
-
-const mockActivities: ActivityLogItem[] = [
-  {
-    id: "1",
-    type: "created",
-    title: "Transfer Created",
-    id_tag: "4241STR",
-    description:
-      "Stock Transfer 4241STR created from Maryland Business To Victoria Island Business",
-    timestamp: "March 2, 2026 09:35am",
-  },
-  {
-    id: "2",
-    type: "initiated",
-    title: "Transfer Initiated",
-    id_tag: "4241STR",
-    description:
-      "Stock Transfer 4241STR initiated and is in transit to Victoria Island Business",
-    timestamp: "March 2, 2026 09:35am",
-  },
-  {
-    id: "3",
-    type: "completed",
-    title: "Transfer Completed",
-    id_tag: "4241STR",
-    description:
-      "Stock Transfer 4241STR receipt confirmed by Victoria Island Business",
-    timestamp: "March 2, 2026 09:35am",
-  },
-  {
-    id: "4",
-    type: "unverified",
-    title: "Transfer Completed (Unverified)",
-    id_tag: "4241STR",
-    description:
-      "Stock Transfer 4241STR completed without confirmation from To Victoria Island Business",
-    timestamp: "March 2, 2026 09:35am",
-  },
-];
-
-const mockItems: TransferItem[] = [
-  {
-    id: "1",
-    name: "Gino Tin Tomato Paste",
-    unit: "Kg",
-    currentStock: 35,
-    transferQty: 0,
-    destinationName: "Gino Tomato Paste",
-  },
-  {
-    id: "2",
-    name: "Knoll Seasoning Cubes",
-    unit: "Kg",
-    currentStock: 40,
-    transferQty: 0,
-    destinationName: "Knoll Seasoning Cubes",
-  },
-  {
-    id: "3",
-    name: "Golden Penny Salt",
-    unit: "Kg",
-    currentStock: 27,
-    transferQty: 0,
-    destinationName: "Golden Penny Salt",
-  },
-  {
-    id: "4",
-    name: "Golden Penny Long Grain Rice",
-    unit: "Kg",
-    currentStock: 15,
-    transferQty: 0,
-    destinationName: "Golden Penny Rice",
-  },
-  {
-    id: "5",
-    name: "Golden Penny Spaghetti",
-    unit: "Kg",
-    currentStock: 7,
-    transferQty: 0,
-  },
-  {
-    id: "6",
-    name: "Kings Vegetable Oil",
-    unit: "Lt",
-    currentStock: 10,
-    transferQty: 0,
-  },
-];
 
 const MarylandIcon = () => (
   <svg
@@ -347,60 +211,76 @@ export default function StockTransferPage() {
   const [selectedItems, setSelectedItems] = useState<TransferItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [destSearchQuery, setDestSearchQuery] = useState("");
-  const [transferStage, setTransferStage] = useState(1); // 1: Initial, 2: In-Transit, 3: Delivered, 4: Verified, 5: Completed
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIncoming, setSelectedIncoming] =
     useState<IncomingTransfer | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [transferPage, setTransferPage] = useState(1);
+  const [incomingPage, setIncomingPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [sendEmailModalOpen, setSendEmailModalOpen] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [cancellingTransfer, setCancellingTransfer] = useState(false);
+  const [deletingTransfer, setDeletingTransfer] = useState(false);
+  const [selectedTransferId, setSelectedTransferId] = useState("");
 
   const currentBusiness = useMemo(
     () => getJsonItemFromLocalStorage("business")?.[0],
     [],
   );
   const currentBusinessId = currentBusiness?.businessId;
-  const currentBusinessName = currentBusiness?.name || "Current Business";
+  const currentBusinessName = currentBusiness?.businessName || "";
+  const userInformation = getJsonItemFromLocalStorage("userInformation");
 
   const { data: incomingData, isLoading: incomingLoading } = useQuery({
-    queryKey: ["incomingTransfers", currentBusinessId],
+    queryKey: ["incomingTransfers", currentBusinessId, incomingPage, pageSize],
     queryFn: async () => {
-      const response = await getIncomingTransfers(currentBusinessId);
+      const response = await getIncomingTransfers(currentBusinessId, incomingPage, pageSize);
       const responseBody = response?.data;
       const paginated = responseBody?.data;
       const rawItems = paginated?.items ?? [];
       const items = Array.isArray(rawItems) ? rawItems : [];
-      return items.map((o: any) => ({
-        id: o.id || "",
-        issueDate: o.dateUpdated
-          ? new Date(o.dateUpdated).toLocaleDateString("en-GB")
-          : "-",
-        transferId: o.reference || "",
-        receivedFrom: o.sourceBusinessName || "",
-        certification:
-          o.status === 0
-            ? ("Unverified" as const)
-            : ("Verified" as const),
-        itemCount: o.numberOfItems ?? 0,
-        status:
-          o.status === 0 ? ("Confirm" as const) : ("Verified" as const),
-      }));
+      return {
+        transfers: items.map((o: any) => ({
+          id: o.id || "",
+          issueDate: o.dateUpdated
+            ? new Date(o.dateUpdated).toLocaleDateString("en-GB")
+            : "-",
+          transferId: o.reference || "",
+          receivedFrom: o.sourceBusinessName || "",
+          certification:
+            o.status === 0
+              ? ("Unverified" as const)
+              : ("Verified" as const),
+          itemCount: o.numberOfItems ?? 0,
+          status:
+            o.status === 0 ? ("Confirm" as const) : ("Verified" as const),
+        })),
+        totalCount: paginated?.totalCount ?? items.length,
+      };
     },
     enabled: !!currentBusinessId,
     ...fetchQueryConfig(),
   });
 
-  const incomingTransfers: IncomingTransfer[] = Array.isArray(incomingData) ? incomingData : [];
+  const incomingTransfers: IncomingTransfer[] = incomingData?.transfers ?? [];
+  const incomingTotalCount = incomingData?.totalCount ?? 0;
 
-  const { data: transfersData, isLoading: transfersLoading } = useQuery({
-    queryKey: ["stockTransfersByBusiness", currentBusinessId],
+  const { data: transfersResult, isLoading: transfersLoading } = useQuery({
+    queryKey: ["stockTransfersByBusiness", currentBusinessId, transferPage, pageSize],
     queryFn: async () => {
-      const response = await getStockTransfersByBusiness(currentBusinessId);
+      const response = await getStockTransfersByBusiness(currentBusinessId, transferPage, pageSize);
       const paginated = response?.data?.data;
       const rawItems = paginated?.items ?? [];
-      return Array.isArray(rawItems) ? rawItems : [];
+      const items = Array.isArray(rawItems) ? rawItems : [];
+      return { items, totalCount: paginated?.totalCount ?? items.length };
     },
     enabled: !!currentBusinessId,
     ...fetchQueryConfig(),
   });
+
+  const transfersData = transfersResult?.items ?? [];
+  const transfersTotalCount = transfersResult?.totalCount ?? 0;
 
   const stockTransfers: StockTransfer[] = useMemo(() => {
     if (!transfersData || !Array.isArray(transfersData)) return [];
@@ -410,23 +290,14 @@ export default function StockTransferPage() {
         ? new Date(o.dateUpdated).toLocaleDateString("en-GB")
         : "-",
       transferId: o.reference || "",
-      route: `${currentBusinessName} → ${o.destinationBusinessName || ""}`,
+      destinationBusinessName: o.destinationBusinessName || "",
       status:
-        o.status === 0
-          ? ("Draft" as const)
-          : o.status === 1
-            ? ("In Transit" as const)
-            : ("Delivered" as const),
-      staff: "-",
+        o.status === 1
+          ? ("In Transit" as const)
+          : ("Delivered" as const),
       itemCount: o.numberOfItems ?? 0,
-      certification:
-        o.status === 0
-          ? ("Pending" as const)
-          : o.status === 1
-            ? ("Pending" as const)
-            : ("Unverified" as const),
     }));
-  }, [transfersData, currentBusinessName]);
+  }, [transfersData]);
 
   const activityItems: ActivityLogItem[] = useMemo(() => {
     if (!transfersData || !Array.isArray(transfersData)) return [];
@@ -522,20 +393,11 @@ export default function StockTransferPage() {
     setSelectedItems([]);
   }, [selectedBusiness]);
 
-  React.useEffect(() => {
-    if (step === "initiate" && transferStage === 1) {
-      console.log("On 'Initiate or save transfer' step:");
-      console.log("Current Business ID:", currentBusinessId);
-      console.log("Selected Business ID (Destination):", selectedBusiness);
-      console.log("Search Query/Business ID from search:", searchQuery);
-    }
-  }, [step, transferStage, currentBusinessId, selectedBusiness, searchQuery]);
-
   const filteredTransfers = useMemo(() => {
     return stockTransfers.filter(
       (t) =>
         t.transferId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        t.route.toLowerCase().includes(searchQuery.toLowerCase()),
+        t.destinationBusinessName.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [searchQuery, stockTransfers]);
 
@@ -594,11 +456,7 @@ export default function StockTransferPage() {
     );
   };
 
-  const handleInitiateTransfer = async (isVerification = false) => {
-    console.log("Current Business ID:", currentBusinessId);
-    console.log("Selected Business ID (Destination):", selectedBusiness);
-    console.log("Search Query/Business ID from search:", searchQuery);
-
+  const handleInitiateTransfer = async () => {
     if (!selectedBusiness || selectedItems.length === 0) {
       notify({
         title: "Error",
@@ -657,16 +515,13 @@ export default function StockTransferPage() {
       if (response?.data?.isSuccessful) {
         notify({
           title: "Success",
-          text: isVerification
-            ? "Stock transfer verified successfully."
-            : "Stock transfer initiated successfully.",
+          text: "Stock transfer submitted successfully.",
           type: "success",
         });
-        if (isVerification) {
-          setTransferStage(5); // Move to Completed stage
-        } else {
-          setTransferStage(2); // Move to In-Transit stage
-        }
+        queryClient.invalidateQueries({ queryKey: ["stockTransfersByBusiness"] });
+        setSelectedItems([]);
+        setSelectedBusiness("");
+        setStep("list");
       } else {
         notify({
           title: "Error",
@@ -692,39 +547,10 @@ export default function StockTransferPage() {
 
   const handleProceedToInitiate = () => {
     if (selectedBusiness && selectedItems.length > 0) {
-      console.log(
-        "Proceeding to Initiate - Current Business ID:",
-        currentBusinessId,
-      );
-      console.log(
-        "Proceeding to Initiate - Selected Business ID (Destination):",
-        selectedBusiness,
-      );
-      console.log(
-        "Proceeding to Initiate - Search Query/Business ID from search:",
-        searchQuery,
-      );
       setStep("initiate");
     }
   };
 
-  const handleSaveDraft = () => {
-    console.log("Saving Draft - Current Business ID:", currentBusinessId);
-    console.log(
-      "Saving Draft - Selected Business ID (Destination):",
-      selectedBusiness,
-    );
-    console.log(
-      "Saving Draft - Search Query/Business ID from search:",
-      searchQuery,
-    );
-    notify({
-      title: "Success",
-      text: "Transfer saved as draft.",
-      type: "success",
-    });
-    setStep("list");
-  };
 
   const handleConfirmIncoming = async (transferId: string) => {
     setConfirmLoading(true);
@@ -751,72 +577,123 @@ export default function StockTransferPage() {
     }
   };
 
+  const handleCancelTransfer = async (item: StockTransfer) => {
+    setCancellingTransfer(true);
+    try {
+      const response = await cancelStockTransfer(item.id);
+      if (response?.data?.isSuccessful || response?.status === 200) {
+        notify({
+          title: "Success",
+          text: "Stock transfer cancelled successfully.",
+          type: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: ["stockTransfersByBusiness"] });
+      } else if (response) {
+        notify({
+          title: "Error",
+          text: response?.data?.error?.responseDescription || "Failed to cancel stock transfer.",
+          type: "error",
+        });
+      }
+    } catch {
+      // handleError in the API controller already shows an error toast
+    } finally {
+      setCancellingTransfer(false);
+    }
+  };
+
+  const handleDeleteTransfer = async (item: StockTransfer) => {
+    setDeletingTransfer(true);
+    try {
+      const response = await deleteStockTransfer(item.id);
+      if (response?.data?.isSuccessful || response?.status === 200) {
+        notify({
+          title: "Success",
+          text: "Stock transfer deleted successfully.",
+          type: "success",
+        });
+        queryClient.invalidateQueries({ queryKey: ["stockTransfersByBusiness"] });
+      } else if (response) {
+        notify({
+          title: "Error",
+          text: response?.data?.error?.responseDescription || "Failed to delete stock transfer.",
+          type: "error",
+        });
+      }
+    } catch {
+      // handleError in the API controller already shows an error toast
+    } finally {
+      setDeletingTransfer(false);
+    }
+  };
+
+  const handleSendMailTransfer = (item: StockTransfer) => {
+    setSelectedTransferId(item.id);
+    setSendEmailModalOpen(true);
+  };
+
+  const handleSendEmail = async (
+    to: string,
+    cc: string,
+    subject: string,
+    message: string,
+    attachment: File | null,
+  ) => {
+    if (!to.trim()) {
+      notify({
+        title: "Error!",
+        text: "Please enter the recipient email address",
+        type: "error",
+      });
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const formData = new FormData();
+      formData.append("OrderId", selectedTransferId);
+      formData.append("To", to);
+      formData.append("From", userInformation?.email || "");
+      formData.append("Subject", subject);
+      formData.append("Cc", cc.trim());
+      formData.append("Content", message);
+      if (attachment) {
+        formData.append("Attachment", attachment);
+      }
+
+      const response = await sendStockTransferMail(formData);
+      if (response?.data?.isSuccessful) {
+        notify({
+          title: "Success!",
+          text: "Stock transfer email sent successfully",
+          type: "success",
+        });
+        setSendEmailModalOpen(false);
+      } else if (response) {
+        notify({
+          title: "Error!",
+          text: response?.data?.error?.responseDescription || "Failed to send email",
+          type: "error",
+        });
+      }
+    } catch {
+      // handleError in the API controller already shows an error toast
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const handleBack = () => {
     if (selectedIncoming) {
       setSelectedIncoming(null);
       return;
     }
     if (step === "select") setStep("list");
-    else if (step === "initiate") {
-      if (transferStage > 1) {
-        setTransferStage(transferStage - 1);
-      } else {
-        setStep("select");
-      }
-    }
-  };
-
-  const ProgressIndicator = ({ currentStage }: { currentStage: number }) => {
-    const stages = ["Created", "Initiated", "Delivered", "Verified"];
-
-    return (
-      <div className="flex items-center gap-2 mb-8 mt-4 overflow-x-auto">
-        {stages.map((label, index) => {
-          const isActive = index < currentStage;
-          const isLast = index === stages.length - 1;
-
-          return (
-            <div key={label} className="flex items-center flex-1 min-w-[150px]">
-              <div className="flex flex-col gap-2 w-full">
-                <div className="flex items-center gap-2">
-                  <div
-                    className={cn(
-                      "w-4 h-4 rounded-full transition-all",
-                      isActive ? "bg-[#16AB60]" : "bg-[#D0D5DD]",
-                    )}
-                  />
-                  {!isLast && (
-                    <div
-                      className={cn(
-                        "h-[2px] flex-1 min-w-[50px]",
-                        isActive && index < currentStage - 1
-                          ? "bg-[#16AB60]"
-                          : "bg-[#D0D5DD]",
-                      )}
-                    />
-                  )}
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className={cn(
-                      "text-sm font-bold",
-                      isActive ? "text-[#101828]" : "text-[#98A2B3]",
-                    )}
-                  >
-                    {label}
-                  </span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
+    else if (step === "initiate") setStep("select");
   };
 
   const renderStatus = (status: string) => {
     const colors: Record<string, string> = {
-      Draft: "text-[#98A2B3]",
       "In Transit": "text-[#F5A623]",
       Delivered: "text-[#5F35D2]",
     };
@@ -825,32 +702,24 @@ export default function StockTransferPage() {
     );
   };
 
-  const renderCertification = (cert: string) => {
-    const colors: Record<string, string> = {
-      Pending: "text-[#98A2B3]",
-      Unverified: "text-[#5F35D2] font-bold",
-      Verified: "text-[#16AB60] font-bold",
-    };
-    return <span className={cn("text-sm", colors[cert])}>{cert}</span>;
-  };
-
   return (
-    <div className="flex flex-col gap-6 min-h-screen bg-[#F9F9FB] -m-6 p-6">
+    <div className="w-full min-h-screen">
       {/* Page Header Tabs */}
-      <div className="flex items-center justify-between border-b border-[#E4E7EC] pb-4">
-        <div className="flex gap-4">
+      <div className="flex items-center justify-between px-6 pt-4 pb-2">
+        <div className="flex items-center gap-1">
           {["Stock Transfer", "Incoming", "Activity Log"].map((tab) => (
             <button
               key={tab}
               onClick={() => {
                 setActiveTab(tab);
                 setStep("list");
+                setSelectedIncoming(null);
               }}
               className={cn(
-                "px-4 py-2 text-sm font-medium transition-all flex items-center gap-2 rounded-full",
+                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
                 activeTab === tab
-                  ? "bg-[#EAE3FF] text-[#5F35D2]"
-                  : "text-[#667085] hover:text-[#5F35D2]",
+                  ? "bg-[#F0ECFB] text-[#5F35D2]"
+                  : "text-[#667085] hover:text-[#101828]",
               )}
             >
               {tab === "Stock Transfer" && (
@@ -866,7 +735,7 @@ export default function StockTransferPage() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 text-sm text-[#475467]">
+        <div className="flex items-center gap-2 text-sm text-[#667085]">
           <MarylandIcon />
           Current Store:{" "}
           <span className="font-semibold text-[#101828]">
@@ -876,15 +745,15 @@ export default function StockTransferPage() {
       </div>
 
       {step === "list" && !selectedIncoming && (
-        <>
-          <div className="flex justify-between items-start">
+        <div className="px-6 py-4">
+          <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-[28px] font-bold text-[#101828]">
+              <h1 className="text-2xl font-bold text-[#101828]">
                 {activeTab === "Stock Transfer" && "Stock Transfers"}
                 {activeTab === "Incoming" && "Incoming Transfers"}
                 {activeTab === "Activity Log" && "Activity Log"}
               </h1>
-              <p className="text-[#667085]">
+              <p className="text-sm text-[#667085] mt-1">
                 {activeTab === "Stock Transfer" &&
                   "Manage inventory movement between business"}
                 {activeTab === "Incoming" &&
@@ -904,7 +773,7 @@ export default function StockTransferPage() {
             )}
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 mb-4">
             <div className="relative flex-1">
               <Input
                 placeholder="Search by name or ID"
@@ -935,9 +804,6 @@ export default function StockTransferPage() {
               )}
               selectorIcon={<ChevronDown className="w-4 h-4 text-[#98A2B3]" />}
             >
-              <SelectItem className="text-[#344054]" key="draft" value="draft">
-                Draft
-              </SelectItem>
               <SelectItem
                 className="text-[#344054]"
                 key="transit"
@@ -953,52 +819,23 @@ export default function StockTransferPage() {
                 Delivered
               </SelectItem>
             </Select>
-            <Select
-              placeholder="Business"
-              className="w-44"
-              variant="bordered"
-              isLoading={businessesLoading}
-              selectedKeys={selectedBusiness ? [selectedBusiness] : []}
-              onSelectionChange={(keys) =>
-                setSelectedBusiness(Array.from(keys)[0] as string)
-              }
-              classNames={{
-                trigger:
-                  "h-[48px] bg-white rounded-lg border-[#E4E7EC] shadow-none data-[hover=true]:border-[#101828] data-[open=true]:border-[#101828] focus:border-[#101828]",
-              }}
-              renderValue={(items) => (
-                <span className="text-[#475467] text-sm">
-                  {items[0]?.textValue || "Business"}
-                </span>
-              )}
-              selectorIcon={<ChevronDown className="w-4 h-4 text-[#98A2B3]" />}
-            >
-              {businesses.map((b) => (
-                <SelectItem
-                  className="text-[#344054]"
-                  key={b.value}
-                  value={b.value}
-                >
-                  {b.label}
-                </SelectItem>
-              ))}
-            </Select>
           </div>
 
-          <div className="bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-[#F2F4F7]">
-              <h2 className="text-xl font-bold text-[#344054]">
-                {activeTab === "Stock Transfer" && "Stock Transfer History"}
-                {activeTab === "Incoming" && "Incoming List"}
-                {activeTab === "Activity Log" && "Activity List"}
-              </h2>
-            </div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-[#3D424A]">
+              {activeTab === "Stock Transfer" && "Stock Transfer History"}
+              {activeTab === "Incoming" && "Incoming List"}
+              {activeTab === "Activity Log" && "Activity List"}
+            </h3>
+          </div>
 
+          <div className="relative border border-primaryGrey rounded-lg overflow-visible">
             {activeTab === "Stock Transfer" && (
               <Table
                 aria-label="Stock Transfer History"
-                removeWrapper
+                radius="lg"
                 isCompact
+                removeWrapper
                 classNames={{
                   th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
                   tr: "border-b border-divider rounded-none",
@@ -1006,43 +843,35 @@ export default function StockTransferPage() {
                 }}
               >
                 <TableHeader>
-                  <TableColumn>Issue Date</TableColumn>
-                  <TableColumn>Transfer ID</TableColumn>
-                  <TableColumn>Transfer Route</TableColumn>
-                  <TableColumn>Status</TableColumn>
-                  <TableColumn>Initiating Staff</TableColumn>
-                  <TableColumn>No. of Items</TableColumn>
-                  <TableColumn>Certification</TableColumn>
-                  <TableColumn align="center"> </TableColumn>
+                  <TableColumn>ISSUE DATE</TableColumn>
+                  <TableColumn>TRANSFER ID</TableColumn>
+                  <TableColumn>DESTINATION</TableColumn>
+                  <TableColumn>STATUS</TableColumn>
+                  <TableColumn>ITEMS</TableColumn>
+                  <TableColumn align="center">ACTIONS</TableColumn>
                 </TableHeader>
-                <TableBody>
-                  {filteredTransfers.map((item) => (
+                <TableBody
+                  emptyContent="No stock transfers found"
+                  items={transfersLoading ? [] : filteredTransfers}
+                  isLoading={transfersLoading}
+                  loadingContent={<SpinnerLoader size="md" />}
+                >
+                  {(item) => (
                     <TableRow key={item.id}>
-                      <TableCell>{item.issueDate}</TableCell>
-                      <TableCell className="font-bold text-[#101828]">
-                        {item.transferId}
+                      <TableCell>
+                        <span className="text-sm text-gray-500">{item.issueDate}</span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <span className="text-[#101828] font-medium">
-                            {item.route.split("→")[0].trim()}
-                          </span>
-                          <ArrowRight
-                            className="w-3 h-3 text-[#98A2B3]"
-                            strokeWidth={3}
-                          />
-                          <span className="text-[#101828] font-medium">
-                            {item.route.split("→")[1].trim()}
-                          </span>
-                        </div>
+                        <span className="text-sm font-medium text-gray-900">{item.transferId}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm font-medium text-gray-900">
+                          {item.destinationBusinessName}
+                        </span>
                       </TableCell>
                       <TableCell>{renderStatus(item.status)}</TableCell>
-                      <TableCell>{item.staff}</TableCell>
-                      <TableCell className="font-bold">
-                        {item.itemCount}
-                      </TableCell>
                       <TableCell>
-                        {renderCertification(item.certification)}
+                        <span className="text-sm text-gray-500">{item.itemCount}</span>
                       </TableCell>
                       <TableCell>
                         <div
@@ -1050,32 +879,57 @@ export default function StockTransferPage() {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Dropdown>
-                            <DropdownTrigger aria-label="actions">
-                              <div className="cursor-pointer flex justify-center items-center text-black">
-                                <HiOutlineDotsVertical className="text-[22px]" />
-                              </div>
+                            <DropdownTrigger>
+                              <button
+                                type="button"
+                                aria-label="actions"
+                                className="cursor-pointer flex items-center gap-0.5 text-gray-500 hover:text-black transition-colors px-2 py-1 rounded-md hover:bg-gray-100"
+                              >
+                                <HiOutlineDotsVertical />
+                              </button>
                             </DropdownTrigger>
-                            <DropdownMenu aria-label="Transfer actions" className="text-black">
+                            <DropdownMenu
+                              className="text-black"
+                              onAction={(key) => {
+                                if (key === "view") {
+                                  // existing view details logic
+                                } else if (key === "sendEmail") {
+                                  handleSendMailTransfer(item);
+                                } else if (key === "cancel") {
+                                  handleCancelTransfer(item);
+                                } else if (key === "delete") {
+                                  handleDeleteTransfer(item);
+                                }
+                              }}
+                            >
                               <DropdownSection>
-                                <DropdownItem
-                                  key="view"
-                                  startContent={<Eye size={16} />}
-                                >
-                                  View Details
+                                <DropdownItem key="view">
+                                  <div className="flex gap-3 items-center">
+                                    <Eye size={16} />
+                                    <p>View Details</p>
+                                  </div>
                                 </DropdownItem>
-                                <DropdownItem
-                                  key="edit"
-                                  startContent={<Pencil size={16} />}
-                                >
-                                  Edit
+                                <DropdownItem key="sendEmail">
+                                  <div className="flex gap-3 items-center">
+                                    <Mail size={16} />
+                                    <p>Send Email</p>
+                                  </div>
+                                </DropdownItem>
+                                <DropdownItem key="cancel">
+                                  <div className="flex gap-3 items-center">
+                                    <XCircle size={16} />
+                                    <p>Cancel</p>
+                                  </div>
                                 </DropdownItem>
                                 <DropdownItem
                                   key="delete"
-                                  startContent={<Trash2 size={16} />}
                                   className="text-danger"
                                   color="danger"
                                 >
-                                  Delete
+                                  <div className="flex gap-3 items-center">
+                                    <Trash2 size={16} />
+                                    <p>Delete</p>
+                                  </div>
                                 </DropdownItem>
                               </DropdownSection>
                             </DropdownMenu>
@@ -1083,7 +937,7 @@ export default function StockTransferPage() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             )}
@@ -1091,8 +945,9 @@ export default function StockTransferPage() {
             {activeTab === "Incoming" && (
               <Table
                 aria-label="Incoming Transfers List"
-                removeWrapper
+                radius="lg"
                 isCompact
+                removeWrapper
                 classNames={{
                   th: "text-default-500 text-xs border-b border-divider py-4 rounded-none bg-grey300",
                   tr: "border-b border-divider rounded-none",
@@ -1100,24 +955,31 @@ export default function StockTransferPage() {
                 }}
               >
                 <TableHeader>
-                  <TableColumn>Issue Date</TableColumn>
-                  <TableColumn>Transfer ID</TableColumn>
-                  <TableColumn>Received From</TableColumn>
-                  <TableColumn>No. of Items</TableColumn>
-                  <TableColumn align="center">Status</TableColumn>
+                  <TableColumn>ISSUE DATE</TableColumn>
+                  <TableColumn>TRANSFER ID</TableColumn>
+                  <TableColumn>RECEIVED FROM</TableColumn>
+                  <TableColumn>ITEMS</TableColumn>
+                  <TableColumn align="center">STATUS</TableColumn>
                 </TableHeader>
-                <TableBody>
-                  {filteredIncoming.map((transfer) => (
+                <TableBody
+                  emptyContent="No incoming transfers found"
+                  items={incomingLoading ? [] : filteredIncoming}
+                  isLoading={incomingLoading}
+                  loadingContent={<SpinnerLoader size="md" />}
+                >
+                  {(transfer) => (
                     <TableRow key={transfer.id}>
-                      <TableCell>{transfer.issueDate}</TableCell>
-                      <TableCell className="font-bold">
-                        {transfer.transferId}
+                      <TableCell>
+                        <span className="text-sm text-gray-500">{transfer.issueDate}</span>
                       </TableCell>
-                      <TableCell className="font-semibold text-[#101828]">
-                        {transfer.receivedFrom}
+                      <TableCell>
+                        <span className="text-sm font-medium text-gray-900">{transfer.transferId}</span>
                       </TableCell>
-                      <TableCell className="font-bold">
-                        {transfer.itemCount}
+                      <TableCell>
+                        <span className="text-sm font-medium text-gray-900">{transfer.receivedFrom}</span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-gray-500">{transfer.itemCount}</span>
                       </TableCell>
                       <TableCell>
                         {transfer.status === "Confirm" ? (
@@ -1171,7 +1033,7 @@ export default function StockTransferPage() {
                         )}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             )}
@@ -1212,12 +1074,44 @@ export default function StockTransferPage() {
                 ))}
               </div>
             )}
+            {activeTab === "Stock Transfer" && (
+              <div className="flex w-full justify-center">
+                <CustomPagination
+                  currentPage={transferPage}
+                  totalPages={Math.ceil(transfersTotalCount / pageSize) || 1}
+                  hasNext={transferPage < (Math.ceil(transfersTotalCount / pageSize) || 1)}
+                  hasPrevious={transferPage > 1}
+                  totalCount={transfersTotalCount}
+                  pageSize={pageSize}
+                  onPageChange={setTransferPage}
+                  onNext={() => setTransferPage(Math.min(transferPage + 1, Math.ceil(transfersTotalCount / pageSize) || 1))}
+                  onPrevious={() => setTransferPage(Math.max(transferPage - 1, 1))}
+                  isLoading={transfersLoading}
+                />
+              </div>
+            )}
+            {activeTab === "Incoming" && (
+              <div className="flex w-full justify-center">
+                <CustomPagination
+                  currentPage={incomingPage}
+                  totalPages={Math.ceil(incomingTotalCount / pageSize) || 1}
+                  hasNext={incomingPage < (Math.ceil(incomingTotalCount / pageSize) || 1)}
+                  hasPrevious={incomingPage > 1}
+                  totalCount={incomingTotalCount}
+                  pageSize={pageSize}
+                  onPageChange={setIncomingPage}
+                  onNext={() => setIncomingPage(Math.min(incomingPage + 1, Math.ceil(incomingTotalCount / pageSize) || 1))}
+                  onPrevious={() => setIncomingPage(Math.max(incomingPage - 1, 1))}
+                  isLoading={incomingLoading}
+                />
+              </div>
+            )}
           </div>
-        </>
+        </div>
       )}
 
       {step === "select" && (
-        <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full pt-4">
+        <div className="flex flex-col gap-6 max-w-4xl mx-auto w-full px-6 pt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -1292,13 +1186,7 @@ export default function StockTransferPage() {
                         (i: any) => i.id === key,
                       );
                       if (item) {
-                        handleSelectItem({
-                          id: item.id,
-                          name: item.name,
-                          unit: item.unitName || "Unit",
-                          currentStock: item.stockLevel,
-                          transferQty: 0,
-                        });
+                        handleSelectItem(item);
                       }
                     }
                   }}
@@ -1350,17 +1238,7 @@ export default function StockTransferPage() {
 
               <Button
                 isDisabled={!selectedBusiness || selectedItems.length === 0}
-                onClick={() => {
-                  console.log(
-                    "Stock Transfer (Step 1) - Current Business ID:",
-                    currentBusinessId,
-                  );
-                  console.log(
-                    "Stock Transfer (Step 1) - Destination Business ID (Selected):",
-                    selectedBusiness,
-                  );
-                  handleProceedToInitiate();
-                }}
+                onClick={handleProceedToInitiate}
                 className={cn(
                   "w-full rounded-xl py-5 font-bold text-base gap-3 transition-all",
                   selectedBusiness && selectedItems.length > 0
@@ -1377,7 +1255,7 @@ export default function StockTransferPage() {
       )}
 
       {step === "initiate" && (
-        <div className="flex flex-col gap-6 pt-4">
+        <div className="flex flex-col gap-6 px-6 pt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
@@ -1387,41 +1265,10 @@ export default function StockTransferPage() {
                 <ArrowLeft className="w-5 h-5 text-[#344054]" />
               </button>
               <h1 className="text-[20px] font-bold text-[#101828]">
-                {transferStage === 1
-                  ? "Initiate or save transfer"
-                  : "Stock Transfer"}
+                Submit Stock Transfer
               </h1>
             </div>
-            {transferStage < 5 && (
-              <div className="text-sm font-semibold text-[#98A2B3]">2 of 2</div>
-            )}
-            {transferStage === 5 && (
-              <div className="flex items-center gap-2 text-[#16AB60] bg-[#EBFFF5] px-4 py-2 rounded-full border border-[#16AB60]">
-                <span className="text-sm font-bold">Verified</span>
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M7.75 12.75L10 15L16.25 8.75"
-                    stroke="#16AB60"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                    stroke="#16AB60"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-            )}
+            <div className="text-sm font-semibold text-[#98A2B3]">2 of 2</div>
           </div>
 
           <div className="flex items-center gap-3 mt-1.5 font-medium text-[#667085]">
@@ -1434,13 +1281,8 @@ export default function StockTransferPage() {
             </span>
           </div>
 
-          {transferStage > 1 && (
-            <ProgressIndicator currentStage={transferStage} />
-          )}
-
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full relative">
-              {transferStage === 1 ? (
                 <Table
                   aria-label="Initiate Transfer List"
                   removeWrapper
@@ -1556,47 +1398,6 @@ export default function StockTransferPage() {
                     ))}
                   </TableBody>
                 </Table>
-              ) : (
-                <Table
-                  aria-label="View Transfer List"
-                  removeWrapper
-                  classNames={{
-                    th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-5 px-6 uppercase tracking-wider",
-                    td: "py-5 px-6 text-sm text-[#344054] border-b border-[#F2F4F7] font-bold relative",
-                  }}
-                >
-                  <TableHeader>
-                    <TableColumn>Source Name (Source)</TableColumn>
-                    <TableColumn align="center"> </TableColumn>
-                    <TableColumn>Item Name (Destination)</TableColumn>
-                    <TableColumn>Item Unit</TableColumn>
-                    <TableColumn>Transfer QTy</TableColumn>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedItems.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="text-[#101828]">
-                          {item.name}
-                        </TableCell>
-                        <TableCell>
-                          <SwapIcon />
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-[#101828]">
-                            {item.destinationName || item.name}
-                          </span>
-                        </TableCell>
-                        <TableCell>{item.unit}</TableCell>
-                        <TableCell>
-                          <span className="text-[#101828] ml-8 font-bold">
-                            {item.transferQty || 0}
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
               {/* Scrollbar UI as seen in the design */}
               <div className="absolute right-0 top-[60px] bottom-0 w-[6px] bg-[#F2F4F7] rounded-full mx-1">
                 <div className="w-full h-20 bg-[#D0D5DD] rounded-full" />
@@ -1612,23 +1413,12 @@ export default function StockTransferPage() {
                 <div className="flex flex-col gap-4 text-xs">
                   <div className="flex justify-between items-center">
                     <span className="text-[#667085] font-medium">
-                      Created At:
+                      Source:
                     </span>
                     <span className="font-bold text-[#475467]">
                       {currentBusinessName}
                     </span>
                   </div>
-                  {transferStage > 1 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#667085] font-medium">
-                        Created By:
-                      </span>
-                      <span className="font-bold text-[#475467]">
-                        {getJsonItemFromLocalStorage("business")?.[0]
-                          ?.staffName || "Staff"}
-                      </span>
-                    </div>
-                  )}
                   <div className="flex justify-between items-center">
                     <span className="text-[#667085] font-medium">
                       Destination:
@@ -1640,48 +1430,6 @@ export default function StockTransferPage() {
                       }
                     </span>
                   </div>
-                  {transferStage > 1 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-[#667085] font-medium">
-                        Status:
-                      </span>
-                      <span
-                        className={cn(
-                          "font-bold",
-                          transferStage === 2 && "text-[#F5A623]",
-                          transferStage === 3 && "text-[#5F35D2]",
-                          transferStage >= 4 && "text-[#667085]",
-                        )}
-                      >
-                        {transferStage === 2
-                          ? "In-Transit"
-                          : transferStage === 3
-                            ? "Delivered"
-                            : "Completed"}
-                      </span>
-                    </div>
-                  )}
-                  {transferStage > 1 && (
-                    <div className="flex justify-between items-center text-xs">
-                      <span className="text-[#667085] font-medium">
-                        Verification:
-                      </span>
-                      <span
-                        className={cn(
-                          "font-bold",
-                          transferStage === 2 && "text-[#98A2B3]",
-                          transferStage === 3 && "text-[#5F35D2]",
-                          transferStage >= 4 && "text-[#16AB60]",
-                        )}
-                      >
-                        {transferStage === 2
-                          ? "Pending"
-                          : transferStage === 3
-                            ? "Unverified"
-                            : "Verified"}
-                      </span>
-                    </div>
-                  )}
                   <div className="h-[1px] bg-[#F2F4F7] w-full" />
                   <div className="flex justify-between items-center">
                     <span className="text-[#667085] font-medium">
@@ -1691,70 +1439,42 @@ export default function StockTransferPage() {
                       {selectedItems.length}
                     </span>
                   </div>
+                  {selectedItems.length > 0 && (
+                    <>
+                      <div className="h-[1px] bg-[#F2F4F7] w-full" />
+                      <div className="flex flex-col gap-2">
+                        {selectedItems.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex justify-between items-center"
+                          >
+                            <span className="text-[#667085] font-medium truncate max-w-[180px]">
+                              {item.name}
+                            </span>
+                            <span className="font-bold text-[#101828]">
+                              {item.transferQty} {item.destinationUnit || item.unit}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex flex-col gap-4">
-                  {transferStage < 5 && (
-                    <Button
-                      onClick={() => {
-                        if (transferStage === 1) {
-                          handleInitiateTransfer(false);
-                        } else if (transferStage === 4) {
-                          handleInitiateTransfer(true);
-                        } else {
-                          setTransferStage(transferStage + 1);
-                        }
-                      }}
-                      isLoading={isLoading}
-                      isDisabled={isLoading}
-                      className="w-full bg-[#5F35D2] text-white rounded-lg py-4 font-bold text-sm gap-3 shadow-none"
-                      endContent={
-                        transferStage < 4 && !isLoading ? (
-                          <ArrowRight className="w-4 h-4" />
-                        ) : null
-                      }
-                    >
-                      {transferStage === 1 && "Initiate Stock Transfer"}
-                      {transferStage === 2 && "Mark as In-transit"}
-                      {transferStage === 3 && "Mark as Delivered"}
-                      {transferStage === 4 && (
-                        <div className="flex items-center gap-2">
-                          Mark as Verified
-                          <svg
-                            width="18"
-                            height="18"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path
-                              d="M7.75 12.75L10 15L16.25 8.75"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <path
-                              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                        </div>
-                      )}
-                    </Button>
-                  )}
-                  {transferStage === 1 && (
-                    <Button
-                      onClick={handleSaveDraft}
-                      className="w-full bg-[#D0D5DD] text-white rounded-lg py-4 font-bold text-sm gap-3 shadow-none"
-                      endContent={<ArrowRight className="w-4 h-4" />}
-                    >
-                      Save as draft
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => handleInitiateTransfer()}
+                    isLoading={isLoading}
+                    isDisabled={isLoading}
+                    className="w-full bg-[#5F35D2] text-white rounded-lg py-4 font-bold text-sm gap-3 shadow-none"
+                    endContent={
+                      !isLoading ? (
+                        <ArrowRight className="w-4 h-4" />
+                      ) : null
+                    }
+                  >
+                    Submit Stock Transfer
+                  </Button>
                 </div>
               </div>
             </div>
@@ -1762,7 +1482,7 @@ export default function StockTransferPage() {
         </div>
       )}
       {selectedIncoming && (
-        <div className="flex flex-col gap-6 pt-4">
+        <div className="flex flex-col gap-6 px-6 pt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center justify-between w-full">
               <div className="flex items-center gap-4">
@@ -1817,10 +1537,6 @@ export default function StockTransferPage() {
               </span>
             </div>
           </div>
-
-          <ProgressIndicator
-            currentStage={selectedIncoming.status === "Verified" ? 4 : 3}
-          />
 
           <div className="flex flex-col lg:flex-row gap-8 items-start">
             <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full relative">
@@ -1978,6 +1694,15 @@ export default function StockTransferPage() {
           </div>
         </div>
       )}
+
+      <SendEmailModal
+        isOpen={sendEmailModalOpen}
+        onOpenChange={setSendEmailModalOpen}
+        supplierEmail=""
+        businessName={currentBusinessName}
+        onSend={handleSendEmail}
+        isLoading={sendingEmail}
+      />
     </div>
   );
 }

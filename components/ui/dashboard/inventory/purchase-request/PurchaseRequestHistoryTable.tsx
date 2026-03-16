@@ -2,7 +2,13 @@
 
 import React, { useState, useMemo } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import { LuPackageCheck, LuCopy, LuMail, LuSearch, LuEye } from "react-icons/lu";
+import {
+  LuPackageCheck,
+  LuCopy,
+  LuMail,
+  LuSearch,
+  LuEye,
+} from "react-icons/lu";
 import { XCircle } from "lucide-react";
 import {
   Chip,
@@ -46,7 +52,9 @@ const statusColorMap: Record<
   Received: "success",
 };
 
-const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = ({
+const PurchaseRequestHistoryTable: React.FC<
+  PurchaseRequestHistoryTableProps
+> = ({
   data,
   onViewRequest,
   onReceiveRequest,
@@ -69,8 +77,8 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
       (item) =>
         item &&
         ((item.reference || "").toLowerCase().includes(query) ||
-        (item.supplierName || "").toLowerCase().includes(query) ||
-        (item.status || "").toLowerCase().includes(query))
+          (item.supplierName || "").toLowerCase().includes(query) ||
+          (item.status || "").toLowerCase().includes(query)),
     );
   }, [data, filterValue]);
 
@@ -87,19 +95,41 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
 
     switch (columnKey) {
       case "reference":
-        return <span className="text-sm font-medium text-gray-900">{item.reference || item.requestId}</span>;
+        return (
+          <span className="text-sm font-medium text-gray-900">
+            {item.reference || item.requestId}
+          </span>
+        );
       case "requestDate":
-        return <span className="text-sm text-gray-500">{item.requestDate}</span>;
+        return (
+          <span className="text-sm text-gray-500">{item.requestDate}</span>
+        );
       case "requestId":
-        return <span className="text-sm font-medium text-gray-900">{item.requestId}</span>;
+        return (
+          <span className="text-sm font-medium text-gray-900">
+            {item.requestId}
+          </span>
+        );
       case "supplierName":
-        return <span className="text-sm text-gray-500">{item.supplierName}</span>;
+        return (
+          <span className="text-sm text-gray-500">{item.supplierName}</span>
+        );
       case "expectedDeliveryDate":
-        return <span className="text-sm text-gray-500">{item.expectedDeliveryDate}</span>;
+        return (
+          <span className="text-sm text-gray-500">
+            {item.expectedDeliveryDate}
+          </span>
+        );
       case "numberOfItems":
-        return <span className="text-sm text-gray-500">{item.numberOfItems}</span>;
+        return (
+          <span className="text-sm text-gray-500">{item.numberOfItems}</span>
+        );
       case "totalCost":
-        return <span className="text-sm text-gray-500">{formatCurrency(item.totalCost)}</span>;
+        return (
+          <span className="text-sm text-gray-500">
+            {formatCurrency(item.totalCost)}
+          </span>
+        );
       case "status":
         return (
           <Chip
@@ -113,7 +143,10 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
         );
       case "actions":
         return (
-          <div className="relative flex justify-center items-center gap-2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative flex justify-center items-center gap-2"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Dropdown>
               <DropdownTrigger>
                 <button
@@ -127,13 +160,19 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
               <DropdownMenu className="text-black">
                 <DropdownSection>
                   {[
-                    <DropdownItem key="view" onClick={() => onViewRequest?.(item)}>
+                    <DropdownItem
+                      key="view"
+                      onClick={() => onViewRequest?.(item)}
+                    >
                       <div className="flex gap-3 items-center">
                         <LuEye size={16} />
                         <p>View PO</p>
                       </div>
                     </DropdownItem>,
-                    <DropdownItem key="duplicate" onClick={() => onDuplicateRequest(item)}>
+                    <DropdownItem
+                      key="duplicate"
+                      onClick={() => onDuplicateRequest(item)}
+                    >
                       <div className="flex gap-3 items-center">
                         <LuCopy size={16} />
                         <p>Duplicate PO</p>
@@ -141,19 +180,30 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                     </DropdownItem>,
                     ...(isPending
                       ? [
-                          <DropdownItem key="receive" onClick={() => onReceiveRequest(item)}>
+                          <DropdownItem
+                            key="receive"
+                            onClick={() => onReceiveRequest(item)}
+                          >
                             <div className="flex gap-3 items-center">
                               <LuPackageCheck size={16} />
                               <p>Receive PO</p>
                             </div>
                           </DropdownItem>,
-                          <DropdownItem key="sendmail" onClick={() => onSendMail(item)}>
+                          <DropdownItem
+                            key="sendmail"
+                            onClick={() => onSendMail(item)}
+                          >
                             <div className="flex gap-3 items-center">
                               <LuMail size={16} />
                               <p>Send Mail to Supplier</p>
                             </div>
                           </DropdownItem>,
-                          <DropdownItem key="cancel" className="text-danger" color="danger" onClick={() => onCancelRequest(item)}>
+                          <DropdownItem
+                            key="cancel"
+                            className="text-danger"
+                            color="danger"
+                            onClick={() => onCancelRequest(item)}
+                          >
                             <div className="flex gap-3 items-center">
                               <XCircle size={16} />
                               <p>Cancel</p>
@@ -175,9 +225,14 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-[#3D424A]">Purchase Order History</h3>
+        <h3 className="text-lg font-semibold text-[#3D424A]">
+          Purchase Order History
+        </h3>
         <div className="relative">
-          <LuSearch size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <LuSearch
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+          />
           <input
             type="text"
             placeholder="Search orders..."
@@ -232,7 +287,10 @@ const PurchaseRequestHistoryTable: React.FC<PurchaseRequestHistoryTableProps> = 
                 </TableColumn>
               )}
             </TableHeader>
-            <TableBody items={filteredData} emptyContent="No purchase orders yet">
+            <TableBody
+              items={filteredData}
+              emptyContent="No purchase orders yet"
+            >
               {(item) => (
                 <TableRow key={item.purchaseOrderId || item.requestId}>
                   {(columnKey) => (

@@ -163,7 +163,8 @@ export function generatePurchaseOrderPdfFile(order: PurchaseRequest): File {
 
   // Totals section — right-aligned
   const subTotal =
-    order.subTotalAmount ?? order.items.reduce((sum, item) => sum + item.cost, 0);
+    order.subTotalAmount ??
+    order.items.reduce((sum, item) => sum + item.cost, 0);
   const vatRate = order.vatRate ?? 0;
   const isVatApplied = order.isVatApplied ?? false;
   const vatAmount = order.vatAmount ?? 0;

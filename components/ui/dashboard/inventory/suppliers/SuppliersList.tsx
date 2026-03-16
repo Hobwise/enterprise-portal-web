@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React from "react";
 import {
   Table,
   TableHeader,
@@ -29,13 +29,20 @@ interface SuppliersListProps {
   onViewSupplier: (supplier: Supplier) => void;
   onEditSupplier?: (supplier: Supplier) => void;
   onDeleteSupplier?: (supplier: Supplier) => void;
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  isLoading?: boolean;
+  search: string;
+  onSearchChange: (value: string) => void;
 }
 
 const columns = [
   { name: "SUPPLIER NAME", uid: "name" },
   { name: "COMPANY NAME", uid: "companyName" },
   { name: "EMAIL ADDRESS", uid: "email" },
-  { name: "ADDRESS", uid: "address" },
   { name: "PHONE NUMBER", uid: "phoneNumber" },
   { name: "STATUS", uid: "status" },
   { name: "", uid: "actions" },
@@ -47,35 +54,16 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
   onViewSupplier,
   onEditSupplier,
   onDeleteSupplier,
+  totalCount,
+  totalPages,
+  currentPage,
+  pageSize,
+  onPageChange,
+  isLoading = false,
+  search,
+  onSearchChange: onSearchChangeProp,
 }) => {
    const isMobile = useMobile();
-  
-  const [filterValue, setFilterValue] = useState("");
-  const [page, setPage] = useState(1);
-  const rowsPerPage = 10;
-
-  const hasSearchFilter = Boolean(filterValue);
-
-  const filteredItems = useMemo(() => {
-    let filteredUsers = [...suppliers];
-
-    if (hasSearchFilter) {
-      filteredUsers = filteredUsers.filter((user) =>
-        user.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-        user.companyName.toLowerCase().includes(filterValue.toLowerCase()) ||
-        user.supplierId.toLowerCase().includes(filterValue.toLowerCase())
-      );
-    }
-
-    return filteredUsers;
-  }, [suppliers, filterValue]);
-
-  const items = useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-
-    return filteredItems.slice(start, end);
-  }, [page, filteredItems]);
 
   const renderCell = React.useCallback(
     (user: Supplier, columnKey: React.Key) => {
@@ -125,16 +113,14 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
   );
 
   const onSearchChange = React.useCallback((value?: string) => {
-    if (value) {
-      setFilterValue(value);
-      setPage(1);
-    } else {
-      setFilterValue("");
+    onSearchChangeProp(value || "");
+    if (currentPage !== 1) {
+      onPageChange(1);
     }
-  }, []);
+  }, [onSearchChangeProp, onPageChange, currentPage]);
 
   const topContent = React.useMemo(() => {
-   
+
     return (
       <div className="flex flex-col gap-4 mb-12 mt-5">
         <div className="flex justify-between gap-3 items-end">
@@ -142,7 +128,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             <div className="bg-gray-200 p-2 rounded-md">
                 <SupplierIcon className="w-5 h-5 text-[#494E58]" />
             </div>
-            <span className="text-md text-gray-500">{suppliers.length} Suppliers</span>
+            <span className="text-md text-gray-500">{totalCount} Suppliers</span>
           </div>
           <div className="flex gap-3 w-1/2 justify-end">
             <Input
@@ -150,7 +136,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
                 className="w-full  sm:max-w-[55%]"
                 placeholder="Search supplier by name or supplier ID"
                 startContent={<Search className="text-default-300" size={16}/>}
-                value={filterValue}
+                value={search}
                 onClear={() => onSearchChange("")}
                 onValueChange={onSearchChange}
                 classNames={{
@@ -165,7 +151,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
         </div>
       </div>
     );
-  }, [filterValue, onSearchChange, suppliers.length, onAddSupplier, isMobile]);
+  }, [search, onSearchChange, totalCount, onAddSupplier, isMobile]);
 
   return (
     <section >
@@ -202,21 +188,6 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             "group-data-[last=true]:last:before:rounded-none",
           ],
         }}
-        bottomContent={
-            <div className="flex w-full justify-center">
-                 <CustomPagination
-                    currentPage={page}
-                    totalPages={Math.ceil(filteredItems.length / rowsPerPage) || 1}
-                    hasNext={page < Math.ceil(filteredItems.length / rowsPerPage)}
-                    hasPrevious={page > 1}
-                    totalCount={filteredItems.length}
-                    pageSize={rowsPerPage}
-                    onPageChange={setPage}
-                    onNext={() => setPage((p) => (p < Math.ceil(filteredItems.length / rowsPerPage) ? p + 1 : p))}
-                    onPrevious={() => setPage((p) => (p > 1 ? p - 1 : p))}
-                />
-            </div>
-        }
       >
         <TableHeader columns={columns}>
           {(column) => (
@@ -225,7 +196,7 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             </TableColumn>
           )}
         </TableHeader>
-        <TableBody items={items} emptyContent={"No suppliers found"}>
+        <TableBody items={suppliers} emptyContent={"No suppliers found"}>
           {(item) => (
             <TableRow key={item.id} className="cursor-pointer hover:bg-gray-50" onClick={() => onViewSupplier(item)}>
               {(columnKey) => (
@@ -234,7 +205,20 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
             </TableRow>
           )}
         </TableBody>
-      </Table> </div>
+      </Table>
+      </div>
+      <CustomPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        hasNext={currentPage < totalPages}
+        hasPrevious={currentPage > 1}
+        totalCount={totalCount}
+        pageSize={pageSize}
+        onPageChange={onPageChange}
+        onNext={() => onPageChange(currentPage + 1)}
+        onPrevious={() => onPageChange(currentPage - 1)}
+        isLoading={isLoading}
+      />
     </section>
   );
 };

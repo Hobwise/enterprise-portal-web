@@ -24,41 +24,50 @@ const useSuppliers = () => {
   const businessInformation = getJsonItemFromLocalStorage("business");
   const businessId = businessInformation?.[0]?.businessId;
 
-  // Pagination state
-  const [page, setPage] = useState(0);
+  // Pagination state (1-indexed for CustomPagination compatibility)
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [pageSize, setPageSize] = useState(10);
 
-  // Fetch all suppliers
-  const getAllSuppliers = async () => {
-    if (!businessId) return [];
-    
+  // Fetch suppliers with pagination metadata
+  const fetchSuppliers = async () => {
+    if (!businessId) return { suppliers: [], totalCount: 0, totalPages: 0 };
+
     const clientParameters = {
-      page,
+      page: page - 1, // API is 0-indexed
       search,
       pageSize,
     };
 
     try {
       const response = await getSuppliersByBusiness(businessId, clientParameters);
-      
-      if (response?.data?.data) {
-        return response.data.data.suppliers;
+      const responseData = response?.data?.data;
+
+      if (responseData) {
+        return {
+          suppliers: responseData.suppliers || [],
+          totalCount: responseData.totalCount ?? 0,
+          totalPages: responseData.totalPages ?? Math.ceil((responseData.totalCount ?? 0) / pageSize),
+        };
       }
-      
-      return [];
+
+      return { suppliers: [], totalCount: 0, totalPages: 0 };
     } catch (error) {
       console.error('Error fetching suppliers:', error);
-      return [];
+      return { suppliers: [], totalCount: 0, totalPages: 0 };
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<Supplier[]>({
+  const { data, isLoading, isError, refetch } = useQuery<{
+    suppliers: Supplier[];
+    totalCount: number;
+    totalPages: number;
+  }>({
     queryKey: ["suppliers", businessId, page, search, pageSize],
     queryFn: async () => {
-      const apiData = await getAllSuppliers();
-     
-      return apiData.map((s: any) => ({
+      const { suppliers: apiData, totalCount, totalPages } = await fetchSuppliers();
+
+      const suppliers = apiData.map((s: any) => ({
         id: s.id,
         supplierId: s.supplierId || s.id,
         name: s.name,
@@ -73,6 +82,8 @@ const useSuppliers = () => {
         status: s.isActive ? 'active' : 'inactive',
         dateCreated: s.dateCreated,
       }));
+
+      return { suppliers, totalCount, totalPages };
     },
     enabled: !!businessId,
     ...fetchQueryConfig(),
@@ -168,8 +179,11 @@ const useSuppliers = () => {
     },
   });
 
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = data?.totalPages ?? 0;
+
   return {
-    data: data || [],
+    data: data?.suppliers || [],
     isLoading,
     isError,
     refetch,
@@ -189,6 +203,10 @@ const useSuppliers = () => {
     setSearch,
     pageSize,
     setPageSize,
+    totalCount,
+    totalPages,
+    hasNext: page < totalPages,
+    hasPrevious: page > 1,
   };
 };
 

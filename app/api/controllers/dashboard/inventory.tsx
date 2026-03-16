@@ -942,6 +942,40 @@ export async function getStockTransferDetails(transferOrderId: string) {
   }
 }
 
+export async function cancelStockTransfer(transferOrderId: string) {
+  const headers: Record<string, string> = {};
+  if (transferOrderId) headers.transferOrderId = transferOrderId;
+
+  try {
+    const data = await api.put(DASHBOARD.stockTransferCancel, {}, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function sendStockTransferMail(formData: FormData) {
+  try {
+    const data = await api.post(DASHBOARD.stockTransferSendMail, formData);
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+export async function deleteStockTransfer(transferOrderId: string) {
+  const headers: Record<string, string> = {};
+  if (transferOrderId) headers.transferOrderId = transferOrderId;
+
+  try {
+    const data = await api.delete(DASHBOARD.stockTransfer, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+    throw error;
+  }
+}
+
 export async function getIncomingTransfers(
   businessId: string,
   page: number = 1,
