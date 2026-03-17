@@ -47,7 +47,7 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
   }, [isOpen, purchaseRequest]);
 
   const formatCurrency = (value: number) => {
-    return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
+    return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const items = purchaseRequest?.items || [];
@@ -65,8 +65,8 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
       }, 0),
     [items, receivedQuantities]
   );
-  const vat = useMemo(() => (isVatApplied ? subTotal * (vatRate / 100) : 0), [subTotal, isVatApplied, vatRate]);
-  const grandTotal = useMemo(() => subTotal + vat + additionalCost, [subTotal, vat, additionalCost]);
+  const vat = useMemo(() => (isVatApplied ? parseFloat((subTotal * (vatRate / 100)).toFixed(2)) : 0), [subTotal, isVatApplied, vatRate]);
+  const grandTotal = useMemo(() => parseFloat((subTotal + vat + additionalCost).toFixed(2)), [subTotal, vat, additionalCost]);
 
   const getReceivedItems = () =>
     items.map((item, index) => ({

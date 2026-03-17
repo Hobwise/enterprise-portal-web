@@ -121,11 +121,11 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     () => items.reduce((sum, item) => sum + item.cost, 0),
     [items]
   );
-  const vat = useMemo(() => vatEnabled ? subTotal * (vatPercent / 100) : 0, [subTotal, vatPercent, vatEnabled]);
-  const grandTotal = useMemo(() => subTotal + vat + additionalCost, [subTotal, vat, additionalCost]);
+  const vat = useMemo(() => vatEnabled ? parseFloat((subTotal * (vatPercent / 100)).toFixed(2)) : 0, [subTotal, vatPercent, vatEnabled]);
+  const grandTotal = useMemo(() => parseFloat((subTotal + vat + additionalCost).toFixed(2)), [subTotal, vat, additionalCost]);
 
   const formatCurrency = (value: number) => {
-    return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
+    return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   const formatCurrencyPdf = (value: number) => {

@@ -672,15 +672,14 @@ const ConfirmStep: React.FC<ConfirmStepProps> = ({
                       </select>
                     </td>
                     <td className="py-2 px-3">
-                      <select
+                      <input
+                        type="number"
+                        min={0}
                         value={editableData[idx]?.openingStock ?? '0'}
                         onChange={(e) => handleInputChange(idx, 'openingStock', e.target.value)}
                         className={selectClass}
-                      >
-                        {[0, 5, 10, 25, 50, 100, 200, 500, 1000].map((v) => (
-                          <option key={v} value={String(v)}>{v}</option>
-                        ))}
-                      </select>
+                        placeholder="0"
+                      />
                     </td>
                   </tr>
                 ))}

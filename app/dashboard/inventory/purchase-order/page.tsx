@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Spinner } from '@nextui-org/react';
+import { Spinner, Modal, ModalContent, ModalBody, ModalFooter, Button } from '@nextui-org/react';
 import { LuPlus, LuHistory } from 'react-icons/lu';
+import { IoClose } from 'react-icons/io5';
 
 import { useQuery } from '@tanstack/react-query';
 import useSuppliers from '@/hooks/cachedEndpoints/useSuppliers';
@@ -121,6 +122,9 @@ export default function PurchaseRequestPage() {
   const [receivedModalOpen, setReceivedModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedPurchaseRequest, setSelectedPurchaseRequest] = useState<PurchaseRequest | null>(null);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState(false);
+  const [orderToDuplicate, setOrderToDuplicate] = useState<PurchaseRequest | null>(null);
+  const [duplicateExpectedDate, setDuplicateExpectedDate] = useState('');
 
   // Loading states
   const [sendingPurchase, setSendingPurchase] = useState(false);
@@ -222,8 +226,8 @@ export default function PurchaseRequestPage() {
         expectedDate: new Date(data.expectedDate).toISOString(),
         additionalCostName: data.additionalCostLabel,
         additionalCost: data.additionalCost,
-        totalAmount: data.grandTotal,
-        vatAmount: data.vatAmount,
+        totalAmount: parseFloat(data.grandTotal.toFixed(2)),
+        vatAmount: parseFloat(data.vatAmount.toFixed(2)),
         vatRate: data.vatPercent,
         isVatApplied: data.vatPercent > 0,
         orderDetails: data.items.map((item) => ({
@@ -374,12 +378,24 @@ export default function PurchaseRequestPage() {
     }
   };
 
-  const handleDuplicateRequest = async (request: PurchaseRequest) => {
+  const handleDuplicateRequest = (request: PurchaseRequest) => {
+    setOrderToDuplicate(request);
+    setDuplicateExpectedDate('');
+    setDuplicateModalOpen(true);
+  };
+
+  const confirmDuplicate = async () => {
+    if (!orderToDuplicate || !duplicateExpectedDate) return;
     setDuplicatingOrder(true);
     try {
-      const response = await duplicatePurchaseOrder(request.requestId, businessId);
+      const response = await duplicatePurchaseOrder(
+        orderToDuplicate.requestId,
+        businessId,
+        new Date(duplicateExpectedDate).toISOString()
+      );
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Purchase order duplicated successfully', type: 'success' });
+        setDuplicateModalOpen(false);
         refetchOrders();
       } else if (response) {
         notify({ title: 'Error!', text: response?.data?.error?.responseDescription || 'Failed to duplicate purchase order', type: 'error' });
@@ -575,6 +591,57 @@ export default function PurchaseRequestPage() {
         onOpenChange={setViewModalOpen}
         purchaseRequest={selectedPurchaseRequest}
       />
+
+      <Modal isOpen={duplicateModalOpen} onOpenChange={setDuplicateModalOpen} size="sm" hideCloseButton>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalBody className="px-4 py-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-bold text-[#3D424A]">Duplicate Purchase Order</h3>
+                  <button
+                    onClick={onClose}
+                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                  >
+                    <IoClose size={18} className="text-gray-500" />
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500">Select the expected delivery date for the new order.</p>
+                <input
+                  type="date"
+                  min={new Date().toISOString().split('T')[0]}
+                  value={duplicateExpectedDate}
+                  onChange={(e) => setDuplicateExpectedDate(e.target.value)}
+                  className="w-full px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-xs text-gray-700 bg-white"
+                />
+              </ModalBody>
+              <ModalFooter className="flex gap-3 px-4 pb-3 pt-3 border-t border-gray-100 justify-end">
+                <Button
+                  variant="bordered"
+                  className="border-primaryColor text-primaryColor font-medium rounded-lg px-6"
+                  onPress={onClose}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-primaryColor text-white font-medium rounded-lg px-6"
+                  onPress={confirmDuplicate}
+                  isDisabled={!duplicateExpectedDate || duplicatingOrder}
+                >
+                  {duplicatingOrder ? (
+                    <>
+                      <Spinner size="sm" color="white" />
+                      Duplicating...
+                    </>
+                  ) : (
+                    'Duplicate'
+                  )}
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }
