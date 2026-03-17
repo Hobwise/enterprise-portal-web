@@ -34,7 +34,7 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
   purchaseRequest,
 }) => {
   const formatCurrency = (value: number) => {
-    return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
+    return `\u20A6${value.toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   if (!purchaseRequest) return null;
