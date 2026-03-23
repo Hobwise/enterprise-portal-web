@@ -117,7 +117,7 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
           const itemsArray = Array.isArray(items) ? items : [];
           setPredictedItems(itemsArray);
           setEditableData(itemsArray.map((item) => ({
-            itemName: item.menuItemName ?? '',
+            itemName: item.suggestedInventoryItemName ?? '',
             costPerUnit: '',
             salesPrice: '',
             itemType: String(item.suggestedItemType ?? 0),
@@ -209,7 +209,7 @@ const SyncMenuItemsModal: React.FC<SyncMenuItemsModalProps> = ({
 
     const payload: SynchronizeInventoryPayload = predictedItems.map((item, idx) => ({
       menuItemId: item.menuItemId,
-      inventoryItemName: editableData[idx]?.itemName || item.menuItemName,
+      inventoryItemName: editableData[idx]?.itemName || item.suggestedInventoryItemName,
       unitCategory: item.suggestedUnitCategory,
       unitId: editableData[idx]?.unitId || item.suggestedUnitId || '',
       itemType: editableData[idx]?.itemType ? Number(editableData[idx].itemType) : (item.suggestedItemType ?? 0),
@@ -619,7 +619,7 @@ const ConfirmStep: React.FC<ConfirmStepProps> = ({
                     <td className="py-2 px-3">
                       <input
                         type="text"
-                        value={editableData[idx]?.itemName ?? item.menuItemName}
+                        value={editableData[idx]?.itemName ?? item.suggestedInventoryItemName}
                         onChange={(e) => handleInputChange(idx, 'itemName', e.target.value)}
                         className={selectClass}
                       />

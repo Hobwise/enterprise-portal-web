@@ -82,7 +82,7 @@ export default function SyncMenuPage() {
           const itemsArray = Array.isArray(items) ? items : [];
           setPredictedItems(itemsArray);
           setEditableData(itemsArray.map((item) => ({
-            itemName: item.menuItemName ?? '',
+            itemName: item.suggestedInventoryItemName ?? '',
             costPerUnit: '',
             salesPrice: '',
             itemType: String(item.suggestedItemType ?? 0),
@@ -174,7 +174,7 @@ export default function SyncMenuPage() {
 
     const payload: SynchronizeInventoryPayload = predictedItems.map((item, idx) => ({
       menuItemId: item.menuItemId,
-      inventoryItemName: editableData[idx]?.itemName || item.menuItemName,
+      inventoryItemName: editableData[idx]?.itemName || item.suggestedInventoryItemName,
       unitCategory: item.suggestedUnitCategory,
       unitId: editableData[idx]?.unitId || item.suggestedUnitId || '',
       itemType: editableData[idx]?.itemType ? Number(editableData[idx].itemType) : (item.suggestedItemType ?? 0),

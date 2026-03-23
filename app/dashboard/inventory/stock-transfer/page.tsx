@@ -214,6 +214,8 @@ export default function StockTransferPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIncoming, setSelectedIncoming] =
     useState<IncomingTransfer | null>(null);
+  const [selectedOutgoing, setSelectedOutgoing] =
+    useState<StockTransfer | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
   const [transferPage, setTransferPage] = useState(1);
   const [incomingPage, setIncomingPage] = useState(1);
@@ -363,6 +365,34 @@ export default function StockTransferPage() {
   }, [incomingDetails]);
 
   const transferDetail = incomingDetails as any;
+
+  const {
+    data: outgoingDetails,
+    isLoading: outgoingDetailsLoading,
+  } = useQuery({
+    queryKey: ["stockTransferDetails", selectedOutgoing?.id],
+    queryFn: async () => {
+      const response = await getStockTransferDetails(selectedOutgoing!.id);
+      return response?.data?.data;
+    },
+    enabled: !!selectedOutgoing,
+    ...fetchQueryConfig(),
+  });
+
+  const outgoingDetailItems = useMemo(() => {
+    const details = outgoingDetails as any;
+    if (!details?.orderDetails) return [];
+    return details.orderDetails.map((d: any) => ({
+      id: d.sourceInventoryItemID || d.destinationInventoryItemID,
+      name: d.sourceInventoryItemName || "",
+      destinationName: d.destinationInventoryItemName || "",
+      unit: d.inventoryUnitName || "",
+      transferQty: d.quantity ?? 0,
+      cost: d.itemCost ?? 0,
+    }));
+  }, [outgoingDetails]);
+
+  const outgoingDetail = outgoingDetails as any;
 
   const { data: businessList, isLoading: businessesLoading } =
     useGetBusinessByCooperate();
@@ -688,6 +718,10 @@ export default function StockTransferPage() {
       setSelectedIncoming(null);
       return;
     }
+    if (selectedOutgoing) {
+      setSelectedOutgoing(null);
+      return;
+    }
     if (step === "select") setStep("list");
     else if (step === "initiate") setStep("select");
   };
@@ -714,6 +748,7 @@ export default function StockTransferPage() {
                 setActiveTab(tab);
                 setStep("list");
                 setSelectedIncoming(null);
+                setSelectedOutgoing(null);
               }}
               className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
@@ -744,7 +779,7 @@ export default function StockTransferPage() {
         </div>
       </div>
 
-      {step === "list" && !selectedIncoming && (
+      {step === "list" && !selectedIncoming && !selectedOutgoing && (
         <div className="px-6 py-4">
           <div className="flex justify-between items-start mb-6">
             <div>
@@ -789,36 +824,6 @@ export default function StockTransferPage() {
                 }}
               />
             </div>
-            <Select
-              placeholder="Status"
-              className="w-40"
-              variant="bordered"
-              classNames={{
-                trigger:
-                  "h-[48px] bg-white rounded-lg border-[#E4E7EC] shadow-none data-[hover=true]:border-[#101828] data-[open=true]:border-[#101828] focus:border-[#101828]",
-              }}
-              renderValue={(items) => (
-                <span className="text-[#475467] text-sm">
-                  {items[0]?.textValue || "Status"}
-                </span>
-              )}
-              selectorIcon={<ChevronDown className="w-4 h-4 text-[#98A2B3]" />}
-            >
-              <SelectItem
-                className="text-[#344054]"
-                key="transit"
-                value="transit"
-              >
-                In Transit
-              </SelectItem>
-              <SelectItem
-                className="text-[#344054]"
-                key="delivered"
-                value="delivered"
-              >
-                Delivered
-              </SelectItem>
-            </Select>
           </div>
 
           <div className="flex items-center justify-between mb-4">
@@ -892,7 +897,7 @@ export default function StockTransferPage() {
                               className="text-black"
                               onAction={(key) => {
                                 if (key === "view") {
-                                  // existing view details logic
+                                  setSelectedOutgoing(item);
                                 } else if (key === "sendEmail") {
                                   handleSendMailTransfer(item);
                                 } else if (key === "cancel") {
@@ -1405,7 +1410,7 @@ export default function StockTransferPage() {
             </div>
 
             <div className="w-full lg:w-[380px] shrink-0">
-              <div className="bg-white p-10 rounded-3xl border border-[#E4E7EC] shadow-sm flex flex-col gap-10">
+              <div className="bg-white p-6 rounded-3xl border border-[#E4E7EC] shadow-sm flex flex-col gap-6">
                 <h3 className="text-[24px] font-bold text-[#475467] text-center">
                   Summary
                 </h3>
@@ -1481,6 +1486,241 @@ export default function StockTransferPage() {
           </div>
         </div>
       )}
+      {selectedOutgoing && (
+        <div className="flex flex-col gap-6 px-6 pt-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleBack}
+                  className="p-2 border border-[#D0D5DD] rounded-lg hover:bg-[#F9FAFB] transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5 text-[#344054]" />
+                </button>
+                <h1 className="text-[20px] font-bold text-[#101828]">
+                  Stock Transfer
+                </h1>
+              </div>
+              {selectedOutgoing.status === "Delivered" && (
+                <div className="flex items-center gap-2 text-[#5F35D2] bg-[#F3EEFF] px-4 py-2 rounded-full border border-[#5F35D2]">
+                  <span className="text-sm font-bold">Delivered</span>
+                </div>
+              )}
+              {selectedOutgoing.status === "In Transit" && (
+                <div className="flex items-center gap-2 text-[#F5A623] bg-[#FFF8EB] px-4 py-2 rounded-full border border-[#F5A623]">
+                  <span className="text-sm font-bold">In Transit</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center gap-3 mt-1.5 font-medium text-[#667085]">
+              <span className="text-[#101828] font-bold">
+                {currentBusinessName}
+              </span>
+              <ArrowRight className="w-3 h-3" strokeWidth={3} />
+              <span className="text-[#101828] font-bold">
+                {selectedOutgoing.destinationBusinessName}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-8 items-start">
+            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full relative">
+              {outgoingDetailsLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F35D2]" />
+                </div>
+              ) : (
+              <Table
+                aria-label="View Transfer List"
+                removeWrapper
+                classNames={{
+                  th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-4 px-6 uppercase tracking-wider",
+                  td: "py-4 px-6 text-sm text-[#344054] border-b border-[#F2F4F7] font-bold relative",
+                }}
+              >
+                <TableHeader>
+                  <TableColumn>Item Name (Source)</TableColumn>
+                  <TableColumn align="center"> </TableColumn>
+                  <TableColumn>Item Name (Destination)</TableColumn>
+                  <TableColumn>Item Unit</TableColumn>
+                  <TableColumn>Transfer Quantity</TableColumn>
+                  <TableColumn>Item Cost</TableColumn>
+                </TableHeader>
+                <TableBody>
+                  {outgoingDetailItems.map((item: any) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="text-[#101828]">
+                        {item.name}
+                      </TableCell>
+                      <TableCell>
+                        <SwapIcon />
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-[#101828]">
+                          {item.destinationName || item.name}
+                        </span>
+                      </TableCell>
+                      <TableCell>{item.unit}</TableCell>
+                      <TableCell>
+                        <span className="text-[#101828] ml-8 font-bold">
+                          {item.transferQty || 0}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-[#101828]">
+                          {item.cost?.toLocaleString("en-NG", { style: "currency", currency: "NGN" }) || "₦0.00"}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              )}
+            </div>
+
+            <div className="w-full lg:w-[380px] shrink-0">
+              <div className="bg-white p-6 rounded-3xl border border-[#E4E7EC] shadow-sm flex flex-col gap-6">
+                <h3 className="text-[24px] font-bold text-[#475467] text-center">
+                  Summary
+                </h3>
+
+                <div className="flex flex-col gap-4 text-xs">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#667085] font-medium">
+                      Source:
+                    </span>
+                    <span className="font-bold text-[#475467]">
+                      {currentBusinessName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#667085] font-medium">
+                      Destination:
+                    </span>
+                    <span className="font-bold text-[#475467]">
+                      {outgoingDetail?.destinationBusinessName || selectedOutgoing.destinationBusinessName}
+                    </span>
+                  </div>
+                  {outgoingDetail?.destinationBusinessAddress && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#667085] font-medium">
+                        Address:
+                      </span>
+                      <span className="font-bold text-[#475467] text-right max-w-[180px]">
+                        {outgoingDetail.destinationBusinessAddress}
+                      </span>
+                    </div>
+                  )}
+                  {outgoingDetail?.destinationBusinessEmail && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#667085] font-medium">
+                        Email:
+                      </span>
+                      <span className="font-bold text-[#475467] text-right max-w-[180px] truncate">
+                        {outgoingDetail.destinationBusinessEmail}
+                      </span>
+                    </div>
+                  )}
+                  {outgoingDetail?.reference && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#667085] font-medium">
+                        Reference:
+                      </span>
+                      <span className="font-bold text-[#475467]">
+                        {outgoingDetail.reference}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#667085] font-medium">Status:</span>
+                    <span className={cn(
+                      "font-bold",
+                      selectedOutgoing.status === "In Transit" ? "text-[#F5A623]" : "text-[#5F35D2]",
+                    )}>
+                      {selectedOutgoing.status}
+                    </span>
+                  </div>
+                  {outgoingDetail?.orderDate && outgoingDetail.orderDate !== "0001-01-01T00:00:00" && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#667085] font-medium">
+                        Order Date:
+                      </span>
+                      <span className="font-bold text-[#475467]">
+                        {new Date(outgoingDetail.orderDate).toLocaleDateString("en-GB")}
+                      </span>
+                    </div>
+                  )}
+                  {outgoingDetail?.expectedDate && outgoingDetail.expectedDate !== "0001-01-01T00:00:00" && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#667085] font-medium">
+                        Expected Date:
+                      </span>
+                      <span className="font-bold text-[#475467]">
+                        {new Date(outgoingDetail.expectedDate).toLocaleDateString("en-GB")}
+                      </span>
+                    </div>
+                  )}
+                  <div className="h-[1px] bg-[#F2F4F7] w-full" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-[#667085] font-medium">
+                      Number of Items:
+                    </span>
+                    <span className="font-bold text-[#101828] text-base">
+                      {outgoingDetailItems.length || selectedOutgoing.itemCount}
+                    </span>
+                  </div>
+                  {outgoingDetail?.additionalCostName && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#667085] font-medium">
+                        {outgoingDetail.additionalCostName}:
+                      </span>
+                      <span className="font-bold text-[#475467]">
+                        {outgoingDetail.additionalCost?.toLocaleString("en-NG", { style: "currency", currency: "NGN" })}
+                      </span>
+                    </div>
+                  )}
+                  {outgoingDetail?.isVatApplied && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#667085] font-medium">
+                        VAT ({outgoingDetail.vatRate}%):
+                      </span>
+                      <span className="font-bold text-[#475467]">
+                        {outgoingDetail.vatAmount?.toLocaleString("en-NG", { style: "currency", currency: "NGN" })}
+                      </span>
+                    </div>
+                  )}
+                  {(outgoingDetail?.subTotalAmount > 0 || outgoingDetail?.totalAmount > 0) && (
+                    <>
+                      <div className="h-[1px] bg-[#F2F4F7] w-full" />
+                      {outgoingDetail?.subTotalAmount > 0 && outgoingDetail?.subTotalAmount !== outgoingDetail?.totalAmount && (
+                        <div className="flex justify-between items-center">
+                          <span className="text-[#667085] font-medium">
+                            Sub Total:
+                          </span>
+                          <span className="font-bold text-[#475467]">
+                            {outgoingDetail.subTotalAmount?.toLocaleString("en-NG", { style: "currency", currency: "NGN" })}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span className="text-[#667085] font-medium">
+                          Total Amount:
+                        </span>
+                        <span className="font-bold text-[#101828] text-base">
+                          {outgoingDetail.totalAmount?.toLocaleString("en-NG", { style: "currency", currency: "NGN" })}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {selectedIncoming && (
         <div className="flex flex-col gap-6 px-6 pt-4">
           <div className="flex items-center justify-between">
@@ -1539,17 +1779,18 @@ export default function StockTransferPage() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-8 items-start">
-            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full relative">
+            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full">
               {incomingDetailsLoading ? (
                 <div className="flex items-center justify-center py-16">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5F35D2]" />
                 </div>
               ) : (
+              <div className="max-h-[60vh] overflow-y-auto">
               <Table
                 aria-label="View Transfer List"
                 removeWrapper
                 classNames={{
-                  th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-4 px-6 uppercase tracking-wider",
+                  th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-4 px-6 uppercase tracking-wider sticky top-0 z-10",
                   td: "py-4 px-6 text-sm text-[#344054] border-b border-[#F2F4F7] font-bold relative",
                 }}
               >
@@ -1584,15 +1825,12 @@ export default function StockTransferPage() {
                   ))}
                 </TableBody>
               </Table>
-              )}
-              {/* Scrollbar UI as seen in the design */}
-              <div className="absolute right-0 top-[60px] bottom-0 w-[6px] bg-[#F2F4F7] rounded-full mx-1">
-                <div className="w-full h-20 bg-[#D0D5DD] rounded-full" />
               </div>
+              )}
             </div>
 
             <div className="w-full lg:w-[380px] shrink-0">
-              <div className="bg-white p-10 rounded-3xl border border-[#E4E7EC] shadow-sm flex flex-col gap-10">
+              <div className="bg-white p-6 rounded-3xl border border-[#E4E7EC] shadow-sm flex flex-col gap-6">
                 <h3 className="text-[24px] font-bold text-[#475467] text-center">
                   Summary
                 </h3>
@@ -1631,23 +1869,6 @@ export default function StockTransferPage() {
                       transferDetail?.status === 0 ? "text-[#101828]" : "text-[#16AB60]",
                     )}>
                       {transferDetail?.status === 0 ? "Pending" : "Completed"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[#667085] font-medium">
-                      Verification:
-                    </span>
-                    <span
-                      className={cn(
-                        "font-bold",
-                        selectedIncoming.status === "Confirm"
-                          ? "text-[#101828]"
-                          : "text-[#16AB60]",
-                      )}
-                    >
-                      {selectedIncoming.status === "Confirm"
-                        ? "Unverified"
-                        : "Verified"}
                     </span>
                   </div>
                   <div className="h-[1px] bg-[#F2F4F7] w-full" />
@@ -1702,6 +1923,11 @@ export default function StockTransferPage() {
         businessName={currentBusinessName}
         onSend={handleSendEmail}
         isLoading={sendingEmail}
+        title="Send Stock Transfer Email"
+        subtitle="Notify the recipient about this stock transfer"
+        emailPlaceholder="recipient@email.com"
+        defaultSubject="Stock Transfer"
+        messagePlaceholder="Add a message to the recipient..."
       />
     </div>
   );

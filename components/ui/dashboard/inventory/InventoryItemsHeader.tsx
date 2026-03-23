@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Search, Plus } from 'lucide-react';
+import { Search, Plus, X } from 'lucide-react';
 
 interface InventoryItemsHeaderProps {
   totalItems: number;
@@ -11,6 +11,8 @@ interface InventoryItemsHeaderProps {
   onItemTypeFilterChange: (value: string) => void;
   stockLevelFilter: string;
   onStockLevelFilterChange: (value: string) => void;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
   onAddItem: () => void;
 }
 
@@ -22,6 +24,8 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
   onItemTypeFilterChange,
   stockLevelFilter,
   onStockLevelFilterChange,
+  hasActiveFilters,
+  onClearFilters,
   onAddItem,
 }) => {
   return (
@@ -99,6 +103,17 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
           <option value="low-stock">Low Stock</option>
           <option value="out-of-stock">Out of Stock</option>
         </select>
+
+        {/* Clear Filters */}
+        {hasActiveFilters && onClearFilters && (
+          <button
+            onClick={onClearFilters}
+            className="flex items-center gap-1 px-3 py-3 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+          >
+            <X className="w-4 h-4" />
+            <span>Clear filters</span>
+          </button>
+        )}
       </div>
     </div>
   );
