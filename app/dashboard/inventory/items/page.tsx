@@ -18,6 +18,15 @@ import RecipeRequiredModal from '@/components/ui/dashboard/inventory/modals/Reci
 import DeleteModal from '@/components/ui/deleteModal';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
 
+// Matches the boundary logic in InventoryItemsTable's getStockBarColor
+function getStockStatus(item: InventoryItem): string {
+  const stock = item.stockLevel ?? 0;
+  const reorder = item.reorderLevel ?? 0;
+  if (stock === 0) return 'out-of-stock';
+  if (stock <= reorder) return 'low-stock';
+  return 'in-stock';
+}
+
 export default function ItemsPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -32,39 +41,22 @@ export default function ItemsPage() {
   // Debounced search for API
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
-  // Map dropdown values to search-friendly labels
-  const typeLabels: Record<string, string> = {
-    '0': 'Direct',
-    '1': 'Ingredient',
-    '2': 'Produced',
-  };
+  const hasActiveFilters = itemTypeFilter !== 'all' || stockLevelFilter !== 'all';
 
-  const stockLabels: Record<string, string> = {
-    'in-stock': 'In Stock',
-    'low-stock': 'Low Stock',
-    'out-of-stock': 'Out of Stock',
-  };
-
-  // Combine text search + dropdown selections into a single Search param
-  const combinedSearch = useMemo(() => {
-    const parts: string[] = [];
-    if (debouncedSearch.trim()) parts.push(debouncedSearch.trim());
-    if (itemTypeFilter !== 'all' && typeLabels[itemTypeFilter]) parts.push(typeLabels[itemTypeFilter]);
-    if (stockLevelFilter !== 'all' && stockLabels[stockLevelFilter]) parts.push(stockLabels[stockLevelFilter]);
-    return parts.join(' ') || undefined;
-  }, [debouncedSearch, itemTypeFilter, stockLevelFilter]);
+  const handleClearFilters = useCallback(() => {
+    setItemTypeFilter('all');
+    setStockLevelFilter('all');
+  }, []);
 
   // Debounce search effect - also reset page when search changes
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (debouncedSearch !== searchQuery) {
-        setPage(1);
-        setDebouncedSearch(searchQuery);
-      }
+      setPage(1);
+      setDebouncedSearch(searchQuery);
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [searchQuery, debouncedSearch, setPage]);
+  }, [searchQuery, setPage]);
 
   // Reset page when filters change
   useEffect(() => {
@@ -84,7 +76,10 @@ export default function ItemsPage() {
   const [isBatchProductionModalOpen, setIsBatchProductionModalOpen] = useState(false);
   const [isRecipeRequiredModalOpen, setIsRecipeRequiredModalOpen] = useState(false);
 
-  // Fetch inventory items
+  // When dropdown filters are active, fetch a larger batch for client-side filtering.
+  // This ensures filtered results are accurate across the full dataset.
+  const FILTERED_BATCH_SIZE = 200;
+
   const {
     data,
     isLoading,
@@ -95,9 +90,9 @@ export default function ItemsPage() {
     hasNext,
     hasPrevious,
   } = useInventoryItems({
-    page,
-    pageSize,
-    search: combinedSearch,
+    page: hasActiveFilters ? 1 : page,
+    pageSize: hasActiveFilters ? FILTERED_BATCH_SIZE : pageSize,
+    search: debouncedSearch.trim() || undefined,
   });
 
   // Recipe enforcement via localStorage
@@ -231,20 +226,55 @@ export default function ItemsPage() {
     router.push(`/dashboard/inventory/items/${item.id}`);
   }, [router]);
 
+  // Apply client-side filters (item type & stock level) on fetched data
+  const filteredData = useMemo(() => {
+    let items = data || [];
+
+    if (itemTypeFilter !== 'all') {
+      const typeNum = parseInt(itemTypeFilter, 10);
+      items = items.filter(item => item.itemType === typeNum);
+    }
+
+    if (stockLevelFilter !== 'all') {
+      items = items.filter(item => getStockStatus(item) === stockLevelFilter);
+    }
+
+    return items;
+  }, [data, itemTypeFilter, stockLevelFilter]);
+
+  // When filters are active, paginate the filtered results client-side
+  const clientPaginatedData = useMemo(() => {
+    if (!hasActiveFilters) return filteredData;
+    const start = (page - 1) * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, hasActiveFilters, page, pageSize]);
+
+  const filteredTotalPages = Math.ceil(filteredData.length / pageSize) || 1;
+
   // Structure data with pagination info for usePagination hook
   const tableData = useMemo(() => {
+    if (hasActiveFilters) {
+      return {
+        data: clientPaginatedData,
+        totalCount: filteredData.length,
+        totalPages: filteredTotalPages,
+        currentPage: page,
+        hasNext: page < filteredTotalPages,
+        hasPrevious: page > 1,
+      };
+    }
     return {
-      data: data || [],
+      data: filteredData,
       totalCount,
       totalPages,
       currentPage,
       hasNext,
       hasPrevious,
     };
-  }, [data, totalCount, totalPages, currentPage, hasNext, hasPrevious]);
+  }, [hasActiveFilters, clientPaginatedData, filteredData, filteredTotalPages, page, totalCount, totalPages, currentPage, hasNext, hasPrevious]);
 
   // Computed values
-  const totalItems = totalCount || 0;
+  const totalItems = hasActiveFilters ? filteredData.length : (totalCount || 0);
 
   if (isLoading && (!data || data.length === 0) && page === 1) {
     return <CustomLoading />;
@@ -263,6 +293,8 @@ export default function ItemsPage() {
             onItemTypeFilterChange={setItemTypeFilter}
             stockLevelFilter={stockLevelFilter}
             onStockLevelFilterChange={setStockLevelFilter}
+            hasActiveFilters={hasActiveFilters}
+            onClearFilters={handleClearFilters}
             onAddItem={handleAddItem}
           />
         </div>

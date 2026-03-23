@@ -938,7 +938,7 @@ export async function getStockTransferDetails(transferOrderId: string) {
     const data = await api.get(DASHBOARD.stockTransfer, { headers });
     return data;
   } catch (error) {
-    handleError(error, false);
+    handleError(error);
   }
 }
 

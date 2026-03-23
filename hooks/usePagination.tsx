@@ -268,11 +268,14 @@ function usePagination<T = any>(arrayToMap: any, columns: T[] = [], visibleColum
     // Type 4: Has quickResponses array (QR codes)
     if (Array.isArray(arrayToMap.quickResponses)) return arrayToMap.quickResponses;
 
-    // Type 5: Is itself an array
-    if (Array.isArray(arrayToMap)) return arrayToMap;
+    // Type 5: Is itself an array — apply client-side pagination
+    if (Array.isArray(arrayToMap)) {
+      const start = (page - 1) * rowsPerPage;
+      return arrayToMap.slice(start, start + rowsPerPage);
+    }
 
     return [];
-  }, [arrayToMap]);
+  }, [arrayToMap, page, rowsPerPage]);
 
   // Handle data accumulation for mobile infinite scroll
   useEffect(() => {

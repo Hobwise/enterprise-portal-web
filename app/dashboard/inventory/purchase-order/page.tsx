@@ -45,7 +45,6 @@ export default function PurchaseRequestPage() {
   // Hooks
   const { data: suppliers, isLoading: suppliersLoading } = useSuppliers();
   const { data: units } = useUnitsByBusiness();
-
   const businessInformation = getJsonItemFromLocalStorage('business');
   const businessId = businessInformation?.[0]?.businessId;
   const userInformation = getJsonItemFromLocalStorage('userInformation');

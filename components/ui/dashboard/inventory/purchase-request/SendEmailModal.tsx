@@ -23,6 +23,11 @@ interface SendEmailModalProps {
   onSend: (to: string, cc: string, subject: string, message: string, attachment: File | null) => void;
   isLoading?: boolean;
   purchaseOrderData?: PurchaseRequest | null;
+  title?: string;
+  subtitle?: string;
+  emailPlaceholder?: string;
+  defaultSubject?: string;
+  messagePlaceholder?: string;
 }
 
 const SendEmailModal: React.FC<SendEmailModalProps> = ({
@@ -32,11 +37,16 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
   onSend,
   isLoading,
   purchaseOrderData,
+  title = "Send Email to Supplier",
+  subtitle = "Notify the supplier about this purchase order",
+  emailPlaceholder = "supplier@email.com",
+  defaultSubject = "Purchase Order",
+  messagePlaceholder = "Add a message to the supplier...",
 }) => {
   const [to, setTo] = useState("");
   const [cc, setCc] = useState("");
   const [ccError, setCcError] = useState("");
-  const [subject, setSubject] = useState("Purchase Order");
+  const [subject, setSubject] = useState(defaultSubject);
   const [attachment, setAttachment] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -46,7 +56,7 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
       setTo(supplierEmail);
       setCc("");
       setCcError("");
-      setSubject("Purchase Order");
+      setSubject(defaultSubject);
       if (editorRef.current) {
         editorRef.current.innerHTML = "";
       }
@@ -102,10 +112,10 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
                   </div>
                   <div>
                     <h2 className="text-sm font-bold text-[#3D424A]">
-                      Send Email to Supplier
+                      {title}
                     </h2>
                     <p className="text-xs text-gray-400 font-normal">
-                      Notify the supplier about this purchase order
+                      {subtitle}
                     </p>
                   </div>
                 </div>
@@ -127,7 +137,7 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
                     type="email"
                     value={to}
                     onChange={(e) => setTo(e.target.value)}
-                    placeholder="supplier@email.com"
+                    placeholder={emailPlaceholder}
                     className={inputClassName}
                   />
                 </div>
@@ -230,7 +240,7 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
                   <div
                     ref={editorRef}
                     contentEditable
-                    data-placeholder="Add a message to the supplier..."
+                    data-placeholder={messagePlaceholder}
                     className="w-full min-h-[120px] max-h-[200px] overflow-y-auto px-3 py-2 text-sm text-gray-700 bg-white focus:outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
                   />
                 </div>
