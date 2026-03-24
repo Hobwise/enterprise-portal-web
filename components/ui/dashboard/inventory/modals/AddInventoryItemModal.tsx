@@ -43,8 +43,15 @@ const AddInventoryItemModal: React.FC<AddInventoryItemModalProps> = ({
   const [loading, setLoading] = useState(false);
 
   // Hooks
-  const { data: suppliers, isLoading: suppliersLoading } = useSuppliers();
+  const { data: suppliers, isLoading: suppliersLoading, refetch: refetchSuppliers } = useSuppliers();
   const { data: unitsByBusiness, isLoading: unitsByBusinessLoading } = useUnitsByBusiness();
+
+  // Refetch suppliers when modal opens to pick up newly created ones
+  useEffect(() => {
+    if (isOpen) {
+      refetchSuppliers();
+    }
+  }, [isOpen]);
 
   // Reset form when modal closes
   useEffect(() => {

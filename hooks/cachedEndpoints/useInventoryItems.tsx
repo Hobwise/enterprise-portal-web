@@ -285,7 +285,6 @@ export const useSuppliers = () => {
     queryKey: ["suppliers", businessId],
     queryFn: fetchSuppliers,
     ...fetchQueryConfig(),
-    staleTime: 30 * 60 * 1000,
     retry: 1,
     enabled: !!businessId,
   });
