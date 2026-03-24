@@ -55,14 +55,15 @@ const getItemTypeLabel = (type: InventoryItemType) => {
 };
 
 const getStockPercentage = (stockLevel: number, reorderLevel: number): number => {
-  const fullCapacity = reorderLevel * 4;
-  if (fullCapacity <= 0) return stockLevel > 0 ? 100 : 0;
-  return Math.min(100, Math.max(0, (stockLevel / fullCapacity) * 100));
+  if (stockLevel === 0) return 0;
+  if (reorderLevel <= 0) return 100;
+  if (stockLevel > reorderLevel) return 100;
+  return Math.max(5, Math.round((stockLevel / reorderLevel) * 100));
 };
 
 const getStockBarColor = (stockLevel: number, reorderLevel: number): string => {
   if (stockLevel === 0) return 'bg-red-500';
-  if (stockLevel <= reorderLevel) return 'bg-amber-500';
+  if (reorderLevel > 0 && stockLevel <= reorderLevel) return 'bg-red-500';
   return 'bg-emerald-500';
 };
 

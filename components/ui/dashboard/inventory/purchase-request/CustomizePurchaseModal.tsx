@@ -175,7 +175,14 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
     y += 5;
     drawValue(requestId, col1, y);
     drawValue(todayFormatted, col2, y);
-    drawValue(expectedDate || "N/A", col3, y);
+    const formattedExpectedDate = expectedDate
+      ? new Date(expectedDate + "T00:00:00").toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+        })
+      : "N/A";
+    drawValue(formattedExpectedDate, col3, y);
     y += 10;
 
     // VENDOR / SHIP TO table

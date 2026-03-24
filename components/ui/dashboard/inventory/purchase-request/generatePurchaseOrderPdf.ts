@@ -66,7 +66,14 @@ export function generatePurchaseOrderPdfFile(order: PurchaseRequest): File {
   y += 5;
   drawValue(order.reference || "N/A", col1, y);
   drawValue(order.requestDate || "N/A", col2, y);
-  drawValue(order.expectedDeliveryDate || "N/A", col3, y);
+  const formattedExpectedDate = order.expectedDeliveryDate
+    ? new Date(order.expectedDeliveryDate + "T00:00:00").toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      })
+    : "N/A";
+  drawValue(formattedExpectedDate, col3, y);
   y += 10;
 
   // VENDOR / SHIP TO table
