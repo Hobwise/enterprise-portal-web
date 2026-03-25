@@ -152,6 +152,9 @@ export const DASHBOARD = {
   inventoryWizardPredict: "api/v1/InventoryWizard/predict",
   inventoryWizardSynchronize: "api/v1/InventoryWizard/synchronize",
   inventoryWizardSetup: "api/v1/InventoryWizard/setup",
+  // Stock Adjustment
+  stockAdjustment: "api/v1/StockAdjustment",
+  stockAdjustmentReasons: "api/v1/StockAdjustment/reasons/lov",
 };
 
 export const INVENTORY = {
