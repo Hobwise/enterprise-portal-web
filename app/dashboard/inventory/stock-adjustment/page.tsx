@@ -15,105 +15,19 @@ import {
   Checkbox,
 } from "@nextui-org/react";
 import { Search, ArrowRight, X } from "lucide-react";
+import { LuSearch } from "react-icons/lu";
 import { StockAdjustmentIcon } from "@/public/assets/svg";
 import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import useInventoryItems from "@/hooks/cachedEndpoints/useInventoryItems";
-import { InventoryItem } from "@/app/api/controllers/dashboard/inventory";
+import useStockAdjustment from "@/hooks/cachedEndpoints/useStockAdjustment";
+import {
+  InventoryItem,
+  StockAdjustmentReason,
+  StockAdjustmentHistoryItem,
+} from "@/app/api/controllers/dashboard/inventory";
+import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
 
 type MainTab = "adjustment" | "activity-log";
-
-const ADJUSTMENT_REASONS = [
-  "Physical stock count correction",
-  "Wastage/spoilage",
-  "Theft/Loss",
-  "Supplier discrepancy",
-  "Kitchen prep adjustment",
-  "Data correction",
-];
-
-const STAFF_OPTIONS = ["Jane Doe", "John Smith", "Esther O.", "David K."];
-
-// Mock data for activity log
-const mockActivityLog = [
-  {
-    id: "1",
-    date: "1/02/2026",
-    time: "10:26 am",
-    transferId: "45412PR",
-    itemName: "Stallion long grain rice",
-    supplierName: "Sandra Okoro",
-    units: "Kilo",
-    oldStock: 7,
-    newStock: 7,
-    difference: 5,
-    reason: "Physical stock count correction",
-  },
-  {
-    id: "2",
-    date: "1/02/2026",
-    time: "10:26 am",
-    transferId: "45412PR",
-    itemName: "Golden Penny Spaghetti",
-    supplierName: "Seun Obafemi",
-    units: "Kilo",
-    oldStock: 5,
-    newStock: 5,
-    difference: 10,
-    reason: "Wastage/spoilage",
-  },
-  {
-    id: "3",
-    date: "1/02/2026",
-    time: "10:26 am",
-    transferId: "45412PR",
-    itemName: "Golden Penny Twist Pasta",
-    supplierName: "Rachel Laurence",
-    units: "Kilo",
-    oldStock: 12,
-    newStock: 12,
-    difference: 20,
-    reason: "Theft/Loss",
-  },
-  {
-    id: "4",
-    date: "1/02/2026",
-    time: "10:26 am",
-    transferId: "45412PR",
-    itemName: "Gino Tin Tomato Paste",
-    supplierName: "Bunmi Susan",
-    units: "Kilo",
-    oldStock: 9,
-    newStock: 9,
-    difference: 8,
-    reason: "Supplier discrepancy",
-  },
-  {
-    id: "5",
-    date: "1/02/2026",
-    time: "10:26 am",
-    transferId: "45412PR",
-    itemName: "Stallion Basmati Rice",
-    supplierName: "Mark Osu",
-    units: "Kilo",
-    oldStock: 5,
-    newStock: 5,
-    difference: 12,
-    reason: "Kitchen prep adjustment",
-  },
-  {
-    id: "6",
-    date: "1/02/2026",
-    time: "10:26 am",
-    transferId: "45412PR",
-    itemName: "Kings Vegetable Oil",
-    supplierName: "Ope Falana",
-    units: "Ltr",
-    oldStock: 7,
-    newStock: 7,
-    difference: 9,
-    reason: "Data correction",
-  },
-];
 
 interface AdjustmentItem {
   id: string;
@@ -121,11 +35,11 @@ interface AdjustmentItem {
   unit: string;
   oldStock: number;
   newStock: number;
-  staff: string;
   reason: string;
+  reasonValue: number;
+  movement: number;
   selected: boolean;
   date: string;
-  transferId: string;
 }
 
 export default function StockAdjustmentPage() {
@@ -136,8 +50,8 @@ export default function StockAdjustmentPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [newStock, setNewStock] = useState("");
-  const [staff, setStaff] = useState("");
-  const [reason, setReason] = useState("");
+  const [selectedReason, setSelectedReason] =
+    useState<StockAdjustmentReason | null>(null);
 
   // Multi-adjustment state
   const [multiSearchQuery, setMultiSearchQuery] = useState("");
@@ -151,6 +65,37 @@ export default function StockAdjustmentPage() {
 
   const businessInformation = getJsonItemFromLocalStorage("business");
   const businessName = businessInformation?.[0]?.businessName || "Maryland";
+
+  // Read fresh IDs for submission payloads to avoid stale closures
+  const getFreshIds = () => {
+    const biz = getJsonItemFromLocalStorage("business");
+    const user = getJsonItemFromLocalStorage("userInformation");
+    return {
+      businessID: biz?.[0]?.businessId || "",
+      cooperateID: user?.cooperateID || "",
+    };
+  };
+
+  // Stock adjustment hook
+  const {
+    history,
+    totalCount,
+    totalPages,
+    currentPage,
+    hasNext,
+    hasPrevious,
+    isLoadingHistory,
+    refetchHistory,
+    reasons,
+    isLoadingReasons,
+    submitAdjustment,
+    isSubmitting,
+    page: historyPage,
+    setPage: setHistoryPage,
+    search: historySearch,
+    setSearch: setHistorySearch,
+    pageSize: historyPageSize,
+  } = useStockAdjustment();
 
   // Fetch inventory items for search
   const { data: inventoryItems, isLoading: itemsLoading } = useInventoryItems({
@@ -184,16 +129,44 @@ export default function StockAdjustmentPage() {
     return () => clearTimeout(timeout);
   }, [multiSearchQuery]);
 
+  // Debounce activity log search
+  const [activitySearchInput, setActivitySearchInput] = useState("");
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setHistorySearch(activitySearchInput);
+      setHistoryPage(1);
+    }, 500);
+    return () => clearTimeout(timeout);
+  }, [activitySearchInput]);
+
   const stockDifference = useMemo(() => {
     if (!selectedItem || !newStock) return 0;
     return Number(newStock) - (selectedItem.stockLevel || 0);
   }, [selectedItem, newStock]);
+
+  // Filter reasons by movement direction based on stock difference
+  const applicableReasons = useMemo(() => {
+    if (!selectedItem || !newStock) return reasons;
+    const diff = Number(newStock) - (selectedItem.stockLevel || 0);
+    if (diff > 0) return reasons.filter((r) => r.movement === 0);
+    if (diff < 0) return reasons.filter((r) => r.movement === 1);
+    return reasons;
+  }, [selectedItem, newStock, reasons]);
+
+  // Get applicable reasons for a multi-item based on its stock difference
+  const getItemReasons = (item: AdjustmentItem) => {
+    const diff = item.newStock - item.oldStock;
+    if (diff > 0) return reasons.filter((r) => r.movement === 0);
+    if (diff < 0) return reasons.filter((r) => r.movement === 1);
+    return reasons;
+  };
 
   const handleSelectItem = (item: InventoryItem) => {
     setSelectedItem(item);
     setSearchQuery(item.name);
     setShowDropdown(false);
     setNewStock("");
+    setSelectedReason(null);
   };
 
   const handleAddMultiItem = (item: InventoryItem) => {
@@ -215,11 +188,11 @@ export default function StockAdjustmentPage() {
         unit: item.unitCode || item.unitName || "Unit",
         oldStock: item.stockLevel || 0,
         newStock: 0,
-        staff: "Jane Doe",
-        reason: ADJUSTMENT_REASONS[0],
+        reason: "",
+        reasonValue: 0,
+        movement: 0,
         selected: false,
         date: new Date().toLocaleDateString("en-GB"),
-        transferId: "45412PR",
       },
     ]);
     setMultiSearchQuery("");
@@ -232,7 +205,43 @@ export default function StockAdjustmentPage() {
     value: any
   ) => {
     setAdjustmentItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+      prev.map((item) => {
+        if (item.id !== id) return item;
+        const updated = { ...item, [field]: value };
+        // Reset reason when stock changes direction
+        if (field === "newStock") {
+          const oldDiff = item.newStock - item.oldStock;
+          const newDiff = (value as number) - item.oldStock;
+          if (
+            (oldDiff > 0 && newDiff < 0) ||
+            (oldDiff < 0 && newDiff > 0) ||
+            newDiff === 0
+          ) {
+            updated.reason = "";
+            updated.reasonValue = 0;
+            updated.movement = 0;
+          }
+        }
+        return updated;
+      })
+    );
+  };
+
+  const handleUpdateMultiItemReason = (
+    id: string,
+    reason: StockAdjustmentReason
+  ) => {
+    setAdjustmentItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              reason: reason.name,
+              reasonValue: reason.value,
+              movement: reason.movement,
+            }
+          : item
+      )
     );
   };
 
@@ -267,15 +276,7 @@ export default function StockAdjustmentPage() {
       });
       return;
     }
-    if (!staff) {
-      notify({
-        title: "Select staff",
-        text: "Please select a staff member",
-        type: "error",
-      });
-      return;
-    }
-    if (!reason) {
+    if (!selectedReason) {
       notify({
         title: "Select reason",
         text: "Please select a reason for adjustment",
@@ -284,17 +285,46 @@ export default function StockAdjustmentPage() {
       return;
     }
 
-    notify({
-      title: "Stock Adjusted",
-      text: `${selectedItem.name} stock adjusted from ${selectedItem.stockLevel} to ${newStock}`,
-      type: "success",
-    });
+    const quantity = Math.abs(
+      Number(newStock) - (selectedItem.stockLevel || 0)
+    );
 
-    setSelectedItem(null);
-    setSearchQuery("");
-    setNewStock("");
-    setStaff("");
-    setReason("");
+    if (quantity === 0) {
+      notify({
+        title: "No change",
+        text: "New stock is the same as old stock",
+        type: "warning",
+      });
+      return;
+    }
+
+    const { businessID, cooperateID } = getFreshIds();
+
+    submitAdjustment(
+      {
+        adjustments: [
+          {
+            inventoryItemId: selectedItem.id,
+            quantity,
+            adjustmentType: selectedReason.value,
+            movementType: selectedReason.movement,
+            reason: selectedReason.name,
+          },
+        ],
+        cooperateID,
+        businessID,
+      },
+      {
+        onSuccess: (response: any) => {
+          if (response?.data?.isSuccessful) {
+            setSelectedItem(null);
+            setSearchQuery("");
+            setNewStock("");
+            setSelectedReason(null);
+          }
+        },
+      }
+    );
   };
 
   const handleAdjustMultipleStocks = () => {
@@ -307,11 +337,38 @@ export default function StockAdjustmentPage() {
       return;
     }
 
-    notify({
-      title: "Stocks Adjusted",
-      text: `${adjustmentItems.length} item(s) have been adjusted`,
-      type: "success",
-    });
+    const invalidItems = adjustmentItems.filter(
+      (item) => !item.reason || item.newStock === item.oldStock
+    );
+    if (invalidItems.length > 0) {
+      notify({
+        title: "Incomplete items",
+        text: "Ensure all items have a reason and changed stock level",
+        type: "warning",
+      });
+      return;
+    }
+
+    const adjustments = adjustmentItems.map((item) => ({
+      inventoryItemId: item.id,
+      quantity: Math.abs(item.newStock - item.oldStock),
+      adjustmentType: item.reasonValue,
+      movementType: item.movement,
+      reason: item.reason,
+    }));
+
+    const { businessID, cooperateID } = getFreshIds();
+
+    submitAdjustment(
+      { adjustments, cooperateID, businessID },
+      {
+        onSuccess: (response: any) => {
+          if (response?.data?.isSuccessful) {
+            setAdjustmentItems([]);
+          }
+        },
+      }
+    );
   };
 
   const filteredMultiSearchItems = useMemo(() => {
@@ -320,8 +377,34 @@ export default function StockAdjustmentPage() {
     return multiSearchItems.filter((item) => !existingIds.has(item.id));
   }, [multiSearchItems, adjustmentItems]);
 
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const formatTime = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return "";
+    }
+  };
+
   return (
-    <div className="w-full min-h-screen bg-[#F8F9FB]">
+    <div className="w-full min-h-screen">
       {/* Top Tabs + Current Store */}
       <div className="flex items-center justify-between px-6 pt-4 pb-2">
         <div className="flex items-center gap-1">
@@ -414,7 +497,7 @@ export default function StockAdjustmentPage() {
             </div>
 
             {/* Quick Adjustment Card */}
-            <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 mb-4 max-w-[750px] mx-auto">
+            <div className="border border-gray-200 rounded-lg p-6 bg-white mb-4 max-w-[750px] mx-auto">
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-10 h-10 rounded-full bg-[#F0ECFB] flex items-center justify-center">
                   <StockAdjustmentIcon className="w-5 h-5 text-[#5F35D2]" />
@@ -441,11 +524,12 @@ export default function StockAdjustmentPage() {
                   onFocus={() => {
                     if (searchQuery) setShowDropdown(true);
                   }}
+                  variant="bordered"
                   endContent={<Search className="w-4 h-4 text-[#98A2B3]" />}
                   classNames={{
                     inputWrapper:
-                      "bg-white border border-[#E4E7EC] rounded-lg shadow-none",
-                    input: "text-sm",
+                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-[48px]",
+                    input: "text-sm text-[#101828]",
                   }}
                 />
                 {showDropdown && searchQuery && (
@@ -481,14 +565,14 @@ export default function StockAdjustmentPage() {
             </div>
 
             {/* Stock Info Row */}
-            <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 mb-4 max-w-[750px] mx-auto">
+            <div className="border border-gray-200 rounded-lg p-6 bg-white mb-4 max-w-[750px] mx-auto">
               <div className="grid grid-cols-3 gap-6">
                 <div>
                   <label className="text-xs text-[#667085] font-medium mb-2 block">
                     Old Stock
                   </label>
                   <div className="text-base font-medium text-[#101828] py-2">
-                    {selectedItem ? selectedItem.stockLevel || 0 : "—"}
+                    {selectedItem ? selectedItem.stockLevel || 0 : "\u2014"}
                   </div>
                 </div>
                 <div>
@@ -499,11 +583,15 @@ export default function StockAdjustmentPage() {
                     type="number"
                     placeholder="0"
                     value={newStock}
-                    onChange={(e) => setNewStock(e.target.value)}
+                    onChange={(e) => {
+                      setNewStock(e.target.value);
+                      setSelectedReason(null);
+                    }}
+                    variant="bordered"
                     classNames={{
                       inputWrapper:
-                        "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-10",
-                      input: "text-sm",
+                        "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
+                      input: "text-sm text-[#101828]",
                     }}
                     isDisabled={!selectedItem}
                   />
@@ -524,59 +612,45 @@ export default function StockAdjustmentPage() {
                   >
                     {selectedItem && newStock
                       ? `${stockDifference > 0 ? "+" : ""}${stockDifference}`
-                      : "—"}
+                      : "\u2014"}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Staff & Reason Row */}
-            <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6 mb-6 max-w-[750px] mx-auto">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <label className="text-xs text-[#667085] font-medium mb-2 block">
-                    Staff
-                  </label>
-                  <Select
-                    placeholder="Select staff"
-                    selectedKeys={staff ? [staff] : []}
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0] as string;
-                      setStaff(val || "");
-                    }}
-                    classNames={{
-                      trigger:
-                        "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-10",
-                      value: "text-sm",
-                    }}
-                  >
-                    {STAFF_OPTIONS.map((s) => (
-                      <SelectItem key={s}>{s}</SelectItem>
-                    ))}
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-xs text-[#667085] font-medium mb-2 block">
-                    Reason for Adjustment
-                  </label>
-                  <Select
-                    placeholder="Select reason"
-                    selectedKeys={reason ? [reason] : []}
-                    onSelectionChange={(keys) => {
-                      const val = Array.from(keys)[0] as string;
-                      setReason(val || "");
-                    }}
-                    classNames={{
-                      trigger:
-                        "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-10",
-                      value: "text-sm",
-                    }}
-                  >
-                    {ADJUSTMENT_REASONS.map((r) => (
-                      <SelectItem key={r}>{r}</SelectItem>
-                    ))}
-                  </Select>
-                </div>
+            {/* Reason Row */}
+            <div className="border border-gray-200 rounded-lg p-6 bg-white mb-6 max-w-[750px] mx-auto">
+              <div>
+                <label className="text-xs text-[#667085] font-medium mb-2 block">
+                  Reason for Adjustment
+                </label>
+                <Select
+                  placeholder={
+                    isLoadingReasons ? "Loading reasons..." : "Select reason"
+                  }
+                  selectedKeys={
+                    selectedReason ? [String(selectedReason.value)] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0] as string;
+                    const found = reasons.find(
+                      (r) => String(r.value) === val
+                    );
+                    setSelectedReason(found || null);
+                  }}
+                  variant="bordered"
+                  isDisabled={isLoadingReasons || !selectedItem || !newStock}
+                  classNames={{
+                    trigger:
+                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
+                    value: "text-sm text-[#101828]",
+                    listboxWrapper: "max-h-[300px]",
+                  }}
+                >
+                  {applicableReasons.map((r) => (
+                    <SelectItem key={String(r.value)} className="text-[#101828]">{r.name}</SelectItem>
+                  ))}
+                </Select>
               </div>
             </div>
 
@@ -594,6 +668,8 @@ export default function StockAdjustmentPage() {
                 className="flex-1 h-12 rounded-xl bg-[#5F35D2] text-white font-semibold text-sm"
                 endContent={<ArrowRight className="w-4 h-4" />}
                 onPress={handleAdjustStock}
+                isLoading={isSubmitting}
+                isDisabled={isSubmitting}
               >
                 Adjust Stock
               </Button>
@@ -604,22 +680,11 @@ export default function StockAdjustmentPage() {
         {/* Multi-Item Adjustment View */}
         {mainTab === "adjustment" && isMultiMode && (
           <div>
-            {/* Filter Bar */}
-            <div className="flex items-center gap-3 mb-4">
-              {/* Selected Items Badge */}
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-sm font-medium text-[#5F35D2]">
-                  Selected Items
-                </span>
-                <span className="w-6 h-6 rounded-full bg-[#5F35D2] text-white text-xs flex items-center justify-center font-semibold">
-                  {adjustmentItems.length}
-                </span>
-              </div>
-
-              {/* Search */}
-              <div className="flex-1 relative">
+            {/* Search Bar - full width */}
+            <div className="flex gap-4 mb-4">
+              <div className="relative flex-1">
                 <Input
-                  placeholder="Search items here"
+                  placeholder="Search and add items"
                   value={multiSearchQuery}
                   onChange={(e) => {
                     setMultiSearchQuery(e.target.value);
@@ -628,15 +693,18 @@ export default function StockAdjustmentPage() {
                   onFocus={() => {
                     if (multiSearchQuery) setShowMultiDropdown(true);
                   }}
-                  startContent={<Search className="w-4 h-4 text-[#98A2B3]" />}
+                  variant="bordered"
+                  endContent={
+                    <Search className="w-5 h-5 text-[#98A2B3] cursor-pointer" />
+                  }
                   classNames={{
                     inputWrapper:
-                      "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-10",
-                    input: "text-sm placeholder:text-[#D0D5DD]",
+                      "bg-white border-[#E4E7EC] h-[48px] rounded-lg px-4 shadow-none",
+                    input: "text-sm text-[#101828]",
                   }}
                 />
                 {showMultiDropdown && multiSearchQuery && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#E4E7EC] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                     {filteredMultiSearchItems.length === 0 ? (
                       <div className="p-3 text-sm text-[#667085]">
                         No items found
@@ -661,59 +729,47 @@ export default function StockAdjustmentPage() {
                   </div>
                 )}
               </div>
-
-              {/* Stock Level Filter */}
-              <Select
-                placeholder="Stock Level"
-                selectedKeys={
-                  stockLevelFilter !== "all" ? [stockLevelFilter] : []
-                }
-                onSelectionChange={(keys) => {
-                  const val = Array.from(keys)[0] as string;
-                  setStockLevelFilter(val || "all");
-                }}
-                classNames={{
-                  trigger:
-                    "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-10 w-[150px]",
-                  value: "text-sm text-[#98A2B3]",
-                }}
-              >
-                <SelectItem key="all">All Levels</SelectItem>
-                <SelectItem key="low">Low Stock</SelectItem>
-                <SelectItem key="medium">Medium Stock</SelectItem>
-                <SelectItem key="high">High Stock</SelectItem>
-              </Select>
-
-              {/* Item Type Filter */}
-              <Select
-                placeholder="Item Type"
-                selectedKeys={
-                  itemTypeFilter !== "all" ? [itemTypeFilter] : []
-                }
-                onSelectionChange={(keys) => {
-                  const val = Array.from(keys)[0] as string;
-                  setItemTypeFilter(val || "all");
-                }}
-                classNames={{
-                  trigger:
-                    "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-10 w-[150px]",
-                  value: "text-sm text-[#98A2B3]",
-                }}
-              >
-                <SelectItem key="all">All Types</SelectItem>
-                <SelectItem key="0">Direct</SelectItem>
-                <SelectItem key="1">Ingredient</SelectItem>
-                <SelectItem key="2">Produced</SelectItem>
-              </Select>
             </div>
 
-            {/* Table Card */}
-            <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6">
-              <h2 className="text-xl font-bold text-[#101828] mb-1">
-                Stock Adjustment History
-              </h2>
-              <div className="border-b border-[#E4E7EC] mb-4" />
+            {/* Filters Row */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                {/* Selected Items Badge */}
+                <span className="text-sm font-medium text-[#5F35D2]">
+                  Selected Items
+                </span>
+                <span className="w-6 h-6 rounded-full bg-[#5F35D2] text-white text-xs flex items-center justify-center font-semibold">
+                  {adjustmentItems.length}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                {/* Stock Level Filter */}
+                <select
+                  value={stockLevelFilter}
+                  onChange={(e) => setStockLevelFilter(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
+                >
+                  <option value="all">Stock Level</option>
+                  <option value="low">Low Stock</option>
+                  <option value="medium">Medium Stock</option>
+                  <option value="high">High Stock</option>
+                </select>
 
+                {/* Item Type Filter */}
+                <select
+                  value={itemTypeFilter}
+                  onChange={(e) => setItemTypeFilter(e.target.value)}
+                  className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
+                >
+                  <option value="all">Item Type</option>
+                  <option value="0">Direct</option>
+                  <option value="1">Ingredient</option>
+                  <option value="2">Produced</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="relative border border-primaryGrey rounded-lg overflow-visible">
               {adjustmentItems.length === 0 ? (
                 /* Empty State */
                 <div className="flex flex-col items-center justify-center py-20">
@@ -727,31 +783,48 @@ export default function StockAdjustmentPage() {
                 </div>
               ) : (
                 /* Items Table */
-                <div className="overflow-x-auto">
+                <div className="max-h-[382px] overflow-auto">
                   <Table
-                    aria-label="Stock adjustment items"
+                    radius="lg"
+                    isCompact
                     removeWrapper
+                    aria-label="Stock adjustment items"
                     classNames={{
-                      th: "bg-transparent text-[#667085] text-xs font-medium border-b border-[#E4E7EC] py-3",
-                      td: "py-4 text-sm text-[#101828]",
-                      tr: "border-b border-[#F2F4F7] last:border-0",
+                      th: [
+                        "text-default-500",
+                        "text-xs",
+                        "border-b",
+                        "border-divider",
+                        "py-4",
+                        "rounded-none",
+                        "bg-grey300",
+                      ],
+                      tr: "border-b border-divider rounded-none",
+                      td: [
+                        "py-3",
+                        "text-textGrey",
+                        "group-data-[first=true]:first:before:rounded-none",
+                        "group-data-[first=true]:last:before:rounded-none",
+                        "group-data-[middle=true]:before:rounded-none",
+                        "group-data-[last=true]:first:before:rounded-none",
+                        "group-data-[last=true]:last:before:rounded-none",
+                      ],
                     }}
                   >
                     <TableHeader>
                       <TableColumn>{" "}</TableColumn>
-                      <TableColumn>Date</TableColumn>
-                      <TableColumn>Transfer ID</TableColumn>
-                      <TableColumn>Item Name</TableColumn>
-                      <TableColumn>Units</TableColumn>
-                      <TableColumn>Old Stock</TableColumn>
-                      <TableColumn>New Stock</TableColumn>
-                      <TableColumn>Difference</TableColumn>
-                      <TableColumn>Staff</TableColumn>
-                      <TableColumn>Item Name</TableColumn>
+                      <TableColumn>DATE</TableColumn>
+                      <TableColumn>ITEM NAME</TableColumn>
+                      <TableColumn>UNITS</TableColumn>
+                      <TableColumn>OLD STOCK</TableColumn>
+                      <TableColumn>NEW STOCK</TableColumn>
+                      <TableColumn>DIFFERENCE</TableColumn>
+                      <TableColumn>REASON</TableColumn>
                     </TableHeader>
                     <TableBody>
                       {adjustmentItems.map((item) => {
                         const diff = item.newStock - item.oldStock;
+                        const itemReasons = getItemReasons(item);
                         return (
                           <TableRow key={item.id}>
                             <TableCell>
@@ -765,9 +838,6 @@ export default function StockAdjustmentPage() {
                             </TableCell>
                             <TableCell className="text-[#667085] whitespace-nowrap">
                               {item.date}
-                            </TableCell>
-                            <TableCell className="text-[#667085]">
-                              {item.transferId}
                             </TableCell>
                             <TableCell className="font-medium whitespace-nowrap">
                               {item.name}
@@ -787,10 +857,11 @@ export default function StockAdjustmentPage() {
                                     Number(e.target.value)
                                   )
                                 }
+                                variant="bordered"
                                 classNames={{
                                   inputWrapper:
-                                    "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-8 w-20",
-                                  input: "text-sm text-center",
+                                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-8 w-20",
+                                  input: "text-sm text-center text-[#101828]",
                                 }}
                               />
                             </TableCell>
@@ -812,49 +883,32 @@ export default function StockAdjustmentPage() {
                             </TableCell>
                             <TableCell>
                               <Select
-                                selectedKeys={[item.staff]}
+                                placeholder="Select reason"
+                                selectedKeys={
+                                  item.reason ? [item.reason] : []
+                                }
                                 onSelectionChange={(keys) => {
                                   const val = Array.from(keys)[0] as string;
-                                  if (val)
-                                    handleUpdateMultiItem(
-                                      item.id,
-                                      "staff",
-                                      val
-                                    );
+                                  const found = reasons.find(
+                                    (r) => r.name === val
+                                  );
+                                  if (found)
+                                    handleUpdateMultiItemReason(item.id, found);
                                 }}
+                                variant="bordered"
                                 classNames={{
                                   trigger:
-                                    "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-8 w-[120px] min-w-[120px]",
-                                  value: "text-xs",
+                                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-8 w-[200px] min-w-[200px]",
+                                  value: "text-xs text-[#101828]",
+                                  listboxWrapper: "max-h-[200px]",
                                 }}
                                 size="sm"
+                                isDisabled={diff === 0}
                               >
-                                {STAFF_OPTIONS.map((s) => (
-                                  <SelectItem key={s}>{s}</SelectItem>
-                                ))}
-                              </Select>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                selectedKeys={[item.reason]}
-                                onSelectionChange={(keys) => {
-                                  const val = Array.from(keys)[0] as string;
-                                  if (val)
-                                    handleUpdateMultiItem(
-                                      item.id,
-                                      "reason",
-                                      val
-                                    );
-                                }}
-                                classNames={{
-                                  trigger:
-                                    "bg-white border border-[#E4E7EC] rounded-lg shadow-none h-8 w-[200px] min-w-[200px]",
-                                  value: "text-xs",
-                                }}
-                                size="sm"
-                              >
-                                {ADJUSTMENT_REASONS.map((r) => (
-                                  <SelectItem key={r}>{r}</SelectItem>
+                                {itemReasons.map((r) => (
+                                  <SelectItem key={r.name} className="text-[#101828]">
+                                    {r.name}
+                                  </SelectItem>
                                 ))}
                               </Select>
                             </TableCell>
@@ -883,6 +937,8 @@ export default function StockAdjustmentPage() {
                   className="h-12 rounded-xl bg-[#5F35D2] text-white font-semibold text-sm px-8"
                   endContent={<ArrowRight className="w-4 h-4" />}
                   onPress={handleAdjustMultipleStocks}
+                  isLoading={isSubmitting}
+                  isDisabled={isSubmitting}
                 >
                   Adjust Stocks
                 </Button>
@@ -893,66 +949,132 @@ export default function StockAdjustmentPage() {
 
         {/* Activity Log View */}
         {mainTab === "activity-log" && (
-          <div className="bg-white rounded-2xl border border-[#E4E7EC] p-6">
-            <h2 className="text-xl font-bold text-[#101828] mb-4">
-              Stock Adjustment Activity Log
-            </h2>
-            <Table
-              aria-label="Stock adjustment activity log"
-              removeWrapper
-              classNames={{
-                th: "bg-transparent text-[#667085] text-xs font-medium border-b border-[#E4E7EC] py-3",
-                td: "py-4 text-sm text-[#101828]",
-                tr: "border-b border-[#F2F4F7] last:border-0",
-              }}
-            >
-              <TableHeader>
-                <TableColumn>Date</TableColumn>
-                <TableColumn>Time</TableColumn>
-                <TableColumn>Transfer ID</TableColumn>
-                <TableColumn>Item Name</TableColumn>
-                <TableColumn>Supplier Name</TableColumn>
-                <TableColumn>Units</TableColumn>
-                <TableColumn>Old Stock</TableColumn>
-                <TableColumn>New Stock</TableColumn>
-                <TableColumn>Difference</TableColumn>
-                <TableColumn>Item Name</TableColumn>
-              </TableHeader>
-              <TableBody>
-                {mockActivityLog.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="text-[#667085] whitespace-nowrap">
-                      {row.date}
-                    </TableCell>
-                    <TableCell className="text-[#667085] whitespace-nowrap">
-                      {row.time}
-                    </TableCell>
-                    <TableCell className="text-[#667085]">
-                      {row.transferId}
-                    </TableCell>
-                    <TableCell className="font-medium whitespace-nowrap">
-                      {row.itemName}
-                    </TableCell>
-                    <TableCell className="text-[#667085] whitespace-nowrap">
-                      {row.supplierName}
-                    </TableCell>
-                    <TableCell className="text-[#667085]">
-                      {row.units}
-                    </TableCell>
-                    <TableCell>{row.oldStock}</TableCell>
-                    <TableCell>{row.newStock}</TableCell>
-                    <TableCell>
-                      <span className="text-[#16AB60] font-medium">
-                        +{row.difference}
-                      </span>
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap">
-                      {row.reason}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-[#3D424A]">
+                Stock Adjustment Activity Log
+              </h3>
+              <div className="relative">
+                <LuSearch
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                />
+                <input
+                  type="text"
+                  placeholder="Search adjustments..."
+                  value={activitySearchInput}
+                  onChange={(e) => setActivitySearchInput(e.target.value)}
+                  className="border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] w-64"
+                />
+              </div>
+            </div>
+
+            <div className="relative border border-primaryGrey rounded-lg overflow-visible">
+              {isLoadingHistory && (
+                <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
+                </div>
+              )}
+              <div className="max-h-[382px] overflow-auto">
+                <Table
+                  radius="lg"
+                  isCompact
+                  removeWrapper
+                  aria-label="Stock adjustment activity log"
+                  classNames={{
+                    th: [
+                      "text-default-500",
+                      "text-xs",
+                      "border-b",
+                      "border-divider",
+                      "py-4",
+                      "rounded-none",
+                      "bg-grey300",
+                    ],
+                    tr: "border-b border-divider rounded-none",
+                    td: [
+                      "py-3",
+                      "text-textGrey",
+                      "group-data-[first=true]:first:before:rounded-none",
+                      "group-data-[first=true]:last:before:rounded-none",
+                      "group-data-[middle=true]:before:rounded-none",
+                      "group-data-[last=true]:first:before:rounded-none",
+                      "group-data-[last=true]:last:before:rounded-none",
+                    ],
+                  }}
+                >
+                  <TableHeader>
+                    <TableColumn>DATE</TableColumn>
+                    <TableColumn>TIME</TableColumn>
+                    <TableColumn>ITEM NAME</TableColumn>
+                    <TableColumn>UNIT</TableColumn>
+                    <TableColumn>OLD STOCK</TableColumn>
+                    <TableColumn>NEW STOCK</TableColumn>
+                    <TableColumn>DIFFERENCE</TableColumn>
+                    <TableColumn>STAFF</TableColumn>
+                    <TableColumn>REASON</TableColumn>
+                  </TableHeader>
+                  <TableBody emptyContent="No adjustment history found">
+                    {history.map((row: StockAdjustmentHistoryItem, idx: number) => (
+                      <TableRow key={`${row.date}-${row.inventoryItemName}-${idx}`}>
+                        <TableCell className="whitespace-nowrap">
+                          {formatDate(row.date)}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {formatTime(row.date)}
+                        </TableCell>
+                        <TableCell className="font-medium whitespace-nowrap">
+                          {row.inventoryItemName}
+                        </TableCell>
+                        <TableCell>{row.unit}</TableCell>
+                        <TableCell>{row.oldStock}</TableCell>
+                        <TableCell>{row.newStock}</TableCell>
+                        <TableCell>
+                          <span
+                            className={cn(
+                              "font-medium",
+                              row.difference > 0
+                                ? "text-[#16AB60]"
+                                : row.difference < 0
+                                ? "text-red-500"
+                                : ""
+                            )}
+                          >
+                            {row.difference > 0
+                              ? `+${row.difference}`
+                              : row.difference}
+                          </span>
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {row.staff}
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap">
+                          {row.reason}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex w-full justify-center">
+                <CustomPagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  hasNext={hasNext}
+                  hasPrevious={hasPrevious}
+                  totalCount={totalCount}
+                  pageSize={historyPageSize}
+                  onPageChange={setHistoryPage}
+                  onNext={() =>
+                    setHistoryPage(Math.min(historyPage + 1, totalPages))
+                  }
+                  onPrevious={() =>
+                    setHistoryPage(Math.max(historyPage - 1, 1))
+                  }
+                  isLoading={isLoadingHistory}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

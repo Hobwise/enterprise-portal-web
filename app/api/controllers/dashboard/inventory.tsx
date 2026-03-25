@@ -994,3 +994,94 @@ export async function getIncomingTransfers(
     handleError(error, false);
   }
 }
+
+// Stock Adjustment types
+export type StockAdjustmentReason = {
+  name: string;
+  value: number;
+  movement: number; // 0 = increase, 1 = decrease
+};
+
+export type StockAdjustmentHistoryItem = {
+  date: string;
+  inventoryItemName: string;
+  unit: string;
+  oldStock: number;
+  newStock: number;
+  difference: number;
+  staff: string;
+  reason: string;
+};
+
+export type StockAdjustmentHistoryResponse = {
+  history: StockAdjustmentHistoryItem[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+};
+
+export type StockAdjustmentEntry = {
+  inventoryItemId: string;
+  quantity: number;
+  adjustmentType: number;
+  movementType: number;
+  reason: string;
+};
+
+export type SubmitStockAdjustmentPayload = {
+  adjustments: StockAdjustmentEntry[];
+  cooperateID: string;
+  businessID: string;
+};
+
+// Stock Adjustment API functions
+export async function getStockAdjustmentHistory(
+  businessId: string,
+  page: number = 1,
+  pageSize: number = 10,
+  search?: string,
+  itemType?: number
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    let url = `${DASHBOARD.stockAdjustment}?Page=${page}&PageSize=${pageSize}`;
+    if (search) url += `&Search=${encodeURIComponent(search)}`;
+    if (itemType !== undefined) url += `&ItemType=${itemType}`;
+    const data = await api.get(url, { headers });
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getStockAdjustmentReasons(businessId: string) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.get(DASHBOARD.stockAdjustmentReasons, { headers });
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function submitStockAdjustment(
+  businessId: string,
+  payload: SubmitStockAdjustmentPayload
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.put(DASHBOARD.stockAdjustment, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
