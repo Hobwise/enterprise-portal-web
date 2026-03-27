@@ -114,7 +114,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
           setPredictedItems(itemsArray);
           setEditableData(
             itemsArray.map((item) => ({
-              itemName: item.suggestedInventoryItemName || '',
+              itemName: item.menuItemName || '',
               costPerUnit: '',
               salesPrice: '',
               itemType: String(item.suggestedItemType ?? 0),
@@ -224,7 +224,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
 
     const payload: SynchronizeInventoryPayload = predictedItems.map((item, idx) => ({
       menuItemId: item.menuItemId,
-      inventoryItemName: editableData[idx]?.itemName?.trim() || item.suggestedInventoryItemName,
+      inventoryItemName: editableData[idx]?.itemName?.trim() || item.menuItemName,
       unitCategory: item.suggestedUnitCategory,
       unitId: editableData[idx]?.unitId || item.suggestedUnitId || '',
       itemType: editableData[idx]?.itemType
@@ -676,7 +676,7 @@ const SyncStep: React.FC<SyncStepProps> = ({
                             </span>
                             <input
                               type="text"
-                              value={editableData[idx]?.itemName ?? item.suggestedInventoryItemName}
+                              value={editableData[idx]?.itemName ?? item.menuItemName}
                               onChange={(e) =>
                                 handleEditableChange(idx, 'itemName', e.target.value)
                               }

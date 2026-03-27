@@ -67,11 +67,7 @@ export function generatePurchaseOrderPdfFile(order: PurchaseRequest): File {
   drawValue(order.reference || "N/A", col1, y);
   drawValue(order.requestDate || "N/A", col2, y);
   const formattedExpectedDate = order.expectedDeliveryDate
-    ? new Date(order.expectedDeliveryDate + "T00:00:00").toLocaleDateString("en-GB", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
+    ? new Date(order.expectedDeliveryDate + "T00:00:00").toLocaleDateString("en-GB")
     : "N/A";
   drawValue(formattedExpectedDate, col3, y);
   y += 10;
