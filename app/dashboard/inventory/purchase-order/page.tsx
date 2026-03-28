@@ -83,8 +83,8 @@ export default function PurchaseRequestPage() {
               ? new Date(o.orderDate).toLocaleDateString('en-GB')
               : '-',
           expectedDeliveryDate: o.expectedDate
-            ? new Date(o.expectedDate).toLocaleDateString('en-GB')
-            : '-',
+            ? o.expectedDate.split('T')[0]
+            : '',
           numberOfItems: Math.round(o.numberOfItems ?? 0),
           totalCost: o.totalAmount ?? 0,
           status: purchaseOrderStatusMap[o.status] ?? 'Pending',
@@ -329,6 +329,9 @@ export default function PurchaseRequestPage() {
         supplierAddress: o.supplierAddress || request.supplierAddress,
         contactName: o.contactName || request.contactName,
         reference: o.reference || request.reference,
+        expectedDeliveryDate: o.expectedDate
+          ? o.expectedDate.split('T')[0]
+          : request.expectedDeliveryDate,
         totalCost: o.totalAmount ?? request.totalCost,
         subTotalAmount: o.subTotalAmount ?? 0,
         vatAmount: o.vatAmount ?? 0,
