@@ -670,19 +670,14 @@ const SyncStep: React.FC<SyncStepProps> = ({
                         }`}
                       >
                         <td className="py-2 px-3">
-                          <div className="flex flex-col gap-0.5">
-                            <span className="text-xs text-gray-400 truncate" title={item.menuItemName}>
-                              {item.menuItemName}
-                            </span>
-                            <input
-                              type="text"
-                              value={editableData[idx]?.itemName ?? item.menuItemName}
-                              onChange={(e) =>
-                                handleEditableChange(idx, 'itemName', e.target.value)
-                              }
-                              className="w-full px-2 py-1.5 text-sm text-black border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#5F35D2] focus:border-[#5F35D2] bg-white font-medium"
-                            />
-                          </div>
+                          <input
+                            type="text"
+                            value={editableData[idx]?.itemName ?? item.menuItemName}
+                            onChange={(e) =>
+                              handleEditableChange(idx, 'itemName', e.target.value)
+                            }
+                            className={selectClass}
+                          />
                         </td>
                         <td className="py-2 px-3">
                           <select
@@ -746,19 +741,16 @@ const SyncStep: React.FC<SyncStepProps> = ({
                           </select>
                         </td>
                         <td className="py-2 px-3">
-                          <select
+                          <input
+                            type="number"
+                            min={0}
                             value={editableData[idx]?.openingStock ?? '0'}
                             onChange={(e) =>
                               handleEditableChange(idx, 'openingStock', e.target.value)
                             }
                             className={selectClass}
-                          >
-                            {[0, 5, 10, 25, 50, 100, 200, 500, 1000].map((v) => (
-                              <option key={v} value={String(v)}>
-                                {v}
-                              </option>
-                            ))}
-                          </select>
+                            placeholder="0"
+                          />
                         </td>
                       </tr>
                     ))}

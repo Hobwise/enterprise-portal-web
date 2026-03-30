@@ -155,6 +155,11 @@ export const DASHBOARD = {
   // Stock Adjustment
   stockAdjustment: "api/v1/StockAdjustment",
   stockAdjustmentReasons: "api/v1/StockAdjustment/reasons/lov",
+  // Inventory Count
+  inventoryCount: "api/v1/InventoryCount",
+  inventoryCountByBusiness: "api/v1/InventoryCount/by-business",
+  inventoryCountVerify: "api/v1/InventoryCount/verify",
+  inventoryCountHistory: "api/v1/InventoryCount/history",
 };
 
 export const INVENTORY = {
