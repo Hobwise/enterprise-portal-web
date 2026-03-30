@@ -29,6 +29,10 @@ import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination"
 
 type MainTab = "adjustment" | "activity-log";
 
+/** Convert PascalCase/camelCase joined words to spaced words for display (e.g. "DamagedGoods" → "Damaged Goods") */
+const formatReasonLabel = (name: string): string =>
+  name.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
+
 interface AdjustmentItem {
   id: string;
   name: string;
@@ -144,22 +148,7 @@ export default function StockAdjustmentPage() {
     return Number(newStock) - (selectedItem.stockLevel || 0);
   }, [selectedItem, newStock]);
 
-  // Filter reasons by movement direction based on stock difference
-  const applicableReasons = useMemo(() => {
-    if (!selectedItem || !newStock) return reasons;
-    const diff = Number(newStock) - (selectedItem.stockLevel || 0);
-    if (diff > 0) return reasons.filter((r) => r.movement === 0);
-    if (diff < 0) return reasons.filter((r) => r.movement === 1);
-    return reasons;
-  }, [selectedItem, newStock, reasons]);
 
-  // Get applicable reasons for a multi-item based on its stock difference
-  const getItemReasons = (item: AdjustmentItem) => {
-    const diff = item.newStock - item.oldStock;
-    if (diff > 0) return reasons.filter((r) => r.movement === 0);
-    if (diff < 0) return reasons.filter((r) => r.movement === 1);
-    return reasons;
-  };
 
   const handleSelectItem = (item: InventoryItem) => {
     setSelectedItem(item);
@@ -207,22 +196,7 @@ export default function StockAdjustmentPage() {
     setAdjustmentItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
-        const updated = { ...item, [field]: value };
-        // Reset reason when stock changes direction
-        if (field === "newStock") {
-          const oldDiff = item.newStock - item.oldStock;
-          const newDiff = (value as number) - item.oldStock;
-          if (
-            (oldDiff > 0 && newDiff < 0) ||
-            (oldDiff < 0 && newDiff > 0) ||
-            newDiff === 0
-          ) {
-            updated.reason = "";
-            updated.reasonValue = 0;
-            updated.movement = 0;
-          }
-        }
-        return updated;
+        return { ...item, [field]: value };
       })
     );
   };
@@ -285,9 +259,7 @@ export default function StockAdjustmentPage() {
       return;
     }
 
-    const quantity = Math.abs(
-      Number(newStock) - (selectedItem.stockLevel || 0)
-    );
+    const quantity = Number(newStock) - (selectedItem.stockLevel || 0);
 
     if (quantity === 0) {
       notify({
@@ -308,7 +280,7 @@ export default function StockAdjustmentPage() {
             quantity,
             adjustmentType: selectedReason.value,
             movementType: selectedReason.movement,
-            reason: selectedReason.name,
+            reason: selectedReason.value,
           },
         ],
         cooperateID,
@@ -351,10 +323,10 @@ export default function StockAdjustmentPage() {
 
     const adjustments = adjustmentItems.map((item) => ({
       inventoryItemId: item.id,
-      quantity: Math.abs(item.newStock - item.oldStock),
+      quantity: item.newStock - item.oldStock,
       adjustmentType: item.reasonValue,
       movementType: item.movement,
-      reason: item.reason,
+      reason: item.reasonValue,
     }));
 
     const { businessID, cooperateID } = getFreshIds();
@@ -564,8 +536,44 @@ export default function StockAdjustmentPage() {
               </div>
             </div>
 
-            {/* Stock Info Row */}
+            {/* Reason Row */}
             <div className="border border-gray-200 rounded-lg p-6 bg-white mb-4 max-w-[750px] mx-auto">
+              <div>
+                <label className="text-xs text-[#667085] font-medium mb-2 block">
+                  Reason for Adjustment
+                </label>
+                <Select
+                  placeholder={
+                    isLoadingReasons ? "Loading reasons..." : "Select reason"
+                  }
+                  selectedKeys={
+                    selectedReason ? [String(selectedReason.value)] : []
+                  }
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0] as string;
+                    const found = reasons.find(
+                      (r) => String(r.value) === val
+                    );
+                    setSelectedReason(found || null);
+                  }}
+                  variant="bordered"
+                  isDisabled={isLoadingReasons || !selectedItem}
+                  classNames={{
+                    trigger:
+                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
+                    value: "text-sm text-[#101828]",
+                    listboxWrapper: "max-h-[300px]",
+                  }}
+                >
+                  {reasons.map((r) => (
+                    <SelectItem key={String(r.value)} className="text-[#101828]">{formatReasonLabel(r.name)}</SelectItem>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            {/* Stock Info Row */}
+            <div className="border border-gray-200 rounded-lg p-6 bg-white mb-6 max-w-[750px] mx-auto">
               <div className="grid grid-cols-3 gap-6">
                 <div>
                   <label className="text-xs text-[#667085] font-medium mb-2 block">
@@ -583,10 +591,7 @@ export default function StockAdjustmentPage() {
                     type="number"
                     placeholder="0"
                     value={newStock}
-                    onChange={(e) => {
-                      setNewStock(e.target.value);
-                      setSelectedReason(null);
-                    }}
+                    onChange={(e) => setNewStock(e.target.value)}
                     variant="bordered"
                     classNames={{
                       inputWrapper:
@@ -615,42 +620,6 @@ export default function StockAdjustmentPage() {
                       : "\u2014"}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Reason Row */}
-            <div className="border border-gray-200 rounded-lg p-6 bg-white mb-6 max-w-[750px] mx-auto">
-              <div>
-                <label className="text-xs text-[#667085] font-medium mb-2 block">
-                  Reason for Adjustment
-                </label>
-                <Select
-                  placeholder={
-                    isLoadingReasons ? "Loading reasons..." : "Select reason"
-                  }
-                  selectedKeys={
-                    selectedReason ? [String(selectedReason.value)] : []
-                  }
-                  onSelectionChange={(keys) => {
-                    const val = Array.from(keys)[0] as string;
-                    const found = reasons.find(
-                      (r) => String(r.value) === val
-                    );
-                    setSelectedReason(found || null);
-                  }}
-                  variant="bordered"
-                  isDisabled={isLoadingReasons || !selectedItem || !newStock}
-                  classNames={{
-                    trigger:
-                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
-                    value: "text-sm text-[#101828]",
-                    listboxWrapper: "max-h-[300px]",
-                  }}
-                >
-                  {applicableReasons.map((r) => (
-                    <SelectItem key={String(r.value)} className="text-[#101828]">{r.name}</SelectItem>
-                  ))}
-                </Select>
               </div>
             </div>
 
@@ -816,15 +785,14 @@ export default function StockAdjustmentPage() {
                       <TableColumn>DATE</TableColumn>
                       <TableColumn>ITEM NAME</TableColumn>
                       <TableColumn>UNITS</TableColumn>
+                      <TableColumn>REASON</TableColumn>
                       <TableColumn>OLD STOCK</TableColumn>
                       <TableColumn>NEW STOCK</TableColumn>
                       <TableColumn>DIFFERENCE</TableColumn>
-                      <TableColumn>REASON</TableColumn>
                     </TableHeader>
                     <TableBody>
                       {adjustmentItems.map((item) => {
                         const diff = item.newStock - item.oldStock;
-                        const itemReasons = getItemReasons(item);
                         return (
                           <TableRow key={item.id}>
                             <TableCell>
@@ -844,6 +812,36 @@ export default function StockAdjustmentPage() {
                             </TableCell>
                             <TableCell className="text-[#667085]">
                               {item.unit}
+                            </TableCell>
+                            <TableCell>
+                              <Select
+                                placeholder="Select reason"
+                                selectedKeys={
+                                  item.reason ? [item.reason] : []
+                                }
+                                onSelectionChange={(keys) => {
+                                  const val = Array.from(keys)[0] as string;
+                                  const found = reasons.find(
+                                    (r) => r.name === val
+                                  );
+                                  if (found)
+                                    handleUpdateMultiItemReason(item.id, found);
+                                }}
+                                variant="bordered"
+                                classNames={{
+                                  trigger:
+                                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-8 w-[200px] min-w-[200px]",
+                                  value: "text-xs text-[#101828]",
+                                  listboxWrapper: "max-h-[200px]",
+                                }}
+                                size="sm"
+                              >
+                                {reasons.map((r) => (
+                                  <SelectItem key={r.name} className="text-[#101828]">
+                                    {formatReasonLabel(r.name)}
+                                  </SelectItem>
+                                ))}
+                              </Select>
                             </TableCell>
                             <TableCell>{item.oldStock}</TableCell>
                             <TableCell>
@@ -880,37 +878,6 @@ export default function StockAdjustmentPage() {
                                   ? `${diff > 0 ? "+" : ""}${diff}`
                                   : "0"}
                               </span>
-                            </TableCell>
-                            <TableCell>
-                              <Select
-                                placeholder="Select reason"
-                                selectedKeys={
-                                  item.reason ? [item.reason] : []
-                                }
-                                onSelectionChange={(keys) => {
-                                  const val = Array.from(keys)[0] as string;
-                                  const found = reasons.find(
-                                    (r) => r.name === val
-                                  );
-                                  if (found)
-                                    handleUpdateMultiItemReason(item.id, found);
-                                }}
-                                variant="bordered"
-                                classNames={{
-                                  trigger:
-                                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-8 w-[200px] min-w-[200px]",
-                                  value: "text-xs text-[#101828]",
-                                  listboxWrapper: "max-h-[200px]",
-                                }}
-                                size="sm"
-                                isDisabled={diff === 0}
-                              >
-                                {itemReasons.map((r) => (
-                                  <SelectItem key={r.name} className="text-[#101828]">
-                                    {r.name}
-                                  </SelectItem>
-                                ))}
-                              </Select>
                             </TableCell>
                           </TableRow>
                         );
@@ -1049,7 +1016,7 @@ export default function StockAdjustmentPage() {
                           {row.staff}
                         </TableCell>
                         <TableCell className="whitespace-nowrap">
-                          {row.reason}
+                          {formatReasonLabel(row.reason)}
                         </TableCell>
                       </TableRow>
                     ))}

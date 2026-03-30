@@ -135,12 +135,14 @@ const RestaurantMenu = () => {
   const [itemName, setItemName] = useState('');
   const [itemDescription, setItemDescription] = useState('');
   const [itemPrice, setItemPrice] = useState('');
+  const [itemQuantity, setItemQuantity] = useState('');
   const [itemImage, setItemImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
 
   // Form states for Create Variety
   const [varietyName, setVarietyName] = useState('');
   const [varietyPrice, setVarietyPrice] = useState('');
+  const [varietyQuantity, setVarietyQuantity] = useState('');
 
   // Upload loading states
   const [isUploadingItemImage, setIsUploadingItemImage] = useState(false);
@@ -788,6 +790,7 @@ const RestaurantMenu = () => {
         menuID: selectedItem.menuID,
         unit: varietyName,
         price: parseFloat(varietyPrice),
+        ...(varietyQuantity ? { quantityPerSale: parseFloat(varietyQuantity) } : {}),
         currency: 'NGA',
       };
 
@@ -802,6 +805,7 @@ const RestaurantMenu = () => {
         toast.success('Variety created successfully');
         setVarietyName('');
         setVarietyPrice('');
+        setVarietyQuantity('');
         backToItemDetails();
         if (activeSubCategory) {
           // Invalidate all pages in cache for this section
@@ -847,6 +851,7 @@ const RestaurantMenu = () => {
         itemDescription: itemDescription,
         price: parseFloat(itemPrice),
         currency: 'NGN',
+        ...(itemQuantity ? { quantityPerSale: parseFloat(itemQuantity) } : {}),
         isAvailable: true,
         hasVariety: false,
         imageReference: itemImageReference,
@@ -864,6 +869,7 @@ const RestaurantMenu = () => {
         setItemName('');
         setItemDescription('');
         setItemPrice('');
+        setItemQuantity('');
         setSelectedSection('');
         setSelectedMenuType('');
         setItemImage(null);
@@ -1719,6 +1725,8 @@ const RestaurantMenu = () => {
         setItemDescription={setItemDescription}
         itemPrice={itemPrice}
         setItemPrice={setItemPrice}
+        itemQuantity={itemQuantity}
+        setItemQuantity={setItemQuantity}
         handleDrag={handleDrag}
         handleDrop={handleDrop}
         handleFileChange={handleFileChange}
@@ -1740,6 +1748,8 @@ const RestaurantMenu = () => {
         setVarietyName={setVarietyName}
         varietyPrice={varietyPrice}
         setVarietyPrice={setVarietyPrice}
+        varietyQuantity={varietyQuantity}
+        setVarietyQuantity={setVarietyQuantity}
         loading={loading}
         handleCreateVariety={handleCreateVariety}
         backToItemDetails={backToItemDetails}

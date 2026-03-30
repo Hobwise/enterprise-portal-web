@@ -27,12 +27,14 @@ const EditVarietyModal = ({
 }: EditVarietyModalProps) => {
   const [varietyName, setVarietyName] = useState('');
   const [varietyPrice, setVarietyPrice] = useState('');
+  const [varietyQuantity, setVarietyQuantity] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (selectedVariety) {
       setVarietyName(selectedVariety.unit || '');
       setVarietyPrice(selectedVariety.price?.toString() || '');
+      setVarietyQuantity(selectedVariety.quantityPerSale?.toString() || '');
     }
   }, [selectedVariety]);
 
@@ -54,6 +56,7 @@ const EditVarietyModal = ({
         menuID: selectedVariety.menuID || selectedItem?.menuID,
         unit: varietyName,
         price: parseFloat(varietyPrice),
+        ...(varietyQuantity ? { quantityPerSale: parseFloat(varietyQuantity) } : {}),
         currency: selectedVariety.currency || 'NGN',
       };
 
@@ -87,6 +90,7 @@ const EditVarietyModal = ({
     if (!loading) {
       setVarietyName('');
       setVarietyPrice('');
+      setVarietyQuantity('');
       onOpenChange(false);
     }
   };
@@ -150,6 +154,27 @@ const EditVarietyModal = ({
                               setVarietyPrice(e.target.value)
                             }
                           />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                          Quantity per Sale
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            value={varietyQuantity}
+                            onChange={(e) => setVarietyQuantity(e.target.value)}
+                            placeholder="Optional"
+                            min="0"
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                          />
+                          {varietyQuantity && (selectedItem?.unitName || selectedItem?.unitCode) && (
+                            <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-[#667085] font-medium">
+                              {selectedItem.unitName || selectedItem.unitCode}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>

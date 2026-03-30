@@ -1028,7 +1028,7 @@ export type StockAdjustmentEntry = {
   quantity: number;
   adjustmentType: number;
   movementType: number;
-  reason: string;
+  reason: number;
 };
 
 export type SubmitStockAdjustmentPayload = {
@@ -1080,6 +1080,75 @@ export async function submitStockAdjustment(
 
   try {
     const data = await api.put(DASHBOARD.stockAdjustment, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+// Inventory Count types
+export type InventoryCountHistoryItem = {
+  id: string;
+  countType: string; // "FullStockCount" | "PartialStockCount"
+  referenceNumber: string;
+  description: string;
+  date: string;
+  status: string;
+  totalItems: number;
+  countedItems: number;
+};
+
+export type InventoryCountHistoryResponse = {
+  history: InventoryCountHistoryItem[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+};
+
+export type VerifyStockCountEntry = {
+  inventoryItemId: string;
+  verifiedCount: number;
+};
+
+export type VerifyStockCountPayload = {
+  countType: string;
+  entries: VerifyStockCountEntry[];
+  cooperateID: string;
+  businessID: string;
+};
+
+// Inventory Count API functions
+export async function getInventoryCountHistory(
+  businessId: string,
+  page: number = 1,
+  pageSize: number = 10,
+  search?: string
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    let url = `${DASHBOARD.inventoryCountHistory}?Page=${page}&PageSize=${pageSize}`;
+    if (search) url += `&Search=${encodeURIComponent(search)}`;
+    const data = await api.get(url, { headers });
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function verifyStockCount(
+  businessId: string,
+  payload: VerifyStockCountPayload
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.put(DASHBOARD.inventoryCountVerify, payload, { headers });
     return data;
   } catch (error) {
     handleError(error);
