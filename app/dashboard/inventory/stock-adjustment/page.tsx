@@ -38,7 +38,7 @@ interface AdjustmentItem {
   name: string;
   unit: string;
   oldStock: number;
-  newStock: number;
+  adjustmentQty: number;
   reason: string;
   reasonValue: number;
   movement: number;
@@ -53,7 +53,7 @@ export default function StockAdjustmentPage() {
   // Quick adjustment state
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  const [newStock, setNewStock] = useState("");
+  const [adjustmentQty, setAdjustmentQty] = useState("");
   const [selectedReason, setSelectedReason] =
     useState<StockAdjustmentReason | null>(null);
 
@@ -143,10 +143,19 @@ export default function StockAdjustmentPage() {
     return () => clearTimeout(timeout);
   }, [activitySearchInput]);
 
-  const stockDifference = useMemo(() => {
-    if (!selectedItem || !newStock) return 0;
-    return Number(newStock) - (selectedItem.stockLevel || 0);
-  }, [selectedItem, newStock]);
+  const computedNewStock = useMemo(() => {
+    if (!selectedItem || !adjustmentQty || !selectedReason) return null;
+    const qty = Number(adjustmentQty);
+    if (isNaN(qty) || qty <= 0) return null;
+    const oldStock = selectedItem.stockLevel || 0;
+    return selectedReason.movement === 1 ? oldStock - qty : oldStock + qty;
+  }, [selectedItem, adjustmentQty, selectedReason]);
+
+  const signedDelta = useMemo(() => {
+    if (!adjustmentQty || !selectedReason) return 0;
+    const qty = Number(adjustmentQty);
+    return selectedReason.movement === 1 ? -qty : qty;
+  }, [adjustmentQty, selectedReason]);
 
 
 
@@ -154,7 +163,7 @@ export default function StockAdjustmentPage() {
     setSelectedItem(item);
     setSearchQuery(item.name);
     setShowDropdown(false);
-    setNewStock("");
+    setAdjustmentQty("");
     setSelectedReason(null);
   };
 
@@ -176,7 +185,7 @@ export default function StockAdjustmentPage() {
         name: item.name,
         unit: item.unitCode || item.unitName || "Unit",
         oldStock: item.stockLevel || 0,
-        newStock: 0,
+        adjustmentQty: 0,
         reason: "",
         reasonValue: 0,
         movement: 0,
@@ -242,14 +251,6 @@ export default function StockAdjustmentPage() {
       });
       return;
     }
-    if (!newStock) {
-      notify({
-        title: "Enter new stock",
-        text: "Please enter the new stock quantity",
-        type: "error",
-      });
-      return;
-    }
     if (!selectedReason) {
       notify({
         title: "Select reason",
@@ -258,17 +259,28 @@ export default function StockAdjustmentPage() {
       });
       return;
     }
-
-    const quantity = Number(newStock) - (selectedItem.stockLevel || 0);
-
-    if (quantity === 0) {
+    if (!adjustmentQty || Number(adjustmentQty) <= 0) {
       notify({
-        title: "No change",
-        text: "New stock is the same as old stock",
-        type: "warning",
+        title: "Enter quantity",
+        text: "Please enter an adjustment quantity greater than 0",
+        type: "error",
       });
       return;
     }
+
+    const qty = Number(adjustmentQty);
+    const oldStock = selectedItem.stockLevel || 0;
+
+    if (selectedReason.movement === 1 && qty > oldStock) {
+      notify({
+        title: "Invalid quantity",
+        text: `Cannot decrease by ${qty}. Current stock is only ${oldStock}.`,
+        type: "error",
+      });
+      return;
+    }
+
+    const signedQuantity = selectedReason.movement === 1 ? -qty : qty;
 
     const { businessID, cooperateID } = getFreshIds();
 
@@ -277,7 +289,7 @@ export default function StockAdjustmentPage() {
         adjustments: [
           {
             inventoryItemId: selectedItem.id,
-            quantity,
+            quantity: signedQuantity,
             adjustmentType: selectedReason.value,
             movementType: selectedReason.movement,
             reason: selectedReason.value,
@@ -291,7 +303,7 @@ export default function StockAdjustmentPage() {
           if (response?.data?.isSuccessful) {
             setSelectedItem(null);
             setSearchQuery("");
-            setNewStock("");
+            setAdjustmentQty("");
             setSelectedReason(null);
           }
         },
@@ -310,20 +322,32 @@ export default function StockAdjustmentPage() {
     }
 
     const invalidItems = adjustmentItems.filter(
-      (item) => !item.reason || item.newStock === item.oldStock
+      (item) => !item.reason || item.adjustmentQty <= 0
     );
     if (invalidItems.length > 0) {
       notify({
         title: "Incomplete items",
-        text: "Ensure all items have a reason and changed stock level",
+        text: "Ensure all items have a reason and an adjustment quantity greater than 0",
         type: "warning",
+      });
+      return;
+    }
+
+    const overdrawnItems = adjustmentItems.filter(
+      (item) => item.movement === 1 && item.adjustmentQty > item.oldStock
+    );
+    if (overdrawnItems.length > 0) {
+      notify({
+        title: "Invalid quantities",
+        text: `${overdrawnItems.map((i) => i.name).join(", ")} would result in negative stock`,
+        type: "error",
       });
       return;
     }
 
     const adjustments = adjustmentItems.map((item) => ({
       inventoryItemId: item.id,
-      quantity: item.newStock - item.oldStock,
+      quantity: item.movement === 1 ? -item.adjustmentQty : item.adjustmentQty,
       adjustmentType: item.reasonValue,
       movementType: item.movement,
       reason: item.reasonValue,
@@ -569,6 +593,11 @@ export default function StockAdjustmentPage() {
                     <SelectItem key={String(r.value)} className="text-[#101828]">{formatReasonLabel(r.name)}</SelectItem>
                   ))}
                 </Select>
+                {selectedItem && !selectedReason && (
+                  <p className="text-xs text-[#F79009] mt-2">
+                    Select a reason to determine whether this is an increase or decrease
+                  </p>
+                )}
               </div>
             </div>
 
@@ -585,39 +614,42 @@ export default function StockAdjustmentPage() {
                 </div>
                 <div>
                   <label className="text-xs text-[#667085] font-medium mb-2 block">
-                    New Stock
+                    {selectedReason
+                      ? selectedReason.movement === 1
+                        ? "Decrease Quantity"
+                        : "Increase Quantity"
+                      : "Adjustment Quantity"}
                   </label>
                   <Input
                     type="number"
+                    min="1"
                     placeholder="0"
-                    value={newStock}
-                    onChange={(e) => setNewStock(e.target.value)}
+                    value={adjustmentQty}
+                    onChange={(e) => setAdjustmentQty(e.target.value)}
                     variant="bordered"
                     classNames={{
                       inputWrapper:
                         "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
                       input: "text-sm text-[#101828]",
                     }}
-                    isDisabled={!selectedItem}
+                    isDisabled={!selectedItem || !selectedReason}
                   />
                 </div>
                 <div>
                   <label className="text-xs text-[#667085] font-medium mb-2 block">
-                    Stock Difference
+                    New Stock
                   </label>
                   <div
                     className={cn(
                       "text-base font-medium py-2",
-                      stockDifference > 0
+                      computedNewStock !== null && signedDelta > 0
                         ? "text-[#16AB60]"
-                        : stockDifference < 0
+                        : computedNewStock !== null && signedDelta < 0
                         ? "text-red-500"
                         : "text-[#101828]"
                     )}
                   >
-                    {selectedItem && newStock
-                      ? `${stockDifference > 0 ? "+" : ""}${stockDifference}`
-                      : "\u2014"}
+                    {computedNewStock !== null ? computedNewStock : "\u2014"}
                   </div>
                 </div>
               </div>
@@ -787,12 +819,15 @@ export default function StockAdjustmentPage() {
                       <TableColumn>UNITS</TableColumn>
                       <TableColumn>REASON</TableColumn>
                       <TableColumn>OLD STOCK</TableColumn>
+                      <TableColumn>ADJ. QTY</TableColumn>
                       <TableColumn>NEW STOCK</TableColumn>
-                      <TableColumn>DIFFERENCE</TableColumn>
                     </TableHeader>
                     <TableBody>
                       {adjustmentItems.map((item) => {
-                        const diff = item.newStock - item.oldStock;
+                        const signedQty = item.reason
+                          ? item.movement === 1 ? -item.adjustmentQty : item.adjustmentQty
+                          : 0;
+                        const computedNew = item.oldStock + signedQty;
                         return (
                           <TableRow key={item.id}>
                             <TableCell>
@@ -847,15 +882,17 @@ export default function StockAdjustmentPage() {
                             <TableCell>
                               <Input
                                 type="number"
-                                value={String(item.newStock)}
+                                min="1"
+                                value={String(item.adjustmentQty || "")}
                                 onChange={(e) =>
                                   handleUpdateMultiItem(
                                     item.id,
-                                    "newStock",
-                                    Number(e.target.value)
+                                    "adjustmentQty",
+                                    Math.max(0, Number(e.target.value))
                                   )
                                 }
                                 variant="bordered"
+                                isDisabled={!item.reason}
                                 classNames={{
                                   inputWrapper:
                                     "bg-white border-[#E4E7EC] rounded-lg shadow-none h-8 w-20",
@@ -867,16 +904,16 @@ export default function StockAdjustmentPage() {
                               <span
                                 className={cn(
                                   "font-medium",
-                                  diff > 0
+                                  signedQty > 0
                                     ? "text-[#16AB60]"
-                                    : diff < 0
+                                    : signedQty < 0
                                     ? "text-red-500"
                                     : "text-[#667085]"
                                 )}
                               >
-                                {diff !== 0
-                                  ? `${diff > 0 ? "+" : ""}${diff}`
-                                  : "0"}
+                                {item.reason && item.adjustmentQty > 0
+                                  ? computedNew
+                                  : "\u2014"}
                               </span>
                             </TableCell>
                           </TableRow>

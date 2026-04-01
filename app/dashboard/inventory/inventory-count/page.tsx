@@ -40,7 +40,6 @@ type CountItem = {
   id: string;
   name: string;
   itemType: string;
-  itemCategory: string;
   unit: string;
   expectedStock: number;
   verifiedCount: number;
@@ -60,34 +59,6 @@ const getItemTypeName = (itemType: InventoryItemType): string => {
   }
 };
 
-const getItemCategory = (item: InventoryItem): string => {
-  switch (item.itemType) {
-    case InventoryItemType.Direct:
-      return "Direct Sale";
-    case InventoryItemType.Ingredient:
-      return "Ingredient";
-    case InventoryItemType.Produced:
-      return "Prep Before Sale";
-    default:
-      return "-";
-  }
-};
-
-const getStockStatus = (
-  currentStock: number,
-  optimumStock: number
-): { label: string; color: string; stockColor: string } => {
-  if (currentStock <= 0)
-    return { label: "Out of Stock", color: "text-red-500", stockColor: "text-red-500" };
-  const ratio = optimumStock > 0 ? currentStock / optimumStock : 1;
-  if (ratio <= 0.2)
-    return { label: "Low Stock", color: "text-orange-500", stockColor: "text-orange-500" };
-  if (ratio <= 0.5)
-    return { label: "Near Reorder", color: "text-yellow-600", stockColor: "text-yellow-600" };
-  if (ratio <= 1.0)
-    return { label: "Optimum Stock", color: "text-green-500", stockColor: "text-green-500" };
-  return { label: "Overstocked", color: "text-blue-500", stockColor: "text-blue-500" };
-};
 
 const formatCountType = (type: string): string => {
   return type
@@ -105,7 +76,6 @@ export default function InventoryCountPage() {
   // Inventory Count main tab state
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [stockLevelFilter, setStockLevelFilter] = useState("all");
   const [itemTypeFilter, setItemTypeFilter] = useState("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
@@ -113,7 +83,6 @@ export default function InventoryCountPage() {
   // Stock count state
   const [countItems, setCountItems] = useState<CountItem[]>([]);
   const [countSearchQuery, setCountSearchQuery] = useState("");
-  const [countStockLevelFilter, setCountStockLevelFilter] = useState("all");
   const [countItemTypeFilter, setCountItemTypeFilter] = useState("all");
   const [selectedPartialItems, setSelectedPartialItems] = useState<Set<string>>(new Set());
 
@@ -140,8 +109,8 @@ export default function InventoryCountPage() {
     hasPrevious: historyHasPrevious,
     isLoadingHistory,
     refetchHistory,
-    verifyStockCount,
-    isVerifying,
+    submitInventoryCount,
+    isSubmitting,
     page: historyPage,
     setPage: setHistoryPage,
     pageSize: historyPageSize,
@@ -166,39 +135,8 @@ export default function InventoryCountPage() {
       );
     }
 
-    if (stockLevelFilter !== "all") {
-      items = items.filter((item) => {
-        const status = getStockStatus(
-          item.stockLevel,
-          item.reorderLevel
-        );
-        switch (stockLevelFilter) {
-          case "out":
-            return status.label === "Out of Stock";
-          case "low":
-            return status.label === "Low Stock";
-          case "near":
-            return status.label === "Near Reorder";
-          case "optimum":
-            return status.label === "Optimum Stock";
-          case "over":
-            return status.label === "Overstocked";
-          default:
-            return true;
-        }
-      });
-    }
-
     return items;
-  }, [inventoryItems, itemTypeFilter, stockLevelFilter]);
-
-  // Low stock items count
-  const lowStockCount = useMemo(() => {
-    return inventoryItems.filter((item) => {
-      const status = getStockStatus(item.stockLevel, item.reorderLevel);
-      return status.label === "Low Stock" || status.label === "Out of Stock";
-    }).length;
-  }, [inventoryItems]);
+  }, [inventoryItems, itemTypeFilter]);
 
   // Filter count items for the stock count view
   const filteredCountItems = useMemo(() => {
@@ -235,7 +173,6 @@ export default function InventoryCountPage() {
       id: item.id,
       name: item.name,
       itemType: getItemTypeName(item.itemType),
-      itemCategory: getItemCategory(item),
       unit: item.unitName || item.unitCode || "Unit",
       expectedStock: item.stockLevel || 0,
       verifiedCount: 0,
@@ -275,31 +212,36 @@ export default function InventoryCountPage() {
     });
   };
 
-  const handleVerifyStockCount = () => {
-    const itemsToVerify =
+  const handleSubmitStockCount = () => {
+    const itemsToSubmit =
       countMode === "full"
         ? countItems
         : countItems.filter((item) => selectedPartialItems.has(item.id));
 
-    if (itemsToVerify.length === 0) {
+    if (itemsToSubmit.length === 0) {
       notify({
         title: "No items selected",
-        text: "Please select items to verify",
+        text: "Please select items to count",
         type: "warning",
       });
       return;
     }
 
-    const { cooperateID, businessID } = getFreshIds();
+    const hasEmptyCount = itemsToSubmit.some((item) => item.verifiedCount <= 0);
+    if (hasEmptyCount) {
+      notify({
+        title: "Missing counts",
+        text: "Please enter a stock quantity for all selected items",
+        type: "warning",
+      });
+      return;
+    }
 
-    verifyStockCount({
-      countType: countMode === "full" ? "FullStockCount" : "PartialStockCount",
-      entries: itemsToVerify.map((item) => ({
+    submitInventoryCount({
+      countRequests: itemsToSubmit.map((item) => ({
         inventoryItemId: item.id,
-        verifiedCount: item.verifiedCount,
+        stockQuantity: item.verifiedCount,
       })),
-      cooperateID,
-      businessID,
     }, {
       onSuccess: (response: any) => {
         if (response?.data?.isSuccessful) {
@@ -454,77 +396,30 @@ export default function InventoryCountPage() {
             </div>
 
             {/* Filters Row */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                {lowStockCount > 0 && (
-                  <button
-                    onClick={() =>
-                      setStockLevelFilter(
-                        stockLevelFilter === "low" ? "all" : "low"
-                      )
-                    }
-                    className={cn(
-                      "flex items-center gap-2 text-sm font-medium transition-colors",
-                      stockLevelFilter === "low"
-                        ? "text-red-500"
-                        : "text-red-400 hover:text-red-500"
-                    )}
-                  >
-                    Low stock items
-                    <span className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                      {lowStockCount}
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Select
-                  placeholder="Stock Level"
-                  selectedKeys={
-                    stockLevelFilter !== "all" ? [stockLevelFilter] : []
-                  }
-                  onSelectionChange={(keys) => {
-                    const val = Array.from(keys)[0] as string;
-                    setStockLevelFilter(val || "all");
-                    setPage(1);
-                  }}
-                  variant="bordered"
-                  classNames={{
-                    trigger:
-                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10 min-w-[160px]",
-                    value: "text-sm text-[#101828]",
-                  }}
-                >
-                  <SelectItem key="out">Out of Stock</SelectItem>
-                  <SelectItem key="low">Low Stock</SelectItem>
-                  <SelectItem key="near">Near Reorder</SelectItem>
-                  <SelectItem key="optimum">Optimum Stock</SelectItem>
-                  <SelectItem key="over">Overstocked</SelectItem>
-                </Select>
-
-                <Select
-                  placeholder="Item Type"
-                  selectedKeys={
-                    itemTypeFilter !== "all" ? [itemTypeFilter] : []
-                  }
-                  onSelectionChange={(keys) => {
-                    const val = Array.from(keys)[0] as string;
-                    setItemTypeFilter(val || "all");
-                    setPage(1);
-                  }}
-                  variant="bordered"
-                  classNames={{
-                    trigger:
-                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10 min-w-[160px]",
-                    value: "text-sm text-[#101828]",
-                  }}
-                >
-                  <SelectItem key="0">Direct</SelectItem>
-                  <SelectItem key="1">Ingredient</SelectItem>
-                  <SelectItem key="2">Produced</SelectItem>
-                </Select>
-              </div>
+            <div className="flex items-center justify-end mb-4">
+              <Select
+                placeholder="Item Type"
+                selectedKeys={
+                  itemTypeFilter !== "all" ? [itemTypeFilter] : []
+                }
+                onSelectionChange={(keys) => {
+                  const val = Array.from(keys)[0] as string;
+                  setItemTypeFilter(val || "all");
+                  setPage(1);
+                }}
+                variant="bordered"
+                className="w-[180px]"
+                classNames={{
+                  trigger:
+                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
+                  value: "text-sm text-[#101828]",
+                  listboxWrapper: "max-h-[300px]",
+                }}
+              >
+                <SelectItem key="0" className="text-[#101828]">Direct</SelectItem>
+                <SelectItem key="1" className="text-[#101828]">Ingredient</SelectItem>
+                <SelectItem key="2" className="text-[#101828]">Produced</SelectItem>
+              </Select>
             </div>
 
             {/* Items Table */}
@@ -563,10 +458,8 @@ export default function InventoryCountPage() {
                   }}
                 >
                   <TableHeader>
-                    <TableColumn>ITEM ID</TableColumn>
                     <TableColumn>ITEM NAME</TableColumn>
                     <TableColumn>ITEM TYPE</TableColumn>
-                    <TableColumn>ITEM CATEGORY</TableColumn>
                     <TableColumn>ITEM UNIT</TableColumn>
                     <TableColumn>OPTIMUM STOCK</TableColumn>
                     <TableColumn>CURRENT STOCK</TableColumn>
@@ -575,15 +468,8 @@ export default function InventoryCountPage() {
                   </TableHeader>
                   <TableBody emptyContent="No inventory items found">
                     {filteredItems.map((item) => {
-                      const status = getStockStatus(
-                        item.stockLevel,
-                        item.reorderLevel
-                      );
                       return (
                         <TableRow key={item.id}>
-                          <TableCell className="whitespace-nowrap text-sm">
-                            {item.id.substring(0, 6).toUpperCase()}IV
-                          </TableCell>
                           <TableCell className="font-medium text-sm text-[#101828]">
                             {item.name}
                           </TableCell>
@@ -591,24 +477,17 @@ export default function InventoryCountPage() {
                             {getItemTypeName(item.itemType)}
                           </TableCell>
                           <TableCell className="text-sm">
-                            {getItemCategory(item)}
-                          </TableCell>
-                          <TableCell className="text-sm">
                             {item.unitName || item.unitCode || "Unit"}
                           </TableCell>
                           <TableCell className="text-sm">
                             {item.reorderLevel || 0}
                           </TableCell>
-                          <TableCell
-                            className={cn("text-sm font-semibold", status.stockColor)}
-                          >
+                          <TableCell className="text-sm font-semibold">
                             {item.stockLevel || 0}
                           </TableCell>
                           <TableCell>
-                            <span
-                              className={cn("text-sm font-medium", status.color)}
-                            >
-                              {status.label}
+                            <span className="text-sm font-medium">
+                              {item.stockStatus || "—"}
                             </span>
                           </TableCell>
                           <TableCell>
@@ -701,9 +580,9 @@ export default function InventoryCountPage() {
               <Button
                 className="h-12 rounded-xl bg-[#5F35D2] text-white font-semibold text-sm px-8"
                 endContent={<CheckCircle2 className="w-4 h-4" />}
-                onPress={handleVerifyStockCount}
-                isLoading={isVerifying}
-                isDisabled={isVerifying}
+                onPress={handleSubmitStockCount}
+                isLoading={isSubmitting}
+                isDisabled={isSubmitting}
               >
                 Verify Stock Count
               </Button>
@@ -725,55 +604,30 @@ export default function InventoryCountPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3">
-                <Select
-                  placeholder="Stock Level"
-                  selectedKeys={
-                    countStockLevelFilter !== "all"
-                      ? [countStockLevelFilter]
-                      : []
-                  }
-                  onSelectionChange={(keys) => {
-                    const val = Array.from(keys)[0] as string;
-                    setCountStockLevelFilter(val || "all");
-                  }}
-                  variant="bordered"
-                  classNames={{
-                    trigger:
-                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10 min-w-[160px]",
-                    value: "text-sm text-[#101828]",
-                  }}
-                >
-                  <SelectItem key="out">Out of Stock</SelectItem>
-                  <SelectItem key="low">Low Stock</SelectItem>
-                  <SelectItem key="near">Near Reorder</SelectItem>
-                  <SelectItem key="optimum">Optimum Stock</SelectItem>
-                  <SelectItem key="over">Overstocked</SelectItem>
-                </Select>
-
-                <Select
-                  placeholder="Item Type"
-                  selectedKeys={
-                    countItemTypeFilter !== "all"
-                      ? [countItemTypeFilter]
-                      : []
-                  }
-                  onSelectionChange={(keys) => {
-                    const val = Array.from(keys)[0] as string;
-                    setCountItemTypeFilter(val || "all");
-                  }}
-                  variant="bordered"
-                  classNames={{
-                    trigger:
-                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10 min-w-[160px]",
-                    value: "text-sm text-[#101828]",
-                  }}
-                >
-                  <SelectItem key="0">Direct</SelectItem>
-                  <SelectItem key="1">Ingredient</SelectItem>
-                  <SelectItem key="2">Produced</SelectItem>
-                </Select>
-              </div>
+              <Select
+                placeholder="Item Type"
+                selectedKeys={
+                  countItemTypeFilter !== "all"
+                    ? [countItemTypeFilter]
+                    : []
+                }
+                onSelectionChange={(keys) => {
+                  const val = Array.from(keys)[0] as string;
+                  setCountItemTypeFilter(val || "all");
+                }}
+                variant="bordered"
+                className="w-[180px]"
+                classNames={{
+                  trigger:
+                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
+                  value: "text-sm text-[#101828]",
+                  listboxWrapper: "max-h-[300px]",
+                }}
+              >
+                <SelectItem key="0" className="text-[#101828]">Direct</SelectItem>
+                <SelectItem key="1" className="text-[#101828]">Ingredient</SelectItem>
+                <SelectItem key="2" className="text-[#101828]">Produced</SelectItem>
+              </Select>
             </div>
 
             {/* Count Table */}
@@ -812,7 +666,6 @@ export default function InventoryCountPage() {
                     ) : (
                       <TableColumn className="hidden">{""}</TableColumn>
                     )}
-                    <TableColumn>ITEM ID</TableColumn>
                     <TableColumn>ITEM NAME</TableColumn>
                     <TableColumn>ITEM TYPE</TableColumn>
                     <TableColumn>ITEM UNIT</TableColumn>
@@ -838,9 +691,6 @@ export default function InventoryCountPage() {
                           ) : (
                             <TableCell className="hidden">{null}</TableCell>
                           )}
-                          <TableCell className="whitespace-nowrap text-sm">
-                            {item.id.substring(0, 6).toUpperCase()}IV
-                          </TableCell>
                           <TableCell className="font-medium text-sm text-[#101828]">
                             {item.name}
                           </TableCell>
@@ -1057,10 +907,6 @@ export default function InventoryCountPage() {
       >
         <ModalContent>
           {selectedDetailItem && (() => {
-            const status = getStockStatus(
-              selectedDetailItem.stockLevel,
-              selectedDetailItem.reorderLevel
-            );
             return (
               <ModalBody className="py-6">
                 <div className="flex items-center justify-between mb-4">
@@ -1080,29 +926,10 @@ export default function InventoryCountPage() {
                     <tbody>
                       <tr className="border-b border-gray-100">
                         <td className="px-4 py-3 text-[#667085] font-medium w-40">
-                          Item ID
-                        </td>
-                        <td className="px-4 py-3 text-[#101828] font-semibold">
-                          {selectedDetailItem.id
-                            .substring(0, 6)
-                            .toUpperCase()}
-                          IV
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 text-[#667085] font-medium">
                           Item Type
                         </td>
                         <td className="px-4 py-3 text-[#101828]">
                           {getItemTypeName(selectedDetailItem.itemType)}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 text-[#667085] font-medium">
-                          Item Category
-                        </td>
-                        <td className="px-4 py-3 text-[#101828]">
-                          {getItemCategory(selectedDetailItem)}
                         </td>
                       </tr>
                       <tr className="border-b border-gray-100">
@@ -1125,14 +952,9 @@ export default function InventoryCountPage() {
                       </tr>
                       <tr className="border-b border-gray-100">
                         <td className="px-4 py-3 text-[#667085] font-medium">
-                          Current Stock:
+                          Current Stock
                         </td>
-                        <td
-                          className={cn(
-                            "px-4 py-3 font-semibold",
-                            status.stockColor
-                          )}
-                        >
+                        <td className="px-4 py-3 font-semibold text-[#101828]">
                           {selectedDetailItem.stockLevel || 0}
                         </td>
                       </tr>
@@ -1140,13 +962,8 @@ export default function InventoryCountPage() {
                         <td className="px-4 py-3 text-[#667085] font-medium">
                           Status
                         </td>
-                        <td
-                          className={cn(
-                            "px-4 py-3 font-semibold",
-                            status.color
-                          )}
-                        >
-                          {status.label}
+                        <td className="px-4 py-3 font-semibold text-[#101828]">
+                          {selectedDetailItem.stockStatus || "—"}
                         </td>
                       </tr>
                     </tbody>
