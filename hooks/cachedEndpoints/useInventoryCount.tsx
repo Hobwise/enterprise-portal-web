@@ -2,7 +2,9 @@
 import { useState } from 'react';
 import {
   getInventoryCountHistory,
+  submitInventoryCount,
   verifyStockCount,
+  SubmitInventoryCountPayload,
   VerifyStockCountPayload,
   InventoryCountHistoryItem,
   InventoryCountHistoryResponse,
@@ -40,11 +42,15 @@ const useInventoryCount = () => {
 
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
+        // Handle different paginated response shapes from the API
+        const items = Array.isArray(result)
+          ? result
+          : (result?.items ?? result?.history ?? result?.data ?? []);
         return {
-          history: (result?.history ?? []) as InventoryCountHistoryItem[],
-          totalCount: result?.totalCount ?? 0,
-          pageSize: result?.pageSize ?? 10,
-          currentPage: result?.currentPage ?? 1,
+          history: items as InventoryCountHistoryItem[],
+          totalCount: result?.totalCount ?? result?.totalRecords ?? items.length,
+          pageSize: result?.pageSize ?? pageSize,
+          currentPage: result?.currentPage ?? result?.page ?? page,
           totalPages: result?.totalPages ?? 1,
           hasNext: result?.hasNext ?? false,
           hasPrevious: result?.hasPrevious ?? false,
@@ -66,6 +72,28 @@ const useInventoryCount = () => {
     queryFn: fetchHistory,
     enabled: !!businessId,
     ...fetchQueryConfig(),
+  });
+
+  // Submit inventory count mutation
+  const submitMutation = useMutation({
+    mutationFn: async (payload: SubmitInventoryCountPayload) => {
+      const currentBusiness = getJsonItemFromLocalStorage('business');
+      const currentBusinessId = currentBusiness?.[0]?.businessId;
+      if (!currentBusinessId) throw new Error('Business ID not found');
+      return submitInventoryCount(currentBusinessId, payload);
+    },
+    onSuccess: (response) => {
+      if (response?.data?.isSuccessful) {
+        notify({ title: 'Success!', text: 'Inventory count submitted successfully', type: 'success' });
+        queryClient.invalidateQueries({ queryKey: ['inventoryCountHistory'] });
+        queryClient.invalidateQueries({ queryKey: ['inventoryItems'] });
+      } else {
+        notify({ title: 'Error!', text: response?.data?.error || 'Failed to submit inventory count', type: 'error' });
+      }
+    },
+    onError: () => {
+      notify({ title: 'Error!', text: 'Failed to submit inventory count', type: 'error' });
+    },
   });
 
   // Verify stock count mutation
@@ -101,7 +129,9 @@ const useInventoryCount = () => {
     isLoadingHistory,
     refetchHistory,
 
-    // Mutation
+    // Mutations
+    submitInventoryCount: submitMutation.mutate,
+    isSubmitting: submitMutation.isPending,
     verifyStockCount: verifyMutation.mutate,
     isVerifying: verifyMutation.isPending,
 

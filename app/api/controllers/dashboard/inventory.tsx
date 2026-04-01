@@ -1120,6 +1120,15 @@ export type VerifyStockCountPayload = {
   businessID: string;
 };
 
+export type InventoryCountRequest = {
+  inventoryItemId: string;
+  stockQuantity: number;
+};
+
+export type SubmitInventoryCountPayload = {
+  countRequests: InventoryCountRequest[];
+};
+
 // Inventory Count API functions
 export async function getInventoryCountHistory(
   businessId: string,
@@ -1131,12 +1140,27 @@ export async function getInventoryCountHistory(
   if (businessId) headers.businessId = businessId;
 
   try {
-    let url = `${DASHBOARD.inventoryCountHistory}?Page=${page}&PageSize=${pageSize}`;
+    let url = `${DASHBOARD.inventoryCount}?Page=${page}&PageSize=${pageSize}`;
     if (search) url += `&Search=${encodeURIComponent(search)}`;
     const data = await api.get(url, { headers });
     return data;
   } catch (error) {
     handleError(error, false);
+  }
+}
+
+export async function submitInventoryCount(
+  businessId: string,
+  payload: SubmitInventoryCountPayload
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    const data = await api.post(DASHBOARD.inventoryCount, payload, { headers });
+    return data;
+  } catch (error) {
+    handleError(error);
   }
 }
 
