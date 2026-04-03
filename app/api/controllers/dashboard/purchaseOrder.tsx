@@ -10,7 +10,7 @@ export async function createPurchaseOrder(businessId: string, payload: {
   vatAmount: number;
   vatRate: number;
   isVatApplied: boolean;
-  orderDetails: { inventoryItemID: string; requestedQuantity: number; purchaseCost: number }[];
+  orderDetails: { inventoryItemID: string; requestedQuantity: number; itemCost: number }[];
 }) {
   const headers = businessId ? { businessId } : {};
 
@@ -119,7 +119,7 @@ export async function updatePurchaseOrder(purchaseOrderId: string, businessId: s
   vatAmount: number;
   vatRate: number;
   isVatApplied: boolean;
-  orderDetails: { inventoryItemID: string; requestedQuantity: number; purchaseCost: number }[];
+  orderDetails: { inventoryItemID: string; requestedQuantity: number; itemCost: number }[];
 }) {
   const headers: Record<string, string> = {};
   if (purchaseOrderId) headers.purchaseOrderId = purchaseOrderId;
