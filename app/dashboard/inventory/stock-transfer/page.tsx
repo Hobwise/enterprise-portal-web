@@ -39,9 +39,7 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { StockTransferIcon } from "@/public/assets/svg";
 import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
-import useInventoryItems, {
-  useIngredients,
-} from "@/hooks/cachedEndpoints/useInventoryItems";
+import useInventoryItems from "@/hooks/cachedEndpoints/useInventoryItems";
 import {
   createStockTransfer,
   getIncomingTransfers,
@@ -91,6 +89,7 @@ interface TransferItem {
   id: string;
   name: string;
   unit: string;
+  unitCategory: number;
   currentStock: number;
   transferQty: number;
   cost: number;
@@ -404,10 +403,10 @@ export default function StockTransferPage() {
   const sourceItems = sourceItemsData || [];
 
   const { data: destinationItems, isLoading: destinationItemsLoading } =
-    useIngredients({
-      businessId: selectedBusiness,
+    useInventoryItems({
+      pageSize: 1000,
       search: destSearchQuery,
-      enabled: step === "initiate" && !!selectedBusiness,
+      businessIdOverride: selectedBusiness || undefined,
     });
 
   const businesses = useMemo(() => {
@@ -451,6 +450,7 @@ export default function StockTransferPage() {
           id: item.id,
           name: item.name,
           unit: item.unitName || "Unit",
+          unitCategory: item.unitCategory,
           currentStock: item.stockLevel,
           transferQty: 0,
           cost: item.averageCostPerUnit || 0,
@@ -1353,7 +1353,12 @@ export default function StockTransferPage() {
                               <Search className="w-4 h-4 text-[#98A2B3]" />
                             }
                           >
-                            {(destinationItems || []).map((destItem: any) => (
+                            {(destinationItems || [])
+                              .filter(
+                                (destItem: any) =>
+                                  destItem.unitCategory === item.unitCategory,
+                              )
+                              .map((destItem: any) => (
                               <AutocompleteItem
                                 key={destItem.id}
                                 value={destItem.id}

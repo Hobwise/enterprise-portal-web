@@ -232,7 +232,7 @@ export default function PurchaseRequestPage() {
         orderDetails: data.items.map((item) => ({
           inventoryItemID: item.id,
           requestedQuantity: item.requiredStock,
-          purchaseCost: item.costPerUnit,
+          itemCost: item.costPerUnit,
         })),
       };
 
@@ -329,9 +329,17 @@ export default function PurchaseRequestPage() {
         supplierAddress: o.supplierAddress || request.supplierAddress,
         contactName: o.contactName || request.contactName,
         reference: o.reference || request.reference,
+        requestDate: o.orderDate && !o.orderDate.startsWith('0001')
+          ? new Date(o.orderDate).toLocaleDateString('en-GB')
+          : request.requestDate,
+        orderDate: o.orderDate || request.orderDate,
         expectedDeliveryDate: o.expectedDate
           ? o.expectedDate.split('T')[0]
           : request.expectedDeliveryDate,
+        rawExpectedDate: o.expectedDate || request.rawExpectedDate,
+        status: typeof o.status === 'number'
+          ? purchaseOrderStatusMap[o.status] || request.status
+          : request.status,
         totalCost: o.totalAmount ?? request.totalCost,
         subTotalAmount: o.subTotalAmount ?? 0,
         vatAmount: o.vatAmount ?? 0,
@@ -339,14 +347,20 @@ export default function PurchaseRequestPage() {
         isVatApplied: o.isVatApplied ?? false,
         additionalCost: o.additionalCost ?? 0,
         additionalCostName: o.additionalCostName || '',
+        receivedById: o.receivedById ?? request.receivedById,
+        receivedByName: o.receivedByName ?? request.receivedByName,
+        createdById: o.createdById ?? request.createdById,
+        createdByName: o.createdByName ?? request.createdByName,
         numberOfItems: Math.round(o.numberOfItems ?? o.orderDetails?.length ?? request.numberOfItems),
         items: (o.orderDetails || []).map((d: any) => ({
           id: d.inventoryItemID || d.id,
+          purchaseOrderID: d.purchaseOrderID,
           itemName: d.inventoryItemName || d.itemName || '',
           unitName: d.inventoryUnitName || d.unitName || 'N/A',
-          costPerUnit: d.requestedQuantity ? d.purchaseCost / d.requestedQuantity : 0,
+          costPerUnit: d.requestedQuantity ? d.itemCost / d.requestedQuantity : 0,
           requiredStock: d.requestedQuantity || 0,
-          cost: d.purchaseCost || 0,
+          receivedQuantity: d.receivedQuantity ?? 0,
+          cost: d.itemCost || 0,
         })),
       };
     } catch {

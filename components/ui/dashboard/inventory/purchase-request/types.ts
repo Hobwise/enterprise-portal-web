@@ -25,6 +25,8 @@ export interface PurchaseRequestItem {
   costPerUnit: number;
   requiredStock: number;
   cost: number;
+  purchaseOrderID?: string;
+  receivedQuantity?: number;
 }
 
 export interface PurchaseRequest {
@@ -52,4 +54,9 @@ export interface PurchaseRequest {
   additionalCost?: number;
   additionalCostName?: string;
   rawExpectedDate?: string;
+  orderDate?: string;
+  receivedById?: string | null;
+  receivedByName?: string | null;
+  createdById?: string | null;
+  createdByName?: string | null;
 }
