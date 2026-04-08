@@ -357,10 +357,10 @@ export default function PurchaseRequestPage() {
           purchaseOrderID: d.purchaseOrderID,
           itemName: d.inventoryItemName || d.itemName || '',
           unitName: d.inventoryUnitName || d.unitName || 'N/A',
-          costPerUnit: d.requestedQuantity ? d.itemCost / d.requestedQuantity : 0,
+          costPerUnit: d.itemCost || 0,
           requiredStock: d.requestedQuantity || 0,
           receivedQuantity: d.receivedQuantity ?? 0,
-          cost: d.itemCost || 0,
+          cost: d.purchaseCost || d.itemCost || 0,
         })),
       };
     } catch {

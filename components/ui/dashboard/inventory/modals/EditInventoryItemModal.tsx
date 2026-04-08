@@ -311,10 +311,10 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
               </div>
             </div>
 
-            {/* Reorder Level */}
+            {/* Reorder Threshold */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Reorder Level
+                Reorder Threshold
               </label>
               <input
                 type="number"
@@ -329,10 +329,10 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-            {/* Stock Level (disabled) */}
+            {/* Current Stock (disabled) */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Stock Level
+                Current Stock
               </label>
               <input
                 type="number"

@@ -7,8 +7,13 @@ import {
 } from '@nextui-org/react';
 import { CustomInput } from '@/components/CustomInput';
 import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
+import { notify } from '@/lib/utils';
 import { Edit, Star, X } from 'lucide-react';
+
+const toast = {
+  success: (text: string) => notify({ text, type: 'success' }),
+  error: (text: string) => notify({ text, type: 'error' }),
+};
 
 interface EditVarietyModalProps {
   isOpen: boolean;

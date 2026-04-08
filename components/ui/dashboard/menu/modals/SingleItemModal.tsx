@@ -3,8 +3,12 @@ import { ArrowLeft, Edit, Plus, Star, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import EditItemModal from "./EditItemModal";
 import DeleteModal from "@/components/ui/deleteModal";
-import toast from "react-hot-toast";
-import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+
+const toast = {
+  success: (text: string) => notify({ text, type: "success" }),
+  error: (text: string) => notify({ text, type: "error" }),
+};
 import type { payloadMenuItem } from "@/app/api/controllers/dashboard/menu";
 
 interface SingleItemModalProps {

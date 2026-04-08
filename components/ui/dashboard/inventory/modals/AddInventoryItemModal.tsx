@@ -249,10 +249,10 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
             </div>
           </div>
 
-          {/* Reorder Level */}
+          {/* Reorder Threshold */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Reorder Level
+              Reorder Threshold
             </label>
             <input
               type="number"

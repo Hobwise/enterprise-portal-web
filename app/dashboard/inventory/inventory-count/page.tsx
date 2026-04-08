@@ -24,8 +24,7 @@ import { LuSearch } from "react-icons/lu";
 import { Eye, X, CheckCircle2, RefreshCw, Clipboard, ClipboardList } from "lucide-react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { InventoryCountIcon } from "@/public/assets/svg";
-import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
-import useInventoryItems from "@/hooks/cachedEndpoints/useInventoryItems";
+import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import useInventoryCount from "@/hooks/cachedEndpoints/useInventoryCount";
 import {
   InventoryItem,
@@ -33,7 +32,6 @@ import {
 } from "@/app/api/controllers/dashboard/inventory";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
 
-type MainTab = "inventory-count" | "activity-log";
 type CountMode = null | "full" | "partial";
 
 type CountItem = {
@@ -59,15 +57,7 @@ const getItemTypeName = (itemType: InventoryItemType): string => {
   }
 };
 
-
-const formatCountType = (type: string): string => {
-  return type
-    .replace(/([a-z])([A-Z])/g, "$1 $2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
-};
-
 export default function InventoryCountPage() {
-  const [mainTab, setMainTab] = useState<MainTab>("inventory-count");
   const [countMode, setCountMode] = useState<CountMode>(null);
   const [showCountTypeModal, setShowCountTypeModal] = useState(false);
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
@@ -90,31 +80,18 @@ export default function InventoryCountPage() {
   const businessName = businessInformation?.[0]?.businessName || "Store";
 
   const {
-    data: inventoryItems,
-    totalCount,
-    totalPages,
-    currentPage,
-    hasNext,
-    hasPrevious,
-    isLoading,
-    refetch: refetchItems,
-  } = useInventoryItems({ page, pageSize, search: debouncedSearch });
-
-  const {
-    history,
-    totalCount: historyTotalCount,
-    totalPages: historyTotalPages,
-    currentPage: historyCurrentPage,
-    hasNext: historyHasNext,
-    hasPrevious: historyHasPrevious,
-    isLoadingHistory,
-    refetchHistory,
+    // Items from /api/v1/InventoryCount
+    items: inventoryItems,
+    itemsTotalCount: totalCount,
+    itemsTotalPages: totalPages,
+    itemsCurrentPage: currentPage,
+    itemsHasNext: hasNext,
+    itemsHasPrevious: hasPrevious,
+    isLoadingItems: isLoading,
+    refetchItems,
     submitInventoryCount,
     isSubmitting,
-    page: historyPage,
-    setPage: setHistoryPage,
-    pageSize: historyPageSize,
-  } = useInventoryCount();
+  } = useInventoryCount({ itemsPage: page, itemsPageSize: pageSize, itemsSearch: debouncedSearch });
 
   // Debounce search
   useEffect(() => {
@@ -253,98 +230,18 @@ export default function InventoryCountPage() {
     });
   };
 
-  const getFreshIds = () => {
-    const user = getJsonItemFromLocalStorage("userInformation");
-    const business = getJsonItemFromLocalStorage("business");
-    return {
-      cooperateID: user?.cooperateID || "",
-      businessID: business?.[0]?.businessId || "",
-    };
-  };
-
   const handleViewItem = (item: InventoryItem) => {
     setSelectedDetailItem(item);
     setShowItemDetailModal(true);
   };
 
-  const formatDate = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const formatTime = (dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return date.toLocaleTimeString("en-US", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      }).toLowerCase();
-    } catch {
-      return "";
-    }
-  };
-
   return (
     <div className="w-full min-h-screen">
-      {/* Top Tabs + Current Store */}
+      {/* Header */}
       <div className="flex items-center justify-between px-6 pt-4 pb-2">
-        <div className="flex items-center gap-1">
-          {/* Inventory Count Tab */}
-          <button
-            onClick={() => {
-              setMainTab("inventory-count");
-              setCountMode(null);
-            }}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-              mainTab === "inventory-count"
-                ? "bg-[#F0ECFB] text-[#5F35D2]"
-                : "text-[#667085] hover:text-[#101828]"
-            )}
-          >
-            <InventoryCountIcon className="w-4 h-4" />
-            Inventory Count
-          </button>
-
-          {/* Activity Log Tab */}
-          <button
-            onClick={() => {
-              setMainTab("activity-log");
-              setCountMode(null);
-            }}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-              mainTab === "activity-log"
-                ? "bg-[#F0ECFB] text-[#5F35D2]"
-                : "text-[#667085] hover:text-[#101828]"
-            )}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3.33 10l3.34-3.33L10 10l3.33-3.33L16.67 10"
-                stroke="currentColor"
-                strokeWidth="1.67"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Activity Log
-          </button>
+        <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#F0ECFB] text-[#5F35D2]">
+          <InventoryCountIcon className="w-4 h-4" />
+          Inventory Count
         </div>
 
         <div className="flex items-center gap-2 text-sm text-[#667085]">
@@ -373,8 +270,8 @@ export default function InventoryCountPage() {
 
       {/* Main Content */}
       <div className="px-6 py-4">
-        {/* ===== INVENTORY COUNT TAB (main view, no count mode) ===== */}
-        {mainTab === "inventory-count" && countMode === null && (
+        {/* ===== INVENTORY COUNT (main view, no count mode) ===== */}
+        {countMode === null && (
           <div>
             {/* Title + Run Stock Count Button */}
             <div className="flex items-center justify-between mb-6">
@@ -561,7 +458,7 @@ export default function InventoryCountPage() {
         )}
 
         {/* ===== STOCK COUNT MODE (Full or Partial) ===== */}
-        {mainTab === "inventory-count" && countMode !== null && (
+        {countMode !== null && (
           <div>
             {/* Title + Verify Button */}
             <div className="flex items-center justify-between mb-6">
@@ -741,112 +638,6 @@ export default function InventoryCountPage() {
               >
                 Cancel
               </Button>
-            </div>
-          </div>
-        )}
-
-        {/* ===== ACTIVITY LOG TAB ===== */}
-        {mainTab === "activity-log" && (
-          <div>
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-[#101828]">
-                Activity Log
-              </h1>
-              <p className="text-sm text-[#667085] mt-1">
-                View Inventory count activities in your location.
-              </p>
-            </div>
-
-            <div className="border border-gray-200 rounded-lg bg-white">
-              <div className="px-6 py-4 border-b border-gray-100">
-                <h3 className="text-base font-semibold text-[#101828]">
-                  Activity List
-                </h3>
-              </div>
-
-              {isLoadingHistory && (
-                <div className="flex items-center justify-center py-16">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
-                </div>
-              )}
-
-              {!isLoadingHistory && history.length === 0 && (
-                <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-                  <Clipboard className="w-12 h-12 mb-3" />
-                  <p className="text-sm">No activity log entries found</p>
-                </div>
-              )}
-
-              {!isLoadingHistory && history.length > 0 && (
-                <div className="divide-y divide-gray-100">
-                  {history.map((entry, idx) => {
-                    const isActive =
-                      entry.status === "completed" || entry.status === "active";
-                    return (
-                      <div
-                        key={entry.id || idx}
-                        className="flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div
-                            className={cn(
-                              "w-3 h-3 rounded-full mt-1.5 flex-shrink-0",
-                              isActive ? "bg-[#5F35D2]" : "bg-gray-300"
-                            )}
-                          />
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span
-                                className={cn(
-                                  "text-base font-semibold",
-                                  isActive
-                                    ? "text-[#5F35D2]"
-                                    : "text-gray-400"
-                                )}
-                              >
-                                {formatCountType(entry.countType)}
-                              </span>
-                              <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded">
-                                {entry.referenceNumber}
-                              </span>
-                            </div>
-                            <p className="text-sm text-[#667085]">
-                              {entry.description ||
-                                `Stock count ${entry.referenceNumber} Initiated and completed`}
-                            </p>
-                            <p className="text-sm text-[#667085] mt-0.5">
-                              {formatDate(entry.date)}{" "}
-                              {formatTime(entry.date)}
-                            </p>
-                          </div>
-                        </div>
-                        <button className="text-gray-400 hover:text-[#5F35D2] transition-colors">
-                          <Eye className="w-5 h-5" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {historyTotalPages > 1 && (
-                <CustomPagination
-                  currentPage={historyCurrentPage}
-                  totalPages={historyTotalPages}
-                  hasNext={historyHasNext}
-                  hasPrevious={historyHasPrevious}
-                  totalCount={historyTotalCount}
-                  pageSize={historyPageSize}
-                  onPageChange={(p) => setHistoryPage(p)}
-                  onNext={() =>
-                    setHistoryPage(Math.min(historyPage + 1, historyTotalPages))
-                  }
-                  onPrevious={() =>
-                    setHistoryPage(Math.max(historyPage - 1, 1))
-                  }
-                  isLoading={isLoadingHistory}
-                />
-              )}
             </div>
           </div>
         )}
