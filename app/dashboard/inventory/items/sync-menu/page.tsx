@@ -2,6 +2,7 @@
 
 import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useMenuSummary, useSuppliers, useUnitsByBusiness } from '@/hooks/cachedEndpoints/useInventoryItems';
 import {
   MenuSummaryCategory,
@@ -21,6 +22,7 @@ import type { ModalStep, EditableItemData } from '@/components/ui/dashboard/inve
 
 export default function SyncMenuPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: menuSummaryData = [], isLoading: menuSummaryLoading } = useMenuSummary();
 
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
@@ -191,6 +193,7 @@ export default function SyncMenuPage() {
 
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Items synced to inventory successfully', type: 'success' });
+        queryClient.invalidateQueries({ queryKey: ['inventoryItems'] });
         router.push('/dashboard/inventory/items');
       } else {
         notify({ title: 'Error!', text: response?.data?.error || 'Failed to sync items to inventory', type: 'error' });
@@ -200,7 +203,7 @@ export default function SyncMenuPage() {
     } finally {
       setIsSyncing(false);
     }
-  }, [router, predictedItems, editableData]);
+  }, [router, queryClient, predictedItems, editableData]);
 
   const handleBackToSelect = useCallback(() => {
     setStep('select');

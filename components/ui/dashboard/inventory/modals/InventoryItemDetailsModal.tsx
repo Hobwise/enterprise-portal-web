@@ -212,7 +212,7 @@ const InventoryItemDetailsModal: React.FC<InventoryItemDetailsModalProps> = ({
                         </div>
                         <div className="bg-gray-50 rounded-xl p-4">
                           <p className="text-xs text-gray-500 font-medium mb-1">
-                            Reorder Level
+                            Reorder Threshold
                           </p>
                           <p className="text-xl font-bold text-gray-800">
                             {displayItem.reorderLevel}
@@ -220,7 +220,7 @@ const InventoryItemDetailsModal: React.FC<InventoryItemDetailsModalProps> = ({
                         </div>
                         <div className="bg-gray-50 rounded-xl p-4">
                           <p className="text-xs text-gray-500 font-medium mb-1">
-                            Stock Level
+                            Current Stock
                           </p>
                           <p className="text-xl font-bold text-gray-800">
                             {displayItem.stockLevel}

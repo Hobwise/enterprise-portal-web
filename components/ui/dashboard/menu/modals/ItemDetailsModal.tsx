@@ -7,8 +7,12 @@ import {
 } from "@nextui-org/react";
 import { ArrowLeft, Edit, Plus, Star, Trash2 } from "lucide-react";
 import DeleteModal from "@/components/ui/deleteModal";
-import toast from "react-hot-toast";
-import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+
+const toast = {
+  success: (text: string) => notify({ text, type: "success" }),
+  error: (text: string) => notify({ text, type: "error" }),
+};
 import type { payloadMenuItem } from "@/app/api/controllers/dashboard/menu";
 import { useState, useEffect } from "react";
 
@@ -347,6 +351,14 @@ const ItemDetailsModal = ({
                                       })}
                                     </span>
                                   </div>
+                                  {variety.quantityPerSale > 0 && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-gray-500">Qty per Sale:</span>
+                                      <span className="text-sm font-semibold text-gray-700">
+                                        {variety.quantityPerSale}
+                                      </span>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             )

@@ -267,6 +267,14 @@ const MenuDetails = () => {
                             <Spacer y={2} />
                             <p className='text-grey600 text-sm'>{item.unit}</p>
                             <Spacer y={2} />
+                            {item.quantityPerSale > 0 && (
+                              <>
+                                <p className='text-grey600 text-sm'>
+                                  Qty per Sale: <span className='font-[600] text-black'>{item.quantityPerSale}</span>
+                                </p>
+                                <Spacer y={2} />
+                              </>
+                            )}
                             <p className='font-[700]'>
                               {formatPrice(item.price)}
                             </p>

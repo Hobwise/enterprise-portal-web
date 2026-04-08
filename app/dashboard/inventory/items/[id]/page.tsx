@@ -470,7 +470,7 @@ export default function ItemDetailPage() {
               {/* Reorder Level */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Reorder Level
+                  Reorder Threshold
                 </label>
                 <input
                   type="number"
@@ -491,7 +491,7 @@ export default function ItemDetailPage() {
               {/* Stock Level (disabled) */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Stock Level
+                  Current Stock
                 </label>
                 <input
                   type="number"

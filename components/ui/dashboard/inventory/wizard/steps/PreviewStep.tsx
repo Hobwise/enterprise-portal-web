@@ -118,7 +118,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
             <div className="sm:w-32">
               <label className="block text-sm font-medium text-gray-500 mb-1">Cost/Unit</label>
               <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
-                {costPerUnit ? `${parseFloat(costPerUnit).toLocaleString()}` : '—'}
+                {costPerUnit ? `₦${parseFloat(costPerUnit).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
               </p>
             </div>
           </div>
@@ -158,7 +158,7 @@ const PreviewStep: React.FC<PreviewStepProps> = ({
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-500 mb-1">Reorder Level</label>
+              <label className="block text-sm font-medium text-gray-500 mb-1">Reorder Threshold</label>
               <p className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-700 bg-gray-50">
                 {reorderLevel || '0'}
               </p>

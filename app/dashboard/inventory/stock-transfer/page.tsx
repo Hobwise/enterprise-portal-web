@@ -1354,10 +1354,24 @@ export default function StockTransferPage() {
                             }
                           >
                             {(destinationItems || [])
-                              .filter(
-                                (destItem: any) =>
-                                  destItem.unitCategory === item.unitCategory,
-                              )
+                              .filter((destItem: any) => {
+                                if (
+                                  item.unitCategory != null &&
+                                  destItem.unitCategory != null
+                                ) {
+                                  return (
+                                    destItem.unitCategory === item.unitCategory
+                                  );
+                                }
+                                return (
+                                  (
+                                    destItem.unitName ||
+                                    destItem.unit ||
+                                    ""
+                                  ).toLowerCase() ===
+                                  (item.unit || "").toLowerCase()
+                                );
+                              })
                               .map((destItem: any) => (
                               <AutocompleteItem
                                 key={destItem.id}

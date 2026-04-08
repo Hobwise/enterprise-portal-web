@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDisclosure } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 import useMenuCategories from '@/hooks/cachedEndpoints/useMenuCategories';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
@@ -21,7 +20,12 @@ import {
   deleteVariety,
 } from '@/app/api/controllers/dashboard/menu';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
-import { getJsonItemFromLocalStorage, dynamicExportConfig } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, dynamicExportConfig, notify } from '@/lib/utils';
+
+const toast = {
+  success: (text: string) => notify({ text, type: 'success' }),
+  error: (text: string) => notify({ text, type: 'error' }),
+};
 import MenuHeader from '@/components/ui/dashboard/menu/MenuHeader';
 import CategoryTabs from '@/components/ui/dashboard/menu/CategoryTabs';
 import MenuToolbar from '@/components/ui/dashboard/menu/MenuToolbar';
@@ -750,6 +754,8 @@ const RestaurantMenu = () => {
         const itemData = response.data.data;
         const varieties = itemData?.varieties || [];
         setSelectedItem({ ...selectedItem, varieties, ...itemData });
+      } else {
+        toast.error('Failed to refresh item data');
       }
     }
     // Refresh menu items
@@ -762,7 +768,7 @@ const RestaurantMenu = () => {
         }
       });
       keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
-      
+
       // Also invalidate preloaded sections cache
       setPreloadedSections(prev => {
         const newMap = new Map(prev);
@@ -806,7 +812,22 @@ const RestaurantMenu = () => {
         setVarietyName('');
         setVarietyPrice('');
         setVarietyQuantity('');
-        backToItemDetails();
+
+        // Refresh selectedItem with new variety data before navigating
+        if (selectedItem) {
+          const refreshResponse = await getMenuItem(selectedItem.id);
+          if (refreshResponse?.data?.isSuccessful) {
+            const itemData = refreshResponse.data.data;
+            const varieties = itemData?.varieties || [];
+            setSelectedItem({ ...selectedItem, varieties, ...itemData });
+          }
+        }
+
+        // After a successful create, we know there is at least one variety,
+        // so always open ItemDetailsModal (not SingleItemModal)
+        setIsCreateVarietyModalOpen(false);
+        setIsItemDetailsModalOpen(true);
+
         if (activeSubCategory) {
           // Invalidate all pages in cache for this section
           const keysToDelete: string[] = [];
@@ -816,7 +837,7 @@ const RestaurantMenu = () => {
             }
           });
           keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
-          
+
           // Also invalidate preloaded sections cache
           setPreloadedSections(prev => {
             const newMap = new Map(prev);

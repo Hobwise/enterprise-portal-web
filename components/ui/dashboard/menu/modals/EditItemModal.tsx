@@ -1,8 +1,12 @@
 import { Modal, ModalContent, ModalBody, Spinner } from '@nextui-org/react';
 import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
 import { editMenuItem, payloadMenuItem, uploadFile, deleteFile } from '@/app/api/controllers/dashboard/menu';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+
+const toast = {
+  success: (text: string) => notify({ text, type: 'success' }),
+  error: (text: string) => notify({ text, type: 'error' }),
+};
 import { Edit, Upload, X, ShoppingBag } from 'lucide-react';
 
 interface EditItemModalProps {

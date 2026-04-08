@@ -1089,13 +1089,16 @@ export async function submitStockAdjustment(
 // Inventory Count types
 export type InventoryCountHistoryItem = {
   id: string;
-  countType: string; // "FullStockCount" | "PartialStockCount"
-  referenceNumber: string;
-  description: string;
   date: string;
-  status: string;
-  totalItems: number;
-  countedItems: number;
+  type: string; // "Full" | "Partial"
+  requestJson: string;
+};
+
+export type InventoryCountAdjustment = {
+  inventoryItemId: string;
+  quantity: number;
+  adjustmentType: number; // 12 = increase, 13 = decrease
+  reason: string;
 };
 
 export type InventoryCountHistoryResponse = {
@@ -1108,18 +1111,6 @@ export type InventoryCountHistoryResponse = {
   hasPrevious: boolean;
 };
 
-export type VerifyStockCountEntry = {
-  inventoryItemId: string;
-  verifiedCount: number;
-};
-
-export type VerifyStockCountPayload = {
-  countType: string;
-  entries: VerifyStockCountEntry[];
-  cooperateID: string;
-  businessID: string;
-};
-
 export type InventoryCountRequest = {
   inventoryItemId: string;
   stockQuantity: number;
@@ -1130,6 +1121,25 @@ export type SubmitInventoryCountPayload = {
 };
 
 // Inventory Count API functions
+export async function getInventoryCountItems(
+  businessId: string,
+  page: number = 1,
+  pageSize: number = 10,
+  search?: string
+) {
+  const headers: Record<string, string> = {};
+  if (businessId) headers.businessId = businessId;
+
+  try {
+    let url = `${DASHBOARD.inventoryCount}?Page=${page}&PageSize=${pageSize}`;
+    if (search) url += `&Search=${encodeURIComponent(search)}`;
+    const data = await api.get(url, { headers });
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
 export async function getInventoryCountHistory(
   businessId: string,
   page: number = 1,
@@ -1164,17 +1174,3 @@ export async function submitInventoryCount(
   }
 }
 
-export async function verifyStockCount(
-  businessId: string,
-  payload: VerifyStockCountPayload
-) {
-  const headers: Record<string, string> = {};
-  if (businessId) headers.businessId = businessId;
-
-  try {
-    const data = await api.put(DASHBOARD.inventoryCountVerify, payload, { headers });
-    return data;
-  } catch (error) {
-    handleError(error);
-  }
-}
