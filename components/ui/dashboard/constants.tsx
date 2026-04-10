@@ -82,13 +82,6 @@ export const INVENTORY_ITEMS: SideNavItem[] = [
     title: "Item",
     path: "/dashboard/inventory/items",
     icon: <ItemIcon />,
-    submenu: true,
-    subMenuItems: [
-      { title: "All Items", path: "/dashboard/inventory/items" },
-      { title: "Wizard", path: "/dashboard/inventory/items/wizard" },
-      { title: "Sync Menu Items", path: "/dashboard/inventory/items/sync-menu" },
-      { title: "Measurements", path: "/dashboard/inventory/items/measurements" },
-    ],
   },
   {
     title: "Supplier",

@@ -696,7 +696,7 @@ const RestaurantMenu = () => {
       if (response?.data?.isSuccessful) {
         const itemData = response.data.data;
         const varieties = itemData?.varieties || [];
-        const updatedItem = { ...item, varieties, ...itemData };
+        const updatedItem = { ...item, varieties, ...itemData, menuID: item.menuID || itemData?.menuID };
         setSelectedItem(updatedItem);
 
         if (varieties.length > 0) {
@@ -753,7 +753,7 @@ const RestaurantMenu = () => {
       if (response?.data?.isSuccessful) {
         const itemData = response.data.data;
         const varieties = itemData?.varieties || [];
-        setSelectedItem({ ...selectedItem, varieties, ...itemData });
+        setSelectedItem({ ...selectedItem, varieties, ...itemData, menuID: selectedItem.menuID || itemData?.menuID });
       } else {
         toast.error('Failed to refresh item data');
       }
@@ -793,7 +793,7 @@ const RestaurantMenu = () => {
       const business = getJsonItemFromLocalStorage('business');
       const payload: payloadMenuVariety = {
         itemID: selectedItem.id,
-        menuID: selectedItem.menuID,
+        menuID: selectedItem.menuID || activeSubCategory,
         unit: varietyName,
         price: parseFloat(varietyPrice),
         ...(varietyQuantity ? { quantityPerSale: parseFloat(varietyQuantity) } : {}),
@@ -819,7 +819,7 @@ const RestaurantMenu = () => {
           if (refreshResponse?.data?.isSuccessful) {
             const itemData = refreshResponse.data.data;
             const varieties = itemData?.varieties || [];
-            setSelectedItem({ ...selectedItem, varieties, ...itemData });
+            setSelectedItem({ ...selectedItem, varieties, ...itemData, menuID: selectedItem.menuID || itemData?.menuID });
           }
         }
 
@@ -1277,7 +1277,7 @@ const RestaurantMenu = () => {
           if (updatedResponse?.data?.isSuccessful) {
             const itemData = updatedResponse.data.data;
             const varieties = itemData?.varieties || [];
-            setSelectedItem({ ...selectedItem, varieties, ...itemData });
+            setSelectedItem({ ...selectedItem, varieties, ...itemData, menuID: selectedItem.menuID || itemData?.menuID });
           }
         }
         if (activeSubCategory) {

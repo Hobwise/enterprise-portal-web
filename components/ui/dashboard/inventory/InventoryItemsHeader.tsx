@@ -98,7 +98,7 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
           onChange={(e) => onStockLevelFilterChange(e.target.value)}
           className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 appearance-none min-w-[150px]"
         >
-          <option value="all">All Stock Levels</option>
+          <option value="all">All Current Stock</option>
           <option value="in-stock">In Stock</option>
           <option value="low-stock">Low Stock</option>
           <option value="out-of-stock">Out of Stock</option>

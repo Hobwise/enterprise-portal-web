@@ -750,7 +750,7 @@ export default function StockAdjustmentPage() {
                   onChange={(e) => setStockLevelFilter(e.target.value)}
                   className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
                 >
-                  <option value="all">Stock Level</option>
+                  <option value="all">Current Stock</option>
                   <option value="low">Low Stock</option>
                   <option value="medium">Medium Stock</option>
                   <option value="high">High Stock</option>

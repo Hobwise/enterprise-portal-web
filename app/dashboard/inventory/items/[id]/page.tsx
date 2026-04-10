@@ -629,7 +629,7 @@ export default function ItemDetailPage() {
                 <div>
                   <p className="font-medium text-gray-700">Allow Tracking</p>
                   <p className="text-sm text-gray-500">
-                    Track stock levels and movements for this item
+                    Track current stock and movements for this item
                   </p>
                 </div>
                 <Switch
