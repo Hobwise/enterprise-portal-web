@@ -52,7 +52,7 @@ export default function Features() {
         'Stay in the know with real-time insights that give you a clear picture of how your business is doing. Make smart, data-driven decisions that help you run things smoothly and efficiently.',
       lists: [
         'Gain detailed insights on customer trends and preferences.',
-        'Monitor sales, orders, and stock levels in real-time for better management.',
+        'Monitor sales, orders, and current stock in real-time for better management.',
         'Identify opportunities to streamline processes and reduce costs.',
       ],
       image: ContentImage,

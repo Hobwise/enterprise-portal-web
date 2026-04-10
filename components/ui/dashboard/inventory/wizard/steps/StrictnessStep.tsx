@@ -60,7 +60,7 @@ const StrictnessStep: React.FC<StrictnessStepProps> = ({
           </p>
           <ul className="space-y-2">
             {[
-              'Sales always go through regardless of stock level',
+              'Sales always go through regardless of current stock',
               'Negative stock is allowed',
               'Allows you to learn usage pattern',
               'Switch to strict later if needed',

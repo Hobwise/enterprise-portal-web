@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import UnitsList from '@/components/ui/dashboard/inventory/units/UnitsList';
 import NoUnits from '@/components/ui/dashboard/inventory/units/NoUnits';
 import AddEditUnitModal, {
@@ -14,8 +12,6 @@ import useUnitsManagement from '@/hooks/cachedEndpoints/useUnitsManagement';
 import type { InventoryUnit } from '@/app/api/controllers/dashboard/inventory';
 
 export default function MeasurementsPage() {
-  const router = useRouter();
-
   const {
     data: units,
     isLoading,
@@ -125,13 +121,6 @@ export default function MeasurementsPage() {
 
   return (
     <div className="h-full flex flex-col">
-      <button
-        onClick={() => router.push('/dashboard/inventory/items')}
-        className="flex items-center gap-2 text-gray-600 hover:text-[#5F35D2] transition-colors mb-4"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span className="text-sm font-medium">Back to Items</span>
-      </button>
       <div className="flex-1">
         {units.length > 0 ? (
           <UnitsList
