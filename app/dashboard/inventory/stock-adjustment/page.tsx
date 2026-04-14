@@ -31,7 +31,9 @@ type MainTab = "adjustment" | "activity-log";
 
 /** Convert PascalCase/camelCase joined words to spaced words for display (e.g. "DamagedGoods" → "Damaged Goods") */
 const formatReasonLabel = (name: string): string =>
-  name.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
+  name
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2");
 
 interface AdjustmentItem {
   id: string;
@@ -40,6 +42,7 @@ interface AdjustmentItem {
   oldStock: number;
   adjustmentQty: number;
   reason: string;
+  reasonText: string;
   reasonValue: number;
   movement: number;
   selected: boolean;
@@ -56,6 +59,7 @@ export default function StockAdjustmentPage() {
   const [adjustmentQty, setAdjustmentQty] = useState("");
   const [selectedReason, setSelectedReason] =
     useState<StockAdjustmentReason | null>(null);
+  const [reasonText, setReasonText] = useState("");
 
   // Multi-adjustment state
   const [multiSearchQuery, setMultiSearchQuery] = useState("");
@@ -157,14 +161,13 @@ export default function StockAdjustmentPage() {
     return selectedReason.movement === 1 ? -qty : qty;
   }, [adjustmentQty, selectedReason]);
 
-
-
   const handleSelectItem = (item: InventoryItem) => {
     setSelectedItem(item);
     setSearchQuery(item.name);
     setShowDropdown(false);
     setAdjustmentQty("");
     setSelectedReason(null);
+    setReasonText("");
   };
 
   const handleAddMultiItem = (item: InventoryItem) => {
@@ -187,6 +190,7 @@ export default function StockAdjustmentPage() {
         oldStock: item.stockLevel || 0,
         adjustmentQty: 0,
         reason: "",
+        reasonText: "",
         reasonValue: 0,
         movement: 0,
         selected: false,
@@ -200,19 +204,19 @@ export default function StockAdjustmentPage() {
   const handleUpdateMultiItem = (
     id: string,
     field: keyof AdjustmentItem,
-    value: any
+    value: any,
   ) => {
     setAdjustmentItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
         return { ...item, [field]: value };
-      })
+      }),
     );
   };
 
   const handleUpdateMultiItemReason = (
     id: string,
-    reason: StockAdjustmentReason
+    reason: StockAdjustmentReason,
   ) => {
     setAdjustmentItems((prev) =>
       prev.map((item) =>
@@ -223,8 +227,8 @@ export default function StockAdjustmentPage() {
               reasonValue: reason.value,
               movement: reason.movement,
             }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -236,7 +240,7 @@ export default function StockAdjustmentPage() {
     handleUpdateMultiItem(
       id,
       "selected",
-      !adjustmentItems.find((i) => i.id === id)?.selected
+      !adjustmentItems.find((i) => i.id === id)?.selected,
     );
   };
 
@@ -255,6 +259,14 @@ export default function StockAdjustmentPage() {
       notify({
         title: "Select reason",
         text: "Please select a reason for adjustment",
+        type: "error",
+      });
+      return;
+    }
+    if (!reasonText.trim()) {
+      notify({
+        title: "Enter reason",
+        text: "Please enter a reason for the adjustment",
         type: "error",
       });
       return;
@@ -292,7 +304,7 @@ export default function StockAdjustmentPage() {
             quantity: signedQuantity,
             adjustmentType: selectedReason.value,
             movementType: selectedReason.movement,
-            reason: selectedReason.value,
+            reason: reasonText.trim(),
           },
         ],
         cooperateID,
@@ -305,9 +317,10 @@ export default function StockAdjustmentPage() {
             setSearchQuery("");
             setAdjustmentQty("");
             setSelectedReason(null);
+            setReasonText("");
           }
         },
-      }
+      },
     );
   };
 
@@ -322,19 +335,20 @@ export default function StockAdjustmentPage() {
     }
 
     const invalidItems = adjustmentItems.filter(
-      (item) => !item.reason || item.adjustmentQty <= 0
+      (item) =>
+        !item.reason || !item.reasonText.trim() || item.adjustmentQty <= 0,
     );
     if (invalidItems.length > 0) {
       notify({
         title: "Incomplete items",
-        text: "Ensure all items have a reason and an adjustment quantity greater than 0",
+        text: "Ensure all items have a reason, a reason description, and an adjustment quantity greater than 0",
         type: "warning",
       });
       return;
     }
 
     const overdrawnItems = adjustmentItems.filter(
-      (item) => item.movement === 1 && item.adjustmentQty > item.oldStock
+      (item) => item.movement === 1 && item.adjustmentQty > item.oldStock,
     );
     if (overdrawnItems.length > 0) {
       notify({
@@ -350,7 +364,7 @@ export default function StockAdjustmentPage() {
       quantity: item.movement === 1 ? -item.adjustmentQty : item.adjustmentQty,
       adjustmentType: item.reasonValue,
       movementType: item.movement,
-      reason: item.reasonValue,
+      reason: item.reasonText.trim(),
     }));
 
     const { businessID, cooperateID } = getFreshIds();
@@ -363,7 +377,7 @@ export default function StockAdjustmentPage() {
             setAdjustmentItems([]);
           }
         },
-      }
+      },
     );
   };
 
@@ -414,7 +428,7 @@ export default function StockAdjustmentPage() {
               "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
               mainTab === "adjustment"
                 ? "bg-[#F0ECFB] text-[#5F35D2]"
-                : "text-[#667085] hover:text-[#101828]"
+                : "text-[#667085] hover:text-[#101828]",
             )}
           >
             <StockAdjustmentIcon className="w-4 h-4" />
@@ -431,7 +445,7 @@ export default function StockAdjustmentPage() {
               "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
               mainTab === "activity-log"
                 ? "bg-[#F0ECFB] text-[#5F35D2]"
-                : "text-[#667085] hover:text-[#101828]"
+                : "text-[#667085] hover:text-[#101828]",
             )}
           >
             <svg
@@ -453,28 +467,7 @@ export default function StockAdjustmentPage() {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 text-sm text-[#667085]">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M8 8.667a2 2 0 100-4 2 2 0 000 4z"
-              stroke="#667085"
-              strokeWidth="1.33"
-            />
-            <path
-              d="M8 14s5.333-3.333 5.333-7.333a5.333 5.333 0 00-10.666 0C2.667 10.667 8 14 8 14z"
-              stroke="#667085"
-              strokeWidth="1.33"
-            />
-          </svg>
-          Current Store:{" "}
-          <span className="font-semibold text-[#101828]">{businessName}</span>
-        </div>
+
       </div>
 
       {/* Main Content */}
@@ -562,22 +555,22 @@ export default function StockAdjustmentPage() {
 
             {/* Reason Row */}
             <div className="border border-gray-200 rounded-lg p-6 bg-white mb-4 max-w-[750px] mx-auto">
-              <div>
+              <div className="mb-4">
                 <label className="text-xs text-[#667085] font-medium mb-2 block">
-                  Reason for Adjustment
+                  Adjustment Type
                 </label>
                 <Select
                   placeholder={
-                    isLoadingReasons ? "Loading reasons..." : "Select reason"
+                    isLoadingReasons
+                      ? "Loading reasons..."
+                      : "Select adjustment type"
                   }
                   selectedKeys={
                     selectedReason ? [String(selectedReason.value)] : []
                   }
                   onSelectionChange={(keys) => {
                     const val = Array.from(keys)[0] as string;
-                    const found = reasons.find(
-                      (r) => String(r.value) === val
-                    );
+                    const found = reasons.find((r) => String(r.value) === val);
                     setSelectedReason(found || null);
                   }}
                   variant="bordered"
@@ -590,14 +583,37 @@ export default function StockAdjustmentPage() {
                   }}
                 >
                   {reasons.map((r) => (
-                    <SelectItem key={String(r.value)} className="text-[#101828]">{formatReasonLabel(r.name)}</SelectItem>
+                    <SelectItem
+                      key={String(r.value)}
+                      className="text-[#101828]"
+                    >
+                      {formatReasonLabel(r.name)}
+                    </SelectItem>
                   ))}
                 </Select>
                 {selectedItem && !selectedReason && (
                   <p className="text-xs text-[#F79009] mt-2">
-                    Select a reason to determine whether this is an increase or decrease
+                    Select an adjustment type to determine whether this is an
+                    increase or decrease
                   </p>
                 )}
+              </div>
+              <div>
+                <label className="text-xs text-[#667085] font-medium mb-2 block">
+                  Reason for Adjustment
+                </label>
+                <Input
+                  placeholder="Enter reason for adjustment..."
+                  value={reasonText}
+                  onChange={(e) => setReasonText(e.target.value)}
+                  variant="bordered"
+                  isDisabled={!selectedItem || !selectedReason}
+                  classNames={{
+                    inputWrapper:
+                      "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
+                    input: "text-sm text-[#101828]",
+                  }}
+                />
               </div>
             </div>
 
@@ -645,8 +661,8 @@ export default function StockAdjustmentPage() {
                       computedNewStock !== null && signedDelta > 0
                         ? "text-[#16AB60]"
                         : computedNewStock !== null && signedDelta < 0
-                        ? "text-red-500"
-                        : "text-[#101828]"
+                          ? "text-red-500"
+                          : "text-[#101828]",
                     )}
                   >
                     {computedNewStock !== null ? computedNewStock : "\u2014"}
@@ -813,10 +829,11 @@ export default function StockAdjustmentPage() {
                     }}
                   >
                     <TableHeader>
-                      <TableColumn>{" "}</TableColumn>
+                      <TableColumn> </TableColumn>
                       <TableColumn>DATE</TableColumn>
                       <TableColumn>ITEM NAME</TableColumn>
                       <TableColumn>UNITS</TableColumn>
+                      <TableColumn>TYPE</TableColumn>
                       <TableColumn>REASON</TableColumn>
                       <TableColumn>OLD STOCK</TableColumn>
                       <TableColumn>ADJ. QTY</TableColumn>
@@ -825,7 +842,9 @@ export default function StockAdjustmentPage() {
                     <TableBody>
                       {adjustmentItems.map((item) => {
                         const signedQty = item.reason
-                          ? item.movement === 1 ? -item.adjustmentQty : item.adjustmentQty
+                          ? item.movement === 1
+                            ? -item.adjustmentQty
+                            : item.adjustmentQty
                           : 0;
                         const computedNew = item.oldStock + signedQty;
                         return (
@@ -850,14 +869,12 @@ export default function StockAdjustmentPage() {
                             </TableCell>
                             <TableCell>
                               <Select
-                                placeholder="Select reason"
-                                selectedKeys={
-                                  item.reason ? [item.reason] : []
-                                }
+                                placeholder="Select type"
+                                selectedKeys={item.reason ? [item.reason] : []}
                                 onSelectionChange={(keys) => {
                                   const val = Array.from(keys)[0] as string;
                                   const found = reasons.find(
-                                    (r) => r.name === val
+                                    (r) => r.name === val,
                                   );
                                   if (found)
                                     handleUpdateMultiItemReason(item.id, found);
@@ -865,18 +882,42 @@ export default function StockAdjustmentPage() {
                                 variant="bordered"
                                 classNames={{
                                   trigger:
-                                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-8 w-[200px] min-w-[200px]",
+                                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-8 w-[160px] min-w-[160px]",
                                   value: "text-xs text-[#101828]",
                                   listboxWrapper: "max-h-[200px]",
                                 }}
                                 size="sm"
                               >
                                 {reasons.map((r) => (
-                                  <SelectItem key={r.name} className="text-[#101828]">
+                                  <SelectItem
+                                    key={r.name}
+                                    className="text-[#101828]"
+                                  >
                                     {formatReasonLabel(r.name)}
                                   </SelectItem>
                                 ))}
                               </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                placeholder="Enter reason"
+                                value={item.reasonText}
+                                onChange={(e) =>
+                                  handleUpdateMultiItem(
+                                    item.id,
+                                    "reasonText",
+                                    e.target.value,
+                                  )
+                                }
+                                variant="bordered"
+                                isDisabled={!item.reason}
+                                classNames={{
+                                  inputWrapper:
+                                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-8 w-[180px] min-w-[180px]",
+                                  input: "text-xs text-[#101828]",
+                                }}
+                                size="sm"
+                              />
                             </TableCell>
                             <TableCell>{item.oldStock}</TableCell>
                             <TableCell>
@@ -888,7 +929,7 @@ export default function StockAdjustmentPage() {
                                   handleUpdateMultiItem(
                                     item.id,
                                     "adjustmentQty",
-                                    Math.max(0, Number(e.target.value))
+                                    Math.max(0, Number(e.target.value)),
                                   )
                                 }
                                 variant="bordered"
@@ -907,8 +948,8 @@ export default function StockAdjustmentPage() {
                                   signedQty > 0
                                     ? "text-[#16AB60]"
                                     : signedQty < 0
-                                    ? "text-red-500"
-                                    : "text-[#667085]"
+                                      ? "text-red-500"
+                                      : "text-[#667085]",
                                 )}
                               >
                                 {item.reason && item.adjustmentQty > 0
@@ -1019,44 +1060,48 @@ export default function StockAdjustmentPage() {
                     <TableColumn>REASON</TableColumn>
                   </TableHeader>
                   <TableBody emptyContent="No adjustment history found">
-                    {history.map((row: StockAdjustmentHistoryItem, idx: number) => (
-                      <TableRow key={`${row.date}-${row.inventoryItemName}-${idx}`}>
-                        <TableCell className="whitespace-nowrap">
-                          {formatDate(row.date)}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {formatTime(row.date)}
-                        </TableCell>
-                        <TableCell className="font-medium whitespace-nowrap">
-                          {row.inventoryItemName}
-                        </TableCell>
-                        <TableCell>{row.unit}</TableCell>
-                        <TableCell>{row.oldStock}</TableCell>
-                        <TableCell>{row.newStock}</TableCell>
-                        <TableCell>
-                          <span
-                            className={cn(
-                              "font-medium",
-                              row.difference > 0
-                                ? "text-[#16AB60]"
-                                : row.difference < 0
-                                ? "text-red-500"
-                                : ""
-                            )}
-                          >
-                            {row.difference > 0
-                              ? `+${row.difference}`
-                              : row.difference}
-                          </span>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {row.staff}
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap">
-                          {formatReasonLabel(row.reason)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {history.map(
+                      (row: StockAdjustmentHistoryItem, idx: number) => (
+                        <TableRow
+                          key={`${row.date}-${row.inventoryItemName}-${idx}`}
+                        >
+                          <TableCell className="whitespace-nowrap">
+                            {formatDate(row.date)}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {formatTime(row.date)}
+                          </TableCell>
+                          <TableCell className="font-medium whitespace-nowrap">
+                            {row.inventoryItemName}
+                          </TableCell>
+                          <TableCell>{row.unit}</TableCell>
+                          <TableCell>{row.oldStock}</TableCell>
+                          <TableCell>{row.newStock}</TableCell>
+                          <TableCell>
+                            <span
+                              className={cn(
+                                "font-medium",
+                                row.difference > 0
+                                  ? "text-[#16AB60]"
+                                  : row.difference < 0
+                                    ? "text-red-500"
+                                    : "",
+                              )}
+                            >
+                              {row.difference > 0
+                                ? `+${row.difference}`
+                                : row.difference}
+                            </span>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {row.staff}
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap">
+                            {formatReasonLabel(row.reason)}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    )}
                   </TableBody>
                 </Table>
               </div>

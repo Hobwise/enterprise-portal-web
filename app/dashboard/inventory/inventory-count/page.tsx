@@ -80,7 +80,7 @@ export default function InventoryCountPage() {
   const businessName = businessInformation?.[0]?.businessName || "Store";
 
   const {
-    // Items from /api/v1/InventoryCount
+    // Items from /api/v1/Inventory/by-business
     items: inventoryItems,
     itemsTotalCount: totalCount,
     itemsTotalPages: totalPages,
@@ -91,7 +91,12 @@ export default function InventoryCountPage() {
     refetchItems,
     submitInventoryCount,
     isSubmitting,
-  } = useInventoryCount({ itemsPage: page, itemsPageSize: pageSize, itemsSearch: debouncedSearch });
+  } = useInventoryCount({
+    itemsPage: page,
+    itemsPageSize: pageSize,
+    itemsSearch: debouncedSearch,
+    itemsItemType: itemTypeFilter !== "all" ? Number(itemTypeFilter) : undefined,
+  });
 
   // Debounce search
   useEffect(() => {
@@ -102,18 +107,8 @@ export default function InventoryCountPage() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Filter inventory items for the main tab
-  const filteredItems = useMemo(() => {
-    let items = inventoryItems;
-
-    if (itemTypeFilter !== "all") {
-      items = items.filter(
-        (item) => String(item.itemType) === itemTypeFilter
-      );
-    }
-
-    return items;
-  }, [inventoryItems, itemTypeFilter]);
+  // Use items directly from hook
+  const filteredItems = inventoryItems;
 
   // Filter count items for the stock count view
   const filteredCountItems = useMemo(() => {
@@ -242,29 +237,6 @@ export default function InventoryCountPage() {
         <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#F0ECFB] text-[#5F35D2]">
           <InventoryCountIcon className="w-4 h-4" />
           Inventory Count
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-[#667085]">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M8 8.667a2 2 0 100-4 2 2 0 000 4z"
-              stroke="#667085"
-              strokeWidth="1.33"
-            />
-            <path
-              d="M8 14s5.333-3.333 5.333-7.333a5.333 5.333 0 00-10.666 0C2.667 10.667 8 14 8 14z"
-              stroke="#667085"
-              strokeWidth="1.33"
-            />
-          </svg>
-          Current Store:{" "}
-          <span className="font-semibold text-[#101828]">{businessName}</span>
         </div>
       </div>
 

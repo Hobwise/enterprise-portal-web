@@ -20,7 +20,7 @@ import {
 } from '@/app/api/controllers/dashboard/purchaseOrder';
 import { getInventoryItems } from '@/app/api/controllers/dashboard/inventory';
 import { fetchQueryConfig } from '@/lib/queryConfig';
-import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+import { cn, getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import { Supplier } from '@/components/ui/dashboard/inventory/suppliers/types';
 import {
   SupplierInventoryItem,
@@ -29,7 +29,6 @@ import {
   purchaseOrderStatusMap,
   itemTypeLabels,
 } from '@/components/ui/dashboard/inventory/purchase-request/types';
-import PurchaseRequestHeader from '@/components/ui/dashboard/inventory/purchase-request/PurchaseRequestHeader';
 import SupplierSearchCard from '@/components/ui/dashboard/inventory/purchase-request/SupplierSearchCard';
 import SupplierItemsTable from '@/components/ui/dashboard/inventory/purchase-request/SupplierItemsTable';
 import NoSupplierItems from '@/components/ui/dashboard/inventory/purchase-request/NoSupplierItems';
@@ -82,8 +81,8 @@ export default function PurchaseRequestPage() {
             : o.orderDate && o.orderDate !== '0001-01-01T00:00:00'
               ? new Date(o.orderDate).toLocaleDateString('en-GB')
               : '-',
-          expectedDeliveryDate: o.expectedDate
-            ? o.expectedDate.split('T')[0]
+          expectedDeliveryDate: o.expectedDate && o.expectedDate !== '0001-01-01T00:00:00'
+            ? new Date(o.expectedDate).toLocaleDateString('en-GB')
             : '',
           numberOfItems: Math.round(o.numberOfItems ?? 0),
           totalCost: o.totalAmount ?? 0,
@@ -333,8 +332,8 @@ export default function PurchaseRequestPage() {
           ? new Date(o.orderDate).toLocaleDateString('en-GB')
           : request.requestDate,
         orderDate: o.orderDate || request.orderDate,
-        expectedDeliveryDate: o.expectedDate
-          ? o.expectedDate.split('T')[0]
+        expectedDeliveryDate: o.expectedDate && !o.expectedDate.startsWith('0001')
+          ? new Date(o.expectedDate).toLocaleDateString('en-GB')
           : request.expectedDeliveryDate,
         rawExpectedDate: o.expectedDate || request.rawExpectedDate,
         status: typeof o.status === 'number'
@@ -480,90 +479,113 @@ export default function PurchaseRequestPage() {
   };
 
   return (
-    <div className="w-full px-4 py-6">
-      <PurchaseRequestHeader />
-
-      {/* Tabs */}
-      <div className="flex items-center gap-1 mb-6 border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab('create')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
-            resolvedTab === 'create'
-              ? 'border-[#5F35D2] text-[#5F35D2]'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          }`}
-        >
-          <LuPlus size={16} />
-          Create Order
-        </button>
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`flex items-center gap-2 px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
-            resolvedTab === 'history'
-              ? 'border-[#5F35D2] text-[#5F35D2]'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-          }`}
-        >
-          <LuHistory size={16} />
-          Order History
-          {purchaseOrdersTotalCount > 0 && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+    <div className="w-full min-h-screen">
+      {/* Top Tabs */}
+      <div className="flex items-center justify-between px-6 pt-4 pb-2">
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setActiveTab('create')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              resolvedTab === 'create'
+                ? "bg-[#F0ECFB] text-[#5F35D2]"
+                : "text-[#667085] hover:text-[#101828]"
+            )}
+          >
+            <LuPlus size={16} />
+            Create Order
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
               resolvedTab === 'history'
-                ? 'bg-[#5F35D2]/10 text-[#5F35D2]'
-                : 'bg-gray-100 text-gray-500'
-            }`}>
-              {purchaseOrdersTotalCount}
-            </span>
-          )}
-        </button>
+                ? "bg-[#F0ECFB] text-[#5F35D2]"
+                : "text-[#667085] hover:text-[#101828]"
+            )}
+          >
+            <LuHistory size={16} />
+            Order History
+            {purchaseOrdersTotalCount > 0 && (
+              <span className={cn(
+                "text-xs px-1.5 py-0.5 rounded-full transition-colors",
+                resolvedTab === 'history'
+                  ? "bg-[#5F35D2]/10 text-[#5F35D2]"
+                  : "bg-gray-100 text-gray-500"
+              )}>
+                {purchaseOrdersTotalCount}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      {resolvedTab === 'create' && (
-        <>
-          <SupplierSearchCard
-            suppliers={suppliers}
-            selectedSupplierId={selectedSupplierId}
-            onSupplierSelect={handleSupplierSelect}
-            isLoading={suppliersLoading}
-          />
-
-          {selectedSupplierId && isLoadingSupplierItems ? (
-            <div className="flex flex-col items-center justify-center w-full bg-white rounded-lg p-8 min-h-[300px]">
-              <Spinner size="lg" color="secondary" />
-              <p className="text-sm text-gray-500 mt-4">Loading supplier items...</p>
+      <div className="px-6 py-4">
+        {/* Tab Content */}
+        {resolvedTab === 'create' && (
+          <>
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-[#101828]">
+                Create Purchase Order
+              </h1>
+              <p className="text-sm text-[#667085] mt-1">
+                Search for a supplier to view their inventory items and create a purchase order request.
+              </p>
             </div>
-          ) : selectedSupplierId && supplierItems.length > 0 ? (
-            <SupplierItemsTable
-              items={supplierItems}
-              selectedItems={selectedItemIds}
-              onSelectionChange={setSelectedItemIds}
-              onCustomize={handleCustomize}
+
+            <SupplierSearchCard
+              suppliers={suppliers}
+              selectedSupplierId={selectedSupplierId}
+              onSupplierSelect={handleSupplierSelect}
+              isLoading={suppliersLoading}
             />
-          ) : selectedSupplierId ? (
-            <NoSupplierItems hasSupplier />
-          ) : (
-            <NoSupplierItems />
-          )}
-        </>
-      )}
 
-      {resolvedTab === 'history' && (
-        <PurchaseRequestHistoryTable
-          data={purchaseOrders}
-          onViewRequest={handleViewRequest}
-          onReceiveRequest={handleReceiveRequest}
-          onDuplicateRequest={handleDuplicateRequest}
-          onCancelRequest={handleCancelRequest}
-          onSendMail={handleSendMailFromHistory}
-          currentPage={historyPage}
-          totalCount={purchaseOrdersTotalCount}
-          pageSize={historyPageSize}
-          onPageChange={setHistoryPage}
-          isActionLoading={isActionLoading}
-        />
-      )}
+            {selectedSupplierId && isLoadingSupplierItems ? (
+              <div className="flex flex-col items-center justify-center w-full bg-white rounded-lg p-8 min-h-[300px]">
+                <Spinner size="lg" color="secondary" />
+                <p className="text-sm text-gray-500 mt-4">Loading supplier items...</p>
+              </div>
+            ) : selectedSupplierId && supplierItems.length > 0 ? (
+              <SupplierItemsTable
+                items={supplierItems}
+                selectedItems={selectedItemIds}
+                onSelectionChange={setSelectedItemIds}
+                onCustomize={handleCustomize}
+              />
+            ) : selectedSupplierId ? (
+              <NoSupplierItems hasSupplier />
+            ) : (
+              <NoSupplierItems />
+            )}
+          </>
+        )}
 
+        {resolvedTab === 'history' && (
+          <>
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold text-[#101828]">
+                Purchase Order History
+              </h1>
+              <p className="text-sm text-[#667085] mt-1">
+                View and manage your purchase orders history here.
+              </p>
+            </div>
+            <PurchaseRequestHistoryTable
+              data={purchaseOrders}
+              onViewRequest={handleViewRequest}
+              onReceiveRequest={handleReceiveRequest}
+              onDuplicateRequest={handleDuplicateRequest}
+              onCancelRequest={handleCancelRequest}
+              onSendMail={handleSendMailFromHistory}
+              currentPage={historyPage}
+              totalCount={purchaseOrdersTotalCount}
+              pageSize={historyPageSize}
+              onPageChange={setHistoryPage}
+              isActionLoading={isActionLoading}
+            />
+          </>
+        )}
+      </div>
       {/* Modals */}
       <CustomizePurchaseModal
         isOpen={customizeModalOpen}

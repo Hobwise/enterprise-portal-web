@@ -220,7 +220,7 @@ const Bookings: React.FC = () => {
                     className="flex text-white"
                   >
                       <IoAddCircleOutline className="text-[22px]" />
-                    <p>Create a booking</p>
+                  <p>Create a booking</p>
                   </CustomButton>
                 )}
               </div>

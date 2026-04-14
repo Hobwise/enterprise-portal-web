@@ -66,9 +66,7 @@ export function generatePurchaseOrderPdfFile(order: PurchaseRequest): File {
   y += 5;
   drawValue(order.reference || "N/A", col1, y);
   drawValue(order.requestDate || "N/A", col2, y);
-  const formattedExpectedDate = order.expectedDeliveryDate
-    ? new Date(order.expectedDeliveryDate + "T00:00:00").toLocaleDateString("en-GB")
-    : "N/A";
+  const formattedExpectedDate = order.expectedDeliveryDate || "N/A";
   drawValue(formattedExpectedDate, col3, y);
   y += 10;
 
@@ -107,7 +105,6 @@ export function generatePurchaseOrderPdfFile(order: PurchaseRequest): File {
   // Ship To details (reset y for right column)
   let shipY = y - vendorLines.length * 5;
   const shipLines = [
-    requestorName,
     businessName,
     businessAddress,
     [businessCity, businessState].filter(Boolean).join(", "),
@@ -119,13 +116,6 @@ export function generatePurchaseOrderPdfFile(order: PurchaseRequest): File {
   });
 
   y = Math.max(y, shipY) + 5;
-
-  // Delivery address
-  doc.setFontSize(9);
-  drawLabel("Shipping / Delivery Address", col1, y);
-  y += 5;
-  drawValue(order.deliveryAddress || "N/A", col1, y);
-  y += 10;
 
   // Items table
   const tableBody = order.items.map((item, i) => [
