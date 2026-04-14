@@ -89,7 +89,7 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
           <>
             <ModalBody className="px-4 py-4">
               {/* Header */}
-              <div className="flex items-center justify-between mb-2">
+              {/* <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">
                   <div>
                     <h2 className="text-sm font-bold text-[#3D424A]">
@@ -116,7 +116,7 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
                 >
                   <IoClose size={18} className="text-gray-500" />
                 </button>
-              </div>
+              </div> */}
 
               {/* Info section */}
               <div className="bg-gray-50 rounded-xl p-4">
@@ -292,14 +292,6 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
 
               {/* Actions */}
               <div className="flex gap-3 w-full justify-end">
-                <Button
-                  variant="bordered"
-                  className="border-primaryColor text-primaryColor font-medium rounded-lg px-6"
-                  onPress={() => onUpdateStock(purchaseRequest.requestId, getReceivedItems())}
-                  isDisabled={isLoading}
-                >
-                  Update Stock Count
-                </Button>
                 <Button
                   className="bg-primaryColor text-white font-medium rounded-lg px-6"
                   onPress={() => onReceivedStock(purchaseRequest.requestId, getReceivedItems())}

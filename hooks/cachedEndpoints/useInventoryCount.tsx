@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import {
   getInventoryCountHistory,
-  getInventoryCountItems,
+  getInventoryItems,
   submitInventoryCount,
   SubmitInventoryCountPayload,
   InventoryCountHistoryItem,
@@ -27,10 +27,18 @@ interface UseInventoryCountOptions {
   itemsPage?: number;
   itemsPageSize?: number;
   itemsSearch?: string;
+  itemsItemType?: number;
+  itemsStockLevel?: number;
 }
 
 const useInventoryCount = (options: UseInventoryCountOptions = {}) => {
-  const { itemsPage = 1, itemsPageSize = 10, itemsSearch = '' } = options;
+  const {
+    itemsPage = 1,
+    itemsPageSize = 10,
+    itemsSearch = '',
+    itemsItemType,
+    itemsStockLevel,
+  } = options;
 
   const queryClient = useQueryClient();
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -61,12 +69,19 @@ const useInventoryCount = (options: UseInventoryCountOptions = {}) => {
     hasPrevious: false,
   };
 
-  // Fetch inventory count items (from /api/v1/InventoryCount endpoint)
+  // Fetch inventory items (from /api/v1/Inventory/by-business endpoint)
   const fetchItems = async (): Promise<InventoryCountItemsResult> => {
     if (!businessId) return emptyItems;
 
     try {
-      const response = await getInventoryCountItems(businessId, itemsPage, itemsPageSize, itemsSearch || undefined);
+      const response = await getInventoryItems(
+        businessId,
+        itemsPage,
+        itemsPageSize,
+        itemsSearch || undefined,
+        itemsItemType,
+        itemsStockLevel
+      );
 
       if (response?.data?.isSuccessful) {
         const responseData = response.data;
@@ -95,7 +110,7 @@ const useInventoryCount = (options: UseInventoryCountOptions = {}) => {
     isLoading: isLoadingItems,
     refetch: refetchItems,
   } = useQuery<InventoryCountItemsResult>({
-    queryKey: ['inventoryCountItems', businessId, itemsPage, itemsPageSize, itemsSearch],
+    queryKey: ['inventoryCountItems', businessId, itemsPage, itemsPageSize, itemsSearch, itemsItemType, itemsStockLevel],
     queryFn: fetchItems,
     enabled: !!businessId,
     ...fetchQueryConfig(),

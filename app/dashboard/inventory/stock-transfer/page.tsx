@@ -770,13 +770,6 @@ export default function StockTransferPage() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 text-sm text-[#667085]">
-          <MarylandIcon />
-          Current Store:{" "}
-          <span className="font-semibold text-[#101828]">
-            {currentBusinessName}
-          </span>
-        </div>
       </div>
 
       {step === "list" && !selectedIncoming && !selectedOutgoing && (
