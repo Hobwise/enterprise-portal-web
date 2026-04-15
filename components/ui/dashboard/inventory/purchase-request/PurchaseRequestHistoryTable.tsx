@@ -224,10 +224,7 @@ const PurchaseRequestHistoryTable: React.FC<
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-[#3D424A]">
-          Purchase Order History
-        </h3>
+      <div className="flex items-center justify-end mb-4">
         <div className="relative">
           <LuSearch
             size={16}

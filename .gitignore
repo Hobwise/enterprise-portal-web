@@ -4,6 +4,8 @@
 /node_modules
 /.pnp
 .pnp.js
+.claude
+.gemini
 .yarn/install-state.gz
 
 # testing
