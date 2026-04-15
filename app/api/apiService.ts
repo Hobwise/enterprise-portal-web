@@ -223,8 +223,9 @@ export const handleError = (error: any, showError: boolean = true) => {
     return;
   }
   
-  // Handle other authentication errors
-  if (error?.response?.status === 401 || error?.response?.status === 403) {
+  // Only 401 should force logout; 403 can be a valid authorization response
+  // (e.g., plan/feature restrictions) and should not clear auth state.
+  if (error?.response?.status === 401) {
     console.warn('Unauthorized access, redirecting to login...');
     resetLoginInfo();
     window.location.href = '/auth/login';
