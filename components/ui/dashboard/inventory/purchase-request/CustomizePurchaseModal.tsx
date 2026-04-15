@@ -372,17 +372,35 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
         {(onClose) => (
           <>
             <ModalBody className="px-4 py-4">
-              {/* Top row: Date, Expected Delivery */}
+              {/* Header */}
+              <div className="flex items-center justify-between mb-2">
+                <button
+                  onClick={onClose}
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <IoClose size={18} className="text-gray-500" />
+                </button>
+              </div>
+
+              {/* Info section */}
               <div className="bg-gray-50 rounded-xl p-4">
-                <div className="grid grid-cols-2 gap-x-6 mb-3">
-                  {/* <div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 mb-3">
+                  <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
-                      Request Date
+                      Reference
+                    </p>
+                    <p className="text-xs font-medium text-gray-700">
+                      {requestId}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                      Order Date
                     </p>
                     <p className="text-xs font-medium text-gray-700">
                       {todayFormatted}
                     </p>
-                  </div> */}
+                  </div>
                   <div>
                     <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
                       Expected Delivery
@@ -392,8 +410,16 @@ const CustomizePurchaseModal: React.FC<CustomizePurchaseModalProps> = ({
                       value={expectedDate}
                       onChange={(e) => setExpectedDate(e.target.value)}
                       min={today}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-xs text-gray-700 bg-white"
+                      className="w-full px-2 py-1 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-xs text-gray-700 bg-white cursor-pointer"
                     />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-gray-400 uppercase tracking-wide mb-0.5">
+                      Total Cost
+                    </p>
+                    <p className="text-xs font-medium text-gray-700">
+                      {formatCurrency(grandTotal)}
+                    </p>
                   </div>
                 </div>
 

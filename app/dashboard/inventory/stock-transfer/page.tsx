@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useQuery, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import {
   Table,
   TableHeader,
@@ -34,6 +34,7 @@ import {
   Trash2,
   Mail,
   XCircle,
+  Loader2,
 } from "lucide-react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { StockTransferIcon } from "@/public/assets/svg";
@@ -224,6 +225,10 @@ export default function StockTransferPage() {
   const [cancellingTransfer, setCancellingTransfer] = useState(false);
   const [deletingTransfer, setDeletingTransfer] = useState(false);
   const [selectedTransferId, setSelectedTransferId] = useState("");
+  const [fetchingTransferDetails, setFetchingTransferDetails] = useState(false);
+  const [selectedMailTransferDetails, setSelectedMailTransferDetails] = useState<any>(null);
+
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const currentBusiness = useMemo(
     () => getJsonItemFromLocalStorage("business")?.[0],
@@ -283,6 +288,55 @@ export default function StockTransferPage() {
   const transfersData = transfersResult?.items ?? [];
   const transfersTotalCount = transfersResult?.totalCount ?? 0;
 
+  // Infinite query for Activity Log
+  const {
+    data: infiniteTransfersResult,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: infiniteTransfersLoading,
+  } = useInfiniteQuery({
+    queryKey: ["stockTransfersByBusinessInfinite", currentBusinessId, pageSize],
+    queryFn: async ({ pageParam = 1 }) => {
+      const response = await getStockTransfersByBusiness(currentBusinessId, pageParam, pageSize);
+      const paginated = response?.data?.data;
+      const rawItems = paginated?.items ?? [];
+      const items = Array.isArray(rawItems) ? rawItems : [];
+      return {
+        items,
+        totalCount: paginated?.totalCount ?? items.length,
+      };
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      const loadedCount = allPages.reduce((sum, page) => sum + page.items.length, 0);
+      return loadedCount < lastPage.totalCount ? allPages.length + 1 : undefined;
+    },
+    enabled: !!currentBusinessId && activeTab === "Activity Log",
+    initialPageParam: 1,
+    ...fetchQueryConfig(),
+  });
+
+  const infiniteTransfersData = useMemo(() => {
+    return infiniteTransfersResult?.pages.flatMap((page) => page.items) ?? [];
+  }, [infiniteTransfersResult]);
+
+  // Intersection Observer for Infinite Scroll
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasNextPage || isFetchingNextPage || activeTab !== "Activity Log") return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1, rootMargin: "100px" }
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, activeTab]);
+
   const stockTransfers: StockTransfer[] = useMemo(() => {
     if (!transfersData || !Array.isArray(transfersData)) return [];
     return transfersData.map((o: any) => ({
@@ -301,8 +355,18 @@ export default function StockTransferPage() {
   }, [transfersData]);
 
   const activityItems: ActivityLogItem[] = useMemo(() => {
-    if (!transfersData || !Array.isArray(transfersData)) return [];
-    return transfersData.map((o: any) => {
+    let sourceData = activeTab === "Activity Log" ? infiniteTransfersData : transfersData;
+    
+    if (searchQuery) {
+      sourceData = sourceData.filter(
+        (o: any) =>
+          (o.reference || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (o.destinationBusinessName || "").toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+    }
+
+    if (!sourceData || !Array.isArray(sourceData)) return [];
+    return sourceData.map((o: any) => {
       const ref = o.reference || "";
       const dest = o.destinationBusinessName || "";
       const date = o.dateUpdated
@@ -335,7 +399,7 @@ export default function StockTransferPage() {
         timestamp: date,
       };
     });
-  }, [transfersData]);
+  }, [transfersData, infiniteTransfersData, activeTab, searchQuery]);
 
   const {
     data: incomingDetails,
@@ -657,8 +721,17 @@ export default function StockTransferPage() {
     }
   };
 
-  const handleSendMailTransfer = (item: StockTransfer) => {
+  const handleSendMailTransfer = async (item: StockTransfer) => {
     setSelectedTransferId(item.id);
+    setFetchingTransferDetails(true);
+    try {
+      const response = await getStockTransferDetails(item.id);
+      setSelectedMailTransferDetails(response?.data?.data || null);
+    } catch {
+      setSelectedMailTransferDetails(null);
+    } finally {
+      setFetchingTransferDetails(false);
+    }
     setSendEmailModalOpen(true);
   };
 
@@ -821,16 +894,15 @@ export default function StockTransferPage() {
 
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-[#3D424A]">
-              {activeTab === "Stock Transfer" && "Stock Transfer History"}
-              {activeTab === "Incoming" && "Incoming List"}
-              {activeTab === "Activity Log" && "Activity List"}
+              {activeTab === "Stock Transfer" && ""}
+              {activeTab === "Incoming" && ""}
+              {activeTab === "Activity Log" && ""}
             </h3>
           </div>
 
           <div className="relative border border-primaryGrey rounded-lg overflow-visible">
             {activeTab === "Stock Transfer" && (
               <Table
-                aria-label="Stock Transfer History"
                 radius="lg"
                 isCompact
                 removeWrapper
@@ -1037,41 +1109,58 @@ export default function StockTransferPage() {
             )}
 
             {activeTab === "Activity Log" && (
-              <div className="flex flex-col gap-6 p-8">
-                {activityItems.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-4 pb-6 border-b border-[#F2F4F7] last:border-0"
-                  >
+              <div className="flex flex-col gap-6 p-8 min-h-[400px]">
+                {activityItems.length > 0 ? (
+                  activityItems.map((activity) => (
                     <div
-                      className={cn(
-                        "w-3 h-3 rounded-full mt-1.5 shrink-0 transition-colors",
-                        activity.type === "created" && "bg-[#5F35D2]",
-                        activity.type === "initiated" && "bg-[#5F35D2]",
-                        activity.type === "completed" && "bg-[#16AB60]",
-                        activity.type === "unverified" && "bg-[#F5A623]",
-                      )}
-                    />
-                    <div className="flex flex-col gap-1 w-full">
-                      <div className="flex items-center gap-3">
-                        <span className="text-[#101828] font-bold text-lg">
-                          {activity.title}
-                        </span>
-                        <span className="bg-[#E4E7EC] text-[#667085] text-[10px] font-bold px-2 py-0.5 rounded-md">
-                          {activity.id_tag}
+                      key={activity.id}
+                      className="flex items-start gap-4 pb-6 border-b border-[#F2F4F7] last:border-0"
+                    >
+                      <div
+                        className={cn(
+                          "w-3 h-3 rounded-full mt-1.5 shrink-0 transition-colors",
+                          activity.type === "created" && "bg-[#5F35D2]",
+                          activity.type === "initiated" && "bg-[#5F35D2]",
+                          activity.type === "completed" && "bg-[#16AB60]",
+                          activity.type === "unverified" && "bg-[#F5A623]",
+                        )}
+                      />
+                      <div className="flex flex-col gap-1 w-full">
+                        <div className="flex items-center gap-3">
+                          <span className="text-[#101828] font-bold text-lg">
+                            {activity.title}
+                          </span>
+                          <span className="bg-[#E4E7EC] text-[#667085] text-[10px] font-bold px-2 py-0.5 rounded-md">
+                            {activity.id_tag}
+                          </span>
+                        </div>
+                        <p className="text-[#667085] text-sm">
+                          {activity.description}
+                        </p>
+                        <span className="text-[#98A2B3] text-xs font-medium uppercase">
+                          {activity.timestamp}
                         </span>
                       </div>
-                      <p className="text-[#667085] text-sm">
-                        {activity.description}
-                      </p>
-                      <span className="text-[#98A2B3] text-xs font-medium uppercase">
-                        {activity.timestamp}
-                      </span>
                     </div>
+                  ))
+                ) : (
+                  !infiniteTransfersLoading && (
+                    <div className="flex flex-col items-center justify-center py-20 text-[#667085]">
+                      <p>No activity logs found</p>
+                    </div>
+                  )
+                )}
+
+                {(infiniteTransfersLoading || isFetchingNextPage) && (
+                  <div className="flex justify-center py-4">
+                    <Loader2 className="w-6 h-6 animate-spin text-[#5F35D2]" />
                   </div>
-                ))}
+                )}
+
+                <div ref={loadMoreRef} className="h-4" />
               </div>
             )}
+
             {activeTab === "Stock Transfer" && (
               <div className="flex w-full justify-center">
                 <CustomPagination
@@ -1935,6 +2024,7 @@ export default function StockTransferPage() {
         businessName={currentBusinessName}
         onSend={handleSendEmail}
         isLoading={sendingEmail}
+        stockTransferData={selectedMailTransferDetails}
         title="Send Stock Transfer Email"
         subtitle="Notify the recipient about this stock transfer"
         emailPlaceholder="recipient@email.com"

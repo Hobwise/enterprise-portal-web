@@ -15,7 +15,7 @@ import {
   Checkbox,
 } from "@nextui-org/react";
 import { Search, ArrowRight, X } from "lucide-react";
-import { LuSearch } from "react-icons/lu";
+import { LuHistory, LuSearch } from "react-icons/lu";
 import { StockAdjustmentIcon } from "@/public/assets/svg";
 import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import useInventoryItems from "@/hooks/cachedEndpoints/useInventoryItems";
@@ -27,7 +27,7 @@ import {
 } from "@/app/api/controllers/dashboard/inventory";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
 
-type MainTab = "adjustment" | "activity-log";
+type MainTab = "adjustment" | "history";
 
 /** Convert PascalCase/camelCase joined words to spaced words for display (e.g. "DamagedGoods" → "Damaged Goods") */
 const formatReasonLabel = (name: string): string =>
@@ -435,39 +435,35 @@ export default function StockAdjustmentPage() {
             Stock Adjustment
           </button>
 
-          {/* Activity Log Tab */}
+          {/* History Tab */}
           <button
             onClick={() => {
-              setMainTab("activity-log");
+              setMainTab("history");
               setIsMultiMode(false);
             }}
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-              mainTab === "activity-log"
+              mainTab === "history"
                 ? "bg-[#F0ECFB] text-[#5F35D2]"
                 : "text-[#667085] hover:text-[#101828]",
             )}
           >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M3.33 10l3.34-3.33L10 10l3.33-3.33L16.67 10"
-                stroke="currentColor"
-                strokeWidth="1.67"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Activity Log
+          <LuHistory size={16} /> 
+            History
           </button>
         </div>
 
 
+      </div>
+
+      {/* Page Title & Subtitle */}
+      <div className="px-6 pt-4 mb-2">
+        <h1 className="text-2xl font-bold text-[#101828]">
+          Stock Adjustment
+        </h1>
+        <p className="text-sm text-[#667085] mt-1">
+          Manage adjustment of individual and multiple stocks here
+        </p>
       </div>
 
       {/* Main Content */}
@@ -475,15 +471,7 @@ export default function StockAdjustmentPage() {
         {/* Quick Adjustment View */}
         {mainTab === "adjustment" && !isMultiMode && (
           <div>
-            {/* Title */}
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-[#101828]">
-                Stock Adjustment
-              </h1>
-              <p className="text-sm text-[#667085] mt-1">
-                Manage adjustment of individual and multiple stocks here
-              </p>
-            </div>
+            {/* Quick Adjustment Card */}
 
             {/* Quick Adjustment Card */}
             <div className="border border-gray-200 rounded-lg p-6 bg-white mb-4 max-w-[750px] mx-auto">
@@ -992,13 +980,11 @@ export default function StockAdjustmentPage() {
           </div>
         )}
 
-        {/* Activity Log View */}
-        {mainTab === "activity-log" && (
+        {/* History View */}
+        {mainTab === "history" && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-[#3D424A]">
-                Stock Adjustment Activity Log
-              </h3>
+            <div className="flex items-center justify-end mb-4">
+          
               <div className="relative">
                 <LuSearch
                   size={16}

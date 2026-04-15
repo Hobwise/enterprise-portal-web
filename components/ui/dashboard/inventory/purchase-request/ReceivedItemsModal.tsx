@@ -12,6 +12,7 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import { IoClose } from "react-icons/io5";
+import { ChevronDown } from "lucide-react";
 import { PurchaseRequest, PurchaseRequestStatus } from "./types";
 
 interface ReceivedItemsModalProps {
@@ -177,8 +178,15 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
                 </div>
               </div>
 
+              {/* Scroll indicator */}
+              <div className="flex items-center justify-center gap-1.5 text-gray-400 py-1">
+                <ChevronDown size={14} className="animate-bounce" />
+                <span className="text-[10px] uppercase tracking-wider">Scroll to view items & totals</span>
+                <ChevronDown size={14} className="animate-bounce" />
+              </div>
+
               {/* Items Table */}
-              <div className="border border-primaryGrey rounded-lg overflow-hidden">
+              <div className="border border-primaryGrey rounded-lg pb-5 overflow-hidden">
                 <table className="w-full">
                   <thead className="bg-grey300">
                     <tr>

@@ -20,7 +20,7 @@ import {
   DropdownItem,
   Checkbox,
 } from "@nextui-org/react";
-import { LuSearch } from "react-icons/lu";
+import { LuHistory, LuSearch } from "react-icons/lu";
 import { Eye, X, CheckCircle2, RefreshCw, Clipboard, ClipboardList } from "lucide-react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { InventoryCountIcon } from "@/public/assets/svg";
@@ -29,10 +29,23 @@ import useInventoryCount from "@/hooks/cachedEndpoints/useInventoryCount";
 import {
   InventoryItem,
   InventoryItemType,
+  InventoryCountHistoryItem,
 } from "@/app/api/controllers/dashboard/inventory";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
+import InventoryCountHistoryTable from "@/components/ui/dashboard/inventory/InventoryCountHistoryTable";
+import InventoryItemDetailsModal from "@/components/ui/dashboard/inventory/modals/InventoryItemDetailsModal";
+import { cn } from "@/lib/utils";
 
 type CountMode = null | "full" | "partial";
+const FILTERED_BATCH_SIZE = 200;
+
+function getStockStatus(item: InventoryItem): string {
+  const stock = item.stockLevel ?? 0;
+  const reorder = item.reorderLevel ?? 0;
+  if (stock === 0) return "out-of-stock";
+  if (stock <= reorder) return "low-stock";
+  return "in-stock";
+}
 
 type CountItem = {
   id: string;
@@ -40,6 +53,7 @@ type CountItem = {
   itemType: string;
   unit: string;
   expectedStock: number;
+  reorderLevel: number;
   verifiedCount: number;
   selected: boolean;
 };
@@ -58,6 +72,7 @@ const getItemTypeName = (itemType: InventoryItemType): string => {
 };
 
 export default function InventoryCountPage() {
+  const [activeTab, setActiveTab] = useState<"count" | "history">("count");
   const [countMode, setCountMode] = useState<CountMode>(null);
   const [showCountTypeModal, setShowCountTypeModal] = useState(false);
   const [showItemDetailModal, setShowItemDetailModal] = useState(false);
@@ -67,14 +82,26 @@ export default function InventoryCountPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [itemTypeFilter, setItemTypeFilter] = useState("all");
+  const [stockLevelFilter, setStockLevelFilter] = useState("all");
   const [page, setPage] = useState(1);
   const pageSize = 10;
+
+  const hasActiveFilters = itemTypeFilter !== "all" || stockLevelFilter !== "all";
+
+  const handleClearFilters = () => {
+    setItemTypeFilter("all");
+    setStockLevelFilter("all");
+    setPage(1);
+  };
 
   // Stock count state
   const [countItems, setCountItems] = useState<CountItem[]>([]);
   const [countSearchQuery, setCountSearchQuery] = useState("");
   const [countItemTypeFilter, setCountItemTypeFilter] = useState("all");
+  const [countStockLevelFilter, setCountStockLevelFilter] = useState("all");
   const [selectedPartialItems, setSelectedPartialItems] = useState<Set<string>>(new Set());
+  const [countPage, setCountPage] = useState(1);
+  const countPageSize = 10;
 
   const businessInformation = getJsonItemFromLocalStorage("business");
   const businessName = businessInformation?.[0]?.businessName || "Store";
@@ -91,11 +118,23 @@ export default function InventoryCountPage() {
     refetchItems,
     submitInventoryCount,
     isSubmitting,
+    // History data
+    history: historyItems,
+    totalCount: historyTotalCount,
+    totalPages: historyTotalPages,
+    currentPage: historyCurrentPage,
+    hasNext: historyHasNext,
+    hasPrevious: historyHasPrevious,
+    isLoadingHistory,
+    // History pagination controls
+    page: historyPage,
+    setPage: setHistoryPage,
+    search: historySearch,
+    setSearch: setHistorySearch,
   } = useInventoryCount({
-    itemsPage: page,
-    itemsPageSize: pageSize,
-    itemsSearch: debouncedSearch,
-    itemsItemType: itemTypeFilter !== "all" ? Number(itemTypeFilter) : undefined,
+    itemsPage: (countMode || showCountTypeModal) ? 1 : (hasActiveFilters ? 1 : page),
+    itemsPageSize: (countMode || showCountTypeModal) ? 1000 : (hasActiveFilters ? FILTERED_BATCH_SIZE : pageSize),
+    itemsSearch: (countMode || showCountTypeModal) ? "" : debouncedSearch,
   });
 
   // Debounce search
@@ -107,8 +146,37 @@ export default function InventoryCountPage() {
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
-  // Use items directly from hook
-  const filteredItems = inventoryItems;
+  // Sync countItems when inventoryItems are loaded in count mode
+  useEffect(() => {
+    if (countMode && inventoryItems.length > 0 && countItems.length === 0) {
+      initializeCountItems(countMode);
+    }
+  }, [countMode, inventoryItems]);
+
+  // Apply client-side filters (item type & stock level) on fetched data
+  const filteredItems = useMemo(() => {
+    let items = inventoryItems || [];
+
+    if (itemTypeFilter !== "all") {
+      const typeNum = parseInt(itemTypeFilter, 10);
+      items = items.filter((item) => item.itemType === typeNum);
+    }
+
+    if (stockLevelFilter !== "all") {
+      items = items.filter((item) => getStockStatus(item) === stockLevelFilter);
+    }
+
+    return items;
+  }, [inventoryItems, itemTypeFilter, stockLevelFilter]);
+
+  // When filters are active, paginate the filtered results client-side
+  const clientPaginatedItems = useMemo(() => {
+    if (!hasActiveFilters) return filteredItems;
+    const start = (page - 1) * pageSize;
+    return filteredItems.slice(start, start + pageSize);
+  }, [filteredItems, hasActiveFilters, page, pageSize]);
+
+  const filteredTotalPages = Math.ceil(filteredItems.length / pageSize) || 1;
 
   // Filter count items for the stock count view
   const filteredCountItems = useMemo(() => {
@@ -136,8 +204,26 @@ export default function InventoryCountPage() {
       });
     }
 
+    if (countStockLevelFilter !== "all") {
+      items = items.filter((item) => {
+        // Adapt item for getStockStatus helper
+        const tempItem: any = {
+          stockLevel: item.expectedStock,
+          reorderLevel: item.reorderLevel,
+        };
+        return getStockStatus(tempItem) === countStockLevelFilter;
+      });
+    }
+
     return items;
-  }, [countItems, countSearchQuery, countItemTypeFilter]);
+  }, [countItems, countSearchQuery, countItemTypeFilter, countStockLevelFilter]);
+
+  const paginatedCountItems = useMemo(() => {
+    const start = (countPage - 1) * countPageSize;
+    return filteredCountItems.slice(start, start + countPageSize);
+  }, [filteredCountItems, countPage, countPageSize]);
+
+  const countTotalPages = Math.ceil(filteredCountItems.length / countPageSize) || 1;
 
   // Initialize count items from inventory
   const initializeCountItems = (type: CountMode) => {
@@ -147,11 +233,15 @@ export default function InventoryCountPage() {
       itemType: getItemTypeName(item.itemType),
       unit: item.unitName || item.unitCode || "Unit",
       expectedStock: item.stockLevel || 0,
+      reorderLevel: item.reorderLevel || 0,
       verifiedCount: 0,
       selected: type === "full",
     }));
     setCountItems(items);
     setSelectedPartialItems(new Set());
+    setCountStockLevelFilter("all");
+    setCountItemTypeFilter("all");
+    setCountPage(1);
   };
 
   const handleRunStockCount = () => {
@@ -234,61 +324,127 @@ export default function InventoryCountPage() {
     <div className="w-full min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between px-6 pt-4 pb-2">
-        <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-[#F0ECFB] text-[#5F35D2]">
-          <InventoryCountIcon className="w-4 h-4" />
-          Inventory Count
+        <div className="flex items-center gap-1">
+          {/* Inventory Count Tab */}
+          <button
+            onClick={() => {
+              setActiveTab("count");
+              setCountMode(null);
+            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              activeTab === "count"
+                ? "bg-[#F0ECFB] text-[#5F35D2]"
+                : "text-[#667085] hover:text-[#101828]"
+            )}
+          >
+            <InventoryCountIcon className="w-4 h-4" />
+            Inventory Count
+          </button>
+
+          {/* History Tab */}
+          <button
+            onClick={() => {
+              setActiveTab("history");
+              setCountMode(null);
+            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              activeTab === "history"
+                ? "bg-[#F0ECFB] text-[#5F35D2]"
+                : "text-[#667085] hover:text-[#101828]"
+            )}
+          >
+         <LuHistory size={16} />
+            History
+          </button>
         </div>
+
+        {/* Run Stock Count Button */}
+        {activeTab === "count" && countMode === null && (
+          <Button
+            className="h-12 rounded-xl bg-[#1D2939] text-white font-semibold text-sm px-8"
+            endContent={<RefreshCw className="w-4 h-4" />}
+            onPress={handleRunStockCount}
+          >
+            Run Stock Count
+          </Button>
+        )}
       </div>
+
+      {/* Page Title & Subtitle */}
+      {countMode === null && (
+        <div className="px-6 pt-4 mb-2">
+          <h1 className="text-2xl font-bold text-[#101828]">
+            {activeTab === "count" ? "Inventory Count" : "Inventory Count History"}
+          </h1>
+          <p className="text-sm text-[#667085] mt-1">
+            {activeTab === "count"
+              ? "View the current count and status of all stock items in your inventory"
+              : "View the history of all inventory counts performed"}
+          </p>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="px-6 py-4">
         {/* ===== INVENTORY COUNT (main view, no count mode) ===== */}
-        {countMode === null && (
+        {activeTab === "count" && countMode === null && (
           <div>
-            {/* Title + Run Stock Count Button */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold text-[#101828]">
-                  Inventory Count
-                </h1>
-                <p className="text-sm text-[#667085] mt-1">
-                  View the current count and status of all stock items in your inventory
-                </p>
-              </div>
-              <Button
-                className="h-12 rounded-xl bg-[#1D2939] text-white font-semibold text-sm px-8"
-                endContent={<RefreshCw className="w-4 h-4" />}
-                onPress={handleRunStockCount}
-              >
-                Run Stock Count
-              </Button>
-            </div>
-
             {/* Filters Row */}
-            <div className="flex items-center justify-end mb-4">
-              <Select
-                placeholder="Item Type"
-                selectedKeys={
-                  itemTypeFilter !== "all" ? [itemTypeFilter] : []
-                }
-                onSelectionChange={(keys) => {
-                  const val = Array.from(keys)[0] as string;
-                  setItemTypeFilter(val || "all");
+            <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
+              {/* Search Input */}
+              <div className="relative flex-1 w-full">
+                <LuSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search items by name..."
+                  className="w-full pl-12 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 text-sm"
+                />
+              </div>
+
+              {/* Item Type Filter */}
+              <select
+                value={itemTypeFilter}
+                onChange={(e) => {
+                  setItemTypeFilter(e.target.value);
                   setPage(1);
                 }}
-                variant="bordered"
-                className="w-[180px]"
-                classNames={{
-                  trigger:
-                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
-                  value: "text-sm text-[#101828]",
-                  listboxWrapper: "max-h-[300px]",
-                }}
+                className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 appearance-none min-w-[150px] text-sm cursor-pointer"
               >
-                <SelectItem key="0" className="text-[#101828]">Direct</SelectItem>
-                <SelectItem key="1" className="text-[#101828]">Ingredient</SelectItem>
-                <SelectItem key="2" className="text-[#101828]">Produced</SelectItem>
-              </Select>
+                <option value="all">All Types</option>
+                <option value="0">Direct</option>
+                <option value="1">Ingredient</option>
+                <option value="2">Produced</option>
+              </select>
+
+              {/* Stock Level Filter */}
+              <select
+                value={stockLevelFilter}
+                onChange={(e) => {
+                  setStockLevelFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 appearance-none min-w-[150px] text-sm cursor-pointer"
+              >
+                <option value="all">All Current Stock</option>
+                <option value="in-stock">In Stock</option>
+                <option value="low-stock">Low Stock</option>
+                <option value="out-of-stock">Out of Stock</option>
+              </select>
+
+              {/* Clear Filters */}
+              {hasActiveFilters && (
+                <button
+                  onClick={handleClearFilters}
+                  className="flex items-center gap-1 px-3 py-2.5 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <X className="w-4 h-4" />
+                  <span>Clear filters</span>
+                </button>
+              )}
             </div>
 
             {/* Items Table */}
@@ -336,96 +492,114 @@ export default function InventoryCountPage() {
                     <TableColumn>{""}</TableColumn>
                   </TableHeader>
                   <TableBody emptyContent="No inventory items found">
-                    {filteredItems.map((item) => {
-                      return (
-                        <TableRow key={item.id}>
-                          <TableCell className="font-medium text-sm text-[#101828]">
-                            {item.name}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {getItemTypeName(item.itemType)}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {item.unitName || item.unitCode || "Unit"}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {item.reorderLevel || 0}
-                          </TableCell>
-                          <TableCell className="text-sm font-semibold">
-                            {item.stockLevel || 0}
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm font-medium">
-                              {item.stockStatus || "—"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div
-                              className="relative flex justify-center items-center"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Dropdown>
-                                <DropdownTrigger aria-label="actions">
-                                  <div className="cursor-pointer flex justify-center items-center text-black">
-                                    <HiOutlineDotsVertical className="text-[22px]" />
-                                  </div>
-                                </DropdownTrigger>
-                                <DropdownMenu
-                                  aria-label="Item actions"
-                                  className="text-black"
+                    {(hasActiveFilters ? clientPaginatedItems : filteredItems).map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium text-sm text-[#101828]">
+                          {item.name}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {getItemTypeName(item.itemType)}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {item.unitName || item.unitCode || "Unit"}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {item.reorderLevel || 0}
+                        </TableCell>
+                        <TableCell className="text-sm font-semibold">
+                          {item.stockLevel || 0}
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm font-medium">
+                            {item.stockStatus || "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <div
+                            className="relative flex justify-center items-center"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Dropdown>
+                              <DropdownTrigger aria-label="actions">
+                                <div className="cursor-pointer flex justify-center items-center text-black">
+                                  <HiOutlineDotsVertical className="text-[22px]" />
+                                </div>
+                              </DropdownTrigger>
+                              <DropdownMenu
+                                aria-label="Item actions"
+                                className="text-black"
+                              >
+                                <DropdownItem
+                                  key="view"
+                                  startContent={<Eye size={16} />}
+                                  onPress={() => handleViewItem(item)}
                                 >
-                                  <DropdownItem
-                                    key="view"
-                                    startContent={<Eye size={16} />}
-                                    onPress={() => handleViewItem(item)}
-                                  >
-                                    View
-                                  </DropdownItem>
-                                  <DropdownItem
-                                    key="adjust"
-                                    startContent={
-                                      <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 16 16"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                      >
-                                        <path
-                                          d="M4 8h8M8 4v8"
-                                          stroke="currentColor"
-                                          strokeWidth="1.5"
-                                          strokeLinecap="round"
-                                        />
-                                      </svg>
-                                    }
-                                    href="/dashboard/inventory/stock-adjustment"
-                                  >
-                                    Adjust Stock
-                                  </DropdownItem>
-                                </DropdownMenu>
-                              </Dropdown>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                                  View
+                                </DropdownItem>
+                                <DropdownItem
+                                  key="adjust"
+                                  startContent={
+                                    <svg
+                                      width="16"
+                                      height="16"
+                                      viewBox="0 0 16 16"
+                                      fill="none"
+                                      xmlns="http://www.w3.org/2000/svg"
+                                    >
+                                      <path
+                                        d="M4 8h8M8 4v8"
+                                        stroke="currentColor"
+                                        strokeWidth="1.5"
+                                        strokeLinecap="round"
+                                      />
+                                    </svg>
+                                  }
+                                  href="/dashboard/inventory/stock-adjustment"
+                                >
+                                  Adjust Stock
+                                </DropdownItem>
+                              </DropdownMenu>
+                            </Dropdown>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
               <CustomPagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                hasNext={hasNext}
-                hasPrevious={hasPrevious}
-                totalCount={totalCount}
+                currentPage={page}
+                totalPages={hasActiveFilters ? filteredTotalPages : totalPages}
+                hasNext={hasActiveFilters ? page < filteredTotalPages : hasNext}
+                hasPrevious={hasActiveFilters ? page > 1 : hasPrevious}
+                totalCount={hasActiveFilters ? filteredItems.length : totalCount}
                 pageSize={pageSize}
                 onPageChange={(p) => setPage(p)}
-                onNext={() => setPage(Math.min(page + 1, totalPages))}
-                onPrevious={() => setPage(Math.max(page - 1, 1))}
+                onNext={() => setPage((curr) => Math.min(curr + 1, hasActiveFilters ? filteredTotalPages : totalPages))}
+                onPrevious={() => setPage((curr) => Math.max(curr - 1, 1))}
                 isLoading={isLoading}
               />
             </div>
+          </div>
+        )}
+
+        {/* ===== HISTORY VIEW ===== */}
+        {activeTab === "history" && countMode === null && (
+          <div>
+            <InventoryCountHistoryTable
+              data={historyItems}
+              currentPage={historyCurrentPage}
+              totalPages={historyTotalPages}
+              hasNext={historyHasNext}
+              hasPrevious={historyHasPrevious}
+              totalCount={historyTotalCount}
+              pageSize={pageSize}
+              onPageChange={(p) => setHistoryPage(p)}
+              searchQuery={historySearch}
+              onSearchChange={(s) => setHistorySearch(s)}
+              isLoading={isLoadingHistory}
+              inventoryItems={inventoryItems}
+            />
           </div>
         )}
 
@@ -436,9 +610,7 @@ export default function InventoryCountPage() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-2xl font-bold text-[#101828]">
-                  {countMode === "full"
-                    ? "Full Stock Count"
-                    : "Partial Stock Count"}
+                  {countMode === "full" ? "Full Stock Count" : "Partial Stock Count"}
                 </h1>
                 <p className="text-sm text-[#667085] mt-1">
                   {countMode === "full"
@@ -458,49 +630,82 @@ export default function InventoryCountPage() {
             </div>
 
             {/* Filters Row */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="relative">
-                <LuSearch
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                />
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+              <div className="relative flex-1 min-w-[200px]">
+                <LuSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search here..."
                   value={countSearchQuery}
                   onChange={(e) => setCountSearchQuery(e.target.value)}
-                  className="border border-gray-200 rounded-lg pl-9 pr-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] w-72"
+                  className="w-full pl-12 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 text-sm"
                 />
               </div>
 
-              <Select
-                placeholder="Item Type"
-                selectedKeys={
-                  countItemTypeFilter !== "all"
-                    ? [countItemTypeFilter]
-                    : []
-                }
-                onSelectionChange={(keys) => {
-                  const val = Array.from(keys)[0] as string;
-                  setCountItemTypeFilter(val || "all");
-                }}
-                variant="bordered"
-                className="w-[180px]"
-                classNames={{
-                  trigger:
-                    "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
-                  value: "text-sm text-[#101828]",
-                  listboxWrapper: "max-h-[300px]",
-                }}
-              >
-                <SelectItem key="0" className="text-[#101828]">Direct</SelectItem>
-                <SelectItem key="1" className="text-[#101828]">Ingredient</SelectItem>
-                <SelectItem key="2" className="text-[#101828]">Produced</SelectItem>
-              </Select>
+              <div className="flex items-center gap-3">
+                <Select
+                  placeholder="Item Type"
+                  selectedKeys={countItemTypeFilter !== "all" ? [countItemTypeFilter] : []}
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0] as string;
+                    setCountItemTypeFilter(val || "all");
+                  }}
+                  variant="bordered"
+                  className="w-[180px]"
+                  classNames={{
+                    trigger: "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
+                    value: "text-sm text-[#101828]",
+                    listboxWrapper: "max-h-[300px]",
+                  }}
+                >
+                  <SelectItem key="0" className="text-[#101828]">Direct</SelectItem>
+                  <SelectItem key="1" className="text-[#101828]">Ingredient</SelectItem>
+                  <SelectItem key="2" className="text-[#101828]">Produced</SelectItem>
+                </Select>
+
+                <Select
+                  placeholder="Stock Level"
+                  selectedKeys={countStockLevelFilter !== "all" ? [countStockLevelFilter] : []}
+                  onSelectionChange={(keys) => {
+                    const val = Array.from(keys)[0] as string;
+                    setCountStockLevelFilter(val || "all");
+                  }}
+                  variant="bordered"
+                  className="w-[180px]"
+                  classNames={{
+                    trigger: "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
+                    value: "text-sm text-[#101828]",
+                    listboxWrapper: "max-h-[300px]",
+                  }}
+                >
+                  <SelectItem key="in-stock" className="text-[#101828]">In Stock</SelectItem>
+                  <SelectItem key="low-stock" className="text-[#101828]">Low Stock</SelectItem>
+                  <SelectItem key="out-of-stock" className="text-[#101828]">Out of Stock</SelectItem>
+                </Select>
+
+                {(countItemTypeFilter !== "all" || countStockLevelFilter !== "all" || countSearchQuery) && (
+                  <button
+                    onClick={() => {
+                      setCountItemTypeFilter("all");
+                      setCountStockLevelFilter("all");
+                      setCountSearchQuery("");
+                    }}
+                    className="flex items-center gap-1 px-3 py-2 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors h-10"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Clear</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Count Table */}
             <div className="relative border border-primaryGrey rounded-lg overflow-visible">
+              {isLoading && (
+                <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
+                </div>
+              )}
               <div className="max-h-[500px] overflow-auto">
                 <Table
                   radius="lg"
@@ -543,7 +748,7 @@ export default function InventoryCountPage() {
                     <TableColumn>DIFFERENCE</TableColumn>
                   </TableHeader>
                   <TableBody emptyContent="No items to count">
-                    {filteredCountItems.map((item) => {
+                    {paginatedCountItems.map((item) => {
                       const diff = item.verifiedCount - item.expectedStock;
                       return (
                         <TableRow key={item.id}>
@@ -551,9 +756,7 @@ export default function InventoryCountPage() {
                             <TableCell>
                               <Checkbox
                                 isSelected={selectedPartialItems.has(item.id)}
-                                onValueChange={() =>
-                                  handleTogglePartialItem(item.id)
-                                }
+                                onValueChange={() => handleTogglePartialItem(item.id)}
                                 size="sm"
                               />
                             </TableCell>
@@ -578,10 +781,7 @@ export default function InventoryCountPage() {
                               min={0}
                               value={item.verifiedCount}
                               onChange={(e) =>
-                                handleUpdateVerifiedCount(
-                                  item.id,
-                                  Number(e.target.value) || 0
-                                )
+                                handleUpdateVerifiedCount(item.id, Number(e.target.value) || 0)
                               }
                               className="w-20 px-2 py-1 text-sm text-center border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#5F35D2] focus:border-[#5F35D2]"
                             />
@@ -595,6 +795,17 @@ export default function InventoryCountPage() {
                   </TableBody>
                 </Table>
               </div>
+              <CustomPagination
+                currentPage={countPage}
+                totalPages={countTotalPages}
+                hasNext={countPage < countTotalPages}
+                hasPrevious={countPage > 1}
+                totalCount={filteredCountItems.length}
+                pageSize={countPageSize}
+                onPageChange={(p) => setCountPage(p)}
+                onNext={() => setCountPage((curr) => Math.min(curr + 1, countTotalPages))}
+                onPrevious={() => setCountPage((curr) => Math.max(curr - 1, 1))}
+              />
             </div>
 
             {/* Back button */}
@@ -662,81 +873,11 @@ export default function InventoryCountPage() {
       </Modal>
 
       {/* Item Detail Modal */}
-      <Modal
+      <InventoryItemDetailsModal
         isOpen={showItemDetailModal}
         onOpenChange={setShowItemDetailModal}
-        size="lg"
-        placement="center"
-      >
-        <ModalContent>
-          {selectedDetailItem && (() => {
-            return (
-              <ModalBody className="py-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-[#101828]">
-                    {selectedDetailItem.name}
-                  </h2>
-                  <button
-                    onClick={() => setShowItemDetailModal(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full text-sm">
-                    <tbody>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 text-[#667085] font-medium w-40">
-                          Item Type
-                        </td>
-                        <td className="px-4 py-3 text-[#101828]">
-                          {getItemTypeName(selectedDetailItem.itemType)}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 text-[#667085] font-medium">
-                          Unit
-                        </td>
-                        <td className="px-4 py-3 text-[#101828]">
-                          {selectedDetailItem.unitName ||
-                            selectedDetailItem.unitCode ||
-                            "Unit"}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 text-[#667085] font-medium">
-                          Optimum Stock
-                        </td>
-                        <td className="px-4 py-3 text-[#101828]">
-                          {selectedDetailItem.reorderLevel || 0}
-                        </td>
-                      </tr>
-                      <tr className="border-b border-gray-100">
-                        <td className="px-4 py-3 text-[#667085] font-medium">
-                          Current Stock
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-[#101828]">
-                          {selectedDetailItem.stockLevel || 0}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-4 py-3 text-[#667085] font-medium">
-                          Status
-                        </td>
-                        <td className="px-4 py-3 font-semibold text-[#101828]">
-                          {selectedDetailItem.stockStatus || "—"}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </ModalBody>
-            );
-          })()}
-        </ModalContent>
-      </Modal>
+        item={selectedDetailItem}
+      />
     </div>
   );
 }

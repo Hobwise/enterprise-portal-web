@@ -14,6 +14,7 @@ import { LuMail } from "react-icons/lu";
 import { Paperclip, FileText, X, Bold, Italic, Underline, List, ListOrdered } from "lucide-react";
 import { PurchaseRequest } from "./types";
 import { generatePurchaseOrderPdfFile } from "./generatePurchaseOrderPdf";
+import { generateStockTransferPdfFile, StockTransferDetails } from "./generateStockTransferPdf";
 
 interface SendEmailModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ interface SendEmailModalProps {
   onSend: (to: string, cc: string, subject: string, message: string, attachment: File | null) => void;
   isLoading?: boolean;
   purchaseOrderData?: PurchaseRequest | null;
+  stockTransferData?: StockTransferDetails | null;
   title?: string;
   subtitle?: string;
   emailPlaceholder?: string;
@@ -37,6 +39,7 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
   onSend,
   isLoading,
   purchaseOrderData,
+  stockTransferData,
   title = "Send Email to Supplier",
   subtitle = "Notify the supplier about this purchase order",
   emailPlaceholder = "supplier@email.com",
@@ -69,11 +72,18 @@ const SendEmailModal: React.FC<SendEmailModalProps> = ({
         } catch {
           setAttachment(null);
         }
+      } else if (stockTransferData && stockTransferData.orderDetails && stockTransferData.orderDetails.length > 0) {
+        try {
+          const pdfFile = generateStockTransferPdfFile(stockTransferData);
+          setAttachment(pdfFile);
+        } catch {
+          setAttachment(null);
+        }
       } else {
         setAttachment(null);
       }
     }
-  }, [isOpen, supplierEmail, purchaseOrderData]);
+  }, [isOpen, supplierEmail, purchaseOrderData, stockTransferData]);
 
   const execCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value);
