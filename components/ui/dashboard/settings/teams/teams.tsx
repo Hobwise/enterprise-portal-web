@@ -4,11 +4,11 @@ import useUserByBusiness from "@/hooks/cachedEndpoints/useUserByBusiness";
 import { SmallLoader } from "@/lib/utils";
 import EmptyPage from "./emptyPage";
 import Users from "./users";
-import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
 import { CiLock } from "react-icons/ci";
 
 const Teams = ({ setActiveScreen }: any) => {
-  const { data: subscription } = useSubscription();
+  const { subscription } = useSubscriptionContext();
   const { data, isLoading, isError, refetch } = useUserByBusiness();
 
   if (subscription?.onTrialVersion) {

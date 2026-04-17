@@ -11,5 +11,6 @@ export type SideNavSection = {
   collapsible: boolean;
   defaultExpanded?: boolean;
   requiredRole?: number; // 0 = Manager only, undefined = all roles
+  requiredCapability?: string; // planCapabilities key, undefined = no capability gate
   items: SideNavItem[];
 };

@@ -7,7 +7,7 @@ import CompanyLogo from "@/components/logo";
 import useGetBusiness from "@/hooks/cachedEndpoints/useGetBusiness";
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
-import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
 import { decryptPayload } from "@/lib/encrypt-decrypt";
 import {
   getJsonItemFromLocalStorage,
@@ -137,9 +137,10 @@ const SideNav = () => {
 
   const pathname = usePathname();
 
-  const { data: subscription } = useSubscription();
-  const canAccessMultipleLocations =
-    subscription?.planCapabilities?.canAccessMultipleLocations;
+  const { planCapabilities, hasCapability } = useSubscriptionContext();
+  const canAccessMultipleLocations = hasCapability(
+    "canAccessMultipleLocations",
+  );
 
   // Filter items based on permissions
   const filterItemsByPermission = useCallback((items: SideNavItem[]) => {
@@ -177,11 +178,18 @@ const SideNav = () => {
       return [];
     }
 
-    // Filter sections based on role requirement
+    // Filter sections based on role and subscription capability
     return SIDENAV_CONFIG
       .filter((section) => {
         // Check if section requires specific role
         if (section.requiredRole !== undefined && Number(role) !== section.requiredRole) {
+          return false;
+        }
+        // Check if section requires a subscription capability
+        if (
+          section.requiredCapability &&
+          !planCapabilities[section.requiredCapability]
+        ) {
           return false;
         }
         return true;
@@ -191,7 +199,7 @@ const SideNav = () => {
         items: filterItemsByPermission(section.items),
       }))
       .filter((section) => section.items.length > 0); // Only show sections with items
-  }, [isPermissionsLoading, role, isMounted, isPOSUserState, isCategoryUserState, filterItemsByPermission]);
+  }, [isPermissionsLoading, role, isMounted, isPOSUserState, isCategoryUserState, filterItemsByPermission, planCapabilities]);
 
   // Accordion state — only one section open at a time
   const [expandedSection, setExpandedSection] = useState<string | null>(() => {
