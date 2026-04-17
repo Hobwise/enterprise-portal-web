@@ -133,6 +133,7 @@ export const SIDENAV_CONFIG: SideNavSection[] = [
     collapsible: true,
     defaultExpanded: true,
     requiredRole: 0, // Manager only (role 0)
+    requiredCapability: "canAccessInventory",
     items: INVENTORY_ITEMS,
   },
 ];

@@ -1,7 +1,7 @@
 "use client";
 
 import useNotification from "@/hooks/cachedEndpoints/useNotifications";
-import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
 import useUser from "@/hooks/cachedEndpoints/useUser";
 import useScroll from "@/hooks/use-scroll";
 import { cn, getJsonItemFromLocalStorage } from "@/lib/utils";
@@ -125,7 +125,7 @@ const Header = ({ ispos }: any) => {
     setPageSize((prevSize) => prevSize + 10);
   }, []);
 
-  const { data: subscription } = useSubscription();
+  const { subscription } = useSubscriptionContext();
 
   const { message, showBanner } = useCheckExpiry(
     subscription?.nextPaymentDate,

@@ -10,6 +10,7 @@ export const permissions = {
   canAccessNotifications: true,
   canAccessQuickResponses: true,
   canAccessMultipleLocations: true,
+  canAccessInventory: true,
 };
 
 export const routePermissions: Record<string, keyof typeof permissions> = {
@@ -24,6 +25,7 @@ export const routePermissions: Record<string, keyof typeof permissions> = {
   "/dashboard/notifications": "canAccessNotifications",
   "/dashboard/quick-response": "canAccessQuickResponses",
   "/dashboard/multiple-locations": "canAccessMultipleLocations",
+  "/dashboard/inventory": "canAccessInventory",
 };
 
 export const EXCLUDE_SETTINGS_PATHS = [

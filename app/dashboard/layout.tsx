@@ -4,33 +4,25 @@ import AdminPrivateRoute from "@/components/auth/AdminPrivateRoute";
 import BusinessSettingsDashboardPrompt from "@/components/businessSettingsDashboardPrompt";
 import Container from "@/components/dashboardContainer";
 import { SubscriptionNoticePopup } from "@/components/ui/dashboard/subscription-notification";
-import { Suspense, useEffect } from "react";
-import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
-import { useIngredients, useUnitsByBusiness, useSuppliers } from "@/hooks/cachedEndpoints/useInventoryItems";
+import {
+  SubscriptionProvider,
+  useSubscriptionContext,
+} from "@/hooks/providers/SubscriptionProvider";
+import { Spinner } from "@nextui-org/react";
+import { Suspense } from "react";
 
-// Component to initialize subscription early in the render cycle
-function SubscriptionInitializer() {
-  const { isLoading, isError } = useSubscription();
+function SubscriptionGate({ children }: { children: React.ReactNode }) {
+  const { isReady } = useSubscriptionContext();
 
-  useEffect(() => {
-    if (isLoading) {
-      console.log('[Dashboard] Initializing subscription data...');
-    } else if (isError) {
-      console.error('[Dashboard] Failed to load subscription data');
-    } else {
-      console.log('[Dashboard] Subscription data loaded successfully');
-    }
-  }, [isLoading, isError]);
+  if (!isReady) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-white">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
 
-  return null; // This component doesn't render anything
-}
-
-// Pre-fetch inventory LOV endpoints so all inventory pages get instant cache hits
-function InventoryLovInitializer() {
-  useIngredients();
-  useUnitsByBusiness();
-  useSuppliers();
-  return null;
+  return <>{children}</>;
 }
 
 export default function DashboardLayout({
@@ -40,17 +32,19 @@ export default function DashboardLayout({
 }) {
   return (
     <AdminPrivateRoute>
-      <div className="font-satoshi">
-        <SubscriptionInitializer />
-        <InventoryLovInitializer />
-        <Container>{children}</Container>
-        <Suspense fallback={null}>
-          <BusinessSettingsDashboardPrompt />
-        </Suspense>
-        <Suspense fallback={null}>
-          <SubscriptionNoticePopup />
-        </Suspense>
-      </div>
+      <SubscriptionProvider>
+        <SubscriptionGate>
+          <div className="font-satoshi">
+            <Container>{children}</Container>
+            <Suspense fallback={null}>
+              <BusinessSettingsDashboardPrompt />
+            </Suspense>
+            <Suspense fallback={null}>
+              <SubscriptionNoticePopup />
+            </Suspense>
+          </div>
+        </SubscriptionGate>
+      </SubscriptionProvider>
     </AdminPrivateRoute>
   );
 }
