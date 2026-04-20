@@ -793,18 +793,15 @@ const CheckoutModal = ({
     const id = businessId ? businessId : businessInformation[0]?.businessId;
     const data = await createOrder(id, payload, effectiveCooperateID);
 
-    // Handle undefined response
+    // Handle undefined response — the upstream error toast (e.g. "Insufficient
+    // stock…") has already been surfaced by handleError in createOrder, so
+    // don't duplicate it with a generic connection-error toast here.
     if (!data) {
       console.error("CreateOrder returned undefined");
       console.error("Request details:", {
         id,
         cooperateID: effectiveCooperateID,
         payload,
-      });
-      notify({
-        title: "Error!",
-        text: "Failed to create order. Please check your connection and try again.",
-        type: "error",
       });
       throw new Error("Failed to create order");
     }

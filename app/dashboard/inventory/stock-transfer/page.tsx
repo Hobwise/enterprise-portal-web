@@ -1437,6 +1437,21 @@ export default function StockTransferPage() {
                           >
                             {(destinationItems || [])
                               .filter((destItem: any) => {
+                                const sourceUnit = (item.unit || "")
+                                  .trim()
+                                  .toLowerCase();
+                                const destUnit = (
+                                  destItem.unitName ||
+                                  destItem.unit ||
+                                  ""
+                                )
+                                  .trim()
+                                  .toLowerCase();
+
+                                if (sourceUnit && destUnit) {
+                                  return sourceUnit === destUnit;
+                                }
+
                                 if (
                                   item.unitCategory != null &&
                                   destItem.unitCategory != null
@@ -1445,14 +1460,8 @@ export default function StockTransferPage() {
                                     destItem.unitCategory === item.unitCategory
                                   );
                                 }
-                                return (
-                                  (
-                                    destItem.unitName ||
-                                    destItem.unit ||
-                                    ""
-                                  ).toLowerCase() ===
-                                  (item.unit || "").toLowerCase()
-                                );
+
+                                return false;
                               })
                               .map((destItem: any) => (
                               <AutocompleteItem
