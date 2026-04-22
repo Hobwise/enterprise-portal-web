@@ -26,6 +26,7 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { InventoryCountIcon } from "@/public/assets/svg";
 import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import useInventoryCount from "@/hooks/cachedEndpoints/useInventoryCount";
+import useInventoryItems from "@/hooks/cachedEndpoints/useInventoryItems";
 import {
   InventoryItem,
   InventoryItemType,
@@ -136,6 +137,20 @@ export default function InventoryCountPage() {
     itemsPageSize: (countMode || showCountTypeModal) ? 1000 : (hasActiveFilters ? FILTERED_BATCH_SIZE : pageSize),
     itemsSearch: (countMode || showCountTypeModal) ? "" : debouncedSearch,
   });
+
+  // Full inventory lookup (id -> item) used by the history view modal so item
+  // names resolve even when the main table is paginated/filtered to a subset.
+  const { data: allInventoryItems } = useInventoryItems({
+    pageSize: 1000,
+    enabled: activeTab === "history",
+  });
+
+  const historyLookupItems = useMemo(() => {
+    if (allInventoryItems && allInventoryItems.length > 0) {
+      return allInventoryItems;
+    }
+    return inventoryItems;
+  }, [allInventoryItems, inventoryItems]);
 
   // Debounce search
   useEffect(() => {
@@ -598,7 +613,7 @@ export default function InventoryCountPage() {
               searchQuery={historySearch}
               onSearchChange={(s) => setHistorySearch(s)}
               isLoading={isLoadingHistory}
-              inventoryItems={inventoryItems}
+              inventoryItems={historyLookupItems}
             />
           </div>
         )}

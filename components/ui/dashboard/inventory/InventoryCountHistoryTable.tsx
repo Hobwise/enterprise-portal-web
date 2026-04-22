@@ -267,7 +267,15 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
                             // The API uses 'inventoryItemId' and 'stockQuantity' in countRequests
                             const itemId = adj.inventoryItemId || adj.inventoryItemID;
                             const quantity = adj.stockQuantity ?? adj.quantity;
-                            const itemName = inventoryItems?.find(i => i.id === itemId)?.name || itemId;
+                            const inlineName =
+                              adj.itemName ||
+                              adj.inventoryItemName ||
+                              adj.name;
+                            const lookedUpName = inventoryItems?.find(
+                              (i) => i.id === itemId,
+                            )?.name;
+                            const itemName =
+                              inlineName || lookedUpName || "Unknown item";
                             return (
                               <TableRow key={idx}>
                                 <TableCell>
