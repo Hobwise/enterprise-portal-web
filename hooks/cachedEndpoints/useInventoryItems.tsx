@@ -28,6 +28,10 @@ type UseInventoryItemsParams = {
    * If not provided, the current business from localStorage is used.
    */
   businessIdOverride?: string;
+  /**
+   * When false, the query will not run. Defaults to true.
+   */
+  enabled?: boolean;
 };
 
 type InventoryItemsResult = {
@@ -46,6 +50,7 @@ const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
     pageSize = 10,
     search,
     businessIdOverride,
+    enabled = true,
   } = params;
 
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -132,6 +137,7 @@ const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
       { businessId, page, pageSize, search },
     ],
     queryFn: fetchInventoryItems,
+    enabled: enabled && !!businessId,
     ...fetchQueryConfig(),
     retry: 1,
   });

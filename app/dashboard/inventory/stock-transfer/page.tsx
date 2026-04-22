@@ -211,6 +211,7 @@ export default function StockTransferPage() {
   const [selectedItems, setSelectedItems] = useState<TransferItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [destSearchQuery, setDestSearchQuery] = useState("");
+  const [sourceAutocompleteKey, setSourceAutocompleteKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIncoming, setSelectedIncoming] =
     useState<IncomingTransfer | null>(null);
@@ -463,6 +464,7 @@ export default function StockTransferPage() {
     useInventoryItems({
       pageSize: 1000,
       businessIdOverride: currentBusinessId,
+      enabled: !!currentBusinessId,
     });
   const sourceItems = sourceItemsData || [];
 
@@ -471,6 +473,7 @@ export default function StockTransferPage() {
       pageSize: 1000,
       search: destSearchQuery,
       businessIdOverride: selectedBusiness || undefined,
+      enabled: !!selectedBusiness,
     });
 
   const businesses = useMemo(() => {
@@ -507,9 +510,10 @@ export default function StockTransferPage() {
   };
 
   const handleSelectItem = (item: any) => {
-    if (!selectedItems.find((i) => i.id === item.id)) {
-      setSelectedItems([
-        ...selectedItems,
+    setSelectedItems((prev) => {
+      if (prev.find((i) => i.id === item.id)) return prev;
+      return [
+        ...prev,
         {
           id: item.id,
           name: item.name,
@@ -519,8 +523,8 @@ export default function StockTransferPage() {
           transferQty: 0,
           cost: item.averageCostPerUnit || 0,
         },
-      ]);
-    }
+      ];
+    });
   };
 
   const handleUpdateItemDestination = (
@@ -636,7 +640,7 @@ export default function StockTransferPage() {
   };
 
   const removeItem = (id: string) => {
-    setSelectedItems(selectedItems.filter((i) => i.id !== id));
+    setSelectedItems((prev) => prev.filter((i) => i.id !== id));
   };
 
   const handleProceedToInitiate = () => {
@@ -1222,6 +1226,7 @@ export default function StockTransferPage() {
               <Select
                 placeholder="Select Business"
                 isLoading={businessesLoading}
+                isDisabled={!businessesLoading && businesses.length === 0}
                 selectedKeys={selectedBusiness ? [selectedBusiness] : []}
                 onSelectionChange={(keys) =>
                   setSelectedBusiness(Array.from(keys)[0] as string)
@@ -1246,11 +1251,17 @@ export default function StockTransferPage() {
                   </SelectItem>
                 ))}
               </Select>
+              {!businessesLoading && businesses.length === 0 && (
+                <p className="text-xs text-[#98A2B3] italic">
+                  No other businesses available to receive a transfer.
+                </p>
+              )}
             </div>
 
             <div className="bg-white p-8 rounded-2xl border border-[#E4E7EC] shadow-sm flex flex-col gap-6">
               <div className="relative">
                 <Autocomplete
+                  key={sourceAutocompleteKey}
                   placeholder="Search and add Items"
                   variant="bordered"
                   isLoading={sourceItemsLoading}
@@ -1267,6 +1278,11 @@ export default function StockTransferPage() {
                         "text-[#101828] font-medium placeholder:text-[#98A2B3] text-sm",
                     },
                   }}
+                  listboxProps={{
+                    emptyContent: !selectedBusiness
+                      ? "Select a destination business first"
+                      : "No items with available stock",
+                  }}
                   onSelectionChange={(key) => {
                     if (key) {
                       const item = (sourceItems || []).find(
@@ -1274,6 +1290,7 @@ export default function StockTransferPage() {
                       );
                       if (item) {
                         handleSelectItem(item);
+                        setSourceAutocompleteKey((k) => k + 1);
                       }
                     }
                   }}
@@ -1282,7 +1299,8 @@ export default function StockTransferPage() {
                   {(sourceItems || [])
                     .filter(
                       (item: any) =>
-                        !selectedItems.find((i) => i.id === item.id),
+                        !selectedItems.find((i) => i.id === item.id) &&
+                        Number(item.stockLevel) > 0,
                     )
                     .map((item: any) => (
                       <AutocompleteItem
@@ -1318,7 +1336,7 @@ export default function StockTransferPage() {
                 ))}
                 {selectedItems.length === 0 && (
                   <div className="w-full py-6 text-center text-[#98A2B3] italic text-sm">
-                    Search and select items to transfer (press Enter)
+                    Search and select items to transfer
                   </div>
                 )}
               </div>
@@ -1334,7 +1352,7 @@ export default function StockTransferPage() {
                 )}
                 endContent={<ArrowRight className="w-5 h-5" />}
               >
-                Create stock Transfer
+                Continue
               </Button>
             </div>
           </div>
@@ -1402,6 +1420,12 @@ export default function StockTransferPage() {
                             isLoading={destinationItemsLoading}
                             defaultSelectedKey={item.destinationId}
                             onInputChange={(value) => setDestSearchQuery(value)}
+                            listboxProps={{
+                              emptyContent:
+                                item.unitCategory == null
+                                  ? "Source item has no unit category"
+                                  : "No compatible destination items",
+                            }}
                             onSelectionChange={(key) => {
                               if (key) {
                                 const destItem = (destinationItems || []).find(
@@ -1437,31 +1461,15 @@ export default function StockTransferPage() {
                           >
                             {(destinationItems || [])
                               .filter((destItem: any) => {
-                                const sourceUnit = (item.unit || "")
-                                  .trim()
-                                  .toLowerCase();
-                                const destUnit = (
-                                  destItem.unitName ||
-                                  destItem.unit ||
-                                  ""
-                                )
-                                  .trim()
-                                  .toLowerCase();
-
-                                if (sourceUnit && destUnit) {
-                                  return sourceUnit === destUnit;
-                                }
-
                                 if (
-                                  item.unitCategory != null &&
-                                  destItem.unitCategory != null
+                                  item.unitCategory == null ||
+                                  destItem.unitCategory == null
                                 ) {
-                                  return (
-                                    destItem.unitCategory === item.unitCategory
-                                  );
+                                  return false;
                                 }
-
-                                return false;
+                                return (
+                                  destItem.unitCategory === item.unitCategory
+                                );
                               })
                               .map((destItem: any) => (
                               <AutocompleteItem
@@ -1513,10 +1521,6 @@ export default function StockTransferPage() {
                     ))}
                   </TableBody>
                 </Table>
-              {/* Scrollbar UI as seen in the design */}
-              <div className="absolute right-0 top-[60px] bottom-0 w-[6px] bg-[#F2F4F7] rounded-full mx-1">
-                <div className="w-full h-20 bg-[#D0D5DD] rounded-full" />
-              </div>
             </div>
 
             <div className="w-full lg:w-[380px] shrink-0">
