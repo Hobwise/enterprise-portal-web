@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef, useLayoutEffect } from "react";
 import {
   Modal,
   ModalContent,
@@ -40,11 +40,38 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
   isLoading,
 }) => {
   const [receivedQuantities, setReceivedQuantities] = useState<number[]>([]);
+  const itemsScrollRef = useRef<HTMLDivElement | null>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(false);
 
   useEffect(() => {
     if (isOpen && purchaseRequest) {
      setReceivedQuantities(purchaseRequest.items.map(() => 0));
     }
+  }, [isOpen, purchaseRequest]);
+
+  useLayoutEffect(() => {
+    const el = itemsScrollRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const overflow = el.scrollHeight > el.clientHeight + 1;
+      setIsOverflowing(overflow);
+      setIsScrolledToBottom(
+        !overflow || el.scrollTop + el.clientHeight >= el.scrollHeight - 1
+      );
+    };
+
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    ro?.observe(el);
+
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro?.disconnect();
+    };
   }, [isOpen, purchaseRequest]);
 
   const formatCurrency = (value: number) => {
@@ -82,8 +109,11 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       size="2xl"
-      scrollBehavior="inside"
+      scrollBehavior="normal"
       hideCloseButton
+      classNames={{
+        base: "max-h-[90vh] my-auto",
+      }}
     >
       <ModalContent>
         {(onClose) => (
@@ -178,86 +208,124 @@ const ReceivedItemsModal: React.FC<ReceivedItemsModalProps> = ({
                 </div>
               </div>
 
-              {/* Scroll indicator */}
-              <div className="flex items-center justify-center gap-1.5 text-gray-400 py-1">
-                <ChevronDown size={14} className="animate-bounce" />
-                <span className="text-[10px] uppercase tracking-wider">Scroll to view items & totals</span>
-                <ChevronDown size={14} className="animate-bounce" />
+              {/* Scroll indicator — only when items overflow */}
+              {isOverflowing && !isScrolledToBottom && (
+                <div className="flex items-center justify-center gap-1.5 text-primaryColor py-1">
+                  <ChevronDown size={14} className="animate-bounce" />
+                  <span className="text-[10px] uppercase tracking-wider font-medium">
+                    Scroll for more items ({items.length})
+                  </span>
+                  <ChevronDown size={14} className="animate-bounce" />
+                </div>
+              )}
+
+              {/* Items Table — scrollable area with visible overflow cues */}
+              <div className="relative border border-primaryGrey rounded-lg">
+                <div
+                  ref={itemsScrollRef}
+                  className="max-h-[260px] overflow-y-auto received-items-scroll"
+                >
+                  <table className="w-full">
+                    <thead className="bg-grey300 sticky top-0 z-10">
+                      <tr>
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-left">
+                          ITEM NAME
+                        </th>
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-left">
+                          UNIT
+                        </th>
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-right">
+                          COST/UNIT
+                        </th>
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-center">
+                          QTY REQUIRED
+                        </th>
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-center">
+                          STOCK RECEIVED
+                        </th>
+                        <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-right">
+                          AMOUNT
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((item, index) => (
+                        <tr
+                          key={index}
+                          className="border-b border-divider hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="py-2 px-3">
+                            <span className="text-xs text-textGrey">{item.itemName}</span>
+                          </td>
+                          <td className="py-2 px-3">
+                            <span className="text-xs text-textGrey">{item.unitName}</span>
+                          </td>
+                          <td className="py-2 px-3 text-right">
+                            <span className="text-xs text-textGrey">
+                              {formatCurrency(item.costPerUnit)}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <span className="text-xs text-textGrey">{item.requiredStock}</span>
+                          </td>
+                          <td className="py-2 px-3">
+                            <div className="flex justify-center">
+                              <input
+                                type="number"
+                                min={0}
+                                value={receivedQuantities[index] || ""}
+                                onChange={(e) =>
+                                  setReceivedQuantities((prev) => {
+                                    const next = [...prev];
+                                    next[index] = parseInt(e.target.value) || 0;
+                                    return next;
+                                  })
+                                }
+                                className="w-16 px-2 py-1 border text-black border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
+                                placeholder="0"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-right">
+                            <span className="text-xs text-textGrey">
+                              {formatCurrency((receivedQuantities[index] || 0) * item.costPerUnit)}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Bottom fade — visual cue that more rows are below the fold */}
+                {isOverflowing && !isScrolledToBottom && (
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent" />
+                )}
               </div>
 
-              {/* Items Table */}
-              <div className="border border-primaryGrey rounded-lg pb-5 overflow-hidden">
-                <table className="w-full">
-                  <thead className="bg-grey300">
-                    <tr>
-                      <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-left">
-                        ITEM NAME
-                      </th>
-                      <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-left">
-                        UNIT
-                      </th>
-                      <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-right">
-                        COST/UNIT
-                      </th>
-                      <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-center">
-                        QTY REQUIRED
-                      </th>
-                      <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-center">
-                        STOCK RECEIVED
-                      </th>
-                      <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-right">
-                        AMOUNT
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {items.map((item, index) => (
-                      <tr
-                        key={index}
-                        className="border-b border-divider hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="py-2 px-3">
-                          <span className="text-xs text-textGrey">{item.itemName}</span>
-                        </td>
-                        <td className="py-2 px-3">
-                          <span className="text-xs text-textGrey">{item.unitName}</span>
-                        </td>
-                        <td className="py-2 px-3 text-right">
-                          <span className="text-xs text-textGrey">
-                            {formatCurrency(item.costPerUnit)}
-                          </span>
-                        </td>
-                        <td className="py-2 px-3 text-center">
-                          <span className="text-xs text-textGrey">{item.requiredStock}</span>
-                        </td>
-                        <td className="py-2 px-3">
-                          <div className="flex justify-center">
-                            <input
-                              type="number"
-                              min={0}
-                              value={receivedQuantities[index] || ""}
-                              onChange={(e) =>
-                                setReceivedQuantities((prev) => {
-                                  const next = [...prev];
-                                  next[index] = parseInt(e.target.value) || 0;
-                                  return next;
-                                })
-                              }
-                              className="w-16 px-2 py-1 border text-black border-gray-200 rounded-lg text-xs text-center focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] bg-white"
-                              placeholder="0"
-                            />
-                          </div>
-                        </td>
-                        <td className="py-2 px-3 text-right">
-                          <span className="text-xs text-textGrey">
-                            {formatCurrency((receivedQuantities[index] || 0) * item.costPerUnit)}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <style jsx global>{`
+                .received-items-scroll {
+                  scrollbar-width: thin;
+                  scrollbar-color: #c4b5fd #f3f4f6;
+                  -ms-overflow-style: auto;
+                }
+                .received-items-scroll::-webkit-scrollbar {
+                  width: 10px;
+                  -webkit-appearance: none;
+                }
+                .received-items-scroll::-webkit-scrollbar-track {
+                  background: #f3f4f6;
+                  border-radius: 4px;
+                }
+                .received-items-scroll::-webkit-scrollbar-thumb {
+                  background: #c4b5fd;
+                  border-radius: 4px;
+                  border: 2px solid #f3f4f6;
+                }
+                .received-items-scroll::-webkit-scrollbar-thumb:hover {
+                  background: #5f35d2;
+                }
+              `}</style>
             </ModalBody>
 
             <ModalFooter className="flex flex-col px-4 pb-3 pt-3 border-t border-gray-100">

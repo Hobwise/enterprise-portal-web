@@ -21,6 +21,11 @@ import {
   DropdownMenu,
   DropdownItem,
   DropdownSection,
+  Modal,
+  ModalContent,
+  ModalBody,
+  ModalFooter,
+  Spinner,
 } from "@nextui-org/react";
 import {
   Search,
@@ -35,6 +40,7 @@ import {
   Mail,
   XCircle,
   Loader2,
+  AlertTriangle,
 } from "lucide-react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { StockTransferIcon } from "@/public/assets/svg";
@@ -63,7 +69,7 @@ interface StockTransfer {
   issueDate: string;
   transferId: string;
   destinationBusinessName: string;
-  status: "In Transit" | "Delivered";
+  status: "Confirmed" | "In Transit" | "Delivered" | "Cancelled";
   itemCount: number;
 }
 
@@ -203,6 +209,165 @@ const ActivityLogIcon = ({ active }: { active?: boolean }) => (
   </svg>
 );
 
+interface ConfirmActionModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  isLoading: boolean;
+  title: string;
+  message: React.ReactNode;
+  confirmLabel: string;
+  loadingLabel: string;
+  tone: "danger" | "warning";
+}
+
+function ConfirmActionModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  isLoading,
+  title,
+  message,
+  confirmLabel,
+  loadingLabel,
+  tone,
+}: ConfirmActionModalProps) {
+  const palette =
+    tone === "danger"
+      ? {
+          headerBg: "from-red-50 to-red-100/50 border-red-200/30",
+          iconRingOuter: "bg-red-100",
+          iconRingInner: "bg-red-200",
+          iconColor: "text-red-600",
+          accent: "from-red-400 to-red-600",
+          button:
+            "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700",
+        }
+      : {
+          headerBg: "from-amber-50 to-amber-100/50 border-amber-200/30",
+          iconRingOuter: "bg-amber-100",
+          iconRingInner: "bg-amber-200",
+          iconColor: "text-amber-600",
+          accent: "from-amber-400 to-amber-600",
+          button:
+            "bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700",
+        };
+
+  return (
+    <Modal
+      isDismissable={!isLoading}
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isLoading) onClose();
+      }}
+      size="lg"
+      hideCloseButton
+      classNames={{
+        wrapper: "items-center justify-center",
+        backdrop: "bg-black/60 backdrop-blur-sm",
+        base: "border border-gray-200",
+      }}
+    >
+      <ModalContent className="bg-white rounded-2xl shadow-2xl">
+        {() => (
+          <>
+            <ModalBody className="p-0">
+              <div
+                className={cn(
+                  "relative bg-gradient-to-br p-8 rounded-t-2xl border-b",
+                  palette.headerBg,
+                )}
+              >
+                <button
+                  onClick={onClose}
+                  disabled={isLoading}
+                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-6">
+                    <div
+                      className={cn(
+                        "w-20 h-20 rounded-full flex items-center justify-center",
+                        palette.iconRingOuter,
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          "w-16 h-16 rounded-full flex items-center justify-center",
+                          palette.iconRingInner,
+                        )}
+                      >
+                        <AlertTriangle
+                          className={cn("w-10 h-10", palette.iconColor)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                    {title}
+                  </h2>
+
+                  <div
+                    className={cn(
+                      "w-16 h-1 rounded-full bg-gradient-to-r",
+                      palette.accent,
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="px-8 py-6">
+                <div className="text-center">
+                  <p className="text-gray-700 text-base leading-relaxed max-w-md mx-auto">
+                    {message}
+                  </p>
+                </div>
+              </div>
+            </ModalBody>
+
+            <ModalFooter className="px-8 pb-8 pt-0">
+              <div className="flex justify-center w-full gap-3">
+                <Button
+                  onClick={onClose}
+                  isDisabled={isLoading}
+                  variant="bordered"
+                  className="px-6 py-6 rounded-xl font-semibold border-gray-300 text-gray-700"
+                  size="lg"
+                >
+                  Keep
+                </Button>
+                <Button
+                  onClick={onConfirm}
+                  isDisabled={isLoading}
+                  className={cn(
+                    "text-white font-semibold px-8 py-6 rounded-xl transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none",
+                    palette.button,
+                  )}
+                  size="lg"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Spinner color="current" size="sm" />
+                      <span>{loadingLabel}</span>
+                    </div>
+                  ) : (
+                    <span>{confirmLabel}</span>
+                  )}
+                </Button>
+              </div>
+            </ModalFooter>
+          </>
+        )}
+      </ModalContent>
+    </Modal>
+  );
+}
+
 export default function StockTransferPage() {
   const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>("list");
@@ -210,7 +375,6 @@ export default function StockTransferPage() {
   const [selectedBusiness, setSelectedBusiness] = useState("");
   const [selectedItems, setSelectedItems] = useState<TransferItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [destSearchQuery, setDestSearchQuery] = useState("");
   const [sourceAutocompleteKey, setSourceAutocompleteKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedIncoming, setSelectedIncoming] =
@@ -225,6 +389,8 @@ export default function StockTransferPage() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [cancellingTransfer, setCancellingTransfer] = useState(false);
   const [deletingTransfer, setDeletingTransfer] = useState(false);
+  const [cancelTarget, setCancelTarget] = useState<StockTransfer | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<StockTransfer | null>(null);
   const [selectedTransferId, setSelectedTransferId] = useState("");
   const [fetchingTransferDetails, setFetchingTransferDetails] = useState(false);
   const [selectedMailTransferDetails, setSelectedMailTransferDetails] = useState<any>(null);
@@ -348,8 +514,12 @@ export default function StockTransferPage() {
       transferId: o.reference || "",
       destinationBusinessName: o.destinationBusinessName || "",
       status:
-        o.status === 1
+        o.status === 0
+          ? ("Confirmed" as const)
+          : o.status === 1
           ? ("In Transit" as const)
+          : o.status === 3
+          ? ("Cancelled" as const)
           : ("Delivered" as const),
       itemCount: o.numberOfItems ?? 0,
     }));
@@ -390,6 +560,10 @@ export default function StockTransferPage() {
         type = "completed";
         title = "Transfer Completed";
         description = `Stock Transfer ${ref} delivered to ${dest}`;
+      } else if (o.status === 3) {
+        type = "unverified";
+        title = "Transfer Cancelled";
+        description = `Stock Transfer ${ref} to ${dest} was cancelled`;
       }
       return {
         id: o.id || "",
@@ -471,7 +645,6 @@ export default function StockTransferPage() {
   const { data: destinationItems, isLoading: destinationItemsLoading } =
     useInventoryItems({
       pageSize: 1000,
-      search: destSearchQuery,
       businessIdOverride: selectedBusiness || undefined,
       enabled: !!selectedBusiness,
     });
@@ -686,6 +859,7 @@ export default function StockTransferPage() {
           type: "success",
         });
         queryClient.invalidateQueries({ queryKey: ["stockTransfersByBusiness"] });
+        setCancelTarget(null);
       } else if (response) {
         notify({
           title: "Error",
@@ -711,6 +885,7 @@ export default function StockTransferPage() {
           type: "success",
         });
         queryClient.invalidateQueries({ queryKey: ["stockTransfersByBusiness"] });
+        setDeleteTarget(null);
       } else if (response) {
         notify({
           title: "Error",
@@ -805,8 +980,10 @@ export default function StockTransferPage() {
 
   const renderStatus = (status: string) => {
     const colors: Record<string, string> = {
+      Confirmed: "text-[#16AB60]",
       "In Transit": "text-[#F5A623]",
       Delivered: "text-[#5F35D2]",
+      Cancelled: "text-[#D92D20]",
     };
     return (
       <span className={cn("text-sm font-bold", colors[status])}>{status}</span>
@@ -818,34 +995,52 @@ export default function StockTransferPage() {
       {/* Page Header Tabs */}
       <div className="flex items-center justify-between px-6 pt-4 pb-2">
         <div className="flex items-center gap-1">
-          {["Stock Transfer", "Incoming", "Activity Log"].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => {
-                setActiveTab(tab);
-                setStep("list");
-                setSelectedIncoming(null);
-                setSelectedOutgoing(null);
-              }}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
-                activeTab === tab
-                  ? "bg-[#F0ECFB] text-[#5F35D2]"
-                  : "text-[#667085] hover:text-[#101828]",
-              )}
-            >
-              {tab === "Stock Transfer" && (
-                <StockTransferIcon className="w-4 h-4" />
-              )}
-              {tab === "Incoming" && (
-                <IncomingIcon active={activeTab === tab} />
-              )}
-              {tab === "Activity Log" && (
-                <ActivityLogIcon active={activeTab === tab} />
-              )}
-              {tab}
-            </button>
-          ))}
+          {/* Create tab — triggers the create flow (replaces the old right-side button) */}
+          <button
+            onClick={() => {
+              setActiveTab("Stock Transfer");
+              setSelectedIncoming(null);
+              setSelectedOutgoing(null);
+              handleCreateNew();
+            }}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+              step !== "list"
+                ? "bg-[#F0ECFB] text-[#5F35D2]"
+                : "text-[#667085] hover:text-[#101828]",
+            )}
+          >
+            <Plus size={16} />
+            Create Stock Transfer
+          </button>
+
+          {["Stock Transfer", "Incoming", "Activity Log"].map((tab) => {
+            const isActive = activeTab === tab && step === "list";
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setStep("list");
+                  setSelectedIncoming(null);
+                  setSelectedOutgoing(null);
+                }}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                  isActive
+                    ? "bg-[#F0ECFB] text-[#5F35D2]"
+                    : "text-[#667085] hover:text-[#101828]",
+                )}
+              >
+                {tab === "Stock Transfer" && (
+                  <StockTransferIcon className="w-4 h-4" />
+                )}
+                {tab === "Incoming" && <IncomingIcon active={isActive} />}
+                {tab === "Activity Log" && <ActivityLogIcon active={isActive} />}
+                {tab}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -867,15 +1062,6 @@ export default function StockTransferPage() {
                   "View stock transfer activity in your business."}
               </p>
             </div>
-            {activeTab === "Stock Transfer" && (
-              <Button
-                onClick={handleCreateNew}
-                className="bg-[#5F35D2] text-white rounded-xl px-6 py-4 font-semibold gap-3 h-auto shadow-none"
-                endContent={<ArrowRight className="w-5 h-5" />}
-              >
-                Create Stock Transfer
-              </Button>
-            )}
           </div>
 
           <div className="flex gap-4 mb-4">
@@ -970,9 +1156,9 @@ export default function StockTransferPage() {
                                 } else if (key === "sendEmail") {
                                   handleSendMailTransfer(item);
                                 } else if (key === "cancel") {
-                                  handleCancelTransfer(item);
+                                  setCancelTarget(item);
                                 } else if (key === "delete") {
-                                  handleDeleteTransfer(item);
+                                  setDeleteTarget(item);
                                 }
                               }}
                             >
@@ -1419,7 +1605,6 @@ export default function StockTransferPage() {
                             variant="bordered"
                             isLoading={destinationItemsLoading}
                             defaultSelectedKey={item.destinationId}
-                            onInputChange={(value) => setDestSearchQuery(value)}
                             listboxProps={{
                               emptyContent:
                                 item.unitCategory == null
@@ -1625,6 +1810,16 @@ export default function StockTransferPage() {
                   <span className="text-sm font-bold">In Transit</span>
                 </div>
               )}
+              {selectedOutgoing.status === "Confirmed" && (
+                <div className="flex items-center gap-2 text-[#16AB60] bg-[#ECFDF3] px-4 py-2 rounded-full border border-[#16AB60]">
+                  <span className="text-sm font-bold">Confirmed</span>
+                </div>
+              )}
+              {selectedOutgoing.status === "Cancelled" && (
+                <div className="flex items-center gap-2 text-[#D92D20] bg-[#FEF3F2] px-4 py-2 rounded-full border border-[#D92D20]">
+                  <span className="text-sm font-bold">Cancelled</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1752,7 +1947,10 @@ export default function StockTransferPage() {
                     <span className="text-[#667085] font-medium">Status:</span>
                     <span className={cn(
                       "font-bold",
-                      selectedOutgoing.status === "In Transit" ? "text-[#F5A623]" : "text-[#5F35D2]",
+                      selectedOutgoing.status === "In Transit" && "text-[#F5A623]",
+                      selectedOutgoing.status === "Delivered" && "text-[#5F35D2]",
+                      selectedOutgoing.status === "Confirmed" && "text-[#16AB60]",
+                      selectedOutgoing.status === "Cancelled" && "text-[#D92D20]",
                     )}>
                       {selectedOutgoing.status}
                     </span>
@@ -2043,6 +2241,46 @@ export default function StockTransferPage() {
         emailPlaceholder="recipient@email.com"
         defaultSubject="Stock Transfer"
         messagePlaceholder="Add a message to the recipient..."
+      />
+
+      <ConfirmActionModal
+        isOpen={!!cancelTarget}
+        onClose={() => !cancellingTransfer && setCancelTarget(null)}
+        onConfirm={() => cancelTarget && handleCancelTransfer(cancelTarget)}
+        isLoading={cancellingTransfer}
+        title="Cancel Stock Transfer"
+        message={
+          <>
+            Are you sure you want to cancel{" "}
+            <span className="font-semibold text-[#101828]">
+              {cancelTarget?.transferId || "this transfer"}
+            </span>
+            ? This action cannot be undone.
+          </>
+        }
+        confirmLabel="Yes, Cancel Transfer"
+        loadingLabel="Cancelling..."
+        tone="warning"
+      />
+
+      <ConfirmActionModal
+        isOpen={!!deleteTarget}
+        onClose={() => !deletingTransfer && setDeleteTarget(null)}
+        onConfirm={() => deleteTarget && handleDeleteTransfer(deleteTarget)}
+        isLoading={deletingTransfer}
+        title="Delete Stock Transfer"
+        message={
+          <>
+            Are you sure you want to delete{" "}
+            <span className="font-semibold text-[#101828]">
+              {deleteTarget?.transferId || "this transfer"}
+            </span>
+            ? This action cannot be undone.
+          </>
+        }
+        confirmLabel="Yes, Delete"
+        loadingLabel="Deleting..."
+        tone="danger"
       />
     </div>
   );

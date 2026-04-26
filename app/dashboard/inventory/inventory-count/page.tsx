@@ -14,15 +14,10 @@ import {
   Modal,
   ModalContent,
   ModalBody,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem,
   Checkbox,
 } from "@nextui-org/react";
 import { LuHistory, LuSearch } from "react-icons/lu";
-import { Eye, X, CheckCircle2, RefreshCw, Clipboard, ClipboardList } from "lucide-react";
-import { HiOutlineDotsVertical } from "react-icons/hi";
+import { X, CheckCircle2, RefreshCw, Clipboard, ClipboardList } from "lucide-react";
 import { InventoryCountIcon } from "@/public/assets/svg";
 import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import useInventoryCount from "@/hooks/cachedEndpoints/useInventoryCount";
@@ -30,15 +25,12 @@ import useInventoryItems from "@/hooks/cachedEndpoints/useInventoryItems";
 import {
   InventoryItem,
   InventoryItemType,
-  InventoryCountHistoryItem,
 } from "@/app/api/controllers/dashboard/inventory";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
 import InventoryCountHistoryTable from "@/components/ui/dashboard/inventory/InventoryCountHistoryTable";
-import InventoryItemDetailsModal from "@/components/ui/dashboard/inventory/modals/InventoryItemDetailsModal";
 import { cn } from "@/lib/utils";
 
 type CountMode = null | "full" | "partial";
-const FILTERED_BATCH_SIZE = 200;
 
 function getStockStatus(item: InventoryItem): string {
   const stock = item.stockLevel ?? 0;
@@ -76,24 +68,8 @@ export default function InventoryCountPage() {
   const [activeTab, setActiveTab] = useState<"count" | "history">("count");
   const [countMode, setCountMode] = useState<CountMode>(null);
   const [showCountTypeModal, setShowCountTypeModal] = useState(false);
-  const [showItemDetailModal, setShowItemDetailModal] = useState(false);
-  const [selectedDetailItem, setSelectedDetailItem] = useState<InventoryItem | null>(null);
 
-  // Inventory Count main tab state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [itemTypeFilter, setItemTypeFilter] = useState("all");
-  const [stockLevelFilter, setStockLevelFilter] = useState("all");
-  const [page, setPage] = useState(1);
   const pageSize = 10;
-
-  const hasActiveFilters = itemTypeFilter !== "all" || stockLevelFilter !== "all";
-
-  const handleClearFilters = () => {
-    setItemTypeFilter("all");
-    setStockLevelFilter("all");
-    setPage(1);
-  };
 
   // Stock count state
   const [countItems, setCountItems] = useState<CountItem[]>([]);
@@ -108,13 +84,8 @@ export default function InventoryCountPage() {
   const businessName = businessInformation?.[0]?.businessName || "Store";
 
   const {
-    // Items from /api/v1/Inventory/by-business
+    // Items from /api/v1/Inventory/by-business — used to seed Full/Partial count
     items: inventoryItems,
-    itemsTotalCount: totalCount,
-    itemsTotalPages: totalPages,
-    itemsCurrentPage: currentPage,
-    itemsHasNext: hasNext,
-    itemsHasPrevious: hasPrevious,
     isLoadingItems: isLoading,
     refetchItems,
     submitInventoryCount,
@@ -128,14 +99,13 @@ export default function InventoryCountPage() {
     hasPrevious: historyHasPrevious,
     isLoadingHistory,
     // History pagination controls
-    page: historyPage,
     setPage: setHistoryPage,
     search: historySearch,
     setSearch: setHistorySearch,
   } = useInventoryCount({
-    itemsPage: (countMode || showCountTypeModal) ? 1 : (hasActiveFilters ? 1 : page),
-    itemsPageSize: (countMode || showCountTypeModal) ? 1000 : (hasActiveFilters ? FILTERED_BATCH_SIZE : pageSize),
-    itemsSearch: (countMode || showCountTypeModal) ? "" : debouncedSearch,
+    itemsPage: 1,
+    itemsPageSize: countMode || showCountTypeModal ? 1000 : pageSize,
+    itemsSearch: "",
   });
 
   // Full inventory lookup (id -> item) used by the history view modal so item
@@ -152,46 +122,12 @@ export default function InventoryCountPage() {
     return inventoryItems;
   }, [allInventoryItems, inventoryItems]);
 
-  // Debounce search
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      setPage(1);
-      setDebouncedSearch(searchQuery);
-    }, 500);
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
-
   // Sync countItems when inventoryItems are loaded in count mode
   useEffect(() => {
     if (countMode && inventoryItems.length > 0 && countItems.length === 0) {
       initializeCountItems(countMode);
     }
   }, [countMode, inventoryItems]);
-
-  // Apply client-side filters (item type & stock level) on fetched data
-  const filteredItems = useMemo(() => {
-    let items = inventoryItems || [];
-
-    if (itemTypeFilter !== "all") {
-      const typeNum = parseInt(itemTypeFilter, 10);
-      items = items.filter((item) => item.itemType === typeNum);
-    }
-
-    if (stockLevelFilter !== "all") {
-      items = items.filter((item) => getStockStatus(item) === stockLevelFilter);
-    }
-
-    return items;
-  }, [inventoryItems, itemTypeFilter, stockLevelFilter]);
-
-  // When filters are active, paginate the filtered results client-side
-  const clientPaginatedItems = useMemo(() => {
-    if (!hasActiveFilters) return filteredItems;
-    const start = (page - 1) * pageSize;
-    return filteredItems.slice(start, start + pageSize);
-  }, [filteredItems, hasActiveFilters, page, pageSize]);
-
-  const filteredTotalPages = Math.ceil(filteredItems.length / pageSize) || 1;
 
   // Filter count items for the stock count view
   const filteredCountItems = useMemo(() => {
@@ -315,6 +251,7 @@ export default function InventoryCountPage() {
     }
 
     submitInventoryCount({
+      type: countMode === "partial" ? "Partial" : "Full",
       countRequests: itemsToSubmit.map((item) => ({
         inventoryItemId: item.id,
         stockQuantity: item.verifiedCount,
@@ -328,11 +265,6 @@ export default function InventoryCountPage() {
         }
       },
     });
-  };
-
-  const handleViewItem = (item: InventoryItem) => {
-    setSelectedDetailItem(item);
-    setShowItemDetailModal(true);
   };
 
   return (
@@ -375,16 +307,6 @@ export default function InventoryCountPage() {
           </button>
         </div>
 
-        {/* Run Stock Count Button */}
-        {activeTab === "count" && countMode === null && (
-          <Button
-            className="h-12 rounded-xl bg-[#1D2939] text-white font-semibold text-sm px-8"
-            endContent={<RefreshCw className="w-4 h-4" />}
-            onPress={handleRunStockCount}
-          >
-            Run Stock Count
-          </Button>
-        )}
       </div>
 
       {/* Page Title & Subtitle */}
@@ -395,7 +317,7 @@ export default function InventoryCountPage() {
           </h1>
           <p className="text-sm text-[#667085] mt-1">
             {activeTab === "count"
-              ? "View the current count and status of all stock items in your inventory"
+              ? "Run a stock count to verify and reconcile your inventory items"
               : "View the history of all inventory counts performed"}
           </p>
         </div>
@@ -406,195 +328,26 @@ export default function InventoryCountPage() {
         {/* ===== INVENTORY COUNT (main view, no count mode) ===== */}
         {activeTab === "count" && countMode === null && (
           <div>
-            {/* Filters Row */}
-            <div className="flex flex-col sm:flex-row items-center gap-3 mb-6">
-              {/* Search Input */}
-              <div className="relative flex-1 w-full">
-                <LuSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search items by name..."
-                  className="w-full pl-12 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 text-sm"
-                />
+            {/* Empty state — items list is hidden until user picks Full or Partial */}
+            <div className="flex flex-col items-center justify-center text-center border border-dashed border-gray-200 rounded-2xl bg-white py-16 px-6">
+              <div className="w-14 h-14 rounded-full bg-[#F0ECFB] flex items-center justify-center mb-4">
+                <ClipboardList className="w-7 h-7 text-[#5F35D2]" />
               </div>
-
-              {/* Item Type Filter */}
-              <select
-                value={itemTypeFilter}
-                onChange={(e) => {
-                  setItemTypeFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 appearance-none min-w-[150px] text-sm cursor-pointer"
+              <h2 className="text-lg font-semibold text-[#101828] mb-1">
+                Start a stock count to view items
+              </h2>
+              <p className="text-sm text-[#667085] max-w-md mb-6">
+                Choose between a full or partial stock count to see your inventory items and verify their counts.
+              </p>
+              <Button
+                className="h-12 rounded-xl bg-[#1D2939] text-white font-semibold text-sm px-8"
+                endContent={<RefreshCw className="w-4 h-4" />}
+                onPress={handleRunStockCount}
               >
-                <option value="all">All Types</option>
-                <option value="0">Direct</option>
-                <option value="1">Ingredient</option>
-                <option value="2">Produced</option>
-              </select>
-
-              {/* Stock Level Filter */}
-              <select
-                value={stockLevelFilter}
-                onChange={(e) => {
-                  setStockLevelFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="px-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-white transition-colors duration-200 appearance-none min-w-[150px] text-sm cursor-pointer"
-              >
-                <option value="all">All Current Stock</option>
-                <option value="in-stock">In Stock</option>
-                <option value="low-stock">Low Stock</option>
-                <option value="out-of-stock">Out of Stock</option>
-              </select>
-
-              {/* Clear Filters */}
-              {hasActiveFilters && (
-                <button
-                  onClick={handleClearFilters}
-                  className="flex items-center gap-1 px-3 py-2.5 text-sm text-gray-500 hover:text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors duration-200"
-                >
-                  <X className="w-4 h-4" />
-                  <span>Clear filters</span>
-                </button>
-              )}
+                Run Stock Count
+              </Button>
             </div>
 
-            {/* Items Table */}
-            <div className="relative border border-primaryGrey rounded-lg overflow-visible">
-              {isLoading && (
-                <div className="absolute inset-0 bg-white/60 z-10 flex items-center justify-center">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
-                </div>
-              )}
-              <div className="max-h-[500px] overflow-auto">
-                <Table
-                  radius="lg"
-                  isCompact
-                  removeWrapper
-                  aria-label="Inventory count table"
-                  classNames={{
-                    th: [
-                      "text-default-500",
-                      "text-xs",
-                      "border-b",
-                      "border-divider",
-                      "py-4",
-                      "rounded-none",
-                      "bg-grey300",
-                    ],
-                    tr: "border-b border-divider rounded-none",
-                    td: [
-                      "py-3",
-                      "text-textGrey",
-                      "group-data-[first=true]:first:before:rounded-none",
-                      "group-data-[first=true]:last:before:rounded-none",
-                      "group-data-[middle=true]:before:rounded-none",
-                      "group-data-[last=true]:first:before:rounded-none",
-                      "group-data-[last=true]:last:before:rounded-none",
-                    ],
-                  }}
-                >
-                  <TableHeader>
-                    <TableColumn>ITEM NAME</TableColumn>
-                    <TableColumn>ITEM TYPE</TableColumn>
-                    <TableColumn>ITEM UNIT</TableColumn>
-                    <TableColumn>OPTIMUM STOCK</TableColumn>
-                    <TableColumn>CURRENT STOCK</TableColumn>
-                    <TableColumn>STATUS</TableColumn>
-                    <TableColumn>{""}</TableColumn>
-                  </TableHeader>
-                  <TableBody emptyContent="No inventory items found">
-                    {(hasActiveFilters ? clientPaginatedItems : filteredItems).map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell className="font-medium text-sm text-[#101828]">
-                          {item.name}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {getItemTypeName(item.itemType)}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {item.unitName || item.unitCode || "Unit"}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {item.reorderLevel || 0}
-                        </TableCell>
-                        <TableCell className="text-sm font-semibold">
-                          {item.stockLevel || 0}
-                        </TableCell>
-                        <TableCell>
-                          <span className="text-sm font-medium">
-                            {item.stockStatus || "—"}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          <div
-                            className="relative flex justify-center items-center"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Dropdown>
-                              <DropdownTrigger aria-label="actions">
-                                <div className="cursor-pointer flex justify-center items-center text-black">
-                                  <HiOutlineDotsVertical className="text-[22px]" />
-                                </div>
-                              </DropdownTrigger>
-                              <DropdownMenu
-                                aria-label="Item actions"
-                                className="text-black"
-                              >
-                                <DropdownItem
-                                  key="view"
-                                  startContent={<Eye size={16} />}
-                                  onPress={() => handleViewItem(item)}
-                                >
-                                  View
-                                </DropdownItem>
-                                <DropdownItem
-                                  key="adjust"
-                                  startContent={
-                                    <svg
-                                      width="16"
-                                      height="16"
-                                      viewBox="0 0 16 16"
-                                      fill="none"
-                                      xmlns="http://www.w3.org/2000/svg"
-                                    >
-                                      <path
-                                        d="M4 8h8M8 4v8"
-                                        stroke="currentColor"
-                                        strokeWidth="1.5"
-                                        strokeLinecap="round"
-                                      />
-                                    </svg>
-                                  }
-                                  href="/dashboard/inventory/stock-adjustment"
-                                >
-                                  Adjust Stock
-                                </DropdownItem>
-                              </DropdownMenu>
-                            </Dropdown>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <CustomPagination
-                currentPage={page}
-                totalPages={hasActiveFilters ? filteredTotalPages : totalPages}
-                hasNext={hasActiveFilters ? page < filteredTotalPages : hasNext}
-                hasPrevious={hasActiveFilters ? page > 1 : hasPrevious}
-                totalCount={hasActiveFilters ? filteredItems.length : totalCount}
-                pageSize={pageSize}
-                onPageChange={(p) => setPage(p)}
-                onNext={() => setPage((curr) => Math.min(curr + 1, hasActiveFilters ? filteredTotalPages : totalPages))}
-                onPrevious={() => setPage((curr) => Math.max(curr - 1, 1))}
-                isLoading={isLoading}
-              />
-            </div>
           </div>
         )}
 
@@ -847,6 +600,7 @@ export default function InventoryCountPage() {
         onOpenChange={setShowCountTypeModal}
         size="md"
         placement="center"
+        hideCloseButton
       >
         <ModalContent>
           <ModalBody className="py-6">
@@ -887,12 +641,6 @@ export default function InventoryCountPage() {
         </ModalContent>
       </Modal>
 
-      {/* Item Detail Modal */}
-      <InventoryItemDetailsModal
-        isOpen={showItemDetailModal}
-        onOpenChange={setShowItemDetailModal}
-        item={selectedDetailItem}
-      />
     </div>
   );
 }

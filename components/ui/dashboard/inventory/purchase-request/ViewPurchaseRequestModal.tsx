@@ -55,8 +55,11 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       size="2xl"
-      scrollBehavior="inside"
+      scrollBehavior="normal"
       hideCloseButton
+      classNames={{
+        base: "max-h-[90vh] my-auto",
+      }}
     >
       <ModalContent>
         {(onClose) => (
@@ -109,7 +112,7 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {/* VENDOR column */}
                   <div className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="bg-primaryColor px-3 py-1.5">
@@ -141,13 +144,33 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                       )}
                     </div>
                   </div>
+
+                  {/* SHIP TO column */}
+                  <div className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="bg-primaryColor px-3 py-1.5">
+                      <p className="text-[10px] font-semibold text-white uppercase tracking-wide">
+                        Ship To
+                      </p>
+                    </div>
+                    <div className="px-3 py-2 space-y-0.5">
+                      {purchaseRequest.contactName && (
+                        <p className="text-xs font-medium text-gray-700">
+                          {purchaseRequest.contactName}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-600">
+                        {purchaseRequest.deliveryAddress || "N/A"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* Items Table */}
-              <div className="border border-primaryGrey rounded-lg overflow-hidden">
+              <div className="border border-primaryGrey rounded-lg">
+                <div className="max-h-[260px] overflow-y-auto view-items-scroll">
                 <table className="w-full">
-                  <thead className="bg-grey300">
+                  <thead className="bg-grey300 sticky top-0 z-10">
                     <tr>
                       <th className="text-[10px] text-default-500 font-medium border-b border-divider py-2 px-3 text-left">
                         ITEM NAME
@@ -201,7 +224,32 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
                     ))}
                   </tbody>
                 </table>
+                </div>
               </div>
+
+              <style jsx global>{`
+                .view-items-scroll {
+                  scrollbar-width: thin;
+                  scrollbar-color: #c4b5fd #f3f4f6;
+                  -ms-overflow-style: auto;
+                }
+                .view-items-scroll::-webkit-scrollbar {
+                  width: 10px;
+                  -webkit-appearance: none;
+                }
+                .view-items-scroll::-webkit-scrollbar-track {
+                  background: #f3f4f6;
+                  border-radius: 4px;
+                }
+                .view-items-scroll::-webkit-scrollbar-thumb {
+                  background: #c4b5fd;
+                  border-radius: 4px;
+                  border: 2px solid #f3f4f6;
+                }
+                .view-items-scroll::-webkit-scrollbar-thumb:hover {
+                  background: #5f35d2;
+                }
+              `}</style>
             </ModalBody>
 
             <ModalFooter className="flex flex-col px-4 pb-3 pt-3 border-t border-gray-100">
