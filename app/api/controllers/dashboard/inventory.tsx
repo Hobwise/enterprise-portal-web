@@ -1120,7 +1120,10 @@ export type InventoryCountRequest = {
   stockQuantity: number;
 };
 
+export type InventoryCountType = "Full" | "Partial";
+
 export type SubmitInventoryCountPayload = {
+  type: InventoryCountType;
   countRequests: InventoryCountRequest[];
 };
 

@@ -15,7 +15,15 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { LuEye, LuSearch } from "react-icons/lu";
-import { X, ClipboardList, Calendar, Package } from "lucide-react";
+import {
+  X,
+  ClipboardList,
+  Calendar,
+  Package,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+} from "lucide-react";
 import {
   InventoryCountHistoryItem,
   InventoryItem,
@@ -80,6 +88,27 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
   }, [allAdjustments, modalPage, modalPageSize]);
 
   const modalTotalPages = Math.ceil(allAdjustments.length / modalPageSize) || 1;
+
+  const summary = useMemo(() => {
+    let increases = 0;
+    let decreases = 0;
+    let unchanged = 0;
+    let netChange = 0;
+    allAdjustments.forEach((adj: any) => {
+      const qty = Number(adj.stockQuantity ?? adj.quantity ?? 0);
+      if (qty > 0) increases += 1;
+      else if (qty < 0) decreases += 1;
+      else unchanged += 1;
+      netChange += qty;
+    });
+    return {
+      total: allAdjustments.length,
+      increases,
+      decreases,
+      unchanged,
+      netChange,
+    };
+  }, [allAdjustments]);
 
   return (
     <div className="space-y-4">
@@ -249,6 +278,53 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
 
                   {/* Modal Content */}
                   <div className="p-6">
+                    {/* Summary cards */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                      <div className="border border-gray-100 rounded-xl px-4 py-3 bg-gray-50">
+                        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                          Items Counted
+                        </p>
+                        <p className="text-xl font-bold text-gray-800 mt-1">
+                          {summary.total}
+                        </p>
+                      </div>
+                      <div className="border border-emerald-100 rounded-xl px-4 py-3 bg-emerald-50">
+                        <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">
+                          Increases
+                        </p>
+                        <p className="text-xl font-bold text-emerald-700 mt-1 flex items-center gap-1">
+                          <ArrowUp className="w-4 h-4" />
+                          {summary.increases}
+                        </p>
+                      </div>
+                      <div className="border border-rose-100 rounded-xl px-4 py-3 bg-rose-50">
+                        <p className="text-[10px] font-semibold text-rose-700 uppercase tracking-wide">
+                          Decreases
+                        </p>
+                        <p className="text-xl font-bold text-rose-700 mt-1 flex items-center gap-1">
+                          <ArrowDown className="w-4 h-4" />
+                          {summary.decreases}
+                        </p>
+                      </div>
+                      <div className="border border-gray-100 rounded-xl px-4 py-3 bg-gray-50">
+                        <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
+                          Net Change
+                        </p>
+                        <p
+                          className={`text-xl font-bold mt-1 ${
+                            summary.netChange > 0
+                              ? "text-emerald-700"
+                              : summary.netChange < 0
+                              ? "text-rose-700"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          {summary.netChange > 0 ? "+" : ""}
+                          {summary.netChange}
+                        </p>
+                      </div>
+                    </div>
+
                     <div className="border border-gray-100 rounded-xl overflow-hidden">
                       <Table
                         removeWrapper
@@ -260,13 +336,17 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
                       >
                         <TableHeader>
                           <TableColumn>ITEM NAME</TableColumn>
-                          <TableColumn align="center">VERIFIED COUNT</TableColumn>
+                          <TableColumn align="center">ADJUSTMENT</TableColumn>
+                          <TableColumn align="center">QUANTITY</TableColumn>
+                          <TableColumn>REASON</TableColumn>
                         </TableHeader>
                         <TableBody emptyContent="No items found">
                           {paginatedAdjustments.map((adj: any, idx: number) => {
                             // The API uses 'inventoryItemId' and 'stockQuantity' in countRequests
                             const itemId = adj.inventoryItemId || adj.inventoryItemID;
-                            const quantity = adj.stockQuantity ?? adj.quantity;
+                            const rawQuantity =
+                              adj.stockQuantity ?? adj.quantity ?? 0;
+                            const quantity = Number(rawQuantity);
                             const inlineName =
                               adj.itemName ||
                               adj.inventoryItemName ||
@@ -276,17 +356,80 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
                             )?.name;
                             const itemName =
                               inlineName || lookedUpName || "Unknown item";
+
+                            const adjustmentType = Number(adj.adjustmentType);
+                            const isIncrease =
+                              adjustmentType === 12 || quantity > 0;
+                            const isDecrease =
+                              adjustmentType === 13 || quantity < 0;
+                            const reason =
+                              adj.reason ||
+                              (isIncrease
+                                ? "Inventory count increase"
+                                : isDecrease
+                                ? "Inventory count decrease"
+                                : "No change");
+
+                            const badge = isIncrease
+                              ? {
+                                  label: "Increase",
+                                  bg: "bg-emerald-50",
+                                  text: "text-emerald-700",
+                                  border: "border-emerald-100",
+                                  Icon: ArrowUp,
+                                }
+                              : isDecrease
+                              ? {
+                                  label: "Decrease",
+                                  bg: "bg-rose-50",
+                                  text: "text-rose-700",
+                                  border: "border-rose-100",
+                                  Icon: ArrowDown,
+                                }
+                              : {
+                                  label: "Unchanged",
+                                  bg: "bg-gray-50",
+                                  text: "text-gray-600",
+                                  border: "border-gray-100",
+                                  Icon: Minus,
+                                };
+
                             return (
                               <TableRow key={idx}>
                                 <TableCell>
-                                  <span className="text-sm font-medium text-gray-800">{itemName}</span>
+                                  <span className="text-sm font-medium text-gray-800">
+                                    {itemName}
+                                  </span>
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex justify-center">
-                                    <span className="text-sm font-bold text-[#5F35D2] bg-[#F0ECFB] px-3 py-1 rounded-lg">
-                                      {quantity}
+                                    <span
+                                      className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}
+                                    >
+                                      <badge.Icon className="w-3 h-3" />
+                                      {badge.label}
                                     </span>
                                   </div>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex justify-center">
+                                    <span
+                                      className={`text-sm font-bold px-3 py-1 rounded-lg ${
+                                        isIncrease
+                                          ? "text-emerald-700 bg-emerald-50"
+                                          : isDecrease
+                                          ? "text-rose-700 bg-rose-50"
+                                          : "text-gray-700 bg-gray-50"
+                                      }`}
+                                    >
+                                      {quantity > 0 ? `+${quantity}` : quantity}
+                                    </span>
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  <span className="text-xs text-gray-600">
+                                    {reason}
+                                  </span>
                                 </TableCell>
                               </TableRow>
                             );
