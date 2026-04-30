@@ -37,6 +37,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
   const [strictnessLevel, setStrictnessLevel] = useState<number>(0);
   const [reorderLevel, setReorderLevel] = useState('');
   const [averageCostPerBaseUnit, setAverageCostPerBaseUnit] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [allowTracking, setAllowTracking] = useState(true);
   const [unitId, setUnitId] = useState('');
@@ -72,6 +73,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
       setStrictnessLevel(sourceItem.strictnessLevel);
       setReorderLevel(String(sourceItem.reorderLevel || 0));
       setAverageCostPerBaseUnit(String(sourceItem.averageCostPerUnit || 0));
+      setExpiryDate(sourceItem.expiryDate ? sourceItem.expiryDate.split('T')[0] : '');
       setIsActive(sourceItem.isActive);
       setAllowTracking(sourceItem.allowTracking ?? true);
       setUnitId(sourceItem.unitId || '');
@@ -115,8 +117,8 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
       notify({ title: 'Error!', text: 'Please select a unit', type: 'error' });
       return;
     }
-    if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) < 0) {
-      notify({ title: 'Error!', text: 'Please enter a valid average cost per base unit', type: 'error' });
+    if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) <= 0) {
+      notify({ title: 'Error!', text: 'Average cost per base unit is required', type: 'error' });
       return;
     }
     if (itemType === null) {
@@ -132,6 +134,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
         description: description.trim(),
         itemType,
         strictnessLevel,
+        openingStock: 0,
         reorderLevel: reorderLevel ? parseFloat(reorderLevel) : 0,
         reorderQuantity: 0,
         averageCostPerUnit: parseFloat(averageCostPerBaseUnit),
@@ -139,6 +142,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
         allowTracking,
         unitId,
         ...(supplierId ? { supplierId } : {}),
+        expiryDate: expiryDate ? new Date(expiryDate).toISOString() : null,
       };
 
       const response = await updateInventoryItem(
@@ -294,6 +298,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Average Cost Per Base Unit
+                <span className="text-red-500 ml-1">*</span>
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold">
@@ -306,6 +311,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
                   placeholder="0.00"
                   min="0"
                   step="0.01"
+                  required
                   className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                 />
               </div>
@@ -323,6 +329,22 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
                 placeholder="0"
                 min="0"
                 step="1"
+                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+              />
+            </div>
+          </div>
+
+          {/* Expiry Date */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Expiry Date
+                <span className="text-gray-400 font-normal ml-1">(optional)</span>
+              </label>
+              <input
+                type="date"
+                value={expiryDate}
+                onChange={(e) => setExpiryDate(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
               />
             </div>

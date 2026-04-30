@@ -377,6 +377,7 @@ export default function StockTransferPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sourceAutocompleteKey, setSourceAutocompleteKey] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [showUnitBanner, setShowUnitBanner] = useState(true);
   const [selectedIncoming, setSelectedIncoming] =
     useState<IncomingTransfer | null>(null);
   const [selectedOutgoing, setSelectedOutgoing] =
@@ -991,7 +992,7 @@ export default function StockTransferPage() {
   };
 
   return (
-    <div className="w-full min-h-screen">
+    <div className="w-full min-h-screen max-w-7xl mx-auto">
       {/* Page Header Tabs */}
       <div className="flex items-center justify-between px-6 pt-4 pb-2">
         <div className="flex items-center gap-1">
@@ -1572,12 +1573,31 @@ export default function StockTransferPage() {
             </span>
           </div>
 
+          {showUnitBanner && (
+            <div className="flex items-start gap-3 p-4 bg-[#FFF8EB] border border-[#F5A623] rounded-xl">
+              <AlertTriangle className="w-5 h-5 text-[#F5A623] shrink-0 mt-0.5" />
+              <p className="text-sm text-[#475467] font-medium flex-1">
+                Source item and destination item unit category must match for
+                the transfer to happen. Only destination items with a matching
+                unit category will appear in the search results.
+              </p>
+              <button
+                onClick={() => setShowUnitBanner(false)}
+                className="text-[#98A2B3] hover:text-[#475467] transition-colors shrink-0"
+                aria-label="Dismiss notice"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+
           <div className="flex flex-col lg:flex-row gap-8 items-start">
-            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-hidden w-full relative">
+            <div className="flex-1 bg-white border border-[#E4E7EC] rounded-2xl shadow-sm overflow-x-auto w-full relative">
                 <Table
                   aria-label="Initiate Transfer List"
                   removeWrapper
                   classNames={{
+                    base: "min-w-[760px]",
                     th: "bg-[#F9FAFB] text-[#667085] font-bold text-[10px] py-5 px-6 uppercase tracking-wider",
                     td: "py-5 px-6 text-sm text-[#344054] border-b border-[#F2F4F7] font-bold relative",
                   }}

@@ -96,8 +96,8 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
     let netChange = 0;
     allAdjustments.forEach((adj: any) => {
       const qty = Number(adj.stockQuantity ?? adj.quantity ?? 0);
-      if (qty > 0) increases += 1;
-      else if (qty < 0) decreases += 1;
+      if (qty > 0) increases += qty;
+      else if (qty < 0) decreases += Math.abs(qty);
       else unchanged += 1;
       netChange += qty;
     });
@@ -282,7 +282,7 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
                       <div className="border border-gray-100 rounded-xl px-4 py-3 bg-gray-50">
                         <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
-                          Items Counted
+                          Items Adjusted
                         </p>
                         <p className="text-xl font-bold text-gray-800 mt-1">
                           {summary.total}
@@ -290,7 +290,7 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
                       </div>
                       <div className="border border-emerald-100 rounded-xl px-4 py-3 bg-emerald-50">
                         <p className="text-[10px] font-semibold text-emerald-700 uppercase tracking-wide">
-                          Increases
+                          Units Added
                         </p>
                         <p className="text-xl font-bold text-emerald-700 mt-1 flex items-center gap-1">
                           <ArrowUp className="w-4 h-4" />
@@ -299,7 +299,7 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
                       </div>
                       <div className="border border-rose-100 rounded-xl px-4 py-3 bg-rose-50">
                         <p className="text-[10px] font-semibold text-rose-700 uppercase tracking-wide">
-                          Decreases
+                          Units Removed
                         </p>
                         <p className="text-xl font-bold text-rose-700 mt-1 flex items-center gap-1">
                           <ArrowDown className="w-4 h-4" />
