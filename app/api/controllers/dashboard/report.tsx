@@ -250,3 +250,69 @@ export async function getReportAuditLog(
     handleError(error, false);
   }
 }
+
+export async function getReportInventory(
+  businessId: string,
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  reportType?: number,
+  inventoryItemId?: string,
+  categoryId?: string,
+  supplierId?: string
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload = {
+    startDate: startDate,
+    endDate: endDate,
+    filterType: filterType,
+    reportType: reportType,
+    inventoryItemId: inventoryItemId,
+    categoryId: categoryId,
+    supplierId: supplierId,
+  };
+
+  try {
+    const data = await api.post(DASHBOARD.reportInventory, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getReportInventoryExport(
+  businessId: string,
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  reportType?: number,
+  exportType?: number,
+  inventoryItemId?: string,
+  categoryId?: string,
+  supplierId?: string
+) {
+  const headers = businessId ? { businessId, exportType } : {};
+  const payload = {
+    startDate: startDate,
+    endDate: endDate,
+    filterType: filterType,
+    reportType: reportType,
+    inventoryItemId: inventoryItemId,
+    categoryId: categoryId,
+    supplierId: supplierId,
+  };
+
+  try {
+    const data = await api.post(DASHBOARD.reportInventoryExport, payload, {
+      headers,
+      responseType: 'blob',
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}

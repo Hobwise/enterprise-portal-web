@@ -25,18 +25,24 @@ import {
 import { TbReportSearch } from 'react-icons/tb';
 import { LuFileBarChart, LuPackage } from 'react-icons/lu';
 import { FaRegCalendarCheck } from 'react-icons/fa';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import {
-  SalesOverviewPanel,
-  OrdersVolumesPanel,
-  PopularItemsPanel,
-  EmployeePerformancePanel,
-  CategoryPerformancePanel,
-  OrderPaymentSummaryPanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/SalesPanels';
-import { GenericOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/GenericOverviewPanel';
+  formatDateTimeForPayload2,
+  getJsonItemFromLocalStorage,
+} from '@/lib/utils';
+import { SalesOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SalesPanels';
 import { ComingSoonPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SharedPanels';
-import { ModuleId, PeriodId } from '@/components/ui/dashboard/inventory/stock-analysis/types';
+import { InventoryOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/InventoryOverviewPanel';
+import { PaymentOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/PaymentOverviewPanel';
+import { BookingOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/BookingOverviewPanel';
+import { UserAuditOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/UserAuditOverviewPanel';
+import {
+  FilterType,
+  ModuleId,
+  PeriodId,
+  ReportSummary,
+  periodToFilterType,
+} from '@/components/ui/dashboard/inventory/stock-analysis/types';
+import useStockAnalysisSummary from '@/hooks/cachedEndpoints/useStockAnalysisSummary';
 
 interface ModuleTab {
   id: ModuleId;
@@ -220,11 +226,9 @@ const MODULES: ModuleTab[] = [
 
 const PERIODS: { id: PeriodId; label: string }[] = [
   { id: 'today', label: 'Today' },
-  { id: 'yesterday', label: 'Yesterday' },
   { id: 'week', label: 'This week' },
-  { id: 'month', label: 'Month' },
-  { id: 'quarter', label: 'Quarter' },
   { id: 'year', label: 'Year' },
+  { id: 'all', label: 'All' },
 ];
 
 const StockAnalysisPage: React.FC = () => {
@@ -255,6 +259,24 @@ const StockAnalysisPage: React.FC = () => {
       setActiveSubTab(next.subTabs[0]?.id ?? 'overview');
     }
   };
+
+  const hasCustomRange = Boolean(customStart && customEnd);
+  const filterType = hasCustomRange
+    ? FilterType.Custom
+    : periodToFilterType(activePeriod);
+  const startDate = hasCustomRange
+    ? `${formatDateTimeForPayload2(customStart)}Z`
+    : undefined;
+  const endDate = hasCustomRange
+    ? `${formatDateTimeForPayload2(customEnd)}Z`
+    : undefined;
+
+  const { data: summary, isLoading: summaryLoading } = useStockAnalysisSummary(
+    filterType,
+    startDate,
+    endDate,
+    { enabled: hasAccess }
+  );
 
   if (!hasAccess) {
     return null;
@@ -346,7 +368,12 @@ const StockAnalysisPage: React.FC = () => {
       </div>
 
       {/* Active panel */}
-      <ActivePanel moduleId={activeModule} subTabId={activeSubTab} />
+      <ActivePanel
+        moduleId={activeModule}
+        subTabId={activeSubTab}
+        summary={summary}
+        isLoading={summaryLoading}
+      />
     </div>
   );
 };
@@ -465,30 +492,61 @@ const SubTabsBar: React.FC<SubTabsBarProps> = ({ tabs, active, onChange }) => {
 interface ActivePanelProps {
   moduleId: ModuleId;
   subTabId: string;
+  summary?: ReportSummary;
+  isLoading?: boolean;
 }
 
-const ActivePanel: React.FC<ActivePanelProps> = ({ moduleId, subTabId }) => {
+const ActivePanel: React.FC<ActivePanelProps> = ({
+  moduleId,
+  subTabId,
+  summary,
+  isLoading,
+}) => {
   if (moduleId === 'sales') {
-    switch (subTabId) {
-      case 'overview':
-        return <SalesOverviewPanel />;
-      case 'order-volumes':
-        return <OrdersVolumesPanel />;
-      case 'popular-items':
-        return <PopularItemsPanel />;
-      case 'employee-performance':
-        return <EmployeePerformancePanel />;
-      case 'category-performance':
-        return <CategoryPerformancePanel />;
-      case 'order-payment-summary':
-        return <OrderPaymentSummaryPanel />;
-      default:
-        return <ComingSoonPanel />;
+    if (subTabId === 'overview') {
+      return (
+        <SalesOverviewPanel
+          data={summary?.orderDetails}
+          isLoading={isLoading}
+        />
+      );
     }
+    return <ComingSoonPanel />;
   }
 
   if (subTabId === 'overview') {
-    return <GenericOverviewPanel />;
+    switch (moduleId) {
+      case 'payments':
+        return (
+          <PaymentOverviewPanel
+            data={summary?.paymentDetails}
+            isLoading={isLoading}
+          />
+        );
+      case 'bookings':
+        return (
+          <BookingOverviewPanel
+            data={summary?.bookingDetails}
+            isLoading={isLoading}
+          />
+        );
+      case 'inventory':
+        return (
+          <InventoryOverviewPanel
+            data={summary?.inventoryDetails}
+            isLoading={isLoading}
+          />
+        );
+      case 'users':
+        return (
+          <UserAuditOverviewPanel
+            data={summary?.auditDetails}
+            isLoading={isLoading}
+          />
+        );
+      default:
+        return <ComingSoonPanel />;
+    }
   }
 
   return <ComingSoonPanel />;

@@ -55,10 +55,12 @@ const ViewPurchaseRequestModal: React.FC<ViewPurchaseRequestModalProps> = ({
       isOpen={isOpen}
       onOpenChange={onOpenChange}
       size="2xl"
-      scrollBehavior="normal"
+      scrollBehavior="inside"
       hideCloseButton
       classNames={{
         base: "max-h-[90vh] my-auto",
+        body: "overflow-y-auto",
+        footer: "shrink-0",
       }}
     >
       <ModalContent>

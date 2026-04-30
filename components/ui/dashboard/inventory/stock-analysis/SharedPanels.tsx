@@ -1,7 +1,10 @@
 'use client';
 
 import React from 'react';
-import { BarRow, BreakdownRow, StatCard } from './types';
+import { useRouter } from 'next/navigation';
+import { IoIosArrowForward } from 'react-icons/io';
+import { saveJsonItemToLocalStorage, notify } from '@/lib/utils';
+import { AvailableReport, BarRow, BreakdownRow, StatCard } from './types';
 
 interface StatCardsProps {
   cards: StatCard[];
@@ -186,6 +189,71 @@ export const ComingSoonPanel: React.FC<ComingSoonPanelProps> = ({ label }) => {
           {label ?? 'This sub-report is under construction'}
         </p>
       </div>
+    </div>
+  );
+};
+
+type DrillDownRoute = 'orders' | 'payments' | 'bookings' | 'users' | 'inventory';
+
+interface AvailableReportsListProps {
+  reports?: AvailableReport[];
+  route: DrillDownRoute;
+  className?: string;
+  title?: string;
+}
+
+export const AvailableReportsList: React.FC<AvailableReportsListProps> = ({
+  reports,
+  route,
+  className,
+  title = 'Available Reports',
+}) => {
+  const router = useRouter();
+  const items = reports ?? [];
+
+  const handleClick = (report: AvailableReport) => {
+    saveJsonItemToLocalStorage('reportFilter', {
+      reportType: report.reportType,
+      reportName: report.reportName,
+      route,
+    });
+    if (route === 'inventory') {
+      notify({
+        title: 'Coming soon',
+        text: 'Inventory drill-down report is being prepared',
+        type: 'warning',
+      });
+      return;
+    }
+    router.push(`/dashboard/reports/${route}`);
+  };
+
+  return (
+    <div
+      className={`bg-white border border-gray-100 rounded-2xl shadow-sm p-5 ${
+        className ?? ''
+      }`}
+    >
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">{title}</h3>
+      {items.length === 0 ? (
+        <p className="text-sm text-gray-500 py-4 text-center">
+          No reports available
+        </p>
+      ) : (
+        <div className="divide-y divide-gray-100">
+          {items.map((report) => (
+            <button
+              key={`${report.reportType}-${report.reportName}`}
+              type="button"
+              onClick={() => handleClick(report)}
+              className="w-full flex items-center justify-between py-3 text-sm text-gray-700 hover:text-primaryColor transition-colors text-left"
+            >
+              <span>{report.reportName}</span>
+              <IoIosArrowForward className="text-gray-400 shrink-0" />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

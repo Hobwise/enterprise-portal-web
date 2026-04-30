@@ -90,6 +90,7 @@ export type InventoryItem = {
   stocks: any[];
   recipe?: any;
   units?: any[];
+  expiryDate?: string | null;
   dateCreated: string;
   dateUpdated: string;
 };
@@ -150,6 +151,7 @@ export type CreateInventoryPayload = {
   allowTracking: boolean;
   unitId: string;
   supplierId?: string;
+  expiryDate?: string | null;
 };
 
 export type InventoryItemsResponse = {
