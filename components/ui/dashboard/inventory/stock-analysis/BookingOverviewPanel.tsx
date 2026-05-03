@@ -3,6 +3,7 @@
 import React from 'react';
 import moment from 'moment';
 import { Skeleton } from '@nextui-org/react';
+import { formatPrice } from '@/lib/utils';
 import {
   AvailableReportsList,
   BarList,
@@ -10,16 +11,23 @@ import {
   StatCards,
 } from './SharedPanels';
 import {
+  AvailableReport,
   BarRow,
   BookingDetailsSection,
   BreakdownRow,
+  PartitionPoint,
   StatCard,
 } from './types';
 
 interface BookingOverviewPanelProps {
-  data?: BookingDetailsSection;
+  data?: BookingDetailsSection | null;
   isLoading?: boolean;
 }
+
+const safeNumber = (value: unknown): number => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
 
 export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
   data,
@@ -38,82 +46,102 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
     );
   }
 
+  const percentageChange = data.percentageChange ?? '0';
   const direction: StatCard['direction'] =
-    Number(data.percentageChange) > 0
+    safeNumber(percentageChange) > 0
       ? 'up'
-      : Number(data.percentageChange) < 0
+      : safeNumber(percentageChange) < 0
       ? 'down'
       : 'neutral';
 
+  const allBookings = safeNumber(data.allBookingCount);
+  const cancelledCount = safeNumber(data.cancelledBookingCount);
+  const averageBookingFee = safeNumber(data.averageBookingFee);
+  const uniqueGuests = safeNumber(data.uniqueGuests);
+
+  const formatChange = (value: string | undefined, suffix: string = '') => {
+    const n = safeNumber(value);
+    const sign = n > 0 ? '+' : '';
+    return `${sign}${n}% from yesterday${suffix}`;
+  };
+
   const stats: StatCard[] = [
     {
-      label: 'All Bookings',
-      value: String(data.allBookingCount ?? 0),
-      delta: `${data.percentageChange}% change`,
+      label: 'Total Bookings',
+      value: allBookings.toLocaleString(),
+      delta: formatChange(percentageChange),
       direction,
     },
     {
-      label: 'Completed',
-      value: String(data.completedBookingCount ?? 0),
-      footer: 'Successfully fulfilled',
-      footerTone: 'success',
-    },
-    {
       label: 'Confirmed',
-      value: String(data.confirmedBookingCount ?? 0),
+      value: safeNumber(data.confirmedBookingCount).toLocaleString(),
       footer: 'Awaiting check-in',
       footerTone: 'muted',
     },
     {
-      label: 'Cancelled',
-      value: String(data.cancelledBookingCount ?? 0),
-      footer:
-        data.cancelledBookingCount > 0
-          ? 'Review cancellation reasons'
-          : 'No cancellations',
-      footerTone: data.cancelledBookingCount > 0 ? 'danger' : 'muted',
+      label: 'Average Booking Fee',
+      value: formatPrice(averageBookingFee, 'NGN'),
+      footer: 'Per booking',
+      footerTone: 'muted',
+    },
+    {
+      label: 'Unique Guests',
+      value: uniqueGuests.toLocaleString(),
+      footer: 'In period',
+      footerTone: 'muted',
     },
   ];
 
+  const peakDay = data.dayWithHighestBooking ?? null;
+  const peakDayDateTime = peakDay?.dateTime ?? null;
+  const peakDayCount = safeNumber(peakDay?.count);
+
   const breakdownRows: BreakdownRow[] = [
-    { label: 'Pending', value: data.pendingBookingCount ?? 0 },
-    { label: 'Admitted', value: data.admittedBookingCount ?? 0 },
-    { label: 'Failed', value: data.failedBookingCount ?? 0 },
-    { label: 'Expired', value: data.expiredBookingCount ?? 0 },
+    { label: 'Pending', value: safeNumber(data.pendingBookingCount) },
+    { label: 'Completed', value: safeNumber(data.completedBookingCount) },
+    { label: 'Admitted', value: safeNumber(data.admittedBookingCount) },
+    { label: 'Cancelled', value: cancelledCount },
+    { label: 'Failed', value: safeNumber(data.failedBookingCount) },
     {
-      label: 'Peak Day',
-      value: data.dayWithHighestBooking?.dateTime
-        ? `${moment(data.dayWithHighestBooking.dateTime).format('ll')} (${
-            data.dayWithHighestBooking.count ?? 0
-          })`
+      label: 'Pick Day',
+      value: peakDayDateTime
+        ? `${moment(peakDayDateTime).format('ddd DD')}, (${peakDayCount})`
         : '—',
     },
   ];
 
-  const partitionRows: BarRow[] = (data.bookingPartitions ?? []).map((p) => ({
-    label: p.partitionName,
-    value: p.count ?? 0,
+  const partitions: PartitionPoint[] = Array.isArray(data.bookingPartitions)
+    ? data.bookingPartitions
+    : [];
+  const partitionRows: BarRow[] = partitions.map((p) => ({
+    label: p?.partitionName ?? 'Unknown',
+    value: safeNumber(p?.count),
     suffix: ' Bookings',
   }));
+
+  const reports: AvailableReport[] = Array.isArray(data.availableReport)
+    ? data.availableReport
+    : [];
 
   return (
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <BarList
-          title="Bookings by Time of Day"
+          title="Daily Bookings"
           rows={partitionRows}
           className="lg:col-span-3"
           max={Math.max(...partitionRows.map((r) => r.value), 1)}
+          valueFormatter={(r) => `${r.value.toLocaleString()} Bookings`}
         />
         <BreakdownList
-          title="Status Breakdown"
+          title="Booking Status Breakdown"
           rows={breakdownRows}
           className="lg:col-span-2"
         />
       </div>
       <AvailableReportsList
-        reports={data.availableReport}
+        reports={reports}
         route="bookings"
         title="Available Booking Reports"
       />

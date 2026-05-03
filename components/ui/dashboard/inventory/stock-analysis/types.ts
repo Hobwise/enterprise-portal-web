@@ -7,7 +7,7 @@ export type ModuleId =
   | 'campaigns'
   | 'users';
 
-export type PeriodId = 'today' | 'week' | 'year' | 'all';
+export type PeriodId = 'today' | 'week' | 'year';
 
 export interface StatCard {
   label: string;
@@ -36,7 +36,6 @@ export const FilterType = {
   Weekly: 1,
   Yearly: 2,
   Custom: 3,
-  All: 4,
 } as const;
 
 export type FilterTypeValue = (typeof FilterType)[keyof typeof FilterType];
@@ -49,11 +48,43 @@ export const periodToFilterType = (period: PeriodId): FilterTypeValue => {
       return FilterType.Weekly;
     case 'year':
       return FilterType.Yearly;
-    case 'all':
-      return FilterType.All;
     default:
       return FilterType.Daily;
   }
+};
+
+const startOfDay = (d: Date): Date =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
+
+const endOfDay = (d: Date): Date =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+export const periodToDateRange = (
+  period: PeriodId
+): { startDate: string; endDate: string } => {
+  const now = new Date();
+  let start: Date;
+  const end: Date = endOfDay(now);
+
+  switch (period) {
+    case 'today':
+      start = startOfDay(now);
+      break;
+    case 'week': {
+      const day = now.getDay();
+      const diffToMonday = (day + 6) % 7;
+      start = startOfDay(
+        new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMonday)
+      );
+      break;
+    }
+    case 'year':
+      start = startOfDay(new Date(now.getFullYear(), 0, 1));
+      break;
+    default:
+      start = startOfDay(now);
+  }
+  return { startDate: start.toISOString(), endDate: end.toISOString() };
 };
 
 export interface AvailableReport {
@@ -72,14 +103,28 @@ export interface DayPoint<T> {
   amount?: T | null;
 }
 
+export interface PaymentMethodBreakdownItem {
+  method: string;
+  count: number;
+  amount: number;
+  sharePct: number;
+}
+
 export interface PaymentDetailsSection {
   totalAmount: number;
   confirmedAmount: number;
   pendingAmount: number;
   percentageChange: string;
+  averageTransactionAmount?: number;
+  collectionRate?: number;
+  refundRate?: number;
+  topPaymentMethod?: string | null;
+  topPaymentMethodAmount?: number;
+  outstandingAmount?: number;
   dayWithHighestPayment: { dateTime: string | null; amount: number | null };
   availableReport: AvailableReport[];
   paymentPartitions: PartitionPoint[];
+  paymentMethodBreakdown?: PaymentMethodBreakdownItem[];
 }
 
 export interface BookingDetailsSection {
@@ -92,6 +137,12 @@ export interface BookingDetailsSection {
   failedBookingCount: number;
   expiredBookingCount: number;
   percentageChange: string;
+  averageBookingFee?: number;
+  cancellationRate?: number;
+  avgLeadTimeDays?: number;
+  peakDayOfWeek?: string | null;
+  repeatGuestRate?: number;
+  uniqueGuests?: number;
   dayWithHighestBooking: { dateTime: string | null; count: number | null };
   availableReport: AvailableReport[];
   bookingPartitions: PartitionPoint[];
@@ -104,6 +155,13 @@ export interface OrderDetailsSection {
   cancelledOrdersCount: number;
   awaitingConfirmationOrdersCount: number;
   percentageChange: string;
+  averageOrderValue?: number;
+  avgOrdersPerDay?: number;
+  completionRate?: number;
+  cancellationRate?: number;
+  peakHour?: string | null;
+  repeatCustomerRate?: number;
+  uniqueCustomers?: number;
   dayWithHighestOrder: { dateTime: string | null; count: number | null };
   availableReport: AvailableReport[];
   orderPartitions: PartitionPoint[];
@@ -118,6 +176,10 @@ export interface MostActiveUser {
 export interface AuditDetailsSection {
   totalUsersCount: number;
   totalActivitiesCount: number;
+  averageActivitiesPerUser?: number;
+  activeDaysInPeriod?: number;
+  peakActivityHour?: number | null;
+  failedActivityRate?: number;
   mostActiveUser: MostActiveUser | null;
   availableReport: AvailableReport[];
 }
@@ -153,6 +215,295 @@ export interface InventoryDetailsSection {
   topMovers: MoverItem[];
   slowMovers: MoverItem[];
   availableReport: AvailableReport[];
+}
+
+export interface OrderReportItem {
+  customerName: string;
+  customerPhoneNumber: string;
+  orderId: string;
+  treatedBy: string | null;
+  totalAmount: string;
+  comment: string;
+  quickResponseName: string;
+  paymentMethod: string;
+  paymentReference: string | null;
+  orderStatus: string;
+  dateCreated: string;
+}
+
+export interface PopularItem {
+  itemName: string;
+  menuName: string;
+  isCurrentlyAvailable: boolean;
+  dateCreated: string;
+  totalQuantitySold: number;
+  currentPrice: string;
+  netSalesAmount: string;
+  totalPackagingAmount: string;
+  grossSalesAmount: string;
+}
+
+export interface EmployeeOrderItem {
+  firstName: string;
+  lastName: string;
+  emailAddress: string;
+  numberOfOrders: number;
+  pendingSales: string;
+  confirmedSales: string;
+  totalSales: string;
+  dateUpdated: string;
+}
+
+export interface CategoryPerformanceItem {
+  categoryName: string;
+  totalOrders: number;
+  totalItemsSold: number;
+  totalAmount: string;
+  percentageOfTotalSales: string;
+}
+
+export interface OrderPaymentItem {
+  orderId: string;
+  orderDate: string;
+  customer: string;
+  orderTotal: string;
+  totalPaid: string;
+  totalRefunded: string;
+  outstanding: string;
+  paymentStatus: string;
+  orderStatus: string;
+}
+
+export interface OrderReportResponse {
+  orders?: OrderReportItem[] | EmployeeOrderItem[];
+  items?: PopularItem[];
+  categories?: CategoryPerformanceItem[];
+  orderPayments?: OrderPaymentItem[];
+  lastRecordDateTime: string | null;
+  hasExceededMaximumCount: boolean;
+  message: string | null;
+  availableReport: AvailableReport[];
+}
+
+export interface OrderReportPayload {
+  filterType: number;
+  startDate?: string;
+  endDate?: string;
+  reportType?: number;
+  paymentMethod?: number;
+  status?: number;
+}
+
+export interface PaymentReportItem {
+  customer: string;
+  orderId: string;
+  treatedBy: string | null;
+  totalAmount: string;
+  quickResponseName: string;
+  paymentMethod: string;
+  paymentDirection: string;
+  paymentType: string;
+  paymentReference: string;
+  confirmedBy: string;
+  status: string;
+  dateCreated: string;
+}
+
+export interface PaymentMethodSummary {
+  paymentMethod: string;
+  numberOfPayments: number;
+  creditCount: number;
+  debitCount: number;
+  totalCredits: string;
+  totalDebits: string;
+  netAmountProcessed: string;
+  lastRecordDateTime: string;
+}
+
+export interface QrRevenueItem {
+  quickResponseName: string;
+  numberOfOrders: number;
+  pendingSalesAmount: string;
+  confirmedSalesAmount: string;
+  totalSalesAmount: string;
+  totalRefundAmount: string;
+  grossSalesAmount: string;
+  dateUpdated: string;
+}
+
+export interface NetRevenueItem {
+  period: string;
+  netRevenue: string;
+  lastRecordDate: string;
+}
+
+export interface OutstandingReceivableItem {
+  orderId: string;
+  customer: string;
+  treatedBy: string | null;
+  orderTotal: string;
+  paidSoFar: string;
+  outstanding: string;
+  orderDate: string;
+  lastRecordDate: string;
+}
+
+export interface PaymentReportResponse {
+  payments?: PaymentReportItem[] | PaymentMethodSummary[];
+  qrOrders?: QrRevenueItem[];
+  netRevenues?: NetRevenueItem[];
+  outstandingReceivables?: OutstandingReceivableItem[];
+  lastRecordDateTime: string | null;
+  hasExceededMaximumCount: boolean;
+  message: string | null;
+  availableReport: AvailableReport[];
+}
+
+export interface PaymentReportPayload {
+  filterType: number;
+  startDate?: string;
+  endDate?: string;
+  reportType?: number;
+  paymentMethod?: number;
+  status?: number;
+}
+
+export interface BookingReportItem {
+  firstName: string;
+  lastName: string;
+  emailAddress: string;
+  phoneNumber: string;
+  reference: string | null;
+  statusComment: string | null;
+  bookingFee: string;
+  minimumSpend: string;
+  checkInDateTime: string;
+  checkOutDateTime: string;
+  bookingDateTime: string;
+  numberOfGuest: number;
+  bookingStatus: string;
+  dateCreated: string;
+}
+
+export interface ReservationBookingItem {
+  reservationName: string;
+  totalBookingFee: string;
+  totalBookings: number;
+  dateUpdated: string;
+}
+
+export interface DailyOccupancyUtilizationItem {
+  reservationName: string;
+  reservationCapacity: number;
+  totalBookings: number;
+  unusedCapacity: number;
+  occupancyRate: string;
+  averageDailyUtilization: number;
+  lastRecordDateTime: string;
+}
+
+export interface BookingReportResponse {
+  bookings?: BookingReportItem[];
+  reservationBookings?: ReservationBookingItem[];
+  dailyOccupancyUtilizations?: DailyOccupancyUtilizationItem[];
+  lastRecordDateTime: string | null;
+  hasExceededMaximumCount: boolean;
+  message: string | null;
+  availableReport: AvailableReport[];
+}
+
+export interface BookingReportPayload {
+  filterType: number;
+  startDate?: string;
+  endDate?: string;
+  reportType?: number;
+  bookingStatus?: number;
+}
+
+export interface InventoryReportItem {
+  itemName: string;
+  itemType: string;
+  supplierName: string | null;
+  unitName: string;
+  quantityOnHand: number;
+  reorderLevel: number;
+  averageCostPerUnit: number;
+  stockValue: number;
+  daysUntilStockout: number | null;
+  status: string;
+  lastRestocked: string | null;
+  expiryDate: string | null;
+}
+
+export interface InventoryReportPayload {
+  filterType: number;
+  startDate?: string;
+  endDate?: string;
+  reportType?: number;
+  inventoryItemId?: string;
+  categoryId?: string;
+  supplierId?: string;
+}
+
+export interface StockMovementItem {
+  dateCreated: string;
+  itemName: string;
+  movementType: string;
+  transactionType: string;
+  quantityChange: number;
+  costPerUnit: number;
+  value: number;
+  unitName: string;
+  reason: string;
+  performedBy: string;
+}
+
+export interface PurchaseAdjustmentItem {
+  date: string;
+  itemName: string;
+  quantityWasted: number;
+  costImpact: number;
+  adjustmentType: string;
+  reason: string;
+  performedBy: string;
+}
+
+export interface UserAuditLogItem {
+  userName: string;
+  emailAddress: string;
+  activity: string;
+  role: string;
+  activityType: string;
+  ipAddress: string | null;
+  isSuccessful: boolean;
+  dateCreated: string;
+}
+
+export interface UserDailyActivePeriod {
+  date: string;
+  fullName: string;
+  emailAddress: string;
+  firstLoginTime: string;
+  lastSeenTime: string;
+  activePeriod: string;
+  dateCreated: string;
+}
+
+export interface UserReportResponse {
+  auditLogs?: UserAuditLogItem[] | null;
+  userDailyActivePeriods?: UserDailyActivePeriod[] | null;
+  lastRecordDateTime: string | null;
+  hasExceededMaximumCount: boolean;
+  message: string | null;
+  availableReport: AvailableReport[];
+}
+
+export interface UserReportPayload {
+  filterType: number;
+  startDate?: string;
+  endDate?: string;
+  reportType?: number;
+  emailAddress?: string;
 }
 
 export interface ReportSummary {

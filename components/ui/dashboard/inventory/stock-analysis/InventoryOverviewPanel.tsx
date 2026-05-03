@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import moment from 'moment';
 import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
 import {
@@ -23,9 +22,14 @@ interface InventoryOverviewPanelProps {
   isLoading?: boolean;
 }
 
+const safeNumber = (value: unknown): number => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
+
 const moverToBarRow = (mover: MoverItem): BarRow => ({
   label: mover.name ?? mover.itemName ?? 'Unknown',
-  value: mover.qty ?? mover.quantity ?? mover.movement ?? mover.value ?? 0,
+  value: safeNumber(mover.qty ?? mover.quantity ?? mover.movement ?? mover.value),
 });
 
 export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
@@ -40,69 +44,72 @@ export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
             <Skeleton key={i} className="h-28 rounded-2xl" />
           ))}
         </div>
-        <Skeleton className="h-64 rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <Skeleton className="h-72 rounded-2xl" />
+          <Skeleton className="h-72 rounded-2xl" />
+        </div>
       </div>
     );
   }
 
-  const stockValueDirection: StatCard['direction'] =
-    Number(data.stockValuePercentageChange) > 0
-      ? 'up'
-      : Number(data.stockValuePercentageChange) < 0
-      ? 'down'
-      : 'neutral';
+  const totalStockValue = safeNumber(data.totalStockValue);
+  const itemsBelowReorder = safeNumber(data.itemsBelowReorder);
+  const itemsOutOfStock = safeNumber(data.itemsOutOfStock);
+  const stockTurnoverRate = safeNumber(data.stockTurnoverRate);
+  const wastageCost = safeNumber(data.wastageCost);
 
-  const wastageDirection: StatCard['direction'] =
-    Number(data.wastagePercentageChange) > 0
-      ? 'up'
-      : Number(data.wastagePercentageChange) < 0
-      ? 'down'
-      : 'neutral';
+  const stockChange = safeNumber(data.stockValuePercentageChange);
+  const stockDirection: StatCard['direction'] =
+    stockChange > 0 ? 'up' : stockChange < 0 ? 'down' : 'neutral';
 
   const stats: StatCard[] = [
     {
       label: 'Total Stock Value',
-      value: formatPrice(data.totalStockValue ?? 0, 'NGN'),
-      delta: `${data.stockValuePercentageChange}% change`,
-      direction: stockValueDirection,
+      value: formatPrice(totalStockValue, 'NGN'),
+      delta: `${stockChange > 0 ? '+' : ''}${stockChange}% from yesterday`,
+      direction: stockDirection,
     },
     {
-      label: 'Items Below Reorder',
-      value: String(data.itemsBelowReorder ?? 0),
-      footer: 'Restock recommended',
-      footerTone: data.itemsBelowReorder > 0 ? 'warning' : 'muted',
+      label: 'Low Stock',
+      value: itemsBelowReorder.toLocaleString(),
+      footer: itemsBelowReorder > 0 ? 'Reorder Required' : 'All stocked',
+      footerTone: itemsBelowReorder > 0 ? 'warning' : 'muted',
     },
     {
-      label: 'Items Out of Stock',
-      value: String(data.itemsOutOfStock ?? 0),
-      footer: 'Currently unavailable',
-      footerTone: data.itemsOutOfStock > 0 ? 'danger' : 'muted',
+      label: 'Out of Stock',
+      value: itemsOutOfStock.toLocaleString(),
+      footer: itemsOutOfStock > 0 ? 'Immediate Action' : 'No items out',
+      footerTone: itemsOutOfStock > 0 ? 'danger' : 'muted',
     },
     {
       label: 'Total COGS',
-      value: formatPrice(data.totalCogs ?? 0, 'NGN'),
+      value: formatPrice(safeNumber(data.totalCogs), 'NGN'),
       footer: 'Cost of goods sold',
       footerTone: 'muted',
     },
   ];
 
+  const wastageChange = safeNumber(data.wastagePercentageChange);
+  const wastageDirection: StatCard['direction'] =
+    wastageChange > 0 ? 'up' : wastageChange < 0 ? 'down' : 'neutral';
+
   const breakdownRows: BreakdownRow[] = [
     {
       label: 'Stock Turnover Rate',
-      value: data.stockTurnoverRate ?? 0,
+      value: stockTurnoverRate,
     },
     {
       label: 'Days of Inventory On Hand',
-      value: data.daysOfInventoryOnHand ?? 0,
+      value: safeNumber(data.daysOfInventoryOnHand),
     },
     {
       label: 'Wastage Cost',
-      value: formatPrice(data.wastageCost ?? 0, 'NGN'),
-      valueClass: 'text-red-500',
+      value: formatPrice(wastageCost, 'NGN'),
+      valueClass: wastageCost > 0 ? 'text-red-500' : 'text-gray-500',
     },
     {
       label: 'Wastage % Change',
-      value: `${data.wastagePercentageChange ?? 0}%`,
+      value: `${wastageChange}%`,
       valueClass:
         wastageDirection === 'down'
           ? 'text-emerald-600'
@@ -127,7 +134,7 @@ export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
             valueFormatter={(r) => `${r.value.toLocaleString()} units`}
           />
         ) : (
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 lg:col-span-3 flex items-center justify-center min-h-[180px]">
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 lg:col-span-3 flex items-center justify-center min-h-[200px]">
             <p className="text-sm text-gray-500">No top movers in this period</p>
           </div>
         )}

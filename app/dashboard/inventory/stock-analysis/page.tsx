@@ -25,10 +25,7 @@ import {
 import { TbReportSearch } from 'react-icons/tb';
 import { LuFileBarChart, LuPackage } from 'react-icons/lu';
 import { FaRegCalendarCheck } from 'react-icons/fa';
-import {
-  formatDateTimeForPayload2,
-  getJsonItemFromLocalStorage,
-} from '@/lib/utils';
+import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { SalesOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SalesPanels';
 import { ComingSoonPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SharedPanels';
 import { InventoryOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/InventoryOverviewPanel';
@@ -36,13 +33,55 @@ import { PaymentOverviewPanel } from '@/components/ui/dashboard/inventory/stock-
 import { BookingOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/BookingOverviewPanel';
 import { UserAuditOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/UserAuditOverviewPanel';
 import {
+  CategoryPerformancePanel,
+  EmployeePerformancePanel,
+  OrderPaymentSummaryPanel,
+  OrdersVolumesPanel,
+  PopularItemsPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/SalesSubTabs';
+import {
+  NetRevenueSubPanel,
+  OutstandingReceivablesSubPanel,
+  PaymentMethodsSubPanel,
+  PaymentSummarySubPanel,
+  QrRevenueSubPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/PaymentSubTabs';
+import {
+  BookingSummaryPanel,
+  OccupancyUtilizationPanel,
+  ReservationSummaryPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/BookingSubTabs';
+import {
+  QrDetailsPanel,
+  QrOverviewPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/QrPanels';
+import {
+  PurchaseOrderPanel,
+  StockLevelPanel,
+  StockTransferPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/InventorySubTabs';
+import {
+  ActivityAuditPanel,
+  DailySessionsPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/UserSubTabs';
+import {
+  BookingReportResponse,
   FilterType,
   ModuleId,
+  OrderReportResponse,
+  PaymentReportResponse,
   PeriodId,
   ReportSummary,
+  UserReportResponse,
+  periodToDateRange,
   periodToFilterType,
 } from '@/components/ui/dashboard/inventory/stock-analysis/types';
 import useStockAnalysisSummary from '@/hooks/cachedEndpoints/useStockAnalysisSummary';
+import useStockAnalysisOrderReport from '@/hooks/cachedEndpoints/useStockAnalysisOrderReport';
+import useStockAnalysisPaymentReport from '@/hooks/cachedEndpoints/useStockAnalysisPaymentReport';
+import useStockAnalysisBookingReport from '@/hooks/cachedEndpoints/useStockAnalysisBookingReport';
+import useStockAnalysisInventoryReport from '@/hooks/cachedEndpoints/useStockAnalysisInventoryReport';
+import useStockAnalysisUserReport from '@/hooks/cachedEndpoints/useStockAnalysisUserReport';
 
 interface ModuleTab {
   id: ModuleId;
@@ -228,8 +267,88 @@ const PERIODS: { id: PeriodId; label: string }[] = [
   { id: 'today', label: 'Today' },
   { id: 'week', label: 'This week' },
   { id: 'year', label: 'Year' },
-  { id: 'all', label: 'All' },
 ];
+
+const SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
+  'order-volumes': 0,
+  'popular-items': 1,
+  'employee-performance': 3,
+  'category-performance': 14,
+  'order-payment-summary': 15,
+};
+
+const PAYMENT_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
+  'payment-summary': 4,
+  'payment-methods': 5,
+  'qr-revenue': 6,
+  'net-revenue': 19,
+  'outstanding-receivables': 20,
+};
+
+const BOOKING_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
+  'booking-summary': 7,
+  'reservation-summary': 8,
+  'occupancy-utilization': 10,
+};
+
+const INVENTORY_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
+  'stock-level': 21,
+  'stock-transfer': 22,
+  'purchase-order': 23,
+};
+
+const USER_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
+  'activity-audit': 11,
+  'daily-sessions': 12,
+};
+
+interface PanelErrorBoundaryState {
+  hasError: boolean;
+}
+
+class PanelErrorBoundary extends React.Component<
+  { children: React.ReactNode; resetKey?: string },
+  PanelErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode; resetKey?: string }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(): PanelErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidUpdate(prevProps: { resetKey?: string }) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  componentDidCatch(error: Error) {
+    if (typeof window !== 'undefined') {
+      console.error('Stock analysis panel error:', error);
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm py-16 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2 text-center px-6">
+            <h3 className="text-base font-semibold text-gray-700">
+              Unable to load this report
+            </h3>
+            <p className="text-sm text-gray-500">
+              Please try a different period or come back later.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const StockAnalysisPage: React.FC = () => {
   const router = useRouter();
@@ -265,10 +384,10 @@ const StockAnalysisPage: React.FC = () => {
     ? FilterType.Custom
     : periodToFilterType(activePeriod);
   const startDate = hasCustomRange
-    ? `${formatDateTimeForPayload2(customStart)}Z`
+    ? new Date(`${customStart}T00:00:00`).toISOString()
     : undefined;
   const endDate = hasCustomRange
-    ? `${formatDateTimeForPayload2(customEnd)}Z`
+    ? new Date(`${customEnd}T23:59:59.999`).toISOString()
     : undefined;
 
   const { data: summary, isLoading: summaryLoading } = useStockAnalysisSummary(
@@ -277,6 +396,98 @@ const StockAnalysisPage: React.FC = () => {
     endDate,
     { enabled: hasAccess }
   );
+
+  const subTabReportType = SUB_TAB_REPORT_TYPE[activeSubTab];
+  const orderReportEnabled =
+    hasAccess &&
+    ((activeModule === 'sales' &&
+      activeSubTab !== 'overview' &&
+      subTabReportType !== undefined) ||
+      activeModule === 'qr');
+
+  const { data: orderReport, isLoading: orderReportLoading } =
+    useStockAnalysisOrderReport(
+      {
+        filterType,
+        startDate,
+        endDate,
+        reportType: subTabReportType,
+      },
+      { enabled: orderReportEnabled }
+    );
+
+  const paymentSubTabReportType = PAYMENT_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const paymentReportEnabled =
+    hasAccess &&
+    activeModule === 'payments' &&
+    activeSubTab !== 'overview' &&
+    paymentSubTabReportType !== undefined;
+
+  const { data: paymentReport, isLoading: paymentReportLoading } =
+    useStockAnalysisPaymentReport(
+      {
+        filterType,
+        startDate,
+        endDate,
+        reportType: paymentSubTabReportType,
+      },
+      { enabled: paymentReportEnabled }
+    );
+
+  const bookingSubTabReportType = BOOKING_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const bookingReportEnabled =
+    hasAccess &&
+    activeModule === 'bookings' &&
+    activeSubTab !== 'overview' &&
+    bookingSubTabReportType !== undefined;
+
+  const { data: bookingReport, isLoading: bookingReportLoading } =
+    useStockAnalysisBookingReport(
+      {
+        filterType,
+        startDate,
+        endDate,
+        reportType: bookingSubTabReportType,
+      },
+      { enabled: bookingReportEnabled }
+    );
+
+  const inventorySubTabReportType =
+    INVENTORY_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const inventoryReportEnabled =
+    hasAccess &&
+    activeModule === 'inventory' &&
+    activeSubTab !== 'overview' &&
+    inventorySubTabReportType !== undefined;
+
+  const { data: inventoryReport, isLoading: inventoryReportLoading } =
+    useStockAnalysisInventoryReport(
+      {
+        filterType,
+        startDate,
+        endDate,
+        reportType: inventorySubTabReportType,
+      },
+      { enabled: inventoryReportEnabled }
+    );
+
+  const userSubTabReportType = USER_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const userReportEnabled =
+    hasAccess &&
+    activeModule === 'users' &&
+    activeSubTab !== 'overview' &&
+    userSubTabReportType !== undefined;
+
+  const { data: userReport, isLoading: userReportLoading } =
+    useStockAnalysisUserReport(
+      {
+        filterType,
+        startDate,
+        endDate,
+        reportType: userSubTabReportType,
+      },
+      { enabled: userReportEnabled }
+    );
 
   if (!hasAccess) {
     return null;
@@ -337,7 +548,11 @@ const StockAnalysisPage: React.FC = () => {
               <button
                 key={p.id}
                 type="button"
-                onClick={() => setActivePeriod(p.id)}
+                onClick={() => {
+                  setActivePeriod(p.id);
+                  setCustomStart('');
+                  setCustomEnd('');
+                }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
                   isActive
                     ? 'bg-primaryColor text-white border-primaryColor'
@@ -354,6 +569,7 @@ const StockAnalysisPage: React.FC = () => {
           <input
             type="date"
             value={customStart}
+            placeholder="dd / mm / yyyy"
             onChange={(e) => setCustomStart(e.target.value)}
             className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-primaryColor"
           />
@@ -361,6 +577,7 @@ const StockAnalysisPage: React.FC = () => {
           <input
             type="date"
             value={customEnd}
+            placeholder="dd / mm / yyyy"
             onChange={(e) => setCustomEnd(e.target.value)}
             className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-primaryColor"
           />
@@ -368,12 +585,24 @@ const StockAnalysisPage: React.FC = () => {
       </div>
 
       {/* Active panel */}
-      <ActivePanel
-        moduleId={activeModule}
-        subTabId={activeSubTab}
-        summary={summary}
-        isLoading={summaryLoading}
-      />
+      <PanelErrorBoundary resetKey={`${activeModule}:${activeSubTab}`}>
+        <ActivePanel
+          moduleId={activeModule}
+          subTabId={activeSubTab}
+          summary={summary}
+          isLoading={summaryLoading}
+          orderReport={orderReport}
+          orderReportLoading={orderReportLoading}
+          paymentReport={paymentReport}
+          paymentReportLoading={paymentReportLoading}
+          bookingReport={bookingReport}
+          bookingReportLoading={bookingReportLoading}
+          inventoryReport={inventoryReport}
+          inventoryReportLoading={inventoryReportLoading}
+          userReport={userReport}
+          userReportLoading={userReportLoading}
+        />
+      </PanelErrorBoundary>
     </div>
   );
 };
@@ -494,6 +723,16 @@ interface ActivePanelProps {
   subTabId: string;
   summary?: ReportSummary;
   isLoading?: boolean;
+  orderReport?: OrderReportResponse;
+  orderReportLoading?: boolean;
+  paymentReport?: PaymentReportResponse;
+  paymentReportLoading?: boolean;
+  bookingReport?: BookingReportResponse;
+  bookingReportLoading?: boolean;
+  inventoryReport?: unknown[];
+  inventoryReportLoading?: boolean;
+  userReport?: UserReportResponse;
+  userReportLoading?: boolean;
 }
 
 const ActivePanel: React.FC<ActivePanelProps> = ({
@@ -501,6 +740,16 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
   subTabId,
   summary,
   isLoading,
+  orderReport,
+  orderReportLoading,
+  paymentReport,
+  paymentReportLoading,
+  bookingReport,
+  bookingReportLoading,
+  inventoryReport,
+  inventoryReportLoading,
+  userReport,
+  userReportLoading,
 }) => {
   if (moduleId === 'sales') {
     if (subTabId === 'overview') {
@@ -511,7 +760,112 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         />
       );
     }
-    return <ComingSoonPanel />;
+    const subTabProps = {
+      data: orderReport,
+      isLoading: orderReportLoading,
+    };
+    switch (subTabId) {
+      case 'order-volumes':
+        return <OrdersVolumesPanel {...subTabProps} />;
+      case 'popular-items':
+        return <PopularItemsPanel {...subTabProps} />;
+      case 'employee-performance':
+        return <EmployeePerformancePanel {...subTabProps} />;
+      case 'category-performance':
+        return <CategoryPerformancePanel {...subTabProps} />;
+      case 'order-payment-summary':
+        return <OrderPaymentSummaryPanel {...subTabProps} />;
+      default:
+        return <ComingSoonPanel />;
+    }
+  }
+
+  if (moduleId === 'payments' && subTabId !== 'overview') {
+    const paymentSubTabProps = {
+      data: paymentReport,
+      isLoading: paymentReportLoading,
+      reports:
+        paymentReport?.availableReport ??
+        summary?.paymentDetails?.availableReport,
+    };
+    switch (subTabId) {
+      case 'payment-summary':
+        return <PaymentSummarySubPanel {...paymentSubTabProps} />;
+      case 'payment-methods':
+        return <PaymentMethodsSubPanel {...paymentSubTabProps} />;
+      case 'qr-revenue':
+        return <QrRevenueSubPanel {...paymentSubTabProps} />;
+      case 'net-revenue':
+        return <NetRevenueSubPanel {...paymentSubTabProps} />;
+      case 'outstanding-receivables':
+        return <OutstandingReceivablesSubPanel {...paymentSubTabProps} />;
+      default:
+        return <ComingSoonPanel />;
+    }
+  }
+
+  if (moduleId === 'bookings' && subTabId !== 'overview') {
+    const bookingSubTabProps = {
+      data: bookingReport,
+      isLoading: bookingReportLoading,
+    };
+    switch (subTabId) {
+      case 'booking-summary':
+        return <BookingSummaryPanel {...bookingSubTabProps} />;
+      case 'reservation-summary':
+        return <ReservationSummaryPanel {...bookingSubTabProps} />;
+      case 'occupancy-utilization':
+        return <OccupancyUtilizationPanel {...bookingSubTabProps} />;
+      default:
+        return <ComingSoonPanel />;
+    }
+  }
+
+  if (moduleId === 'qr') {
+    const qrPanelProps = {
+      data: orderReport,
+      isLoading: orderReportLoading,
+    };
+    switch (subTabId) {
+      case 'overview':
+        return <QrOverviewPanel {...qrPanelProps} />;
+      case 'qr-details':
+        return <QrDetailsPanel {...qrPanelProps} />;
+      default:
+        return <ComingSoonPanel />;
+    }
+  }
+
+  if (moduleId === 'inventory' && subTabId !== 'overview') {
+    const inventorySubTabProps = {
+      data: inventoryReport,
+      isLoading: inventoryReportLoading,
+    };
+    switch (subTabId) {
+      case 'stock-level':
+        return <StockLevelPanel {...inventorySubTabProps} />;
+      case 'stock-transfer':
+        return <StockTransferPanel {...inventorySubTabProps} />;
+      case 'purchase-order':
+        return <PurchaseOrderPanel {...inventorySubTabProps} />;
+      default:
+        return <ComingSoonPanel />;
+    }
+  }
+
+  if (moduleId === 'users' && subTabId !== 'overview') {
+    const userSubTabProps = {
+      data: userReport,
+      isLoading: userReportLoading,
+    };
+    switch (subTabId) {
+      case 'activity-audit':
+        return <ActivityAuditPanel {...userSubTabProps} />;
+      case 'daily-sessions':
+        return <DailySessionsPanel {...userSubTabProps} />;
+      default:
+        return <ComingSoonPanel />;
+    }
   }
 
   if (subTabId === 'overview') {
