@@ -1,6 +1,16 @@
 import { DASHBOARD } from '../../api-url';
 import api, { handleError } from '../../apiService';
 
+const withDateRange = (
+  payload: Record<string, unknown>,
+  startDate?: string,
+  endDate?: string
+): Record<string, unknown> => {
+  if (startDate) payload.startDate = startDate;
+  if (endDate) payload.endDate = endDate;
+  return payload;
+};
+
 export async function getReport(
   businessId: string,
   filterType: number,
@@ -8,11 +18,11 @@ export async function getReport(
   endDate?: string
 ) {
   const headers = businessId ? { businessId } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-  };
+  const payload = withDateRange(
+    { filterType: filterType },
+    startDate,
+    endDate
+  );
 
   try {
     const data = await api.post(DASHBOARD.report, payload, {
@@ -30,16 +40,22 @@ export async function getReportOrder(
   startDate?: string,
   endDate?: string,
   reportType?: number,
-  emailAddress?: string
+  emailAddress?: string,
+  paymentMethod?: number,
+  status?: number
 ) {
   const headers = businessId ? { businessId } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    emailAddress: emailAddress,
-  };
+  const payload: Record<string, unknown> = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      emailAddress: emailAddress,
+    },
+    startDate,
+    endDate
+  );
+  if (paymentMethod !== undefined) payload.paymentMethod = paymentMethod;
+  if (status !== undefined) payload.status = status;
 
   try {
     const data = await api.post(DASHBOARD.reportOrder, payload, {
@@ -62,13 +78,15 @@ export async function getReportOrderExport(
   emailAddress?: string
 ) {
   const headers = businessId ? { businessId, exportType } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    emailAddress: emailAddress,
-  };
+  const payload = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      emailAddress: emailAddress,
+    },
+    startDate,
+    endDate
+  );
 
   try {
     const data = await api.post(DASHBOARD.reportOrderExport, payload, {
@@ -91,13 +109,15 @@ export async function getReportBookingExport(
   emailAddress?: string
 ) {
   const headers = businessId ? { businessId, exportType } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    emailAddress: emailAddress,
-  };
+  const payload = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      emailAddress: emailAddress,
+    },
+    startDate,
+    endDate
+  );
 
   try {
     const data = await api.post(DASHBOARD.reportBookingExport, payload, {
@@ -120,13 +140,15 @@ export async function getReportPaymentExport(
   emailAddress?: string
 ) {
   const headers = businessId ? { businessId, exportType } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    emailAddress: emailAddress,
-  };
+  const payload = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      emailAddress: emailAddress,
+    },
+    startDate,
+    endDate
+  );
 
   try {
     const data = await api.post(DASHBOARD.reportPaymentExport, payload, {
@@ -150,13 +172,15 @@ export async function getReportAuditLogExport(
   emailAddress?: string
 ) {
   const headers = businessId ? { businessId, exportType } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    emailAddress: emailAddress,
-  };
+  const payload = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      emailAddress: emailAddress,
+    },
+    startDate,
+    endDate
+  );
 
   try {
     const data = await api.post(DASHBOARD.reportAuditLogExport, payload, {
@@ -175,16 +199,22 @@ export async function getReportPayment(
   startDate?: string,
   endDate?: string,
   reportType?: number,
-  emailAddress?: string
+  emailAddress?: string,
+  paymentMethod?: number,
+  status?: number
 ) {
   const headers = businessId ? { businessId } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    emailAddress: emailAddress,
-  };
+  const payload: Record<string, unknown> = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      emailAddress: emailAddress,
+    },
+    startDate,
+    endDate
+  );
+  if (paymentMethod !== undefined) payload.paymentMethod = paymentMethod;
+  if (status !== undefined) payload.status = status;
 
   try {
     const data = await api.post(DASHBOARD.reportPayment, payload, {
@@ -202,16 +232,20 @@ export async function getReportBooking(
   startDate?: string,
   endDate?: string,
   reportType?: number,
-  emailAddress?: string
+  emailAddress?: string,
+  bookingStatus?: number
 ) {
   const headers = businessId ? { businessId } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    emailAddress: emailAddress,
-  };
+  const payload: Record<string, unknown> = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      emailAddress: emailAddress,
+    },
+    startDate,
+    endDate
+  );
+  if (bookingStatus !== undefined) payload.bookingStatus = bookingStatus;
 
   try {
     const data = await api.post(DASHBOARD.reportBooking, payload, {
@@ -232,13 +266,15 @@ export async function getReportAuditLog(
   emailAddress?: string
 ) {
   const headers = businessId ? { businessId } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    emailAddress: emailAddress,
-  };
+  const payload = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      emailAddress: emailAddress,
+    },
+    startDate,
+    endDate
+  );
 
   try {
     const data = await api.post(DASHBOARD.reportAuditLog, payload, {
@@ -262,15 +298,17 @@ export async function getReportInventory(
   supplierId?: string
 ) {
   const headers = businessId ? { businessId } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    inventoryItemId: inventoryItemId,
-    categoryId: categoryId,
-    supplierId: supplierId,
-  };
+  const payload = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      inventoryItemId: inventoryItemId,
+      categoryId: categoryId,
+      supplierId: supplierId,
+    },
+    startDate,
+    endDate
+  );
 
   try {
     const data = await api.post(DASHBOARD.reportInventory, payload, {
@@ -295,15 +333,17 @@ export async function getReportInventoryExport(
   supplierId?: string
 ) {
   const headers = businessId ? { businessId, exportType } : {};
-  const payload = {
-    startDate: startDate,
-    endDate: endDate,
-    filterType: filterType,
-    reportType: reportType,
-    inventoryItemId: inventoryItemId,
-    categoryId: categoryId,
-    supplierId: supplierId,
-  };
+  const payload = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+      inventoryItemId: inventoryItemId,
+      categoryId: categoryId,
+      supplierId: supplierId,
+    },
+    startDate,
+    endDate
+  );
 
   try {
     const data = await api.post(DASHBOARD.reportInventoryExport, payload, {

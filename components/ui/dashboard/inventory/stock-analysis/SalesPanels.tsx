@@ -4,18 +4,19 @@ import React from 'react';
 import moment from 'moment';
 import { Button, Chip, Skeleton } from '@nextui-org/react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
-import {
-  AvailableReportsList,
-  BarList,
-  BreakdownList,
-  StatCards,
-} from './SharedPanels';
+import { formatPrice } from '@/lib/utils';
+import { BarList, BreakdownList, StatCards } from './SharedPanels';
 import { BarRow, BreakdownRow, OrderDetailsSection, StatCard } from './types';
 
 interface SalesOverviewPanelProps {
   data?: OrderDetailsSection;
   isLoading?: boolean;
 }
+
+const safeNumber = (value: unknown): number => {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : 0;
+};
 
 export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
   data,
@@ -34,65 +35,72 @@ export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
     );
   }
 
+  const percentageChange = data.percentageChange ?? '0';
   const direction: StatCard['direction'] =
-    Number(data.percentageChange) > 0
+    safeNumber(percentageChange) > 0
       ? 'up'
-      : Number(data.percentageChange) < 0
+      : safeNumber(percentageChange) < 0
       ? 'down'
       : 'neutral';
 
+  const allOrders = safeNumber(data.allOrdersCount);
+  const averageOrderValue = safeNumber(data.averageOrderValue);
+  const uniqueCustomers = safeNumber(data.uniqueCustomers);
+
+  const formatChange = (value: string | undefined) => {
+    const n = safeNumber(value);
+    const sign = n > 0 ? '+' : '';
+    return `${sign}${n}% from yesterday`;
+  };
+
   const stats: StatCard[] = [
     {
-      label: 'All Orders',
-      value: String(data.allOrdersCount ?? 0),
-      delta: `${data.percentageChange}% change`,
+      label: 'Total Orders',
+      value: allOrders.toLocaleString(),
+      delta: formatChange(percentageChange),
       direction,
     },
     {
-      label: 'Open Orders',
-      value: String(data.openOrdersCount ?? 0),
-      footer: 'Currently active',
+      label: 'Average Order Amount',
+      value: formatPrice(averageOrderValue, 'NGN'),
+      footer: 'Per order',
       footerTone: 'muted',
     },
     {
-      label: 'Closed Orders',
-      value: String(data.closedOrdersCount ?? 0),
-      footer: 'Successfully fulfilled',
-      footerTone: 'success',
+      label: 'Avg Orders Per Day',
+      value: safeNumber(data.avgOrdersPerDay).toLocaleString(),
+      footer: 'Daily average',
+      footerTone: 'muted',
     },
     {
-      label: 'Cancelled Orders',
-      value: String(data.cancelledOrdersCount ?? 0),
-      footer:
-        data.cancelledOrdersCount > 0
-          ? 'Review cancellation reasons'
-          : 'No cancellations',
-      footerTone: data.cancelledOrdersCount > 0 ? 'danger' : 'muted',
+      label: 'Unique Customers',
+      value: uniqueCustomers.toLocaleString(),
+      footer: 'In period',
+      footerTone: 'muted',
     },
   ];
 
   const partitionRows: BarRow[] = (data.orderPartitions ?? []).map((p) => ({
     label: p.partitionName,
-    value: p.count ?? 0,
+    value: safeNumber(p.count),
     suffix: ' Orders',
   }));
 
+  const peakDay = data.dayWithHighestOrder?.dateTime
+    ? `${moment(data.dayWithHighestOrder.dateTime).format('ddd DD')}, (${
+        safeNumber(data.dayWithHighestOrder.count)
+      })`
+    : '—';
+
   const breakdownRows: BreakdownRow[] = [
-    { label: 'Open', value: data.openOrdersCount ?? 0 },
-    { label: 'Closed', value: data.closedOrdersCount ?? 0 },
+    { label: 'Open', value: safeNumber(data.openOrdersCount) },
+    { label: 'Closed', value: safeNumber(data.closedOrdersCount) },
     {
       label: 'Awaiting confirmation',
-      value: data.awaitingConfirmationOrdersCount ?? 0,
+      value: safeNumber(data.awaitingConfirmationOrdersCount),
     },
-    { label: 'Cancelled', value: data.cancelledOrdersCount ?? 0 },
-    {
-      label: 'Peak Day',
-      value: data.dayWithHighestOrder?.dateTime
-        ? `${moment(data.dayWithHighestOrder.dateTime).format('ll')} (${
-            data.dayWithHighestOrder.count ?? 0
-          })`
-        : '—',
-    },
+    { label: 'Cancellation', value: safeNumber(data.cancelledOrdersCount) },
+    { label: 'Pick Day', value: peakDay },
   ];
 
   return (
@@ -100,10 +108,11 @@ export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
       <StatCards cards={stats} />
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <BarList
-          title="Orders by Time of Day"
+          title="Daily Orders"
           rows={partitionRows}
           className="lg:col-span-3"
           max={Math.max(...partitionRows.map((r) => r.value), 1)}
+          valueFormatter={(r) => `${r.value.toLocaleString()} Orders`}
         />
         <BreakdownList
           title="Order Status Breakdown"
@@ -111,11 +120,6 @@ export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
           className="lg:col-span-2"
         />
       </div>
-      <AvailableReportsList
-        reports={data.availableReport}
-        route="orders"
-        title="Available Order Reports"
-      />
     </div>
   );
 };
