@@ -7,6 +7,7 @@ import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
 import { StatCards } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
+import { ExportType } from './exportHelpers';
 import {
   InventoryReportItem,
   PurchaseAdjustmentItem,
@@ -32,35 +33,48 @@ const formatNumber = (value: number): string => {
 interface InventorySubTabPanelProps {
   data?: unknown[];
   isLoading?: boolean;
+  onExport?: (exportType: number) => void | Promise<void>;
+  isExporting?: boolean;
 }
 
 interface ExportButtonsProps {
-  onExportCsv?: () => void;
+  onExportExcel?: () => void;
   onExportPdf?: () => void;
+  isLoading?: boolean;
 }
 
 const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportCsv,
+  onExportExcel,
   onExportPdf,
+  isLoading,
 }) => (
   <div className="flex items-center gap-2 px-5 py-4">
     <Button
       variant="bordered"
-      onPress={onExportCsv}
-      startContent={<FiDownload size={14} />}
+      onPress={onExportExcel}
+      isLoading={isLoading}
+      startContent={isLoading ? null : <FiDownload size={14} />}
       className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
     >
-      Exp CSV
+      Exp Excel
     </Button>
     <Button
       onPress={onExportPdf}
-      startContent={<FiDownload size={14} />}
+      isLoading={isLoading}
+      startContent={isLoading ? null : <FiDownload size={14} />}
       className="bg-primaryColor text-white rounded-lg text-xs h-9"
     >
       Exp PDF
     </Button>
   </div>
 );
+
+const buildExportHandlers = (
+  onExport?: (exportType: number) => void | Promise<void>
+) => ({
+  onExportExcel: onExport ? () => onExport(ExportType.Excel) : undefined,
+  onExportPdf: onExport ? () => onExport(ExportType.Pdf) : undefined,
+});
 
 const TableSkeleton: React.FC = () => (
   <div className="flex flex-col gap-5">
@@ -99,9 +113,12 @@ const stockValueClass = (
 export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
   data,
   isLoading,
+  onExport,
+  isExporting,
 }) => {
   const [statusTab, setStatusTab] = useState<string>('all');
   const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
   const items = (data ?? []) as InventoryReportItem[];
 
   const counts = useMemo(() => {
@@ -210,7 +227,7 @@ export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
               );
             })}
           </div>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -348,7 +365,10 @@ const normalizeMovementType = (type: string, qty: number): string => {
 export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
   data,
   isLoading,
+  onExport,
+  isExporting,
 }) => {
+  const exportHandlers = buildExportHandlers(onExport);
   const [transactionFilter, setTransactionFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
 
@@ -456,7 +476,7 @@ export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
               </select>
             )}
           </div>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -586,7 +606,10 @@ const formatAdjustmentType = (type: string): string =>
 export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
   data,
   isLoading,
+  onExport,
+  isExporting,
 }) => {
+  const exportHandlers = buildExportHandlers(onExport);
   const [adjustmentFilter, setAdjustmentFilter] = useState<string>('all');
   const [page, setPage] = useState(1);
 
@@ -688,7 +711,7 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
               </select>
             )}
           </div>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
