@@ -82,6 +82,10 @@ import useStockAnalysisPaymentReport from '@/hooks/cachedEndpoints/useStockAnaly
 import useStockAnalysisBookingReport from '@/hooks/cachedEndpoints/useStockAnalysisBookingReport';
 import useStockAnalysisInventoryReport from '@/hooks/cachedEndpoints/useStockAnalysisInventoryReport';
 import useStockAnalysisUserReport from '@/hooks/cachedEndpoints/useStockAnalysisUserReport';
+import {
+  ExportType,
+  useStockAnalysisExport,
+} from '@/components/ui/dashboard/inventory/stock-analysis/exportHelpers';
 
 interface ModuleTab {
   id: ModuleId;
@@ -489,6 +493,14 @@ const StockAnalysisPage: React.FC = () => {
       { enabled: userReportEnabled }
     );
 
+  const { exportTable, isExporting } = useStockAnalysisExport({
+    module: activeModule,
+    subTab: activeSubTab,
+    filterType,
+    startDate,
+    endDate,
+  });
+
   if (!hasAccess) {
     return null;
   }
@@ -508,13 +520,17 @@ const StockAnalysisPage: React.FC = () => {
         <div className="flex gap-3">
           <Button
             variant="bordered"
-            startContent={<FiDownload size={16} />}
+            onPress={() => exportTable(ExportType.Excel)}
+            isLoading={isExporting}
+            startContent={isExporting ? null : <FiDownload size={16} />}
             className="border border-gray-200 text-gray-700 bg-white rounded-lg font-medium"
           >
-            Export CSV
+            Export Excel
           </Button>
           <Button
-            startContent={<FiDownload size={16} />}
+            onPress={() => exportTable(ExportType.Pdf)}
+            isLoading={isExporting}
+            startContent={isExporting ? null : <FiDownload size={16} />}
             className="bg-primaryColor text-white rounded-lg font-medium"
           >
             Export PDF
@@ -601,6 +617,8 @@ const StockAnalysisPage: React.FC = () => {
           inventoryReportLoading={inventoryReportLoading}
           userReport={userReport}
           userReportLoading={userReportLoading}
+          onExport={exportTable}
+          isExporting={isExporting}
         />
       </PanelErrorBoundary>
     </div>
@@ -733,6 +751,8 @@ interface ActivePanelProps {
   inventoryReportLoading?: boolean;
   userReport?: UserReportResponse;
   userReportLoading?: boolean;
+  onExport: (exportType: number) => void | Promise<void>;
+  isExporting?: boolean;
 }
 
 const ActivePanel: React.FC<ActivePanelProps> = ({
@@ -750,6 +770,8 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
   inventoryReportLoading,
   userReport,
   userReportLoading,
+  onExport,
+  isExporting,
 }) => {
   if (moduleId === 'sales') {
     if (subTabId === 'overview') {
@@ -763,6 +785,8 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
     const subTabProps = {
       data: orderReport,
       isLoading: orderReportLoading,
+      onExport,
+      isExporting,
     };
     switch (subTabId) {
       case 'order-volumes':
@@ -787,6 +811,8 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       reports:
         paymentReport?.availableReport ??
         summary?.paymentDetails?.availableReport,
+      onExport,
+      isExporting,
     };
     switch (subTabId) {
       case 'payment-summary':
@@ -808,6 +834,8 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
     const bookingSubTabProps = {
       data: bookingReport,
       isLoading: bookingReportLoading,
+      onExport,
+      isExporting,
     };
     switch (subTabId) {
       case 'booking-summary':
@@ -825,6 +853,8 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
     const qrPanelProps = {
       data: orderReport,
       isLoading: orderReportLoading,
+      onExport,
+      isExporting,
     };
     switch (subTabId) {
       case 'overview':
@@ -840,6 +870,8 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
     const inventorySubTabProps = {
       data: inventoryReport,
       isLoading: inventoryReportLoading,
+      onExport,
+      isExporting,
     };
     switch (subTabId) {
       case 'stock-level':
@@ -857,6 +889,8 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
     const userSubTabProps = {
       data: userReport,
       isLoading: userReportLoading,
+      onExport,
+      isExporting,
     };
     switch (subTabId) {
       case 'activity-audit':

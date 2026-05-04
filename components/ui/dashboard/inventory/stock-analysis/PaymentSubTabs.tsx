@@ -7,6 +7,7 @@ import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
 import { AvailableReportsList, StatCards } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
+import { ExportType } from './exportHelpers';
 import {
   AvailableReport,
   NetRevenueItem,
@@ -37,35 +38,48 @@ interface PaymentSubTabPanelProps {
   data?: PaymentReportResponse;
   isLoading?: boolean;
   reports?: AvailableReport[];
+  onExport?: (exportType: number) => void | Promise<void>;
+  isExporting?: boolean;
 }
 
 interface ExportButtonsProps {
-  onExportCsv?: () => void;
+  onExportExcel?: () => void;
   onExportPdf?: () => void;
+  isLoading?: boolean;
 }
 
 const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportCsv,
+  onExportExcel,
   onExportPdf,
+  isLoading,
 }) => (
   <div className="flex gap-2">
     <Button
       variant="bordered"
-      onPress={onExportCsv}
-      startContent={<FiDownload size={14} />}
+      onPress={onExportExcel}
+      isLoading={isLoading}
+      startContent={isLoading ? null : <FiDownload size={14} />}
       className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
     >
-      Exp CSV
+      Exp Excel
     </Button>
     <Button
       onPress={onExportPdf}
-      startContent={<FiDownload size={14} />}
+      isLoading={isLoading}
+      startContent={isLoading ? null : <FiDownload size={14} />}
       className="bg-primaryColor text-white rounded-lg text-xs h-9"
     >
       Exp PDF
     </Button>
   </div>
 );
+
+const buildExportHandlers = (
+  onExport?: (exportType: number) => void | Promise<void>
+) => ({
+  onExportExcel: onExport ? () => onExport(ExportType.Excel) : undefined,
+  onExportPdf: onExport ? () => onExport(ExportType.Pdf) : undefined,
+});
 
 const PaymentSubTabSkeleton: React.FC = () => (
   <div className="flex flex-col gap-5">
@@ -138,9 +152,12 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   reports,
+  onExport,
+  isExporting,
 }) => {
   const [statusTab, setStatusTab] = useState<string>('all');
   const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
 
   const payments = (data?.payments ?? []) as PaymentReportItem[];
 
@@ -245,7 +262,7 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
             }}
           />
           <div className="px-5 py-4">
-            <ExportButtons />
+            <ExportButtons {...exportHandlers} isLoading={isExporting} />
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -345,7 +362,10 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   reports,
+  onExport,
+  isExporting,
 }) => {
+  const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
   const methods = (data?.payments ?? []) as PaymentMethodSummary[];
 
@@ -421,7 +441,7 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             All Payment Method Summaries
           </h3>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -508,7 +528,10 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   reports,
+  onExport,
+  isExporting,
 }) => {
+  const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
 
   const qrOrders: QrRevenueItem[] = data?.qrOrders ?? [];
@@ -588,7 +611,7 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             Revenue by QR Code
           </h3>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -675,7 +698,10 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
   reports,
+  onExport,
+  isExporting,
 }) => {
+  const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
   const netRevenues: NetRevenueItem[] = data?.netRevenues ?? [];
 
@@ -763,7 +789,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             Net Revenue by Period
           </h3>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -832,9 +858,10 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
 
 export const OutstandingReceivablesSubPanel: React.FC<
   PaymentSubTabPanelProps
-> = ({ data, isLoading, reports }) => {
+> = ({ data, isLoading, reports, onExport, isExporting }) => {
   const [page, setPage] = useState(1);
   const today = moment();
+  const exportHandlers = buildExportHandlers(onExport);
 
   const receivables: OutstandingReceivableItem[] =
     data?.outstandingReceivables ?? [];
@@ -921,7 +948,7 @@ export const OutstandingReceivablesSubPanel: React.FC<
           <h3 className="text-base font-semibold text-gray-900">
             All Outstanding Receivables
           </h3>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

@@ -7,6 +7,7 @@ import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
 import { BarList, StatCards } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
+import { ExportType } from './exportHelpers';
 import {
   BarRow,
   OrderReportItem,
@@ -32,6 +33,8 @@ const formatNgn = (value: number): string => formatPrice(value, 'NGN');
 interface QrPanelProps {
   data?: OrderReportResponse;
   isLoading?: boolean;
+  onExport?: (exportType: number) => void | Promise<void>;
+  isExporting?: boolean;
 }
 
 const Skeletonized: React.FC = () => (
@@ -46,32 +49,43 @@ const Skeletonized: React.FC = () => (
 );
 
 interface ExportButtonsProps {
-  onExportCsv?: () => void;
+  onExportExcel?: () => void;
   onExportPdf?: () => void;
+  isLoading?: boolean;
 }
 
 const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportCsv,
+  onExportExcel,
   onExportPdf,
+  isLoading,
 }) => (
   <div className="flex items-center gap-2 px-5 py-4">
     <Button
       variant="bordered"
-      onPress={onExportCsv}
-      startContent={<FiDownload size={14} />}
+      onPress={onExportExcel}
+      isLoading={isLoading}
+      startContent={isLoading ? null : <FiDownload size={14} />}
       className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
     >
-      Exp CSV
+      Exp Excel
     </Button>
     <Button
       onPress={onExportPdf}
-      startContent={<FiDownload size={14} />}
+      isLoading={isLoading}
+      startContent={isLoading ? null : <FiDownload size={14} />}
       className="bg-primaryColor text-white rounded-lg text-xs h-9"
     >
       Exp PDF
     </Button>
   </div>
 );
+
+const buildExportHandlers = (
+  onExport?: (exportType: number) => void | Promise<void>
+) => ({
+  onExportExcel: onExport ? () => onExport(ExportType.Excel) : undefined,
+  onExportPdf: onExport ? () => onExport(ExportType.Pdf) : undefined,
+});
 
 interface QrAggregate {
   qrName: string;
@@ -246,8 +260,14 @@ const buildDetailRows = (orders: OrderReportItem[]): QrDetailRow[] => {
   }));
 };
 
-export const QrDetailsPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => {
+export const QrDetailsPanel: React.FC<QrPanelProps> = ({
+  data,
+  isLoading,
+  onExport,
+  isExporting,
+}) => {
   const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
   const orders = (data?.orders ?? []) as OrderReportItem[];
 
   const tableRows = useMemo(() => buildDetailRows(orders), [orders]);
@@ -269,7 +289,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => {
           <h3 className="px-5 py-4 text-base font-semibold text-gray-900">
             QR Code Details
           </h3>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

@@ -7,6 +7,7 @@ import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
 import { BarList, StatCards } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
+import { ExportType } from './exportHelpers';
 import {
   BarRow,
   CategoryPerformanceItem,
@@ -36,35 +37,48 @@ const formatNgn = (value: number): string => formatPrice(value, 'NGN');
 interface SalesSubTabPanelProps {
   data?: OrderReportResponse;
   isLoading?: boolean;
+  onExport?: (exportType: number) => void | Promise<void>;
+  isExporting?: boolean;
 }
 
 interface ExportButtonsProps {
-  onExportCsv?: () => void;
+  onExportExcel?: () => void;
   onExportPdf?: () => void;
+  isLoading?: boolean;
 }
 
 const ExportButtons: React.FC<ExportButtonsProps> = ({
-  onExportCsv,
+  onExportExcel,
   onExportPdf,
+  isLoading,
 }) => (
   <div className="flex gap-2">
     <Button
       variant="bordered"
-      onPress={onExportCsv}
-      startContent={<FiDownload size={14} />}
+      onPress={onExportExcel}
+      isLoading={isLoading}
+      startContent={isLoading ? null : <FiDownload size={14} />}
       className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
     >
-      Exp CSV
+      Exp Excel
     </Button>
     <Button
       onPress={onExportPdf}
-      startContent={<FiDownload size={14} />}
+      isLoading={isLoading}
+      startContent={isLoading ? null : <FiDownload size={14} />}
       className="bg-primaryColor text-white rounded-lg text-xs h-9"
     >
       Exp PDF
     </Button>
   </div>
 );
+
+const buildExportHandlers = (
+  onExport?: (exportType: number) => void | Promise<void>
+) => ({
+  onExportExcel: onExport ? () => onExport(ExportType.Excel) : undefined,
+  onExportPdf: onExport ? () => onExport(ExportType.Pdf) : undefined,
+});
 
 const SubTabSkeleton: React.FC = () => (
   <div className="flex flex-col gap-5">
@@ -155,11 +169,14 @@ const PillCountTabs: React.FC<PillTabBarProps> = ({
 export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
+  onExport,
+  isExporting,
 }) => {
   const [statusTab, setStatusTab] = useState<
     'all' | 'open' | 'closed' | 'awaiting' | 'cancelled'
   >('all');
   const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
 
   const orders = (data?.orders ?? []) as OrderReportItem[];
 
@@ -251,7 +268,7 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
               setPage(1);
             }}
           />
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -333,9 +350,12 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
 export const PopularItemsPanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
+  onExport,
+  isExporting,
 }) => {
   const [page, setPage] = useState(1);
   const items: PopularItem[] = data?.items ?? [];
+  const exportHandlers = buildExportHandlers(onExport);
 
   const sortedItems = useMemo(
     () => [...items].sort((a, b) => b.totalQuantitySold - a.totalQuantitySold),
@@ -429,7 +449,7 @@ export const PopularItemsPanel: React.FC<SalesSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             All items Order Volumes
           </h3>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -518,8 +538,11 @@ export const PopularItemsPanel: React.FC<SalesSubTabPanelProps> = ({
 export const EmployeePerformancePanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
+  onExport,
+  isExporting,
 }) => {
   const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
   const employees = ((data?.orders as EmployeeOrderItem[] | undefined) ?? [])
     .slice()
     .sort((a, b) => parseAmount(b.totalSales) - parseAmount(a.totalSales));
@@ -587,7 +610,7 @@ export const EmployeePerformancePanel: React.FC<SalesSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             All Employees Performance
           </h3>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -662,8 +685,11 @@ export const EmployeePerformancePanel: React.FC<SalesSubTabPanelProps> = ({
 export const CategoryPerformancePanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
+  onExport,
+  isExporting,
 }) => {
   const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
   const categories: CategoryPerformanceItem[] = useMemo(
     () =>
       [...(data?.categories ?? [])].sort(
@@ -769,7 +795,7 @@ export const CategoryPerformancePanel: React.FC<SalesSubTabPanelProps> = ({
           <h3 className="text-base font-semibold text-gray-900">
             All categories and Order Volumes
           </h3>
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -842,9 +868,12 @@ const paymentStatusClass = (status: string): string => {
 export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
+  onExport,
+  isExporting,
 }) => {
   const [statusTab, setStatusTab] = useState<string>('all');
   const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
 
   const orderPayments: OrderPaymentItem[] = data?.orderPayments ?? [];
 
@@ -951,7 +980,7 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
               setPage(1);
             }}
           />
-          <ExportButtons />
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

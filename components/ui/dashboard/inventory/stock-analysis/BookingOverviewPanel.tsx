@@ -103,10 +103,11 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
     { label: 'Cancelled', value: cancelledCount },
     { label: 'Failed', value: safeNumber(data.failedBookingCount) },
     {
-      label: 'Pick Day',
-      value: peakDayDateTime
-        ? `${moment(peakDayDateTime).format('ddd DD')}, (${peakDayCount})`
-        : '—',
+      label: 'Peak Day',
+      value:
+        peakDayDateTime && moment(peakDayDateTime).isValid()
+          ? `${moment(peakDayDateTime).format('ddd DD')}, (${peakDayCount})`
+          : '—',
     },
   ];
 
