@@ -76,7 +76,6 @@ const MODULE_OVERVIEW_FILE_NAME: Record<ModuleId, string> = {
   inventory: 'InventoryOverview',
   qr: 'QrOverview',
   users: 'UsersOverview',
-  campaigns: 'CampaignsOverview',
 };
 
 interface UseStockAnalysisExportArgs {

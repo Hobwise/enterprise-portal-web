@@ -2,11 +2,7 @@
 
 import React from 'react';
 import { Skeleton } from '@nextui-org/react';
-import {
-  AvailableReportsList,
-  BreakdownList,
-  StatCards,
-} from './SharedPanels';
+import { BreakdownList, StatCards } from './SharedPanels';
 import {
   AuditDetailsSection,
   BreakdownRow,
@@ -101,11 +97,6 @@ export const UserAuditOverviewPanel: React.FC<UserAuditOverviewPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <BreakdownList title="Activity Insights" rows={insightRows} />
-      <AvailableReportsList
-        reports={data.availableReport}
-        route="users"
-        title="Available User Reports"
-      />
     </div>
   );
 };

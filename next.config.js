@@ -1,11 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  publicRuntimeConfig: {
-    apiBaseUrl:
-      process.env.NODE_ENV === 'production'
-        ? 'https://api.hobwise.com/'
-        : 'https://sandbox-api.hobwise.com/',
-  },
   reactStrictMode: true,
 
   // Experimental features for performance

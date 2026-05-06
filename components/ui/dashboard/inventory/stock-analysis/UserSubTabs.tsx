@@ -5,6 +5,7 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { TablePagination } from './SalesPanels';
+import { SortableTH, useTableSort } from './SharedPanels';
 import { ExportType } from './exportHelpers';
 import {
   UserAuditLogItem,
@@ -128,16 +129,42 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
   }, [auditLogs]);
 
   const filtered = useMemo(() => {
-    const sorted = [...auditLogs].sort((a, b) =>
-      moment(b.dateCreated).diff(moment(a.dateCreated))
-    );
-    if (activityFilter === 'all') return sorted;
-    return sorted.filter((a) => a.activityType === activityFilter);
+    if (activityFilter === 'all') return auditLogs;
+    return auditLogs.filter((a) => a.activityType === activityFilter);
   }, [auditLogs, activityFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const getAuditValue = React.useCallback(
+    (
+      a: UserAuditLogItem,
+      key:
+        | 'dateCreated'
+        | 'userName'
+        | 'role'
+        | 'activityType'
+        | 'activity'
+        | 'ipAddress'
+        | 'isSuccessful'
+    ) => {
+      switch (key) {
+        case 'dateCreated':
+          return a.dateCreated ? moment(a.dateCreated).valueOf() : 0;
+        case 'isSuccessful':
+          return a.isSuccessful ? 1 : 0;
+        default:
+          return ((a as any)[key] ?? '') as string;
+      }
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort(filtered, getAuditValue, {
+    key: 'dateCreated',
+    direction: 'desc',
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageRows = filtered.slice(
+  const pageRows = sorted.slice(
     (safePage - 1) * PAGE_SIZE,
     safePage * PAGE_SIZE
   );
@@ -180,14 +207,62 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">Date</th>
-                <th className="text-left px-5 py-3 font-medium">Time</th>
-                <th className="text-left px-5 py-3 font-medium">Staff</th>
-                <th className="text-left px-5 py-3 font-medium">Role</th>
-                <th className="text-left px-5 py-3 font-medium">Type</th>
-                <th className="text-left px-5 py-3 font-medium">Activity</th>
-                <th className="text-left px-5 py-3 font-medium">IP Address</th>
-                <th className="text-left px-5 py-3 font-medium">Status</th>
+                <SortableTH
+                  label="Date"
+                  sortKey="dateCreated"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Time"
+                  sortKey="dateCreated"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Staff"
+                  sortKey="userName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Role"
+                  sortKey="role"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Type"
+                  sortKey="activityType"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Activity"
+                  sortKey="activity"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="IP Address"
+                  sortKey="ipAddress"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Status"
+                  sortKey="isSuccessful"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -248,7 +323,7 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
             </tbody>
           </table>
         </div>
-        {filtered.length > 0 && (
+        {sorted.length > 0 && (
           <TablePagination
             currentPage={safePage}
             totalPages={totalPages}
@@ -291,37 +366,129 @@ export const DailySessionsPanel: React.FC<UserSubTabPanelProps> = ({
   isExporting,
 }) => {
   const [page, setPage] = useState(1);
+  const [staffFilter, setStaffFilter] = useState<string>('all');
   const exportHandlers = buildExportHandlers(onExport);
-  const rows = useMemo(
+  const allRows = useMemo(
     () => buildSessionRows(data?.userDailyActivePeriods ?? []),
     [data]
   );
-  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const pageRows = rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const staffNames = useMemo(() => {
+    const set = new Set<string>();
+    allRows.forEach((r) => {
+      if (r.staff) set.add(r.staff);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [allRows]);
+
+  const filteredRows = useMemo(() => {
+    if (staffFilter === 'all') return allRows;
+    return allRows.filter((r) => r.staff === staffFilter);
+  }, [allRows, staffFilter]);
+
+  const getSessionValue = React.useCallback(
+    (
+      r: DailySessionRow,
+      key:
+        | 'date'
+        | 'staff'
+        | 'email'
+        | 'firstLogin'
+        | 'lastSeen'
+        | 'activePeriod'
+    ) => (r[key] ?? '') as string,
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort(
+    filteredRows,
+    getSessionValue,
+    { key: 'date', direction: 'desc' }
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   if (isLoading) return <TableSkeleton />;
 
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
-          <h3 className="px-5 py-4 text-base font-semibold text-gray-900">
-            Daily Sessions
-          </h3>
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              Daily Sessions
+            </h3>
+            <span className="text-xs text-gray-500">
+              {allRows.length.toLocaleString()} total
+            </span>
+            {staffNames.length > 0 && (
+              <select
+                value={staffFilter}
+                onChange={(e) => {
+                  setStaffFilter(e.target.value);
+                  setPage(1);
+                }}
+                className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
+              >
+                <option value="all">All staff</option>
+                {staffNames.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">Date</th>
-                <th className="text-left px-5 py-3 font-medium">Staff</th>
-                <th className="text-left px-5 py-3 font-medium">Email</th>
-                <th className="text-left px-5 py-3 font-medium">First Login</th>
-                <th className="text-left px-5 py-3 font-medium">Last Seen</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Active Period
-                </th>
+                <SortableTH
+                  label="Date"
+                  sortKey="date"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Staff"
+                  sortKey="staff"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Email"
+                  sortKey="email"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="First Login"
+                  sortKey="firstLogin"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Last Seen"
+                  sortKey="lastSeen"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Active Period"
+                  sortKey="activePeriod"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -358,9 +525,9 @@ export const DailySessionsPanel: React.FC<UserSubTabPanelProps> = ({
             </tbody>
           </table>
         </div>
-        {rows.length > 0 && (
+        {sorted.length > 0 && (
           <TablePagination
-            currentPage={page}
+            currentPage={safePage}
             totalPages={totalPages}
             onChange={setPage}
           />

@@ -5,7 +5,7 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
-import { StatCards } from './SharedPanels';
+import { SortableTH, StatCards, useTableSort } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
@@ -139,18 +139,51 @@ export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
   }, [items]);
 
   const filtered = useMemo(() => {
-    const sorted = [...items].sort((a, b) =>
-      (a.itemName ?? '').localeCompare(b.itemName ?? '')
-    );
-    if (statusTab === 'all') return sorted;
-    return sorted.filter(
-      (i) => (i.status ?? '').toLowerCase() === statusTab
-    );
+    if (statusTab === 'all') return items;
+    return items.filter((i) => (i.status ?? '').toLowerCase() === statusTab);
   }, [items, statusTab]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const getStockValue = React.useCallback(
+    (
+      i: InventoryReportItem,
+      key:
+        | 'itemName'
+        | 'itemType'
+        | 'supplierName'
+        | 'unitName'
+        | 'quantityOnHand'
+        | 'reorderLevel'
+        | 'averageCostPerUnit'
+        | 'stockValue'
+        | 'lastRestocked'
+        | 'status'
+    ) => {
+      switch (key) {
+        case 'quantityOnHand':
+          return safeNumber(i.quantityOnHand);
+        case 'reorderLevel':
+          return safeNumber(i.reorderLevel);
+        case 'averageCostPerUnit':
+          return safeNumber(i.averageCostPerUnit);
+        case 'stockValue':
+          return safeNumber(i.stockValue);
+        case 'lastRestocked':
+          return i.lastRestocked ? moment(i.lastRestocked).valueOf() : null;
+        default:
+          return ((i as any)[key] ?? '') as string;
+      }
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort(filtered, getStockValue, {
+    key: 'itemName',
+    direction: 'asc',
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageRows = filtered.slice(
+  const pageRows = sorted.slice(
     (safePage - 1) * PAGE_SIZE,
     safePage * PAGE_SIZE
   );
@@ -233,26 +266,76 @@ export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">Item Name</th>
-                <th className="text-left px-5 py-3 font-medium">Type</th>
-                <th className="text-left px-5 py-3 font-medium">Supplier</th>
-                <th className="text-left px-5 py-3 font-medium">Unit</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Quantity on Hand
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Reorder Level
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Avg. Cost / Unit
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Stock Value
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Last Restocked
-                </th>
-                <th className="text-left px-5 py-3 font-medium">Status</th>
+                <SortableTH
+                  label="Item Name"
+                  sortKey="itemName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Type"
+                  sortKey="itemType"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Supplier"
+                  sortKey="supplierName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Unit"
+                  sortKey="unitName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Quantity on Hand"
+                  sortKey="quantityOnHand"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Reorder Level"
+                  sortKey="reorderLevel"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Avg. Cost / Unit"
+                  sortKey="averageCostPerUnit"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Stock Value"
+                  sortKey="stockValue"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Last Restocked"
+                  sortKey="lastRestocked"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Status"
+                  sortKey="status"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -323,7 +406,7 @@ export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
             </tbody>
           </table>
         </div>
-        {filtered.length > 0 && (
+        {sorted.length > 0 && (
           <TablePagination
             currentPage={safePage}
             totalPages={totalPages}
@@ -406,16 +489,49 @@ export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
   }, [movements]);
 
   const filtered = useMemo(() => {
-    const sorted = [...movements].sort((a, b) =>
-      moment(b.dateCreated).diff(moment(a.dateCreated))
-    );
-    if (transactionFilter === 'all') return sorted;
-    return sorted.filter((m) => m.transactionType === transactionFilter);
+    if (transactionFilter === 'all') return movements;
+    return movements.filter((m) => m.transactionType === transactionFilter);
   }, [movements, transactionFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const getMovementValue = React.useCallback(
+    (
+      m: StockMovementItem,
+      key:
+        | 'dateCreated'
+        | 'itemName'
+        | 'movementType'
+        | 'transactionType'
+        | 'quantityChange'
+        | 'costPerUnit'
+        | 'unitName'
+        | 'value'
+        | 'reason'
+        | 'performedBy'
+    ) => {
+      switch (key) {
+        case 'dateCreated':
+          return m.dateCreated ? moment(m.dateCreated).valueOf() : 0;
+        case 'quantityChange':
+          return safeNumber(m.quantityChange);
+        case 'costPerUnit':
+          return safeNumber(m.costPerUnit);
+        case 'value':
+          return safeNumber(m.value);
+        default:
+          return ((m as any)[key] ?? '') as string;
+      }
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort(filtered, getMovementValue, {
+    key: 'dateCreated',
+    direction: 'desc',
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageRows = filtered.slice(
+  const pageRows = sorted.slice(
     (safePage - 1) * PAGE_SIZE,
     safePage * PAGE_SIZE
   );
@@ -482,24 +598,76 @@ export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">Date</th>
-                <th className="text-left px-5 py-3 font-medium">Item</th>
-                <th className="text-left px-5 py-3 font-medium">Movement</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Transaction
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Quantity Change
-                </th>
-                <th className="text-left px-5 py-3 font-medium">Unit</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Cost / Unit
-                </th>
-                <th className="text-left px-5 py-3 font-medium">Value</th>
-                <th className="text-left px-5 py-3 font-medium">Reason</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Performed By
-                </th>
+                <SortableTH
+                  label="Date"
+                  sortKey="dateCreated"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Item"
+                  sortKey="itemName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Movement"
+                  sortKey="movementType"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Transaction"
+                  sortKey="transactionType"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Quantity Change"
+                  sortKey="quantityChange"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Unit"
+                  sortKey="unitName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Cost / Unit"
+                  sortKey="costPerUnit"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Value"
+                  sortKey="value"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Reason"
+                  sortKey="reason"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Performed By"
+                  sortKey="performedBy"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -579,7 +747,7 @@ export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
             </tbody>
           </table>
         </div>
-        {filtered.length > 0 && (
+        {sorted.length > 0 && (
           <TablePagination
             currentPage={safePage}
             totalPages={totalPages}
@@ -641,16 +809,45 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
   }, [adjustments]);
 
   const filtered = useMemo(() => {
-    const sorted = [...adjustments].sort((a, b) =>
-      moment(b.date).diff(moment(a.date))
-    );
-    if (adjustmentFilter === 'all') return sorted;
-    return sorted.filter((a) => a.adjustmentType === adjustmentFilter);
+    if (adjustmentFilter === 'all') return adjustments;
+    return adjustments.filter((a) => a.adjustmentType === adjustmentFilter);
   }, [adjustments, adjustmentFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const getAdjustmentValue = React.useCallback(
+    (
+      a: PurchaseAdjustmentItem,
+      key:
+        | 'date'
+        | 'itemName'
+        | 'adjustmentType'
+        | 'quantityWasted'
+        | 'costImpact'
+        | 'reason'
+        | 'performedBy'
+    ) => {
+      switch (key) {
+        case 'date':
+          return a.date ? moment(a.date).valueOf() : 0;
+        case 'quantityWasted':
+          return safeNumber(a.quantityWasted);
+        case 'costImpact':
+          return safeNumber(a.costImpact);
+        default:
+          return ((a as any)[key] ?? '') as string;
+      }
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort(
+    filtered,
+    getAdjustmentValue,
+    { key: 'date', direction: 'desc' }
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageRows = filtered.slice(
+  const pageRows = sorted.slice(
     (safePage - 1) * PAGE_SIZE,
     safePage * PAGE_SIZE
   );
@@ -717,21 +914,55 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">Date</th>
-                <th className="text-left px-5 py-3 font-medium">Item</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Adjustment Type
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Quantity Wasted
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Cost Impact
-                </th>
-                <th className="text-left px-5 py-3 font-medium">Reason</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Performed By
-                </th>
+                <SortableTH
+                  label="Date"
+                  sortKey="date"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Item"
+                  sortKey="itemName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Adjustment Type"
+                  sortKey="adjustmentType"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Quantity Wasted"
+                  sortKey="quantityWasted"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Cost Impact"
+                  sortKey="costImpact"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Reason"
+                  sortKey="reason"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Performed By"
+                  sortKey="performedBy"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -801,7 +1032,7 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
             </tbody>
           </table>
         </div>
-        {filtered.length > 0 && (
+        {sorted.length > 0 && (
           <TablePagination
             currentPage={safePage}
             totalPages={totalPages}

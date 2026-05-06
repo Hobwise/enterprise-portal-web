@@ -11,11 +11,7 @@ import {
   Legend,
 } from 'chart.js';
 import { formatPrice } from '@/lib/utils';
-import {
-  AvailableReportsList,
-  BarList,
-  StatCards,
-} from './SharedPanels';
+import { BarList, StatCards } from './SharedPanels';
 import {
   BarRow,
   PaymentDetailsSection,
@@ -216,11 +212,6 @@ export const PaymentOverviewPanel: React.FC<PaymentOverviewPanelProps> = ({
         />
         <PaymentMethodsChart breakdown={breakdown} />
       </div>
-      <AvailableReportsList
-        reports={data.availableReport}
-        route="payments"
-        title="Available Payment Reports"
-      />
     </div>
   );
 };

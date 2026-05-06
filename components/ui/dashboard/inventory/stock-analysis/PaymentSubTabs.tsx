@@ -5,11 +5,10 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
-import { AvailableReportsList, StatCards } from './SharedPanels';
+import { SortableTH, StatCards, useTableSort } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
-  AvailableReport,
   NetRevenueItem,
   OutstandingReceivableItem,
   PaymentMethodSummary,
@@ -26,10 +25,17 @@ const safeNumber = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const parseAmount = (formatted: string | null | undefined): number => {
-  if (!formatted) return 0;
-  const cleaned = formatted.replace(/[^0-9.-]+/g, '');
+const parseAmount = (formatted: unknown): number => {
+  if (formatted === null || formatted === undefined || formatted === '') return 0;
+  if (typeof formatted === 'number') return safeNumber(formatted);
+  const cleaned = String(formatted).replace(/[^0-9.-]+/g, '');
   return safeNumber(cleaned);
+};
+
+const toTime = (value: string | null | undefined): number => {
+  if (!value) return 0;
+  const m = moment(value);
+  return m.isValid() ? m.valueOf() : 0;
 };
 
 const formatNgn = (value: number): string => formatPrice(value, 'NGN');
@@ -37,7 +43,6 @@ const formatNgn = (value: number): string => formatPrice(value, 'NGN');
 interface PaymentSubTabPanelProps {
   data?: PaymentReportResponse;
   isLoading?: boolean;
-  reports?: AvailableReport[];
   onExport?: (exportType: number) => void | Promise<void>;
   isExporting?: boolean;
 }
@@ -151,7 +156,6 @@ const PillCountTabs: React.FC<{
 export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
-  reports,
   onExport,
   isExporting,
 }) => {
@@ -196,18 +200,43 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
   }, [payments]);
 
   const filtered = useMemo(() => {
-    const sorted = [...payments].sort((a, b) =>
-      moment(b.dateCreated).diff(moment(a.dateCreated))
-    );
-    if (statusTab === 'all') return sorted;
-    return sorted.filter(
+    if (statusTab === 'all') return payments;
+    return payments.filter(
       (p) => (p.status ?? '').toLowerCase() === statusTab
     );
   }, [payments, statusTab]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const getPaymentValue = React.useCallback(
+    (
+      p: PaymentReportItem,
+      key:
+        | 'dateCreated'
+        | 'orderId'
+        | 'customer'
+        | 'quickResponseName'
+        | 'paymentMethod'
+        | 'paymentType'
+        | 'paymentDirection'
+        | 'totalAmount'
+        | 'confirmedBy'
+        | 'status'
+    ) => {
+      if (key === 'dateCreated') return toTime(p.dateCreated);
+      if (key === 'totalAmount') return parseAmount(p.totalAmount);
+      return ((p as any)[key] ?? '') as string;
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort(
+    filtered,
+    getPaymentValue,
+    { key: 'dateCreated', direction: 'desc' }
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageRows = filtered.slice(
+  const pageRows = sorted.slice(
     (safePage - 1) * PAGE_SIZE,
     safePage * PAGE_SIZE
   );
@@ -269,16 +298,76 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">Date</th>
-                <th className="text-left px-5 py-3 font-medium">Order ID</th>
-                <th className="text-left px-5 py-3 font-medium">Customer</th>
-                <th className="text-left px-5 py-3 font-medium">QR Name</th>
-                <th className="text-left px-5 py-3 font-medium">Method</th>
-                <th className="text-left px-5 py-3 font-medium">Type</th>
-                <th className="text-left px-5 py-3 font-medium">Direction</th>
-                <th className="text-left px-5 py-3 font-medium">Amount</th>
-                <th className="text-left px-5 py-3 font-medium">Confirmed By</th>
-                <th className="text-left px-5 py-3 font-medium">Status</th>
+                <SortableTH
+                  label="Date"
+                  sortKey="dateCreated"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Order ID"
+                  sortKey="orderId"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Customer"
+                  sortKey="customer"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="QR Name"
+                  sortKey="quickResponseName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Method"
+                  sortKey="paymentMethod"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Type"
+                  sortKey="paymentType"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Direction"
+                  sortKey="paymentDirection"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Amount"
+                  sortKey="totalAmount"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Confirmed By"
+                  sortKey="confirmedBy"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Status"
+                  sortKey="status"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -341,7 +430,7 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
             </tbody>
           </table>
         </div>
-        {filtered.length > 0 && (
+        {sorted.length > 0 && (
           <TablePagination
             currentPage={safePage}
             totalPages={totalPages}
@@ -349,11 +438,6 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
           />
         )}
       </div>
-      <AvailableReportsList
-        reports={reports}
-        route="payments"
-        title="Available Payment Reports"
-      />
     </div>
   );
 };
@@ -361,7 +445,6 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
 export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
-  reports,
   onExport,
   isExporting,
 }) => {
@@ -383,15 +466,43 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
     return { totalPayments, totalCredits, totalDebits, totalNet };
   }, [methods]);
 
-  const sortedMethods = useMemo(
-    () =>
-      [...methods].sort(
-        (a, b) =>
-          parseAmount(b.netAmountProcessed) -
-          parseAmount(a.netAmountProcessed)
-      ),
-    [methods]
+  const getMethodValue = React.useCallback(
+    (
+      m: PaymentMethodSummary,
+      key:
+        | 'paymentMethod'
+        | 'numberOfPayments'
+        | 'totalCredits'
+        | 'totalDebits'
+        | 'netAmountProcessed'
+        | 'lastRecordDateTime'
+    ) => {
+      switch (key) {
+        case 'numberOfPayments':
+          return safeNumber(m.numberOfPayments);
+        case 'totalCredits':
+          return parseAmount(m.totalCredits);
+        case 'totalDebits':
+          return parseAmount(m.totalDebits);
+        case 'netAmountProcessed':
+          return parseAmount(m.netAmountProcessed);
+        case 'lastRecordDateTime':
+          return toTime(m.lastRecordDateTime);
+        default:
+          return m.paymentMethod ?? '';
+      }
+    },
+    []
   );
+
+  const {
+    sort: methodSort,
+    sorted: sortedMethods,
+    toggleSort: toggleMethodSort,
+  } = useTableSort(methods, getMethodValue, {
+    key: 'netAmountProcessed',
+    direction: 'desc',
+  });
 
   const totalPages = Math.max(1, Math.ceil(sortedMethods.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -447,24 +558,48 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">
-                  Payment Method
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  No. of Payments
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Total Credits
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Total Debits
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Net Amount Processed
-                </th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Last Activity
-                </th>
+                <SortableTH
+                  label="Payment Method"
+                  sortKey="paymentMethod"
+                  active={methodSort.key}
+                  direction={methodSort.direction}
+                  onSort={toggleMethodSort}
+                />
+                <SortableTH
+                  label="No. of Payments"
+                  sortKey="numberOfPayments"
+                  active={methodSort.key}
+                  direction={methodSort.direction}
+                  onSort={toggleMethodSort}
+                />
+                <SortableTH
+                  label="Total Credits"
+                  sortKey="totalCredits"
+                  active={methodSort.key}
+                  direction={methodSort.direction}
+                  onSort={toggleMethodSort}
+                />
+                <SortableTH
+                  label="Total Debits"
+                  sortKey="totalDebits"
+                  active={methodSort.key}
+                  direction={methodSort.direction}
+                  onSort={toggleMethodSort}
+                />
+                <SortableTH
+                  label="Net Amount Processed"
+                  sortKey="netAmountProcessed"
+                  active={methodSort.key}
+                  direction={methodSort.direction}
+                  onSort={toggleMethodSort}
+                />
+                <SortableTH
+                  label="Last Activity"
+                  sortKey="lastRecordDateTime"
+                  active={methodSort.key}
+                  direction={methodSort.direction}
+                  onSort={toggleMethodSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -515,11 +650,6 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           />
         )}
       </div>
-      <AvailableReportsList
-        reports={reports}
-        route="payments"
-        title="Available Payment Reports"
-      />
     </div>
   );
 };
@@ -527,7 +657,6 @@ export const PaymentMethodsSubPanel: React.FC<PaymentSubTabPanelProps> = ({
 export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
-  reports,
   onExport,
   isExporting,
 }) => {
@@ -536,15 +665,6 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
 
   const qrOrders: QrRevenueItem[] = data?.qrOrders ?? [];
 
-  const sortedQr = useMemo(
-    () =>
-      [...qrOrders].sort(
-        (a, b) =>
-          parseAmount(b.totalSalesAmount) - parseAmount(a.totalSalesAmount)
-      ),
-    [qrOrders]
-  );
-
   const totals = useMemo(() => {
     let orders = 0;
     let total = 0;
@@ -552,7 +672,7 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
     let pending = 0;
     let refunds = 0;
     let gross = 0;
-    sortedQr.forEach((q) => {
+    qrOrders.forEach((q) => {
       orders += safeNumber(q.numberOfOrders);
       total += parseAmount(q.totalSalesAmount);
       confirmed += parseAmount(q.confirmedSalesAmount);
@@ -561,7 +681,51 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
       gross += parseAmount(q.grossSalesAmount);
     });
     return { orders, total, confirmed, pending, refunds, gross };
-  }, [sortedQr]);
+  }, [qrOrders]);
+
+  const getQrValue = React.useCallback(
+    (
+      q: QrRevenueItem,
+      key:
+        | 'quickResponseName'
+        | 'numberOfOrders'
+        | 'pendingSalesAmount'
+        | 'confirmedSalesAmount'
+        | 'totalSalesAmount'
+        | 'totalRefundAmount'
+        | 'grossSalesAmount'
+        | 'dateUpdated'
+    ) => {
+      switch (key) {
+        case 'numberOfOrders':
+          return safeNumber(q.numberOfOrders);
+        case 'pendingSalesAmount':
+          return parseAmount(q.pendingSalesAmount);
+        case 'confirmedSalesAmount':
+          return parseAmount(q.confirmedSalesAmount);
+        case 'totalSalesAmount':
+          return parseAmount(q.totalSalesAmount);
+        case 'totalRefundAmount':
+          return parseAmount(q.totalRefundAmount);
+        case 'grossSalesAmount':
+          return parseAmount(q.grossSalesAmount);
+        case 'dateUpdated':
+          return toTime(q.dateUpdated);
+        default:
+          return q.quickResponseName ?? '';
+      }
+    },
+    []
+  );
+
+  const {
+    sort: qrSort,
+    sorted: sortedQr,
+    toggleSort: toggleQrSort,
+  } = useTableSort(qrOrders, getQrValue, {
+    key: 'totalSalesAmount',
+    direction: 'desc',
+  });
 
   const totalPages = Math.max(1, Math.ceil(sortedQr.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -617,16 +781,62 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">QR Code</th>
-                <th className="text-left px-5 py-3 font-medium">Orders</th>
-                <th className="text-left px-5 py-3 font-medium">Pending</th>
-                <th className="text-left px-5 py-3 font-medium">Confirmed</th>
-                <th className="text-left px-5 py-3 font-medium">Total Sales</th>
-                <th className="text-left px-5 py-3 font-medium">Refunds</th>
-                <th className="text-left px-5 py-3 font-medium">Gross Sales</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Last Activity
-                </th>
+                <SortableTH
+                  label="QR Code"
+                  sortKey="quickResponseName"
+                  active={qrSort.key}
+                  direction={qrSort.direction}
+                  onSort={toggleQrSort}
+                />
+                <SortableTH
+                  label="Orders"
+                  sortKey="numberOfOrders"
+                  active={qrSort.key}
+                  direction={qrSort.direction}
+                  onSort={toggleQrSort}
+                />
+                <SortableTH
+                  label="Pending"
+                  sortKey="pendingSalesAmount"
+                  active={qrSort.key}
+                  direction={qrSort.direction}
+                  onSort={toggleQrSort}
+                />
+                <SortableTH
+                  label="Confirmed"
+                  sortKey="confirmedSalesAmount"
+                  active={qrSort.key}
+                  direction={qrSort.direction}
+                  onSort={toggleQrSort}
+                />
+                <SortableTH
+                  label="Total Sales"
+                  sortKey="totalSalesAmount"
+                  active={qrSort.key}
+                  direction={qrSort.direction}
+                  onSort={toggleQrSort}
+                />
+                <SortableTH
+                  label="Refunds"
+                  sortKey="totalRefundAmount"
+                  active={qrSort.key}
+                  direction={qrSort.direction}
+                  onSort={toggleQrSort}
+                />
+                <SortableTH
+                  label="Gross Sales"
+                  sortKey="grossSalesAmount"
+                  active={qrSort.key}
+                  direction={qrSort.direction}
+                  onSort={toggleQrSort}
+                />
+                <SortableTH
+                  label="Last Activity"
+                  sortKey="dateUpdated"
+                  active={qrSort.key}
+                  direction={qrSort.direction}
+                  onSort={toggleQrSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -685,11 +895,6 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           />
         )}
       </div>
-      <AvailableReportsList
-        reports={reports}
-        route="payments"
-        title="Available Payment Reports"
-      />
     </div>
   );
 };
@@ -697,21 +902,24 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
 export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
-  reports,
   onExport,
   isExporting,
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
+  const [directionFilter, setDirectionFilter] = useState<string>('all');
   const netRevenues: NetRevenueItem[] = data?.netRevenues ?? [];
 
-  const sortedRevenues = useMemo(
-    () =>
-      [...netRevenues].sort((a, b) =>
-        moment(b.period).diff(moment(a.period))
-      ),
-    [netRevenues]
-  );
+  const filteredRevenues = useMemo(() => {
+    if (directionFilter === 'all') return netRevenues;
+    return netRevenues.filter((r) => {
+      const amount = parseAmount(r.netRevenue);
+      if (directionFilter === 'positive') return amount > 0;
+      if (directionFilter === 'negative') return amount < 0;
+      if (directionFilter === 'zero') return amount === 0;
+      return true;
+    });
+  }, [netRevenues, directionFilter]);
 
   const totals = useMemo(() => {
     let net = 0;
@@ -719,7 +927,8 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
     let negative = 0;
     let positiveCount = 0;
     let negativeCount = 0;
-    sortedRevenues.forEach((r) => {
+    let zeroCount = 0;
+    netRevenues.forEach((r) => {
       const amount = parseAmount(r.netRevenue);
       net += amount;
       if (amount > 0) {
@@ -728,10 +937,40 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
       } else if (amount < 0) {
         negative += amount;
         negativeCount += 1;
+      } else {
+        zeroCount += 1;
       }
     });
-    return { net, positive, negative, positiveCount, negativeCount };
-  }, [sortedRevenues]);
+    return { net, positive, negative, positiveCount, negativeCount, zeroCount };
+  }, [netRevenues]);
+
+  const getNetValue = React.useCallback(
+    (
+      r: NetRevenueItem,
+      key: 'period' | 'netRevenue' | 'lastRecordDate'
+    ) => {
+      switch (key) {
+        case 'period':
+          return toTime(r.period);
+        case 'netRevenue':
+          return parseAmount(r.netRevenue);
+        case 'lastRecordDate':
+          return toTime(r.lastRecordDate);
+        default:
+          return '';
+      }
+    },
+    []
+  );
+
+  const {
+    sort: netSort,
+    sorted: sortedRevenues,
+    toggleSort: toggleNetSort,
+  } = useTableSort(filteredRevenues, getNetValue, {
+    key: 'period',
+    direction: 'desc',
+  });
 
   const totalPages = Math.max(1, Math.ceil(sortedRevenues.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -742,7 +981,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
 
   if (isLoading) return <PaymentSubTabSkeleton />;
 
-  const top = sortedRevenues.reduce<NetRevenueItem | null>((acc, r) => {
+  const top = netRevenues.reduce<NetRevenueItem | null>((acc, r) => {
     if (!acc) return r;
     return parseAmount(r.netRevenue) > parseAmount(acc.netRevenue) ? r : acc;
   }, null);
@@ -751,7 +990,7 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
     {
       label: 'Net Revenue',
       value: formatNgn(totals.net),
-      footer: `${sortedRevenues.length} periods`,
+      footer: `${netRevenues.length} periods`,
       footerTone: totals.net >= 0 ? 'success' : 'danger',
     },
     {
@@ -786,21 +1025,62 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
-          <h3 className="text-base font-semibold text-gray-900">
-            Net Revenue by Period
-          </h3>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              Net Revenue by Period
+            </h3>
+            <select
+              value={directionFilter}
+              onChange={(e) => {
+                setDirectionFilter(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
+            >
+              <option value="all">All periods</option>
+              <option value="positive">
+                Positive ({totals.positiveCount})
+              </option>
+              <option value="negative">
+                Negative ({totals.negativeCount})
+              </option>
+              <option value="zero">Zero ({totals.zeroCount})</option>
+            </select>
+          </div>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">Period</th>
-                <th className="text-left px-5 py-3 font-medium">Day</th>
-                <th className="text-left px-5 py-3 font-medium">Net Revenue</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Last Activity
-                </th>
+                <SortableTH
+                  label="Period"
+                  sortKey="period"
+                  active={netSort.key}
+                  direction={netSort.direction}
+                  onSort={toggleNetSort}
+                />
+                <SortableTH
+                  label="Day"
+                  sortKey="period"
+                  active={netSort.key}
+                  direction={netSort.direction}
+                  onSort={toggleNetSort}
+                />
+                <SortableTH
+                  label="Net Revenue"
+                  sortKey="netRevenue"
+                  active={netSort.key}
+                  direction={netSort.direction}
+                  onSort={toggleNetSort}
+                />
+                <SortableTH
+                  label="Last Activity"
+                  sortKey="lastRecordDate"
+                  active={netSort.key}
+                  direction={netSort.direction}
+                  onSort={toggleNetSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -847,19 +1127,15 @@ export const NetRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
           />
         )}
       </div>
-      <AvailableReportsList
-        reports={reports}
-        route="payments"
-        title="Available Payment Reports"
-      />
     </div>
   );
 };
 
 export const OutstandingReceivablesSubPanel: React.FC<
   PaymentSubTabPanelProps
-> = ({ data, isLoading, reports, onExport, isExporting }) => {
+> = ({ data, isLoading, onExport, isExporting }) => {
   const [page, setPage] = useState(1);
+  const [agingFilter, setAgingFilter] = useState<string>('all');
   const today = moment();
   const exportHandlers = buildExportHandlers(onExport);
 
@@ -878,12 +1154,67 @@ export const OutstandingReceivablesSubPanel: React.FC<
     [receivables, today]
   );
 
-  const sorted = useMemo(
-    () =>
-      [...enriched].sort(
-        (a, b) => b.outstandingAmount - a.outstandingAmount
-      ),
-    [enriched]
+  const agingCounts = useMemo(() => {
+    let recent = 0;
+    let mid = 0;
+    let aged = 0;
+    enriched.forEach((r) => {
+      if (r.daysOutstanding <= 7) recent += 1;
+      else if (r.daysOutstanding <= 30) mid += 1;
+      else aged += 1;
+    });
+    return { recent, mid, aged };
+  }, [enriched]);
+
+  const filtered = useMemo(() => {
+    if (agingFilter === 'all') return enriched;
+    if (agingFilter === 'recent')
+      return enriched.filter((r) => r.daysOutstanding <= 7);
+    if (agingFilter === 'mid')
+      return enriched.filter(
+        (r) => r.daysOutstanding > 7 && r.daysOutstanding <= 30
+      );
+    if (agingFilter === 'aged')
+      return enriched.filter((r) => r.daysOutstanding > 30);
+    return enriched;
+  }, [enriched, agingFilter]);
+
+  type EnrichedReceivable = typeof enriched[number];
+  const getReceivableValue = React.useCallback(
+    (
+      r: EnrichedReceivable,
+      key:
+        | 'orderDate'
+        | 'orderId'
+        | 'customer'
+        | 'treatedBy'
+        | 'orderTotal'
+        | 'paidSoFar'
+        | 'outstanding'
+        | 'daysOutstanding'
+    ) => {
+      switch (key) {
+        case 'orderDate':
+          return toTime(r.orderDate);
+        case 'orderTotal':
+          return parseAmount(r.orderTotal);
+        case 'paidSoFar':
+          return parseAmount(r.paidSoFar);
+        case 'outstanding':
+          return r.outstandingAmount;
+        case 'daysOutstanding':
+          return r.daysOutstanding;
+        default:
+          return ((r as any)[key] ?? '') as string;
+      }
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort(
+    filtered,
+    getReceivableValue,
+    { key: 'outstanding', direction: 'desc' }
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
@@ -945,27 +1276,88 @@ export const OutstandingReceivablesSubPanel: React.FC<
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
-          <h3 className="text-base font-semibold text-gray-900">
-            All Outstanding Receivables
-          </h3>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              All Outstanding Receivables
+            </h3>
+            <select
+              value={agingFilter}
+              onChange={(e) => {
+                setAgingFilter(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
+            >
+              <option value="all">All ages</option>
+              <option value="recent">
+                1 – 7 days ({agingCounts.recent})
+              </option>
+              <option value="mid">8 – 30 days ({agingCounts.mid})</option>
+              <option value="aged">Over 30 days ({agingCounts.aged})</option>
+            </select>
+          </div>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">Order Date</th>
-                <th className="text-left px-5 py-3 font-medium">Order ID</th>
-                <th className="text-left px-5 py-3 font-medium">Customer</th>
-                <th className="text-left px-5 py-3 font-medium">Treated By</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Order Total
-                </th>
-                <th className="text-left px-5 py-3 font-medium">Paid So Far</th>
-                <th className="text-left px-5 py-3 font-medium">Outstanding</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Days Outstanding
-                </th>
+                <SortableTH
+                  label="Order Date"
+                  sortKey="orderDate"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Order ID"
+                  sortKey="orderId"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Customer"
+                  sortKey="customer"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Treated By"
+                  sortKey="treatedBy"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Order Total"
+                  sortKey="orderTotal"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Paid So Far"
+                  sortKey="paidSoFar"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Outstanding"
+                  sortKey="outstanding"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Days Outstanding"
+                  sortKey="daysOutstanding"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -1027,11 +1419,6 @@ export const OutstandingReceivablesSubPanel: React.FC<
           />
         )}
       </div>
-      <AvailableReportsList
-        reports={reports}
-        route="payments"
-        title="Available Payment Reports"
-      />
     </div>
   );
 };

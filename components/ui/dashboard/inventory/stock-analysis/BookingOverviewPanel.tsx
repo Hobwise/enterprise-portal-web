@@ -4,14 +4,8 @@ import React from 'react';
 import moment from 'moment';
 import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
+import { BarList, BreakdownList, StatCards } from './SharedPanels';
 import {
-  AvailableReportsList,
-  BarList,
-  BreakdownList,
-  StatCards,
-} from './SharedPanels';
-import {
-  AvailableReport,
   BarRow,
   BookingDetailsSection,
   BreakdownRow,
@@ -33,7 +27,7 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
   data,
   isLoading,
 }) => {
-  if (isLoading || !data) {
+  if (isLoading) {
     return (
       <div className="flex flex-col gap-5">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -42,6 +36,21 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
           ))}
         </div>
         <Skeleton className="h-64 rounded-2xl" />
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm py-16 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2 text-center px-6">
+          <h3 className="text-base font-semibold text-gray-700">
+            No booking data
+          </h3>
+          <p className="text-sm text-gray-500">
+            Try a different period or come back later.
+          </p>
+        </div>
       </div>
     );
   }
@@ -94,7 +103,6 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
 
   const peakDay = data.dayWithHighestBooking ?? null;
   const peakDayDateTime = peakDay?.dateTime ?? null;
-  const peakDayCount = safeNumber(peakDay?.count);
 
   const breakdownRows: BreakdownRow[] = [
     { label: 'Pending', value: safeNumber(data.pendingBookingCount) },
@@ -106,7 +114,7 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
       label: 'Peak Day',
       value:
         peakDayDateTime && moment(peakDayDateTime).isValid()
-          ? `${moment(peakDayDateTime).format('ddd DD')}, (${peakDayCount})`
+          ? moment(peakDayDateTime).format('ddd, MMM DD, YYYY')
           : '—',
     },
   ];
@@ -120,10 +128,6 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
     suffix: ' Bookings',
   }));
 
-  const reports: AvailableReport[] = Array.isArray(data.availableReport)
-    ? data.availableReport
-    : [];
-
   return (
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
@@ -132,7 +136,7 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
           title="Daily Bookings"
           rows={partitionRows}
           className="lg:col-span-3"
-          max={Math.max(...partitionRows.map((r) => r.value), 1)}
+          max={partitionRows.reduce((acc, r) => Math.max(acc, r.value), 1)}
           valueFormatter={(r) => `${r.value.toLocaleString()} Bookings`}
         />
         <BreakdownList
@@ -141,11 +145,6 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
           className="lg:col-span-2"
         />
       </div>
-      <AvailableReportsList
-        reports={reports}
-        route="bookings"
-        title="Available Booking Reports"
-      />
     </div>
   );
 };

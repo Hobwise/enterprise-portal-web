@@ -4,7 +4,6 @@ export type ModuleId =
   | 'bookings'
   | 'inventory'
   | 'qr'
-  | 'campaigns'
   | 'users';
 
 export type PeriodId = 'today' | 'week' | 'year';
