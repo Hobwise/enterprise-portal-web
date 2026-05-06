@@ -1,10 +1,128 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { IoIosArrowForward } from 'react-icons/io';
+import { TbArrowsSort, TbArrowUp, TbArrowDown } from 'react-icons/tb';
 import { saveJsonItemToLocalStorage, notify } from '@/lib/utils';
 import { AvailableReport, BarRow, BreakdownRow, StatCard } from './types';
+
+export type SortDirection = 'asc' | 'desc';
+
+export type SortableValue = string | number | boolean | null | undefined;
+
+export interface SortState<K extends string> {
+  key: K | null;
+  direction: SortDirection;
+}
+
+type NoInferK<T> = [T][T extends string ? 0 : never];
+
+export const useTableSort = <T, K extends string>(
+  items: T[],
+  getValue: (item: T, key: K) => SortableValue,
+  initial?: { key: NoInferK<K>; direction?: SortDirection }
+) => {
+  const [sort, setSort] = useState<SortState<K>>({
+    key: (initial?.key as K | undefined) ?? null,
+    direction: initial?.direction ?? 'asc',
+  });
+
+  const sorted = useMemo(() => {
+    if (!sort.key) return items;
+    const key = sort.key;
+    const dir = sort.direction === 'asc' ? 1 : -1;
+    return [...items].sort((a, b) => {
+      const av = getValue(a, key);
+      const bv = getValue(b, key);
+      if (av == null && bv == null) return 0;
+      if (av == null) return 1;
+      if (bv == null) return -1;
+      let cmp = 0;
+      if (typeof av === 'number' && typeof bv === 'number') {
+        cmp = av - bv;
+      } else {
+        cmp = String(av).localeCompare(String(bv), undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        });
+      }
+      return cmp * dir;
+    });
+  }, [items, sort, getValue]);
+
+  const toggleSort = (key: K) => {
+    setSort((prev) =>
+      prev.key === key
+        ? { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' }
+        : { key, direction: 'asc' }
+    );
+  };
+
+  return { sort, sorted, toggleSort };
+};
+
+interface SortableTHProps<K extends string> {
+  label: string;
+  sortKey: K;
+  active: K | null;
+  direction: SortDirection;
+  onSort: (key: K) => void;
+  className?: string;
+  align?: 'left' | 'right' | 'center';
+}
+
+export const SortableTH = <K extends string>({
+  label,
+  sortKey,
+  active,
+  direction,
+  onSort,
+  className,
+  align = 'left',
+}: SortableTHProps<K>) => {
+  const isActive = active === sortKey;
+  const alignClass =
+    align === 'right'
+      ? 'text-right justify-end'
+      : align === 'center'
+      ? 'text-center justify-center'
+      : 'text-left';
+  return (
+    <th
+      className={
+        className ??
+        `${alignClass} px-5 py-3 font-medium select-none whitespace-nowrap`
+      }
+    >
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={`inline-flex items-center gap-1 hover:text-gray-900 transition-colors ${
+          isActive ? 'text-gray-900' : 'text-gray-600'
+        }`}
+        aria-sort={
+          isActive
+            ? direction === 'asc'
+              ? 'ascending'
+              : 'descending'
+            : 'none'
+        }
+      >
+        <span>{label}</span>
+        {isActive ? (
+          direction === 'asc' ? (
+            <TbArrowUp size={14} />
+          ) : (
+            <TbArrowDown size={14} />
+          )
+        ) : (
+          <TbArrowsSort size={14} className="text-gray-300" />
+        )}
+      </button>
+    </th>
+  );
+};
 
 interface StatCardsProps {
   cards: StatCard[];

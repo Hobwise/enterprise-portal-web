@@ -5,7 +5,7 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
-import { BarList, StatCards } from './SharedPanels';
+import { BarList, SortableTH, StatCards, useTableSort } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
@@ -22,9 +22,10 @@ const safeNumber = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const parseAmount = (formatted: string | null | undefined): number => {
-  if (!formatted) return 0;
-  const cleaned = formatted.replace(/[^0-9.-]+/g, '');
+const parseAmount = (formatted: unknown): number => {
+  if (formatted === null || formatted === undefined || formatted === '') return 0;
+  if (typeof formatted === 'number') return safeNumber(formatted);
+  const cleaned = String(formatted).replace(/[^0-9.-]+/g, '');
   return safeNumber(cleaned);
 };
 
@@ -267,12 +268,58 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
   isExporting,
 }) => {
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const exportHandlers = buildExportHandlers(onExport);
   const orders = (data?.orders ?? []) as OrderReportItem[];
 
-  const tableRows = useMemo(() => buildDetailRows(orders), [orders]);
-  const totalPages = Math.max(1, Math.ceil(tableRows.length / PAGE_SIZE));
-  const pageRows = tableRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const allRows = useMemo(() => buildDetailRows(orders), [orders]);
+
+  const counts = useMemo(() => {
+    let active = 0;
+    let inactive = 0;
+    allRows.forEach((r) => {
+      if (r.status === 'Active') active += 1;
+      else inactive += 1;
+    });
+    return { active, inactive };
+  }, [allRows]);
+
+  const filteredRows = useMemo(() => {
+    if (statusFilter === 'all') return allRows;
+    if (statusFilter === 'active')
+      return allRows.filter((r) => r.status === 'Active');
+    if (statusFilter === 'inactive')
+      return allRows.filter((r) => r.status === 'Inactive');
+    return allRows;
+  }, [allRows, statusFilter]);
+
+  const getQrDetailValue = React.useCallback(
+    (
+      r: QrDetailRow,
+      key:
+        | 'qrName'
+        | 'orders'
+        | 'openOrders'
+        | 'averageValue'
+        | 'netRevenue'
+        | 'refunds'
+        | 'status'
+    ) => r[key] as string | number,
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort(
+    filteredRows,
+    getQrDetailValue,
+    { key: 'orders', direction: 'desc' }
+  );
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = sorted.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
 
   if (isLoading) {
     return (
@@ -285,25 +332,82 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
-          <h3 className="px-5 py-4 text-base font-semibold text-gray-900">
-            QR Code Details
-          </h3>
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              QR Code Details
+            </h3>
+            <span className="text-xs text-gray-500">
+              {allRows.length.toLocaleString()} total
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
+            >
+              <option value="all">All QR codes</option>
+              <option value="active">Active ({counts.active})</option>
+              <option value="inactive">Inactive ({counts.inactive})</option>
+            </select>
+          </div>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <th className="text-left px-5 py-3 font-medium">QR Name</th>
-                <th className="text-left px-5 py-3 font-medium">Orders</th>
-                <th className="text-left px-5 py-3 font-medium">Open Orders</th>
-                <th className="text-left px-5 py-3 font-medium">
-                  Average Value
-                </th>
-                <th className="text-left px-5 py-3 font-medium">Net Revenue</th>
-                <th className="text-left px-5 py-3 font-medium">Refunds</th>
-                <th className="text-left px-5 py-3 font-medium">Status</th>
+                <SortableTH
+                  label="QR Name"
+                  sortKey="qrName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Orders"
+                  sortKey="orders"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Open Orders"
+                  sortKey="openOrders"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Average Value"
+                  sortKey="averageValue"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Net Revenue"
+                  sortKey="netRevenue"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Refunds"
+                  sortKey="refunds"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Status"
+                  sortKey="status"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -352,9 +456,9 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
             </tbody>
           </table>
         </div>
-        {tableRows.length > 0 && (
+        {sorted.length > 0 && (
           <TablePagination
-            currentPage={page}
+            currentPage={safePage}
             totalPages={totalPages}
             onChange={setPage}
           />

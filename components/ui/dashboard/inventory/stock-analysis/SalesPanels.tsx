@@ -87,9 +87,7 @@ export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
   }));
 
   const peakDay = data.dayWithHighestOrder?.dateTime
-    ? `${moment(data.dayWithHighestOrder.dateTime).format('ddd DD')}, (${
-        safeNumber(data.dayWithHighestOrder.count)
-      })`
+    ? moment(data.dayWithHighestOrder.dateTime).format('ddd, MMM DD, YYYY')
     : '—';
 
   const breakdownRows: BreakdownRow[] = [
@@ -100,7 +98,7 @@ export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
       value: safeNumber(data.awaitingConfirmationOrdersCount),
     },
     { label: 'Cancellation', value: safeNumber(data.cancelledOrdersCount) },
-    { label: 'Pick Day', value: peakDay },
+    { label: 'Peak Day', value: peakDay },
   ];
 
   return (

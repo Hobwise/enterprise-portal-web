@@ -3,12 +3,7 @@
 import React from 'react';
 import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
-import {
-  AvailableReportsList,
-  BarList,
-  BreakdownList,
-  StatCards,
-} from './SharedPanels';
+import { BarList, BreakdownList, StatCards } from './SharedPanels';
 import {
   BarRow,
   BreakdownRow,
@@ -156,11 +151,6 @@ export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
             <p className="text-sm text-gray-500">No slow movers in this period</p>
           </div>
         )}
-        <AvailableReportsList
-          reports={data.availableReport}
-          route="inventory"
-          title="Available Inventory Reports"
-        />
       </div>
     </div>
   );

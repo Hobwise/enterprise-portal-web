@@ -18,7 +18,6 @@ import {
   MdOutlinePayments,
   MdOutlineStar,
   MdOutlineGridView,
-  MdOutlineCampaign,
   MdOutlineSupervisorAccount,
   MdOutlineHistory,
 } from 'react-icons/md';
@@ -65,6 +64,7 @@ import {
   DailySessionsPanel,
 } from '@/components/ui/dashboard/inventory/stock-analysis/UserSubTabs';
 import {
+  AvailableReport,
   BookingReportResponse,
   FilterType,
   ModuleId,
@@ -99,6 +99,7 @@ interface SubTab {
   id: string;
   label: string;
   icon: React.ReactNode;
+  reportType?: number;
 }
 
 const MODULES: ModuleTab[] = [
@@ -106,33 +107,37 @@ const MODULES: ModuleTab[] = [
     id: 'sales',
     label: 'Sales & Orders',
     icon: <MdOutlineBarChart size={18} />,
-    badge: { value: '123k', variant: 'count' },
     subTabs: [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
       {
         id: 'order-volumes',
         label: 'Orders Volumes',
         icon: <MdOutlineBarChart size={16} />,
+        reportType: 0,
       },
       {
         id: 'popular-items',
         label: 'Popular Items',
         icon: <MdOutlineStar size={16} />,
+        reportType: 1,
       },
       {
         id: 'employee-performance',
         label: 'Employee Performance',
         icon: <MdOutlinePeopleAlt size={16} />,
+        reportType: 3,
       },
       {
         id: 'category-performance',
         label: 'Category Performance',
         icon: <MdOutlineCategory size={16} />,
+        reportType: 14,
       },
       {
         id: 'order-payment-summary',
         label: 'Order Payment Summary',
         icon: <MdOutlinePayments size={16} />,
+        reportType: 15,
       },
     ],
   },
@@ -140,33 +145,37 @@ const MODULES: ModuleTab[] = [
     id: 'payments',
     label: 'Payment & Revenue',
     icon: <HiOutlineCreditCard size={18} />,
-    badge: { value: '101 Alerts', variant: 'alert' },
     subTabs: [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
       {
         id: 'payment-summary',
         label: 'Payment Summary',
         icon: <MdOutlinePayments size={16} />,
+        reportType: 4,
       },
       {
         id: 'payment-methods',
         label: 'Payment Methods',
         icon: <HiOutlineCreditCard size={16} />,
+        reportType: 5,
       },
       {
         id: 'qr-revenue',
         label: 'QR Revenue',
         icon: <HiOutlineQrcode size={16} />,
+        reportType: 6,
       },
       {
         id: 'net-revenue',
         label: 'Net Revenue',
         icon: <MdOutlineBarChart size={16} />,
+        reportType: 19,
       },
       {
         id: 'outstanding-receivables',
         label: 'Outstanding Receivables',
         icon: <TbReportSearch size={16} />,
+        reportType: 20,
       },
     ],
   },
@@ -174,23 +183,25 @@ const MODULES: ModuleTab[] = [
     id: 'bookings',
     label: 'Bookings & Reservation',
     icon: <BsBookmark size={16} />,
-    badge: { value: '10 Alerts', variant: 'alert' },
     subTabs: [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
       {
         id: 'booking-summary',
         label: 'Booking Summary',
         icon: <BsBookmark size={14} />,
+        reportType: 7,
       },
       {
         id: 'reservation-summary',
         label: 'Reservation Summary',
         icon: <FaRegCalendarCheck size={14} />,
+        reportType: 8,
       },
       {
         id: 'occupancy-utilization',
         label: 'Occupancy Utilization',
         icon: <LuFileBarChart size={16} />,
+        reportType: 10,
       },
     ],
   },
@@ -198,23 +209,25 @@ const MODULES: ModuleTab[] = [
     id: 'inventory',
     label: 'Inventory',
     icon: <HiOutlineCube size={18} />,
-    badge: { value: '10 Alerts', variant: 'alert' },
     subTabs: [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
       {
         id: 'stock-level',
         label: 'Stock Level',
         icon: <MdOutlineBarChart size={16} />,
+        reportType: 21,
       },
       {
         id: 'stock-transfer',
         label: 'Stock Transfer',
         icon: <MdOutlineStar size={16} />,
+        reportType: 22,
       },
       {
         id: 'purchase-order',
         label: 'Purchase Order',
         icon: <LuPackage size={16} />,
+        reportType: 23,
       },
     ],
   },
@@ -222,7 +235,6 @@ const MODULES: ModuleTab[] = [
     id: 'qr',
     label: 'QR Code',
     icon: <HiOutlineQrcode size={18} />,
-    badge: { value: '2', variant: 'count' },
     subTabs: [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
       {
@@ -233,35 +245,22 @@ const MODULES: ModuleTab[] = [
     ],
   },
   {
-    id: 'campaigns',
-    label: 'Campaigns',
-    icon: <MdOutlineCampaign size={18} />,
-    badge: { value: '10 Active', variant: 'alert' },
-    subTabs: [
-      { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
-      {
-        id: 'campaign-performance',
-        label: 'Campaign Performance',
-        icon: <MdOutlineCampaign size={16} />,
-      },
-    ],
-  },
-  {
     id: 'users',
     label: 'Users & Audits',
     icon: <MdOutlineSupervisorAccount size={18} />,
-    badge: { value: '10 Logs', variant: 'alert' },
     subTabs: [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
       {
         id: 'activity-audit',
         label: 'Activity Audit',
         icon: <MdOutlineBarChart size={16} />,
+        reportType: 11,
       },
       {
         id: 'daily-sessions',
         label: 'Daily Sessions',
         icon: <MdOutlineHistory size={16} />,
+        reportType: 12,
       },
     ],
   },
@@ -374,6 +373,42 @@ const StockAnalysisPage: React.FC = () => {
   }, [router]);
 
   const currentModule = MODULES.find((m) => m.id === activeModule) ?? MODULES[0];
+
+  const availableReportsForModule = (
+    moduleId: ModuleId,
+    summaryData?: ReportSummary,
+    activeReports?: AvailableReport[]
+  ): AvailableReport[] => {
+    const fromActive = activeReports ?? [];
+    let fromSummary: AvailableReport[] = [];
+    switch (moduleId) {
+      case 'sales':
+      case 'qr':
+        fromSummary = summaryData?.orderDetails?.availableReport ?? [];
+        break;
+      case 'payments':
+        fromSummary = summaryData?.paymentDetails?.availableReport ?? [];
+        break;
+      case 'bookings':
+        fromSummary = summaryData?.bookingDetails?.availableReport ?? [];
+        break;
+      case 'inventory':
+        fromSummary = summaryData?.inventoryDetails?.availableReport ?? [];
+        break;
+      case 'users':
+        fromSummary = summaryData?.auditDetails?.availableReport ?? [];
+        break;
+      default:
+        fromSummary = [];
+    }
+    const merged = new Map<number, AvailableReport>();
+    [...fromSummary, ...fromActive].forEach((r) => {
+      if (r && typeof r.reportType === 'number') {
+        merged.set(r.reportType, r);
+      }
+    });
+    return Array.from(merged.values());
+  };
 
   const handleModuleChange = (id: ModuleId) => {
     setActiveModule(id);
@@ -545,11 +580,17 @@ const StockAnalysisPage: React.FC = () => {
           active={activeModule}
           onChange={handleModuleChange}
         />
-        <div className="px-4 md:px-6 py-4 border-t border-gray-100">
+        <div className="px-2 md:px-3 py-4 border-t border-gray-100">
           <SubTabsBar
             tabs={currentModule.subTabs}
             active={activeSubTab}
             onChange={setActiveSubTab}
+            availableReports={availableReportsForModule(activeModule, summary, [
+              ...(orderReport?.availableReport ?? []),
+              ...(paymentReport?.availableReport ?? []),
+              ...(bookingReport?.availableReport ?? []),
+              ...(userReport?.availableReport ?? []),
+            ])}
           />
         </div>
       </div>
@@ -705,33 +746,71 @@ interface SubTabsBarProps {
   tabs: SubTab[];
   active: string;
   onChange: (id: string) => void;
+  availableReports?: AvailableReport[];
 }
 
-const SubTabsBar: React.FC<SubTabsBarProps> = ({ tabs, active, onChange }) => {
+const SubTabsBar: React.FC<SubTabsBarProps> = ({
+  tabs,
+  active,
+  onChange,
+  availableReports,
+}) => {
+  const scrollerRef = React.useRef<HTMLDivElement>(null);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollerRef.current) {
+      const offset = direction === 'right' ? 240 : -240;
+      scrollerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    }
+  };
+
+  const resolveLabel = (tab: SubTab): string => {
+    if (tab.reportType === undefined) {
+      return tab.label;
+    }
+    const found = availableReports?.find(
+      (report) => report.reportType === tab.reportType
+    );
+    return found?.reportName ?? tab.label;
+  };
+
   return (
-    <div className="flex flex-wrap gap-2">
-      {tabs.map((tab) => {
-        const isActive = active === tab.id;
-        return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
-              isActive
-                ? 'bg-pink200 text-primaryColor border-pink200'
-                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            <span
-              className={isActive ? 'text-primaryColor' : 'text-gray-500'}
+    <div className="flex items-center gap-2">
+      <div
+        ref={scrollerRef}
+        className="flex items-center overflow-x-auto scrollbar-hide flex-1 gap-2 scroll-smooth"
+      >
+        {tabs.map((tab) => {
+          const isActive = active === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onChange(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium border whitespace-nowrap shrink-0 transition-colors ${
+                isActive
+                  ? 'bg-pink200 text-primaryColor border-pink200'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+              }`}
             >
-              {tab.icon}
-            </span>
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
+              <span
+                className={isActive ? 'text-primaryColor' : 'text-gray-500'}
+              >
+                {tab.icon}
+              </span>
+              <span>{resolveLabel(tab)}</span>
+            </button>
+          );
+        })}
+      </div>
+      <button
+        type="button"
+        onClick={() => handleScroll('right')}
+        aria-label="Scroll sub tabs right"
+        className="flex items-center justify-center h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 shrink-0"
+      >
+        <IoIosArrowForward size={16} />
+      </button>
     </div>
   );
 };
@@ -808,9 +887,6 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
     const paymentSubTabProps = {
       data: paymentReport,
       isLoading: paymentReportLoading,
-      reports:
-        paymentReport?.availableReport ??
-        summary?.paymentDetails?.availableReport,
       onExport,
       isExporting,
     };
