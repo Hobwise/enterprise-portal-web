@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import moment from 'moment';
 import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
 import { BarList, BreakdownList, StatCards } from './SharedPanels';
@@ -56,23 +55,30 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
   }
 
   const percentageChange = data.percentageChange ?? '0';
+  const changeNumber = safeNumber(percentageChange);
   const direction: StatCard['direction'] =
-    safeNumber(percentageChange) > 0
-      ? 'up'
-      : safeNumber(percentageChange) < 0
-      ? 'down'
-      : 'neutral';
+    changeNumber > 0 ? 'up' : changeNumber < 0 ? 'down' : 'neutral';
 
   const allBookings = safeNumber(data.allBookingCount);
+  const confirmedCount = safeNumber(data.confirmedBookingCount);
   const cancelledCount = safeNumber(data.cancelledBookingCount);
   const averageBookingFee = safeNumber(data.averageBookingFee);
-  const uniqueGuests = safeNumber(data.uniqueGuests);
+  const totalBookingFees = averageBookingFee * allBookings;
 
-  const formatChange = (value: string | undefined, suffix: string = '') => {
+  const formatChange = (
+    value: string | undefined,
+    suffix: string = ' Increase'
+  ) => {
     const n = safeNumber(value);
     const sign = n > 0 ? '+' : '';
-    return `${sign}${n}% from yesterday${suffix}`;
+    const tone = n > 0 ? suffix : n < 0 ? ' Decrease' : ' Change';
+    return `${sign}${n}%${tone}`;
   };
+
+  const cancelledChange = -Math.abs(changeNumber);
+  const cancelledDelta = `${cancelledChange}% Decrease`;
+  const cancelledDirection: StatCard['direction'] =
+    cancelledChange < 0 ? 'down' : 'neutral';
 
   const stats: StatCard[] = [
     {
@@ -82,40 +88,36 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
       direction,
     },
     {
-      label: 'Confirmed',
-      value: safeNumber(data.confirmedBookingCount).toLocaleString(),
-      footer: 'Awaiting check-in',
-      footerTone: 'muted',
+      label: 'Confirmed Bookings',
+      value: confirmedCount.toLocaleString(),
+      delta: formatChange(percentageChange),
+      direction,
     },
     {
-      label: 'Average Booking Fee',
-      value: formatPrice(averageBookingFee, 'NGN'),
-      footer: 'Per booking',
-      footerTone: 'muted',
+      label: 'Cancelled Bookings',
+      value: cancelledCount.toLocaleString(),
+      delta: cancelledDelta,
+      direction: cancelledDirection,
     },
     {
-      label: 'Unique Guests',
-      value: uniqueGuests.toLocaleString(),
-      footer: 'In period',
-      footerTone: 'muted',
+      label: 'Total Booking fees',
+      value: formatPrice(totalBookingFees, 'NGN'),
+      delta: formatChange(percentageChange),
+      direction,
     },
   ];
 
-  const peakDay = data.dayWithHighestBooking ?? null;
-  const peakDayDateTime = peakDay?.dateTime ?? null;
-
   const breakdownRows: BreakdownRow[] = [
+    { label: 'Confirmed', value: confirmedCount },
     { label: 'Pending', value: safeNumber(data.pendingBookingCount) },
     { label: 'Completed', value: safeNumber(data.completedBookingCount) },
     { label: 'Admitted', value: safeNumber(data.admittedBookingCount) },
-    { label: 'Cancelled', value: cancelledCount },
-    { label: 'Failed', value: safeNumber(data.failedBookingCount) },
+    { label: 'Cancellation', value: cancelledCount },
     {
-      label: 'Peak Day',
+      label: 'Expired/Failed',
       value:
-        peakDayDateTime && moment(peakDayDateTime).isValid()
-          ? moment(peakDayDateTime).format('ddd, MMM DD, YYYY')
-          : '—',
+        safeNumber(data.expiredBookingCount) +
+        safeNumber(data.failedBookingCount),
     },
   ];
 
@@ -133,14 +135,14 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
       <StatCards cards={stats} />
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         <BarList
-          title="Daily Bookings"
+          title="Daily Orders"
           rows={partitionRows}
           className="lg:col-span-3"
           max={partitionRows.reduce((acc, r) => Math.max(acc, r.value), 1)}
           valueFormatter={(r) => `${r.value.toLocaleString()} Bookings`}
         />
         <BreakdownList
-          title="Booking Status Breakdown"
+          title="Order Status Breakdown"
           rows={breakdownRows}
           className="lg:col-span-2"
         />

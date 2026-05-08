@@ -5,6 +5,7 @@ import {
   getReportInventoryExport,
   getReportOrderExport,
   getReportPaymentExport,
+  getReportQrExport,
 } from '@/app/api/controllers/dashboard/report';
 import {
   dynamicExportConfig,
@@ -44,6 +45,11 @@ const SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
   // Users
   'activity-audit': 11,
   'daily-sessions': 12,
+  // QR
+  'qr-details': 30,
+  'qr-order-history': 31,
+  'qr-revenue-by-code': 6,
+  'qr-activity-timeline': 32,
 };
 
 const SUB_TAB_FILE_NAME: Record<string, string> = {
@@ -65,7 +71,10 @@ const SUB_TAB_FILE_NAME: Record<string, string> = {
   'purchase-order': 'PurchaseOrder',
   'activity-audit': 'ActivityAudit',
   'daily-sessions': 'DailySessions',
-  'qr-details': 'QrDetails',
+  'qr-details': 'QrPerformanceSummary',
+  'qr-order-history': 'QrOrderHistory',
+  'qr-revenue-by-code': 'RevenueByQrCode',
+  'qr-activity-timeline': 'QrActivityTimeline',
   overview: 'Overview',
 };
 
@@ -115,13 +124,22 @@ export const useStockAnalysisExport = ({
       setIsExporting(true);
       try {
         let response;
-        if (module === 'sales' || module === 'qr') {
+        if (module === 'sales') {
           response = await getReportOrderExport(
             businessId,
             filterType,
             startDate,
             endDate,
             reportType,
+            exportType
+          );
+        } else if (module === 'qr') {
+          response = await getReportQrExport(
+            businessId,
+            filterType,
+            startDate,
+            endDate,
+            reportType ?? 30,
             exportType
           );
         } else if (module === 'payments') {

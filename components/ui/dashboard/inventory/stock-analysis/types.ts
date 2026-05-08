@@ -505,6 +505,61 @@ export interface UserReportPayload {
   emailAddress?: string;
 }
 
+export interface QrTopItem {
+  qrName: string;
+  orderCount: number;
+  netRevenue: number;
+  averageOrderValue: number;
+  lastOrderDateTime: string | null;
+}
+
+export interface QrDetailsSection {
+  totalQRCodes: number;
+  activeQRCodes: number;
+  idleQRCodes: number;
+  totalQROrders: number;
+  totalQRRevenue: number;
+  averageOrdersPerActiveQR: number;
+  topQRConcentrationPct: number;
+  topByRevenue: QrTopItem | null;
+  topByOrders: QrTopItem | null;
+  topByAverageOrderValue: QrTopItem | null;
+  percentageChange: string;
+  availableReport: AvailableReport[];
+}
+
+export interface QrPerformanceItem {
+  qrName: string;
+  orderCount: number;
+  openOrders?: number;
+  closedOrders?: number;
+  cancelledOrders?: number;
+  netRevenue: number;
+  averageOrderValue: number;
+  refundAmount?: number;
+  status?: string;
+  lastOrderDateTime?: string | null;
+}
+
+export interface QrReportResponse {
+  qrDetails?: QrDetailsSection;
+  qrPerformanceSummaries?: QrPerformanceItem[];
+  qrOrderHistories?: OrderReportItem[];
+  qrActivityTimelines?: unknown[];
+  lastRecordDateTime: string | null;
+  hasExceededMaximumCount: boolean;
+  message: string | null;
+  availableReport: AvailableReport[];
+}
+
+export interface QrReportPayload {
+  filterType: number;
+  startDate?: string;
+  endDate?: string;
+  reportType?: number;
+  quickResponseID?: string;
+}
+
 export interface ReportSummary {
   filterType?: number;
   paymentDetails: PaymentDetailsSection;

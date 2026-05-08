@@ -321,6 +321,68 @@ export async function getReportInventory(
   }
 }
 
+export async function getReportQr(
+  businessId: string,
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  reportType?: number,
+  quickResponseID?: string
+) {
+  const headers = businessId ? { businessId } : {};
+  const payload: Record<string, unknown> = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+    },
+    startDate,
+    endDate
+  );
+  if (quickResponseID !== undefined) payload.quickResponseID = quickResponseID;
+
+  try {
+    const data = await api.post(DASHBOARD.reportQr, payload, {
+      headers,
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+export async function getReportQrExport(
+  businessId: string,
+  filterType: number,
+  startDate?: string,
+  endDate?: string,
+  reportType?: number,
+  exportType?: number,
+  quickResponseID?: string
+) {
+  const headers = businessId ? { businessId, exportType } : {};
+  const payload: Record<string, unknown> = withDateRange(
+    {
+      filterType: filterType,
+      reportType: reportType,
+    },
+    startDate,
+    endDate
+  );
+  if (quickResponseID !== undefined) payload.quickResponseID = quickResponseID;
+
+  try {
+    const data = await api.post(DASHBOARD.reportQrExport, payload, {
+      headers,
+      responseType: 'blob',
+    });
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
 export async function getReportInventoryExport(
   businessId: string,
   filterType: number,

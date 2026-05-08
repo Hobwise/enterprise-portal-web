@@ -110,6 +110,8 @@ export const DASHBOARD = {
   reportAuditLog: "api/v1/ReportManager/user",
   reportInventory: "api/v1/ReportManager/inventory",
   reportInventoryExport: "api/v1/ReportManager/inventory/export",
+  reportQr: "api/v1/ReportManager/qr",
+  reportQrExport: "api/v1/ReportManager/qr/export",
   //Billings and Subscriptions
   subscription: "api/v1/Subscription",
   userSubscription: "api/v1/Subscription/User",

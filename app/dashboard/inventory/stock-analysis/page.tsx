@@ -2,18 +2,20 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Chip } from '@nextui-org/react';
-import { FiDownload } from 'react-icons/fi';
-import { IoIosArrowForward } from 'react-icons/io';
+import { Chip } from '@nextui-org/react';
+import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import {
   HiOutlineCreditCard,
   HiOutlineCube,
   HiOutlineQrcode,
 } from 'react-icons/hi';
-import { BsBookmark } from 'react-icons/bs';
 import {
   MdOutlineBarChart,
+  MdOutlineBookmark,
+  MdOutlineBookmarkBorder,
   MdOutlineCategory,
+  MdOutlineCheckCircle,
+  MdOutlineEventNote,
   MdOutlinePeopleAlt,
   MdOutlinePayments,
   MdOutlineStar,
@@ -22,14 +24,12 @@ import {
   MdOutlineHistory,
 } from 'react-icons/md';
 import { TbReportSearch } from 'react-icons/tb';
-import { LuFileBarChart, LuPackage } from 'react-icons/lu';
-import { FaRegCalendarCheck } from 'react-icons/fa';
+import { LuPackage } from 'react-icons/lu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { SalesOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SalesPanels';
 import { ComingSoonPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SharedPanels';
 import { InventoryOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/InventoryOverviewPanel';
 import { PaymentOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/PaymentOverviewPanel';
-import { BookingOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/BookingOverviewPanel';
 import { UserAuditOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/UserAuditOverviewPanel';
 import {
   CategoryPerformancePanel,
@@ -46,14 +46,15 @@ import {
   QrRevenueSubPanel,
 } from '@/components/ui/dashboard/inventory/stock-analysis/PaymentSubTabs';
 import {
+  QrDetailsPanel,
+  QrOverviewPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/QrPanels';
+import { BookingOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/BookingOverviewPanel';
+import {
   BookingSummaryPanel,
   OccupancyUtilizationPanel,
   ReservationSummaryPanel,
 } from '@/components/ui/dashboard/inventory/stock-analysis/BookingSubTabs';
-import {
-  QrDetailsPanel,
-  QrOverviewPanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/QrPanels';
 import {
   PurchaseOrderPanel,
   StockLevelPanel,
@@ -71,6 +72,7 @@ import {
   OrderReportResponse,
   PaymentReportResponse,
   PeriodId,
+  QrReportResponse,
   ReportSummary,
   UserReportResponse,
   periodToDateRange,
@@ -79,13 +81,11 @@ import {
 import useStockAnalysisSummary from '@/hooks/cachedEndpoints/useStockAnalysisSummary';
 import useStockAnalysisOrderReport from '@/hooks/cachedEndpoints/useStockAnalysisOrderReport';
 import useStockAnalysisPaymentReport from '@/hooks/cachedEndpoints/useStockAnalysisPaymentReport';
-import useStockAnalysisBookingReport from '@/hooks/cachedEndpoints/useStockAnalysisBookingReport';
 import useStockAnalysisInventoryReport from '@/hooks/cachedEndpoints/useStockAnalysisInventoryReport';
 import useStockAnalysisUserReport from '@/hooks/cachedEndpoints/useStockAnalysisUserReport';
-import {
-  ExportType,
-  useStockAnalysisExport,
-} from '@/components/ui/dashboard/inventory/stock-analysis/exportHelpers';
+import useStockAnalysisQrReport from '@/hooks/cachedEndpoints/useStockAnalysisQrReport';
+import useStockAnalysisBookingReport from '@/hooks/cachedEndpoints/useStockAnalysisBookingReport';
+import { useStockAnalysisExport } from '@/components/ui/dashboard/inventory/stock-analysis/exportHelpers';
 
 interface ModuleTab {
   id: ModuleId;
@@ -182,25 +182,25 @@ const MODULES: ModuleTab[] = [
   {
     id: 'bookings',
     label: 'Bookings & Reservation',
-    icon: <BsBookmark size={16} />,
+    icon: <MdOutlineBookmarkBorder size={18} />,
     subTabs: [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
       {
         id: 'booking-summary',
         label: 'Booking Summary',
-        icon: <BsBookmark size={14} />,
+        icon: <MdOutlineBookmark size={16} />,
         reportType: 7,
       },
       {
         id: 'reservation-summary',
         label: 'Reservation Summary',
-        icon: <FaRegCalendarCheck size={14} />,
+        icon: <MdOutlineEventNote size={16} />,
         reportType: 8,
       },
       {
         id: 'occupancy-utilization',
         label: 'Occupancy Utilization',
-        icon: <LuFileBarChart size={16} />,
+        icon: <MdOutlineCheckCircle size={16} />,
         reportType: 10,
       },
     ],
@@ -239,8 +239,27 @@ const MODULES: ModuleTab[] = [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
       {
         id: 'qr-details',
-        label: 'QR Code Details',
+        label: 'QR Performance Summary',
         icon: <HiOutlineQrcode size={16} />,
+        reportType: 30,
+      },
+      {
+        id: 'qr-order-history',
+        label: 'QR Order History',
+        icon: <MdOutlineHistory size={16} />,
+        reportType: 31,
+      },
+      {
+        id: 'qr-revenue-by-code',
+        label: 'Revenue by QR Code',
+        icon: <MdOutlinePayments size={16} />,
+        reportType: 6,
+      },
+      {
+        id: 'qr-activity-timeline',
+        label: 'QR Activity Timeline',
+        icon: <MdOutlineBarChart size={16} />,
+        reportType: 32,
       },
     ],
   },
@@ -303,6 +322,51 @@ const INVENTORY_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
 const USER_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
   'activity-audit': 11,
   'daily-sessions': 12,
+};
+
+const QR_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
+  overview: 30,
+  'qr-details': 30,
+  'qr-order-history': 31,
+  'qr-revenue-by-code': 6,
+  'qr-activity-timeline': 32,
+};
+
+const slugifyReportName = (name: string): string =>
+  name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const mergeSubTabsWithReports = (
+  baseSubTabs: SubTab[],
+  availableReports: AvailableReport[]
+): SubTab[] => {
+  const usedTypes = new Set<number>(
+    baseSubTabs
+      .map((t) => t.reportType)
+      .filter((t): t is number => typeof t === 'number')
+  );
+  const usedIds = new Set<string>(baseSubTabs.map((t) => t.id));
+
+  const extras: SubTab[] = [];
+  availableReports.forEach((report) => {
+    if (typeof report.reportType !== 'number') return;
+    if (usedTypes.has(report.reportType)) return;
+    const slug = slugifyReportName(report.reportName ?? '') ||
+      `report-${report.reportType}`;
+    if (usedIds.has(slug)) return;
+    usedTypes.add(report.reportType);
+    usedIds.add(slug);
+    extras.push({
+      id: slug,
+      label: report.reportName,
+      icon: <TbReportSearch size={16} />,
+      reportType: report.reportType,
+    });
+  });
+
+  return [...baseSubTabs, ...extras];
 };
 
 interface PanelErrorBoundaryState {
@@ -383,7 +447,6 @@ const StockAnalysisPage: React.FC = () => {
     let fromSummary: AvailableReport[] = [];
     switch (moduleId) {
       case 'sales':
-      case 'qr':
         fromSummary = summaryData?.orderDetails?.availableReport ?? [];
         break;
       case 'payments':
@@ -397,6 +460,9 @@ const StockAnalysisPage: React.FC = () => {
         break;
       case 'users':
         fromSummary = summaryData?.auditDetails?.availableReport ?? [];
+        break;
+      case 'qr':
+        fromSummary = [];
         break;
       default:
         fromSummary = [];
@@ -439,10 +505,9 @@ const StockAnalysisPage: React.FC = () => {
   const subTabReportType = SUB_TAB_REPORT_TYPE[activeSubTab];
   const orderReportEnabled =
     hasAccess &&
-    ((activeModule === 'sales' &&
-      activeSubTab !== 'overview' &&
-      subTabReportType !== undefined) ||
-      activeModule === 'qr');
+    activeModule === 'sales' &&
+    activeSubTab !== 'overview' &&
+    subTabReportType !== undefined;
 
   const { data: orderReport, isLoading: orderReportLoading } =
     useStockAnalysisOrderReport(
@@ -453,6 +518,20 @@ const StockAnalysisPage: React.FC = () => {
         reportType: subTabReportType,
       },
       { enabled: orderReportEnabled }
+    );
+
+  const qrSubTabReportType = QR_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const qrReportEnabled = hasAccess && activeModule === 'qr';
+
+  const { data: qrReport, isLoading: qrReportLoading } =
+    useStockAnalysisQrReport(
+      {
+        filterType,
+        startDate,
+        endDate,
+        reportType: qrSubTabReportType,
+      },
+      { enabled: qrReportEnabled }
     );
 
   const paymentSubTabReportType = PAYMENT_SUB_TAB_REPORT_TYPE[activeSubTab];
@@ -471,24 +550,6 @@ const StockAnalysisPage: React.FC = () => {
         reportType: paymentSubTabReportType,
       },
       { enabled: paymentReportEnabled }
-    );
-
-  const bookingSubTabReportType = BOOKING_SUB_TAB_REPORT_TYPE[activeSubTab];
-  const bookingReportEnabled =
-    hasAccess &&
-    activeModule === 'bookings' &&
-    activeSubTab !== 'overview' &&
-    bookingSubTabReportType !== undefined;
-
-  const { data: bookingReport, isLoading: bookingReportLoading } =
-    useStockAnalysisBookingReport(
-      {
-        filterType,
-        startDate,
-        endDate,
-        reportType: bookingSubTabReportType,
-      },
-      { enabled: bookingReportEnabled }
     );
 
   const inventorySubTabReportType =
@@ -528,6 +589,24 @@ const StockAnalysisPage: React.FC = () => {
       { enabled: userReportEnabled }
     );
 
+  const bookingSubTabReportType = BOOKING_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const bookingReportEnabled =
+    hasAccess &&
+    activeModule === 'bookings' &&
+    activeSubTab !== 'overview' &&
+    bookingSubTabReportType !== undefined;
+
+  const { data: bookingReport, isLoading: bookingReportLoading } =
+    useStockAnalysisBookingReport(
+      {
+        filterType,
+        startDate,
+        endDate,
+        reportType: bookingSubTabReportType,
+      },
+      { enabled: bookingReportEnabled }
+    );
+
   const { exportTable, isExporting } = useStockAnalysisExport({
     module: activeModule,
     subTab: activeSubTab,
@@ -535,6 +614,29 @@ const StockAnalysisPage: React.FC = () => {
     startDate,
     endDate,
   });
+
+  const activeModuleReports: AvailableReport[] = (() => {
+    switch (activeModule) {
+      case 'sales':
+        return orderReport?.availableReport ?? [];
+      case 'payments':
+        return paymentReport?.availableReport ?? [];
+      case 'users':
+        return userReport?.availableReport ?? [];
+      case 'bookings':
+        return bookingReport?.availableReport ?? [];
+      case 'qr':
+        return qrReport?.qrDetails?.availableReport ?? [];
+      default:
+        return [];
+    }
+  })();
+
+  const moduleAvailableReports = availableReportsForModule(
+    activeModule,
+    summary,
+    activeModuleReports
+  );
 
   if (!hasAccess) {
     return null;
@@ -552,25 +654,6 @@ const StockAnalysisPage: React.FC = () => {
             View, filter and export across all modules
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button
-            variant="bordered"
-            onPress={() => exportTable(ExportType.Excel)}
-            isLoading={isExporting}
-            startContent={isExporting ? null : <FiDownload size={16} />}
-            className="border border-gray-200 text-gray-700 bg-white rounded-lg font-medium"
-          >
-            Export Excel
-          </Button>
-          <Button
-            onPress={() => exportTable(ExportType.Pdf)}
-            isLoading={isExporting}
-            startContent={isExporting ? null : <FiDownload size={16} />}
-            className="bg-primaryColor text-white rounded-lg font-medium"
-          >
-            Export PDF
-          </Button>
-        </div>
       </div>
 
       {/* Module tabs + sub-tabs card */}
@@ -582,15 +665,13 @@ const StockAnalysisPage: React.FC = () => {
         />
         <div className="px-2 md:px-3 py-4 border-t border-gray-100">
           <SubTabsBar
-            tabs={currentModule.subTabs}
+            tabs={mergeSubTabsWithReports(
+              currentModule.subTabs,
+              moduleAvailableReports
+            )}
             active={activeSubTab}
             onChange={setActiveSubTab}
-            availableReports={availableReportsForModule(activeModule, summary, [
-              ...(orderReport?.availableReport ?? []),
-              ...(paymentReport?.availableReport ?? []),
-              ...(bookingReport?.availableReport ?? []),
-              ...(userReport?.availableReport ?? []),
-            ])}
+            availableReports={moduleAvailableReports}
           />
         </div>
       </div>
@@ -652,18 +733,70 @@ const StockAnalysisPage: React.FC = () => {
           orderReportLoading={orderReportLoading}
           paymentReport={paymentReport}
           paymentReportLoading={paymentReportLoading}
-          bookingReport={bookingReport}
-          bookingReportLoading={bookingReportLoading}
           inventoryReport={inventoryReport}
           inventoryReportLoading={inventoryReportLoading}
           userReport={userReport}
           userReportLoading={userReportLoading}
+          qrReport={qrReport}
+          qrReportLoading={qrReportLoading}
+          bookingReport={bookingReport}
+          bookingReportLoading={bookingReportLoading}
           onExport={exportTable}
           isExporting={isExporting}
         />
       </PanelErrorBoundary>
     </div>
   );
+};
+
+const useHorizontalScrollControls = () => {
+  const scrollerRef = React.useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  const update = React.useCallback(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const tolerance = 1;
+    setCanScrollLeft(el.scrollLeft > tolerance);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - tolerance);
+  }, []);
+
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el) return;
+
+    update();
+    el.addEventListener('scroll', update, { passive: true });
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(update);
+      resizeObserver.observe(el);
+      Array.from(el.children).forEach((child) => {
+        resizeObserver?.observe(child as Element);
+      });
+    } else if (typeof window !== 'undefined') {
+      window.addEventListener('resize', update);
+    }
+
+    return () => {
+      el.removeEventListener('scroll', update);
+      resizeObserver?.disconnect();
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('resize', update);
+      }
+    };
+  }, [update]);
+
+  const scrollBy = React.useCallback((direction: 'left' | 'right') => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const offset = direction === 'right' ? 240 : -240;
+    el.scrollBy({ left: offset, behavior: 'smooth' });
+  }, []);
+
+  return { scrollerRef, canScrollLeft, canScrollRight, scrollBy };
 };
 
 interface ModuleTabsBarProps {
@@ -677,17 +810,21 @@ const ModuleTabsBar: React.FC<ModuleTabsBarProps> = ({
   active,
   onChange,
 }) => {
-  const scrollerRef = React.useRef<HTMLDivElement>(null);
-
-  const handleScroll = (direction: 'left' | 'right') => {
-    if (scrollerRef.current) {
-      const offset = direction === 'right' ? 240 : -240;
-      scrollerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-    }
-  };
+  const { scrollerRef, canScrollLeft, canScrollRight, scrollBy } =
+    useHorizontalScrollControls();
 
   return (
     <div className="flex items-center px-2 md:px-3 py-3 gap-2">
+      {canScrollLeft && (
+        <button
+          type="button"
+          onClick={() => scrollBy('left')}
+          aria-label="Scroll modules left"
+          className="flex items-center justify-center h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 shrink-0"
+        >
+          <IoIosArrowBack size={16} />
+        </button>
+      )}
       <div
         ref={scrollerRef}
         className="flex items-center overflow-x-auto scrollbar-hide flex-1 gap-1 scroll-smooth"
@@ -730,14 +867,16 @@ const ModuleTabsBar: React.FC<ModuleTabsBarProps> = ({
           );
         })}
       </div>
-      <button
-        type="button"
-        onClick={() => handleScroll('right')}
-        aria-label="Scroll modules right"
-        className="flex items-center justify-center h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 shrink-0"
-      >
-        <IoIosArrowForward size={16} />
-      </button>
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={() => scrollBy('right')}
+          aria-label="Scroll modules right"
+          className="flex items-center justify-center h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 shrink-0"
+        >
+          <IoIosArrowForward size={16} />
+        </button>
+      )}
     </div>
   );
 };
@@ -755,14 +894,8 @@ const SubTabsBar: React.FC<SubTabsBarProps> = ({
   onChange,
   availableReports,
 }) => {
-  const scrollerRef = React.useRef<HTMLDivElement>(null);
-
-  const handleScroll = (direction: 'left' | 'right') => {
-    if (scrollerRef.current) {
-      const offset = direction === 'right' ? 240 : -240;
-      scrollerRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-    }
-  };
+  const { scrollerRef, canScrollLeft, canScrollRight, scrollBy } =
+    useHorizontalScrollControls();
 
   const resolveLabel = (tab: SubTab): string => {
     if (tab.reportType === undefined) {
@@ -776,6 +909,16 @@ const SubTabsBar: React.FC<SubTabsBarProps> = ({
 
   return (
     <div className="flex items-center gap-2">
+      {canScrollLeft && (
+        <button
+          type="button"
+          onClick={() => scrollBy('left')}
+          aria-label="Scroll sub tabs left"
+          className="flex items-center justify-center h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 shrink-0"
+        >
+          <IoIosArrowBack size={16} />
+        </button>
+      )}
       <div
         ref={scrollerRef}
         className="flex items-center overflow-x-auto scrollbar-hide flex-1 gap-2 scroll-smooth"
@@ -803,14 +946,16 @@ const SubTabsBar: React.FC<SubTabsBarProps> = ({
           );
         })}
       </div>
-      <button
-        type="button"
-        onClick={() => handleScroll('right')}
-        aria-label="Scroll sub tabs right"
-        className="flex items-center justify-center h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 shrink-0"
-      >
-        <IoIosArrowForward size={16} />
-      </button>
+      {canScrollRight && (
+        <button
+          type="button"
+          onClick={() => scrollBy('right')}
+          aria-label="Scroll sub tabs right"
+          className="flex items-center justify-center h-8 w-8 rounded-full border border-gray-200 text-gray-500 hover:bg-gray-50 shrink-0"
+        >
+          <IoIosArrowForward size={16} />
+        </button>
+      )}
     </div>
   );
 };
@@ -824,12 +969,14 @@ interface ActivePanelProps {
   orderReportLoading?: boolean;
   paymentReport?: PaymentReportResponse;
   paymentReportLoading?: boolean;
-  bookingReport?: BookingReportResponse;
-  bookingReportLoading?: boolean;
   inventoryReport?: unknown[];
   inventoryReportLoading?: boolean;
   userReport?: UserReportResponse;
   userReportLoading?: boolean;
+  qrReport?: QrReportResponse;
+  qrReportLoading?: boolean;
+  bookingReport?: BookingReportResponse;
+  bookingReportLoading?: boolean;
   onExport: (exportType: number) => void | Promise<void>;
   isExporting?: boolean;
 }
@@ -843,12 +990,14 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
   orderReportLoading,
   paymentReport,
   paymentReportLoading,
-  bookingReport,
-  bookingReportLoading,
   inventoryReport,
   inventoryReportLoading,
   userReport,
   userReportLoading,
+  qrReport,
+  qrReportLoading,
+  bookingReport,
+  bookingReportLoading,
   onExport,
   isExporting,
 }) => {
@@ -906,6 +1055,23 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
     }
   }
 
+  if (moduleId === 'qr') {
+    const qrPanelProps = {
+      data: qrReport,
+      isLoading: qrReportLoading,
+      onExport,
+      isExporting,
+    };
+    switch (subTabId) {
+      case 'overview':
+        return <QrOverviewPanel {...qrPanelProps} />;
+      case 'qr-details':
+        return <QrDetailsPanel {...qrPanelProps} />;
+      default:
+        return <ComingSoonPanel />;
+    }
+  }
+
   if (moduleId === 'bookings' && subTabId !== 'overview') {
     const bookingSubTabProps = {
       data: bookingReport,
@@ -920,23 +1086,6 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return <ReservationSummaryPanel {...bookingSubTabProps} />;
       case 'occupancy-utilization':
         return <OccupancyUtilizationPanel {...bookingSubTabProps} />;
-      default:
-        return <ComingSoonPanel />;
-    }
-  }
-
-  if (moduleId === 'qr') {
-    const qrPanelProps = {
-      data: orderReport,
-      isLoading: orderReportLoading,
-      onExport,
-      isExporting,
-    };
-    switch (subTabId) {
-      case 'overview':
-        return <QrOverviewPanel {...qrPanelProps} />;
-      case 'qr-details':
-        return <QrDetailsPanel {...qrPanelProps} />;
       default:
         return <ComingSoonPanel />;
     }
