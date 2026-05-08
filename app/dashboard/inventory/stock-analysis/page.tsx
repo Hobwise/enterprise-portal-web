@@ -11,8 +11,11 @@ import {
 } from 'react-icons/hi';
 import {
   MdOutlineBarChart,
+  MdOutlineBookmark,
   MdOutlineBookmarkBorder,
   MdOutlineCategory,
+  MdOutlineCheckCircle,
+  MdOutlineEventNote,
   MdOutlinePeopleAlt,
   MdOutlinePayments,
   MdOutlineStar,
@@ -46,6 +49,12 @@ import {
   QrDetailsPanel,
   QrOverviewPanel,
 } from '@/components/ui/dashboard/inventory/stock-analysis/QrPanels';
+import { BookingOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/BookingOverviewPanel';
+import {
+  BookingSummaryPanel,
+  OccupancyUtilizationPanel,
+  ReservationSummaryPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/BookingSubTabs';
 import {
   PurchaseOrderPanel,
   StockLevelPanel,
@@ -57,6 +66,7 @@ import {
 } from '@/components/ui/dashboard/inventory/stock-analysis/UserSubTabs';
 import {
   AvailableReport,
+  BookingReportResponse,
   FilterType,
   ModuleId,
   OrderReportResponse,
@@ -74,6 +84,7 @@ import useStockAnalysisPaymentReport from '@/hooks/cachedEndpoints/useStockAnaly
 import useStockAnalysisInventoryReport from '@/hooks/cachedEndpoints/useStockAnalysisInventoryReport';
 import useStockAnalysisUserReport from '@/hooks/cachedEndpoints/useStockAnalysisUserReport';
 import useStockAnalysisQrReport from '@/hooks/cachedEndpoints/useStockAnalysisQrReport';
+import useStockAnalysisBookingReport from '@/hooks/cachedEndpoints/useStockAnalysisBookingReport';
 import { useStockAnalysisExport } from '@/components/ui/dashboard/inventory/stock-analysis/exportHelpers';
 
 interface ModuleTab {
@@ -172,7 +183,27 @@ const MODULES: ModuleTab[] = [
     id: 'bookings',
     label: 'Bookings & Reservation',
     icon: <MdOutlineBookmarkBorder size={18} />,
-    subTabs: [],
+    subTabs: [
+      { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
+      {
+        id: 'booking-summary',
+        label: 'Booking Summary',
+        icon: <MdOutlineBookmark size={16} />,
+        reportType: 7,
+      },
+      {
+        id: 'reservation-summary',
+        label: 'Reservation Summary',
+        icon: <MdOutlineEventNote size={16} />,
+        reportType: 8,
+      },
+      {
+        id: 'occupancy-utilization',
+        label: 'Occupancy Utilization',
+        icon: <MdOutlineCheckCircle size={16} />,
+        reportType: 10,
+      },
+    ],
   },
   {
     id: 'inventory',
@@ -274,6 +305,12 @@ const PAYMENT_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
   'qr-revenue': 6,
   'net-revenue': 19,
   'outstanding-receivables': 20,
+};
+
+const BOOKING_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
+  'booking-summary': 7,
+  'reservation-summary': 8,
+  'occupancy-utilization': 10,
 };
 
 const INVENTORY_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
@@ -416,7 +453,7 @@ const StockAnalysisPage: React.FC = () => {
         fromSummary = summaryData?.paymentDetails?.availableReport ?? [];
         break;
       case 'bookings':
-        fromSummary = [];
+        fromSummary = summaryData?.bookingDetails?.availableReport ?? [];
         break;
       case 'inventory':
         fromSummary = summaryData?.inventoryDetails?.availableReport ?? [];
@@ -552,6 +589,24 @@ const StockAnalysisPage: React.FC = () => {
       { enabled: userReportEnabled }
     );
 
+  const bookingSubTabReportType = BOOKING_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const bookingReportEnabled =
+    hasAccess &&
+    activeModule === 'bookings' &&
+    activeSubTab !== 'overview' &&
+    bookingSubTabReportType !== undefined;
+
+  const { data: bookingReport, isLoading: bookingReportLoading } =
+    useStockAnalysisBookingReport(
+      {
+        filterType,
+        startDate,
+        endDate,
+        reportType: bookingSubTabReportType,
+      },
+      { enabled: bookingReportEnabled }
+    );
+
   const { exportTable, isExporting } = useStockAnalysisExport({
     module: activeModule,
     subTab: activeSubTab,
@@ -569,7 +624,7 @@ const StockAnalysisPage: React.FC = () => {
       case 'users':
         return userReport?.availableReport ?? [];
       case 'bookings':
-        return [];
+        return bookingReport?.availableReport ?? [];
       case 'qr':
         return qrReport?.qrDetails?.availableReport ?? [];
       default:
@@ -684,6 +739,8 @@ const StockAnalysisPage: React.FC = () => {
           userReportLoading={userReportLoading}
           qrReport={qrReport}
           qrReportLoading={qrReportLoading}
+          bookingReport={bookingReport}
+          bookingReportLoading={bookingReportLoading}
           onExport={exportTable}
           isExporting={isExporting}
         />
@@ -918,6 +975,8 @@ interface ActivePanelProps {
   userReportLoading?: boolean;
   qrReport?: QrReportResponse;
   qrReportLoading?: boolean;
+  bookingReport?: BookingReportResponse;
+  bookingReportLoading?: boolean;
   onExport: (exportType: number) => void | Promise<void>;
   isExporting?: boolean;
 }
@@ -937,13 +996,11 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
   userReportLoading,
   qrReport,
   qrReportLoading,
+  bookingReport,
+  bookingReportLoading,
   onExport,
   isExporting,
 }) => {
-  if (moduleId === 'bookings') {
-    return null;
-  }
-
   if (moduleId === 'sales') {
     if (subTabId === 'overview') {
       return (
@@ -1015,6 +1072,25 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
     }
   }
 
+  if (moduleId === 'bookings' && subTabId !== 'overview') {
+    const bookingSubTabProps = {
+      data: bookingReport,
+      isLoading: bookingReportLoading,
+      onExport,
+      isExporting,
+    };
+    switch (subTabId) {
+      case 'booking-summary':
+        return <BookingSummaryPanel {...bookingSubTabProps} />;
+      case 'reservation-summary':
+        return <ReservationSummaryPanel {...bookingSubTabProps} />;
+      case 'occupancy-utilization':
+        return <OccupancyUtilizationPanel {...bookingSubTabProps} />;
+      default:
+        return <ComingSoonPanel />;
+    }
+  }
+
   if (moduleId === 'inventory' && subTabId !== 'overview') {
     const inventorySubTabProps = {
       data: inventoryReport,
@@ -1057,6 +1133,13 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return (
           <PaymentOverviewPanel
             data={summary?.paymentDetails}
+            isLoading={isLoading}
+          />
+        );
+      case 'bookings':
+        return (
+          <BookingOverviewPanel
+            data={summary?.bookingDetails}
             isLoading={isLoading}
           />
         );
