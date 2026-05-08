@@ -112,47 +112,6 @@ const directionColor = (direction: string): string => {
   return 'text-gray-700';
 };
 
-interface PillCountTab {
-  id: string;
-  label: string;
-  count: number;
-}
-
-const PillCountTabs: React.FC<{
-  tabs: PillCountTab[];
-  active: string;
-  onChange: (id: string) => void;
-}> = ({ tabs, active, onChange }) => (
-  <div className="flex items-center gap-6 px-5 pt-4 border-b border-gray-100 overflow-x-auto scrollbar-hide">
-    {tabs.map((tab) => {
-      const isActive = active === tab.id;
-      return (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id)}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-            isActive
-              ? 'text-primaryColor border-primaryColor'
-              : 'text-gray-500 border-transparent hover:text-gray-700'
-          }`}
-        >
-          <span>{tab.label}</span>
-          <span
-            className={`h-5 min-w-5 px-2 inline-flex items-center justify-center rounded-full text-[11px] font-semibold ${
-              isActive
-                ? 'bg-pink200 text-primaryColor'
-                : 'bg-gray-100 text-gray-500'
-            }`}
-          >
-            {tab.count}
-          </span>
-        </button>
-      );
-    })}
-  </div>
-);
-
 export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
   data,
   isLoading,
@@ -270,7 +229,7 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
     },
   ];
 
-  const tabs: PillCountTab[] = [
+  const tabs = [
     { id: 'all', label: 'All payments', count: counts.total },
     { id: 'confirmed', label: 'Confirmed', count: counts.confirmed },
     { id: 'pending', label: 'Pending', count: counts.pending },
@@ -281,18 +240,24 @@ export const PaymentSummarySubPanel: React.FC<PaymentSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
-          <PillCountTabs
-            tabs={tabs}
-            active={statusTab}
-            onChange={(v) => {
-              setStatusTab(v);
-              setPage(1);
-            }}
-          />
-          <div className="px-5 py-4">
-            <ExportButtons {...exportHandlers} isLoading={isExporting} />
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <select
+              value={statusTab}
+              onChange={(e) => {
+                setStatusTab(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
+            >
+              {tabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label} ({tab.count})
+                </option>
+              ))}
+            </select>
           </div>
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">

@@ -153,224 +153,49 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) <= 0) {
     }
   };
 
+  const inputClass =
+    'w-full px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-sm text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200';
+  const labelClass = 'block text-xs font-semibold text-gray-700 mb-1';
+  const selectClass = `${inputClass} appearance-none pr-9`;
+
   const renderCreateItemStep = () => (
-    <div className="p-6 space-y-6">
+    <div className="p-5 space-y-4">
       {/* Basic Information */}
-      <div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Item Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Item Name
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter item name"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Unit
-            </label>
-            <div className="relative">
-              <select
-                value={unitId}
-                onChange={(e) => setUnitId(e.target.value)}
-                disabled={unitsByBusinessLoading}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-              >
-                <option value="">Select unit</option>
-                {Array.isArray(unitsByBusiness) && [...unitsByBusiness].filter((u) => u.isActive).sort((a, b) => a.name.localeCompare(b.name)).map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                {unitsByBusinessLoading ? (
-                  <Spinner size="sm" color="secondary" />
-                ) : (
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Description - full width */}
-          <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter item description"
-              rows={3}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 resize-none"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Pricing & Stock */}
-      <div className="border-t border-gray-100 pt-4 mt-2">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Average Cost Per Base Unit */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Average Cost Per Base Unit
-              <span className="text-red-500 ml-1">*</span>
-            </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold">
-                &#x20A6;
-              </span>
-              <input
-                type="number"
-                value={averageCostPerBaseUnit}
-                onChange={(e) => setAverageCostPerBaseUnit(e.target.value)}
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                required
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-              />
-            </div>
-          </div>
-
-          {/* Reorder Threshold */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Reorder Threshold
-            </label>
-            <input
-              type="number"
-              value={reorderLevel}
-              onChange={(e) => setReorderLevel(e.target.value)}
-              placeholder="0"
-              min="0"
-              step="1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-            />
-          </div>
-
-          {/* Opening Stock */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Opening Stock
-            </label>
-            <input
-              type="number"
-              value={openingStock}
-              onChange={(e) => setOpeningStock(e.target.value)}
-              placeholder="0"
-              min="0"
-              step="1"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-            />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Item Name */}
+        <div>
+          <label className={labelClass}>Item Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter item name"
+            className={inputClass}
+          />
         </div>
 
-        {/* Expiry Date */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Expiry Date
-              <span className="text-gray-400 font-normal ml-1">(optional)</span>
-            </label>
-            <input
-              type="date"
-              value={expiryDate}
-              onChange={(e) => setExpiryDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Classification */}
-      <div className="border-t border-gray-100 pt-4 mt-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Supplier Name */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Supplier Name
-            </label>
-            <div className="relative">
-              <select
-                value={supplierId}
-                onChange={(e) => setSupplierId(e.target.value)}
-                disabled={suppliersLoading}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-              >
-                <option value="">Select supplier</option>
-                {Array?.isArray(suppliers) && suppliers?.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                {suppliersLoading ? (
-                  <Spinner size="sm" color="secondary" />
-                ) : (
-                  <svg
-                    className="w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Item Type */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Item Type
-            </label>
-            <div className="relative">
-              <select
-                value={itemType === null ? '' : itemType}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setItemType(val === '' ? null : Number(val) as InventoryItemType);
-                }}
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
-              >
-                <option value="">Select item type</option>
-                <option value={InventoryItemType.Direct}>Direct</option>
-                <option value={InventoryItemType.Ingredient}>Ingredient</option>
-                <option value={InventoryItemType.Produced}>Produced</option>
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+        <div>
+          <label className={labelClass}>Unit</label>
+          <div className="relative">
+            <select
+              value={unitId}
+              onChange={(e) => setUnitId(e.target.value)}
+              disabled={unitsByBusinessLoading}
+              className={selectClass}
+            >
+              <option value="">Select unit</option>
+              {Array.isArray(unitsByBusiness) && [...unitsByBusiness].filter((u) => u.isActive).sort((a, b) => a.name.localeCompare(b.name)).map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              {unitsByBusinessLoading ? (
+                <Spinner size="sm" color="secondary" />
+              ) : (
                 <svg
-                  className="w-5 h-5 text-gray-400"
+                  className="w-4 h-4 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -382,104 +207,262 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) <= 0) {
                     d="M19 9l-7 7-7-7"
                   />
                 </svg>
-              </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Description - full width */}
+        <div className="md:col-span-2">
+          <label className={labelClass}>Description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Enter item description"
+            rows={2}
+            className={`${inputClass} resize-none`}
+          />
+        </div>
+      </div>
+
+      {/* Pricing & Stock */}
+      <div className="border-t border-gray-100 pt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {/* Average Cost Per Base Unit */}
+        <div>
+          <label className={labelClass}>
+            Avg Cost / Base Unit
+            <span className="text-red-500 ml-1">*</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#5F35D2] font-bold text-sm">
+              &#x20A6;
+            </span>
+            <input
+              type="number"
+              value={averageCostPerBaseUnit}
+              onChange={(e) => setAverageCostPerBaseUnit(e.target.value)}
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              required
+              className={`${inputClass} pl-8`}
+            />
+          </div>
+        </div>
+
+        {/* Reorder Threshold */}
+        <div>
+          <label className={labelClass}>Reorder Threshold</label>
+          <input
+            type="number"
+            value={reorderLevel}
+            onChange={(e) => setReorderLevel(e.target.value)}
+            placeholder="0"
+            min="0"
+            step="1"
+            className={inputClass}
+          />
+        </div>
+
+        {/* Opening Stock */}
+        <div>
+          <label className={labelClass}>Opening Stock</label>
+          <input
+            type="number"
+            value={openingStock}
+            onChange={(e) => setOpeningStock(e.target.value)}
+            placeholder="0"
+            min="0"
+            step="1"
+            className={inputClass}
+          />
+        </div>
+
+        {/* Expiry Date */}
+        <div>
+          <label className={labelClass}>
+            Expiry Date
+            <span className="text-gray-400 font-normal ml-1">(optional)</span>
+          </label>
+          <input
+            type="date"
+            value={expiryDate}
+            onChange={(e) => setExpiryDate(e.target.value)}
+            min={new Date().toISOString().split('T')[0]}
+            className={inputClass}
+          />
+        </div>
+      </div>
+
+      {/* Classification */}
+      <div className="border-t border-gray-100 pt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Supplier Name */}
+        <div>
+          <label className={labelClass}>Supplier Name</label>
+          <div className="relative">
+            <select
+              value={supplierId}
+              onChange={(e) => setSupplierId(e.target.value)}
+              disabled={suppliersLoading}
+              className={selectClass}
+            >
+              <option value="">Select supplier</option>
+              {Array?.isArray(suppliers) && suppliers?.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              {suppliersLoading ? (
+                <Spinner size="sm" color="secondary" />
+              ) : (
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Item Type */}
+        <div>
+          <label className={labelClass}>Item Type</label>
+          <div className="relative">
+            <select
+              value={itemType === null ? '' : itemType}
+              onChange={(e) => {
+                const val = e.target.value;
+                setItemType(val === '' ? null : Number(val) as InventoryItemType);
+              }}
+              className={selectClass}
+            >
+              <option value="">Select item type</option>
+              <option value={InventoryItemType.Direct}>Direct</option>
+              <option value={InventoryItemType.Ingredient}>Ingredient</option>
+              <option value={InventoryItemType.Produced}>Produced</option>
+            </select>
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+              <svg
+                className="w-4 h-4 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </div>
           </div>
         </div>
       </div>
 
       {/* Settings Section */}
-      <div className="border-t border-gray-100 pt-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+      <div className="border-t border-gray-100 pt-4 space-y-3">
+        <h3 className="text-sm font-semibold text-gray-800">
           Inventory Settings
         </h3>
 
-        {/* Active Toggle */}
-        <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-xl">
-          <div>
-            <p className="font-medium text-gray-700">Active</p>
-            <p className="text-sm text-gray-500">
-              Enable or disable this inventory item
-            </p>
+        {/* Active + Allow Tracking */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Active</p>
+              <p className="text-xs text-gray-500">
+                Enable or disable this item
+              </p>
+            </div>
+            <Switch
+              size="sm"
+              isSelected={isActive}
+              onValueChange={setIsActive}
+              classNames={{
+                wrapper: 'group-data-[selected=true]:bg-green-500',
+              }}
+            />
           </div>
-          <Switch
-            isSelected={isActive}
-            onValueChange={setIsActive}
-            classNames={{
-              wrapper: 'group-data-[selected=true]:bg-green-500',
-            }}
-          />
-        </div>
 
-        {/* Allow Tracking Toggle */}
-        <div className="flex items-center justify-between mb-6 p-4 bg-gray-50 rounded-xl">
-          <div>
-            <p className="font-medium text-gray-700">Allow Tracking</p>
-            <p className="text-sm text-gray-500">
-              Track current stock and movements for this item
-            </p>
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <p className="text-sm font-medium text-gray-700">Allow Tracking</p>
+              <p className="text-xs text-gray-500">
+                Track stock and movements
+              </p>
+            </div>
+            <Switch
+              size="sm"
+              isSelected={allowTracking}
+              onValueChange={setAllowTracking}
+              classNames={{
+                wrapper: 'group-data-[selected=true]:bg-green-500',
+              }}
+            />
           </div>
-          <Switch
-            isSelected={allowTracking}
-            onValueChange={setAllowTracking}
-            classNames={{
-              wrapper: 'group-data-[selected=true]:bg-green-500',
-            }}
-          />
         </div>
 
         {/* Strictness Level */}
-        <div className="space-y-3">
-          <p className="font-medium text-gray-700">
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-gray-700">
             Strictness Level
           </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+              <input
+                type="radio"
+                name="strictnessLevel"
+                value={0}
+                checked={strictnessLevel === 0}
+                onChange={() => setStrictnessLevel(0)}
+                className="mt-0.5 w-4 h-4 text-[#5F35D2] focus:ring-[#5F35D2]"
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Safe Mode</p>
+                <p className="text-xs text-gray-500">
+                  Never block sales. Allow negative stock.
+                </p>
+              </div>
+            </label>
 
-          {/* Safe Mode */}
-          <label className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
-            <input
-              type="radio"
-              name="strictnessLevel"
-              value={0}
-              checked={strictnessLevel === 0}
-              onChange={() => setStrictnessLevel(0)}
-              className="mt-1 w-4 h-4 text-[#5F35D2] focus:ring-[#5F35D2]"
-            />
-            <div>
-              <p className="font-medium text-gray-700">Safe Mode</p>
-              <p className="text-sm text-gray-500">
-                Never block sales. Allow negative stock. Best for
-                first-time users.
-              </p>
-            </div>
-          </label>
-
-          {/* Strict Mode */}
-          <label className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors">
-            <input
-              type="radio"
-              name="strictnessLevel"
-              value={1}
-              checked={strictnessLevel === 1}
-              onChange={() => setStrictnessLevel(1)}
-              className="mt-1 w-4 h-4 text-[#5F35D2] focus:ring-[#5F35D2]"
-            />
-            <div>
-              <p className="font-medium text-gray-700">Strict Mode</p>
-              <p className="text-sm text-gray-500">
-                Prevent selling out-of-stock items. Enforce availability
-                rules.
-              </p>
-            </div>
-          </label>
+            <label className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
+              <input
+                type="radio"
+                name="strictnessLevel"
+                value={1}
+                checked={strictnessLevel === 1}
+                onChange={() => setStrictnessLevel(1)}
+                className="mt-0.5 w-4 h-4 text-[#5F35D2] focus:ring-[#5F35D2]"
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-700">Strict Mode</p>
+                <p className="text-xs text-gray-500">
+                  Prevent selling out-of-stock items.
+                </p>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
 
       {/* Submit Button */}
-      <div className="flex justify-center pt-4">
+      <div className="flex justify-end pt-2">
         <button
           onClick={handleSubmitItem}
           disabled={loading}
-          className="flex items-center gap-2 px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
+          className="flex items-center gap-2 px-6 py-2.5 bg-[#5F35D2] text-white rounded-lg hover:bg-[#5F35D2]/90 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
         >
           {loading ? (
             <>
@@ -490,7 +473,7 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) <= 0) {
             <>
               <span>Register Item</span>
               <svg
-                className="w-5 h-5"
+                className="w-4 h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -522,23 +505,23 @@ if (!averageCostPerBaseUnit || parseFloat(averageCostPerBaseUnit) <= 0) {
           <ModalBody className="p-0">
             <div className="bg-white rounded-2xl w-full max-h-[90vh] overflow-y-auto">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-[#5F35D2]/10 rounded-xl flex items-center justify-center">
-                    <Package className="w-5 h-5 text-[#5F35D2]" />
+                  <div className="w-9 h-9 bg-[#5F35D2]/10 rounded-lg flex items-center justify-center">
+                    <Package className="w-4 h-4 text-[#5F35D2]" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-gray-800">
+                    <h2 className="text-base font-bold text-gray-800">
                       Add Inventory Item
                     </h2>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs text-gray-500">
                       Register a new item to your inventory
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>

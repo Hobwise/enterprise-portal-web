@@ -5,7 +5,7 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
-import { SortableTH, StatCards, useTableSort } from './SharedPanels';
+import { StatCards } from './SharedPanels';
 import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
@@ -23,10 +23,9 @@ const safeNumber = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const parseAmount = (formatted: unknown): number => {
-  if (formatted === null || formatted === undefined || formatted === '') return 0;
-  if (typeof formatted === 'number') return safeNumber(formatted);
-  const cleaned = String(formatted).replace(/[^0-9.-]+/g, '');
+const parseAmount = (formatted: string | null | undefined): number => {
+  if (!formatted) return 0;
+  const cleaned = formatted.replace(/[^0-9.-]+/g, '');
   return safeNumber(cleaned);
 };
 
@@ -133,9 +132,7 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
   const [page, setPage] = useState(1);
   const exportHandlers = buildExportHandlers(onExport);
 
-  const bookings: BookingReportItem[] = Array.isArray(data?.bookings)
-    ? (data?.bookings as BookingReportItem[])
-    : [];
+  const bookings = data?.bookings ?? [];
 
   const counts = useMemo(() => {
     let total = 0;
@@ -170,60 +167,20 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
   }, [bookings]);
 
   const filtered = useMemo(() => {
-    if (statusTab === 'all') return bookings;
-    return bookings.filter(
+    const sorted = [...bookings].sort((a, b) =>
+      moment(b.bookingDateTime || b.dateCreated).diff(
+        moment(a.bookingDateTime || a.dateCreated)
+      )
+    );
+    if (statusTab === 'all') return sorted;
+    return sorted.filter(
       (b) => (b.bookingStatus ?? '').toLowerCase() === statusTab
     );
   }, [bookings, statusTab]);
 
-  const toTime = (value: string | null | undefined): number => {
-    if (!value) return 0;
-    const m = moment(value);
-    return m.isValid() ? m.valueOf() : 0;
-  };
-
-  const getBookingValue = React.useCallback(
-    (
-      b: BookingReportItem,
-      key:
-        | 'bookingDateTime'
-        | 'firstName'
-        | 'emailAddress'
-        | 'phoneNumber'
-        | 'numberOfGuest'
-        | 'bookingFee'
-        | 'minimumSpend'
-        | 'checkInDateTime'
-        | 'bookingStatus'
-    ) => {
-      switch (key) {
-        case 'bookingDateTime':
-          return toTime(b.bookingDateTime || b.dateCreated);
-        case 'firstName':
-          return `${b.firstName ?? ''} ${b.lastName ?? ''}`.trim();
-        case 'numberOfGuest':
-          return safeNumber(b.numberOfGuest);
-        case 'bookingFee':
-          return parseAmount(b.bookingFee);
-        case 'minimumSpend':
-          return parseAmount(b.minimumSpend);
-        case 'checkInDateTime':
-          return toTime(b.checkInDateTime);
-        default:
-          return (b[key] ?? '') as string;
-      }
-    },
-    []
-  );
-
-  const { sort, sorted, toggleSort } = useTableSort(filtered, getBookingValue, {
-    key: 'bookingDateTime',
-    direction: 'desc',
-  });
-
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageRows = sorted.slice(
+  const pageRows = filtered.slice(
     (safePage - 1) * PAGE_SIZE,
     safePage * PAGE_SIZE
   );
@@ -270,37 +227,22 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
-          <div className="flex items-center gap-6 px-5 pt-4 border-b border-gray-100 overflow-x-auto scrollbar-hide flex-1">
-            {tabs.map((tab) => {
-              const isActive = statusTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    setStatusTab(tab.id);
-                    setPage(1);
-                  }}
-                  className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                    isActive
-                      ? 'text-primaryColor border-primaryColor'
-                      : 'text-gray-500 border-transparent hover:text-gray-700'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={`h-5 min-w-5 px-2 inline-flex items-center justify-center rounded-full text-[11px] font-semibold ${
-                      isActive
-                        ? 'bg-pink200 text-primaryColor'
-                        : 'bg-gray-100 text-gray-500'
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                </button>
-              );
-            })}
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <select
+              value={statusTab}
+              onChange={(e) => {
+                setStatusTab(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
+            >
+              {tabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label} ({tab.count})
+                </option>
+              ))}
+            </select>
           </div>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
@@ -308,69 +250,21 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <SortableTH
-                  label="Booking Date"
-                  sortKey="bookingDateTime"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Customer"
-                  sortKey="firstName"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Email"
-                  sortKey="emailAddress"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Phone"
-                  sortKey="phoneNumber"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Guests"
-                  sortKey="numberOfGuest"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Booking Fee"
-                  sortKey="bookingFee"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Minimum Spend"
-                  sortKey="minimumSpend"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Check-In"
-                  sortKey="checkInDateTime"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Status"
-                  sortKey="bookingStatus"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
+                <th className="text-left px-5 py-3 font-medium">
+                  Booking Date
+                </th>
+                <th className="text-left px-5 py-3 font-medium">Customer</th>
+                <th className="text-left px-5 py-3 font-medium">Email</th>
+                <th className="text-left px-5 py-3 font-medium">Phone</th>
+                <th className="text-left px-5 py-3 font-medium">Guests</th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Booking Fee
+                </th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Minimum Spend
+                </th>
+                <th className="text-left px-5 py-3 font-medium">Check-In</th>
+                <th className="text-left px-5 py-3 font-medium">Status</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -424,7 +318,7 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
             </tbody>
           </table>
         </div>
-        {sorted.length > 0 && (
+        {filtered.length > 0 && (
           <TablePagination
             currentPage={safePage}
             totalPages={totalPages}
@@ -444,49 +338,15 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
-  const reservations: ReservationBookingItem[] = Array.isArray(
-    data?.reservationBookings
-  )
-    ? (data?.reservationBookings as ReservationBookingItem[])
-    : [];
+  const reservations: ReservationBookingItem[] =
+    data?.reservationBookings ?? [];
 
-  const totals = useMemo(() => {
-    let totalBookings = 0;
-    let totalFee = 0;
-    reservations.forEach((r) => {
-      totalBookings += safeNumber(r.totalBookings);
-      totalFee += parseAmount(r.totalBookingFee);
-    });
-    return { totalBookings, totalFee };
-  }, [reservations]);
-
-  const getReservationValue = React.useCallback(
-    (
-      r: ReservationBookingItem,
-      key:
-        | 'reservationName'
-        | 'totalBookings'
-        | 'totalBookingFee'
-        | 'dateUpdated'
-    ) => {
-      switch (key) {
-        case 'totalBookings':
-          return safeNumber(r.totalBookings);
-        case 'totalBookingFee':
-          return parseAmount(r.totalBookingFee);
-        case 'dateUpdated':
-          return r.dateUpdated ? moment(r.dateUpdated).valueOf() : 0;
-        default:
-          return r.reservationName ?? '';
-      }
-    },
-    []
-  );
-
-  const { sort, sorted, toggleSort } = useTableSort(
-    reservations,
-    getReservationValue,
-    { key: 'totalBookings', direction: 'desc' }
+  const sorted = useMemo(
+    () =>
+      [...reservations].sort(
+        (a, b) => safeNumber(b.totalBookings) - safeNumber(a.totalBookings)
+      ),
+    [reservations]
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
@@ -495,6 +355,16 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
     (safePage - 1) * PAGE_SIZE,
     safePage * PAGE_SIZE
   );
+
+  const totals = useMemo(() => {
+    let totalBookings = 0;
+    let totalFee = 0;
+    sorted.forEach((r) => {
+      totalBookings += safeNumber(r.totalBookings);
+      totalFee += parseAmount(r.totalBookingFee);
+    });
+    return { totalBookings, totalFee };
+  }, [sorted]);
 
   if (isLoading) return <SubTabSkeleton />;
 
@@ -543,34 +413,18 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <SortableTH
-                  label="Reservation Name"
-                  sortKey="reservationName"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Total Bookings"
-                  sortKey="totalBookings"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Total Booking Fee"
-                  sortKey="totalBookingFee"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Last Activity"
-                  sortKey="dateUpdated"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
+                <th className="text-left px-5 py-3 font-medium">
+                  Reservation Name
+                </th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Total Bookings
+                </th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Total Booking Fee
+                </th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Last Activity
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -596,7 +450,7 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
                       {safeNumber(r.totalBookings).toLocaleString()}
                     </td>
                     <td className="px-5 py-4 text-gray-900 font-semibold">
-                      {r.totalBookingFee ?? '—'}
+                      {r.totalBookingFee}
                     </td>
                     <td className="px-5 py-4 text-gray-700">
                       {r.dateUpdated
@@ -621,14 +475,13 @@ export const ReservationSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
   );
 };
 
-const parseOccupancyRate = (rate: unknown): number => {
-  if (rate === null || rate === undefined || rate === '') return 0;
-  if (typeof rate === 'number') return safeNumber(rate);
-  const cleaned = String(rate).replace(/[^0-9.-]+/g, '');
+const parseOccupancyRate = (rate: string): number => {
+  if (!rate) return 0;
+  const cleaned = rate.replace(/[^0-9.-]+/g, '');
   return safeNumber(cleaned);
 };
 
-const occupancyRateClass = (rate: unknown): string => {
+const occupancyRateClass = (rate: string): string => {
   const value = parseOccupancyRate(rate);
   if (value >= 70) return 'text-emerald-600 font-semibold';
   if (value >= 30) return 'text-amber-500 font-semibold';
@@ -643,86 +496,17 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
 }) => {
   const exportHandlers = buildExportHandlers(onExport);
   const [page, setPage] = useState(1);
-  const [rangeFilter, setRangeFilter] = useState<string>('all');
-  const occupancies: DailyOccupancyUtilizationItem[] = Array.isArray(
-    data?.dailyOccupancyUtilizations
-  )
-    ? (data?.dailyOccupancyUtilizations as DailyOccupancyUtilizationItem[])
-    : [];
+  const occupancies: DailyOccupancyUtilizationItem[] =
+    data?.dailyOccupancyUtilizations ?? [];
 
-  const rangeCounts = useMemo(() => {
-    let high = 0;
-    let mid = 0;
-    let low = 0;
-    occupancies.forEach((r) => {
-      const rate = parseOccupancyRate(r.occupancyRate);
-      if (rate >= 70) high += 1;
-      else if (rate >= 30) mid += 1;
-      else low += 1;
-    });
-    return { high, mid, low };
-  }, [occupancies]);
-
-  const filteredOccupancies = useMemo(() => {
-    if (rangeFilter === 'all') return occupancies;
-    return occupancies.filter((r) => {
-      const rate = parseOccupancyRate(r.occupancyRate);
-      if (rangeFilter === 'high') return rate >= 70;
-      if (rangeFilter === 'mid') return rate >= 30 && rate < 70;
-      if (rangeFilter === 'low') return rate < 30;
-      return true;
-    });
-  }, [occupancies, rangeFilter]);
-
-  const totals = useMemo(() => {
-    return occupancies.reduce(
-      (acc, r) => ({
-        capacity: acc.capacity + safeNumber(r.reservationCapacity),
-        bookings: acc.bookings + safeNumber(r.totalBookings),
-        unused: acc.unused + safeNumber(r.unusedCapacity),
-      }),
-      { capacity: 0, bookings: 0, unused: 0 }
-    );
-  }, [occupancies]);
-
-  const getOccupancyValue = React.useCallback(
-    (
-      r: DailyOccupancyUtilizationItem,
-      key:
-        | 'reservationName'
-        | 'reservationCapacity'
-        | 'totalBookings'
-        | 'unusedCapacity'
-        | 'occupancyRate'
-        | 'averageDailyUtilization'
-        | 'lastRecordDateTime'
-    ) => {
-      switch (key) {
-        case 'reservationCapacity':
-          return safeNumber(r.reservationCapacity);
-        case 'totalBookings':
-          return safeNumber(r.totalBookings);
-        case 'unusedCapacity':
-          return safeNumber(r.unusedCapacity);
-        case 'occupancyRate':
-          return parseOccupancyRate(r.occupancyRate);
-        case 'averageDailyUtilization':
-          return safeNumber(r.averageDailyUtilization);
-        case 'lastRecordDateTime':
-          return r.lastRecordDateTime
-            ? moment(r.lastRecordDateTime).valueOf()
-            : 0;
-        default:
-          return r.reservationName ?? '';
-      }
-    },
-    []
-  );
-
-  const { sort, sorted, toggleSort } = useTableSort(
-    filteredOccupancies,
-    getOccupancyValue,
-    { key: 'occupancyRate', direction: 'desc' }
+  const sorted = useMemo(
+    () =>
+      [...occupancies].sort(
+        (a, b) =>
+          parseOccupancyRate(b.occupancyRate) -
+          parseOccupancyRate(a.occupancyRate)
+      ),
+    [occupancies]
   );
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
@@ -732,12 +516,18 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
     safePage * PAGE_SIZE
   );
 
-  if (isLoading) return <SubTabSkeleton />;
+  const totals = useMemo(() => {
+    return sorted.reduce(
+      (acc, r) => ({
+        capacity: acc.capacity + safeNumber(r.reservationCapacity),
+        bookings: acc.bookings + safeNumber(r.totalBookings),
+        unused: acc.unused + safeNumber(r.unusedCapacity),
+      }),
+      { capacity: 0, bookings: 0, unused: 0 }
+    );
+  }, [sorted]);
 
-  const overallUtilization =
-    totals.capacity > 0
-      ? Math.round((totals.bookings / totals.capacity) * 10000) / 100
-      : 0;
+  if (isLoading) return <SubTabSkeleton />;
 
   const top = sorted[0] ?? null;
 
@@ -763,7 +553,7 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
     {
       label: 'Top Reservation',
       value: top?.reservationName ?? '—',
-      footer: top?.occupancyRate ? String(top.occupancyRate) : 'No data',
+      footer: top ? top.occupancyRate : 'No data',
       footerTone: 'success',
     },
   ];
@@ -772,82 +562,35 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h3 className="text-base font-semibold text-gray-900">
-              Daily Occupancy & Utilization
-            </h3>
-            <select
-              value={rangeFilter}
-              onChange={(e) => {
-                setRangeFilter(e.target.value);
-                setPage(1);
-              }}
-              className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
-            >
-              <option value="all">All occupancy</option>
-              <option value="high">High (≥70%) ({rangeCounts.high})</option>
-              <option value="mid">
-                Medium (30 – 69%) ({rangeCounts.mid})
-              </option>
-              <option value="low">Low (&lt;30%) ({rangeCounts.low})</option>
-            </select>
-          </div>
+        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
+          <h3 className="px-5 py-4 text-base font-semibold text-gray-900">
+            Daily Occupancy & Utilization
+          </h3>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 text-gray-600">
               <tr>
-                <SortableTH
-                  label="Reservation"
-                  sortKey="reservationName"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Capacity"
-                  sortKey="reservationCapacity"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Total Bookings"
-                  sortKey="totalBookings"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Unused Capacity"
-                  sortKey="unusedCapacity"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Occupancy Rate"
-                  sortKey="occupancyRate"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Avg. Daily Utilization"
-                  sortKey="averageDailyUtilization"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
-                <SortableTH
-                  label="Last Activity"
-                  sortKey="lastRecordDateTime"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
+                <th className="text-left px-5 py-3 font-medium">
+                  Reservation
+                </th>
+                <th className="text-left px-5 py-3 font-medium">Capacity</th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Total Bookings
+                </th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Unused Capacity
+                </th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Occupancy Rate
+                </th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Avg. Daily Utilization
+                </th>
+                <th className="text-left px-5 py-3 font-medium">
+                  Last Activity
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -883,7 +626,7 @@ export const OccupancyUtilizationPanel: React.FC<BookingSubTabPanelProps> = ({
                         row.occupancyRate
                       )}`}
                     >
-                      {row.occupancyRate ?? '—'}
+                      {row.occupancyRate}
                     </td>
                     <td className="px-5 py-4 text-gray-700">
                       {safeNumber(row.averageDailyUtilization).toLocaleString(

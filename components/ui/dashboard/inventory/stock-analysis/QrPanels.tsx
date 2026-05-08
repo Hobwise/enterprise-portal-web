@@ -10,8 +10,10 @@ import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
   BarRow,
-  OrderReportItem,
-  OrderReportResponse,
+  QrDetailsSection,
+  QrPerformanceItem,
+  QrReportResponse,
+  QrTopItem,
   StatCard,
 } from './types';
 
@@ -22,17 +24,15 @@ const safeNumber = (value: unknown): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-const parseAmount = (formatted: unknown): number => {
-  if (formatted === null || formatted === undefined || formatted === '') return 0;
-  if (typeof formatted === 'number') return safeNumber(formatted);
-  const cleaned = String(formatted).replace(/[^0-9.-]+/g, '');
-  return safeNumber(cleaned);
-};
-
 const formatNgn = (value: number): string => formatPrice(value, 'NGN');
 
+const formatPercentage = (value: number): string => {
+  if (!Number.isFinite(value)) return '0%';
+  return `${value.toFixed(value >= 10 ? 0 : 2)}%`;
+};
+
 interface QrPanelProps {
-  data?: OrderReportResponse;
+  data?: QrReportResponse;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
   isExporting?: boolean;
@@ -88,152 +88,184 @@ const buildExportHandlers = (
   onExportPdf: onExport ? () => onExport(ExportType.Pdf) : undefined,
 });
 
-interface QrAggregate {
-  qrName: string;
-  orders: number;
-  openOrders: number;
-  closedOrders: number;
-  cancelledOrders: number;
-  totalRevenue: number;
-}
-
-const aggregateByQr = (orders: OrderReportItem[]): QrAggregate[] => {
-  const groups = new Map<string, QrAggregate>();
-  orders.forEach((o) => {
-    const name = o.quickResponseName || 'Unknown';
-    const existing =
-      groups.get(name) ??
-      ({
-        qrName: name,
-        orders: 0,
-        openOrders: 0,
-        closedOrders: 0,
-        cancelledOrders: 0,
-        totalRevenue: 0,
-      } as QrAggregate);
-    existing.orders += 1;
-    const status = (o.orderStatus ?? '').toLowerCase();
-    if (status === 'open') existing.openOrders += 1;
-    else if (status === 'closed') existing.closedOrders += 1;
-    else if (status === 'cancelled') existing.cancelledOrders += 1;
-    existing.totalRevenue += parseAmount(o.totalAmount);
-    groups.set(name, existing);
-  });
-  return Array.from(groups.values()).sort((a, b) => b.orders - a.orders);
+const tonalDelta = (
+  percentageChange: string | undefined
+): { delta: string; direction: 'up' | 'down' | 'neutral' } => {
+  if (!percentageChange) {
+    return { delta: '0%', direction: 'neutral' };
+  }
+  const numeric = safeNumber(percentageChange);
+  if (numeric === 0) return { delta: '0%', direction: 'neutral' };
+  const sign = numeric > 0 ? '+' : '';
+  return {
+    delta: `${sign}${numeric}%`,
+    direction: numeric > 0 ? 'up' : 'down',
+  };
 };
 
+interface TopQrCardProps {
+  title: string;
+  item: QrTopItem | null;
+  metricLabel: string;
+  metricValue: string;
+}
+
+const TopQrCard: React.FC<TopQrCardProps> = ({
+  title,
+  item,
+  metricLabel,
+  metricValue,
+}) => (
+  <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+    <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">
+      {title}
+    </p>
+    {item ? (
+      <>
+        <p className="text-lg font-semibold text-gray-900 mb-3 break-words">
+          {item.qrName}
+        </p>
+        <div className="space-y-1.5 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-500">{metricLabel}</span>
+            <span className="font-semibold text-primaryColor">
+              {metricValue}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-500">Orders</span>
+            <span className="text-gray-700">
+              {item.orderCount.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-500">Avg. Order Value</span>
+            <span className="text-gray-700">
+              {formatNgn(safeNumber(item.averageOrderValue))}
+            </span>
+          </div>
+          {item.lastOrderDateTime && (
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">Last Order</span>
+              <span className="text-gray-700">
+                {moment(item.lastOrderDateTime).format('DD MMM YYYY')}
+              </span>
+            </div>
+          )}
+        </div>
+      </>
+    ) : (
+      <p className="text-sm text-gray-500 py-4">No data for this period</p>
+    )}
+  </div>
+);
+
 export const QrOverviewPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => {
-  const orders = (data?.orders ?? []) as OrderReportItem[];
+  const qrDetails: QrDetailsSection | undefined = data?.qrDetails;
 
-  const aggregates = useMemo(() => aggregateByQr(orders), [orders]);
-
-  const totals = useMemo(() => {
-    let totalOrders = 0;
-    let totalRevenue = 0;
-    let takeOuts = 0;
-    orders.forEach((o) => {
-      totalOrders += 1;
-      totalRevenue += parseAmount(o.totalAmount);
-      const name = (o.quickResponseName ?? '').toLowerCase();
-      if (name.includes('take') && name.includes('out')) takeOuts += 1;
-    });
-    return { totalOrders, totalRevenue, takeOuts };
-  }, [orders]);
-
-  const dailyRows = useMemo<BarRow[]>(() => {
-    const groups = new Map<string, number>();
-    orders.forEach((o) => {
-      if (!o.dateCreated) return;
-      const key = moment(o.dateCreated).format('YYYY-MM-DD');
-      groups.set(key, (groups.get(key) ?? 0) + 1);
-    });
-    return Array.from(groups.entries())
-      .sort(([a], [b]) => (a < b ? -1 : 1))
-      .map(([date, count]) => ({
-        label: moment(date).format('ddd DD'),
-        value: count,
+  const topRows = useMemo<BarRow[]>(() => {
+    const list = data?.qrPerformanceSummaries ?? [];
+    return list
+      .slice()
+      .sort((a, b) => safeNumber(b.orderCount) - safeNumber(a.orderCount))
+      .slice(0, 6)
+      .map((row) => ({
+        label: row.qrName,
+        value: safeNumber(row.orderCount),
         suffix: ' Orders',
       }));
-  }, [orders]);
+  }, [data]);
 
   if (isLoading) return <Skeletonized />;
 
-  const activeQr = aggregates.length;
+  const totalQRCodes = safeNumber(qrDetails?.totalQRCodes);
+  const activeQRCodes = safeNumber(qrDetails?.activeQRCodes);
+  const idleQRCodes = safeNumber(qrDetails?.idleQRCodes);
+  const totalQROrders = safeNumber(qrDetails?.totalQROrders);
+  const totalQRRevenue = safeNumber(qrDetails?.totalQRRevenue);
+  const averageOrdersPerActiveQR = safeNumber(
+    qrDetails?.averageOrdersPerActiveQR
+  );
+  const topQRConcentrationPct = safeNumber(qrDetails?.topQRConcentrationPct);
+  const revenueDelta = tonalDelta(qrDetails?.percentageChange);
+
   const stats: StatCard[] = [
     {
-      label: 'Active QR Code',
-      value: activeQr.toLocaleString(),
-      footer: activeQr > 0 ? 'All Active' : 'No active QR',
-      footerTone: activeQr > 0 ? 'success' : 'muted',
+      label: 'Total QR Codes',
+      value: totalQRCodes.toLocaleString(),
+      footer: `${activeQRCodes.toLocaleString()} active · ${idleQRCodes.toLocaleString()} idle`,
+      footerTone: activeQRCodes > 0 ? 'success' : 'muted',
     },
     {
-      label: 'Total Orders Via QR',
-      value: totals.totalOrders.toLocaleString(),
-      footer: 'In period',
+      label: 'Total QR Orders',
+      value: totalQROrders.toLocaleString(),
+      footer: `Avg ${averageOrdersPerActiveQR.toFixed(2)} per active QR`,
       footerTone: 'muted',
     },
     {
-      label: 'QR Order Revenue',
-      value: formatNgn(totals.totalRevenue),
-      footer: 'Gross revenue',
+      label: 'QR Revenue',
+      value: formatNgn(totalQRRevenue),
+      delta: revenueDelta.delta,
+      direction: revenueDelta.direction,
+      footer: 'vs. previous period',
       footerTone: 'muted',
     },
     {
-      label: 'Take Outs From QR',
-      value: totals.takeOuts.toLocaleString(),
-      footer: 'Take-out orders',
-      footerTone: 'muted',
+      label: 'Top QR Concentration',
+      value: formatPercentage(topQRConcentrationPct),
+      footer: 'Share of orders by top QR',
+      footerTone: topQRConcentrationPct >= 50 ? 'warning' : 'muted',
     },
   ];
 
-  const topOrdersByQr = aggregates.slice(0, 6);
-  const otherCount = aggregates
-    .slice(6)
-    .reduce((sum, a) => sum + a.orders, 0);
+  const hasAnyTop =
+    qrDetails?.topByRevenue ||
+    qrDetails?.topByOrders ||
+    qrDetails?.topByAverageOrderValue;
 
   return (
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <BarList
-          title="Daily QR Orders"
-          rows={dailyRows}
-          max={Math.max(...dailyRows.map((r) => r.value), 1)}
-          valueFormatter={(r) => `${r.value.toLocaleString()} Orders`}
-        />
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-          <h3 className="text-sm font-semibold text-gray-900 mb-4">
-            Top Orders by QR
-          </h3>
-          {topOrdersByQr.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4 text-center">
-              No QR orders for this period
-            </p>
-          ) : (
-            <div className="divide-y divide-gray-100">
-              {topOrdersByQr.map((row) => (
-                <div
-                  key={row.qrName}
-                  className="flex items-center justify-between py-3 text-sm"
-                >
-                  <span className="text-gray-700">{row.qrName}</span>
-                  <span className="font-semibold text-primaryColor">
-                    {row.orders.toLocaleString()}
-                  </span>
-                </div>
-              ))}
-              {otherCount > 0 && (
-                <div className="flex items-center justify-between py-3 text-sm">
-                  <span className="text-gray-700">Others</span>
-                  <span className="font-semibold text-primaryColor">
-                    {otherCount.toLocaleString()}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+
+      {hasAnyTop && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <TopQrCard
+            title="Top QR by Revenue"
+            item={qrDetails?.topByRevenue ?? null}
+            metricLabel="Net Revenue"
+            metricValue={formatNgn(
+              safeNumber(qrDetails?.topByRevenue?.netRevenue)
+            )}
+          />
+          <TopQrCard
+            title="Top QR by Orders"
+            item={qrDetails?.topByOrders ?? null}
+            metricLabel="Order Count"
+            metricValue={safeNumber(
+              qrDetails?.topByOrders?.orderCount
+            ).toLocaleString()}
+          />
+          <TopQrCard
+            title="Top QR by Avg. Order Value"
+            item={qrDetails?.topByAverageOrderValue ?? null}
+            metricLabel="Avg. Order Value"
+            metricValue={formatNgn(
+              safeNumber(qrDetails?.topByAverageOrderValue?.averageOrderValue)
+            )}
+          />
         </div>
-      </div>
+      )}
+
+      {topRows.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-1 gap-5">
+          <BarList
+            title="Top QR Codes by Orders"
+            rows={topRows}
+            max={Math.max(...topRows.map((r) => r.value), 1)}
+            valueFormatter={(r) => `${r.value.toLocaleString()} Orders`}
+          />
+        </div>
+      )}
     </div>
   );
 };
@@ -248,17 +280,29 @@ interface QrDetailRow {
   status: 'Active' | 'Inactive';
 }
 
-const buildDetailRows = (orders: OrderReportItem[]): QrDetailRow[] => {
-  const groups = aggregateByQr(orders);
-  return groups.map((g) => ({
-    qrName: g.qrName,
-    orders: g.orders,
-    openOrders: g.openOrders,
-    averageValue: g.orders > 0 ? g.totalRevenue / g.orders : 0,
-    netRevenue: g.totalRevenue,
-    refunds: g.cancelledOrders,
-    status: g.orders > 0 ? 'Active' : 'Inactive',
-  }));
+const buildDetailRows = (
+  performance: QrPerformanceItem[]
+): QrDetailRow[] => {
+  return performance.map((row) => {
+    const orders = safeNumber(row.orderCount);
+    const status = (() => {
+      if (typeof row.status === 'string') {
+        const s = row.status.toLowerCase();
+        if (s === 'active') return 'Active' as const;
+        if (s === 'inactive' || s === 'idle') return 'Inactive' as const;
+      }
+      return orders > 0 ? ('Active' as const) : ('Inactive' as const);
+    })();
+    return {
+      qrName: row.qrName ?? 'Unknown',
+      orders,
+      openOrders: safeNumber(row.openOrders),
+      averageValue: safeNumber(row.averageOrderValue),
+      netRevenue: safeNumber(row.netRevenue),
+      refunds: safeNumber(row.refundAmount ?? row.cancelledOrders),
+      status,
+    };
+  });
 };
 
 export const QrDetailsPanel: React.FC<QrPanelProps> = ({
@@ -270,9 +314,9 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const exportHandlers = buildExportHandlers(onExport);
-  const orders = (data?.orders ?? []) as OrderReportItem[];
+  const performance = data?.qrPerformanceSummaries ?? [];
 
-  const allRows = useMemo(() => buildDetailRows(orders), [orders]);
+  const allRows = useMemo(() => buildDetailRows(performance), [performance]);
 
   const counts = useMemo(() => {
     let active = 0;

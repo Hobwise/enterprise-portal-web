@@ -126,53 +126,6 @@ const orderStatusClass = (status: string): string => {
   return 'text-gray-700';
 };
 
-interface PillCountTab {
-  id: string;
-  label: string;
-  count: number;
-}
-
-interface PillTabBarProps {
-  tabs: PillCountTab[];
-  active: string;
-  onChange: (id: string) => void;
-}
-
-const PillCountTabs: React.FC<PillTabBarProps> = ({
-  tabs,
-  active,
-  onChange,
-}) => (
-  <div className="flex items-center gap-6 px-5 pt-4 border-b border-gray-100 overflow-x-auto scrollbar-hide">
-    {tabs.map((tab) => {
-      const isActive = active === tab.id;
-      return (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id)}
-          className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-            isActive
-              ? 'text-primaryColor border-primaryColor'
-              : 'text-gray-500 border-transparent hover:text-gray-700'
-          }`}
-        >
-          <span>{tab.label}</span>
-          <span
-            className={`h-5 min-w-5 px-2 inline-flex items-center justify-center rounded-full text-[11px] font-semibold ${
-              isActive
-                ? 'bg-pink200 text-primaryColor'
-                : 'bg-gray-100 text-gray-500'
-            }`}
-          >
-            {tab.count}
-          </span>
-        </button>
-      );
-    })}
-  </div>
-);
-
 export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
   data,
   isLoading,
@@ -277,25 +230,27 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
-          <PillCountTabs
-            tabs={[
-              { id: 'all', label: 'All Orders', count: counts.total },
-              { id: 'open', label: 'Open', count: counts.open },
-              { id: 'closed', label: 'Closed', count: counts.closed },
-              {
-                id: 'awaiting',
-                label: 'Awaiting Confirmation',
-                count: counts.awaiting,
-              },
-              { id: 'cancelled', label: 'Cancelled', count: counts.cancelled },
-            ]}
-            active={statusTab}
-            onChange={(v) => {
-              setStatusTab(v as typeof statusTab);
-              setPage(1);
-            }}
-          />
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <select
+              value={statusTab}
+              onChange={(e) => {
+                setStatusTab(e.target.value as typeof statusTab);
+                setPage(1);
+              }}
+              className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
+            >
+              <option value="all">All Orders ({counts.total})</option>
+              <option value="open">Open ({counts.open})</option>
+              <option value="closed">Closed ({counts.closed})</option>
+              <option value="awaiting">
+                Awaiting Confirmation ({counts.awaiting})
+              </option>
+              <option value="cancelled">
+                Cancelled ({counts.cancelled})
+              </option>
+            </select>
+          </div>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
@@ -1348,7 +1303,7 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
     },
   ];
 
-  const tabs: PillCountTab[] = [
+  const tabs = [
     { id: 'all', label: 'All payments', count: counts.total },
     { id: 'paid', label: 'Paid', count: counts.paid },
     {
@@ -1364,15 +1319,23 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 pr-5">
-          <PillCountTabs
-            tabs={tabs}
-            active={statusTab}
-            onChange={(v) => {
-              setStatusTab(v);
-              setPage(1);
-            }}
-          />
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <select
+              value={statusTab}
+              onChange={(e) => {
+                setStatusTab(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
+            >
+              {tabs.map((tab) => (
+                <option key={tab.id} value={tab.id}>
+                  {tab.label} ({tab.count})
+                </option>
+              ))}
+            </select>
+          </div>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
