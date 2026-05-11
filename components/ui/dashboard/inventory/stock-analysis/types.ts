@@ -52,6 +52,20 @@ export const periodToFilterType = (period: PeriodId): FilterTypeValue => {
   }
 };
 
+export const filterTypeToComparisonLabel = (filterType: number): string => {
+  switch (filterType) {
+    case FilterType.Daily:
+      return 'from yesterday';
+    case FilterType.Weekly:
+      return 'from last week';
+    case FilterType.Yearly:
+      return 'from last year';
+    case FilterType.Custom:
+    default:
+      return 'from previous period';
+  }
+};
+
 const startOfDay = (d: Date): Date =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0);
 
@@ -541,11 +555,20 @@ export interface QrPerformanceItem {
   lastOrderDateTime?: string | null;
 }
 
+export interface QrActivityTimelineItem {
+  qrName: string;
+  eventType: string;
+  occurredAt: string;
+  orderId?: string | null;
+  amount?: number | null;
+  performedBy?: string | null;
+}
+
 export interface QrReportResponse {
   qrDetails?: QrDetailsSection;
   qrPerformanceSummaries?: QrPerformanceItem[];
   qrOrderHistories?: OrderReportItem[];
-  qrActivityTimelines?: unknown[];
+  qrActivityTimelines?: QrActivityTimelineItem[];
   lastRecordDateTime: string | null;
   hasExceededMaximumCount: boolean;
   message: string | null;

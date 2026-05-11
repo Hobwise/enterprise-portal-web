@@ -5,12 +5,18 @@ import moment from 'moment';
 import { Button, Chip, Skeleton } from '@nextui-org/react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import { formatPrice } from '@/lib/utils';
-import { BarList, BreakdownList, StatCards } from './SharedPanels';
-import { BarRow, BreakdownRow, OrderDetailsSection, StatCard } from './types';
+import {
+  BarList,
+  DistributionDonut,
+  DistributionSegment,
+  StatCards,
+} from './SharedPanels';
+import { BarRow, OrderDetailsSection, StatCard } from './types';
 
 interface SalesOverviewPanelProps {
   data?: OrderDetailsSection;
   isLoading?: boolean;
+  comparisonLabel?: string;
 }
 
 const safeNumber = (value: unknown): number => {
@@ -21,6 +27,7 @@ const safeNumber = (value: unknown): number => {
 export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
   data,
   isLoading,
+  comparisonLabel = 'from previous period',
 }) => {
   if (isLoading || !data) {
     return (
@@ -50,7 +57,7 @@ export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
   const formatChange = (value: string | undefined) => {
     const n = safeNumber(value);
     const sign = n > 0 ? '+' : '';
-    return `${sign}${n}% from yesterday`;
+    return `${sign}${n}% ${comparisonLabel}`;
   };
 
   const stats: StatCard[] = [
@@ -90,16 +97,32 @@ export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
     ? moment(data.dayWithHighestOrder.dateTime).format('ddd, MMM DD, YYYY')
     : '—';
 
-  const breakdownRows: BreakdownRow[] = [
-    { label: 'Open', value: safeNumber(data.openOrdersCount) },
-    { label: 'Closed', value: safeNumber(data.closedOrdersCount) },
+  const orderStatusSegments: DistributionSegment[] = [
+    {
+      label: 'Open',
+      value: safeNumber(data.openOrdersCount),
+      color: '#7C5BE6',
+    },
+    {
+      label: 'Closed',
+      value: safeNumber(data.closedOrdersCount),
+      color: '#10B981',
+    },
     {
       label: 'Awaiting confirmation',
       value: safeNumber(data.awaitingConfirmationOrdersCount),
+      color: '#F59E0B',
     },
-    { label: 'Cancellation', value: safeNumber(data.cancelledOrdersCount) },
-    { label: 'Peak Day', value: peakDay },
+    {
+      label: 'Cancellation',
+      value: safeNumber(data.cancelledOrdersCount),
+      color: '#EF4444',
+    },
   ];
+  const orderStatusTotal = orderStatusSegments.reduce(
+    (sum, seg) => sum + seg.value,
+    0
+  );
 
   return (
     <div className="flex flex-col gap-5">
@@ -112,9 +135,12 @@ export const SalesOverviewPanel: React.FC<SalesOverviewPanelProps> = ({
           max={Math.max(...partitionRows.map((r) => r.value), 1)}
           valueFormatter={(r) => `${r.value.toLocaleString()} Orders`}
         />
-        <BreakdownList
+        <DistributionDonut
           title="Order Status Breakdown"
-          rows={breakdownRows}
+          segments={orderStatusSegments}
+          centerLabel="Total"
+          centerValue={orderStatusTotal.toLocaleString()}
+          caption={`Peak day: ${peakDay}`}
           className="lg:col-span-2"
         />
       </div>
