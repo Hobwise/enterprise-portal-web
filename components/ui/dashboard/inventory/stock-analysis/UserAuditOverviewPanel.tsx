@@ -2,12 +2,8 @@
 
 import React from 'react';
 import { Skeleton } from '@nextui-org/react';
-import { BreakdownList, StatCards } from './SharedPanels';
-import {
-  AuditDetailsSection,
-  BreakdownRow,
-  StatCard,
-} from './types';
+import { InsightBars, InsightMetric, StatCards } from './SharedPanels';
+import { AuditDetailsSection, StatCard } from './types';
 
 interface UserAuditOverviewPanelProps {
   data?: AuditDetailsSection;
@@ -70,33 +66,61 @@ export const UserAuditOverviewPanel: React.FC<UserAuditOverviewPanelProps> = ({
     },
   ];
 
-  const insightRows: BreakdownRow[] = [
+  const activeDays = safeNumber(data.activeDaysInPeriod);
+  const totalUsers = safeNumber(data.totalUsersCount);
+  const avgPerUser = safeNumber(data.averageActivitiesPerUser);
+  const peakHour =
+    data.peakActivityHour != null ? safeNumber(data.peakActivityHour) : null;
+
+  const peakHourFill = peakHour != null ? (peakHour / 24) * 100 : 0;
+  const avgPerUserMax = Math.max(totalUsers, 1) * Math.max(activeDays, 1);
+  const avgPerUserFill =
+    avgPerUserMax > 0
+      ? Math.min(100, (avgPerUser / avgPerUserMax) * 100)
+      : Math.min(100, avgPerUser);
+
+  const insightRows: InsightMetric[] = [
     {
       label: 'Total Activities',
-      value: totalActivities.toLocaleString(),
+      displayValue: totalActivities.toLocaleString(),
+      fillPct: 100,
+      tone: 'primary',
     },
     {
       label: 'Active Days In Period',
-      value: safeNumber(data.activeDaysInPeriod),
+      displayValue: activeDays.toLocaleString(),
+      fillPct: Math.min(100, (activeDays / 365) * 100),
+      tone: 'primary',
+      caption: 'out of 365 day window',
     },
     {
       label: 'Avg. Activities Per User',
-      value: safeNumber(data.averageActivitiesPerUser),
+      displayValue: avgPerUser.toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      }),
+      fillPct: avgPerUserFill,
+      tone: 'primary',
     },
     {
       label: 'Peak Activity Hour',
-      value: peakActivityHour,
+      displayValue: peakActivityHour,
+      fillPct: peakHourFill,
+      tone: 'success',
+      caption: peakHour != null ? '24-hour clock' : undefined,
     },
     {
       label: 'Failed Activity Rate',
-      value: `${failedRate}%`,
+      displayValue: `${failedRate}%`,
+      fillPct: Math.min(100, failedRate),
+      tone:
+        failedRate >= 5 ? 'danger' : failedRate > 0 ? 'warning' : 'success',
     },
   ];
 
   return (
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
-      <BreakdownList title="Activity Insights" rows={insightRows} />
+      <InsightBars title="Activity Insights" rows={insightRows} />
     </div>
   );
 };

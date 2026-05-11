@@ -5,7 +5,14 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
-import { BarList, SortableTH, StatCards, useTableSort } from './SharedPanels';
+import {
+  BarList,
+  DistributionDonut,
+  DistributionSegment,
+  SortableTH,
+  StatCards,
+  useTableSort,
+} from './SharedPanels';
 import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
@@ -1041,6 +1048,11 @@ export const CategoryPerformancePanel: React.FC<SalesSubTabPanelProps> = ({
     suffix: ' Orders',
   }));
 
+  const shareSegments: DistributionSegment[] = categories.map((c) => ({
+    label: c.categoryName,
+    value: parseAmount(c.totalAmount),
+  }));
+
   return (
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
@@ -1050,30 +1062,14 @@ export const CategoryPerformancePanel: React.FC<SalesSubTabPanelProps> = ({
         ) : (
           <NoOrdersMessage label="No category data" />
         )}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">
-            Share of Sales
-          </h3>
-          {categories.length === 0 ? (
-            <p className="text-sm text-gray-500 py-4 text-center">
-              No category data
-            </p>
-          ) : (
-            <ul className="divide-y divide-gray-100">
-              {categories.slice(0, 6).map((c) => (
-                <li
-                  key={c.categoryName}
-                  className="flex items-center justify-between py-3 text-sm"
-                >
-                  <span className="text-gray-700">{c.categoryName}</span>
-                  <span className="font-semibold text-primaryColor">
-                    {c.percentageOfTotalSales}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <DistributionDonut
+          title="Share of Sales"
+          segments={shareSegments}
+          centerLabel="Total"
+          centerValue={formatNgn(totalSales)}
+          emptyLabel="No category data"
+          valueFormatter={formatNgn}
+        />
       </div>
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">

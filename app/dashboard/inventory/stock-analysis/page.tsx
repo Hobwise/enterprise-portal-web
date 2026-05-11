@@ -27,7 +27,10 @@ import { TbReportSearch } from 'react-icons/tb';
 import { LuPackage } from 'react-icons/lu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { SalesOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SalesPanels';
-import { ComingSoonPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SharedPanels';
+import {
+  ComingSoonPanel,
+  GenericReportPanel,
+} from '@/components/ui/dashboard/inventory/stock-analysis/SharedPanels';
 import { InventoryOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/InventoryOverviewPanel';
 import { PaymentOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/PaymentOverviewPanel';
 import { UserAuditOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/UserAuditOverviewPanel';
@@ -46,8 +49,11 @@ import {
   QrRevenueSubPanel,
 } from '@/components/ui/dashboard/inventory/stock-analysis/PaymentSubTabs';
 import {
+  QrActivityTimelinePanel,
   QrDetailsPanel,
+  QrOrderHistoryPanel,
   QrOverviewPanel,
+  QrRevenueByCodePanel,
 } from '@/components/ui/dashboard/inventory/stock-analysis/QrPanels';
 import { BookingOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/BookingOverviewPanel';
 import {
@@ -75,6 +81,7 @@ import {
   QrReportResponse,
   ReportSummary,
   UserReportResponse,
+  filterTypeToComparisonLabel,
   periodToDateRange,
   periodToFilterType,
 } from '@/components/ui/dashboard/inventory/stock-analysis/types';
@@ -502,12 +509,29 @@ const StockAnalysisPage: React.FC = () => {
     { enabled: hasAccess }
   );
 
-  const subTabReportType = SUB_TAB_REPORT_TYPE[activeSubTab];
+  const summaryAvailableReports = React.useMemo(
+    () => availableReportsForModule(activeModule, summary, undefined),
+    [activeModule, summary]
+  );
+
+  const dynamicReportTypeBySlug = React.useMemo(() => {
+    const merged = mergeSubTabsWithReports(
+      currentModule.subTabs,
+      summaryAvailableReports
+    );
+    const map: Record<string, number | undefined> = {};
+    merged.forEach((tab) => {
+      if (typeof tab.reportType === 'number') {
+        map[tab.id] = tab.reportType;
+      }
+    });
+    return map;
+  }, [currentModule, summaryAvailableReports]);
+
+  const subTabReportType =
+    SUB_TAB_REPORT_TYPE[activeSubTab] ?? dynamicReportTypeBySlug[activeSubTab];
   const orderReportEnabled =
-    hasAccess &&
-    activeModule === 'sales' &&
-    activeSubTab !== 'overview' &&
-    subTabReportType !== undefined;
+    hasAccess && activeModule === 'sales' && activeSubTab !== 'overview';
 
   const { data: orderReport, isLoading: orderReportLoading } =
     useStockAnalysisOrderReport(
@@ -534,12 +558,11 @@ const StockAnalysisPage: React.FC = () => {
       { enabled: qrReportEnabled }
     );
 
-  const paymentSubTabReportType = PAYMENT_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const paymentSubTabReportType =
+    PAYMENT_SUB_TAB_REPORT_TYPE[activeSubTab] ??
+    dynamicReportTypeBySlug[activeSubTab];
   const paymentReportEnabled =
-    hasAccess &&
-    activeModule === 'payments' &&
-    activeSubTab !== 'overview' &&
-    paymentSubTabReportType !== undefined;
+    hasAccess && activeModule === 'payments' && activeSubTab !== 'overview';
 
   const { data: paymentReport, isLoading: paymentReportLoading } =
     useStockAnalysisPaymentReport(
@@ -553,12 +576,10 @@ const StockAnalysisPage: React.FC = () => {
     );
 
   const inventorySubTabReportType =
-    INVENTORY_SUB_TAB_REPORT_TYPE[activeSubTab];
+    INVENTORY_SUB_TAB_REPORT_TYPE[activeSubTab] ??
+    dynamicReportTypeBySlug[activeSubTab];
   const inventoryReportEnabled =
-    hasAccess &&
-    activeModule === 'inventory' &&
-    activeSubTab !== 'overview' &&
-    inventorySubTabReportType !== undefined;
+    hasAccess && activeModule === 'inventory' && activeSubTab !== 'overview';
 
   const { data: inventoryReport, isLoading: inventoryReportLoading } =
     useStockAnalysisInventoryReport(
@@ -571,12 +592,11 @@ const StockAnalysisPage: React.FC = () => {
       { enabled: inventoryReportEnabled }
     );
 
-  const userSubTabReportType = USER_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const userSubTabReportType =
+    USER_SUB_TAB_REPORT_TYPE[activeSubTab] ??
+    dynamicReportTypeBySlug[activeSubTab];
   const userReportEnabled =
-    hasAccess &&
-    activeModule === 'users' &&
-    activeSubTab !== 'overview' &&
-    userSubTabReportType !== undefined;
+    hasAccess && activeModule === 'users' && activeSubTab !== 'overview';
 
   const { data: userReport, isLoading: userReportLoading } =
     useStockAnalysisUserReport(
@@ -589,12 +609,11 @@ const StockAnalysisPage: React.FC = () => {
       { enabled: userReportEnabled }
     );
 
-  const bookingSubTabReportType = BOOKING_SUB_TAB_REPORT_TYPE[activeSubTab];
+  const bookingSubTabReportType =
+    BOOKING_SUB_TAB_REPORT_TYPE[activeSubTab] ??
+    dynamicReportTypeBySlug[activeSubTab];
   const bookingReportEnabled =
-    hasAccess &&
-    activeModule === 'bookings' &&
-    activeSubTab !== 'overview' &&
-    bookingSubTabReportType !== undefined;
+    hasAccess && activeModule === 'bookings' && activeSubTab !== 'overview';
 
   const { data: bookingReport, isLoading: bookingReportLoading } =
     useStockAnalysisBookingReport(
@@ -638,6 +657,14 @@ const StockAnalysisPage: React.FC = () => {
     activeModuleReports
   );
 
+  const mergedSubTabs = mergeSubTabsWithReports(
+    currentModule.subTabs,
+    moduleAvailableReports
+  );
+
+  const subTabLabel =
+    mergedSubTabs.find((t) => t.id === activeSubTab)?.label ?? activeSubTab;
+
   if (!hasAccess) {
     return null;
   }
@@ -665,10 +692,7 @@ const StockAnalysisPage: React.FC = () => {
         />
         <div className="px-2 md:px-3 py-4 border-t border-gray-100">
           <SubTabsBar
-            tabs={mergeSubTabsWithReports(
-              currentModule.subTabs,
-              moduleAvailableReports
-            )}
+            tabs={mergedSubTabs}
             active={activeSubTab}
             onChange={setActiveSubTab}
             availableReports={moduleAvailableReports}
@@ -727,6 +751,7 @@ const StockAnalysisPage: React.FC = () => {
         <ActivePanel
           moduleId={activeModule}
           subTabId={activeSubTab}
+          subTabLabel={subTabLabel}
           summary={summary}
           isLoading={summaryLoading}
           orderReport={orderReport}
@@ -741,6 +766,7 @@ const StockAnalysisPage: React.FC = () => {
           qrReportLoading={qrReportLoading}
           bookingReport={bookingReport}
           bookingReportLoading={bookingReportLoading}
+          comparisonLabel={filterTypeToComparisonLabel(filterType)}
           onExport={exportTable}
           isExporting={isExporting}
         />
@@ -963,6 +989,7 @@ const SubTabsBar: React.FC<SubTabsBarProps> = ({
 interface ActivePanelProps {
   moduleId: ModuleId;
   subTabId: string;
+  subTabLabel?: string;
   summary?: ReportSummary;
   isLoading?: boolean;
   orderReport?: OrderReportResponse;
@@ -977,6 +1004,7 @@ interface ActivePanelProps {
   qrReportLoading?: boolean;
   bookingReport?: BookingReportResponse;
   bookingReportLoading?: boolean;
+  comparisonLabel?: string;
   onExport: (exportType: number) => void | Promise<void>;
   isExporting?: boolean;
 }
@@ -984,6 +1012,7 @@ interface ActivePanelProps {
 const ActivePanel: React.FC<ActivePanelProps> = ({
   moduleId,
   subTabId,
+  subTabLabel,
   summary,
   isLoading,
   orderReport,
@@ -994,6 +1023,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
   inventoryReportLoading,
   userReport,
   userReportLoading,
+  comparisonLabel,
   qrReport,
   qrReportLoading,
   bookingReport,
@@ -1007,6 +1037,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         <SalesOverviewPanel
           data={summary?.orderDetails}
           isLoading={isLoading}
+          comparisonLabel={comparisonLabel}
         />
       );
     }
@@ -1028,7 +1059,17 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       case 'order-payment-summary':
         return <OrderPaymentSummaryPanel {...subTabProps} />;
       default:
-        return <ComingSoonPanel />;
+        return (
+          <GenericReportPanel
+            reportName={subTabLabel ?? subTabId}
+            data={
+              orderReport as unknown as Record<string, unknown> | undefined
+            }
+            isLoading={orderReportLoading}
+            onExport={onExport}
+            isExporting={isExporting}
+          />
+        );
     }
   }
 
@@ -1051,7 +1092,17 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       case 'outstanding-receivables':
         return <OutstandingReceivablesSubPanel {...paymentSubTabProps} />;
       default:
-        return <ComingSoonPanel />;
+        return (
+          <GenericReportPanel
+            reportName={subTabLabel ?? subTabId}
+            data={
+              paymentReport as unknown as Record<string, unknown> | undefined
+            }
+            isLoading={paymentReportLoading}
+            onExport={onExport}
+            isExporting={isExporting}
+          />
+        );
     }
   }
 
@@ -1067,8 +1118,22 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return <QrOverviewPanel {...qrPanelProps} />;
       case 'qr-details':
         return <QrDetailsPanel {...qrPanelProps} />;
+      case 'qr-order-history':
+        return <QrOrderHistoryPanel {...qrPanelProps} />;
+      case 'qr-revenue-by-code':
+        return <QrRevenueByCodePanel {...qrPanelProps} />;
+      case 'qr-activity-timeline':
+        return <QrActivityTimelinePanel {...qrPanelProps} />;
       default:
-        return <ComingSoonPanel />;
+        return (
+          <GenericReportPanel
+            reportName={subTabLabel ?? subTabId}
+            data={qrReport as unknown as Record<string, unknown> | undefined}
+            isLoading={qrReportLoading}
+            onExport={onExport}
+            isExporting={isExporting}
+          />
+        );
     }
   }
 
@@ -1087,7 +1152,17 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       case 'occupancy-utilization':
         return <OccupancyUtilizationPanel {...bookingSubTabProps} />;
       default:
-        return <ComingSoonPanel />;
+        return (
+          <GenericReportPanel
+            reportName={subTabLabel ?? subTabId}
+            data={
+              bookingReport as unknown as Record<string, unknown> | undefined
+            }
+            isLoading={bookingReportLoading}
+            onExport={onExport}
+            isExporting={isExporting}
+          />
+        );
     }
   }
 
@@ -1106,7 +1181,15 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       case 'purchase-order':
         return <PurchaseOrderPanel {...inventorySubTabProps} />;
       default:
-        return <ComingSoonPanel />;
+        return (
+          <GenericReportPanel
+            reportName={subTabLabel ?? subTabId}
+            data={inventoryReport}
+            isLoading={inventoryReportLoading}
+            onExport={onExport}
+            isExporting={isExporting}
+          />
+        );
     }
   }
 
@@ -1123,7 +1206,17 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
       case 'daily-sessions':
         return <DailySessionsPanel {...userSubTabProps} />;
       default:
-        return <ComingSoonPanel />;
+        return (
+          <GenericReportPanel
+            reportName={subTabLabel ?? subTabId}
+            data={
+              userReport as unknown as Record<string, unknown> | undefined
+            }
+            isLoading={userReportLoading}
+            onExport={onExport}
+            isExporting={isExporting}
+          />
+        );
     }
   }
 
@@ -1134,6 +1227,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
           <PaymentOverviewPanel
             data={summary?.paymentDetails}
             isLoading={isLoading}
+            comparisonLabel={comparisonLabel}
           />
         );
       case 'bookings':
@@ -1148,6 +1242,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
           <InventoryOverviewPanel
             data={summary?.inventoryDetails}
             isLoading={isLoading}
+            comparisonLabel={comparisonLabel}
           />
         );
       case 'users':
@@ -1158,10 +1253,12 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
           />
         );
       default:
+        // Defensive fallback — should be unreachable.
         return <ComingSoonPanel />;
     }
   }
 
+  // Defensive fallback — should be unreachable.
   return <ComingSoonPanel />;
 };
 

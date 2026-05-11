@@ -3,10 +3,14 @@
 import React from 'react';
 import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
-import { BarList, BreakdownList, StatCards } from './SharedPanels';
+import {
+  BarList,
+  DistributionDonut,
+  DistributionSegment,
+  StatCards,
+} from './SharedPanels';
 import {
   BarRow,
-  BreakdownRow,
   InventoryDetailsSection,
   MoverItem,
   StatCard,
@@ -15,6 +19,7 @@ import {
 interface InventoryOverviewPanelProps {
   data?: InventoryDetailsSection;
   isLoading?: boolean;
+  comparisonLabel?: string;
 }
 
 const safeNumber = (value: unknown): number => {
@@ -30,6 +35,7 @@ const moverToBarRow = (mover: MoverItem): BarRow => ({
 export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
   data,
   isLoading,
+  comparisonLabel = 'from previous period',
 }) => {
   if (isLoading || !data) {
     return (
@@ -61,7 +67,7 @@ export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
     {
       label: 'Total Stock Value',
       value: formatPrice(totalStockValue, 'NGN'),
-      delta: `${stockChange > 0 ? '+' : ''}${stockChange}% from yesterday`,
+      delta: `${stockChange > 0 ? '+' : ''}${stockChange}% ${comparisonLabel}`,
       direction: stockDirection,
     },
     {
@@ -88,31 +94,30 @@ export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
   const wastageDirection: StatCard['direction'] =
     wastageChange > 0 ? 'up' : wastageChange < 0 ? 'down' : 'neutral';
 
-  const breakdownRows: BreakdownRow[] = [
-    {
-      label: 'Stock Turnover Rate',
-      value: stockTurnoverRate,
-    },
-    {
-      label: 'Days of Inventory On Hand',
-      value: safeNumber(data.daysOfInventoryOnHand),
-    },
-    {
-      label: 'Wastage Cost',
-      value: formatPrice(wastageCost, 'NGN'),
-      valueClass: wastageCost > 0 ? 'text-red-500' : 'text-gray-500',
-    },
-    {
-      label: 'Wastage % Change',
-      value: `${wastageChange}%`,
-      valueClass:
-        wastageDirection === 'down'
-          ? 'text-emerald-600'
-          : wastageDirection === 'up'
-          ? 'text-red-500'
-          : 'text-gray-500',
-    },
+  const daysOnHand = safeNumber(data.daysOfInventoryOnHand);
+  const wastageBounded = Math.max(0, Math.min(wastageCost, totalStockValue));
+  const activeStock = Math.max(0, totalStockValue - wastageBounded);
+
+  const stockHealthSegments: DistributionSegment[] = [
+    { label: 'Active Stock', value: activeStock, color: '#10B981' },
+    { label: 'Wastage', value: wastageBounded, color: '#EF4444' },
   ];
+
+  const turnoverDisplay = stockTurnoverRate.toLocaleString(undefined, {
+    maximumFractionDigits: 2,
+  });
+  const wastageChangeDisplay = `${wastageChange > 0 ? '+' : ''}${wastageChange}%`;
+  const stockHealthCaption =
+    `Turnover ${turnoverDisplay} • ` +
+    `Days on hand ${daysOnHand.toLocaleString()} • ` +
+    `Wastage change ${wastageChangeDisplay} ` +
+    `(${
+      wastageDirection === 'down'
+        ? 'improving'
+        : wastageDirection === 'up'
+        ? 'worsening'
+        : 'stable'
+    })`;
 
   const topMoverRows = (data.topMovers ?? []).map(moverToBarRow);
   const slowMoverRows = (data.slowMovers ?? []).map(moverToBarRow);
@@ -133,9 +138,14 @@ export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
             <p className="text-sm text-gray-500">No top movers in this period</p>
           </div>
         )}
-        <BreakdownList
+        <DistributionDonut
           title="Stock Health"
-          rows={breakdownRows}
+          segments={stockHealthSegments}
+          centerLabel="Stock Value"
+          centerValue={formatPrice(totalStockValue, 'NGN')}
+          caption={stockHealthCaption}
+          emptyLabel="No stock value recorded"
+          valueFormatter={(v) => formatPrice(v, 'NGN')}
           className="lg:col-span-2"
         />
       </div>

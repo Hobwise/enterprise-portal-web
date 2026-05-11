@@ -3,11 +3,15 @@
 import React from 'react';
 import { Skeleton } from '@nextui-org/react';
 import { formatPrice } from '@/lib/utils';
-import { BarList, BreakdownList, StatCards } from './SharedPanels';
+import {
+  BarList,
+  DistributionDonut,
+  DistributionSegment,
+  StatCards,
+} from './SharedPanels';
 import {
   BarRow,
   BookingDetailsSection,
-  BreakdownRow,
   PartitionPoint,
   StatCard,
 } from './types';
@@ -107,19 +111,33 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
     },
   ];
 
-  const breakdownRows: BreakdownRow[] = [
-    { label: 'Confirmed', value: confirmedCount },
-    { label: 'Pending', value: safeNumber(data.pendingBookingCount) },
-    { label: 'Completed', value: safeNumber(data.completedBookingCount) },
-    { label: 'Admitted', value: safeNumber(data.admittedBookingCount) },
-    { label: 'Cancellation', value: cancelledCount },
+  const bookingSegments: DistributionSegment[] = [
+    { label: 'Confirmed', value: confirmedCount, color: '#10B981' },
+    {
+      label: 'Pending',
+      value: safeNumber(data.pendingBookingCount),
+      color: '#F59E0B',
+    },
+    {
+      label: 'Completed',
+      value: safeNumber(data.completedBookingCount),
+      color: '#7C5BE6',
+    },
+    {
+      label: 'Admitted',
+      value: safeNumber(data.admittedBookingCount),
+      color: '#3B82F6',
+    },
+    { label: 'Cancellation', value: cancelledCount, color: '#EF4444' },
     {
       label: 'Expired/Failed',
       value:
         safeNumber(data.expiredBookingCount) +
         safeNumber(data.failedBookingCount),
+      color: '#9CA3AF',
     },
   ];
+  const bookingTotal = bookingSegments.reduce((sum, seg) => sum + seg.value, 0);
 
   const partitions: PartitionPoint[] = Array.isArray(data.bookingPartitions)
     ? data.bookingPartitions
@@ -141,9 +159,11 @@ export const BookingOverviewPanel: React.FC<BookingOverviewPanelProps> = ({
           max={partitionRows.reduce((acc, r) => Math.max(acc, r.value), 1)}
           valueFormatter={(r) => `${r.value.toLocaleString()} Bookings`}
         />
-        <BreakdownList
-          title="Order Status Breakdown"
-          rows={breakdownRows}
+        <DistributionDonut
+          title="Booking Status Breakdown"
+          segments={bookingSegments}
+          centerLabel="Total"
+          centerValue={bookingTotal.toLocaleString()}
           className="lg:col-span-2"
         />
       </div>

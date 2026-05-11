@@ -10,6 +10,8 @@ import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
   BarRow,
+  OrderReportItem,
+  QrActivityTimelineItem,
   QrDetailsSection,
   QrPerformanceItem,
   QrReportResponse,
@@ -493,6 +495,593 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
                       }`}
                     >
                       {row.status}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {sorted.length > 0 && (
+          <TablePagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onChange={setPage}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+type OrderHistorySortKey =
+  | 'orderId'
+  | 'customerName'
+  | 'quickResponseName'
+  | 'paymentMethod'
+  | 'totalAmount'
+  | 'orderStatus'
+  | 'dateCreated';
+
+export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
+  data,
+  isLoading,
+  onExport,
+  isExporting,
+}) => {
+  const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
+  const rows: OrderReportItem[] = data?.qrOrderHistories ?? [];
+
+  const getValue = React.useCallback(
+    (row: OrderReportItem, key: OrderHistorySortKey): string | number => {
+      if (key === 'totalAmount') return safeNumber(row.totalAmount);
+      if (key === 'dateCreated') {
+        const t = Date.parse(row.dateCreated ?? '');
+        return Number.isFinite(t) ? t : 0;
+      }
+      const v = row[key];
+      return typeof v === 'string' || typeof v === 'number' ? v : '';
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort<
+    OrderReportItem,
+    OrderHistorySortKey
+  >(rows, getValue, { key: 'dateCreated', direction: 'desc' });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = sorted.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5">
+        <Skeleton className="h-96 rounded-2xl" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              QR Order History
+            </h3>
+            <span className="text-xs text-gray-500">
+              {rows.length.toLocaleString()} orders
+            </span>
+          </div>
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600">
+              <tr>
+                <SortableTH
+                  label="Order ID"
+                  sortKey="orderId"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Customer"
+                  sortKey="customerName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="QR"
+                  sortKey="quickResponseName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Payment Method"
+                  sortKey="paymentMethod"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Total"
+                  sortKey="totalAmount"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Status"
+                  sortKey="orderStatus"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Date Created"
+                  sortKey="dateCreated"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {pageRows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-5 py-8 text-center text-sm text-gray-500"
+                  >
+                    No QR orders for this period
+                  </td>
+                </tr>
+              ) : (
+                pageRows.map((row, idx) => (
+                  <tr
+                    key={`${row.orderId}-${idx}`}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="px-5 py-4 text-gray-900 font-medium">
+                      {row.orderId || '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.customerName || '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.quickResponseName || '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.paymentMethod || '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {formatNgn(safeNumber(row.totalAmount))}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.orderStatus || '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.dateCreated
+                        ? moment(row.dateCreated).format('DD MMM YYYY HH:mm')
+                        : '—'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {sorted.length > 0 && (
+          <TablePagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onChange={setPage}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+type RevenueRowSortKey =
+  | 'qrName'
+  | 'netRevenue'
+  | 'orderCount'
+  | 'averageOrderValue'
+  | 'refundAmount'
+  | 'lastOrderDateTime';
+
+export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
+  data,
+  isLoading,
+  onExport,
+  isExporting,
+}) => {
+  const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
+  const qrDetails: QrDetailsSection | undefined = data?.qrDetails;
+  const performance: QrPerformanceItem[] = data?.qrPerformanceSummaries ?? [];
+
+  const getValue = React.useCallback(
+    (row: QrPerformanceItem, key: RevenueRowSortKey): string | number => {
+      if (key === 'lastOrderDateTime') {
+        const t = Date.parse(row.lastOrderDateTime ?? '');
+        return Number.isFinite(t) ? t : 0;
+      }
+      if (key === 'qrName') return row.qrName ?? '';
+      const v = row[key as Exclude<RevenueRowSortKey, 'qrName' | 'lastOrderDateTime'>];
+      return safeNumber(v);
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort<
+    QrPerformanceItem,
+    RevenueRowSortKey
+  >(performance, getValue, { key: 'netRevenue', direction: 'desc' });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = sorted.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+
+  if (isLoading) return <Skeletonized />;
+
+  const totalQRRevenue = safeNumber(qrDetails?.totalQRRevenue);
+  const activeQRCodes = safeNumber(qrDetails?.activeQRCodes);
+  const averagePerActive = safeNumber(qrDetails?.averageOrdersPerActiveQR);
+  const topRevenue = qrDetails?.topByRevenue ?? null;
+  const revenueDelta = tonalDelta(qrDetails?.percentageChange);
+
+  const stats: StatCard[] = [
+    {
+      label: 'Total QR Revenue',
+      value: formatNgn(totalQRRevenue),
+      delta: revenueDelta.delta,
+      direction: revenueDelta.direction,
+      footer: 'vs. previous period',
+      footerTone: 'muted',
+    },
+    {
+      label: 'Top QR by Revenue',
+      value: topRevenue?.qrName ?? '—',
+      footer: topRevenue
+        ? `${formatNgn(safeNumber(topRevenue.netRevenue))} net`
+        : 'No data',
+      footerTone: topRevenue ? 'success' : 'muted',
+    },
+    {
+      label: 'Active QR Codes',
+      value: activeQRCodes.toLocaleString(),
+      footer: `Avg ${averagePerActive.toFixed(2)} orders / active QR`,
+      footerTone: 'muted',
+    },
+    {
+      label: 'Top Concentration',
+      value: formatPercentage(safeNumber(qrDetails?.topQRConcentrationPct)),
+      footer: 'Share of orders by top QR',
+      footerTone: 'muted',
+    },
+  ];
+
+  const hasAnyTop =
+    qrDetails?.topByRevenue ||
+    qrDetails?.topByOrders ||
+    qrDetails?.topByAverageOrderValue;
+
+  return (
+    <div className="flex flex-col gap-5">
+      <StatCards cards={stats} />
+
+      {hasAnyTop && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <TopQrCard
+            title="Top QR by Revenue"
+            item={qrDetails?.topByRevenue ?? null}
+            metricLabel="Net Revenue"
+            metricValue={formatNgn(
+              safeNumber(qrDetails?.topByRevenue?.netRevenue)
+            )}
+          />
+          <TopQrCard
+            title="Top QR by Orders"
+            item={qrDetails?.topByOrders ?? null}
+            metricLabel="Order Count"
+            metricValue={safeNumber(
+              qrDetails?.topByOrders?.orderCount
+            ).toLocaleString()}
+          />
+          <TopQrCard
+            title="Top QR by Avg. Order Value"
+            item={qrDetails?.topByAverageOrderValue ?? null}
+            metricLabel="Avg. Order Value"
+            metricValue={formatNgn(
+              safeNumber(qrDetails?.topByAverageOrderValue?.averageOrderValue)
+            )}
+          />
+        </div>
+      )}
+
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              Revenue by QR Code
+            </h3>
+            <span className="text-xs text-gray-500">
+              {performance.length.toLocaleString()} QR codes
+            </span>
+          </div>
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600">
+              <tr>
+                <SortableTH
+                  label="QR Name"
+                  sortKey="qrName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Net Revenue"
+                  sortKey="netRevenue"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Orders"
+                  sortKey="orderCount"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Avg Order Value"
+                  sortKey="averageOrderValue"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Refund Amount"
+                  sortKey="refundAmount"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Last Order"
+                  sortKey="lastOrderDateTime"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {pageRows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={6}
+                    className="px-5 py-8 text-center text-sm text-gray-500"
+                  >
+                    No revenue data for this period
+                  </td>
+                </tr>
+              ) : (
+                pageRows.map((row, idx) => (
+                  <tr key={`${row.qrName}-${idx}`} className="hover:bg-gray-50">
+                    <td className="px-5 py-4 text-gray-900 font-medium">
+                      {row.qrName ?? '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {formatNgn(safeNumber(row.netRevenue))}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {safeNumber(row.orderCount).toLocaleString()}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {formatNgn(safeNumber(row.averageOrderValue))}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {formatNgn(safeNumber(row.refundAmount))}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.lastOrderDateTime
+                        ? moment(row.lastOrderDateTime).format('DD MMM YYYY')
+                        : '—'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        {sorted.length > 0 && (
+          <TablePagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onChange={setPage}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
+
+type TimelineSortKey =
+  | 'occurredAt'
+  | 'qrName'
+  | 'eventType'
+  | 'orderId'
+  | 'amount'
+  | 'performedBy';
+
+export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
+  data,
+  isLoading,
+  onExport,
+  isExporting,
+}) => {
+  const [page, setPage] = useState(1);
+  const exportHandlers = buildExportHandlers(onExport);
+  const rows: QrActivityTimelineItem[] = data?.qrActivityTimelines ?? [];
+
+  const getValue = React.useCallback(
+    (row: QrActivityTimelineItem, key: TimelineSortKey): string | number => {
+      if (key === 'occurredAt') {
+        const t = Date.parse(row.occurredAt ?? '');
+        return Number.isFinite(t) ? t : 0;
+      }
+      if (key === 'amount') return safeNumber(row.amount);
+      const v = row[key];
+      return typeof v === 'string' || typeof v === 'number' ? v : '';
+    },
+    []
+  );
+
+  const { sort, sorted, toggleSort } = useTableSort<
+    QrActivityTimelineItem,
+    TimelineSortKey
+  >(rows, getValue, { key: 'occurredAt', direction: 'desc' });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageRows = sorted.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5">
+        <Skeleton className="h-96 rounded-2xl" />
+      </div>
+    );
+  }
+
+  const hasAmount = rows.some(
+    (r) => r.amount !== undefined && r.amount !== null
+  );
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              QR Activity Timeline
+            </h3>
+            <span className="text-xs text-gray-500">
+              {rows.length.toLocaleString()} events
+            </span>
+          </div>
+          <ExportButtons {...exportHandlers} isLoading={isExporting} />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 text-gray-600">
+              <tr>
+                <SortableTH
+                  label="When"
+                  sortKey="occurredAt"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="QR"
+                  sortKey="qrName"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Event"
+                  sortKey="eventType"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                <SortableTH
+                  label="Order ID"
+                  sortKey="orderId"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+                {hasAmount && (
+                  <SortableTH
+                    label="Amount"
+                    sortKey="amount"
+                    active={sort.key}
+                    direction={sort.direction}
+                    onSort={toggleSort}
+                  />
+                )}
+                <SortableTH
+                  label="By"
+                  sortKey="performedBy"
+                  active={sort.key}
+                  direction={sort.direction}
+                  onSort={toggleSort}
+                />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {pageRows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={hasAmount ? 6 : 5}
+                    className="px-5 py-8 text-center text-sm text-gray-500"
+                  >
+                    No QR activity in this period
+                  </td>
+                </tr>
+              ) : (
+                pageRows.map((row, idx) => (
+                  <tr
+                    key={`${row.qrName}-${row.occurredAt}-${idx}`}
+                    className="hover:bg-gray-50"
+                  >
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.occurredAt
+                        ? moment(row.occurredAt).format('DD MMM YYYY HH:mm')
+                        : '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-900 font-medium">
+                      {row.qrName ?? '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.eventType ?? '—'}
+                    </td>
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.orderId ?? '—'}
+                    </td>
+                    {hasAmount && (
+                      <td className="px-5 py-4 text-gray-700">
+                        {row.amount !== undefined && row.amount !== null
+                          ? formatNgn(safeNumber(row.amount))
+                          : '—'}
+                      </td>
+                    )}
+                    <td className="px-5 py-4 text-gray-700">
+                      {row.performedBy ?? '—'}
                     </td>
                   </tr>
                 ))
