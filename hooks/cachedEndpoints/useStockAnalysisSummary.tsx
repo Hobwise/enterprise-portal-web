@@ -20,10 +20,10 @@ const useStockAnalysisSummary = (
       startDate,
       endDate
     );
-    return responseData?.data?.data as ReportSummary | undefined;
+    return (responseData?.data?.data ?? null) as ReportSummary | null;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<ReportSummary | undefined>({
+  const { data, isLoading, isError, refetch } = useQuery<ReportSummary | null>({
     queryKey: ['stockAnalysisSummary', { filterType, startDate, endDate }],
     queryFn: fetchSummary,
     refetchOnWindowFocus: false,

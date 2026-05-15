@@ -34,11 +34,11 @@ const useStockAnalysisPaymentReport = (
       payload.paymentMethod,
       payload.status
     );
-    return responseData?.data?.data as PaymentReportResponse | undefined;
+    return (responseData?.data?.data ?? null) as PaymentReportResponse | null;
   };
 
   const { data, isLoading, isError, refetch } = useQuery<
-    PaymentReportResponse | undefined
+    PaymentReportResponse | null
   >({
     queryKey: ['stockAnalysisPaymentReport', args],
     queryFn: fetchPaymentReport,

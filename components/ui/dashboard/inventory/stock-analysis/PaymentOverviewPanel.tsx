@@ -200,8 +200,9 @@ export const PaymentOverviewPanel: React.FC<PaymentOverviewPanelProps> = ({
       ? 'down'
       : 'neutral';
 
-  const grossRevenue = safeNumber(data.totalAmount);
-  const confirmed = safeNumber(data.confirmedAmount);
+  const grossRevenue = safeNumber(data.grossRevenue ?? data.totalAmount);
+  const netRevenue = safeNumber(data.netRevenue ?? data.totalAmount);
+  const grossProfit = safeNumber(data.grossProfit);
   const outstanding = safeNumber(data.outstandingAmount);
   const refundRate = safeNumber(data.refundRate);
 
@@ -215,14 +216,20 @@ export const PaymentOverviewPanel: React.FC<PaymentOverviewPanelProps> = ({
     {
       label: 'Gross Revenue',
       value: formatPrice(grossRevenue, 'NGN'),
-      delta: formatChange(percentageChange, ' value'),
+      delta: formatChange(percentageChange),
       direction,
     },
     {
-      label: 'Confirmed',
-      value: formatPrice(confirmed, 'NGN'),
-      footer: 'Settled payments',
-      footerTone: 'success',
+      label: 'Net Revenue',
+      value: formatPrice(netRevenue, 'NGN'),
+      footer: 'Revenue after refunds & discounts',
+      footerTone: 'muted',
+    },
+    {
+      label: 'Gross Profit',
+      value: formatPrice(grossProfit, 'NGN'),
+      footer: 'Revenue minus cost of goods',
+      footerTone: grossProfit > 0 ? 'success' : 'muted',
     },
     {
       label: 'Refund Rate',

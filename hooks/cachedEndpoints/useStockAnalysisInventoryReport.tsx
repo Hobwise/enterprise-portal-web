@@ -32,10 +32,10 @@ const useStockAnalysisInventoryReport = (
       payload.categoryId,
       payload.supplierId
     );
-    return responseData?.data?.data as unknown[] | undefined;
+    return (responseData?.data?.data ?? null) as unknown[] | null;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<unknown[] | undefined>({
+  const { data, isLoading, isError, refetch } = useQuery<unknown[] | null>({
     queryKey: ['stockAnalysisInventoryReport', args],
     queryFn: fetchInventoryReport,
     refetchOnWindowFocus: false,

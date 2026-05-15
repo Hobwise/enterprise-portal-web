@@ -849,7 +849,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
                   }
                   className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
                 >
-                  Exp Excel
+                  Export Excel
                 </Button>
                 <Button
                   onPress={handleExportPdf}
@@ -859,7 +859,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
                   }
                   className="bg-primaryColor text-white rounded-lg text-xs h-9"
                 >
-                  Exp PDF
+                  Export PDF
                 </Button>
               </div>
             )}

@@ -9,8 +9,11 @@ import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from '@/lib/userTypeUtils';
 import { useDisclosure } from '@nextui-org/react';
 import { motion, useCycle } from 'framer-motion';
-import { FiLogOut } from 'react-icons/fi';
+import { FiLock, FiLogOut } from 'react-icons/fi';
 import { IoIosArrowDown } from 'react-icons/io';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
+import { useSubscriptionContext } from '@/hooks/providers/SubscriptionProvider';
+import { routePermissions } from '@/lib/routePermissions';
 import LogoutModal from '../logoutModal';
 import { SIDENAV_ITEMS, SIDENAV_CONFIG } from './constants';
 import { SideNavItem, SideNavSection } from './types';
@@ -55,15 +58,65 @@ const HeaderMobile = () => {
   // Get user role (0 = Manager, 1 = Staff)
   const userRole = userInformation?.role;
 
-  // Filter sections based on user role
-  const filteredSections = useMemo(() => {
-    return SIDENAV_CONFIG.filter((section) => {
-      if (section.requiredRole !== undefined && userRole !== section.requiredRole) {
-        return false;
+  const { userRolePermissions } = usePermission();
+  const { planCapabilities } = useSubscriptionContext();
+
+  const isPlanLockedPath = useCallback(
+    (path: string): boolean => {
+      let match: { key: string; capability: string } | null = null;
+      for (const [route, capability] of Object.entries(routePermissions)) {
+        if (path === route || path.startsWith(route + '/')) {
+          if (!match || route.length > match.key.length) {
+            match = { key: route, capability };
+          }
+        }
       }
-      return true;
-    });
-  }, [userRole]);
+      if (!match) return false;
+      return !planCapabilities[match.capability];
+    },
+    [planCapabilities]
+  );
+
+  const decorateItemsForSection = useCallback(
+    (items: SideNavItem[], section: SideNavSection): SideNavItem[] => {
+      const sectionLockedByRole =
+        section.requiredRole !== undefined && userRole !== section.requiredRole;
+      const sectionLockedByPlan = Boolean(
+        section.requiredCapability && !planCapabilities[section.requiredCapability]
+      );
+      const sectionLocked = sectionLockedByRole || sectionLockedByPlan;
+
+      const rbacMap: Record<string, boolean | undefined> = {
+        Menu: userRolePermissions?.canViewMenu,
+        Campaigns: userRolePermissions?.canViewCampaign,
+        Reservation: userRolePermissions?.canViewReservation,
+        Payments: userRolePermissions?.canViewPayment,
+        Orders: userRolePermissions?.canViewOrder,
+        Reports: userRolePermissions?.canViewReport,
+        Bookings: userRolePermissions?.canViewBooking,
+        Dashboard: userRolePermissions?.canViewDashboard,
+        'Quick Response': userRolePermissions?.canViewQR,
+      };
+
+      return items.map((item) => {
+        const rbacLocked = userRole === 1 && rbacMap[item.title] === false;
+        const planLocked = isPlanLockedPath(item.path);
+        return {
+          ...item,
+          locked: sectionLocked || rbacLocked || planLocked,
+        };
+      });
+    },
+    [userRole, userRolePermissions, planCapabilities, isPlanLockedPath]
+  );
+
+  // Show every section, decorate items as locked when restricted
+  const filteredSections = useMemo(() => {
+    return SIDENAV_CONFIG.map((section) => ({
+      ...section,
+      items: decorateItemsForSection(section.items, section),
+    }));
+  }, [decorateItemsForSection]);
 
   // Accordion state — only one section open at a time
   const [expandedSection, setExpandedSection] = useState<string | null>(() => {
@@ -285,8 +338,8 @@ const MobileSectionGroup = ({
         </button>
       </MenuItem>
 
-      {/* Section Items */}
-      {isExpanded && (
+      {/* Section Items — always visible when non-collapsible */}
+      {(isExpanded || !section.collapsible) && (
         <div className="mt-2 space-y-2">
           {section.items.map((item, idx) => {
             const isLastItem = idx === section.items.length - 1;
@@ -299,13 +352,20 @@ const MobileSectionGroup = ({
                   <MenuItem>
                     <Link
                       prefetch={true}
-                      href={item?.path}
+                      href={item.locked ? '/dashboard/unauthorized' : item?.path}
                       onClick={() => toggleOpen()}
-                      className={`flex w-full text-white text-xl ${
+                      aria-disabled={item.locked ? true : undefined}
+                      className={`flex w-full items-center justify-between text-white text-xl ${
                         item?.path === pathname ? 'font-bold' : ''
-                      }`}
+                      } ${item.locked ? 'opacity-60' : ''}`}
                     >
-                      {item?.title}
+                      <span>{item?.title}</span>
+                      {item.locked ? (
+                        <FiLock
+                          aria-label="No access"
+                          className="text-[18px] text-gray-400"
+                        />
+                      ) : null}
                     </Link>
                   </MenuItem>
                 )}

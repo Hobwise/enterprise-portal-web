@@ -23,52 +23,81 @@ import {
 import Image from 'next/image';
 import Menu from '../../../public/assets/icons/menu.png';
 
+const DASHBOARD_ITEM: SideNavItem = {
+  title: "Dashboard",
+  path: "/dashboard",
+  icon: <DashboardSidebar />,
+};
+
+const MENU_ITEM: SideNavItem = {
+  title: "Menu",
+  path: "/dashboard/menu",
+  icon: Menu,
+};
+
+const ORDERS_ITEM: SideNavItem = {
+  title: "Orders",
+  path: "/dashboard/orders",
+  icon: <OrderSidebar />,
+};
+
+const QUICK_RESPONSE_ITEM: SideNavItem = {
+  title: "Quick Response",
+  path: "/dashboard/quick-response",
+  icon: <QRcodeSidebar />,
+};
+
+const CAMPAIGNS_ITEM: SideNavItem = {
+  title: "Campaigns",
+  path: "/dashboard/campaigns",
+  icon: <CampaignSidebar />,
+};
+
+const RESERVATION_ITEM: SideNavItem = {
+  title: "Reservation",
+  path: "/dashboard/reservation",
+  icon: <ReservationSidebar />,
+};
+
+const BOOKINGS_ITEM: SideNavItem = {
+  title: "Bookings",
+  path: "/dashboard/bookings",
+  icon: <BookingSidebar />,
+};
+
+const PAYMENTS_ITEM: SideNavItem = {
+  title: "Payments",
+  path: "/dashboard/payments",
+  icon: <PaymentSidebar />,
+};
+
+const REPORTS_ITEM: SideNavItem = {
+  title: "Reports",
+  path: "/dashboard/reports",
+  icon: <ReportSidebar />,
+};
+
+// Flat list of all primary nav items — used for permission lookups & header mapping
 export const SIDENAV_ITEMS: SideNavItem[] = [
-  {
-    title: "Dashboard",
-    path: "/dashboard",
-    icon: <DashboardSidebar />,
-  },
-  {
-    title: "Menu",
-    path: "/dashboard/menu",
-    icon: Menu,
-  },
-  {
-    title: "Orders",
-    path: "/dashboard/orders",
-    icon: <OrderSidebar />,
-  },
-  {
-    title: "Quick Response",
-    path: "/dashboard/quick-response",
-    icon: <QRcodeSidebar />,
-  },
-  {
-    title: "Campaigns",
-    path: "/dashboard/campaigns",
-    icon: <CampaignSidebar />,
-  },
-  {
-    title: "Reservation",
-    path: "/dashboard/reservation",
-    icon: <ReservationSidebar />,
-  },
-  {
-    title: "Bookings",
-    path: "/dashboard/bookings",
-    icon: <BookingSidebar />,
-  },
-  {
-    title: "Payments",
-    path: "/dashboard/payments",
-    icon: <PaymentSidebar />,
-  },
-  {
-    title: "Reports",
-    path: "/dashboard/reports",
-    icon: <ReportSidebar />,
-  },
+  DASHBOARD_ITEM,
+  MENU_ITEM,
+  ORDERS_ITEM,
+  QUICK_RESPONSE_ITEM,
+  CAMPAIGNS_ITEM,
+  RESERVATION_ITEM,
+  BOOKINGS_ITEM,
+  PAYMENTS_ITEM,
+  REPORTS_ITEM,
+];
+
+// Section item groupings (used in SIDENAV_CONFIG below)
+const OVERVIEW_ITEMS: SideNavItem[] = [DASHBOARD_ITEM, REPORTS_ITEM];
+const SALES_ITEMS: SideNavItem[] = [MENU_ITEM, ORDERS_ITEM, PAYMENTS_ITEM];
+const ENGAGEMENT_ITEMS: SideNavItem[] = [
+  QUICK_RESPONSE_ITEM,
+  CAMPAIGNS_ITEM,
+  RESERVATION_ITEM,
+  BOOKINGS_ITEM,
 ];
 
 // Inventory Manager navigation items
@@ -123,15 +152,23 @@ export const INVENTORY_ITEMS: SideNavItem[] = [
 // Section-based navigation configuration
 export const SIDENAV_CONFIG: SideNavSection[] = [
   {
-    sectionTitle: "ORDER MANAGER",
-    collapsible: true,
-    defaultExpanded: true,
-    items: SIDENAV_ITEMS,
+    sectionTitle: "OVERVIEW",
+    collapsible: false,
+    items: OVERVIEW_ITEMS,
   },
   {
-    sectionTitle: "INVENTORY MANAGER",
-    collapsible: true,
-    defaultExpanded: true,
+    sectionTitle: "SALES",
+    collapsible: false,
+    items: SALES_ITEMS,
+  },
+  {
+    sectionTitle: "ENGAGEMENT",
+    collapsible: false,
+    items: ENGAGEMENT_ITEMS,
+  },
+  {
+    sectionTitle: "INVENTORY",
+    collapsible: false,
     requiredRole: 0, // Manager only (role 0)
     requiredCapability: "canAccessInventory",
     items: INVENTORY_ITEMS,
