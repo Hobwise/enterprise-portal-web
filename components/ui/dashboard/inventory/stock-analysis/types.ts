@@ -134,6 +134,9 @@ export interface PaymentDetailsSection {
   topPaymentMethod?: string | null;
   topPaymentMethodAmount?: number;
   outstandingAmount?: number;
+  grossRevenue?: number;
+  netRevenue?: number;
+  grossProfit?: number;
   dayWithHighestPayment: { dateTime: string | null; amount: number | null };
   availableReport: AvailableReport[];
   paymentPartitions: PartitionPoint[];

@@ -66,7 +66,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
       startContent={isLoading ? null : <FiDownload size={14} />}
       className="border border-gray-200 text-gray-700 bg-white rounded-lg text-xs h-9"
     >
-      Exp Excel
+      Export Excel
     </Button>
     <Button
       onPress={onExportPdf}
@@ -74,7 +74,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
       startContent={isLoading ? null : <FiDownload size={14} />}
       className="bg-primaryColor text-white rounded-lg text-xs h-9"
     >
-      Exp PDF
+      Export PDF
     </Button>
   </div>
 );

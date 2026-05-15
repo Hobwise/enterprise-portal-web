@@ -31,11 +31,11 @@ const useStockAnalysisUserReport = (
       payload.reportType,
       payload.emailAddress
     );
-    return responseData?.data?.data as UserReportResponse | undefined;
+    return (responseData?.data?.data ?? null) as UserReportResponse | null;
   };
 
   const { data, isLoading, isError, refetch } = useQuery<
-    UserReportResponse | undefined
+    UserReportResponse | null
   >({
     queryKey: ['stockAnalysisUserReport', args],
     queryFn: fetchUserReport,

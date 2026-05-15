@@ -31,11 +31,11 @@ const useStockAnalysisQrReport = (
       payload.reportType,
       payload.quickResponseID
     );
-    return responseData?.data?.data as QrReportResponse | undefined;
+    return (responseData?.data?.data ?? null) as QrReportResponse | null;
   };
 
   const { data, isLoading, isError, refetch } = useQuery<
-    QrReportResponse | undefined
+    QrReportResponse | null
   >({
     queryKey: ['stockAnalysisQrReport', args],
     queryFn: fetchQrReport,

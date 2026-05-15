@@ -32,11 +32,11 @@ const useStockAnalysisBookingReport = (
       undefined,
       payload.bookingStatus
     );
-    return responseData?.data?.data as BookingReportResponse | undefined;
+    return (responseData?.data?.data ?? null) as BookingReportResponse | null;
   };
 
   const { data, isLoading, isError, refetch } = useQuery<
-    BookingReportResponse | undefined
+    BookingReportResponse | null
   >({
     queryKey: ['stockAnalysisBookingReport', args],
     queryFn: fetchBookingReport,

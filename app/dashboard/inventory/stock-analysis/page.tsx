@@ -46,7 +46,6 @@ import {
   OutstandingReceivablesSubPanel,
   PaymentMethodsSubPanel,
   PaymentSummarySubPanel,
-  QrRevenueSubPanel,
 } from '@/components/ui/dashboard/inventory/stock-analysis/PaymentSubTabs';
 import {
   QrActivityTimelinePanel,
@@ -165,12 +164,6 @@ const MODULES: ModuleTab[] = [
         label: 'Payment Methods',
         icon: <HiOutlineCreditCard size={16} />,
         reportType: 5,
-      },
-      {
-        id: 'qr-revenue',
-        label: 'QR Revenue',
-        icon: <HiOutlineQrcode size={16} />,
-        reportType: 6,
       },
       {
         id: 'net-revenue',
@@ -309,7 +302,6 @@ const SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
 const PAYMENT_SUB_TAB_REPORT_TYPE: Record<string, number | undefined> = {
   'payment-summary': 4,
   'payment-methods': 5,
-  'qr-revenue': 6,
   'net-revenue': 19,
   'outstanding-receivables': 20,
 };
@@ -510,7 +502,7 @@ const StockAnalysisPage: React.FC = () => {
   );
 
   const summaryAvailableReports = React.useMemo(
-    () => availableReportsForModule(activeModule, summary, undefined),
+    () => availableReportsForModule(activeModule, summary ?? undefined, undefined),
     [activeModule, summary]
   );
 
@@ -653,7 +645,7 @@ const StockAnalysisPage: React.FC = () => {
 
   const moduleAvailableReports = availableReportsForModule(
     activeModule,
-    summary,
+    summary ?? undefined,
     activeModuleReports
   );
 
@@ -752,19 +744,19 @@ const StockAnalysisPage: React.FC = () => {
           moduleId={activeModule}
           subTabId={activeSubTab}
           subTabLabel={subTabLabel}
-          summary={summary}
+          summary={summary ?? undefined}
           isLoading={summaryLoading}
-          orderReport={orderReport}
+          orderReport={orderReport ?? undefined}
           orderReportLoading={orderReportLoading}
-          paymentReport={paymentReport}
+          paymentReport={paymentReport ?? undefined}
           paymentReportLoading={paymentReportLoading}
-          inventoryReport={inventoryReport}
+          inventoryReport={inventoryReport ?? undefined}
           inventoryReportLoading={inventoryReportLoading}
-          userReport={userReport}
+          userReport={userReport ?? undefined}
           userReportLoading={userReportLoading}
-          qrReport={qrReport}
+          qrReport={qrReport ?? undefined}
           qrReportLoading={qrReportLoading}
-          bookingReport={bookingReport}
+          bookingReport={bookingReport ?? undefined}
           bookingReportLoading={bookingReportLoading}
           comparisonLabel={filterTypeToComparisonLabel(filterType)}
           onExport={exportTable}
@@ -1085,8 +1077,6 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return <PaymentSummarySubPanel {...paymentSubTabProps} />;
       case 'payment-methods':
         return <PaymentMethodsSubPanel {...paymentSubTabProps} />;
-      case 'qr-revenue':
-        return <QrRevenueSubPanel {...paymentSubTabProps} />;
       case 'net-revenue':
         return <NetRevenueSubPanel {...paymentSubTabProps} />;
       case 'outstanding-receivables':

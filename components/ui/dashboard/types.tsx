@@ -4,6 +4,7 @@ export type SideNavItem = {
   icon?: any;
   submenu?: boolean;
   subMenuItems?: SideNavItem[];
+  locked?: boolean;
 };
 
 export type SideNavSection = {
