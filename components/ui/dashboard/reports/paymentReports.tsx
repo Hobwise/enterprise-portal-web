@@ -2,7 +2,8 @@ import { Card, CardBody, Divider } from "@nextui-org/react";
 import moment from "moment";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { formatPrice, saveJsonItemToLocalStorage } from "@/lib/utils";
+import { formatPrice } from "@/lib/utils";
+import { buildReportPath } from "@/lib/reportRoutes";
 import {
   CategoryScale,
   Chart as ChartJS,
@@ -114,16 +115,12 @@ const ReportDetails = ({ report }: any) => {
   const router = useRouter();
 
   const handleActivityReport = (
-    reportType: number,
+    _reportType: number,
     reportName: string,
     route: string
   ) => {
-    router.push(`/dashboard/reports/${route}`);
-    saveJsonItemToLocalStorage("reportFilter", {
-      reportType: reportType,
-      reportName: reportName,
-      route: route,
-    });
+    const path = buildReportPath(route, reportName);
+    if (path) router.push(path);
   };
 
   return (

@@ -17,7 +17,6 @@ import {
   StockTransferIcon,
   StockAdjustmentIcon,
   InventoryCountIcon,
-  HistoryIcon,
   StockAnalysisIcon,
 } from "@/public/assets/svg";
 import Image from 'next/image';
@@ -103,11 +102,6 @@ const ENGAGEMENT_ITEMS: SideNavItem[] = [
 // Inventory Manager navigation items
 export const INVENTORY_ITEMS: SideNavItem[] = [
   {
-    title: "Dashboard",
-    path: "/dashboard/inventory",
-    icon: <InventoryDashboardIcon />,
-  },
-  {
     title: "Item",
     path: "/dashboard/inventory/items",
     icon: <ItemIcon />,
@@ -137,13 +131,12 @@ export const INVENTORY_ITEMS: SideNavItem[] = [
     path: "/dashboard/inventory/inventory-count",
     icon: <InventoryCountIcon />,
   },
+];
+
+// Insights navigation items
+export const INSIGHTS_ITEMS: SideNavItem[] = [
   {
-    title: "History",
-    path: "/dashboard/inventory/history",
-    icon: <HistoryIcon />,
-  },
-  {
-    title: "Stock Analysis",
+    title: "Report",
     path: "/dashboard/inventory/stock-analysis",
     icon: <StockAnalysisIcon />,
   },
@@ -172,6 +165,13 @@ export const SIDENAV_CONFIG: SideNavSection[] = [
     requiredRole: 0, // Manager only (role 0)
     requiredCapability: "canAccessInventory",
     items: INVENTORY_ITEMS,
+  },
+  {
+    sectionTitle: "INSIGHTS",
+    collapsible: false,
+    requiredRole: 0, // Manager only (role 0)
+    requiredCapability: "canAccessInventory",
+    items: INSIGHTS_ITEMS,
   },
 ];
 

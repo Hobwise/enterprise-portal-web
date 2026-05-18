@@ -19,7 +19,8 @@ import {
   ChartOptions,
   Plugin,
 } from 'chart.js';
-import { formatPrice, saveJsonItemToLocalStorage, notify } from '@/lib/utils';
+import { formatPrice, notify } from '@/lib/utils';
+import { slugifyReportName } from '@/lib/reportRoutes';
 import { ExportType } from './exportHelpers';
 import { AvailableReport, BarRow, BreakdownRow, StatCard } from './types';
 
@@ -964,11 +965,6 @@ export const AvailableReportsList: React.FC<AvailableReportsListProps> = ({
   const items = reports ?? [];
 
   const handleClick = (report: AvailableReport) => {
-    saveJsonItemToLocalStorage('reportFilter', {
-      reportType: report.reportType,
-      reportName: report.reportName,
-      route,
-    });
     if (route === 'inventory') {
       notify({
         title: 'Coming soon',
@@ -977,7 +973,9 @@ export const AvailableReportsList: React.FC<AvailableReportsListProps> = ({
       });
       return;
     }
-    router.push(`/dashboard/reports/${route}`);
+    router.push(
+      `/dashboard/reports/${route}/${slugifyReportName(report.reportName)}`
+    );
   };
 
   return (
