@@ -637,7 +637,7 @@ const StockAnalysisPage: React.FC = () => {
       case 'bookings':
         return bookingReport?.availableReport ?? [];
       case 'qr':
-        return qrReport?.qrDetails?.availableReport ?? [];
+        return [];
       default:
         return [];
     }

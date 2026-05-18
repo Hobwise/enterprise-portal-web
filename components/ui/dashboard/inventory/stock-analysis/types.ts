@@ -586,6 +586,26 @@ export interface QrReportPayload {
   quickResponseID?: string;
 }
 
+export type AlertSeverity = 'critical' | 'warning' | 'info' | string;
+export type AlertCategory =
+  | 'inventory'
+  | 'order'
+  | 'payment'
+  | 'booking'
+  | 'qr'
+  | 'audit'
+  | string;
+
+export interface SummaryAlert {
+  severity: AlertSeverity;
+  category: AlertCategory;
+  title: string;
+  message: string;
+  actionLabel?: string | null;
+  actionUrl?: string | null;
+  metricValue?: number | null;
+}
+
 export interface ReportSummary {
   filterType?: number;
   paymentDetails: PaymentDetailsSection;
@@ -593,4 +613,5 @@ export interface ReportSummary {
   orderDetails: OrderDetailsSection;
   auditDetails: AuditDetailsSection;
   inventoryDetails: InventoryDetailsSection;
+  alerts?: SummaryAlert[];
 }
