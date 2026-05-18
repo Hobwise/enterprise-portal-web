@@ -28,7 +28,14 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiLock, FiLogOut, FiSearch } from "react-icons/fi";
+import {
+  FiLock,
+  FiLogOut,
+  FiSearch,
+  FiChevronDown,
+  FiChevronLeft,
+  FiChevronRight,
+} from "react-icons/fi";
 import { GoPlus } from "react-icons/go";
 import { PiBookOpenTextLight } from "react-icons/pi";
 
@@ -45,7 +52,7 @@ const SECTION_LABEL = "text-[11px] tracking-[0.12em] text-[#64748B]";
 const ITEM_INACTIVE =
   "text-[#CBD5E1] hover:bg-[#111B2E] hover:text-white";
 const ITEM_ACTIVE =
-  "bg-gradient-to-r from-[#6D28D9] to-[#4C1D95] text-white shadow-[0_8px_20px_-10px_rgba(124,58,237,0.55)]";
+  "relative bg-gradient-to-r from-[#3D1E8E] via-[#1F1547] to-[#0B1320] text-white shadow-md before:content-[''] before:absolute before:-left-3 before:top-1/2 before:-translate-y-1/2 before:w-1 before:h-2/3 before:bg-[#A78BFA] before:rounded-md";
 
 const getBusinessInitials = (name?: string): string => {
   if (!name) return "B";
@@ -55,7 +62,12 @@ const getBusinessInitials = (name?: string): string => {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 };
 
-const SideNav = () => {
+interface SideNavProps {
+  isCollapsed?: boolean;
+  onToggleCollapsed?: () => void;
+}
+
+const SideNav = ({ isCollapsed = false, onToggleCollapsed }: SideNavProps) => {
   const { isOpen, onOpenChange } = useDisclosure();
   const {
     isOpen: isLogoutOpen,
@@ -301,11 +313,30 @@ const SideNav = () => {
 
   return (
     <div
-      className={`md:w-[272px] ${SIDEBAR_BG} h-screen flex-1 fixed z-30 hidden md:flex flex-col border-r ${SIDEBAR_BORDER}`}
+      className={`${isCollapsed ? "md:w-[72px]" : "md:w-[272px]"} ${SIDEBAR_BG} h-screen flex-1 fixed z-30 hidden md:flex flex-col border-r ${SIDEBAR_BORDER} transition-[width] duration-200 ease-in-out`}
     >
+      {/* Collapse / expand toggle — floats on right edge */}
+      {onToggleCollapsed ? (
+        <button
+          type="button"
+          onClick={onToggleCollapsed}
+          aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className="hidden md:flex absolute -right-3 top-16 z-40 w-6 h-6 items-center justify-center rounded-full bg-[#1A2236] border border-[#2B3550] text-[#94A3B8] hover:text-white hover:bg-[#2B3550] shadow-md transition-colors"
+        >
+          {isCollapsed ? (
+            <FiChevronRight className="text-[12px]" />
+          ) : (
+            <FiChevronLeft className="text-[12px]" />
+          )}
+        </button>
+      ) : null}
+
       <div className="flex flex-col w-full h-full">
         {/* Business header */}
-        <div className="flex-shrink-0 px-4 pt-5">
+        <div
+          className={`flex-shrink-0 ${isCollapsed ? "px-2" : "px-4"} pt-5`}
+        >
           <Dropdown
             placement="bottom-start"
             classNames={{ content: "bg-[#1A2236] border border-[#2B3550]" }}
@@ -313,19 +344,39 @@ const SideNav = () => {
             <DropdownTrigger>
               <button
                 type="button"
-                className="w-full flex items-center gap-3 rounded-lg px-2 py-2 transition hover:bg-[#111B2E]"
+                aria-label="Switch business"
+                title={
+                  userInformation?.isOwner && canAccessMultipleLocations
+                    ? `Switch business — ${businessName}`
+                    : businessName
+                }
+                className={`w-full flex items-center rounded-lg py-2 transition hover:bg-[#111B2E] ${
+                  isCollapsed
+                    ? "justify-center px-1"
+                    : "gap-2 px-1.5"
+                }`}
               >
                 <BusinessAvatar
                   initials={businessInitials}
                   imageBase64={businessDetails?.logoImage}
                   isLoading={isLoading}
                 />
-                <div className="flex flex-col items-start flex-1 min-w-0">
-                  <span className="text-[14px] font-semibold text-white truncate w-full text-left">
-                    {businessName}
-                  </span>
-                  <PoweredByBadge planLabel={planLabel} />
-                </div>
+                {!isCollapsed && (
+                  <>
+                    <div className="flex flex-col items-start flex-1 min-w-0">
+                      <span className="text-[13px] font-semibold text-white truncate w-full text-left leading-tight">
+                        {businessName}
+                      </span>
+                      <PoweredByBadge planLabel={planLabel} />
+                    </div>
+                    {userInformation?.isOwner && canAccessMultipleLocations ? (
+                      <FiChevronDown
+                        aria-hidden="true"
+                        className="text-[#94A3B8] text-[14px] flex-shrink-0"
+                      />
+                    ) : null}
+                  </>
+                )}
               </button>
             </DropdownTrigger>
             <DropdownMenu
@@ -382,42 +433,64 @@ const SideNav = () => {
         </div>
 
         {/* Search */}
-        <div className="flex-shrink-0 px-4 pt-4 pb-2">
-          <label className="flex items-center gap-2 bg-transparent border border-[#27314A] rounded-lg px-3 py-2 focus-within:border-[#5F35D2] transition-colors">
-            <FiSearch className="text-[#64748B] text-[16px]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search here..."
-              className="bg-transparent text-[13px] text-white placeholder:text-[#64748B] outline-none flex-1 min-w-0"
-              aria-label="Search navigation"
-            />
-          </label>
-        </div>
+        {isCollapsed ? (
+          <div className="flex-shrink-0 px-2 pt-4 pb-2">
+            <button
+              type="button"
+              onClick={onToggleCollapsed}
+              aria-label="Expand sidebar to search"
+              title="Search"
+              className="w-full flex items-center justify-center rounded-lg border border-[#27314A] py-2 text-[#64748B] hover:text-white hover:border-[#5F35D2] transition-colors"
+            >
+              <FiSearch className="text-[16px]" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex-shrink-0 px-4 pt-4 pb-2">
+            <label className="flex items-center gap-2 bg-transparent border border-[#27314A] rounded-lg px-3 py-2 focus-within:border-[#5F35D2] transition-colors">
+              <FiSearch className="text-[#64748B] text-[16px]" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search here..."
+                className="bg-transparent text-[13px] text-white placeholder:text-[#64748B] outline-none flex-1 min-w-0"
+                aria-label="Search navigation"
+              />
+            </label>
+          </div>
+        )}
 
         {/* Scrollable nav */}
         <nav
-          className="overflow-y-auto flex-1 px-3 py-3"
+          className={`overflow-y-auto flex-1 ${isCollapsed ? "px-2" : "px-3"} py-3`}
           aria-label="Primary navigation"
         >
           <div className="flex flex-col gap-1">
             {isPermissionsLoading || !isMounted ? (
-              <NavSkeleton />
+              <NavSkeleton isCollapsed={isCollapsed} />
             ) : isPOSUserState ? (
               filteredItems.map((item, idx) => (
-                <MenuItem key={idx} item={item} pathname={pathname} />
+                <MenuItem
+                  key={idx}
+                  item={item}
+                  pathname={pathname}
+                  isCollapsed={isCollapsed}
+                />
               ))
             ) : visibleSections.length === 0 ? (
-              <p className="px-4 py-6 text-[12px] text-[#64748B]">
-                No matches.
-              </p>
+              !isCollapsed ? (
+                <p className="px-4 py-6 text-[12px] text-[#64748B]">
+                  No matches.
+                </p>
+              ) : null
             ) : (
               visibleSections.map((section) => (
                 <SectionGroup
                   key={section.sectionTitle}
                   section={section}
                   pathname={pathname}
+                  isCollapsed={isCollapsed}
                 />
               ))
             )}
@@ -425,14 +498,44 @@ const SideNav = () => {
         </nav>
 
         {/* User profile footer */}
-        <div className={`flex-shrink-0 border-t ${SIDEBAR_BORDER} px-4 py-4`}>
+        <div
+          className={`flex-shrink-0 border-t ${SIDEBAR_BORDER} ${
+            isCollapsed ? "px-2 py-3" : "px-4 py-4"
+          }`}
+        >
           {!isMounted ? (
-            <div className="flex items-center gap-3">
-              <Skeleton className="rounded-md w-10 h-10" />
-              <div className="flex-1 flex flex-col gap-2">
-                <Skeleton className="h-2 w-3/5 rounded" />
-                <Skeleton className="h-2 w-4/5 rounded" />
+            isCollapsed ? (
+              <div className="flex justify-center">
+                <Skeleton className="rounded-md w-10 h-10" />
               </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Skeleton className="rounded-md w-10 h-10" />
+                <div className="flex-1 flex flex-col gap-2">
+                  <Skeleton className="h-2 w-3/5 rounded" />
+                  <Skeleton className="h-2 w-4/5 rounded" />
+                </div>
+              </div>
+            )
+          ) : isCollapsed ? (
+            <div className="flex flex-col items-center gap-2">
+              <Avatar
+                radius="md"
+                src={avatarSrc}
+                showFallback
+                name={displayName}
+                title={displayName}
+                className="w-10 h-10 flex-shrink-0"
+              />
+              <button
+                type="button"
+                onClick={onLogoutOpenChange}
+                aria-label="Log out"
+                title="Log out"
+                className="text-[#94A3B8] hover:text-white p-2 rounded-md transition-colors"
+              >
+                <FiLogOut className="text-[18px]" />
+              </button>
             </div>
           ) : (
             <div className="flex items-center gap-3">
@@ -518,24 +621,25 @@ BusinessAvatar.displayName = "BusinessAvatar";
 
 // "Powered by Hobwise · <plan>" badge below business name
 const PoweredByBadge = memo(({ planLabel }: { planLabel: string }) => (
-  <span className="flex items-center gap-1 text-[11px] text-[#94A3B8] mt-0.5">
-    <span className="inline-flex items-center gap-1">
-      <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7]" />
-      Powered by Hobwise
-    </span>
-    <span aria-hidden="true">·</span>
-    <span className="text-[#C4B5FD] font-medium">{planLabel}</span>
+  <span className="flex items-center gap-1 text-[10px] text-[#94A3B8] mt-0.5 w-full min-w-0 whitespace-nowrap overflow-hidden">
+    <span className="w-1.5 h-1.5 rounded-full bg-[#A855F7] flex-shrink-0" />
+    <span className="truncate">Powered by Hobwise</span>
+    <span aria-hidden="true" className="flex-shrink-0">·</span>
+    <span className="text-[#C4B5FD] font-medium flex-shrink-0">{planLabel}</span>
   </span>
 ));
 PoweredByBadge.displayName = "PoweredByBadge";
 
 // Skeleton placeholder for the nav list
-const NavSkeleton = () => (
+const NavSkeleton = ({ isCollapsed = false }: { isCollapsed?: boolean }) => (
   <div className="flex flex-col gap-4 px-2 pt-2">
     {[1, 2, 3, 4, 5, 6, 7].map((item) => (
-      <div key={item} className="flex items-center gap-3">
+      <div
+        key={item}
+        className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}
+      >
         <Skeleton className="w-5 h-5 rounded-md" />
-        <Skeleton className="h-3 w-32 rounded" />
+        {!isCollapsed ? <Skeleton className="h-3 w-32 rounded" /> : null}
       </div>
     ))}
   </div>
@@ -546,17 +650,31 @@ const SectionGroup = memo(
   ({
     section,
     pathname,
+    isCollapsed = false,
   }: {
     section: SideNavSection;
     pathname: string;
+    isCollapsed?: boolean;
   }) => (
     <div className="mt-3 first:mt-0">
-      <div className={`${SECTION_LABEL} font-semibold uppercase px-3 py-2`}>
-        {section.sectionTitle}
-      </div>
+      {isCollapsed ? (
+        <div
+          className="mx-auto my-2 h-px w-6 bg-[#1E293B]"
+          aria-hidden="true"
+        />
+      ) : (
+        <div className={`${SECTION_LABEL} font-semibold uppercase px-3 py-2`}>
+          {section.sectionTitle}
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         {section.items.map((item, idx) => (
-          <MenuItem key={idx} item={item} pathname={pathname} />
+          <MenuItem
+            key={idx}
+            item={item}
+            pathname={pathname}
+            isCollapsed={isCollapsed}
+          />
         ))}
       </div>
     </div>
@@ -572,7 +690,15 @@ const isItemPathActive = (itemPath: string, pathname: string): boolean => {
 };
 
 const MenuItem = memo(
-  ({ item, pathname }: { item: SideNavItem; pathname: string }) => {
+  ({
+    item,
+    pathname,
+    isCollapsed = false,
+  }: {
+    item: SideNavItem;
+    pathname: string;
+    isCollapsed?: boolean;
+  }) => {
     const isItemActive = isItemPathActive(item.path, pathname);
     const isSubItemActive =
       item.submenu &&
@@ -608,12 +734,35 @@ const MenuItem = memo(
     };
 
     if (item.submenu) {
+      // When collapsed, treat submenu parents as direct links (we have no room
+      // for the expanded sub-list) and rely on the icon + tooltip.
+      if (isCollapsed) {
+        const targetPath = item.locked ? "/dashboard/unauthorized" : item.path;
+        return (
+          <Link
+            prefetch
+            href={targetPath}
+            aria-disabled={item.locked ? true : undefined}
+            title={
+              item.locked
+                ? `${item.title} — no access`
+                : item.title
+            }
+            className={`flex items-center justify-center px-2 py-2.5 rounded-lg transition-colors ${
+              isSubItemActive || isItemActive ? ITEM_ACTIVE : ITEM_INACTIVE
+            } ${item.locked ? "opacity-60" : ""}`}
+          >
+            <span className="flex-shrink-0">{renderIcon()}</span>
+          </Link>
+        );
+      }
+
       return (
         <div>
           <button
             type="button"
             onClick={toggleSubMenu}
-            className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+            className={`flex items-center gap-3 w-full px-3 py-3 rounded-lg text-[13px] font-medium transition-colors ${
               isSubItemActive ? ITEM_ACTIVE : ITEM_INACTIVE
             } ${item.locked ? "opacity-60" : ""}`}
           >
@@ -658,19 +807,33 @@ const MenuItem = memo(
         prefetch
         href={targetPath}
         aria-disabled={item.locked ? true : undefined}
-        title={item.locked ? "You don't have access to this section" : undefined}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
-          isItemActive ? ITEM_ACTIVE : ITEM_INACTIVE
-        } ${item.locked ? "opacity-60" : ""}`}
+        title={
+          item.locked
+            ? `${item.title} — no access`
+            : isCollapsed
+              ? item.title
+              : undefined
+        }
+        className={`flex items-center rounded-lg text-[13px] font-medium transition-colors ${
+          isCollapsed
+            ? "justify-center px-2 py-2.5"
+            : "gap-3 px-3 py-3"
+        } ${isItemActive ? ITEM_ACTIVE : ITEM_INACTIVE} ${
+          item.locked ? "opacity-60" : ""
+        }`}
       >
         <span className="flex-shrink-0">{renderIcon()}</span>
-        <span className="flex-1 truncate">{item.title}</span>
-        {item.locked ? (
-          <FiLock
-            aria-label="No access"
-            className="text-[13px] text-[#94A3B8] flex-shrink-0"
-          />
-        ) : null}
+        {!isCollapsed && (
+          <>
+            <span className="flex-1 truncate">{item.title}</span>
+            {item.locked ? (
+              <FiLock
+                aria-label="No access"
+                className="text-[13px] text-[#94A3B8] flex-shrink-0"
+              />
+            ) : null}
+          </>
+        )}
       </Link>
     );
   },

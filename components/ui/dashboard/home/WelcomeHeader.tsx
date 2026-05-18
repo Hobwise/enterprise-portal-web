@@ -8,7 +8,6 @@ import {
   DropdownTrigger,
 } from "@nextui-org/react";
 import moment from "moment";
-import { LuStar } from "react-icons/lu";
 import { MdKeyboardArrowDown } from "react-icons/md";
 
 import {
@@ -25,7 +24,6 @@ interface WelcomeHeaderProps {
   onOpenCustomRange: () => void;
   customRange: CustomDateRange;
   hasCustomRange: boolean;
-  planLabel: string;
 }
 
 const formatRange = (
@@ -76,7 +74,6 @@ const WelcomeHeader = ({
   onOpenCustomRange,
   customRange,
   hasCustomRange,
-  planLabel,
 }: WelcomeHeaderProps) => {
   const displayName = firstName?.trim() || "there";
   const range = formatRange(activePeriod, hasCustomRange, customRange);
@@ -122,6 +119,20 @@ const WelcomeHeader = ({
             selectionMode="single"
             selectedKeys={new Set([selectedKey])}
             onAction={handleAction}
+            itemClasses={{
+              base: [
+                "rounded-md",
+                "text-[#0F172A]",
+                "data-[hover=true]:bg-[#F3EEFE]",
+                "data-[hover=true]:text-primaryColor",
+                "data-[selectable=true]:focus:bg-[#F3EEFE]",
+                "data-[selectable=true]:focus:text-primaryColor",
+                "data-[selected=true]:bg-primaryColor",
+                "data-[selected=true]:text-white",
+                "data-[selected=true]:data-[hover=true]:bg-primaryColor",
+                "data-[selected=true]:data-[hover=true]:text-white",
+              ],
+            }}
           >
             <DropdownItem key="today">Today</DropdownItem>
             <DropdownItem key="week">This Week</DropdownItem>
@@ -129,11 +140,6 @@ const WelcomeHeader = ({
             <DropdownItem key="custom">Custom Range</DropdownItem>
           </DropdownMenu>
         </Dropdown>
-
-        <span className="inline-flex items-center gap-1.5 h-10 px-3 rounded-lg border border-[#E5E7EB] bg-white text-[13px] font-medium text-[#5F35D2]">
-          <LuStar className="text-[14px]" />
-          {planLabel}
-        </span>
       </div>
     </header>
   );

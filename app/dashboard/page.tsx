@@ -15,16 +15,10 @@ import {
   WelcomeHeader,
   usePeriodFilter,
 } from "@/components/ui/dashboard/home";
-import useStockAnalysisBookingReport from "@/hooks/cachedEndpoints/useStockAnalysisBookingReport";
-import useStockAnalysisInventoryReport from "@/hooks/cachedEndpoints/useStockAnalysisInventoryReport";
-import useStockAnalysisOrderReport from "@/hooks/cachedEndpoints/useStockAnalysisOrderReport";
-import useStockAnalysisPaymentReport from "@/hooks/cachedEndpoints/useStockAnalysisPaymentReport";
 import useStockAnalysisSummary from "@/hooks/cachedEndpoints/useStockAnalysisSummary";
-import useStockAnalysisUserReport from "@/hooks/cachedEndpoints/useStockAnalysisUserReport";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import useUser from "@/hooks/cachedEndpoints/useUser";
 import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
-import { getPlanLabel } from "@/lib/planLabels";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import {
   DateRangePicker,
@@ -88,7 +82,7 @@ const Dashboard: React.FC = () => {
   }, [router]);
 
   const { data: user } = useUser();
-  const { subscription, hasCapability } = useSubscriptionContext();
+  const { hasCapability } = useSubscriptionContext();
   const { userRolePermissions, role } = usePermission();
   const isManager = Number(role) === 0;
 
@@ -109,58 +103,13 @@ const Dashboard: React.FC = () => {
     isLoading: summaryLoading,
   } = useStockAnalysisSummary(filterType, startDate, endDate, { enabled: true });
 
-  const { data: orderReport, isLoading: orderLoading } =
-    useStockAnalysisOrderReport(
-      { filterType, startDate, endDate },
-      { enabled: true },
-    );
-
-  const { data: paymentReport, isLoading: paymentLoading } =
-    useStockAnalysisPaymentReport(
-      { filterType, startDate, endDate },
-      { enabled: true },
-    );
-
-  const { data: bookingReport, isLoading: bookingLoading } =
-    useStockAnalysisBookingReport(
-      { filterType, startDate, endDate },
-      { enabled: true },
-    );
-
-  const { data: inventoryReport, isLoading: inventoryLoading } =
-    useStockAnalysisInventoryReport(
-      { filterType, startDate, endDate },
-      { enabled: Boolean(canViewInventory) },
-    );
-
-  const { data: userReport, isLoading: userLoading } =
-    useStockAnalysisUserReport(
-      { filterType, startDate, endDate },
-      { enabled: Boolean(canViewReport) },
-    );
-
-  // Prefer detailed report data when available; fall back to summary sections
   const orderDetails = summary?.orderDetails;
   const paymentDetails = summary?.paymentDetails;
   const bookingDetails = summary?.bookingDetails;
   const inventoryDetails = summary?.inventoryDetails;
   const auditDetails = summary?.auditDetails;
 
-  // Silence "report data fetched but unused" lint without dropping the fetch
-  // — keeping the hooks ensures React Query primes the cache for /reports drill-downs
-  void orderReport;
-  void paymentReport;
-  void bookingReport;
-  void inventoryReport;
-  void userReport;
-
-  const cardLoading =
-    summaryLoading ||
-    orderLoading ||
-    paymentLoading ||
-    bookingLoading ||
-    inventoryLoading ||
-    userLoading;
+  const cardLoading = summaryLoading;
 
   const handleDateChange = (newValue: {
     start: DateValue | null;
@@ -189,7 +138,6 @@ const Dashboard: React.FC = () => {
           onOpenCustomRange={onOpen}
           customRange={period.customRange}
           hasCustomRange={period.hasCustomRange}
-          planLabel={getPlanLabel(subscription?.plan)}
         />
 
         {summaryError ? (
@@ -208,11 +156,7 @@ const Dashboard: React.FC = () => {
           </div>
         ) : null}
 
-        <AlertCards
-          inventory={inventoryDetails}
-          payments={paymentDetails}
-          orders={orderDetails}
-        />
+        <AlertCards alerts={summary?.alerts} />
 
         <KpiTiles
           payments={paymentDetails}

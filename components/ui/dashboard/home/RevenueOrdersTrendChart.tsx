@@ -26,11 +26,21 @@ interface RevenueOrdersTrendChartProps {
   isLoading?: boolean;
 }
 
+const CURRENCY_SYMBOL = "₦";
+
 const formatRevenue = (value: number): string => {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}k`;
-  return value.toString();
+  if (value >= 1_000_000)
+    return `${CURRENCY_SYMBOL}${(value / 1_000_000).toFixed(1)}M`;
+  if (value >= 1_000)
+    return `${CURRENCY_SYMBOL}${(value / 1_000).toFixed(0)}k`;
+  return `${CURRENCY_SYMBOL}${value.toString()}`;
 };
+
+const formatRevenueExact = (value: number): string =>
+  `${CURRENCY_SYMBOL}${value.toLocaleString("en-NG", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })}`;
 
 const RevenueOrdersTrendChart = ({
   payments,
@@ -77,7 +87,15 @@ const RevenueOrdersTrendChart = ({
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (ctx: any) => `${ctx.dataset.label}: ${ctx.parsed.y}`,
+          label: (ctx: any) => {
+            const value = Number(ctx.parsed.y) || 0;
+            if (ctx.dataset.yAxisID === "y") {
+              return `${ctx.dataset.label}: ${formatRevenueExact(value)}`;
+            }
+            return `${ctx.dataset.label}: ${value.toLocaleString()} ${
+              value === 1 ? "order" : "orders"
+            }`;
+          },
         },
       },
     },
@@ -91,7 +109,7 @@ const RevenueOrdersTrendChart = ({
         position: "left" as const,
         title: {
           display: true,
-          text: "Revenue",
+          text: `Revenue (${CURRENCY_SYMBOL})`,
           color: "#7DD3C0",
           font: { size: 11 },
         },
@@ -107,7 +125,7 @@ const RevenueOrdersTrendChart = ({
         position: "right" as const,
         title: {
           display: true,
-          text: "Orders",
+          text: "Orders (count)",
           color: "#5F35D2",
           font: { size: 11 },
         },
@@ -116,6 +134,7 @@ const RevenueOrdersTrendChart = ({
         ticks: {
           color: "#64748B",
           font: { size: 11 },
+          precision: 0,
         },
       },
     },

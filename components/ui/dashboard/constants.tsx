@@ -91,7 +91,7 @@ export const SIDENAV_ITEMS: SideNavItem[] = [
 ];
 
 // Section item groupings (used in SIDENAV_CONFIG below)
-const OVERVIEW_ITEMS: SideNavItem[] = [DASHBOARD_ITEM, REPORTS_ITEM];
+const OVERVIEW_ITEMS: SideNavItem[] = [DASHBOARD_ITEM];
 const SALES_ITEMS: SideNavItem[] = [MENU_ITEM, ORDERS_ITEM, PAYMENTS_ITEM];
 const ENGAGEMENT_ITEMS: SideNavItem[] = [
   QUICK_RESPONSE_ITEM,
