@@ -197,6 +197,11 @@ const ActivityTableBooking = ({
         visibleColumn: INITIAL_VISIBLE_COLUMNS10,
       };
     }
+    return {
+      data: [],
+      column: columns7,
+      visibleColumn: INITIAL_VISIBLE_COLUMNS7,
+    };
   }, [reportType, data]);
 
   const {
@@ -229,7 +234,7 @@ const ActivityTableBooking = ({
   };
 
   const filteredItems = useMemo(() => {
-    let filteredData = [...columns?.data];
+    let filteredData = Array.isArray(columns?.data) ? [...columns.data] : [];
 
     filteredData = filteredData.filter(
       (item) =>

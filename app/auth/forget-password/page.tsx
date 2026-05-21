@@ -1,10 +1,7 @@
-import BackButton from "@/components/backButton";
 import EntryPoint from "@/components/ui/auth/forget-password/EntryPoint";
+import AuthLeftPanel from "@/components/ui/auth/AuthLeftPanel";
 import { companyInfo } from "../../../lib/companyInfo";
 import Image from "next/image";
-import Link from "next/link";
-import OnboardingImage from "@/public/assets/images/onboarding-image.png";
-import { HOME_URL } from "@/utilities/routes";
 
 export const metadata = {
   title: `${companyInfo.name} | Forget Password`,
@@ -18,53 +15,24 @@ const ForgetPassword = async ({
   searchParams?: SearchParams;
 }) => {
   const query = await searchParams;
-  const loginBgColor = "bg-[#160051]";
-  const textColor = "text-white";
 
   return (
-    <main
-      className={`flex min-h-screen font-bricolage_grotesque ${loginBgColor} ${textColor}`}
-    >
-      {/* Left side - Image Section */}
-      <div className="hidden lg:flex lg:w-1/3 relative p-0">
-        <div className="relative w-full h-[86%] z-20">
-          <Image
-            src={OnboardingImage}
-            fill
-            style={{ objectFit: "cover" }}
-            alt="Bartender preparing a drink"
-            priority
-          />
-        </div>
-        <div className="absolute top-16 left-16 w-full h-[86%] bg-[#160161]" />
-        <div className="absolute bottom-12 mx-auto left-0 right-0 text-center px-4 z-20">
-          <Link
-            href={HOME_URL}
-            className="bg-white/10 backdrop-blur-md text-secondaryColor xl:px-16 px-8 py-4 rounded-xl font-semibold
-                       hover:bg-white/20 transition-all border border-white/20 text-sm shadow-lg text-nowrap"
-          >
-            Continue Exploring our website here
-          </Link>
-        </div>
-      </div>
+    <main className="flex min-h-screen font-bricolage_grotesque">
+      <AuthLeftPanel variant="long" />
 
-      {/* Right side - Form Section */}
-      <div className="w-full lg:w-2/3 flex items-center justify-center py-12 px-4 sm:px-8 relative">
-        <div className="w-full max-w-[480px]">
-          {/* Logo */}
-          <div className="flex justify-center mb-8 lg:mb-12">
-            <Link className="block" href={HOME_URL}>
-              <Image
-                src="/assets/icons/hobwise-icon.png"
-                height={60}
-                width={60}
-                className="bg-contain rounded-full"
-                alt="Hobwise logo"
-              />
-            </Link>
+      <div className="relative flex min-h-screen w-full items-center justify-center bg-[#160151] px-4 py-10 sm:px-8 lg:w-1/2 lg:bg-[#F3F4F6] lg:px-10 lg:py-12">
+        <div className="w-full max-w-[460px]">
+          <div className="mb-6 flex justify-center lg:hidden">
+            <Image
+              src="/assets/icons/hobwise-logo.png"
+              height={56}
+              width={56}
+              className="rounded-xl"
+              alt="Hobwise logo"
+              priority
+            />
           </div>
 
-          {/* Form */}
           <EntryPoint
             userEmail={query?.email}
             screenNumber={Number(query?.screen)}

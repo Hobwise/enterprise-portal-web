@@ -267,6 +267,11 @@ const INITIAL_VISIBLE_COLUMNS2 = [
           visibleColumn: INITIAL_VISIBLE_COLUMNS17,
         };
       }
+      return {
+        data: [],
+        column: columns0,
+        visibleColumn: INITIAL_VISIBLE_COLUMNS0,
+      };
     }, [reportType, data]);
 
     const {
@@ -308,7 +313,7 @@ const INITIAL_VISIBLE_COLUMNS2 = [
     };
 
     const filteredItems = useMemo(() => {
-      let filteredData = [...columns?.data];
+      let filteredData = Array.isArray(columns?.data) ? [...columns.data] : [];
 
       filteredData = filteredData.filter(
         (item) =>

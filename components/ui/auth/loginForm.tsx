@@ -10,11 +10,12 @@ import {
   getTokenCookie,
   getJsonItemFromLocalStorage,
 } from "@/lib/utils";
-import { Spacer } from "@nextui-org/react";
+import { Checkbox, Spacer } from "@nextui-org/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { FaRegEnvelope } from "react-icons/fa6";
+import { LuArrowRight } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { decryptPayload } from "@/lib/encrypt-decrypt";
 
@@ -490,12 +491,13 @@ const LoginForm = () => {
     };
   }, [router]);
 
-  const linkColor = "text-secondaryColor  hover:text-secondaryColor/80";
+  const [keepSignedIn, setKeepSignedIn] = useState(false);
+  const linkColor = "text-secondaryColor hover:text-secondaryColor/80";
 
   return (
     <form onSubmit={submitFormData} autoComplete="off" noValidate>
       <CustomInput
-        placeholder="Enter email"
+        placeholder="Enter Email"
         type="email"
         name="email"
         errorMessage={errors.email?.[0]}
@@ -504,13 +506,15 @@ const LoginForm = () => {
         label=""
         isRequired
         autoComplete="email"
-        bgColor="bg-transparent"
-        classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-        inputTextColor="text-gray-200"
-        endContent={<FaRegEnvelope className="text-gray-300 text-lg" />}
+        bgColor="bg-transparent lg:bg-white"
+        classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+        inputTextColor="text-white lg:text-[#1F2937]"
+        endContent={
+          <FaRegEnvelope className="text-base text-white/70 lg:text-[#1F2937]" />
+        }
       />
 
-      <Spacer y={5} />
+      <Spacer y={4} />
 
       <CustomInput
         errorMessage={errors.password?.[0]}
@@ -518,38 +522,58 @@ const LoginForm = () => {
         onChange={handleInputChange}
         type="password"
         label=""
-        eyeIconStyle="text-gray-300 text-lg"
+        eyeIconStyle="text-base text-white/70 lg:text-[#1F2937]"
         name="password"
-        placeholder="Enter password"
+        placeholder="Enter Password"
         isRequired
         autoComplete="current-password"
-        bgColor="bg-transparent"
-        classnames="border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor h-[56px] rounded-xl"
-        inputTextColor="text-gray-200"
+        bgColor="bg-transparent lg:bg-white"
+        classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+        inputTextColor="text-white lg:text-[#1F2937]"
       />
 
-      <Spacer y={7} />
+      <Spacer y={5} />
 
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <Checkbox
+          size="sm"
+          isSelected={keepSignedIn}
+          onValueChange={setKeepSignedIn}
+          classNames={{
+            label: "text-[13px] text-white/70 lg:text-[#475367]",
+            wrapper:
+              "after:bg-secondaryColor before:border-white/30 lg:before:border-[#D0D5DD]",
+          }}
+        >
+          Keep me signed in
+        </Checkbox>
         <Link
           prefetch={true}
-          className={`text-sm font-medium ${linkColor} transition-all`}
+          className={`text-[13px] font-medium ${linkColor} transition-all`}
           href="/auth/forget-password"
         >
           Forgot Password?
         </Link>
       </div>
 
-      <Spacer y={7} />
+      <Spacer y={6} />
 
       <CustomButton
         loading={loading}
         disabled={loading}
         type="submit"
-        className="bg-secondaryColor font-[600] text-[16px] w-full rounded-xl h-[55px] text-white hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80 transition-all"
+        className={`group flex h-[56px] w-full items-center justify-center gap-3 rounded-xl text-[16px] font-semibold text-white transition-colors ${
+          loginFormData.email && loginFormData.password
+            ? "bg-primaryColor hover:bg-primaryColor/90 focus:bg-primaryColor/90 active:bg-primaryColor/80"
+            : "bg-secondaryColor hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80"
+        }`}
       >
-        {loading ? "Logging in..." : "Log In"}
+        <span>{loading ? "Signing in..." : "Sign in"}</span>
+        {!loading && (
+          <LuArrowRight className="text-lg transition-transform group-hover:translate-x-0.5" />
+        )}
       </CustomButton>
+
     </form>
   );
 };
