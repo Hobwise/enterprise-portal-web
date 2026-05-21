@@ -19,7 +19,7 @@ import {
   ChartOptions,
   Plugin,
 } from 'chart.js';
-import { formatPrice, notify } from '@/lib/utils';
+import { formatPrice } from '@/lib/utils';
 import { slugifyReportName } from '@/lib/reportRoutes';
 import { ExportType } from './exportHelpers';
 import { AvailableReport, BarRow, BreakdownRow, StatCard } from './types';
@@ -154,11 +154,24 @@ interface StatCardsProps {
   cards: StatCard[];
 }
 
+const STAT_CARD_GRID_CLASSES: Record<number, string> = {
+  1: 'grid-cols-1',
+  2: 'grid-cols-1 sm:grid-cols-2',
+  3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+  4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+  5: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5',
+  6: 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6',
+};
+
 export const StatCards: React.FC<StatCardsProps> = ({ cards }) => {
+  const colsClass =
+    STAT_CARD_GRID_CLASSES[cards.length] ??
+    'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+  const dense = cards.length >= 5;
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className={`grid ${colsClass} gap-4`}>
       {cards.map((card) => (
-        <StatCardItem key={card.label} card={card} />
+        <StatCardItem key={card.label} card={card} dense={dense} />
       ))}
     </div>
   );
@@ -166,6 +179,7 @@ export const StatCards: React.FC<StatCardsProps> = ({ cards }) => {
 
 interface StatCardItemProps {
   card: StatCard;
+  dense?: boolean;
 }
 
 const toneClass = (tone?: StatCard['footerTone']): string => {
@@ -182,7 +196,7 @@ const toneClass = (tone?: StatCard['footerTone']): string => {
   }
 };
 
-export const StatCardItem: React.FC<StatCardItemProps> = ({ card }) => {
+export const StatCardItem: React.FC<StatCardItemProps> = ({ card, dense }) => {
   const direction = card.direction ?? 'up';
   const deltaColor =
     direction === 'down'
@@ -190,10 +204,20 @@ export const StatCardItem: React.FC<StatCardItemProps> = ({ card }) => {
       : direction === 'neutral'
       ? 'text-gray-500'
       : 'text-emerald-600';
+  const padding = dense ? 'p-4' : 'p-5';
+  const valueSize = dense
+    ? 'text-xl xl:text-2xl'
+    : 'text-[28px]';
+  const labelSpacing = dense ? 'mb-2' : 'mb-3';
+  const valueSpacing = dense ? 'mb-2' : 'mb-3';
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
-      <p className="text-sm text-gray-500 mb-3">{card.label}</p>
-      <p className="text-[28px] leading-tight font-bold text-gray-900 mb-3 break-words">
+    <div
+      className={`bg-white border border-gray-100 rounded-2xl shadow-sm ${padding}`}
+    >
+      <p className={`text-sm text-gray-500 ${labelSpacing}`}>{card.label}</p>
+      <p
+        className={`${valueSize} leading-tight font-bold text-gray-900 ${valueSpacing} break-words tabular-nums`}
+      >
         {card.value}
       </p>
       {card.delta && (
@@ -627,6 +651,239 @@ const GENERIC_WRAPPER_KEYS = new Set([
   'message',
   'availableReport',
 ]);
+const GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE: Record<number, string[]> = {
+  0: [
+    'customerName',
+    'customerPhoneNumber',
+    'orderId',
+    'totalAmount',
+    'treatedBy',
+    'paymentMethod',
+    'orderStatus',
+    'dateCreated',
+  ],
+  1: [
+    'itemName',
+    'menuName',
+    'totalQuantitySold',
+    'currentPrice',
+    'netSalesAmount',
+    'totalPackagingAmount',
+    'grossSalesAmount',
+    'isCurrentlyAvailable',
+  ],
+  2: [
+    'customerName',
+    'customerPhoneNumber',
+    'numberOfOrders',
+    'totalPurchaseAmount',
+  ],
+  3: [
+    'firstName',
+    'lastName',
+    'emailAddress',
+    'numberOfOrders',
+    'pendingSales',
+    'confirmedSales',
+    'totalSales',
+    'dateUpdated',
+  ],
+  4: [
+    'customer',
+    'orderId',
+    'treatedBy',
+    'totalAmount',
+    'quickResponseName',
+    'paymentMethod',
+    'paymentDirection',
+    'paymentType',
+    'paymentReference',
+    'confirmedBy',
+    'status',
+    'dateCreated',
+  ],
+  5: [
+    'paymentMethod',
+    'numberOfPayments',
+    'creditCount',
+    'debitCount',
+    'totalCredits',
+    'totalDebits',
+    'netAmountProcessed',
+    'lastRecordDateTime',
+  ],
+  6: [
+    'quickResponseName',
+    'numberOfOrders',
+    'pendingSalesAmount',
+    'confirmedSalesAmount',
+    'totalSalesAmount',
+    'totalRefundAmount',
+    'grossSalesAmount',
+    'dateUpdated',
+  ],
+  7: [
+    'firstName',
+    'phoneNumber',
+    'emailAddress',
+    'bookingFee',
+    'bookingDateTime',
+    'bookingStatus',
+  ],
+  8: ['reservationName', 'totalBookingFee', 'totalBookings', 'dateUpdated'],
+  9: [
+    'customerFirstName',
+    'customerLastName',
+    'customerPhoneNumber',
+    'customerEmailAddress',
+    'totalBookingFee',
+    'totalBookings',
+  ],
+  10: [
+    'reservationName',
+    'reservationCapacity',
+    'occupancyRate',
+    'totalBookings',
+    'averageDailyUtilization',
+    'lastRecordDateTime',
+  ],
+  11: [
+    'userName',
+    'emailAddress',
+    'ipAddress',
+    'activity',
+    'dateCreated',
+    'isSuccessful',
+  ],
+  12: [
+    'fullName',
+    'emailAddress',
+    'firstLoginTime',
+    'lastSeenTime',
+    'activePeriod',
+    'date',
+  ],
+  13: ['totalAmount', 'numberOfOrders', 'orderStatus'],
+  14: [
+    'categoryName',
+    'totalOrders',
+    'totalItemsSold',
+    'totalAmount',
+    'percentageOfTotalSales',
+  ],
+  15: [
+    'orderId',
+    'orderDate',
+    'customer',
+    'orderTotal',
+    'totalPaid',
+    'totalRefunded',
+    'outstanding',
+    'paymentStatus',
+    'orderStatus',
+  ],
+  16: ['orderId', 'orderTotal', 'paidSoFar', 'remaining', 'lastPaymentDate'],
+  17: [
+    'orderId',
+    'customer',
+    'refundAmount',
+    'refundReason',
+    'approvedBy',
+    'date',
+  ],
+  18: ['date', 'totalCredits', 'totalDebits', 'netMovement'],
+  19: ['period', 'netRevenue'],
+  20: [
+    'orderId',
+    'customer',
+    'orderDate',
+    'orderTotal',
+    'totalPaid',
+    'outstanding',
+    'treatedBy',
+  ],
+  21: [
+    'itemName',
+    'itemType',
+    'supplierName',
+    'unitName',
+    'quantityOnHand',
+    'reorderLevel',
+    'averageCostPerUnit',
+    'stockValue',
+    'lastRestocked',
+    'status',
+  ],
+  22: [
+    'dateCreated',
+    'itemName',
+    'movementType',
+    'transactionType',
+    'quantityChange',
+    'unitName',
+    'costPerUnit',
+    'value',
+    'reason',
+    'performedBy',
+  ],
+  23: [
+    'date',
+    'itemName',
+    'adjustmentType',
+    'quantityWasted',
+    'costImpact',
+    'reason',
+    'performedBy',
+  ],
+  30: [
+    'qrName',
+    'orderCount',
+    'openOrders',
+    'averageOrderValue',
+    'netRevenue',
+    'refundAmount',
+    'status',
+    'lastOrderDateTime',
+  ],
+  31: [
+    'orderId',
+    'customerName',
+    'quickResponseName',
+    'paymentMethod',
+    'totalAmount',
+    'orderStatus',
+    'dateCreated',
+  ],
+  32: ['occurredAt', 'qrName', 'eventType', 'orderId', 'amount', 'performedBy'],
+};
+const GENERIC_COLUMN_PRESETS_BY_REPORT_NAME: Record<string, string[]> = {
+  'customer-order-history': GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[2],
+  'order-status-sales': GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[13],
+  'partial-payment': GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[16],
+  'refund-history': GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[17],
+};
+const GENERIC_COLUMN_PRESETS_BY_TABLE_KEY: Record<string, string[]> = {
+  customers: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[2],
+  orders: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[0],
+  items: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[1],
+  categories: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[14],
+  orderPayments: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[15],
+  orderRefunds: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[17],
+  payments: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[4],
+  qrOrders: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[6],
+  cashMovements: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[18],
+  netRevenues: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[19],
+  outstandingReceivables: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[20],
+  bookings: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[7],
+  reservationBookings: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[8],
+  customerBookings: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[9],
+  dailyOccupancyUtilizations: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[10],
+  auditLogs: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[11],
+  userDailyActivePeriods: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[12],
+  qrPerformanceSummaries: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[30],
+  qrOrderHistories: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[31],
+  qrActivityTimelines: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[32],
+};
 const MONEY_KEY_REGEX =
   /amount|revenue|sales|cost|price|value|fee|payment|outstanding|refund/i;
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T/;
@@ -646,6 +903,32 @@ const isObjectArray = (
   v: unknown
 ): v is Record<string, unknown>[] =>
   Array.isArray(v) && v.length > 0 && v.every(isPlainObject);
+
+const normalizePresetKey = (value: string): string =>
+  value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const mergeColumnPreset = (
+  detectedColumns: string[],
+  reportName: string,
+  reportType?: number,
+  tableKey?: string | null
+): string[] => {
+  const preset =
+    (typeof reportType === 'number'
+      ? GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[reportType]
+      : undefined) ??
+    GENERIC_COLUMN_PRESETS_BY_REPORT_NAME[normalizePresetKey(reportName)] ??
+    (tableKey ? GENERIC_COLUMN_PRESETS_BY_TABLE_KEY[tableKey] : undefined);
+
+  if (!preset) return detectedColumns;
+  return [
+    ...preset,
+    ...detectedColumns.filter((column) => !preset.includes(column)),
+  ];
+};
 
 const formatCell = (key: string, value: unknown): string => {
   if (value === null || value === undefined || value === '') return '—';
@@ -698,6 +981,7 @@ const sortableValueFromCell = (
 
 interface GenericReportPanelProps {
   reportName: string;
+  reportType?: number;
   data?: Record<string, unknown> | unknown[] | null;
   isLoading?: boolean;
   onExport?: (exportType: number) => void | Promise<void>;
@@ -709,14 +993,14 @@ interface GenericReportPanelProps {
  *
  * Accepts either a wrapper object (e.g. `{ items: [...], availableReport: [...] }`)
  * or a bare array of row objects. In wrapper mode, inspects fields and renders the
- * first non-empty array of objects as a sortable, paginated table; renders scalar
- * numeric fields as stat cards; surfaces `message` as a header subtitle. Falls back
- * to ComingSoonPanel only when no array and no numeric scalar exist. When an extra
- * sub-tab graduates to a first-class report, replace its switch case with a
- * hand-built panel.
+ * first array of objects as a sortable, paginated table; renders scalar numeric
+ * fields as stat cards; surfaces `message` as a header subtitle. Empty report
+ * responses still render the table shell so users see "no data" instead of a
+ * placeholder for unfinished work.
  */
 export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
   reportName,
+  reportType,
   data,
   isLoading,
   onExport,
@@ -738,12 +1022,31 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
       statCards: [],
       message: null,
     };
-    if (!data) return result;
+    if (!data) {
+      result.columns = mergeColumnPreset([], reportName, reportType);
+      return result;
+    }
 
     if (isObjectArray(data)) {
       result.tableKey = 'items';
       result.rows = data;
-      result.columns = Object.keys(data[0]);
+      result.columns = mergeColumnPreset(
+        Object.keys(data[0]),
+        reportName,
+        reportType,
+        result.tableKey
+      );
+      return result;
+    }
+
+    if (Array.isArray(data)) {
+      result.tableKey = 'items';
+      result.columns = mergeColumnPreset(
+        [],
+        reportName,
+        reportType,
+        result.tableKey
+      );
       return result;
     }
 
@@ -755,10 +1058,17 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
         return;
       }
       if (GENERIC_WRAPPER_KEYS.has(key)) return;
-      if (!result.tableKey && isObjectArray(value)) {
+      if (
+        isObjectArray(value) &&
+        (!result.tableKey || result.rows.length === 0)
+      ) {
         result.tableKey = key;
         result.rows = value;
         result.columns = Object.keys(value[0]);
+        return;
+      }
+      if (Array.isArray(value) && value.length === 0 && !result.tableKey) {
+        result.tableKey = key;
         return;
       }
       if (typeof value === 'number' && Number.isFinite(value)) {
@@ -771,8 +1081,14 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
         });
       }
     });
+    result.columns = mergeColumnPreset(
+      result.columns,
+      reportName,
+      reportType,
+      result.tableKey
+    );
     return result;
-  }, [data]);
+  }, [data, reportName, reportType]);
 
   const getValue = React.useCallback(
     (row: Record<string, unknown>, key: string): string | number =>
@@ -806,13 +1122,11 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
     );
   }
 
-  if (rows.length === 0 && statCards.length === 0) {
-    return (
-      <ComingSoonPanel
-        label={`${reportName} returned no data for this period`}
-      />
-    );
-  }
+  const shouldRenderTable =
+    rows.length > 0 ||
+    columns.length > 0 ||
+    Boolean(tableKey) ||
+    statCards.length === 0;
 
   const handleExportExcel = onExport
     ? () => onExport(ExportType.Excel)
@@ -825,7 +1139,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
     <div className="flex flex-col gap-5">
       {statCards.length > 0 && <StatCards cards={statCards} />}
 
-      {rows.length > 0 && (
+      {shouldRenderTable && (
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
             <div className="flex items-center gap-3 flex-wrap">
@@ -867,20 +1181,22 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600">
-                <tr>
-                  {columns.map((col) => (
-                    <SortableTH
-                      key={col}
-                      label={titleCase(col)}
-                      sortKey={col}
-                      active={sort.key}
-                      direction={sort.direction}
-                      onSort={toggleSort}
-                    />
-                  ))}
-                </tr>
-              </thead>
+              {columns.length > 0 && (
+                <thead className="bg-gray-50 text-gray-600">
+                  <tr>
+                    {columns.map((col) => (
+                      <SortableTH
+                        key={col}
+                        label={titleCase(col)}
+                        sortKey={col}
+                        active={sort.key}
+                        direction={sort.direction}
+                        onSort={toggleSort}
+                      />
+                    ))}
+                  </tr>
+                </thead>
+              )}
               <tbody className="divide-y divide-gray-100">
                 {pageRows.length === 0 ? (
                   <tr>
@@ -965,17 +1281,13 @@ export const AvailableReportsList: React.FC<AvailableReportsListProps> = ({
   const items = reports ?? [];
 
   const handleClick = (report: AvailableReport) => {
+    const slug = slugifyReportName(report.reportName);
     if (route === 'inventory') {
-      notify({
-        title: 'Coming soon',
-        text: 'Inventory drill-down report is being prepared',
-        type: 'warning',
-      });
+      const params = new URLSearchParams({ module: 'inventory', sub: slug });
+      router.push(`/dashboard/inventory/stock-analysis?${params.toString()}`);
       return;
     }
-    router.push(
-      `/dashboard/reports/${route}/${slugifyReportName(report.reportName)}`
-    );
+    router.push(`/dashboard/reports/${route}/${slug}`);
   };
 
   return (

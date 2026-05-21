@@ -196,6 +196,11 @@ const ActivityTablePayment = ({
         visibleColumn: INITIAL_VISIBLE_COLUMNS20,
       };
     }
+    return {
+      data: [],
+      column: columns4,
+      visibleColumn: INITIAL_VISIBLE_COLUMNS4,
+    };
   }, [reportType, data]);
 
   const {
@@ -236,7 +241,7 @@ const ActivityTablePayment = ({
   };
 
   const filteredItems = useMemo(() => {
-    let filteredData = [...columns?.data];
+    let filteredData = Array.isArray(columns?.data) ? [...columns.data] : [];
 
     filteredData = filteredData.filter(
       (item) =>

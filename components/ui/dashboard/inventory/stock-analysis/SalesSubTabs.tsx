@@ -239,6 +239,9 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
           <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              Order Value
+            </h3>
             <select
               value={statusTab}
               onChange={(e) => {
@@ -1317,6 +1320,9 @@ export const OrderPaymentSummaryPanel: React.FC<SalesSubTabPanelProps> = ({
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
           <div className="flex items-center gap-3 flex-wrap">
+            <h3 className="text-base font-semibold text-gray-900">
+              Order Payment Summary
+            </h3>
             <select
               value={statusTab}
               onChange={(e) => {

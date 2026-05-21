@@ -97,6 +97,20 @@ const nextConfig = {
 
     return config;
   },
+  redirects: async () => {
+    return [
+      {
+        source: '/reports',
+        destination: '/dashboard/reports',
+        permanent: false,
+      },
+      {
+        source: '/reports/:path*',
+        destination: '/dashboard/reports/:path*',
+        permanent: false,
+      },
+    ];
+  },
   headers: async () => {
     return [
       {

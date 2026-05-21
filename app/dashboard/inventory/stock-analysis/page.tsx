@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Chip } from '@nextui-org/react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 import {
@@ -416,11 +416,38 @@ class PanelErrorBoundary extends React.Component<
   }
 }
 
+const SUB_TAB_ALIASES: Record<string, string> = {
+  'stock-levels': 'stock-level',
+  'stock-transfers': 'stock-transfer',
+  'purchase-orders': 'purchase-order',
+};
+
+const resolveModuleAndSubTab = (
+  moduleParam: string | null,
+  subParam: string | null
+): { module?: ModuleId; sub?: string } => {
+  if (!moduleParam) return {};
+  const module = MODULES.find((m) => m.id === moduleParam);
+  if (!module) return {};
+  if (!subParam) return { module: module.id };
+  const normalizedSub = SUB_TAB_ALIASES[subParam] ?? subParam;
+  const matched = module.subTabs.find((t) => t.id === normalizedSub);
+  return { module: module.id, sub: matched?.id ?? module.subTabs[0]?.id };
+};
+
 const StockAnalysisPage: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialModuleParam = searchParams?.get('module') ?? null;
+  const initialSubParam = searchParams?.get('sub') ?? null;
+  const initial = resolveModuleAndSubTab(initialModuleParam, initialSubParam);
   const [hasAccess, setHasAccess] = useState(false);
-  const [activeModule, setActiveModule] = useState<ModuleId>('sales');
-  const [activeSubTab, setActiveSubTab] = useState<string>('overview');
+  const [activeModule, setActiveModule] = useState<ModuleId>(
+    initial.module ?? 'sales'
+  );
+  const [activeSubTab, setActiveSubTab] = useState<string>(
+    initial.sub ?? 'overview'
+  );
   const [activePeriod, setActivePeriod] = useState<PeriodId>('today');
   const [customStart, setCustomStart] = useState<string>('');
   const [customEnd, setCustomEnd] = useState<string>('');
@@ -434,6 +461,20 @@ const StockAnalysisPage: React.FC = () => {
     }
     setHasAccess(true);
   }, [router]);
+
+  useEffect(() => {
+    const next = resolveModuleAndSubTab(
+      searchParams?.get('module') ?? null,
+      searchParams?.get('sub') ?? null
+    );
+    if (next.module && next.module !== activeModule) {
+      setActiveModule(next.module);
+    }
+    if (next.sub && next.sub !== activeSubTab) {
+      setActiveSubTab(next.sub);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const currentModule = MODULES.find((m) => m.id === activeModule) ?? MODULES[0];
 
@@ -656,6 +697,24 @@ const StockAnalysisPage: React.FC = () => {
 
   const subTabLabel =
     mergedSubTabs.find((t) => t.id === activeSubTab)?.label ?? activeSubTab;
+  const activeReportType = (() => {
+    switch (activeModule) {
+      case 'sales':
+        return subTabReportType;
+      case 'payments':
+        return paymentSubTabReportType;
+      case 'inventory':
+        return inventorySubTabReportType;
+      case 'users':
+        return userSubTabReportType;
+      case 'bookings':
+        return bookingSubTabReportType;
+      case 'qr':
+        return qrSubTabReportType;
+      default:
+        return undefined;
+    }
+  })();
 
   if (!hasAccess) {
     return null;
@@ -744,6 +803,7 @@ const StockAnalysisPage: React.FC = () => {
           moduleId={activeModule}
           subTabId={activeSubTab}
           subTabLabel={subTabLabel}
+          reportType={activeReportType}
           summary={summary ?? undefined}
           isLoading={summaryLoading}
           orderReport={orderReport ?? undefined}
@@ -982,6 +1042,7 @@ interface ActivePanelProps {
   moduleId: ModuleId;
   subTabId: string;
   subTabLabel?: string;
+  reportType?: number;
   summary?: ReportSummary;
   isLoading?: boolean;
   orderReport?: OrderReportResponse;
@@ -1005,6 +1066,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
   moduleId,
   subTabId,
   subTabLabel,
+  reportType,
   summary,
   isLoading,
   orderReport,
@@ -1054,6 +1116,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return (
           <GenericReportPanel
             reportName={subTabLabel ?? subTabId}
+            reportType={reportType}
             data={
               orderReport as unknown as Record<string, unknown> | undefined
             }
@@ -1085,6 +1148,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return (
           <GenericReportPanel
             reportName={subTabLabel ?? subTabId}
+            reportType={reportType}
             data={
               paymentReport as unknown as Record<string, unknown> | undefined
             }
@@ -1118,6 +1182,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return (
           <GenericReportPanel
             reportName={subTabLabel ?? subTabId}
+            reportType={reportType}
             data={qrReport as unknown as Record<string, unknown> | undefined}
             isLoading={qrReportLoading}
             onExport={onExport}
@@ -1145,6 +1210,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return (
           <GenericReportPanel
             reportName={subTabLabel ?? subTabId}
+            reportType={reportType}
             data={
               bookingReport as unknown as Record<string, unknown> | undefined
             }
@@ -1174,6 +1240,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return (
           <GenericReportPanel
             reportName={subTabLabel ?? subTabId}
+            reportType={reportType}
             data={inventoryReport}
             isLoading={inventoryReportLoading}
             onExport={onExport}
@@ -1199,6 +1266,7 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return (
           <GenericReportPanel
             reportName={subTabLabel ?? subTabId}
+            reportType={reportType}
             data={
               userReport as unknown as Record<string, unknown> | undefined
             }

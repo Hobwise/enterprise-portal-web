@@ -212,18 +212,19 @@ const Activity = () => {
     }
   };
 
+  useEffect(() => {
+    if (category === "inventory") {
+      const params = new URLSearchParams({
+        module: "inventory",
+        sub: reportSlug || "overview",
+      });
+      router.replace(`/dashboard/inventory/stock-analysis?${params.toString()}`);
+    }
+  }, [category, reportSlug, router]);
+
   if (!apiRoute) {
     if (category === "inventory") {
-      return (
-        <main className="p-6">
-          <div className="text-[24px] leading-8 font-semibold mb-2">
-            Reports
-          </div>
-          <p className="text-sm text-grey600">
-            Inventory drill-down report is being prepared. Please check back soon.
-          </p>
-        </main>
-      );
+      return null;
     }
     return <Error onClick={() => router.push("/dashboard/reports")} />;
   }
