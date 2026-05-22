@@ -1,9 +1,9 @@
-import SignupForm from '@/components/ui/auth/signupForm';
+import SignupForm from "@/components/ui/auth/signupForm";
+import AuthLeftPanel from "@/components/ui/auth/AuthLeftPanel";
 import { companyInfo } from "@/lib/companyInfo";
 import Image from "next/image";
 import Link from "next/link";
-import OnboardingImage from "@/public/assets/images/onboarding-image.png";
-import { HOME_URL } from "@/utilities/routes";
+import { LuUserPlus } from "react-icons/lu";
 
 export const metadata = {
   title: `${companyInfo.name}| Create account`,
@@ -11,56 +11,45 @@ export const metadata = {
 };
 
 export default function Signup() {
-  const loginBgColor = "bg-[#160051]";
-  const textColor = "text-white";
-  const linkColor = "text-secondaryColor hover:text-secondaryColor/80";
-
   return (
-    <main
-      className={`flex min-h-screen font-bricolage_grotesque ${loginBgColor} ${textColor}`}
-    >
-      <div className="hidden lg:flex lg:w-1/3 relative p-0">
-        <div className="relative w-full h-[86%] z-20">
-          <Image
-            src={OnboardingImage}
-            fill
-            style={{ objectFit: "cover" }}
-            alt="Bartender preparing a drink"
-            priority
-          />
-        </div>
-        <div className="absolute top-16 left-16 w-full h-[86%] bg-[#160161]" />
-        <div className="absolute bottom-12 mx-auto left-0 right-0 text-center px-4 z-20">
-          <Link
-            href={HOME_URL}
-            className="bg-white/10 backdrop-blur-md text-secondaryColor xl:px-16 px-8 py-4 rounded-xl font-semibold
-                       hover:bg-white/20 transition-all border border-white/20 text-sm shadow-lg text-nowrap"
-          >
-            Continue Exploring our website here
-          </Link>
-        </div>
-      </div>
-      <div className="w-full lg:w-2/3 flex items-center justify-center py-12 px-4 sm:px-8">
-        <div className="w-full max-w-[480px]">
-          {/* Logo */}
-          <div className="flex justify-center mb-8 lg:mb-12">
+    <main className="flex min-h-screen font-bricolage_grotesque">
+      <AuthLeftPanel />
+
+      <div className="relative flex min-h-screen w-full items-center justify-center bg-[#160151] px-4 py-10 sm:px-8 lg:w-1/2 lg:bg-[#F3F4F6] lg:px-10 lg:py-12">
+        <div className="w-full max-w-[460px]">
+          <div className="mb-6 flex justify-center lg:hidden">
             <Image
-              src="/assets/icons/hobwise-icon.png"
-              height={60}
-              width={60}
-              className="bg-contain rounded-full"
+              src="/assets/icons/hobwise-logo.png"
+              height={56}
+              width={56}
+              className="rounded-xl"
               alt="Hobwise logo"
+              priority
             />
           </div>
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-extrabold mb-3">Create Account</h1>
-            <p className={`text-base text-gray-400`}>
+
+          <div className="mb-6 hidden lg:flex">
+            <span className="inline-flex items-center gap-2 rounded-xl bg-white/70 px-4 py-2 text-[12px] font-semibold uppercase tracking-wider text-[#475367] ring-1 ring-black/5">
+              <LuUserPlus className="text-[14px]" />
+              Create Your Account
+            </span>
+          </div>
+
+          <div className="mb-8 text-center lg:text-left">
+            <h1 className="text-[34px] font-extrabold leading-tight text-white lg:text-[40px] lg:text-[#1F2937]">
+              Create Account
+            </h1>
+            <p className="mt-2 text-[15px] text-white/70 lg:text-[#6B7280]">
               Already have an account?{" "}
-              <Link href="/auth/login" className={`font-semibold ${linkColor}`}>
+              <Link
+                href="/auth/login"
+                className="font-semibold text-secondaryColor underline-offset-2 hover:underline"
+              >
                 Log In
               </Link>
             </p>
           </div>
+
           <SignupForm />
         </div>
       </div>

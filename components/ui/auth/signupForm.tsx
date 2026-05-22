@@ -8,6 +8,7 @@ import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
 import { FaRegEnvelope } from 'react-icons/fa6';
+import { LuArrowRight } from 'react-icons/lu';
 import { useQueryClient } from '@tanstack/react-query';
 
 const SignupForm = () => {
@@ -70,9 +71,9 @@ const SignupForm = () => {
             onChange={handleInputChange}
             value={signupFormData.firstName}
             placeholder="First name"
-            bgColor="bg-transparent"
-            classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-            inputTextColor="text-gray-200"
+            bgColor="bg-transparent lg:bg-white"
+            classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+            inputTextColor="text-white lg:text-[#1F2937]"
           />
         </div>
 
@@ -85,14 +86,14 @@ const SignupForm = () => {
             value={signupFormData.lastName}
             label=""
             placeholder="Last name"
-            bgColor="bg-transparent"
-            classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-            inputTextColor="text-gray-200"
+            bgColor="bg-transparent lg:bg-white"
+            classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+            inputTextColor="text-white lg:text-[#1F2937]"
           />
         </div>
       </div>
 
-      <Spacer y={5} />
+      <Spacer y={4} />
 
       <CustomInput
         type="text"
@@ -102,13 +103,15 @@ const SignupForm = () => {
         value={signupFormData.email}
         label=""
         placeholder="Enter email"
-        bgColor="bg-transparent"
-        classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-        inputTextColor="text-gray-200"
-        endContent={<FaRegEnvelope className="text-gray-300 text-lg" />}
+        bgColor="bg-transparent lg:bg-white"
+        classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+        inputTextColor="text-white lg:text-[#1F2937]"
+        endContent={
+          <FaRegEnvelope className="text-base text-white/70 lg:text-[#1F2937]" />
+        }
       />
 
-      <Spacer y={5} />
+      <Spacer y={4} />
 
       <Tooltip
         showArrow
@@ -149,15 +152,15 @@ const SignupForm = () => {
             name="password"
             label=""
             placeholder="Enter password"
-            bgColor="bg-transparent"
-            classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-            inputTextColor="text-gray-200"
-            eyeIconStyle="text-gray-300 text-lg"
+            bgColor="bg-transparent lg:bg-white"
+            classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+            inputTextColor="text-white lg:text-[#1F2937]"
+            eyeIconStyle="text-base text-white/70 lg:text-[#1F2937]"
           />
         </div>
       </Tooltip>
 
-      <Spacer y={5} />
+      <Spacer y={4} />
 
       <CustomInput
         errorMessage={response?.errors?.confirmPassword?.[0]}
@@ -167,21 +170,32 @@ const SignupForm = () => {
         name="confirmPassword"
         label=""
         placeholder="Confirm password"
-        bgColor="bg-transparent"
-        classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-        inputTextColor="text-gray-200"
-        eyeIconStyle="text-gray-300 text-lg"
+        bgColor="bg-transparent lg:bg-white"
+        classnames="h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor"
+        inputTextColor="text-white lg:text-[#1F2937]"
+        eyeIconStyle="text-base text-white/70 lg:text-[#1F2937]"
       />
 
-      <Spacer y={7} />
+      <Spacer y={6} />
 
       <CustomButton
         loading={loading}
         disabled={loading}
         type="submit"
-        className="bg-secondaryColor font-[600] text-[16px] w-full rounded-xl h-[55px] text-white hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80 transition-all"
+        className={`group flex h-[56px] w-full items-center justify-center gap-3 rounded-xl text-[16px] font-semibold text-white transition-colors ${
+          signupFormData.firstName &&
+          signupFormData.lastName &&
+          signupFormData.email &&
+          signupFormData.password &&
+          signupFormData.confirmPassword
+            ? "bg-primaryColor hover:bg-primaryColor/90 focus:bg-primaryColor/90 active:bg-primaryColor/80"
+            : "bg-secondaryColor hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80"
+        }`}
       >
-        Create Account
+        <span>{loading ? "Creating account..." : "Create Account"}</span>
+        {!loading && (
+          <LuArrowRight className="text-lg transition-transform group-hover:translate-x-0.5" />
+        )}
       </CustomButton>
     </form>
   );
