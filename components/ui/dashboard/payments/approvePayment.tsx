@@ -282,6 +282,14 @@ const ApprovePayment = ({
   const isOrderLoading =
     Array.isArray(order) && order.length === 0 && !orderError;
 
+  // When the parent order is already fully settled, confirming this pending
+  // payment would exceed the order total and the backend rejects it
+  // ("Payment exceeds order total"). Detect that so we can suppress the
+  // always-failing Confirm button and explain instead.
+  const orderRemaining =
+    !Array.isArray(order) && order ? Number(order.amountRemaining) : NaN;
+  const orderFullyPaid = Number.isFinite(orderRemaining) && orderRemaining <= 0;
+
   return (
     <Modal
       isDismissable={false}
@@ -469,7 +477,7 @@ const ApprovePayment = ({
                       valueClassName="text-gray-900 font-bold text-base"
                     />
                     <InfoRow
-                      label="Amount Paid:"
+                      label="Payment Amount:"
                       value={formatPrice(singlePayment.totalAmount)}
                       valueClassName="text-gray-900 font-bold text-base"
                     />
@@ -511,10 +519,14 @@ const ApprovePayment = ({
                   </div>
                 )}
 
-                {true && // Always show confirm button if it's open, relying on permission check below
-                  ((role === 0 ||
-                    userRolePermissions?.canEditPayment === true) &&
-                  singlePayment.status === 0 ? (
+                {(role === 0 || userRolePermissions?.canEditPayment === true) &&
+                singlePayment.status === 0 ? (
+                  orderFullyPaid ? (
+                    <div className="w-full py-4 px-4 bg-green-50 border border-green-200 rounded-xl text-center text-sm font-medium text-green-700">
+                      This order is already fully paid — no balance remaining to
+                      confirm.
+                    </div>
+                  ) : (
                     <CustomButton
                       loading={isLoading}
                       disabled={isLoading}
@@ -528,7 +540,8 @@ const ApprovePayment = ({
                         <HiArrowLongRight className="text-2xl" />
                       </div>
                     </CustomButton>
-                  ) : null)}
+                  )
+                ) : null}
               </div>
             </div>
           </ModalBody>

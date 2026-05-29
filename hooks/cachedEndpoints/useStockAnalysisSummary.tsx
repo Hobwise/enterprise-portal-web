@@ -2,7 +2,7 @@
 import { getReport } from '@/app/api/controllers/dashboard/report';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { ReportSummary } from '@/components/ui/dashboard/inventory/stock-analysis/types';
+import { ReportSummary } from '@/components/ui/dashboard/report/types';
 
 const useStockAnalysisSummary = (
   filterType: number,

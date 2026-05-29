@@ -19,6 +19,7 @@ export const routePermissions: Record<string, keyof typeof permissions> = {
   "/dashboard/orders": "canAccessOrders",
   "/dashboard/payments": "canAccessPayments",
   "/dashboard/reports": "canAccessReports",
+  "/report": "canAccessReports",
   "/dashboard/reservation": "canAccessReservations",
   "/dashboard/settings": "canAccessSettings",
   "/dashboard/menu": "canAccessMenu",

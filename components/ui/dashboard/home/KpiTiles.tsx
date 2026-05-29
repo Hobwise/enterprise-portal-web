@@ -7,7 +7,7 @@ import {
   BookingDetailsSection,
   OrderDetailsSection,
   PaymentDetailsSection,
-} from "@/components/ui/dashboard/inventory/stock-analysis/types";
+} from "@/components/ui/dashboard/report/types";
 
 import DashboardCard from "./DashboardCard";
 import LockedCardOverlay from "./LockedCardOverlay";

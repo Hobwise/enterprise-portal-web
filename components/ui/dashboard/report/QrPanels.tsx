@@ -924,13 +924,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
   );
 };
 
-type TimelineSortKey =
-  | 'occurredAt'
-  | 'qrName'
-  | 'eventType'
-  | 'orderId'
-  | 'amount'
-  | 'performedBy';
+type TimelineSortKey = 'occurredAt' | 'qrName' | 'eventType' | 'amount';
 
 export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
   data,
@@ -1018,13 +1012,6 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
                   direction={sort.direction}
                   onSort={toggleSort}
                 />
-                <SortableTH
-                  label="Order ID"
-                  sortKey="orderId"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
                 {hasAmount && (
                   <SortableTH
                     label="Amount"
@@ -1034,20 +1021,13 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
                     onSort={toggleSort}
                   />
                 )}
-                <SortableTH
-                  label="By"
-                  sortKey="performedBy"
-                  active={sort.key}
-                  direction={sort.direction}
-                  onSort={toggleSort}
-                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {pageRows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={hasAmount ? 6 : 5}
+                    colSpan={hasAmount ? 4 : 3}
                     className="px-5 py-8 text-center text-sm text-gray-500"
                   >
                     No QR activity in this period
@@ -1070,9 +1050,6 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
                     <td className="px-5 py-4 text-gray-700">
                       {row.eventType ?? '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
-                      {row.orderId ?? '—'}
-                    </td>
                     {hasAmount && (
                       <td className="px-5 py-4 text-gray-700">
                         {row.amount !== undefined && row.amount !== null
@@ -1080,9 +1057,6 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
                           : '—'}
                       </td>
                     )}
-                    <td className="px-5 py-4 text-gray-700">
-                      {row.performedBy ?? '—'}
-                    </td>
                   </tr>
                 ))
               )}

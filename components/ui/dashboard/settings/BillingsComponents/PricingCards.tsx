@@ -23,6 +23,7 @@ import {
 import { MdVerified } from "react-icons/md";
 import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
+import { forceTokenRefresh } from "@/app/api/apiService";
 // import PaystackPop from 'paystack-inline-ts';
 import PaystackPop from "paystack-inline-ts";
 import { usePaystackPayment } from "react-paystack";
@@ -30,7 +31,6 @@ import { usePaystackPayment } from "react-paystack";
 
 import LoadingSpinner from "@/app/dashboard/reservation/[reservationId]/loading";
 import FeatureList from "./FeatureList";
-import { getUser } from "@/app/api/controllers/auth";
 import SubscriptionWarningModal from "./SubscriptionWarningModal";
 import { useDisclosure } from "@nextui-org/react";
 
@@ -173,9 +173,12 @@ export const PricingCards: React.FC<PlansFromParent> = ({
         const access_code = initializedTransaction.access_code;
 
         const handleSuccess = async () => {
-          const userDetailss = await getUser(userId).then((response) =>
-            window.location.reload()
-          );
+          // The token held right after onboarding predates the active business,
+          // so the subscription endpoint rejects it. Refresh to a business-scoped
+          // token before reloading; on failure forceTokenRefresh has already
+          // redirected to /auth/login.
+          await forceTokenRefresh();
+          window.location.reload();
         };
 
         popup.resumeTransaction({

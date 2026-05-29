@@ -7,7 +7,7 @@ import {
   PeriodId,
   filterTypeToComparisonLabel as upstreamFilterTypeToComparisonLabel,
   periodToFilterType as upstreamPeriodToFilterType,
-} from "@/components/ui/dashboard/inventory/stock-analysis/types";
+} from "@/components/ui/dashboard/report/types";
 
 export type DashboardPeriod = PeriodId;
 

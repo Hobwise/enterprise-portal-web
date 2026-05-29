@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   OrderReportPayload,
   OrderReportResponse,
-} from '@/components/ui/dashboard/inventory/stock-analysis/types';
+} from '@/components/ui/dashboard/report/types';
 
 interface UseOrderReportArgs {
   filterType: number;

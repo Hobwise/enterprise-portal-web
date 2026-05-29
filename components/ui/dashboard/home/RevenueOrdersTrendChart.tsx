@@ -14,7 +14,7 @@ import { Bar } from "react-chartjs-2";
 import {
   OrderDetailsSection,
   PaymentDetailsSection,
-} from "@/components/ui/dashboard/inventory/stock-analysis/types";
+} from "@/components/ui/dashboard/report/types";
 
 import DashboardCard from "./DashboardCard";
 

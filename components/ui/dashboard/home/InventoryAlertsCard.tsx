@@ -4,7 +4,7 @@ import { Skeleton } from "@nextui-org/react";
 import { HiOutlineExclamation } from "react-icons/hi";
 
 import { formatNumber, formatPrice } from "@/lib/utils";
-import { InventoryDetailsSection } from "@/components/ui/dashboard/inventory/stock-analysis/types";
+import { InventoryDetailsSection } from "@/components/ui/dashboard/report/types";
 
 import DashboardCard from "./DashboardCard";
 

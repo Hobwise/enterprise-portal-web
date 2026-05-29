@@ -2,7 +2,7 @@
 import { getReportInventory } from '@/app/api/controllers/dashboard/report';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { InventoryReportPayload } from '@/components/ui/dashboard/inventory/stock-analysis/types';
+import { InventoryReportPayload } from '@/components/ui/dashboard/report/types';
 
 interface UseInventoryReportArgs {
   filterType: number;

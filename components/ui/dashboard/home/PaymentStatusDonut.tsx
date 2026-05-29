@@ -8,7 +8,7 @@ import { formatNumber } from "@/lib/utils";
 import {
   PaymentDetailsSection,
   PaymentMethodBreakdownItem,
-} from "@/components/ui/dashboard/inventory/stock-analysis/types";
+} from "@/components/ui/dashboard/report/types";
 
 import DashboardCard from "./DashboardCard";
 
@@ -88,9 +88,12 @@ const PaymentStatusDonut = ({
 
   return (
     <DashboardCard className="p-5 flex flex-col gap-4 h-full">
-      <h3 className="text-[15px] font-semibold text-[#0F172A]">
-        Payment Status
-      </h3>
+      <div className="flex flex-col gap-0.5">
+        <h3 className="text-[15px] font-semibold text-[#0F172A]">
+          Payment Status
+        </h3>
+        <p className="text-[12px] text-[#64748B]">Payment method breakdown</p>
+      </div>
 
       {!hasData ? (
         <div className="flex items-center justify-center flex-1 min-h-[220px] text-[13px] text-[#64748B]">
