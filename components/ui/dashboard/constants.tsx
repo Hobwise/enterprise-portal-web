@@ -137,7 +137,7 @@ export const INVENTORY_ITEMS: SideNavItem[] = [
 export const INSIGHTS_ITEMS: SideNavItem[] = [
   {
     title: "Report",
-    path: "/dashboard/inventory/stock-analysis",
+    path: "/report",
     icon: <StockAnalysisIcon />,
   },
 ];

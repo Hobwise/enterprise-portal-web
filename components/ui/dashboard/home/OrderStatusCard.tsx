@@ -3,7 +3,7 @@
 import { Skeleton } from "@nextui-org/react";
 
 import { formatNumber } from "@/lib/utils";
-import { OrderDetailsSection } from "@/components/ui/dashboard/inventory/stock-analysis/types";
+import { OrderDetailsSection } from "@/components/ui/dashboard/report/types";
 
 import DashboardCard from "./DashboardCard";
 

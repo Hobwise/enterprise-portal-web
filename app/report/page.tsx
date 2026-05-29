@@ -26,49 +26,49 @@ import {
 import { TbReportSearch } from 'react-icons/tb';
 import { LuPackage } from 'react-icons/lu';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { SalesOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/SalesPanels';
+import { SalesOverviewPanel } from '@/components/ui/dashboard/report/SalesPanels';
 import {
   ComingSoonPanel,
   GenericReportPanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/SharedPanels';
-import { InventoryOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/InventoryOverviewPanel';
-import { PaymentOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/PaymentOverviewPanel';
-import { UserAuditOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/UserAuditOverviewPanel';
+} from '@/components/ui/dashboard/report/SharedPanels';
+import { InventoryOverviewPanel } from '@/components/ui/dashboard/report/InventoryOverviewPanel';
+import { PaymentOverviewPanel } from '@/components/ui/dashboard/report/PaymentOverviewPanel';
+import { UserAuditOverviewPanel } from '@/components/ui/dashboard/report/UserAuditOverviewPanel';
 import {
   CategoryPerformancePanel,
   EmployeePerformancePanel,
   OrderPaymentSummaryPanel,
   OrdersVolumesPanel,
   PopularItemsPanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/SalesSubTabs';
+} from '@/components/ui/dashboard/report/SalesSubTabs';
 import {
   NetRevenueSubPanel,
   OutstandingReceivablesSubPanel,
   PaymentMethodsSubPanel,
   PaymentSummarySubPanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/PaymentSubTabs';
+} from '@/components/ui/dashboard/report/PaymentSubTabs';
 import {
   QrActivityTimelinePanel,
   QrDetailsPanel,
   QrOrderHistoryPanel,
   QrOverviewPanel,
   QrRevenueByCodePanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/QrPanels';
-import { BookingOverviewPanel } from '@/components/ui/dashboard/inventory/stock-analysis/BookingOverviewPanel';
+} from '@/components/ui/dashboard/report/QrPanels';
+import { BookingOverviewPanel } from '@/components/ui/dashboard/report/BookingOverviewPanel';
 import {
   BookingSummaryPanel,
   OccupancyUtilizationPanel,
   ReservationSummaryPanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/BookingSubTabs';
+} from '@/components/ui/dashboard/report/BookingSubTabs';
 import {
   PurchaseOrderPanel,
   StockLevelPanel,
   StockTransferPanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/InventorySubTabs';
+} from '@/components/ui/dashboard/report/InventorySubTabs';
 import {
   ActivityAuditPanel,
   DailySessionsPanel,
-} from '@/components/ui/dashboard/inventory/stock-analysis/UserSubTabs';
+} from '@/components/ui/dashboard/report/UserSubTabs';
 import {
   AvailableReport,
   BookingReportResponse,
@@ -83,7 +83,7 @@ import {
   filterTypeToComparisonLabel,
   periodToDateRange,
   periodToFilterType,
-} from '@/components/ui/dashboard/inventory/stock-analysis/types';
+} from '@/components/ui/dashboard/report/types';
 import useStockAnalysisSummary from '@/hooks/cachedEndpoints/useStockAnalysisSummary';
 import useStockAnalysisOrderReport from '@/hooks/cachedEndpoints/useStockAnalysisOrderReport';
 import useStockAnalysisPaymentReport from '@/hooks/cachedEndpoints/useStockAnalysisPaymentReport';
@@ -91,7 +91,7 @@ import useStockAnalysisInventoryReport from '@/hooks/cachedEndpoints/useStockAna
 import useStockAnalysisUserReport from '@/hooks/cachedEndpoints/useStockAnalysisUserReport';
 import useStockAnalysisQrReport from '@/hooks/cachedEndpoints/useStockAnalysisQrReport';
 import useStockAnalysisBookingReport from '@/hooks/cachedEndpoints/useStockAnalysisBookingReport';
-import { useStockAnalysisExport } from '@/components/ui/dashboard/inventory/stock-analysis/exportHelpers';
+import { useStockAnalysisExport } from '@/components/ui/dashboard/report/exportHelpers';
 
 interface ModuleTab {
   id: ModuleId;

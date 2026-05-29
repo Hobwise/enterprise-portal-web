@@ -3,7 +3,7 @@
 import { Avatar, Skeleton } from "@nextui-org/react";
 
 import { formatNumber } from "@/lib/utils";
-import { AuditDetailsSection } from "@/components/ui/dashboard/inventory/stock-analysis/types";
+import { AuditDetailsSection } from "@/components/ui/dashboard/report/types";
 
 import DashboardCard from "./DashboardCard";
 
@@ -12,9 +12,10 @@ interface TeamActivityCardProps {
   isLoading?: boolean;
 }
 
-const formatHours = (avgPerUser?: number): string => {
+const formatAvgActivities = (avgPerUser?: number): string => {
   if (typeof avgPerUser !== "number") return "—";
-  return `${avgPerUser.toFixed(1)}hrs`;
+  // Trim a trailing ".0" so whole numbers read cleanly (24.0 -> "24").
+  return avgPerUser.toFixed(1).replace(/\.0$/, "");
 };
 
 const formatHour = (hour?: number | null): string => {
@@ -99,9 +100,9 @@ const TeamActivityCard = ({ audit, isLoading }: TeamActivityCardProps) => {
           </span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] text-[#64748B]">Avg. User Hours</span>
+          <span className="text-[11px] text-[#64748B]">Avg. Activities/User</span>
           <span className="font-semibold text-[#0F172A]">
-            {formatHours(audit?.averageActivitiesPerUser)}
+            {formatAvgActivities(audit?.averageActivitiesPerUser)}
           </span>
         </div>
         <div className="flex flex-col gap-0.5">

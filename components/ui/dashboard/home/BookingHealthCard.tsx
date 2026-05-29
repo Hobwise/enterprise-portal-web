@@ -3,7 +3,7 @@
 import { Skeleton } from "@nextui-org/react";
 
 import { formatNumber, formatPrice } from "@/lib/utils";
-import { BookingDetailsSection } from "@/components/ui/dashboard/inventory/stock-analysis/types";
+import { BookingDetailsSection } from "@/components/ui/dashboard/report/types";
 
 import DashboardCard from "./DashboardCard";
 
@@ -71,10 +71,6 @@ const BookingHealthCard = ({
         <Row
           label="Average booking fee"
           value={formatPrice(bookings?.averageBookingFee ?? 0, "NGN")}
-        />
-        <Row
-          label="Most popular type"
-          value={formatNumber(bookings?.completedBookingCount ?? 0).toString()}
         />
       </ul>
     </DashboardCard>

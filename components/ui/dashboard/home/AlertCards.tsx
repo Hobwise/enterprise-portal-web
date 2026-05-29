@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { HiArrowRight } from "react-icons/hi";
 
-import { SummaryAlert } from "@/components/ui/dashboard/inventory/stock-analysis/types";
+import { SummaryAlert } from "@/components/ui/dashboard/report/types";
 
 interface AlertCardsProps {
   alerts?: SummaryAlert[];

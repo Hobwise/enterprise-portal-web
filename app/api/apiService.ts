@@ -107,6 +107,30 @@ const refreshTokenIfNeeded = async () => {
   }
 };
 
+/**
+ * Force a business-scoped token refresh on demand (e.g. right after subscribing
+ * to a plan, when the currently stored token predates the active business).
+ * Respects the shared `isRefreshing` flag / `refreshSubscribers` queue so it
+ * never races a refresh already triggered by the interceptors.
+ * Returns the new token, or null when refresh failed (in which case
+ * `refreshToken` has already redirected to /auth/login).
+ */
+export const forceTokenRefresh = async (): Promise<string | null> => {
+  if (isRefreshing) {
+    // Join the in-flight refresh instead of starting a second one.
+    return new Promise((resolve) =>
+      subscribeTokenRefresh((token) => resolve(token ?? null))
+    );
+  }
+
+  isRefreshing = true; // mirror the interceptor's contract
+  try {
+    return await refreshToken(); // refreshToken's finally resets isRefreshing
+  } catch (error) {
+    return null; // refreshToken already redirected to /auth/login on failure
+  }
+};
+
 api.interceptors.request.use(async (config) => {
   await refreshTokenIfNeeded();
 

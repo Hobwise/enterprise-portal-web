@@ -1284,7 +1284,7 @@ export const AvailableReportsList: React.FC<AvailableReportsListProps> = ({
     const slug = slugifyReportName(report.reportName);
     if (route === 'inventory') {
       const params = new URLSearchParams({ module: 'inventory', sub: slug });
-      router.push(`/dashboard/inventory/stock-analysis?${params.toString()}`);
+      router.push(`/report?${params.toString()}`);
       return;
     }
     router.push(`/dashboard/reports/${route}/${slug}`);

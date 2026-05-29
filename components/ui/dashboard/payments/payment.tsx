@@ -193,9 +193,16 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     });
   }, [paymentDetails, sortDescriptor]);
 
-  const toggleApproveModal = (payment: PaymentItem) => {
+  // Explicit open/close avoids the phase-desync that a setIsOpen(!isOpen)
+  // toggle suffers when onOpenChange fires out of sync — which made row
+  // clicks intermittently fail to open the modal.
+  const openApproveModal = (payment: PaymentItem) => {
     setSinglePayment(payment);
-    setIsOpen(!isOpen);
+    setIsOpen(true);
+  };
+
+  const closeApproveModal = () => {
+    setIsOpen(false);
   };
 
   const handleTabClick = (categoryName: string) => {
@@ -272,7 +279,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
                 >
                   <DropdownItem
                     onClick={() => {
-                      toggleApproveModal(payment);
+                      openApproveModal(payment);
                     }}
                     aria-label="update order"
                   >
@@ -335,7 +342,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
 
   // Handle row click to open payment details
   const handleRowClick = (payment: PaymentItem) => {
-    toggleApproveModal(payment);
+    openApproveModal(payment);
   };
 
   return (
@@ -394,7 +401,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
         refetch={refetch}
         singlePayment={singlePayment}
         isOpen={isOpen}
-        toggleApproveModal={toggleApproveModal}
+        toggleApproveModal={closeApproveModal}
       />
     </section>
   );

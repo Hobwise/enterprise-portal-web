@@ -6,7 +6,7 @@ import { formatNumber } from "@/lib/utils";
 import {
   InventoryDetailsSection,
   MoverItem,
-} from "@/components/ui/dashboard/inventory/stock-analysis/types";
+} from "@/components/ui/dashboard/report/types";
 
 import DashboardCard from "./DashboardCard";
 

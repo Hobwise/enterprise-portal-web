@@ -156,8 +156,9 @@ export const OrdersVolumesPanel: React.FC<SalesSubTabPanelProps> = ({
     let grossRevenue = 0;
     orders.forEach((o) => {
       total += 1;
-      grossRevenue += parseAmount(o.totalAmount);
       const status = normalizeStatus(o.orderStatus);
+      // Gross Revenue should reflect realized sales — exclude cancelled orders.
+      if (status !== 'cancelled') grossRevenue += parseAmount(o.totalAmount);
       if (status === 'open') open += 1;
       else if (status === 'closed') closed += 1;
       else if (status === 'cancelled') cancelled += 1;

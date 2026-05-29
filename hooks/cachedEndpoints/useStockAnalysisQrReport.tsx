@@ -10,8 +10,8 @@ import {
   QrReportPayload,
   QrReportResponse,
   QrTopItem,
-} from '@/components/ui/dashboard/inventory/stock-analysis/types';
-import { OrderReportItem } from '@/components/ui/dashboard/inventory/stock-analysis/types';
+} from '@/components/ui/dashboard/report/types';
+import { OrderReportItem } from '@/components/ui/dashboard/report/types';
 
 interface UseQrReportArgs {
   filterType: number;

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   UserReportPayload,
   UserReportResponse,
-} from '@/components/ui/dashboard/inventory/stock-analysis/types';
+} from '@/components/ui/dashboard/report/types';
 
 interface UseUserReportArgs {
   filterType: number;

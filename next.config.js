@@ -109,6 +109,13 @@ const nextConfig = {
         destination: '/dashboard/reports/:path*',
         permanent: false,
       },
+      {
+        // Reports page moved out from under inventory to a top-level /report.
+        // Keep old bookmarks/links working (query string is preserved automatically).
+        source: '/dashboard/inventory/stock-analysis',
+        destination: '/report',
+        permanent: true,
+      },
     ];
   },
   headers: async () => {

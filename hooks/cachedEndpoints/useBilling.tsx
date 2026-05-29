@@ -5,17 +5,19 @@ import { useQuery } from '@tanstack/react-query';
 
 const useBilling = () => {
   const business = getJsonItemFromLocalStorage('business');
+  const businessId = business?.[0]?.businessId;
 
   const getSubscriptionInfo = async () => {
-    const responseData = await getSubscription(business[0].businessId, 100, 100);
+    const responseData = await getSubscription(businessId, 100, 100);
     // console.log("RESSS",responseData)
-    return responseData?.data?.data as any;
+    return responseData?.data?.data ?? null;
   };
 
   const { data, refetch, isLoading, isError } = useQuery<any>({
     queryKey: ['getSubscription'],
     queryFn: getSubscriptionInfo,
     refetchOnWindowFocus: false,
+    enabled: !!businessId,
   });
 
   return { data, isLoading, isError, refetch };

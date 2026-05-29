@@ -218,7 +218,7 @@ const Activity = () => {
         module: "inventory",
         sub: reportSlug || "overview",
       });
-      router.replace(`/dashboard/inventory/stock-analysis?${params.toString()}`);
+      router.replace(`/report?${params.toString()}`);
     }
   }, [category, reportSlug, router]);
 
