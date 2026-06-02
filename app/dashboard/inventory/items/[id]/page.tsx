@@ -32,7 +32,6 @@ import {
   getRecipeByItem,
 } from '@/app/api/controllers/dashboard/inventory';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
-import ItemUnitsTable from '@/components/ui/dashboard/inventory/ItemUnitsTable';
 import AddRecipeModal from '@/components/ui/dashboard/inventory/modals/AddRecipeModal';
 import ViewRecipeModal from '@/components/ui/dashboard/inventory/modals/ViewRecipeModal';
 import BatchProductionModal from '@/components/ui/dashboard/inventory/modals/BatchProductionModal';
@@ -238,14 +237,6 @@ export default function ItemDetailPage() {
   const handleBack = useCallback(() => {
     router.push('/dashboard/inventory/items');
   }, [router]);
-
-  const handleEditPrimaryUnit = useCallback(() => {
-    const unitSelect = document.getElementById('primary-unit-select') as HTMLSelectElement;
-    if (unitSelect) {
-      unitSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setTimeout(() => unitSelect.focus(), 300);
-    }
-  }, []);
 
   const getUnitName = useCallback(
     (unitId: string) => {
@@ -691,18 +682,6 @@ export default function ItemDetailPage() {
           </div>
         </div>
 
-        {/* Unit Conversions Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <ItemUnitsTable
-            itemUnits={item.units || []}
-            primaryUnitId={item.unitId}
-            costPerUnit={item.averageCostPerUnit}
-            unitsByBusiness={unitsByBusiness}
-            inventoryItemId={itemId}
-            onRefetch={refetch}
-            onEditPrimaryUnit={handleEditPrimaryUnit}
-          />
-        </div>
       </div>
 
       {/* Add Recipe Modal */}

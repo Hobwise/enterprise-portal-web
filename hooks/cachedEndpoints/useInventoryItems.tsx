@@ -278,7 +278,10 @@ export const useSuppliers = () => {
       const response = await getSuppliers(businessId);
       if (response?.data?.isSuccessful) {
         const result = response.data.data;
-        return Array.isArray(result) ? (result as Supplier[]) : [];
+        // The LOV endpoint wraps the list (like Unit/lov → { units: [...] }),
+        // so unwrap `suppliers` but still tolerate a flat array.
+        const suppliers = result?.suppliers ?? result;
+        return Array.isArray(suppliers) ? (suppliers as Supplier[]) : [];
       }
       return [];
     } catch (error) {

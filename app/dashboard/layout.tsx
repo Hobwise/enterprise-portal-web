@@ -3,6 +3,7 @@
 import AdminPrivateRoute from "@/components/auth/AdminPrivateRoute";
 import BusinessSettingsDashboardPrompt from "@/components/businessSettingsDashboardPrompt";
 import Container from "@/components/dashboardContainer";
+import AiChatWidget from "@/components/ui/dashboard/ai-chat/AiChatWidget";
 import { SubscriptionNoticePopup } from "@/components/ui/dashboard/subscription-notification";
 import {
   SubscriptionProvider,
@@ -42,6 +43,7 @@ export default function DashboardLayout({
             <Suspense fallback={null}>
               <SubscriptionNoticePopup />
             </Suspense>
+            <AiChatWidget />
           </div>
         </SubscriptionGate>
       </SubscriptionProvider>

@@ -61,7 +61,6 @@ import {
   ReservationSummaryPanel,
 } from '@/components/ui/dashboard/report/BookingSubTabs';
 import {
-  PurchaseOrderPanel,
   StockLevelPanel,
   StockTransferPanel,
 } from '@/components/ui/dashboard/report/InventorySubTabs';
@@ -612,7 +611,10 @@ const StockAnalysisPage: React.FC = () => {
     INVENTORY_SUB_TAB_REPORT_TYPE[activeSubTab] ??
     dynamicReportTypeBySlug[activeSubTab];
   const inventoryReportEnabled =
-    hasAccess && activeModule === 'inventory' && activeSubTab !== 'overview';
+    hasAccess &&
+    activeModule === 'inventory' &&
+    activeSubTab !== 'overview' &&
+    typeof inventorySubTabReportType === 'number';
 
   const { data: inventoryReport, isLoading: inventoryReportLoading } =
     useStockAnalysisInventoryReport(
@@ -1234,8 +1236,6 @@ const ActivePanel: React.FC<ActivePanelProps> = ({
         return <StockLevelPanel {...inventorySubTabProps} />;
       case 'stock-transfer':
         return <StockTransferPanel {...inventorySubTabProps} />;
-      case 'purchase-order':
-        return <PurchaseOrderPanel {...inventorySubTabProps} />;
       default:
         return (
           <GenericReportPanel

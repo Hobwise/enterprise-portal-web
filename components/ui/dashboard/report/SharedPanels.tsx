@@ -885,7 +885,7 @@ const GENERIC_COLUMN_PRESETS_BY_TABLE_KEY: Record<string, string[]> = {
   qrActivityTimelines: GENERIC_COLUMN_PRESETS_BY_REPORT_TYPE[32],
 };
 const MONEY_KEY_REGEX =
-  /amount|revenue|sales|cost|price|value|fee|payment|outstanding|refund/i;
+  /amount|revenue|sales|cost|cogs|profit|price|value|fee|payment|spend|outstanding|refund/i;
 const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}T/;
 
 const titleCase = (key: string): string =>
@@ -924,10 +924,21 @@ const mergeColumnPreset = (
     (tableKey ? GENERIC_COLUMN_PRESETS_BY_TABLE_KEY[tableKey] : undefined);
 
   if (!preset) return detectedColumns;
-  return [
-    ...preset,
-    ...detectedColumns.filter((column) => !preset.includes(column)),
-  ];
+
+  // With no data we can't validate the preset, so use it for header display.
+  if (detectedColumns.length === 0) return preset;
+
+  // A preset only orders/selects columns that genuinely exist in the data. Any
+  // preset column absent from the rows (e.g. the generic `items` fallback
+  // applied to an unmapped report) is dropped so it never renders as a column
+  // of "—". Detected columns not covered by the preset are appended afterwards.
+  const orderedPresetColumns = preset.filter((column) =>
+    detectedColumns.includes(column)
+  );
+  const extraColumns = detectedColumns.filter(
+    (column) => !preset.includes(column)
+  );
+  return [...orderedPresetColumns, ...extraColumns];
 };
 
 const formatCell = (key: string, value: unknown): string => {
@@ -1041,8 +1052,15 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
 
     if (Array.isArray(data)) {
       result.tableKey = 'items';
+      // Keep any object rows rather than discarding the whole array when the
+      // first element is atypical (e.g. a null/scalar slipped in).
+      const objectRows = data.filter(isPlainObject) as Record<
+        string,
+        unknown
+      >[];
+      result.rows = objectRows;
       result.columns = mergeColumnPreset(
-        [],
+        objectRows.length > 0 ? Object.keys(objectRows[0]) : [],
         reportName,
         reportType,
         result.tableKey
