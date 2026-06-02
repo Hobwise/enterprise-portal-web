@@ -2,6 +2,7 @@ import CategoryPrivateRoute from "@/components/auth/CategoryPrivateRoute";
 import ClientProviders from "@/components/ClientProviders";
 import QueryProvider from "@/hooks/queryProvider";
 import { AppProvider } from "@/hooks/globalProvider";
+import { SubscriptionProvider } from "@/hooks/providers/SubscriptionProvider";
 import { Providers } from "@/utilities/providers";
 import { bricolage_grotesque } from "@/utilities/ui-config/fonts";
 import { Toaster } from "react-hot-toast";
@@ -24,7 +25,7 @@ export default function BusinessActivitiesLayout({
           <QueryProvider>
             <AppProvider>
               <Providers>
-                {children}
+                <SubscriptionProvider>{children}</SubscriptionProvider>
                 <Toaster
                   toastOptions={{
                     duration: 5000,
