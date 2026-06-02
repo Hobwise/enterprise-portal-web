@@ -222,10 +222,6 @@ const POSContent = () => {
             const orderData = response?.data?.data;
             const orderDetails = orderData.orderDetails || [];
 
-            // Debug logging
-            console.log("API orderData:", orderData);
-            console.log("localStorage order:", order);
-
             // Transform order details to match POS cart format
             orderDetails.forEach((item: any) => {
               const menuItem = menuItems.find(
@@ -266,8 +262,6 @@ const POSContent = () => {
                 "",
             };
 
-            console.log("Transformed orderData:", transformedOrderData);
-
             setExistingOrder(transformedOrderData);
             // No local state update for ID needed as we rely on URL
             toast.success(`Loading order ${orderData.reference || idToLoad}`);
@@ -292,7 +286,6 @@ const POSContent = () => {
     loadExistingOrder();
   }, [searchParams, menuItems.length]);
 
-  console.log("Rendered POSContent with existingOrder:", orderItems);
 
   return (
     <>

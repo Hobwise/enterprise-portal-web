@@ -1,5 +1,6 @@
 import POSPrivateRoute from "@/components/auth/POSPrivateRoute";
 import { AppProvider } from "@/hooks/globalProvider";
+import { SubscriptionProvider } from "@/hooks/providers/SubscriptionProvider";
 import ClientProviders from "@/components/ClientProviders";
 import QueryProvider from "@/hooks/queryProvider";
 import { Providers } from "@/utilities/providers";
@@ -24,7 +25,7 @@ export default function POSLayout({
           <QueryProvider>
             <AppProvider>
               <Providers>
-                {children}
+                <SubscriptionProvider>{children}</SubscriptionProvider>
                 <Toaster
                   toastOptions={{
                     duration: 5000,
