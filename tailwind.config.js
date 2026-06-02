@@ -26,6 +26,8 @@ module.exports = {
         primaryGrey: '#F0F2F5',
         secondaryGrey: '#E4E7EC',
         navColor: '#616B7C',
+        aiChatSurface: '#F4F2FF',
+        aiChatInput: '#ECEAF6',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -52,6 +54,8 @@ module.exports = {
       animation: {
         'infinite-scroll': 'infinite-scroll 25s linear infinite',
         shimmer: 'shimmer 1.5s infinite',
+        'ai-bounce': 'ai-bounce 1.4s infinite ease-in-out both',
+        'ai-pop': 'ai-pop 0.25s ease-out',
       },
       keyframes: {
         'infinite-scroll': {
@@ -61,6 +65,14 @@ module.exports = {
         shimmer: {
           '0%': { transform: 'translateX(-100%)' },
           '100%': { transform: 'translateX(100%)' },
+        },
+        'ai-bounce': {
+          '0%, 80%, 100%': { transform: 'scale(0.6)', opacity: '0.4' },
+          '40%': { transform: 'scale(1)', opacity: '1' },
+        },
+        'ai-pop': {
+          '0%': { transform: 'translateY(8px) scale(0.96)', opacity: '0' },
+          '100%': { transform: 'translateY(0) scale(1)', opacity: '1' },
         },
       },
     },

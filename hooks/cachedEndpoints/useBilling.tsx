@@ -14,7 +14,7 @@ const useBilling = () => {
   };
 
   const { data, refetch, isLoading, isError } = useQuery<any>({
-    queryKey: ['getSubscription'],
+    queryKey: ['getSubscription', businessId],
     queryFn: getSubscriptionInfo,
     refetchOnWindowFocus: false,
     enabled: !!businessId,

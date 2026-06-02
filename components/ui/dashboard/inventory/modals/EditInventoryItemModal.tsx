@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Modal, ModalContent, ModalBody, Spinner, Switch } from '@nextui-org/react';
 import { X, Package, Plus, Pencil, BookOpen } from 'lucide-react';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
@@ -55,6 +56,7 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
   const [isAddRecipeOpen, setIsAddRecipeOpen] = useState(false);
 
   // Hooks
+  const queryClient = useQueryClient();
   const { data: suppliers, isLoading: suppliersLoading } = useSuppliers();
   const { data: unitsByBusiness, isLoading: unitsByBusinessLoading } = useUnitsByBusiness();
 
@@ -162,6 +164,11 @@ const EditInventoryItemModal: React.FC<EditInventoryItemModalProps> = ({
 
       if (response?.data?.isSuccessful) {
         notify({ title: 'Success!', text: 'Item updated successfully', type: 'success' });
+
+        // Drop the stale cached item detail (and list) so reopening Edit shows
+        // the freshly-saved values instead of the 5-minute-fresh cache.
+        queryClient.invalidateQueries({ queryKey: ['inventoryItem', item!.id] });
+        queryClient.invalidateQueries({ queryKey: ['inventoryItems'] });
 
         if (itemType === InventoryItemType.Produced) {
           setStep('manage-recipes');
