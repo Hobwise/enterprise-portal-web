@@ -7,8 +7,6 @@ import {
   QrCode,
   LucideIcon,
 } from "lucide-react";
-import { AgentHistoryItem } from "./agentChatApi";
-import ChatHistoryList from "./ChatHistoryList";
 
 interface Suggestion {
   icon: LucideIcon;
@@ -41,20 +39,12 @@ const SUGGESTIONS: Suggestion[] = [
 
 interface WelcomeScreenProps {
   userName: string;
-  history: AgentHistoryItem[];
-  historyLoading: boolean;
   onSuggestion: (prompt: string) => void;
-  onSelectSession: (sessionId: string) => void;
-  onViewHistory: () => void;
 }
 
 const WelcomeScreen = ({
   userName,
-  history,
-  historyLoading,
   onSuggestion,
-  onSelectSession,
-  onViewHistory,
 }: WelcomeScreenProps) => {
   return (
     <div className="space-y-6">
@@ -78,7 +68,7 @@ const WelcomeScreen = ({
                 key={suggestion.label}
                 type="button"
                 onClick={() => onSuggestion(suggestion.prompt)}
-                className="flex items-center gap-3 rounded-2xl border border-secondaryGrey/70 bg-white px-4 py-3 text-left transition-colors hover:border-primaryColor/40 hover:bg-primaryColor/5"
+                className="flex items-center gap-3 rounded-2xl border border-black/[0.07] bg-grey300 px-4 py-3 text-left transition-colors hover:border-primaryColor/30 hover:bg-primaryColor/5"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primaryColor/10 text-primaryColor">
                   <Icon className="h-4 w-4" />
@@ -92,26 +82,6 @@ const WelcomeScreen = ({
         </div>
       </div>
 
-      {(history.length > 0 || historyLoading) && (
-        <div className="space-y-3 rounded-2xl border border-secondaryGrey/70 bg-white p-4">
-          <h4 className="text-sm font-bold text-dark">Chat History</h4>
-          <ChatHistoryList
-            history={history}
-            loading={historyLoading}
-            limit={3}
-            onSelect={onSelectSession}
-          />
-          {history.length > 0 && (
-            <button
-              type="button"
-              onClick={onViewHistory}
-              className="w-full pt-1 text-center text-sm font-semibold text-primaryColor hover:underline"
-            >
-              View chat history
-            </button>
-          )}
-        </div>
-      )}
     </div>
   );
 };

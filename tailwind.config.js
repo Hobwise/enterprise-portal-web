@@ -26,8 +26,8 @@ module.exports = {
         primaryGrey: '#F0F2F5',
         secondaryGrey: '#E4E7EC',
         navColor: '#616B7C',
-        aiChatSurface: '#F4F2FF',
-        aiChatInput: '#ECEAF6',
+        aiChatSurface: '#FFFFFF',
+        aiChatInput: '#F4F4F5',
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

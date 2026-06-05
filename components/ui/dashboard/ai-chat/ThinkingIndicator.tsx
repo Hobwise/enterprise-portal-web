@@ -5,7 +5,7 @@ import SparkleIcon from "./SparkleIcon";
 const ThinkingIndicator = () => {
   return (
     <div className="flex animate-ai-pop flex-col items-start gap-2">
-      <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-secondaryGrey bg-white px-4 py-4">
+      <div className="flex items-center gap-1.5 rounded-2xl rounded-tl-sm border border-black/[0.06] bg-grey300 px-4 py-4">
         {[0, 1, 2].map((dot) => (
           <span
             key={dot}

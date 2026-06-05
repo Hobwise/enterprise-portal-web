@@ -6,8 +6,6 @@ import {
   Maximize2,
   Minimize2,
   X,
-  Keyboard,
-  Mic,
   SquarePen,
   History,
 } from "lucide-react";
@@ -57,7 +55,6 @@ const AiChatPanel = ({
   onClose,
 }: AiChatPanelProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [voiceSupported, setVoiceSupported] = useState(true);
   const [view, setView] = useState<PanelView>("main");
 
   useEffect(() => {
@@ -119,64 +116,64 @@ const AiChatPanel = ({
       <motion.div
         layout
         role="dialog"
-        aria-label="Hospira AI chat"
+        aria-label="Hospira chat"
         variants={PANEL_VARIANTS}
         transition={PANEL_TRANSITION}
         className={cn(
-          "pointer-events-auto absolute flex flex-col overflow-hidden bg-aiChatSurface shadow-custom_shadow",
-          "inset-0 sm:inset-auto sm:rounded-3xl sm:border sm:border-secondaryGrey",
+          "pointer-events-auto absolute flex flex-col overflow-hidden bg-aiChatSurface shadow-[0_8px_40px_rgba(0,0,0,0.12)]",
+          "inset-0 sm:inset-auto sm:rounded-3xl sm:border sm:border-black/[0.06]",
           expanded
             ? "sm:inset-0 sm:m-auto sm:h-[88vh] sm:max-h-[900px] sm:w-[860px] sm:max-w-[94vw]"
             : "sm:bottom-6 sm:right-6 sm:h-[640px] sm:max-h-[calc(100vh-3rem)] sm:w-[420px]"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-secondaryGrey/60 bg-aiChatSurface px-4 py-4">
+        <div className="flex items-center justify-between border-b border-black/[0.06] px-4 py-3.5">
           <div className="flex items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primaryColor text-white">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primaryColor to-secondaryColor text-white shadow-sm">
               <SparkleIcon className="h-5 w-5" />
             </span>
-            <h2 className="text-lg font-bold text-dark">Hospira AI</h2>
+            <h2 className="text-lg font-bold text-dark">Hospira</h2>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button
               type="button"
               onClick={handleNewChat}
               disabled={chat.isResponding}
               aria-label="Start a new chat"
               title="New chat"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey500 transition-colors hover:bg-black/5 hover:text-dark disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <SquarePen className="h-5 w-5" />
+              <SquarePen className="h-4.5 w-4.5" />
             </button>
             <button
               type="button"
               onClick={handleViewHistory}
               aria-label="View chat history"
               title="Chat history"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey500 transition-colors hover:bg-black/5 hover:text-dark"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
             >
-              <History className="h-5 w-5" />
+              <History className="h-4.5 w-4.5" />
             </button>
             <button
               type="button"
               onClick={onToggleExpand}
               aria-label={expanded ? "Collapse chat" : "Expand chat"}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey500 transition-colors hover:bg-black/5 hover:text-dark"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
             >
               {expanded ? (
-                <Minimize2 className="h-5 w-5" />
+                <Minimize2 className="h-4.5 w-4.5" />
               ) : (
-                <Maximize2 className="h-5 w-5" />
+                <Maximize2 className="h-4.5 w-4.5" />
               )}
             </button>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close chat"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey500 transition-colors hover:bg-black/5 hover:text-dark"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4.5 w-4.5" />
             </button>
           </div>
         </div>
@@ -214,11 +211,7 @@ const AiChatPanel = ({
             ) : chat.messages.length === 0 ? (
               <WelcomeScreen
                 userName={chat.userName}
-                history={chat.history}
-                historyLoading={chat.historyLoading}
                 onSuggestion={chat.sendMessage}
-                onSelectSession={handleSelectSession}
-                onViewHistory={handleViewHistory}
               />
             ) : (
               <div className="space-y-5">
@@ -235,7 +228,7 @@ const AiChatPanel = ({
         {view !== "history" && (
           <div
             className={cn(
-              "space-y-3 border-t border-secondaryGrey/60 pb-3 pt-4",
+              "space-y-3 border-t border-black/[0.06] pb-3 pt-4",
               expanded ? "px-6 sm:px-10" : "px-4"
             )}
           >
@@ -254,21 +247,8 @@ const AiChatPanel = ({
                 onSend={chat.sendMessage}
                 disabled={chat.isResponding || chat.quotaReached}
                 quotaReached={chat.quotaReached}
-                onVoiceSupportChange={setVoiceSupported}
+                onVoiceSupportChange={() => {}}
               />
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-grey500">
-                <span>
-                  HOSPIRA only responds to hospitality and HOBWISE-related
-                  questions
-                </span>
-                <span className="flex items-center gap-1">
-                  <Keyboard className="h-3.5 w-3.5" /> Enter to send
-                </span>
-                <span className="flex items-center gap-1">
-                  <Mic className="h-3.5 w-3.5" />
-                  {voiceSupported ? "Voice available" : "Voice unavailable"}
-                </span>
-              </div>
             </div>
           </div>
         )}

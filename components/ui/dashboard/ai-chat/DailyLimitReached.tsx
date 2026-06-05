@@ -38,7 +38,7 @@ const DailyLimitReached = ({
         midnight. Upgrade to Premium for unlimited access.
       </p>
 
-      <div className="mt-5 w-full rounded-2xl border border-red-200 bg-white p-4">
+      <div className="mt-5 w-full rounded-2xl border border-red-200 bg-red-50/50 p-4">
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-2 text-sm font-medium text-red-500">
             <Clock className="h-4 w-4" />
@@ -65,7 +65,7 @@ const DailyLimitReached = ({
         <button
           type="button"
           onClick={onWait}
-          className="flex items-center gap-2 rounded-xl border border-secondaryGrey/70 bg-white px-4 py-2.5 text-sm font-medium text-textGrey transition-colors hover:bg-black/5"
+          className="flex items-center gap-2 rounded-xl border border-black/[0.07] bg-grey300 px-4 py-2.5 text-sm font-medium text-textGrey transition-colors hover:bg-black/5"
         >
           <Clock className="h-4 w-4" />
           Wait for Reset
