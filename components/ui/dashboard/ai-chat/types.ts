@@ -14,4 +14,6 @@ export interface ChatMessageData {
   time: string;
   /** Optional CTA chip rendered beneath an AI message. */
   action?: MessageAction;
+  /** True when the AI response contained [ESCALATE] — shows the support form. */
+  escalate?: boolean;
 }

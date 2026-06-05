@@ -5,26 +5,8 @@ import BusinessSettingsDashboardPrompt from "@/components/businessSettingsDashbo
 import Container from "@/components/dashboardContainer";
 import AiChatWidget from "@/components/ui/dashboard/ai-chat/AiChatWidget";
 import { SubscriptionNoticePopup } from "@/components/ui/dashboard/subscription-notification";
-import {
-  SubscriptionProvider,
-  useSubscriptionContext,
-} from "@/hooks/providers/SubscriptionProvider";
-import { Spinner } from "@nextui-org/react";
+import { SubscriptionProvider } from "@/hooks/providers/SubscriptionProvider";
 import { Suspense } from "react";
-
-function SubscriptionGate({ children }: { children: React.ReactNode }) {
-  const { isReady } = useSubscriptionContext();
-
-  if (!isReady) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center bg-white">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  return <>{children}</>;
-}
 
 export default function DashboardLayout({
   children,
@@ -34,18 +16,16 @@ export default function DashboardLayout({
   return (
     <AdminPrivateRoute>
       <SubscriptionProvider>
-        <SubscriptionGate>
-          <div className="font-satoshi">
-            <Container>{children}</Container>
-            <Suspense fallback={null}>
-              <BusinessSettingsDashboardPrompt />
-            </Suspense>
-            <Suspense fallback={null}>
-              <SubscriptionNoticePopup />
-            </Suspense>
-            <AiChatWidget />
-          </div>
-        </SubscriptionGate>
+        <div className="font-satoshi">
+          <Container>{children}</Container>
+          <Suspense fallback={null}>
+            <BusinessSettingsDashboardPrompt />
+          </Suspense>
+          <Suspense fallback={null}>
+            <SubscriptionNoticePopup />
+          </Suspense>
+          <AiChatWidget />
+        </div>
       </SubscriptionProvider>
     </AdminPrivateRoute>
   );

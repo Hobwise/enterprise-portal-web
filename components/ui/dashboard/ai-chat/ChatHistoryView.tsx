@@ -27,7 +27,7 @@ const ChatHistoryView = ({
         <button
           type="button"
           onClick={onBack}
-          className="flex items-center gap-1.5 rounded-xl border border-secondaryGrey/70 bg-white px-3 py-2 text-sm font-medium text-textGrey transition-colors hover:bg-black/5"
+          className="flex items-center gap-1.5 rounded-xl border border-black/[0.07] bg-grey300 px-3 py-2 text-sm font-medium text-textGrey transition-colors hover:bg-black/5"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -35,7 +35,7 @@ const ChatHistoryView = ({
         <button
           type="button"
           onClick={onStartNew}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-primaryColor/50 bg-white px-3 py-2 text-sm font-semibold text-primaryColor transition-colors hover:bg-primaryColor/5"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-primaryColor/30 bg-primaryColor/5 px-3 py-2 text-sm font-semibold text-primaryColor transition-colors hover:bg-primaryColor/10"
         >
           <SquarePen className="h-4 w-4" />
           Start New Chat

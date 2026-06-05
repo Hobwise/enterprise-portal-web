@@ -94,7 +94,7 @@ const ChatInput = ({
     <div
       className={cn(
         "flex items-end gap-2 rounded-2xl border bg-aiChatInput px-4 py-3 transition-colors",
-        voice.listening ? "border-red-400" : "border-primaryColor/30"
+        voice.listening ? "border-red-400" : "border-black/[0.08] focus-within:border-primaryColor/40"
       )}
     >
       <textarea
@@ -124,7 +124,7 @@ const ChatInput = ({
             "flex h-9 w-9 items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-50",
             voice.listening
               ? "animate-pulse border-red-400 bg-red-500 text-white"
-              : "border-secondaryGrey bg-white text-grey500 hover:text-primaryColor"
+              : "border-black/[0.08] bg-grey300 text-grey400 hover:text-primaryColor"
           )}
         >
           <Mic className="h-4 w-4" />

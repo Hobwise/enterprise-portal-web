@@ -16,6 +16,8 @@ import {
 /** Fallback prompt cap used until the real quota loads. */
 const DEFAULT_PROMPT_LIMIT = 10;
 
+const ESCALATE_TOKEN = /\[ESCALATE\]/gi;
+
 const formatTime = (date: Date): string => {
   let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -245,6 +247,13 @@ export const useAiChat = (): UseAiChat => {
             if (event.done) applyUsage(event);
           },
         });
+        // Strip [ESCALATE] token and flag the message for the support card.
+        setMessages((prev) =>
+          prev.map((m) => {
+            if (m.id !== aiId || !ESCALATE_TOKEN.test(m.text)) return m;
+            return { ...m, text: m.text.replace(ESCALATE_TOKEN, "").trim(), escalate: true };
+          })
+        );
         // A brand-new conversation now has a session — surface it in history.
         if (wasNewChat && sessionIdRef.current) refreshHistory();
       } catch {

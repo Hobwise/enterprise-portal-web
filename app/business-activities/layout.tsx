@@ -7,6 +7,7 @@ import { Providers } from "@/utilities/providers";
 import { bricolage_grotesque } from "@/utilities/ui-config/fonts";
 import { Toaster } from "react-hot-toast";
 import { companyInfo } from "../../lib/companyInfo";
+import AiChatWidget from "@/components/ui/dashboard/ai-chat/AiChatWidget";
 
 export const metadata = {
   title: `${companyInfo.name} - Business Activities`,
@@ -26,6 +27,7 @@ export default function BusinessActivitiesLayout({
             <AppProvider>
               <Providers>
                 <SubscriptionProvider>{children}</SubscriptionProvider>
+                <AiChatWidget />
                 <Toaster
                   toastOptions={{
                     duration: 5000,
