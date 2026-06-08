@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { ChatMessageData } from "./types";
+import { ChatMessageData, NavigationHint } from "./types";
 import SparkleIcon from "./SparkleIcon";
 import EscalationCard from "./EscalationCard";
 
@@ -147,7 +147,17 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
         {renderText(message.text)}
       </div>
       {message.action && <ActionChip action={message.action} />}
-      {message.escalate && <EscalationCard />}
+      {message.navigation && (
+        <div className="mt-0.5">
+          <NavigationChip navigation={message.navigation} />
+        </div>
+      )}
+      {message.escalate && (
+        <EscalationCard
+          userMessage={message.userPrompt ?? ""}
+          aiReply={message.text}
+        />
+      )}
       <div className="flex items-center gap-2 pl-1">
         <Avatar role="ai" />
         <span className="text-xs text-grey500">{message.time}</span>
@@ -177,5 +187,15 @@ const ActionChip = ({
     </button>
   );
 };
+
+const NavigationChip = ({ navigation }: { navigation: NavigationHint }) => (
+  <Link
+    href={navigation.href}
+    className="inline-flex items-center gap-2 rounded-xl border border-primaryColor px-4 py-2 text-sm font-medium text-primaryColor transition-colors hover:bg-primaryColor hover:text-white"
+  >
+    {navigation.label}
+    <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+  </Link>
+);
 
 export default ChatMessage;

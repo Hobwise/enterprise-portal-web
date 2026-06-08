@@ -19,7 +19,6 @@ import useStockAnalysisSummary from "@/hooks/cachedEndpoints/useStockAnalysisSum
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import useUser from "@/hooks/cachedEndpoints/useUser";
 import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
-import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import {
   DateRangePicker,
   Modal,
@@ -28,8 +27,7 @@ import {
   useDisclosure,
 } from "@nextui-org/react";
 import { DateValue, getLocalTimeZone, today } from "@internationalized/date";
-import { useRouter } from "next/navigation";
-import React, { useEffect } from "react";
+import React from "react";
 
 const toIsoDate = (value: DateValue | null | undefined): string | undefined => {
   if (!value) return undefined;
@@ -41,7 +39,6 @@ const toIsoDate = (value: DateValue | null | undefined): string | undefined => {
 };
 
 const Dashboard: React.FC = () => {
-  const router = useRouter();
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
   const initialDate = today(getLocalTimeZone());
   const [pickerValue, setPickerValue] = React.useState<{
@@ -54,35 +51,8 @@ const Dashboard: React.FC = () => {
 
   const period = usePeriodFilter("week");
 
-  // Client-side protection: Redirect POS and category users
-  useEffect(() => {
-    const userInformation = getJsonItemFromLocalStorage("userInformation");
-    if (!userInformation) return;
-
-    const { role, staffType, primaryAssignment, assignedCategoryId } =
-      userInformation;
-
-    const isPOSUser =
-      primaryAssignment === "Point of Sales" ||
-      primaryAssignment === "POS Operator" ||
-      (assignedCategoryId && assignedCategoryId === "POS");
-
-    const isCategoryUser =
-      role === 1 &&
-      staffType === 2 &&
-      assignedCategoryId &&
-      assignedCategoryId !== "" &&
-      assignedCategoryId !== "POS";
-
-    if (isPOSUser) {
-      router.replace("/pos");
-    } else if (isCategoryUser) {
-      router.replace("/business-activities");
-    }
-  }, [router]);
-
   const { data: user } = useUser();
-  const { hasCapability } = useSubscriptionContext();
+  const { hasCapability, isReady: subscriptionReady } = useSubscriptionContext();
   const { userRolePermissions, role } = usePermission();
   const isManager = Number(role) === 0;
 
@@ -110,6 +80,10 @@ const Dashboard: React.FC = () => {
   const auditDetails = summary?.auditDetails;
 
   const cardLoading = summaryLoading;
+
+  // Don't reveal the locked overlay while the page or subscription is still loading —
+  // show the skeleton instead so users never see "Upgrade Plan" during the initial fetch.
+  const showLocks = subscriptionReady && !cardLoading;
 
   const handleDateChange = (newValue: {
     start: DateValue | null;
@@ -169,7 +143,7 @@ const Dashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2">
-            {planAllowsReports ? (
+            {planAllowsReports || !showLocks ? (
               <RevenueOrdersTrendChart
                 payments={paymentDetails}
                 orders={orderDetails}
@@ -180,7 +154,7 @@ const Dashboard: React.FC = () => {
                 <RevenueOrdersTrendChart
                   payments={paymentDetails}
                   orders={orderDetails}
-                  isLoading={cardLoading}
+                  isLoading={false}
                 />
               </LockedCardOverlay>
             )}
@@ -193,7 +167,7 @@ const Dashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <OrderStatusCard orders={orderDetails} isLoading={cardLoading} />
-          {planAllowsBookings ? (
+          {planAllowsBookings || !showLocks ? (
             <BookingHealthCard
               bookings={bookingDetails}
               isLoading={cardLoading}
@@ -202,12 +176,12 @@ const Dashboard: React.FC = () => {
             <LockedCardOverlay>
               <BookingHealthCard
                 bookings={bookingDetails}
-                isLoading={cardLoading}
+                isLoading={false}
               />
             </LockedCardOverlay>
           )}
           {canViewInventory ? (
-            planAllowsInventory ? (
+            planAllowsInventory || !showLocks ? (
               <InventoryAlertsCard
                 inventory={inventoryDetails}
                 isLoading={cardLoading}
@@ -216,7 +190,7 @@ const Dashboard: React.FC = () => {
               <LockedCardOverlay>
                 <InventoryAlertsCard
                   inventory={inventoryDetails}
-                  isLoading={cardLoading}
+                  isLoading={false}
                 />
               </LockedCardOverlay>
             )
@@ -225,7 +199,7 @@ const Dashboard: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {canViewInventory ? (
-            planAllowsInventory ? (
+            planAllowsInventory || !showLocks ? (
               <TopMoversCard
                 inventory={inventoryDetails}
                 isLoading={cardLoading}
@@ -234,17 +208,17 @@ const Dashboard: React.FC = () => {
               <LockedCardOverlay>
                 <TopMoversCard
                   inventory={inventoryDetails}
-                  isLoading={cardLoading}
+                  isLoading={false}
                 />
               </LockedCardOverlay>
             )
           ) : null}
           {canViewReport ? (
-            planAllowsReports ? (
+            planAllowsReports || !showLocks ? (
               <TeamActivityCard audit={auditDetails} isLoading={cardLoading} />
             ) : (
               <LockedCardOverlay>
-                <TeamActivityCard audit={auditDetails} isLoading={cardLoading} />
+                <TeamActivityCard audit={auditDetails} isLoading={false} />
               </LockedCardOverlay>
             )
           ) : null}
