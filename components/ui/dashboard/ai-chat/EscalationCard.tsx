@@ -1,106 +1,251 @@
 "use client";
 
-import { useState } from "react";
-import { Mail, CheckCircle2 } from "lucide-react";
-import { ContactUs } from "@/app/api/controllers/landingPage";
+import { useRef, useState } from "react";
+import { CheckCircle2, Headphones, Paperclip, Send, X } from "lucide-react";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import { sendEscalationMail } from "./agentChatApi";
 
-const SUPPORT_EMAIL = "support@hobwise.com";
+const SUPPORT_EMAIL =
+  process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "hello@hobwise.com";
 
-const resolveUserInfo = () => {
+const resolveContext = () => {
   const user = getJsonItemFromLocalStorage("userInformation");
-  const name = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() || user?.fullName || "";
-  const email = user?.email ?? "";
-  return { name, email };
+  const business = getJsonItemFromLocalStorage("business");
+  const userEmail = user?.email ?? "";
+  const userName =
+    `${user?.firstName ?? ""} ${user?.lastName ?? ""}`.trim() ||
+    user?.fullName ||
+    "Unknown User";
+  const businessName =
+    business?.[0]?.businessName ?? business?.[0]?.name ?? "Unknown Business";
+  return { userName, userEmail, businessName };
 };
 
-const EscalationCard = () => {
-  const prefill = resolveUserInfo();
-  const [name, setName] = useState(prefill.name);
-  const [email, setEmail] = useState(prefill.email);
-  const [message, setMessage] = useState("");
+const buildDefaultContent = (
+  userMessage: string,
+  aiReply: string,
+  userName: string,
+  businessName: string
+) =>
+  [
+    "Hi HOBWISE Support Team,",
+    "",
+    "I need help with an issue that the AI could not fully resolve.",
+    "",
+    "--- AI Conversation ---",
+    `My question: ${userMessage}`,
+    "",
+    `AI response: ${aiReply}`,
+    "--- End of AI Conversation ---",
+    "",
+    `Business: ${businessName}`,
+    `User: ${userName}`,
+    `Date: ${new Date().toLocaleString()}`,
+    "",
+    "Please follow up at your earliest convenience.",
+  ].join("\n");
+
+interface EscalationCardProps {
+  userMessage: string;
+  aiReply: string;
+}
+
+const inputClass =
+  "w-full rounded-lg border border-amber-200 bg-white px-2.5 py-1.5 text-xs text-textGrey placeholder:text-grey400 focus:border-amber-400 focus:outline-none";
+
+const Field = ({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) => (
+  <div className="flex items-start gap-2">
+    <span className="w-14 shrink-0 pt-1.5 text-xs font-semibold text-amber-800">
+      {label}
+    </span>
+    <div className="flex-1">{children}</div>
+  </div>
+);
+
+const EscalationCard = ({ userMessage, aiReply }: EscalationCardProps) => {
+  const { userName, userEmail, businessName } = resolveContext();
+
+  const [to] = useState(SUPPORT_EMAIL);
+  const [from, setFrom] = useState(userEmail);
+  const [subject, setSubject] = useState(
+    `Support Request — ${businessName} — HOBWISE AI`
+  );
+  const [cc, setCc] = useState("");
+  const [content, setContent] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  const canSend = name.trim() && email.trim() && message.trim() && !sending;
+  const canSend = content.trim().length > 0 && !sending;
 
   const handleSend = async () => {
     if (!canSend) return;
     setSending(true);
     setError("");
     try {
-      await ContactUs({ name: name.trim(), email: email.trim(), message: message.trim() });
-      setSent(true);
+      const aiContext = buildDefaultContent(userMessage, aiReply, userName, businessName);
+      const fullContent = content.trim()
+        ? `${content.trim()}\n\n${aiContext}`
+        : aiContext;
+
+      const ok = await sendEscalationMail(
+        { To: to, From: from, Subject: subject, Cc: cc || undefined, Content: fullContent },
+        attachment
+      );
+      if (ok) {
+        setSent(true);
+      } else {
+        setError("Failed to send. Please try again.");
+      }
     } catch {
-      setError("Something went wrong. Please try again or email us directly.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setSending(false);
     }
   };
 
-  const inputClass =
-    "w-full rounded-xl border border-black/[0.08] bg-aiChatInput px-3 py-2 text-sm text-textGrey placeholder:text-grey400 focus:border-primaryColor/40 focus:outline-none";
-
   if (sent) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-4 py-5 text-center">
-        <CheckCircle2 className="h-7 w-7 text-green-500" />
-        <p className="text-sm font-semibold text-green-700">Message sent!</p>
-        <p className="text-xs text-green-600">We&apos;ll get back to you at {email} soon.</p>
+      <div className="w-full max-w-[85%] rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-600">
+            <CheckCircle2 className="h-4 w-4" />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-green-800">Message sent!</p>
+            <p className="mt-0.5 text-xs text-green-700">
+              Our support team will follow up shortly.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 rounded-2xl border border-primaryColor/20 bg-primaryColor/5 p-4">
-      <div className="flex items-start gap-2">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primaryColor/10 text-primaryColor">
-          <Mail className="h-4 w-4" />
+    <div className="w-full max-w-[85%] rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+      {/* Header */}
+      <div className="mb-3 flex items-center gap-2.5">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+          <Headphones className="h-4 w-4" />
         </span>
         <div>
-          <p className="text-sm font-semibold text-dark">Need more help?</p>
-          <a
-            href={`mailto:${SUPPORT_EMAIL}`}
-            className="text-xs font-medium text-primaryColor hover:underline"
-          >
-            {SUPPORT_EMAIL}
-          </a>
+          <p className="text-sm font-semibold text-amber-900">
+            Flagged for human support
+          </p>
+          <p className="text-xs text-amber-700">
+            This issue has been flagged. Fill in the details and send to our
+            team.
+          </p>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <input
-          type="text"
-          placeholder="Your name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className={inputClass}
-        />
-        <input
-          type="email"
-          placeholder="Your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className={inputClass}
-        />
-        <textarea
-          placeholder="Describe your issue…"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          rows={3}
-          className={`${inputClass} resize-none`}
-        />
+      {/* Form */}
+      <div className="space-y-2 rounded-xl border border-amber-200 bg-white p-3">
+        <Field label="To">
+          <input
+            type="text"
+            value={to}
+            readOnly
+            className={`${inputClass} cursor-default bg-amber-50 text-amber-700`}
+          />
+        </Field>
+
+        <Field label="From">
+          <input
+            type="email"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            placeholder="your@email.com"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Subject">
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Subject"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Cc">
+          <input
+            type="text"
+            value={cc}
+            onChange={(e) => setCc(e.target.value)}
+            placeholder="Optional"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Content">
+          <textarea
+            rows={6}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Describe your issue…"
+            className={`${inputClass} resize-none`}
+          />
+        </Field>
+
+        <Field label="Attachment">
+          {attachment ? (
+            <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5">
+              <Paperclip className="h-3 w-3 shrink-0 text-amber-700" />
+              <span className="flex-1 truncate text-xs text-amber-800">
+                {attachment.name}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setAttachment(null);
+                  if (fileRef.current) fileRef.current.value = "";
+                }}
+                className="text-amber-600 hover:text-amber-900"
+                aria-label="Remove attachment"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="flex items-center gap-1.5 rounded-lg border border-dashed border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-700 transition-colors hover:bg-amber-100"
+            >
+              <Paperclip className="h-3 w-3" />
+              Choose file
+            </button>
+          )}
+          <input
+            ref={fileRef}
+            type="file"
+            className="hidden"
+            onChange={(e) => setAttachment(e.target.files?.[0] ?? null)}
+          />
+        </Field>
       </div>
 
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {error && <p className="mt-2 text-xs text-red-500">{error}</p>}
 
       <button
         type="button"
         onClick={handleSend}
         disabled={!canSend}
-        className="w-full rounded-xl bg-primaryColor px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+        className="mt-3 flex items-center gap-1.5 rounded-lg border border-amber-300 bg-white px-3 py-1.5 text-xs font-semibold text-amber-800 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
       >
+        <Send className="h-3 w-3" />
         {sending ? "Sending…" : "Send to Support"}
       </button>
     </div>

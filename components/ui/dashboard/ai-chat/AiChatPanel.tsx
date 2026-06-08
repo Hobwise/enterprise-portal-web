@@ -9,6 +9,7 @@ import {
   SquarePen,
   History,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
@@ -30,8 +31,8 @@ const CONTAINER_VARIANTS: Variants = {
 };
 
 const PANEL_VARIANTS: Variants = {
-  hidden: { scale: 0.96, y: 16 },
-  visible: { scale: 1, y: 0 },
+  hidden: { scale: 0.92, y: 40, opacity: 0 },
+  visible: { scale: 1, y: 0, opacity: 1 },
 };
 
 const PANEL_TRANSITION = {
@@ -119,6 +120,7 @@ const AiChatPanel = ({
         aria-label="Hospira chat"
         variants={PANEL_VARIANTS}
         transition={PANEL_TRANSITION}
+        style={{ transformOrigin: "bottom right" }}
         className={cn(
           "pointer-events-auto absolute flex flex-col overflow-hidden bg-aiChatSurface shadow-[0_8px_40px_rgba(0,0,0,0.12)]",
           "inset-0 sm:inset-auto sm:rounded-3xl sm:border sm:border-black/[0.06]",
@@ -142,38 +144,38 @@ const AiChatPanel = ({
               disabled={chat.isResponding}
               aria-label="Start a new chat"
               title="New chat"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <SquarePen className="h-4.5 w-4.5" />
+              <SquarePen className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
               onClick={handleViewHistory}
               aria-label="View chat history"
               title="Chat history"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
             >
-              <History className="h-4.5 w-4.5" />
+              <History className="h-3.5 w-3.5" />
             </button>
             <button
               type="button"
               onClick={onToggleExpand}
               aria-label={expanded ? "Collapse chat" : "Expand chat"}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
             >
               {expanded ? (
-                <Minimize2 className="h-4.5 w-4.5" />
+                <Minimize2 className="h-3.5 w-3.5" />
               ) : (
-                <Maximize2 className="h-4.5 w-4.5" />
+                <Maximize2 className="h-3.5 w-3.5" />
               )}
             </button>
             <button
               type="button"
               onClick={onClose}
               aria-label="Close chat"
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
+              className="flex h-7 w-7 items-center justify-center rounded-lg text-grey400 transition-colors hover:bg-grey300 hover:text-dark"
             >
-              <X className="h-4.5 w-4.5" />
+              <X className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>

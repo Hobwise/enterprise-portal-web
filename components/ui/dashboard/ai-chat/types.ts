@@ -6,6 +6,11 @@ export interface MessageAction {
   onClick?: () => void;
 }
 
+export interface NavigationHint {
+  label: string;
+  href: string;
+}
+
 export interface ChatMessageData {
   id: string;
   role: ChatRole;
@@ -14,6 +19,10 @@ export interface ChatMessageData {
   time: string;
   /** Optional CTA chip rendered beneath an AI message. */
   action?: MessageAction;
-  /** True when the AI response contained [ESCALATE] — shows the support form. */
+  /** Navigation chip shown below the AI bubble on the final done event. */
+  navigation?: NavigationHint;
+  /** True when the AI flags escalation — shows the support notice. */
   escalate?: boolean;
+  /** The user question that triggered this AI reply (passed to escalation card). */
+  userPrompt?: string;
 }

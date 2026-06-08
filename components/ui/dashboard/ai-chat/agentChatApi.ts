@@ -19,12 +19,18 @@ export interface AgentUsage {
   resetsAt: string;
 }
 
+export interface AgentNavigation {
+  label: string;
+  moduleId: string;
+  reportType: number | null;
+}
+
 export interface AgentChatEvent {
   delta: string;
   done: boolean;
   sessionId: string | null;
   usage: AgentUsage | null;
-  navigation: unknown;
+  navigation: AgentNavigation | null;
   intent: string | null;
   escalate: boolean;
 }
@@ -204,6 +210,42 @@ export const getAgentSession = async (
   if (!response.ok) return [];
   const payload = await response.json();
   return (payload?.data as AgentSessionMessage[] | undefined) ?? [];
+};
+
+export interface EscalationMailPayload {
+  To: string;
+  From: string;
+  Subject: string;
+  Content: string;
+  Cc?: string;
+  OrderId?: string;
+}
+
+/** Sends a support escalation email via the backend agent mailer.
+ *  Uses multipart/form-data so an optional file attachment can be included. */
+export const sendEscalationMail = async (
+  payload: EscalationMailPayload,
+  attachment?: File | null
+): Promise<boolean> => {
+  const form = new FormData();
+  if (payload.OrderId) form.append("OrderId", payload.OrderId);
+  form.append("To", payload.To);
+  form.append("From", payload.From);
+  form.append("Subject", payload.Subject);
+  if (payload.Cc) form.append("Cc", payload.Cc);
+  form.append("Content", payload.Content);
+  if (attachment) form.append("Attachment", attachment);
+
+  const response = await fetch(
+    `${BASE_URL}api/v${API_VERSION}/Agent/send-escalation-mail`,
+    {
+      method: "POST",
+      // Let the browser set Content-Type with the multipart boundary automatically.
+      headers: { Accept: "*/*", ...authHeaders() },
+      body: form,
+    }
+  );
+  return response.ok;
 };
 
 /** Permanently deletes a chat session. Resolves true on success. */

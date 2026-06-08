@@ -82,6 +82,7 @@ import {
   filterTypeToComparisonLabel,
   periodToDateRange,
   periodToFilterType,
+  StockMovementItem,
 } from '@/components/ui/dashboard/report/types';
 import useStockAnalysisSummary from '@/hooks/cachedEndpoints/useStockAnalysisSummary';
 import useStockAnalysisOrderReport from '@/hooks/cachedEndpoints/useStockAnalysisOrderReport';
@@ -627,6 +628,32 @@ const StockAnalysisPage: React.FC = () => {
       { enabled: inventoryReportEnabled }
     );
 
+  const cogsMovementsEnabled =
+    hasAccess && activeModule === 'inventory' && activeSubTab === 'overview';
+
+  const { data: cogsMovementsData } = useStockAnalysisInventoryReport(
+    { filterType, startDate, endDate, reportType: 22 },
+    { enabled: cogsMovementsEnabled }
+  );
+
+  const effectiveSummary = React.useMemo(() => {
+    if (!summary) return undefined;
+    if (!cogsMovementsData || (summary.inventoryDetails?.totalCogs ?? 0) !== 0) {
+      return summary;
+    }
+    const movements = cogsMovementsData as StockMovementItem[];
+    const computedCogs = movements
+      .filter((m) => (m.transactionType ?? '').toLowerCase() === 'sale')
+      .reduce((sum, m) => {
+        const v = Number(m.value);
+        return sum + (Number.isFinite(v) ? v : 0);
+      }, 0);
+    return {
+      ...summary,
+      inventoryDetails: { ...summary.inventoryDetails, totalCogs: computedCogs },
+    };
+  }, [summary, cogsMovementsData]);
+
   const userSubTabReportType =
     USER_SUB_TAB_REPORT_TYPE[activeSubTab] ??
     dynamicReportTypeBySlug[activeSubTab];
@@ -806,7 +833,7 @@ const StockAnalysisPage: React.FC = () => {
           subTabId={activeSubTab}
           subTabLabel={subTabLabel}
           reportType={activeReportType}
-          summary={summary ?? undefined}
+          summary={effectiveSummary}
           isLoading={summaryLoading}
           orderReport={orderReport ?? undefined}
           orderReportLoading={orderReportLoading}

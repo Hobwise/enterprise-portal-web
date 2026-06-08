@@ -5,6 +5,7 @@ import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { ChatMessageData } from "./types";
 import {
   AgentChatEvent,
+  AgentNavigation,
   AgentHistoryItem,
   deleteAgentSession,
   getAgentHistory,
@@ -208,6 +209,7 @@ export const useAiChat = (): UseAiChat => {
 
       const aiId = nextId("ai");
       let started = false;
+      let doneEvent: AgentChatEvent | null = null;
       const wasNewChat = !sessionIdRef.current;
 
       const controller = new AbortController();
@@ -244,14 +246,39 @@ export const useAiChat = (): UseAiChat => {
           signal: controller.signal,
           onDelta: appendDelta,
           onEvent: (event) => {
-            if (event.done) applyUsage(event);
+            if (event.done) {
+              applyUsage(event);
+              doneEvent = event;
+            }
           },
         });
-        // Strip [ESCALATE] token and flag the message for the support card.
+        // Apply navigation hint and escalation flag from the terminal done event.
         setMessages((prev) =>
           prev.map((m) => {
-            if (m.id !== aiId || !ESCALATE_TOKEN.test(m.text)) return m;
-            return { ...m, text: m.text.replace(ESCALATE_TOKEN, "").trim(), escalate: true };
+            if (m.id !== aiId) return m;
+            let updated = { ...m };
+
+            const shouldEscalate = doneEvent?.escalate || ESCALATE_TOKEN.test(m.text);
+            if (shouldEscalate) {
+              updated = {
+                ...updated,
+                text: updated.text.replace(ESCALATE_TOKEN, "").trim(),
+                escalate: true,
+                userPrompt: trimmed,
+              };
+            }
+
+            const nav = doneEvent?.navigation as AgentNavigation | null;
+            if (nav) {
+              const params = new URLSearchParams({ module: nav.moduleId });
+              if (nav.reportType !== null) params.set("sub", String(nav.reportType));
+              updated = {
+                ...updated,
+                navigation: { label: nav.label, href: `/report?${params.toString()}` },
+              };
+            }
+
+            return updated;
           })
         );
         // A brand-new conversation now has a session — surface it in history.
