@@ -281,8 +281,8 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
                     title={b.statusComment || undefined}
                   >
                     <td className="px-5 py-4 text-gray-700">
-                      {b.bookingDateTime
-                        ? moment(b.bookingDateTime).format('MMM DD, hh:mma')
+                      {isValidDate(b.dateCreated)
+                        ? moment(b.dateCreated).format('MMM DD, hh:mma')
                         : '—'}
                     </td>
                     <td className="px-5 py-4 text-gray-900 font-medium">
@@ -304,8 +304,8 @@ export const BookingSummaryPanel: React.FC<BookingSubTabPanelProps> = ({
                       {b.minimumSpend || '—'}
                     </td>
                     <td className="px-5 py-4 text-gray-700">
-                      {isValidDate(b.checkInDateTime)
-                        ? moment(b.checkInDateTime).format('MMM DD, hh:mma')
+                      {b.bookingDateTime
+                        ? moment(b.bookingDateTime).format('MMM DD, hh:mma')
                         : '—'}
                     </td>
                     <td

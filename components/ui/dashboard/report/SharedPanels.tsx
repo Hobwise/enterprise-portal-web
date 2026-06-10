@@ -206,8 +206,8 @@ export const StatCardItem: React.FC<StatCardItemProps> = ({ card, dense }) => {
       : 'text-emerald-600';
   const padding = dense ? 'p-4' : 'p-5';
   const valueSize = dense
-    ? 'text-xl xl:text-2xl'
-    : 'text-[28px]';
+    ? 'text-base xl:text-lg'
+    : 'text-lg xl:text-xl';
   const labelSpacing = dense ? 'mb-2' : 'mb-3';
   const valueSpacing = dense ? 'mb-2' : 'mb-3';
   return (
@@ -562,7 +562,7 @@ export const DistributionDonut: React.FC<DistributionDonutProps> = ({
                   </span>
                 )}
                 {centerValue && (
-                  <span className="text-xl font-bold text-gray-900 leading-tight tabular-nums mt-1 break-words max-w-full">
+                  <span className="text-sm font-bold text-gray-900 leading-tight tabular-nums mt-1 max-w-full text-center">
                     {centerValue}
                   </span>
                 )}

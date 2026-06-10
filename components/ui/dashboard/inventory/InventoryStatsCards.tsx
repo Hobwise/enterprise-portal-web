@@ -97,7 +97,7 @@ const InventoryStatsCards: React.FC<InventoryStatsCardsProps> = ({ data }) => {
           <div className="flex items-start justify-between">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-medium text-gray-500">{stat.label}</span>
-              <span className={`text-2xl font-semibold ${stat.valueColor} tracking-tight`}>
+              <span className={`text-lg xl:text-xl font-semibold ${stat.valueColor} tracking-tight`}>
                 {stat.value}
               </span>
               <span className="text-xs text-gray-400 mt-1">

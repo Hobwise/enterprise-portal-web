@@ -29,7 +29,7 @@ const safeNumber = (value: unknown): number => {
 
 const moverToBarRow = (mover: MoverItem): BarRow => ({
   label: mover.name ?? mover.itemName ?? 'Unknown',
-  value: safeNumber(mover.qty ?? mover.quantity ?? mover.movement ?? mover.value),
+  value: safeNumber(mover.quantityMoved ?? mover.qty ?? mover.quantity ?? mover.movement),
 });
 
 export const InventoryOverviewPanel: React.FC<InventoryOverviewPanelProps> = ({
