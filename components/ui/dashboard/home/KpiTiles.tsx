@@ -68,7 +68,7 @@ const Tile = ({
   <DashboardCard className="px-4 py-4 flex flex-col gap-1.5">
     <span className="text-[12px] text-[#64748B]">{label}</span>
     <span
-      className={`text-[22px] font-bold leading-tight tabular-nums break-words ${
+      className={`text-lg xl:text-xl font-bold leading-tight tabular-nums ${
         highlight ? "text-[#DC2626]" : "text-[#0F172A]"
       }`}
     >

@@ -67,7 +67,7 @@ const MenuItemsGrid = ({
               <div
                 key={item.id}
                 onClick={() => onItemClick(item)}
-                className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[180px] transition-shadow cursor-pointer relative ${
+                className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[180px] transition-shadow cursor-pointer relative p-2 ${
                   item.isAvailable === false ? '' : ''
                 }`}
               >
@@ -88,10 +88,10 @@ const MenuItemsGrid = ({
                   </Chip>
                 )}
                 
-                <div className="relative overflow-hidden rounded-t-lg">
+                <div className="relative overflow-hidden rounded-md">
                   {/* Grey overlay for unavailable items */}
                   {item.isAvailable === false && (
-                    <div className="absolute inset-0 bg-gray-900/40 z-10 rounded-t-lg" />
+                    <div className="absolute inset-0 bg-gray-900/40 z-10 rounded-md" />
                   )}
                   <img
                     src={
@@ -100,7 +100,7 @@ const MenuItemsGrid = ({
                         : `data:image/jpeg;base64,${item.image}`
                     }
                     alt={item.name}
-                    className={`w-full h-[130px] object-cover ${
+                    className={`w-full h-[118px] object-cover ${
                       item.isAvailable === false ? 'grayscale opacity-70' : ''
                     }`}
                     onError={(e) => {

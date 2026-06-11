@@ -205,6 +205,7 @@ export interface MoverItem {
   itemName?: string;
   qty?: number;
   quantity?: number;
+  quantityMoved?: number;
   movement?: number;
   value?: number;
 }

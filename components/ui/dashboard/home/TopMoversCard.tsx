@@ -19,7 +19,7 @@ const getMoverName = (m: MoverItem): string =>
   m.itemName ?? m.name ?? "Unnamed";
 
 const getMoverQty = (m: MoverItem): number =>
-  m.quantity ?? m.qty ?? m.movement ?? 0;
+  m.quantityMoved ?? m.quantity ?? m.qty ?? m.movement ?? 0;
 
 const TopMoversCard = ({ inventory, isLoading }: TopMoversCardProps) => {
   if (isLoading) {
