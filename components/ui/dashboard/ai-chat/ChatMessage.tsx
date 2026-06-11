@@ -2,12 +2,43 @@
 
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { ChatMessageData, NavigationHint } from "./types";
+import { ChatMessageData, NavButton, NavigationHint } from "./types";
 import SparkleIcon from "./SparkleIcon";
 import EscalationCard from "./EscalationCard";
 
 const ROUTE_RE = /\/dashboard\/reports?(?:\/[\w-]+(?:\/[\w-]+)*)?|\/report(?:\?[\w=&%-]+)?|\/(?:dashboard|pos|business-activities)\/[\w-]+(?:\/[\w-]+)*/g;
 const BOLD_RE = /\*\*([^*]+)\*\*/g;
+
+const NAV_ROUTE_MAP: Record<string, { href: string; label: string }> = {
+  bookings:                     { href: '/dashboard/bookings',                   label: 'Bookings' },
+  orders:                       { href: '/dashboard/orders',                     label: 'Orders' },
+  payments:                     { href: '/dashboard/payments',                   label: 'Payments' },
+  menu:                         { href: '/dashboard/menu',                       label: 'Menu' },
+  campaigns:                    { href: '/dashboard/campaigns',                  label: 'Campaigns' },
+  reservation:                  { href: '/dashboard/reservation',                label: 'Reservation' },
+  'quick-response':             { href: '/dashboard/quick-response',             label: 'Quick Response' },
+  qr:                           { href: '/report?module=qr',                     label: 'QR Code Report' },
+  settings:                     { href: '/dashboard/settings',                   label: 'Settings' },
+  reports:                      { href: '/dashboard/reports',                    label: 'Reports' },
+  inventory:                    { href: '/dashboard/inventory',                  label: 'Inventory' },
+  'inventory:items':            { href: '/dashboard/inventory/items',            label: 'Inventory Items' },
+  'inventory:suppliers':        { href: '/dashboard/inventory/suppliers',        label: 'Suppliers' },
+  'inventory:purchase-order':   { href: '/dashboard/inventory/purchase-order',   label: 'Purchase Order' },
+  'inventory:stock-transfer':   { href: '/dashboard/inventory/stock-transfer',   label: 'Stock Transfer' },
+  'inventory:stock-adjustment': { href: '/dashboard/inventory/stock-adjustment', label: 'Stock Adjustment' },
+  'inventory:inventory-count':  { href: '/dashboard/inventory/inventory-count',  label: 'Inventory Count' },
+};
+
+function extractNavTokens(text: string): { cleanedText: string; navButtons: NavButton[] } {
+  const buttons: NavButton[] = [];
+  const re = /\[NAV:([\w-]+(?::[\w-]+)*)\]/gi;
+  const cleanedText = text.replace(re, (_, token: string) => {
+    const entry = NAV_ROUTE_MAP[token.toLowerCase()];
+    if (entry) buttons.push(entry);
+    return '';
+  }).trim();
+  return { cleanedText, navButtons: buttons };
+}
 
 const SUB_TAB_ALIASES: Record<string, string> = {
   'stock-levels': 'stock-level',
@@ -141,10 +172,15 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
     );
   }
 
+  // Extract [NAV:...] tokens at render time so they're always stripped from
+  // visible text and buttons appear immediately (even during streaming).
+  const { cleanedText, navButtons: extractedButtons } = extractNavTokens(message.text);
+  const navButtons = message.navButtons ?? (extractedButtons.length > 0 ? extractedButtons : undefined);
+
   return (
     <div className="flex animate-ai-pop flex-col items-start gap-2">
       <div className="max-w-[85%] whitespace-pre-line rounded-2xl rounded-tl-sm border border-black/[0.06] bg-grey300 px-4 py-3 text-sm text-textGrey">
-        {renderText(message.text)}
+        {renderText(cleanedText)}
       </div>
       {message.action && <ActionChip action={message.action} />}
       {message.navigation && (
@@ -152,10 +188,13 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
           <NavigationChip navigation={message.navigation} />
         </div>
       )}
+      {navButtons && navButtons.length > 0 && (
+        <NavButtonsRow buttons={navButtons} />
+      )}
       {message.escalate && (
         <EscalationCard
           userMessage={message.userPrompt ?? ""}
-          aiReply={message.text}
+          aiReply={cleanedText}
         />
       )}
       <div className="flex items-center gap-2 pl-1">
@@ -196,6 +235,21 @@ const NavigationChip = ({ navigation }: { navigation: NavigationHint }) => (
     {navigation.label}
     <ArrowRight className="h-3.5 w-3.5 shrink-0" />
   </Link>
+);
+
+const NavButtonsRow = ({ buttons }: { buttons: NavButton[] }) => (
+  <div className="flex flex-wrap gap-2 mt-0.5">
+    {buttons.map((btn) => (
+      <Link
+        key={btn.href}
+        href={btn.href}
+        className="inline-flex items-center gap-2 rounded-xl border border-primaryColor px-4 py-2 text-sm font-medium text-primaryColor transition-colors hover:bg-primaryColor hover:text-white"
+      >
+        {btn.label}
+        <ArrowRight className="h-3.5 w-3.5 shrink-0" />
+      </Link>
+    ))}
+  </div>
 );
 
 export default ChatMessage;

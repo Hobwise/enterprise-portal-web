@@ -11,6 +11,11 @@ export interface NavigationHint {
   href: string;
 }
 
+export interface NavButton {
+  label: string;
+  href: string;
+}
+
 export interface ChatMessageData {
   id: string;
   role: ChatRole;
@@ -21,6 +26,8 @@ export interface ChatMessageData {
   action?: MessageAction;
   /** Navigation chip shown below the AI bubble on the final done event. */
   navigation?: NavigationHint;
+  /** Navigation buttons parsed from [NAV:...] tokens in the AI response. */
+  navButtons?: NavButton[];
   /** True when the AI flags escalation — shows the support notice. */
   escalate?: boolean;
   /** The user question that triggered this AI reply (passed to escalation card). */

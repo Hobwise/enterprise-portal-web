@@ -22,7 +22,7 @@ const CategoryTabs = ({
   setIsOpenViewMenu,
 }: CategoryTabsProps) => {
   return (
-    <div className="bg-[#EAE5FF] rounded-md mt-2">
+    <div className="mt-2 border-b border-gray-200">
       <div className="flex items-center px-4 gap-6 py-2">
         <button
           onClick={() => setIsOpenCreateSection(true)}
