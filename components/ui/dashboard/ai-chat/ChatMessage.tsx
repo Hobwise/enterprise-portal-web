@@ -3,62 +3,18 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ChatMessageData, NavButton, NavigationHint } from "./types";
+import {
+  MODULE_LABELS,
+  SUB_TAB_ALIASES,
+  VALID_MODULES,
+  extractNavTokens,
+  fmtSub,
+} from "./navTokens";
 import SparkleIcon from "./SparkleIcon";
 import EscalationCard from "./EscalationCard";
 
 const ROUTE_RE = /\/dashboard\/reports?(?:\/[\w-]+(?:\/[\w-]+)*)?|\/report(?:\?[\w=&%-]+)?|\/(?:dashboard|pos|business-activities)\/[\w-]+(?:\/[\w-]+)*/g;
 const BOLD_RE = /\*\*([^*]+)\*\*/g;
-
-const NAV_ROUTE_MAP: Record<string, { href: string; label: string }> = {
-  bookings:                     { href: '/dashboard/bookings',                   label: 'Bookings' },
-  orders:                       { href: '/dashboard/orders',                     label: 'Orders' },
-  payments:                     { href: '/dashboard/payments',                   label: 'Payments' },
-  menu:                         { href: '/dashboard/menu',                       label: 'Menu' },
-  campaigns:                    { href: '/dashboard/campaigns',                  label: 'Campaigns' },
-  reservation:                  { href: '/dashboard/reservation',                label: 'Reservation' },
-  'quick-response':             { href: '/dashboard/quick-response',             label: 'Quick Response' },
-  qr:                           { href: '/report?module=qr',                     label: 'QR Code Report' },
-  settings:                     { href: '/dashboard/settings',                   label: 'Settings' },
-  reports:                      { href: '/dashboard/reports',                    label: 'Reports' },
-  inventory:                    { href: '/dashboard/inventory',                  label: 'Inventory' },
-  'inventory:items':            { href: '/dashboard/inventory/items',            label: 'Inventory Items' },
-  'inventory:suppliers':        { href: '/dashboard/inventory/suppliers',        label: 'Suppliers' },
-  'inventory:purchase-order':   { href: '/dashboard/inventory/purchase-order',   label: 'Purchase Order' },
-  'inventory:stock-transfer':   { href: '/dashboard/inventory/stock-transfer',   label: 'Stock Transfer' },
-  'inventory:stock-adjustment': { href: '/dashboard/inventory/stock-adjustment', label: 'Stock Adjustment' },
-  'inventory:inventory-count':  { href: '/dashboard/inventory/inventory-count',  label: 'Inventory Count' },
-};
-
-function extractNavTokens(text: string): { cleanedText: string; navButtons: NavButton[] } {
-  const buttons: NavButton[] = [];
-  const re = /\[NAV:([\w-]+(?::[\w-]+)*)\]/gi;
-  const cleanedText = text.replace(re, (_, token: string) => {
-    const entry = NAV_ROUTE_MAP[token.toLowerCase()];
-    if (entry) buttons.push(entry);
-    return '';
-  }).trim();
-  return { cleanedText, navButtons: buttons };
-}
-
-const SUB_TAB_ALIASES: Record<string, string> = {
-  'stock-levels': 'stock-level',
-  'stock-transfers': 'stock-transfer',
-  'purchase-orders': 'purchase-order',
-};
-
-const MODULE_LABELS: Record<string, string> = {
-  sales: 'Sales & Orders',
-  payments: 'Payment & Revenue',
-  bookings: 'Bookings & Reservation',
-  inventory: 'Inventory',
-  qr: 'QR Code',
-  users: 'Users & Audits',
-};
-
-const VALID_MODULES = new Set(['sales', 'payments', 'bookings', 'inventory', 'qr', 'users']);
-
-const fmtSub = (s: string) =>
-  s.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
 function resolveReportHref(raw: string): { href: string; label: string } | null {
   // /dashboard/reports?/... or /dashboard/report/...

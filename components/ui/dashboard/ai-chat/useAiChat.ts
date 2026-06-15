@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
 import { ChatMessageData, NavButton } from "./types";
+import { NAV_TOKEN_RE, resolveNavToken } from "./navTokens";
 import {
   AgentChatEvent,
   AgentNavigation,
@@ -18,32 +19,6 @@ import {
 const DEFAULT_PROMPT_LIMIT = 10;
 
 const ESCALATE_TOKEN = /\[ESCALATE\]/gi;
-const NAV_TOKEN_RE = /\[NAV:([\w-]+(?::[\w-]+)*)\]/gi;
-
-const NAV_ROUTE_MAP: Record<string, { href: string; label: string }> = {
-  bookings:                    { href: '/dashboard/bookings',                      label: 'Bookings' },
-  orders:                      { href: '/dashboard/orders',                        label: 'Orders' },
-  payments:                    { href: '/dashboard/payments',                      label: 'Payments' },
-  menu:                        { href: '/dashboard/menu',                          label: 'Menu' },
-  campaigns:                   { href: '/dashboard/campaigns',                     label: 'Campaigns' },
-  reservation:                 { href: '/dashboard/reservation',                   label: 'Reservation' },
-  'quick-response':            { href: '/dashboard/quick-response',                label: 'Quick Response' },
-  qr:                          { href: '/report?module=qr',                        label: 'QR Code Report' },
-  settings:                    { href: '/dashboard/settings',                      label: 'Settings' },
-  reports:                     { href: '/dashboard/reports',                       label: 'Reports' },
-  inventory:                   { href: '/dashboard/inventory',                     label: 'Inventory' },
-  'inventory:items':           { href: '/dashboard/inventory/items',               label: 'Inventory Items' },
-  'inventory:suppliers':       { href: '/dashboard/inventory/suppliers',           label: 'Suppliers' },
-  'inventory:purchase-order':  { href: '/dashboard/inventory/purchase-order',      label: 'Purchase Order' },
-  'inventory:stock-transfer':  { href: '/dashboard/inventory/stock-transfer',      label: 'Stock Transfer' },
-  'inventory:stock-adjustment':{ href: '/dashboard/inventory/stock-adjustment',    label: 'Stock Adjustment' },
-  'inventory:inventory-count': { href: '/dashboard/inventory/inventory-count',     label: 'Inventory Count' },
-};
-
-const resolveNavToken = (token: string): NavButton | null => {
-  const entry = NAV_ROUTE_MAP[token.toLowerCase()];
-  return entry ?? null;
-};
 
 const formatTime = (date: Date): string => {
   let hours = date.getHours();
