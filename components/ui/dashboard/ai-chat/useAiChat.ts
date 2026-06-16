@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+import {
+  clearItemLocalStorage,
+  getFromLocalStorage,
+  getJsonItemFromLocalStorage,
+  notify,
+  saveToLocalStorage,
+} from "@/lib/utils";
 import { ChatMessageData, NavButton } from "./types";
 import { NAV_TOKEN_RE, resolveNavToken } from "./navTokens";
 import {
@@ -17,6 +23,9 @@ import {
 
 /** Fallback prompt cap used until the real quota loads. */
 const DEFAULT_PROMPT_LIMIT = 10;
+
+/** localStorage key holding the active conversation so it survives a refresh. */
+const ACTIVE_SESSION_KEY = "hospitalAiActiveSession";
 
 const ESCALATE_TOKEN = /\[ESCALATE\]/gi;
 
@@ -79,20 +88,28 @@ export const useAiChat = (): UseAiChat => {
   const abortRef = useRef<AbortController | null>(null);
   const idCounter = useRef(0);
 
+  // Keep the active session in localStorage so a page refresh restores the same
+  // conversation instead of opening a brand-new chat.
+  const setActiveSession = useCallback((sessionId: string | null) => {
+    sessionIdRef.current = sessionId;
+    if (sessionId) saveToLocalStorage(ACTIVE_SESSION_KEY, sessionId);
+    else clearItemLocalStorage(ACTIVE_SESSION_KEY);
+  }, []);
+
   const nextId = useCallback((prefix: string) => {
     idCounter.current += 1;
     return `${prefix}-${idCounter.current}`;
   }, []);
 
   const applyUsage = useCallback((event: AgentChatEvent) => {
-    if (event.sessionId) sessionIdRef.current = event.sessionId;
+    if (event.sessionId) setActiveSession(event.sessionId);
     if (event.usage) {
       setPromptsUsed(event.usage.used);
       setUnlimited(event.usage.isUnlimited || event.usage.limit < 0);
       if (event.usage.limit >= 0) setPromptLimit(event.usage.limit);
       if (event.usage.resetsAt) setResetsAt(event.usage.resetsAt);
     }
-  }, []);
+  }, [setActiveSession]);
 
   const refreshHistory = useCallback(async () => {
     setHistoryLoading(true);
@@ -130,11 +147,11 @@ export const useAiChat = (): UseAiChat => {
   const startNewChat = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
-    sessionIdRef.current = null;
+    setActiveSession(null);
     setMessages([]);
     setIsThinking(false);
     setIsResponding(false);
-  }, []);
+  }, [setActiveSession]);
 
   const loadSession = useCallback(
     async (sessionId: string) => {
@@ -147,7 +164,7 @@ export const useAiChat = (): UseAiChat => {
         (a, b) =>
           new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
       );
-      sessionIdRef.current = sessionId;
+      setActiveSession(sessionId);
       setMessages(
         ordered.map((message) => ({
           id: message.id,
@@ -157,8 +174,20 @@ export const useAiChat = (): UseAiChat => {
         }))
       );
     },
-    []
+    [setActiveSession]
   );
+
+  // Restore the previously active conversation after a refresh. Runs once on
+  // mount; a stale/invalid stored id is cleared and we fall back to a new chat.
+  useEffect(() => {
+    const stored = getFromLocalStorage(ACTIVE_SESSION_KEY);
+    if (!stored || typeof stored !== "string") return;
+    loadSession(stored).catch(() => {
+      clearItemLocalStorage(ACTIVE_SESSION_KEY);
+      sessionIdRef.current = null;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const deleteSession = useCallback(
     async (sessionId: string) => {
