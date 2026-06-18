@@ -690,20 +690,20 @@ const ViewRecipeModal: React.FC<ViewRecipeModalProps> = ({
                         <div>
                           {recipe.details && recipe.details.length > 0 ? (
                             <div className="border border-gray-200 rounded-xl overflow-hidden">
-                              <div className="flex items-start justify-around py-3 px-4 bg-gray-50 border-b border-gray-200">
-                                <span className="font-semibold text-gray-600 text-xs uppercase tracking-wide">Ingredient</span>
-                                <span className="font-semibold text-gray-600 text-xs uppercase tracking-wide">Quantity Used</span>
+                              <div className="grid grid-cols-2 py-3 px-4 bg-gray-50 border-b border-gray-200">
+                                <span className="font-semibold text-gray-600 text-xs uppercase tracking-wide text-center">Ingredient</span>
+                                <span className="font-semibold text-gray-600 text-xs uppercase tracking-wide text-center">Quantity Used</span>
                               </div>
                               <div>
                                 {recipe.details.map((detail) => (
                                   <div
                                     key={detail.id || detail.inventoryItemId || detail.inventoryItemID}
-                                    className="flex items-start justify-around py-3 px-4 border-b border-gray-100 last:border-b-0"
+                                    className="grid grid-cols-2 py-3 px-4 border-b border-gray-100 last:border-b-0"
                                   >
-                                    <span className="text-sm text-gray-700">
+                                    <span className="text-sm text-gray-700 text-center">
                                       {detail.inventoryItemName || getIngredientName(detail.inventoryItemId || detail.inventoryItemID || '')}
                                     </span>
-                                    <span className="text-sm text-gray-700 font-medium">
+                                    <span className="text-sm text-gray-700 font-medium text-center">
                                       {detail.quantityUsed}{' '}
                                       {/* <span className="text-gray-400 text-xs">
                                         {recipe.outputQuantityUnitName || recipe.outputQuantityUnitCode || ''}
