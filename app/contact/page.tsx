@@ -6,10 +6,11 @@ import FAQs from "@/components/ui/landingPage/faq";
 import JoinCommunity from "@/components/ui/landingPage/joinCommunity";
 import Footer from "@/components/ui/landingPage/footer";
 import Navbar from "@/components/ui/landingPage/navBar";
+import Campaigns from "@/components/ui/landingPage/campaigns";
 import { notify, validateEmail } from "@/lib/utils";
-import HobinkLogo from "@/public/assets/icons/hobink-iconpng.png";
-import ContactUsBg from "@/public/assets/images/contact-us-bg.png";
-import DashboardImage from "@/public/assets/images/dashboard-image-2.png";
+import Hobwise from "@/public/assets/images/hobwise.png";
+import ContactBanner from "@/public/assets/images/contact-banner.png";
+import ContactBannerMobile from "@/public/assets/images/contact-banner-mobile.png";
 import { ContactIcon } from "@/public/assets/svg";
 import Image from "next/image";
 import { useState } from "react";
@@ -18,7 +19,6 @@ import { toast } from "sonner";
 import LandingPageHeader from "@/components/ui/landingPage/header";
 import { PRIVACY_POLICY } from "@/utilities/routes";
 import Link from "next/link";
-import BackgroundImage from "@/public/assets/images/pricing-bg-2.png";
 
 export default function Contact() {
   const defaultErrorValue = { name: "", email: "", message: "" };
@@ -78,39 +78,34 @@ export default function Contact() {
         <Navbar type="default" />
       </header>
       <main>
-        <section className="font-satoshi bg-white w-full pt-24 space-y-12">
-          <Image
-            src={BackgroundImage}
-            alt=""
-            className="absolute top-0 w-[60%] right-[20%] px-6 lg:px-12"
-            priority
-          />
+        <section className="font-satoshi bg-white w-full pt-28 lg:pt-32 pb-8 space-y-8 lg:space-y-10 px-6 lg:px-12">
           <div className={sectionHeaderClass}>
             <ContactIcon className="text-[#5F35D2]" />
-            <p className="font-normal">Content</p>
+            <p className="font-normal">Contact</p>
           </div>
-          <div className="w-[65%] mx-auto text-center">
-            <h2 className="text-[40px] text-[#161618] leading-[64px] font-bricolage_grotesque">
+          <div className="w-full text-center">
+            <h2 className="text-[32px] lg:text-[44px] text-[#1D2939] lg:leading-[52px] font-bricolage_grotesque font-bold">
               Talk to us
             </h2>
           </div>
 
-          <div className="bg-[#5F35D2] rounded-xl relative w-[80%] mx-auto">
-            <Image
-              src={ContactUsBg}
-              alt=""
-              className="absolute top-0"
-              priority
-            />
-            <div className="flex">
+          <div className="rounded-3xl overflow-hidden w-full lg:w-[80%] mx-auto bg-[#EAE3FB]">
+            <div className="bg-[#F4E1DC] p-4 lg:p-6">
               <Image
-                src={DashboardImage}
-                alt="Dashboard image"
-                className="mx-auto w-[75%] lg:w-[85%] z-50 mt-10 lg:mr-12"
+                src={ContactBanner}
+                alt="Talk to us"
+                priority
+                className="hidden lg:block w-full h-[240px] object-cover rounded-2xl"
+              />
+              <Image
+                src={ContactBannerMobile}
+                alt="Talk to us"
+                priority
+                className="lg:hidden w-full h-[180px] object-cover rounded-2xl"
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 bg-white lg:bg-[#DDD1FF] px-8 py-10 rounded-b-xl">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 px-6 lg:px-10 py-8 lg:py-10">
               <form autoComplete="off" className="space-y-6">
                 <CustomInput
                   type="text"
@@ -169,7 +164,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <CustomButton
-                    className="h-10 w-full text-white -mt-6"
+                    className="h-11 w-full text-white -mt-6"
                     type="button"
                     onClick={submitFormData}
                     loading={isLoading}
@@ -180,19 +175,14 @@ export default function Contact() {
                 </div>
               </form>
 
-              <div className="font-satoshi space-y-8 lg:w-[55%]">
-                <Image
-                  src={HobinkLogo}
-                  alt="hobwise logo"
-                  width={50}
-                  height={50}
-                />
+              <div className="font-satoshi space-y-6">
+                <Image src={Hobwise} alt="Hobwise" width={150} />
                 <div className="space-y-1.5">
-                  <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">
+                  <h4 className="font-bricolage_grotesque font-bold text-[18px] lg:text-[20px] text-[#1D2939]">
                     Prefer email?
                   </h4>
                   <a
-                    href="mailto: hello@hobwise.com"
+                    href="mailto:hello@hobwise.com"
                     target="_blank"
                     className="text-primaryColor underline font-medium"
                   >
@@ -200,10 +190,21 @@ export default function Contact() {
                   </a>
                 </div>
                 <div className="space-y-1.5">
-                  <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">
+                  <h4 className="font-bricolage_grotesque font-bold text-[18px] lg:text-[20px] text-[#1D2939]">
+                    Call Us
+                  </h4>
+                  <a
+                    href="tel:+2348123456789"
+                    className="text-primaryColor underline font-medium"
+                  >
+                    +234 812 345 6789
+                  </a>
+                </div>
+                <div className="space-y-1.5">
+                  <h4 className="font-bricolage_grotesque font-bold text-[18px] lg:text-[20px] text-[#1D2939]">
                     Prefer docs?
                   </h4>
-                  <p className="text-[#252525]">
+                  <p className="text-[#475467]">
                     Check out our{" "}
                     <Link
                       href={`${PRIVACY_POLICY}`}
@@ -214,11 +215,10 @@ export default function Contact() {
                   </p>
                 </div>
                 <div className="space-y-1.5">
-                  <h4 className="font-bricolage_grotesque text-[20px] text-[#252525]">
+                  <h4 className="font-bricolage_grotesque font-bold text-[18px] lg:text-[20px] text-[#1D2939]">
                     Office Headquarters
                   </h4>
-
-                  <p className="text-[#252525]">
+                  <p className="text-[#475467]">
                     Bouvardia Court Ota Iku Street Off Gbangbala Street Ikate
                     Lekki
                   </p>
@@ -228,9 +228,9 @@ export default function Contact() {
           </div>
         </section>
 
-        <section className="pt-20">
-          <FAQs />
-        </section>
+        <Campaigns />
+
+        <FAQs />
 
         <JoinCommunity className="text-center" />
       </main>

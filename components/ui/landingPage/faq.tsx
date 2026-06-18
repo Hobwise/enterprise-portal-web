@@ -1,9 +1,42 @@
 'use client';
 import { getFAQItems } from '@/app/api/controllers/landingPage';
-import { cn, notify } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { ArrowDown2, ArrowUp, FaqIcon } from '@/public/assets/svg';
 import React, { useEffect, useState } from 'react';
 import { Transition } from './transition';
+
+const DEFAULT_FAQS = [
+  {
+    question: 'How secure is my data on Hobwise?',
+    answer:
+      'Security is our top priority. Hobwise uses industry-standard encryption and regular security audits to ensure your business and customer data are always protected.',
+    collapse: true,
+  },
+  {
+    question: 'Can I manage multiple locations with Hobwise?',
+    answer:
+      'Yes. Hobwise lets you manage multiple branches or outlets from a single account, with separate insights and controls for each location.',
+    collapse: false,
+  },
+  {
+    question: 'Does Hobwise offer real-time data and reporting?',
+    answer:
+      'Absolutely. Sales, orders, inventory, and payments update in real time, and you can export detailed reports across every module whenever you need them.',
+    collapse: false,
+  },
+  {
+    question: 'Is Hobwise available on mobile devices?',
+    answer:
+      'Yes. Hobwise is fully responsive and works on any modern browser, so you can manage your business from your phone, tablet, or desktop.',
+    collapse: false,
+  },
+  {
+    question: 'What types of businesses benefit from Hobwise?',
+    answer:
+      'Hobwise is built for the hospitality industry — restaurants, hotels, cafés, bars, lounges, and clubs of any size.',
+    collapse: false,
+  },
+];
 
 export default function FAQs({ className }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,14 +49,10 @@ export default function FAQs({ className }: { className?: string }) {
     const data = await getFAQItems();
     setIsLoading(false);
 
-    if (data?.data?.isSuccessful) {
-      setFaqs([...data?.data?.data, { collapse: true }]);
-    } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
+    if (data?.data?.isSuccessful && data?.data?.data?.length) {
+      setFaqs(data.data.data);
+    } else {
+      setFaqs(DEFAULT_FAQS);
     }
   };
 
@@ -43,8 +72,9 @@ export default function FAQs({ className }: { className?: string }) {
 
   return (
     <section
+      id='faq'
       className={cn(
-        'bg-white py-8 lg:py-16 font-satoshi space-y-2 px-6 lg:px-12',
+        'scroll-mt-28 bg-white py-8 lg:py-16 font-satoshi space-y-2 px-6 lg:px-12',
         className
       )}
     >
@@ -53,7 +83,7 @@ export default function FAQs({ className }: { className?: string }) {
         <p className='font-normal'>FAQ</p>
       </div>
       <div className='w-[100%] text-left'>
-        <h2 className='text-[24px] lg:text-[40px] text-[#161618] lg:leading-[64px] font-bricolage_grotesque'>
+        <h2 className='text-[28px] lg:text-[44px] text-[#1D2939] lg:leading-[52px] font-bricolage_grotesque font-bold'>
           Your Top Questions About Hobwise
         </h2>
       </div>
@@ -64,7 +94,7 @@ export default function FAQs({ className }: { className?: string }) {
         ) : (
           <React.Fragment>
             {faqs.map((each, index) => (
-              <Transition key={each.question}>
+              <Transition key={each.question || index}>
                 {each.question && (
                   <div className='bg-[#F6F5FE] px-4 lg:px-8 py-6 rounded-2xl border border-[#5F35D24D] flex items-start justify-between font-bricolage_grotesque'>
                     <div className='space-y-2 text-left w-[80%]'>
