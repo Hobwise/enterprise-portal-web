@@ -102,7 +102,7 @@ function ChatMockup() {
 
 export default function HospiraAI() {
   return (
-    <section className="font-satoshi px-6 lg:px-12 py-8 lg:py-12">
+    <section className="font-satoshi lg:mt-12 px-6 lg:px-12 py-8 lg:py-12">
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1C0B45] via-[#241065] to-[#160a36] px-6 lg:px-14 py-10 lg:py-16">
         <div className="absolute -top-24 -right-24 h-80 w-80 rounded-full bg-[#6D4AE0] opacity-20 blur-3xl" />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center relative">
