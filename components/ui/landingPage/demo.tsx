@@ -1,10 +1,9 @@
 'use client';
 import { FlashIcon } from '@/public/assets/svg';
 import { Transition } from './transition';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
-import DemoIllustration from '@/public/assets/images/demo-illustration.png';
 
 interface ITab {
   title: string;
@@ -34,6 +33,7 @@ const tabs: ITab[] = [
 
 export default function Demo() {
   const [selectedTab, setSelectedTab] = useState<ITab>(tabs[0]);
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const sectionHeaderClass: string =
     'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1 rounded-full text-xs lg:mx-auto shadow_custom-inset';
 
@@ -85,7 +85,17 @@ export default function Demo() {
         </div>
         <div className="w-full lg:w-[65%] mt-6 lg:mt-0">
           <Transition>
-            <Image src={DemoIllustration} alt="How Hobwise works" priority className="w-full h-auto" />
+            <video
+              width="100%"
+              height={isDesktop ? '500px' : '300px'}
+              controls
+              poster="/assets/images/video-poster.jpg"
+              className="text-center justify-center rounded-2xl shadow-custom border-[14px] border-white"
+              src="https://res.cloudinary.com/dboqyj4bp/video/upload/v1744286255/hob-wizz_pvswyr.mp4"
+            >
+              <source src="https://res.cloudinary.com/dboqyj4bp/video/upload/v1744286255/hob-wizz_pvswyr.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           </Transition>
         </div>
       </div>
