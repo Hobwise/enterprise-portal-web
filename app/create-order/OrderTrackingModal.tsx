@@ -573,7 +573,7 @@ const OrderTrackingPage = ({
                       orderData.vatRate !== null && (
                         <p>
                           VAT Rate:{" "}
-                          {Math.round(Number(orderData.vatRate || 0) * 100)}%
+                          {Number(orderData.vatRate || 0).toFixed(2)}%
                         </p>
                       )}
                   </div>

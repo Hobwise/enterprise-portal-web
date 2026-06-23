@@ -222,10 +222,12 @@ export interface EscalationMailPayload {
 }
 
 /** Sends a support escalation email via the backend agent mailer.
- *  Uses multipart/form-data so an optional file attachment can be included. */
+ *  Uses multipart/form-data so an optional file attachment can be included.
+ *  A `sessionId` links the escalation to its chat session so it shows in history. */
 export const sendEscalationMail = async (
   payload: EscalationMailPayload,
-  attachment?: File | null
+  attachment?: File | null,
+  sessionId?: string | null
 ): Promise<boolean> => {
   const form = new FormData();
   if (payload.OrderId) form.append("OrderId", payload.OrderId);
@@ -236,8 +238,12 @@ export const sendEscalationMail = async (
   form.append("Content", payload.Content);
   if (attachment) form.append("Attachment", attachment);
 
+  const query = sessionId
+    ? `?sessionId=${encodeURIComponent(sessionId)}`
+    : "";
+
   const response = await fetch(
-    `${BASE_URL}api/v${API_VERSION}/Agent/send-escalation-mail`,
+    `${BASE_URL}api/v${API_VERSION}/Agent/send-escalation-mail${query}`,
     {
       method: "POST",
       // Let the browser set Content-Type with the multipart boundary automatically.

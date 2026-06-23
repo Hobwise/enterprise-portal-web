@@ -12,6 +12,12 @@ import { NavButton } from "./types";
 /** Matches a single `[NAV:token]` marker, capturing the token (e.g. `sales:0`). */
 export const NAV_TOKEN_RE = /\[NAV:([\w-]+(?::[\w-]+)*)\]/gi;
 
+/** Flags the AI raises for human escalation. */
+export const ESCALATE_RE = /\[ESCALATE\]/gi;
+
+/** Appended to a message once the escalation email has been sent. */
+export const ESCALATION_SENT_RE = /\[ESCALATION EMAIL SENT\]/gi;
+
 /** Exact-token routes for dashboard pages that are not report modules. */
 export const NAV_ROUTE_MAP: Record<string, NavButton> = {
   bookings:                     { href: '/dashboard/bookings',                   label: 'Bookings' },
@@ -109,4 +115,38 @@ export const extractNavTokens = (text: string): ExtractedNav => {
     })
     .trim();
   return { cleanedText, navButtons };
+};
+
+export interface ExtractedAgentTokens {
+  /** Message text with every control tag removed and trimmed. */
+  cleanedText: string;
+  /** True when the message carries the `[ESCALATE]` flag. */
+  escalate: boolean;
+  /** True when the escalation email has been sent (`[ESCALATION EMAIL SENT]`). */
+  escalationSent: boolean;
+  /** Navigation buttons resolved from `[NAV:...]` markers. */
+  navButtons: NavButton[];
+}
+
+/**
+ * Single processor for all text-embedded agent control tags
+ * (`[NAV:...]`, `[ESCALATE]`, `[ESCALATION EMAIL SENT]`). Used by both the live
+ * streaming path and the loaded-session path so tag handling stays identical.
+ */
+export const extractAgentTokens = (text: string): ExtractedAgentTokens => {
+  ESCALATE_RE.lastIndex = 0;
+  const escalate = ESCALATE_RE.test(text);
+  ESCALATION_SENT_RE.lastIndex = 0;
+  const escalationSent = ESCALATION_SENT_RE.test(text);
+
+  const { cleanedText: noNav, navButtons } = extractNavTokens(text);
+
+  ESCALATE_RE.lastIndex = 0;
+  ESCALATION_SENT_RE.lastIndex = 0;
+  const cleanedText = noNav
+    .replace(ESCALATE_RE, '')
+    .replace(ESCALATION_SENT_RE, '')
+    .trim();
+
+  return { cleanedText, escalate, escalationSent, navButtons };
 };

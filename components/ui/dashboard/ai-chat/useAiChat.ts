@@ -8,8 +8,8 @@ import {
   notify,
   saveToLocalStorage,
 } from "@/lib/utils";
-import { ChatMessageData, NavButton } from "./types";
-import { NAV_TOKEN_RE, resolveNavToken } from "./navTokens";
+import { ChatMessageData } from "./types";
+import { extractAgentTokens } from "./navTokens";
 import {
   AgentChatEvent,
   AgentNavigation,
@@ -27,8 +27,6 @@ const DEFAULT_PROMPT_LIMIT = 10;
 /** localStorage key holding the active conversation so it survives a refresh. */
 const ACTIVE_SESSION_KEY = "hospitalAiActiveSession";
 
-const ESCALATE_TOKEN = /\[ESCALATE\]/gi;
-
 const formatTime = (date: Date): string => {
   let hours = date.getHours();
   const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -45,6 +43,8 @@ const resolveUserName = (): string => {
 
 export interface UseAiChat {
   messages: ChatMessageData[];
+  /** The active conversation id (null for a brand-new, unsent chat). */
+  sessionId: string | null;
   /** Waiting for the first streamed token (drives the typing indicator). */
   isThinking: boolean;
   /** A request is in-flight from send until the stream completes. */
@@ -81,6 +81,8 @@ export const useAiChat = (): UseAiChat => {
   const [history, setHistory] = useState<AgentHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [userName] = useState(resolveUserName);
+  // Reactive mirror of `sessionIdRef` so the UI can read the active session.
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   // Current conversation. `null` => new chat: no sessionId is sent, and the
   // backend mints one (returned on the terminal `done` event).
@@ -90,9 +92,10 @@ export const useAiChat = (): UseAiChat => {
 
   // Keep the active session in localStorage so a page refresh restores the same
   // conversation instead of opening a brand-new chat.
-  const setActiveSession = useCallback((sessionId: string | null) => {
-    sessionIdRef.current = sessionId;
-    if (sessionId) saveToLocalStorage(ACTIVE_SESSION_KEY, sessionId);
+  const setActiveSession = useCallback((id: string | null) => {
+    sessionIdRef.current = id;
+    setSessionId(id);
+    if (id) saveToLocalStorage(ACTIVE_SESSION_KEY, id);
     else clearItemLocalStorage(ACTIVE_SESSION_KEY);
   }, []);
 
@@ -165,13 +168,49 @@ export const useAiChat = (): UseAiChat => {
           new Date(a.dateCreated).getTime() - new Date(b.dateCreated).getTime()
       );
       setActiveSession(sessionId);
+      // Persisted messages carry the same inline tags as the live stream
+      // (`[ESCALATE]`, `[NAV:...]`, `[ESCALATION EMAIL SENT]`), so run them
+      // through the shared processor instead of rendering the raw content.
+      // Pre-process every message once so tag handling matches the live stream.
+      const processed = ordered.map((message) => ({
+        message,
+        role: roleToUi(message.role),
+        tokens: extractAgentTokens(message.content),
+      }));
+      // The backend may append `[ESCALATION EMAIL SENT]` to either the user
+      // prompt or the assistant reply. Treat it as a session-level signal and
+      // surface the sent-notice on the escalating AI message regardless of
+      // which side carries the tag.
+      const sessionEscalationSent = processed.some((p) => p.tokens.escalationSent);
+      let lastUserText = "";
+      let sentNoticeApplied = false;
       setMessages(
-        ordered.map((message) => ({
-          id: message.id,
-          role: roleToUi(message.role),
-          text: message.content,
-          time: formatTime(new Date(message.dateCreated)),
-        }))
+        processed.map(({ message, role, tokens }) => {
+          const { cleanedText, escalate, escalationSent, navButtons } = tokens;
+          const base: ChatMessageData = {
+            id: message.id,
+            role,
+            text: cleanedText,
+            time: formatTime(new Date(message.dateCreated)),
+          };
+          if (role === "user") {
+            lastUserText = cleanedText;
+            return base;
+          }
+          // Show the notice if this AI message carries the tag directly, or if
+          // the session was escalated-and-sent: attach it to the first
+          // escalating reply so it replaces that reply's escalation card.
+          const showSent =
+            escalationSent ||
+            (sessionEscalationSent && escalate && !sentNoticeApplied);
+          if (showSent) sentNoticeApplied = true;
+          return {
+            ...base,
+            ...(navButtons.length > 0 && { navButtons }),
+            ...(escalate && { escalate: true, userPrompt: lastUserText }),
+            ...(showSent && { escalationSent: true }),
+          };
+        })
       );
     },
     [setActiveSession]
@@ -282,20 +321,23 @@ export const useAiChat = (): UseAiChat => {
             }
           },
         });
-        // Apply navigation hint and escalation flag from the terminal done event.
+        // Apply navigation hint and the text-embedded tags from the stream.
         setMessages((prev) =>
           prev.map((m) => {
             if (m.id !== aiId) return m;
-            let updated = { ...m };
 
-            const shouldEscalate = doneEvent?.escalate || ESCALATE_TOKEN.test(m.text);
-            if (shouldEscalate) {
-              updated = {
-                ...updated,
-                text: updated.text.replace(ESCALATE_TOKEN, "").trim(),
-                escalate: true,
-                userPrompt: trimmed,
-              };
+            const { cleanedText, escalate, escalationSent, navButtons } =
+              extractAgentTokens(m.text);
+            let updated: ChatMessageData = { ...m, text: cleanedText };
+
+            if (doneEvent?.escalate || escalate) {
+              updated = { ...updated, escalate: true, userPrompt: trimmed };
+            }
+            if (escalationSent) {
+              updated = { ...updated, escalationSent: true };
+            }
+            if (navButtons.length > 0) {
+              updated = { ...updated, navButtons };
             }
 
             const nav = doneEvent?.navigation as AgentNavigation | null;
@@ -305,20 +347,6 @@ export const useAiChat = (): UseAiChat => {
               updated = {
                 ...updated,
                 navigation: { label: nav.label, href: `/report?${params.toString()}` },
-              };
-            }
-
-            NAV_TOKEN_RE.lastIndex = 0;
-            const navMatches = [...updated.text.matchAll(NAV_TOKEN_RE)];
-            if (navMatches.length > 0) {
-              const navButtons = navMatches
-                .map((m) => resolveNavToken(m[1]))
-                .filter((b): b is NavButton => b !== null);
-              NAV_TOKEN_RE.lastIndex = 0;
-              updated = {
-                ...updated,
-                text: updated.text.replace(NAV_TOKEN_RE, '').trim(),
-                ...(navButtons.length > 0 && { navButtons }),
               };
             }
 
@@ -361,6 +389,7 @@ export const useAiChat = (): UseAiChat => {
 
   return {
     messages,
+    sessionId,
     isThinking,
     isResponding,
     promptsUsed,

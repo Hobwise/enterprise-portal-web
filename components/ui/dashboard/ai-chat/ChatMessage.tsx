@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { ChatMessageData, NavButton, NavigationHint } from "./types";
 import {
+  ESCALATION_SENT_RE,
   MODULE_LABELS,
   SUB_TAB_ALIASES,
   VALID_MODULES,
@@ -12,6 +13,7 @@ import {
 } from "./navTokens";
 import SparkleIcon from "./SparkleIcon";
 import EscalationCard from "./EscalationCard";
+import EscalationSentNotice from "./EscalationSentNotice";
 
 const ROUTE_RE = /\/dashboard\/reports?(?:\/[\w-]+(?:\/[\w-]+)*)?|\/report(?:\?[\w=&%-]+)?|\/(?:dashboard|pos|business-activities)\/[\w-]+(?:\/[\w-]+)*/g;
 const BOLD_RE = /\*\*([^*]+)\*\*/g;
@@ -94,7 +96,15 @@ function renderText(raw: string): React.ReactNode[] {
 
 interface ChatMessageProps {
   message: ChatMessageData;
+  /** Active session id, forwarded to the escalation form so it links correctly. */
+  sessionId?: string | null;
 }
+
+/** Strips the escalation-sent tag defensively so a raw tag can never leak. */
+const stripEscalationSentTag = (text: string): string => {
+  ESCALATION_SENT_RE.lastIndex = 0;
+  return text.replace(ESCALATION_SENT_RE, "").trim();
+};
 
 const Avatar = ({ role }: { role: ChatMessageData["role"] }) => {
   if (role === "user") {
@@ -111,14 +121,14 @@ const Avatar = ({ role }: { role: ChatMessageData["role"] }) => {
   );
 };
 
-const ChatMessage = ({ message }: ChatMessageProps) => {
+const ChatMessage = ({ message, sessionId }: ChatMessageProps) => {
   const isUser = message.role === "user";
 
   if (isUser) {
     return (
       <div className="flex animate-ai-pop flex-col items-end gap-1">
         <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primaryColor px-4 py-3 text-sm font-medium text-white">
-          {message.text}
+          {stripEscalationSentTag(message.text)}
         </div>
         <div className="flex items-center gap-2 pr-1">
           <span className="text-xs text-grey500">{message.time}</span>
@@ -129,8 +139,10 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   }
 
   // Extract [NAV:...] tokens at render time so they're always stripped from
-  // visible text and buttons appear immediately (even during streaming).
-  const { cleanedText, navButtons: extractedButtons } = extractNavTokens(message.text);
+  // visible text and buttons appear immediately (even during streaming). The
+  // escalation-sent tag is stripped here too so a raw tag never leaks.
+  const { cleanedText: noNav, navButtons: extractedButtons } = extractNavTokens(message.text);
+  const cleanedText = stripEscalationSentTag(noNav);
   const navButtons = message.navButtons ?? (extractedButtons.length > 0 ? extractedButtons : undefined);
 
   return (
@@ -147,12 +159,15 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
       {navButtons && navButtons.length > 0 && (
         <NavButtonsRow buttons={navButtons} />
       )}
-      {message.escalate && (
+      {message.escalationSent ? (
+        <EscalationSentNotice />
+      ) : message.escalate ? (
         <EscalationCard
           userMessage={message.userPrompt ?? ""}
           aiReply={cleanedText}
+          sessionId={sessionId}
         />
-      )}
+      ) : null}
       <div className="flex items-center gap-2 pl-1">
         <Avatar role="ai" />
         <span className="text-xs text-grey500">{message.time}</span>

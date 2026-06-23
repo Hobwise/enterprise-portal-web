@@ -1,4 +1,4 @@
-'use client';
+g'use client';
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
@@ -13,6 +13,7 @@ import { CheckIcon } from "@/components/ui/dashboard/orders/place-order/data";
 import useMenuConfig from "@/hooks/cachedEndpoints/useMenuConfiguration";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { formatPrice } from "@/lib/utils";
+import { computeOrderTotals } from "@/lib/orderTotals";
 import { useSearchParams, useRouter } from "next/navigation";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import {
@@ -362,6 +363,7 @@ const CreateOrder = () => {
     waitingTimeMinutes?: number;
     isVatEnabled?: boolean;
     vatRate?: number;
+    comment?: string;
   };
 
   const toggleVarietyModal = (menu: any) => {
@@ -375,13 +377,6 @@ const CreateOrder = () => {
     if (existingItem) {
       setSelectedItems(selectedItems.filter((item) => item.id !== menuItem.id));
     } else {
-      // Look up category VAT settings using menuID
-      const itemCategory = categories?.find(
-        (cat: any) => cat.id === menuItem.menuID
-      );
-      const isVatEnabled = itemCategory?.isVatEnabled ?? false;
-      const vatRate = itemCategory?.vatRate ?? 0;
-
       // setSelectedMenu(menuItem);
       setSelectedItems((prevItems: Item[]) => [
         ...prevItems,
@@ -392,9 +387,12 @@ const CreateOrder = () => {
           packingCost: menuItem.isVariety
             ? (selectedMenu as any)?.packingCost || 0
             : menuItem.packingCost || 0,
-          // Add VAT metadata from category
-          isVatEnabled,
-          vatRate,
+          // VAT metadata already comes from the item's category (attached in the
+          // `menuItems` memo). Don't re-derive it from menuID — that's the menu
+          // section id, not a category id, so the lookup silently fails and
+          // zeroes out VAT, causing a total mismatch on the backend.
+          isVatEnabled: menuItem.isVatEnabled ?? false,
+          vatRate: menuItem.vatRate ?? 0,
         },
       ]);
     }
@@ -408,14 +406,8 @@ const CreateOrder = () => {
       // If item already exists, increment count
       handleIncrement(menuItem.id);
     } else {
-      // Look up category VAT settings using menuID
-      const itemCategory = categories?.find(
-        (cat: any) => cat.id === menuItem.menuID
-      );
-      const isVatEnabled = itemCategory?.isVatEnabled ?? false;
-      const vatRate = itemCategory?.vatRate ?? 0;
-
-      // Add new item to cart
+      // Add new item to cart. Keep the VAT metadata already attached to the
+      // item from its category (see note in handleCardClick).
       setSelectedItems((prevItems: Item[]) => [
         ...prevItems,
         {
@@ -423,9 +415,8 @@ const CreateOrder = () => {
           count: 1,
           isPacked: false,
           packingCost: menuItem.packingCost || 0,
-          // Add VAT metadata from category
-          isVatEnabled,
-          vatRate,
+          isVatEnabled: menuItem.isVatEnabled ?? false,
+          vatRate: menuItem.vatRate ?? 0,
         },
       ]);
     }
@@ -457,15 +448,11 @@ const CreateOrder = () => {
       )
     );
   };
+  // Display total — must match what gets submitted and what the backend stores.
+  // Uses the shared calculation: per-line rounding + a single VAT rate applied
+  // to the whole subtotal (same as the dashboard checkout and the receipt).
   const calculateTotalPrice = () => {
-    return selectedItems.reduce((acc, item) => {
-      const itemTotal = item.price * item.count;
-      // Allow packing even when packingCost is 0 or undefined
-      const packingTotal = item.isPacked
-        ? (item.packingCost >= 0 ? item.packingCost : 0) * item.count
-        : 0;
-      return acc + itemTotal + packingTotal;
-    }, 0);
+    return computeOrderTotals({ items: selectedItems }).total;
   };
 
   // Helper function to check if order items have changed
@@ -499,6 +486,14 @@ const CreateOrder = () => {
     setSelectedItems((prevItems: Item[]) =>
       prevItems.map((item: Item) =>
         item.id === itemId ? { ...item, isPacked } : item
+      )
+    );
+  };
+
+  const handleItemComment = (itemId: string, comment: string) => {
+    setSelectedItems((prevItems: Item[]) =>
+      prevItems.map((item: Item) =>
+        item.id === itemId ? { ...item, comment } : item
       )
     );
   };
@@ -541,46 +536,9 @@ const CreateOrder = () => {
         return;
       }
 
-      // Compute totals with dynamic per-item VAT
-      let subtotal = 0;
-      let packingCost = 0;
-      let vat = 0;
-
-      // Get all unique VAT rates from categories to use as fallback
-      const categoryVatRates = Array.from(
-        new Set(
-          categories
-            ?.map((cat: any) => cat.vatRate)
-            .filter((rate: number) => rate > 0) || []
-        )
-      );
-      const defaultVatRate =
-        categoryVatRates.length > 0 ? categoryVatRates[0] : 0;
-
-      selectedItems.forEach((item: any) => {
-        const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
-        subtotal += itemTotal;
-        let itemPackingTotal = 0;
-        if (item.isPacked && item.packingCost) {
-          itemPackingTotal =
-            (Number(item.packingCost) || 0) * (Number(item.count) || 0);
-          packingCost += itemPackingTotal;
-        }
-
-        // Only apply VAT if isVatEnabled is true and vatRate exists
-        if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
-          const itemSubtotal = itemTotal + itemPackingTotal;
-          // Convert percentage to decimal (e.g., 7.5 -> 0.075)
-          const vatRateDecimal = item.vatRate / 100;
-          const itemVat = itemSubtotal * vatRateDecimal;
-          vat += itemVat;
-        }
-      });
-
-      subtotal = Math.round(subtotal * 100) / 100;
-      packingCost = Math.round(packingCost * 100) / 100;
-      vat = Math.round(vat * 100) / 100;
-      const total = Math.round((subtotal + packingCost + vat) * 100) / 100;
+      // Compute the total once, per item, so it matches the cart and the
+      // backend's per-category VAT.
+      const { vatAmount, total } = computeOrderTotals({ items: selectedItems });
 
       const orderDetails = selectedItems.map((item) => {
         return {
@@ -593,6 +551,7 @@ const CreateOrder = () => {
           menuID: item.menuID,
           isVatEnabled: item.isVatEnabled ?? false,
           vatRate: item.vatRate ?? 0,
+          comment: item.comment || "",
         };
       });
 
@@ -602,7 +561,10 @@ const CreateOrder = () => {
         placedByPhoneNumber: servingInfoData.phoneNumber,
         quickResponseID: qrId || "",
         comment: servingInfoData.comment,
-        totalAmount: Math.round(total * 100) / 100,
+        // Store VAT at the order level so the receipt matches the cart.
+        vatAmount,
+        isVatApplied: vatAmount > 0,
+        totalAmount: total,
         orderDetails,
       };
 
@@ -1652,6 +1614,7 @@ const CreateOrder = () => {
         handleIncrement={handleIncrement}
         handleRemoveItem={handleRemoveItem}
         handlePackingCost={handlePackingCost}
+        handleItemComment={handleItemComment}
         onProceedToServingInfo={handleProceedToServingInfo}
         businessName={businessName}
         menuConfig={menuConfig}

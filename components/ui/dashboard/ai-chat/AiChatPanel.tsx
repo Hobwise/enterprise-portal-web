@@ -218,7 +218,11 @@ const AiChatPanel = ({
             ) : (
               <div className="space-y-5">
                 {chat.messages.map((message) => (
-                  <ChatMessage key={message.id} message={message} />
+                  <ChatMessage
+                    key={message.id}
+                    message={message}
+                    sessionId={chat.sessionId}
+                  />
                 ))}
                 {chat.isThinking && <ThinkingIndicator />}
               </div>

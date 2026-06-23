@@ -34,7 +34,7 @@ import Notifications from "./notifications/notifications";
 import { NavigationBanner, useCheckExpiry } from "./subscription-notification";
 import * as signalR from "@microsoft/signalr";
 import useNotifyCount from "@/hooks/cachedEndpoints/useNotificationCount";
-import CompanyLogo from "@/components/logo";
+import BusinessLogo from "@/components/businessLogo";
 
 // NotificationFetcher: fetches notifications only when mounted (popover open)
 const NotificationFetcher = ({ page, pageSize, ...props }: any) => {
@@ -228,8 +228,8 @@ const Header = ({ ispos }: any) => {
               }
               className="cursor-pointer"
             >
-              <CompanyLogo
-                textColor="text-black font-lexend text-[28px] font-[600]"
+              <BusinessLogo
+                textColor="text-black font-lexend text-[20px] font-[600]"
                 containerClass="flex gap-2 items-center"
               />
             </Link>

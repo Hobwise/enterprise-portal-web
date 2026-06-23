@@ -16,6 +16,9 @@ interface CustomTextProps {
   hidden?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   maxLength?: number;
+  /** Min/max visible rows. Defaults to NextUI's (3/8); set both to 1 for a single line. */
+  minRows?: number;
+  maxRows?: number;
 }
 
 export const CustomTextArea = ({
@@ -32,6 +35,8 @@ export const CustomTextArea = ({
   errorMessage,
   size = "lg",
   maxLength = 100,
+  minRows,
+  maxRows,
 }: CustomTextProps) => {
   const [currentLength, setCurrentLength] = useState(value?.length || 0);
 
@@ -79,6 +84,8 @@ export const CustomTextArea = ({
         errorMessage={errorMessage}
         isInvalid={errorMessage && true}
         size={size}
+        minRows={minRows}
+        maxRows={maxRows}
       />
       <p className="text-xs float-right text-primaryColor">
         {maxLength - currentLength} character(s)

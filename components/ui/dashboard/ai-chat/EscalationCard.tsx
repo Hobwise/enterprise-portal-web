@@ -1,9 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { CheckCircle2, Headphones, Paperclip, Send, X } from "lucide-react";
+import { Headphones, Paperclip, Send, X } from "lucide-react";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import { sendEscalationMail } from "./agentChatApi";
+import EscalationSentNotice from "./EscalationSentNotice";
 
 const SUPPORT_EMAIL =
   process.env.NEXT_PUBLIC_SUPPORT_EMAIL ?? "hello@hobwise.com";
@@ -48,6 +49,8 @@ const buildDefaultContent = (
 interface EscalationCardProps {
   userMessage: string;
   aiReply: string;
+  /** Active chat session, linked to the escalation so it shows in history. */
+  sessionId?: string | null;
 }
 
 const inputClass =
@@ -68,7 +71,7 @@ const Field = ({
   </div>
 );
 
-const EscalationCard = ({ userMessage, aiReply }: EscalationCardProps) => {
+const EscalationCard = ({ userMessage, aiReply, sessionId }: EscalationCardProps) => {
   const { userName, userEmail, businessName } = resolveContext();
 
   const [to] = useState(SUPPORT_EMAIL);
@@ -98,7 +101,8 @@ const EscalationCard = ({ userMessage, aiReply }: EscalationCardProps) => {
 
       const ok = await sendEscalationMail(
         { To: to, From: from, Subject: subject, Cc: cc || undefined, Content: fullContent },
-        attachment
+        attachment,
+        sessionId
       );
       if (ok) {
         setSent(true);
@@ -113,21 +117,7 @@ const EscalationCard = ({ userMessage, aiReply }: EscalationCardProps) => {
   };
 
   if (sent) {
-    return (
-      <div className="w-full max-w-[85%] rounded-2xl border border-amber-200 bg-amber-50 px-4 py-4">
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-green-100 text-green-600">
-            <CheckCircle2 className="h-4 w-4" />
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-green-800">Message sent!</p>
-            <p className="mt-0.5 text-xs text-green-700">
-              Our support team will follow up shortly.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <EscalationSentNotice />;
   }
 
   return (
