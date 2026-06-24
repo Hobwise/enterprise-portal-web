@@ -1,4 +1,4 @@
-g'use client';
+'use client';
 import { Chip, Divider, useDisclosure } from '@nextui-org/react';
 import Image from 'next/image';
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
