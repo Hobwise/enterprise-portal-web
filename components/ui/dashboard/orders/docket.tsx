@@ -15,6 +15,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { MdKeyboardArrowRight } from "react-icons/md";
 import useOrderDockets from "@/hooks/cachedEndpoints/useOrderDockets";
+import useOrderDetails from "@/hooks/cachedEndpoints/useOrderDetails";
 
 export interface DocketCategory {
   categoryId: string;
@@ -70,13 +71,38 @@ const DocketModal = ({
   const [selectedCategory, setSelectedCategory] =
     useState<DocketCategory | null>(null);
 
-  // Query every category's docket in parallel so we know which ones actually
-  // have items on this order.
-  const { dockets, isLoading } = useOrderDockets(
-    categories,
-    singleOrder?.id,
-    { enabled: isOpenDocket }
-  );
+  // When we have the menu categories, query each category's docket in parallel
+  // so we know which ones actually have items on this order.
+  const hasCategories = (categories?.length ?? 0) > 0;
+  const { dockets: categoryDockets, isLoading: isLoadingCategoryDockets } =
+    useOrderDockets(categories, singleOrder?.id, {
+      enabled: isOpenDocket && hasCategories,
+    });
+
+  // Fallback for users/roles that can't read the menu-categories list (e.g. POS
+  // or category staff): build a single docket straight from the order's own
+  // items. Anyone who can see the order can read this.
+  const { orderDetails: fullOrder, isLoading: isLoadingFullOrder } =
+    useOrderDetails(singleOrder?.id, {
+      enabled: isOpenDocket && !hasCategories,
+    });
+
+  const dockets = useMemo(() => {
+    if (hasCategories) {
+      return categoryDockets;
+    }
+    const items = fullOrder?.orderDetails ?? [];
+    return [
+      {
+        category: { categoryId: "all", categoryName: "All Items" },
+        items,
+      },
+    ];
+  }, [hasCategories, categoryDockets, fullOrder]);
+
+  const isLoading = hasCategories
+    ? isLoadingCategoryDockets
+    : isLoadingFullOrder;
 
   // Only categories with at least one item are offered / shown.
   const nonEmptyDockets = useMemo(
