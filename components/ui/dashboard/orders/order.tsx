@@ -61,6 +61,7 @@ import RefundPaymentModal from "./RefundPaymentModal";
 import OrderHistoryModal from "./OrderHistoryModal";
 import DocketModal, { DocketCategory } from "./docket";
 import useMenuCategories from "@/hooks/cachedEndpoints/useMenuCategories";
+import { usePOSMenu } from "@/hooks/usePOSMenu";
 import { History } from "lucide-react";
 import {
   completeOrder,
@@ -199,19 +200,28 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
   // Menu categories drive the "Generate Docket" action. Sourced from the Menu
   // Controller (react-query cached); the action is hidden when none exist.
-  const { data: menuCategoriesData } = useMenuCategories();
-  const docketCategories: DocketCategory[] = React.useMemo(
-    () =>
-      (menuCategoriesData ?? []).map((category) => ({
-        categoryId: category.categoryId,
-        categoryName: category.categoryName,
-      })),
-    [menuCategoriesData]
-  );
-  // `renderCell` is memoized with empty deps but invoked each render, so the
-  // desktop dropdown reads categories through a ref to stay current.
-  const docketCategoriesRef = React.useRef<DocketCategory[]>([]);
-  docketCategoriesRef.current = docketCategories;
+  const { data: menuCategoriesData, isLoading: menuCategoriesLoading } =
+    useMenuCategories();
+  // The menu-categories endpoint is cooperate-scoped, so POS/staff users coming
+  // from POS get an empty list. When that happens we fall back to the POS menu
+  // (only needs businessId). The fetch is enabled only once menu categories
+  // have loaded empty, so managers with real categories never make the request.
+  const menuCategoriesEmpty =
+    !menuCategoriesLoading && (menuCategoriesData ?? []).length === 0;
+  const { posData } = usePOSMenu({ enabled: menuCategoriesEmpty });
+  const docketCategories: DocketCategory[] = React.useMemo(() => {
+    const menuCats = (menuCategoriesData ?? []).map((category) => ({
+      categoryId: category.categoryId,
+      categoryName: category.categoryName,
+    }));
+    if (menuCats.length > 0) {
+      return menuCats;
+    }
+    return (posData ?? []).map((section) => ({
+      categoryId: section.id,
+      categoryName: section.name,
+    }));
+  }, [menuCategoriesData, posData]);
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] =
@@ -622,6 +632,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
       ...sourceData,
       quickResponseID:
         sourceData.qrReference || sourceData.quickResponseID || "",
+      // The order-details endpoint may omit the order comment, so fall back to
+      // the list item's comment to keep it visible/editable on the checkout
+      // "Add comment" field when updating an order.
+      comment:
+        (sourceData as any)?.comment ?? singleOrder.comment ?? "",
     };
   }, [singleOrder, fullOrderDetails]);
 
@@ -774,20 +789,16 @@ const OrdersList: React.FC<OrdersListProps> = ({
                         )) as any
                     }
 
-                    {
-                      (docketCategoriesRef.current.length > 0 && (
-                        <DropdownItem
-                          key="generate-docket"
-                          onClick={() => toggleDocketModal(order)}
-                          aria-label="Generate Docket"
-                        >
-                          <div className="flex gap-3 items-center text-grey500">
-                            <ClipboardList className="w-[18px] h-[18px]" />
-                            <p>Generate Docket</p>
-                          </div>
-                        </DropdownItem>
-                      )) as any
-                    }
+                    <DropdownItem
+                      key="generate-docket"
+                      onClick={() => toggleDocketModal(order)}
+                      aria-label="Generate Docket"
+                    >
+                      <div className="flex gap-3 items-center text-grey500">
+                        <ClipboardList className="w-[18px] h-[18px]" />
+                        <p>Generate Docket</p>
+                      </div>
+                    </DropdownItem>
 
                     {
                       ((role === 0 ||
@@ -968,20 +979,16 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             </div>
                           </DropdownItem>
 
-                          {
-                            (docketCategories.length > 0 && (
-                              <DropdownItem
-                                key="generate-docket"
-                                onClick={() => toggleDocketModal(order)}
-                                aria-label="Generate Docket"
-                              >
-                                <div className="flex gap-3 items-center text-grey500">
-                                  <ClipboardList className="w-[18px] h-[18px]" />
-                                  <p>Generate Docket</p>
-                                </div>
-                              </DropdownItem>
-                            )) as any
-                          }
+                          <DropdownItem
+                            key="generate-docket"
+                            onClick={() => toggleDocketModal(order)}
+                            aria-label="Generate Docket"
+                          >
+                            <div className="flex gap-3 items-center text-grey500">
+                              <ClipboardList className="w-[18px] h-[18px]" />
+                              <p>Generate Docket</p>
+                            </div>
+                          </DropdownItem>
 
                           {
                             ((role === 0 ||

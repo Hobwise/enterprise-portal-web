@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { getPOSMenu, POSSection } from '@/app/api/controllers/pos';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 
-export const usePOSMenu = () => {
-  const [loading, setLoading] = useState(true);
+export const usePOSMenu = (options?: { enabled?: boolean }) => {
+  const enabled = options?.enabled ?? true;
+  const [loading, setLoading] = useState(enabled);
   const [error, setError] = useState<string | null>(null);
   const [posData, setPosData] = useState<POSSection[]>([]);
 
@@ -52,8 +53,10 @@ export const usePOSMenu = () => {
   };
 
   useEffect(() => {
-    fetchPOSMenuData();
-  }, []);
+    if (enabled) {
+      fetchPOSMenuData();
+    }
+  }, [enabled]);
 
   return { loading, error, posData, refetch: fetchPOSMenuData };
 };

@@ -524,6 +524,14 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                       userInformation?.lastName || "Not assigned"}
                   </span>
                 </div>
+                {(fullOrderData?.comment || orderData?.comment) && (
+                  <div className="flex flex-col w-full gap-1 mt-2 pt-2 border-t border-primaryGrey">
+                    <span className="text-textGrey">Comment:</span>
+                    <span className="font-semibold text-black whitespace-pre-wrap break-words">
+                      {fullOrderData?.comment || orderData?.comment}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </ModalHeader>

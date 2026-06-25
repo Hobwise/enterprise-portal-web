@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { ShoppingCart, X, Plus, Minus } from "lucide-react";
 import { useDisclosure } from "@nextui-org/react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
@@ -47,6 +47,11 @@ const POSContent = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [existingOrder, setExistingOrder] = useState<any>(null);
   const [isLoadingExistingOrder, setIsLoadingExistingOrder] = useState(false);
+
+  // Track which order id has already been loaded so add-items mode only
+  // fetches/loads the order once, instead of re-running (and re-toasting +
+  // re-adding items) on every re-render.
+  const loadedOrderIdRef = useRef<string | null>(null);
 
   // Get order ID from URL params
   const urlOrderId = searchParams.get("orderId");
@@ -215,6 +220,15 @@ const POSContent = () => {
       const idToLoad = urlOrderId || order?.id;
 
       if (isAddItemsMode && idToLoad && menuItems.length > 0) {
+        // Only load this order once. Without this guard the effect re-runs on
+        // re-render (e.g. every time an item is clicked/added) and would
+        // re-fetch the order, re-show the "Loading order" toast, and re-add
+        // the existing items to the cart.
+        if (loadedOrderIdRef.current === idToLoad) {
+          return;
+        }
+        loadedOrderIdRef.current = idToLoad;
+
         setIsLoadingExistingOrder(true);
         try {
           const response = await getOrder(idToLoad);
@@ -270,17 +284,25 @@ const POSContent = () => {
             // Clear the order from localStorage after loading
             clearItemLocalStorage("order");
           } else {
+            // Allow a future attempt to reload this order after a failure.
+            loadedOrderIdRef.current = null;
             toast.error("Failed to load order details");
           }
         } catch (error) {
           console.error("Error loading existing order:", error);
+          // Allow a future attempt to reload this order after a failure.
+          loadedOrderIdRef.current = null;
           toast.error("Failed to load order details");
         } finally {
           setIsLoadingExistingOrder(false);
         }
-      } else if (!isAddItemsMode && order?.id) {
-        // Clear the order from localStorage if we're not in add-items mode
-        clearItemLocalStorage("order");
+      } else if (!isAddItemsMode) {
+        // Left add-items mode: reset the guard so re-entering can load again.
+        loadedOrderIdRef.current = null;
+        if (order?.id) {
+          // Clear the order from localStorage if we're not in add-items mode
+          clearItemLocalStorage("order");
+        }
       }
     };
 
@@ -342,24 +364,30 @@ const POSContent = () => {
 
               {/* Right area: the nav bar spans the grid + cart panel */}
               <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Top Navigation — category tabs with search + order list inside */}
-                <div className="bg-[#5F35D2] flex items-center justify-between">
-                  <div className="flex overflow-x-auto scrollbar-hide flex-1 min-w-0">
+                {/* Top Navigation — search + order list on their own row on
+                    mobile (so the category tabs get full width and are easy to
+                    tap); inline on desktop. */}
+                <div className="bg-[#5F35D2] flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                  {/* Search + Order list (first on mobile, right on desktop) */}
+                  <div className="order-1 lg:order-2 border-b border-white/10 lg:border-b-0">
+                    <POSHeader onSearch={handleSearch} />
+                  </div>
+                  {/* Category (menu) tabs */}
+                  <div className="order-2 lg:order-1 flex overflow-x-auto scrollbar-hide flex-1 min-w-0">
                     {categories.map((menu) => (
                       <button
                         key={menu}
                         onClick={() => setSelectedMenu(menu)}
                         className={`flex-shrink-0 px-4 sm:px-6 py-3 text-sm font-medium border-b-2 ${
                           selectedMenu === menu
-                            ? "text-white bg-[#A07EFF]"
-                            : "text-white"
+                            ? "text-white bg-[#A07EFF] border-[#A07EFF]"
+                            : "text-white border-transparent"
                         }`}
                       >
                         {menu}
                       </button>
                     ))}
                   </div>
-                  <POSHeader onSearch={handleSearch} />
                 </div>
 
                 {/* Row: menu grid + cart panel, beneath the full-width nav */}
