@@ -21,6 +21,7 @@ interface OrderDetail {
   packingCost?: number;
   isVariety?: boolean;
   isPacked?: boolean;
+  comment?: string;
 }
 
 const optionalPhoneSchema = z.string().trim().optional().or(z.literal(""));
@@ -244,6 +245,23 @@ export async function getOrder(
     handleError(error, false);
   }
 }
+// Fetch a single order scoped to a menu category, used to print a docket
+// (e.g. kitchen/bar ticket) containing only that category's items.
+export async function getCategoryOrderDocket(
+  categoryId: string,
+  orderId: string
+) {
+  try {
+    const data = await api.get(
+      `/api/v1/Order/categories/${categoryId}/orders/${orderId}`
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
 export async function getOrderByRef(
   reference: string,
   businessId: string,

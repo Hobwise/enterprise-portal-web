@@ -25,7 +25,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { TbFileInvoice } from "react-icons/tb";
-import { Clock, Receipt, RotateCcw, CreditCard } from "lucide-react";
+import { Clock, Receipt, RotateCcw, CreditCard, ClipboardList } from "lucide-react";
 import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 import {
   availableOptions,
@@ -59,6 +59,8 @@ import OrderProgressModal from "./OrderProgressModal";
 import PaymentSummaryModal from "./PaymentSummaryModal";
 import RefundPaymentModal from "./RefundPaymentModal";
 import OrderHistoryModal from "./OrderHistoryModal";
+import DocketModal, { DocketCategory } from "./docket";
+import useMenuCategories from "@/hooks/cachedEndpoints/useMenuCategories";
 import { History } from "lucide-react";
 import {
   completeOrder,
@@ -193,6 +195,23 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenRefund, setIsOpenRefund] = React.useState<boolean>(false);
   const [isOpenHistoryModal, setIsOpenHistoryModal] =
     React.useState<boolean>(false);
+  const [isOpenDocket, setIsOpenDocket] = React.useState<boolean>(false);
+
+  // Menu categories drive the "Generate Docket" action. Sourced from the Menu
+  // Controller (react-query cached); the action is hidden when none exist.
+  const { data: menuCategoriesData } = useMenuCategories();
+  const docketCategories: DocketCategory[] = React.useMemo(
+    () =>
+      (menuCategoriesData ?? []).map((category) => ({
+        categoryId: category.categoryId,
+        categoryName: category.categoryName,
+      })),
+    [menuCategoriesData]
+  );
+  // `renderCell` is memoized with empty deps but invoked each render, so the
+  // desktop dropdown reads categories through a ref to stay current.
+  const docketCategoriesRef = React.useRef<DocketCategory[]>([]);
+  docketCategoriesRef.current = docketCategories;
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] =
@@ -369,6 +388,15 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const toggleHistoryModal = (order: OrderItem) => {
     setSingleOrder(order);
     setIsOpenHistoryModal(!isOpenHistoryModal);
+  };
+
+  // Functional toggle so it works from both the (memoized) desktop dropdown and
+  // the modal's onOpenChange (which passes a boolean, not an order).
+  const toggleDocketModal = (order?: OrderItem) => {
+    if (order && typeof order === "object" && "id" in order) {
+      setSingleOrder(order);
+    }
+    setIsOpenDocket((prev) => !prev);
   };
 
   const [paymentOption, setPaymentOption] = React.useState<"full" | "partial">(
@@ -747,6 +775,21 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     }
 
                     {
+                      (docketCategoriesRef.current.length > 0 && (
+                        <DropdownItem
+                          key="generate-docket"
+                          onClick={() => toggleDocketModal(order)}
+                          aria-label="Generate Docket"
+                        >
+                          <div className="flex gap-3 items-center text-grey500">
+                            <ClipboardList className="w-[18px] h-[18px]" />
+                            <p>Generate Docket</p>
+                          </div>
+                        </DropdownItem>
+                      )) as any
+                    }
+
+                    {
                       ((role === 0 ||
                         isPOSUserState ||
                         userRolePermissions?.canEditOrder === true) &&
@@ -924,6 +967,21 @@ const OrdersList: React.FC<OrdersListProps> = ({
                               <p>Payment Summary</p>
                             </div>
                           </DropdownItem>
+
+                          {
+                            (docketCategories.length > 0 && (
+                              <DropdownItem
+                                key="generate-docket"
+                                onClick={() => toggleDocketModal(order)}
+                                aria-label="Generate Docket"
+                              >
+                                <div className="flex gap-3 items-center text-grey500">
+                                  <ClipboardList className="w-[18px] h-[18px]" />
+                                  <p>Generate Docket</p>
+                                </div>
+                              </DropdownItem>
+                            )) as any
+                          }
 
                           {
                             ((role === 0 ||
@@ -1160,6 +1218,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
         toggleInvoiceModal={toggleInvoiceModal}
         onClose={() => setIsOpenInvoice(false)}
       />
+      <DocketModal
+        singleOrder={singleOrder}
+        isOpenDocket={isOpenDocket}
+        toggleDocketModal={toggleDocketModal}
+        categories={docketCategories}
+      />
       <OrderProgressModal
         isOpen={isOpenProgress}
         onOpenChange={() => setIsOpenProgress(!isOpenProgress)}
@@ -1215,6 +1279,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
           setCheckoutSelectedItems((prev) =>
             prev.map((item) =>
               item.id === itemId ? { ...item, isPacked } : item
+            )
+          );
+        }}
+        handleItemComment={(itemId: string, comment: string) => {
+          setCheckoutSelectedItems((prev) =>
+            prev.map((item) =>
+              item.id === itemId ? { ...item, comment } : item
             )
           );
         }}

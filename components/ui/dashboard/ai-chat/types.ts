@@ -30,6 +30,8 @@ export interface ChatMessageData {
   navButtons?: NavButton[];
   /** True when the AI flags escalation — shows the support notice. */
   escalate?: boolean;
+  /** True once the escalation email has been sent — shows the sent confirmation. */
+  escalationSent?: boolean;
   /** The user question that triggered this AI reply (passed to escalation card). */
   userPrompt?: string;
 }

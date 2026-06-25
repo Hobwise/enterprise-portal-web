@@ -34,15 +34,8 @@ export const OrderSummaryPanel: React.FC<OrderSummaryPanelProps> = ({
 }) => {
   return (
     <div className="hidden lg:flex w-96 bg-white shadow flex-col relative h-full">
-      {/* Business Name Header */}
-      <div className="px-6 py-2">
-        <h3 className="text-lg text-center font-semibold text-gray-900">
-          {businessName || 'Business Name'}
-        </h3>
-      </div>
-
      {orderItems.length > 0 && (
-      <div className="px-6">
+      <div className="px-6 pt-3">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
             <div className="text-gray-500">POS Terminal</div>

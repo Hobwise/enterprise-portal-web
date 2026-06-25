@@ -1,6 +1,8 @@
 "use client";
 import { CustomButton } from "@/components/customButton";
+import { CustomTextArea } from "@/components/customTextArea";
 import { formatPrice } from "@/lib/utils";
+import { computeOrderTotals } from "@/lib/orderTotals";
 import { Checkbox } from "@nextui-org/react";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -18,6 +20,7 @@ interface CartModalProps {
   handleIncrement: (id: string) => void;
   handleRemoveItem: (id: string) => void;
   handlePackingCost: (id: string, isPacked: boolean) => void;
+  handleItemComment: (id: string, comment: string) => void;
   onProceedToServingInfo: () => void;
   businessName?: string;
   menuConfig?: {
@@ -36,6 +39,7 @@ const CartModal = ({
   handleIncrement,
   handleRemoveItem,
   handlePackingCost,
+  handleItemComment,
   onProceedToServingInfo,
   businessName,
   menuConfig,
@@ -57,48 +61,22 @@ const CartModal = ({
   // Don't render if not open
   if (!isOpen) return null;
 
-  const calculateSubtotal = () => {
-    return selectedItems.reduce((acc, item) => {
-      return acc + item.price * item.count;
-    }, 0);
-  };
-
-  const calculatePackingCost = () => {
-    return selectedItems.reduce((acc, item) => {
-      if (item.isPacked && item.packingCost) {
-        return acc + item.packingCost * item.count;
-      }
-      return acc;
-    }, 0);
-  };
-  const subtotal = calculateSubtotal();
-  const packingCost = calculatePackingCost();
-  // Compute dynamic VAT - only apply if isVatEnabled is true
-  let vat = 0;
+  // Shared calculation: per-line rounding + per-item VAT, so the cart matches
+  // the submitted total and the receipt.
+  const {
+    itemsSubtotal: subtotal,
+    packingSubtotal: packingCost,
+    vatAmount: vat,
+    total,
+  } = computeOrderTotals({ items: selectedItems });
+  // Distinct VAT rates present (for the label only); 0%-rated items are excluded.
   const enabledRates = Array.from(
     new Set(
       selectedItems
-        .filter((i: any) => i.isVatEnabled && i.vatRate && i.vatRate > 0)
+        .filter((i: any) => i.isVatEnabled && Number(i.vatRate) > 0)
         .map((i: any) => Number(i.vatRate))
     )
   );
-
-  selectedItems.forEach((item: any) => {
-    const itemTotal = (Number(item.price) || 0) * (Number(item.count) || 0);
-    const itemPacking =
-      item.isPacked && item.packingCost
-        ? (Number(item.packingCost) || 0) * (Number(item.count) || 0)
-        : 0;
-    const itemSubtotal = itemTotal + itemPacking;
-    // Only apply VAT if isVatEnabled is true and vatRate exists
-    if (item.isVatEnabled && item.vatRate && item.vatRate > 0) {
-      // Convert percentage to decimal (e.g., 7.5 -> 0.075)
-      const vatRateDecimal = item.vatRate / 100;
-      vat += itemSubtotal * vatRateDecimal;
-    }
-  });
-  vat = Math.round(vat * 100) / 100;
-  const total = Math.round((subtotal + packingCost + vat) * 100) / 100;
 
   return (
     <div className="fixed inset-0 z-50 bg-white overflow-hidden flex flex-col">
@@ -133,8 +111,9 @@ const CartModal = ({
           {selectedItems.map((item) => (
             <div
               key={item.id}
-              className="flex gap-3 p-3 bg-gray-50 rounded-xl relative"
+              className="flex flex-col gap-3 p-3 bg-gray-50 rounded-xl"
             >
+              <div className="flex gap-3 relative">
               {/* Item Image */}
               <div className="relative w-20 h-20 flex-shrink-0">
                 <Image
@@ -214,6 +193,17 @@ const CartModal = ({
                   </button>
                 </div>
               </div>
+              </div>
+
+              <CustomTextArea
+                size="sm"
+                minRows={1}
+                maxRows={1}
+                name={`item-comment-${item.id}`}
+                value={item.comment || ""}
+                onChange={(e) => handleItemComment(item.id, e.target.value)}
+                placeholder="Add a note for this item (optional)"
+              />
             </div>
           ))}
         </div>

@@ -76,6 +76,7 @@ const POSContent = () => {
     handleDecrement,
     handleIncrement,
     handlePackingCost,
+    handleItemComment,
     addItemToCart,
     clearCart,
     calculateOrderSummary,
@@ -311,13 +312,12 @@ const POSContent = () => {
       `}</style>
 
       <div className="flex h-screen overflow-hidden bg-white">
-        <main className="flex-1 w-full overflow-y-auto text-black">
+        <main className="flex-1 w-full flex flex-col overflow-hidden text-black">
           <Header ispos />
-          <POSHeader onSearch={handleSearch} />
 
           {/* Mobile Category Tabs */}
 
-          <div className="h-[83vh] lg:h-[83vh] bg-gray-50 flex">
+          <div className="flex-1 min-h-0 bg-gray-50 flex">
             <div className="flex flex-1 overflow-hidden bg-white">
               {/* Desktop Sidebar */}
               <div className="hidden lg:block w-48 bg-[#391D84] text-white overflow-y-auto">
@@ -340,11 +340,11 @@ const POSContent = () => {
                 </div>
               </div>
 
-              {/* Main Content */}
+              {/* Right area: the nav bar spans the grid + cart panel */}
               <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Top Navigation */}
-                <div className="bg-[#5F35D2]">
-                  <div className="flex overflow-x-auto scrollbar-hide">
+                {/* Top Navigation — category tabs with search + order list inside */}
+                <div className="bg-[#5F35D2] flex items-center justify-between">
+                  <div className="flex overflow-x-auto scrollbar-hide flex-1 min-w-0">
                     {categories.map((menu) => (
                       <button
                         key={menu}
@@ -359,8 +359,13 @@ const POSContent = () => {
                       </button>
                     ))}
                   </div>
+                  <POSHeader onSearch={handleSearch} />
                 </div>
 
+                {/* Row: menu grid + cart panel, beneath the full-width nav */}
+                <div className="flex flex-1 overflow-hidden min-h-0">
+                  {/* Menu column */}
+                  <div className="flex-1 flex flex-col overflow-hidden">
                 <div className="lg:hidden bg-[#391D84]">
                   <div className="flex overflow-x-auto scrollbar-hide">
                     {mainTabs.map((category) => (
@@ -442,6 +447,8 @@ const POSContent = () => {
                 onClearCart={handleClearCart}
                 onProcessOrder={onOpen}
               />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -634,6 +641,7 @@ const POSContent = () => {
             id={urlOrderId || existingOrder?.id || null}
             orderDetails={existingOrder}
             handlePackingCost={handlePackingCost}
+            handleItemComment={handleItemComment}
             businessId={businessInformation?.[0]?.businessId}
             cooperateID={userInformation?.cooperateID}
             onOrderSuccess={handleClearCart}

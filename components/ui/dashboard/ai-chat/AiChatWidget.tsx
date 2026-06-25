@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import AiChatButton from "./AiChatButton";
 import AiChatPanel from "./AiChatPanel";
@@ -15,6 +15,8 @@ const AiChatWidget = () => {
   const [open, setOpen] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const chat = useAiChat();
+  // Full-viewport boundary the draggable button is kept within.
+  const dragBoundsRef = useRef<HTMLDivElement>(null);
 
   const handleOpen = () => {
     setExpanded(false);
@@ -23,7 +25,16 @@ const AiChatWidget = () => {
 
   return (
     <>
-      {!open && <AiChatButton onClick={handleOpen} />}
+      {/* Drag boundary spans the viewport but lets clicks through to the page;
+          only the button inside re-enables pointer events. */}
+      <div
+        ref={dragBoundsRef}
+        className="pointer-events-none fixed inset-0 z-40"
+      >
+        {!open && (
+          <AiChatButton onClick={handleOpen} dragConstraints={dragBoundsRef} />
+        )}
+      </div>
       <AnimatePresence>
         {open && (
           <AiChatPanel

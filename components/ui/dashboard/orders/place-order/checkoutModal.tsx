@@ -91,6 +91,7 @@ const CheckoutModal = ({
   businessId,
   cooperateID,
   handlePackingCost,
+  handleItemComment,
   categoriesData,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -711,6 +712,10 @@ const CheckoutModal = ({
           // Merge quantities if item already exists
           const existing = deduplicatedMap.get(finalItemID);
           existing.quantity += item.count;
+          // Preserve a per-item note: keep the existing one, fall back to this item's.
+          if (!existing.comment && item.comment) {
+            existing.comment = item.comment;
+          }
         } else {
           deduplicatedMap.set(finalItemID, {
             itemID: finalItemID,
@@ -719,6 +724,7 @@ const CheckoutModal = ({
             isVariety: item.isVariety,
             isPacked: item.isPacked,
             packingCost: item?.packingCost || 0,
+            comment: item.comment || "",
           });
         }
       });
@@ -924,6 +930,9 @@ const CheckoutModal = ({
         const existing = deduplicatedMap.get(finalItemID);
         existing.quantity += item.count;
         // Optionally update other fields if needed, but price should be same
+        if (!existing.comment && item.comment) {
+          existing.comment = item.comment;
+        }
       } else {
         deduplicatedMap.set(finalItemID, {
           itemID: finalItemID,
@@ -932,6 +941,7 @@ const CheckoutModal = ({
           isVariety: item.isVariety,
           isPacked: item.isPacked,
           packingCost: item?.packingCost || 0,
+          comment: item.comment || "",
         });
       }
     });
@@ -1626,6 +1636,25 @@ const CheckoutModal = ({
                                     </div>
                                   </div>
                                 </div>
+                                <div className="pb-3">
+                                  <CustomTextArea
+                                    size="sm"
+                                    minRows={1}
+                                    maxRows={1}
+                                    name={`item-comment-${item.id}`}
+                                    value={item.comment || ""}
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLTextAreaElement>
+                                    ) =>
+                                      handleItemComment?.(
+                                        item.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    label="Item note (optional)"
+                                    placeholder="Add a note for this item"
+                                  />
+                                </div>
                                 {index !== selectedItems?.length - 1 && (
                                   <Divider className="bg-[#E4E7EC80]" />
                                 )}
@@ -1880,6 +1909,24 @@ const CheckoutModal = ({
                                       </Checkbox>
                                     )}
                                   </div>
+
+                                  <CustomTextArea
+                                    size="sm"
+                                    minRows={1}
+                                    maxRows={1}
+                                    name={`item-comment-mobile-${item.id}`}
+                                    value={item.comment || ""}
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLTextAreaElement>
+                                    ) =>
+                                      handleItemComment?.(
+                                        item.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    label="Item note (optional)"
+                                    placeholder="Add a note for this item"
+                                  />
                                 </div>
                                 {index !== selectedItems?.length - 1 && (
                                   <Divider className="bg-[#E4E7EC80]" />
