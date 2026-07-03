@@ -1,51 +1,62 @@
 'use client';
 import { getFAQItems } from '@/app/api/controllers/landingPage';
 import { cn } from '@/lib/utils';
-import { ArrowDown2, ArrowUp, FaqIcon } from '@/public/assets/svg';
+import FaqPhoto from '@/public/assets/images/landing-v2/faq-photo.jpg';
+import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
+import { FiMinus, FiPlus } from 'react-icons/fi';
 import { Transition } from './transition';
 
 const DEFAULT_FAQS = [
   {
-    question: 'How secure is my data on Hobwise?',
+    question: 'How long does setup take?',
     answer:
-      'Security is our top priority. Hobwise uses industry-standard encryption and regular security audits to ensure your business and customer data are always protected.',
-    collapse: true,
+      'Most restaurants can get started within 24–72 hours, depending on the size of your operations. Our team helps you set up menus, staff accounts, payments, and other essentials so you can start running smoothly as quickly as possible.',
   },
   {
-    question: 'Can I manage multiple locations with Hobwise?',
+    question: 'Will my staff need training?',
     answer:
-      'Yes. Hobwise lets you manage multiple branches or outlets from a single account, with separate insights and controls for each location.',
-    collapse: false,
+      "Yes — but we've designed Hobwise to be simple and easy to use. Most staff members learn the basics within a short time, and we provide onboarding guidance to help your team get comfortable quickly.",
   },
   {
-    question: 'Does Hobwise offer real-time data and reporting?',
+    question: 'Can Hobwise work across multiple branches?',
     answer:
-      'Absolutely. Sales, orders, inventory, and payments update in real time, and you can export detailed reports across every module whenever you need them.',
-    collapse: false,
+      'Absolutely. Hobwise lets you manage multiple restaurant locations from one dashboard, giving you visibility into sales, operations, staff activity, and performance across all branches.',
   },
   {
-    question: 'Is Hobwise available on mobile devices?',
+    question: 'What happens if internet connectivity drops?',
     answer:
-      'Yes. Hobwise is fully responsive and works on any modern browser, so you can manage your business from your phone, tablet, or desktop.',
-    collapse: false,
+      'Hobwise is built with real operational environments in mind. Some features can continue working during temporary internet interruptions, and data syncs once connectivity is restored.',
   },
   {
-    question: 'What types of businesses benefit from Hobwise?',
+    question: 'Can I migrate from another POS system?',
     answer:
-      'Hobwise is built for the hospitality industry — restaurants, hotels, cafés, bars, lounges, and clubs of any size.',
-    collapse: false,
+      'Yes. We can help you migrate important business data such as menus, products, and operational information from your current system to Hobwise with minimal disruption.',
+  },
+  {
+    question: 'Do you offer onboarding support?',
+    answer:
+      'Yes. Our team provides onboarding assistance to help you set up your restaurant, configure workflows, and get your staff ready to use Hobwise confidently.',
+  },
+  {
+    question: 'Is support available on WhatsApp?',
+    answer:
+      'Yes. We offer WhatsApp support so you can quickly reach our team whenever you need help or have questions about your operations.',
   },
 ];
 
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 export default function FAQs({ className }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [faqs, setFaqs] = useState<
-    { question: string; answer: string; collapse: boolean }[]
-  >([]);
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const getFaqs = async (loading = true) => {
-    setIsLoading(loading);
+  const getFaqs = async () => {
+    setIsLoading(true);
     const data = await getFAQItems();
     setIsLoading(false);
 
@@ -60,71 +71,75 @@ export default function FAQs({ className }: { className?: string }) {
     getFaqs();
   }, []);
 
-  const handleCollapse = (index: number) => {
-    const copyFaqs = [...faqs];
-    if (copyFaqs[index].collapse) {
-      copyFaqs[index].collapse = false;
-    } else {
-      copyFaqs[index].collapse = true;
-    }
-    setFaqs(copyFaqs);
+  const handleToggle = (index: number) => {
+    setOpenIndex((prev) => (prev === index ? null : index));
   };
 
   return (
     <section
       id='faq'
       className={cn(
-        'scroll-mt-28 bg-white py-8 lg:py-16 font-satoshi space-y-2 px-6 lg:px-12',
+        'scroll-mt-24 bg-white py-16 lg:py-24 font-satoshi px-6 lg:px-16',
         className
       )}
     >
-      <div className='flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1.5 rounded-full text-xs shadow-custom-inset'>
-        <FaqIcon />
-        <p className='font-normal'>FAQ</p>
-      </div>
-      <div className='w-[100%] text-left'>
-        <h2 className='text-[28px] lg:text-[44px] text-[#1D2939] lg:leading-[52px] font-bricolage_grotesque font-bold'>
-          Your Top Questions About Hobwise
-        </h2>
-      </div>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start'>
+        <div className='space-y-10'>
+          <div className='text-center space-y-3'>
+            <h2 className='font-bricolage_grotesque font-medium text-[#161618] text-[30px] leading-[38px] lg:text-[44px] lg:leading-[52px]'>
+              Frequently
+              <br /> Asked Questions
+            </h2>
+            <p className='text-[#667085] text-sm lg:text-base'>Your top questions, answered.</p>
+          </div>
 
-      <div className='space-y-6'>
-        {isLoading ? (
-          ''
-        ) : (
-          <React.Fragment>
-            {faqs.map((each, index) => (
-              <Transition key={each.question || index}>
-                {each.question && (
-                  <div className='bg-[#F6F5FE] px-4 lg:px-8 py-6 rounded-2xl border border-[#5F35D24D] flex items-start justify-between font-bricolage_grotesque'>
-                    <div className='space-y-2 text-left w-[80%]'>
-                      <p
-                        className='text-[#252525] font-medium text-base lg:text-[20px]'
-                        onClick={() => handleCollapse(index)}
+          {!isLoading && (
+            <div className='space-y-2 text-left'>
+              {faqs.map((each, index) => {
+                if (!each.question) return null;
+                const isOpen = openIndex === index;
+
+                return (
+                  <Transition key={each.question}>
+                    <div className='py-1'>
+                      <button
+                        type='button'
+                        aria-expanded={isOpen}
+                        onClick={() => handleToggle(index)}
+                        className={cn(
+                          'w-full flex items-center gap-4 text-left px-4 py-4 transition-colors',
+                          isOpen
+                            ? 'bg-[#F4F4F6] border-l-4 border-primaryColor text-primaryColor'
+                            : 'text-[#3F3F46]'
+                        )}
                       >
-                        {each.question}
-                      </p>
-                      {each.collapse && (
+                        <span className='shrink-0 text-lg'>
+                          {isOpen ? <FiMinus /> : <FiPlus />}
+                        </span>
+                        <span className='font-bricolage_grotesque text-base lg:text-lg'>
+                          {each.question}
+                        </span>
+                      </button>
+                      {isOpen && (
                         <Transition>
-                          <p className='text-[#677182] font-satoshi text-sm lg:text-base'>
+                          <p className='bg-white shadow-[0_8px_24px_rgba(16,24,40,0.06)] px-5 py-5 text-[#677182] text-sm lg:text-base'>
                             {each.answer}
                           </p>
                         </Transition>
                       )}
                     </div>
-                    <div
-                      className='border border-[#5F35D2] bg-[#EAE8FD] rounded-full lg:h-10 lg:w-10 w-6 h-6 flex items-center justify-center'
-                      role='button'
-                      onClick={() => handleCollapse(index)}
-                    >
-                      {each.collapse ? <ArrowUp /> : <ArrowDown2 />}
-                    </div>
-                  </div>
-                )}
-              </Transition>
-            ))}
-          </React.Fragment>
-        )}
+                  </Transition>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <Image
+          src={FaqPhoto}
+          alt='Warm, modern restaurant interior'
+          className='hidden lg:block w-full h-auto object-cover'
+        />
       </div>
     </section>
   );

@@ -265,7 +265,7 @@ const DocketModal = ({
             {/* Items Table Header — no amount column on a docket */}
             <div className="flex gap-3 text-sm font-semibold text-black mb-2">
               <div className="w-12">Qty</div>
-              <div className="flex-1">Description</div>
+              <div className="flex-1 text-center">Description</div>
             </div>
 
             {/* Items List */}
@@ -276,7 +276,7 @@ const DocketModal = ({
                   className="flex gap-3 border-b pb-1 text-sm text-black"
                 >
                   <div className="w-12 text-black">{item.quantity}</div>
-                  <div className="flex-1">
+                  <div className="flex-1 text-center">
                     <div className="text-black font-medium">
                       {item.itemName}
                       {item.isPacked && (
