@@ -4,7 +4,7 @@ import {
   CONTACT_URL,
   LOGIN_URL,
   PRIVACY_POLICY,
-  SIGN_UP_URL,
+  REQUEST_DEMO_URL,
 } from '@/utilities/routes';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -18,15 +18,15 @@ const linkColumns = [
     { title: 'Pricing', href: '/#pricing' },
   ],
   [
-    { title: 'About', href: '/#about' },
-    { title: 'Careers', href: `/${CONTACT_URL}` },
+    { title: 'Book a Live Demo', href: `/${REQUEST_DEMO_URL}` },
     { title: 'FAQ', href: '/#faq' },
     { title: 'Contact', href: `/${CONTACT_URL}` },
+    { title: 'Email', href: 'mailto:hello@hobwise.com' },
   ],
   [
-    { title: 'Email', href: 'mailto:hello@hobwise.com' },
-    { title: 'WhatsApp', href: `/${CONTACT_URL}` },
-    { title: 'Book a demo', href: SIGN_UP_URL },
+    { title: 'Terms of Use', href: `${PRIVACY_POLICY}?tab=Terms Of Use` },
+    { title: 'Privacy Policy', href: PRIVACY_POLICY },
+    { title: 'User Guide', href: `${PRIVACY_POLICY}?tab=User Guide` },
   ],
 ];
 

@@ -4,8 +4,8 @@ import { CustomInput } from "@/components/CustomInput";
 import { CustomTextArea } from "@/components/customTextArea";
 import FAQs from "@/components/ui/landingPage/faq";
 import JoinCommunity from "@/components/ui/landingPage/joinCommunity";
-import Footer from "@/components/ui/landingPage/footer";
-import Navbar from "@/components/ui/landingPage/navBar";
+import LandingFooter from "@/components/ui/landingPage/v2/footer";
+import LandingNav from "@/components/ui/landingPage/v2/nav";
 import Campaigns from "@/components/ui/landingPage/campaigns";
 import { notify, validateEmail } from "@/lib/utils";
 import Hobwise from "@/public/assets/images/hobwise.png";
@@ -16,7 +16,6 @@ import Image from "next/image";
 import { useState } from "react";
 import { ContactUs } from "../api/controllers/landingPage";
 import { toast } from "sonner";
-import LandingPageHeader from "@/components/ui/landingPage/header";
 import { PRIVACY_POLICY } from "@/utilities/routes";
 import Link from "next/link";
 
@@ -73,10 +72,7 @@ export default function Contact() {
 
   return (
     <div className="w-full bg-white">
-      <header className="z-[100] backdrop-filter backdrop-blur-md fixed w-full">
-        <LandingPageHeader />
-        <Navbar type="default" />
-      </header>
+      <LandingNav />
       <main>
         <section className="font-satoshi bg-white w-full pt-28 lg:pt-32 pb-8 space-y-8 lg:space-y-10 px-6 lg:px-12">
           <div className={sectionHeaderClass}>
@@ -234,7 +230,7 @@ export default function Contact() {
 
         <JoinCommunity className="text-center" />
       </main>
-      <Footer />
+      <LandingFooter />
     </div>
   );
 }

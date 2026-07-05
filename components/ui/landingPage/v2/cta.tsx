@@ -1,6 +1,6 @@
 import { CustomButton } from '@/components/customButton';
 import CtaGraphics from '@/public/assets/images/landing-v2/cta-graphics.png';
-import { SIGN_UP_URL } from '@/utilities/routes';
+import { REQUEST_DEMO_URL } from '@/utilities/routes';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiArrowRight } from 'react-icons/fi';
@@ -52,7 +52,7 @@ export default function Cta() {
             Bring orders, staff, inventory, reservations, and reporting into one system built for
             modern restaurants.
           </p>
-          <Link href={SIGN_UP_URL} target='_blank' className='inline-block'>
+          <Link href={`/${REQUEST_DEMO_URL}`} className='inline-block'>
             <CustomButton className='h-[48px] px-8 rounded-sm bg-white text-primaryColor'>
               <span className='flex items-center gap-2'>
                 Book a Demo <FiArrowRight />

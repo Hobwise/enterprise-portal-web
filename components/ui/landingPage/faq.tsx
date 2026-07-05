@@ -7,41 +7,58 @@ import React, { useEffect, useState } from 'react';
 import { FiMinus, FiPlus } from 'react-icons/fi';
 import { Transition } from './transition';
 
+// Mirrors the live FAQ content served by the API — used only when the
+// getFAQItems() request fails or returns an empty list.
 const DEFAULT_FAQS = [
   {
-    question: 'How long does setup take?',
+    question: 'What is this platform, and who is it for?',
     answer:
-      'Most restaurants can get started within 24–72 hours, depending on the size of your operations. Our team helps you set up menus, staff accounts, payments, and other essentials so you can start running smoothly as quickly as possible.',
+      'Our platform is a B2B SaaS solution tailored for the hospitality industry, including businesses like bars, restaurants, clubs, hotels, lounges etc. We simplify daily operations by offering tools to efficiently manage orders, inventory, reservations, customer interactions, and more.',
   },
   {
-    question: 'Will my staff need training?',
+    question: 'What types of activities can I manage with this platform?',
     answer:
-      "Yes — but we've designed Hobwise to be simple and easy to use. Most staff members learn the basics within a short time, and we provide onboarding guidance to help your team get comfortable quickly.",
+      'You can manage a wide range of activities, including digital menu, order processing, inventory tracking, reservation scheduling, customer communications, staff assignments, and sales reporting. Our platform centralizes your business operations, giving you better control and visibility.',
   },
   {
-    question: 'Can Hobwise work across multiple branches?',
+    question: 'How does your platform help improve customer experience?',
     answer:
-      'Absolutely. Hobwise lets you manage multiple restaurant locations from one dashboard, giving you visibility into sales, operations, staff activity, and performance across all branches.',
+      'By automating and streamlining tasks, our platform helps you serve customers faster, reduce errors, and personalize interactions. This leads to shorter wait times, more accurate orders, and a smooth customer experience that keeps guests coming back.',
   },
   {
-    question: 'What happens if internet connectivity drops?',
+    question: 'Can I use this solution to manage multiple locations?',
     answer:
-      'Hobwise is built with real operational environments in mind. Some features can continue working during temporary internet interruptions, and data syncs once connectivity is restored.',
+      'Yes, our platform is designed to support businesses with multiple locations. You can monitor and manage each location individually allowing you to make data-driven decisions.',
   },
   {
-    question: 'Can I migrate from another POS system?',
+    question: 'What reports and analytics are available?',
     answer:
-      'Yes. We can help you migrate important business data such as menus, products, and operational information from your current system to Hobwise with minimal disruption.',
+      'Our platform provides detailed analytics on sales, customer preferences, peak hours, and staff performance. You can generate custom reports to gain insights into your business’s performance, helping you identify opportunities for growth.',
   },
   {
-    question: 'Do you offer onboarding support?',
+    question: 'Is the platform mobile-friendly?',
     answer:
-      'Yes. Our team provides onboarding assistance to help you set up your restaurant, configure workflows, and get your staff ready to use Hobwise confidently.',
+      'Absolutely! Our platform is designed to be accessible from any device, including smartphones and tablets, allowing you to manage your business on the go.',
   },
   {
-    question: 'Is support available on WhatsApp?',
+    question: 'How secure is my data?',
     answer:
-      'Yes. We offer WhatsApp support so you can quickly reach our team whenever you need help or have questions about your operations.',
+      'We prioritize data security and employ industry-standard encryption and access control measures. Your data is stored securely, and only authorized users have access to sensitive information.',
+  },
+  {
+    question: 'How much does the platform cost?',
+    answer:
+      'Our pricing is based on the size of your business and the features you need. We offer flexible subscription plans, so you only pay for what you use. Contact us to get a personalized quote.',
+  },
+  {
+    question: 'What kind of customer support do you offer?',
+    answer:
+      'We offer 24/7 customer support to ensure you have assistance whenever you need it. Our support team is available via email, phone, and live chat, and we also offer a knowledge base for self-service help.',
+  },
+  {
+    question: 'How can I get started with the platform?',
+    answer:
+      'Getting started is easy! Sign up for a free trial on our website or contact our sales team for a personalized demo. We’ll help you onboard and set up your account to ensure you’re ready to streamline your business operations right away.',
   },
 ];
 
