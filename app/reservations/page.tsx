@@ -3,7 +3,7 @@ import { CustomInput } from '@/components/CustomInput';
 import React, { useEffect, useState } from 'react';
 import { IoSearchOutline } from 'react-icons/io5';
 import { CustomButton } from '@/components/customButton';
-import Footer from '@/components/ui/landingPage/footer';
+import LandingFooter from '@/components/ui/landingPage/v2/footer';
 import { getReservations } from '../api/controllers/landingPage';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
 import ReservationCard from '@/components/ui/landingPage/reservationCard';
@@ -149,7 +149,7 @@ export default function Reservations() {
           )}
         </React.Fragment>
         <JoinCommunity className="text-center" />
-        <Footer />
+        <LandingFooter />
       </div>
     </div>
   );

@@ -1,12 +1,13 @@
 'use client';
 import HospiraChat from '@/public/assets/images/landing-v2/hospira-chat.png';
+import HospiraDashboard from '@/public/assets/images/landing-v2/hospira-dashboard.png';
 import HospiraSupport from '@/public/assets/images/landing-v2/hospira-support.png';
 import Image from 'next/image';
+import { useRef, useState } from 'react';
 import { PiChartPieSliceFill, PiLightningFill, PiRobotFill } from 'react-icons/pi';
 
 const DEMO_VIDEO_URL =
   'https://res.cloudinary.com/dboqyj4bp/video/upload/v1744286255/hob-wizz_pvswyr.mp4';
-const DEMO_VIDEO_POSTER = '/assets/images/landing-v2/hospira-dashboard.png';
 
 const capabilities = [
   {
@@ -24,6 +25,18 @@ const capabilities = [
 ];
 
 export default function Hospira() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const startPlayback = () => {
+    setIsPlaying(true);
+    // play() must be called synchronously inside the click handler —
+    // browsers block autoplay-with-sound on elements mounted after the fact.
+    videoRef.current?.play().catch(() => {
+      // Autoplay refused: the video stays visible with native controls.
+    });
+  };
+
   return (
     <section id='hospira' className='scroll-mt-24 bg-white font-satoshi py-16 lg:py-24 px-6 lg:px-16'>
       <div className='text-center space-y-4 max-w-2xl mx-auto'>
@@ -40,16 +53,35 @@ export default function Hospira() {
         </p>
       </div>
 
-      <video
-        controls
-        preload='none'
-        poster={DEMO_VIDEO_POSTER}
-        src={DEMO_VIDEO_URL}
-        className='w-full h-auto mt-12 rounded-2xl border border-[#ECECEC] shadow-custom'
-      >
-        <source src={DEMO_VIDEO_URL} type='video/mp4' />
-        Your browser does not support the video tag.
-      </video>
+      <div className='mt-12 rounded-2xl overflow-hidden border border-[#ECECEC] shadow-custom'>
+        <video
+          ref={videoRef}
+          controls
+          playsInline
+          preload='metadata'
+          onEnded={() => setIsPlaying(false)}
+          className={isPlaying ? 'w-full h-auto' : 'hidden'}
+        >
+          <source src={DEMO_VIDEO_URL} type='video/mp4' />
+          Your browser does not support the video tag.
+        </video>
+        {!isPlaying && (
+          // The poster artwork already carries the play button — make the
+          // whole frame the actual control so tapping it starts playback.
+          <button
+            type='button'
+            aria-label='Play the Hobwise demo video'
+            onClick={startPlayback}
+            className='group block w-full cursor-pointer'
+          >
+            <Image
+              src={HospiraDashboard}
+              alt='Watch the Hobwise demo video'
+              className='w-full h-auto transition-transform duration-300 group-hover:scale-[1.01]'
+            />
+          </button>
+        )}
+      </div>
 
       <div className='grid grid-cols-1 lg:grid-cols-[0.68fr_1fr_1fr] gap-6 mt-8 text-left'>
         <div className='bg-white border border-[#ECECEC] p-6 space-y-5'>

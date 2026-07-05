@@ -45,7 +45,7 @@ export default function LandingNav() {
           <Link href={SIGN_UP_URL} target='_blank'>
             <CustomButton className='h-[44px] px-6 rounded-md bg-gradient-to-r from-[#5F35D2] to-[#7C3AED] text-white'>
               <span className='flex items-center gap-2'>
-                Book a Demo <FiArrowRight />
+                Sign Up <FiArrowRight />
               </span>
             </CustomButton>
           </Link>
@@ -80,7 +80,7 @@ export default function LandingNav() {
         <div className='pt-2 flex items-center gap-4'>
           <Link href={SIGN_UP_URL} target='_blank' onClick={() => setOpenNav(false)}>
             <CustomButton className='h-[44px] px-6 rounded-md bg-primaryColor text-white'>
-              Book a Demo
+              Sign Up
             </CustomButton>
           </Link>
           <Link href={LOGIN_URL} target='_blank' className='text-sm text-[#3F3F46]'>

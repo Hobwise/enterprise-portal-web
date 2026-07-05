@@ -1,7 +1,7 @@
 'use client';
 import { CustomButton } from '@/components/customButton';
 import HeroCollage from '@/public/assets/images/landing-v2/hero-collage.png';
-import { SIGN_UP_URL } from '@/utilities/routes';
+import { REQUEST_DEMO_URL, SIGN_UP_URL } from '@/utilities/routes';
 import Image from 'next/image';
 import Link from 'next/link';
 import { FiArrowRight } from 'react-icons/fi';
@@ -52,7 +52,7 @@ export default function Hero() {
         </p>
 
         <div className='flex flex-col sm:flex-row items-center justify-center gap-4 pt-2'>
-          <Link href={SIGN_UP_URL} target='_blank'>
+          <Link href={`/${REQUEST_DEMO_URL}`}>
             <CustomButton className='h-[48px] px-8 rounded-md bg-gradient-to-r from-[#5F35D2] to-[#7C3AED] text-white'>
               <span className='flex items-center gap-2'>
                 Book Live Demo <FiArrowRight />
