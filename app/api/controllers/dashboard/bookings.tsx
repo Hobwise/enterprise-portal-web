@@ -127,7 +127,7 @@ export async function getBookingDetails(
   const payload = {
     category: category,
     businessId: businessId,
-    page: page || 0,
+    page: page || 1,
     pageSize: pageSize || 10,
   };
 

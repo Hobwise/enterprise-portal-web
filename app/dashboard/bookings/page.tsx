@@ -71,9 +71,10 @@ const Bookings: React.FC = () => {
     categories,
     getCategoryDetails,
     isLoadingInitial,
+    isLoadingDetails,
     isError,
     refetch,
-  } = useAllBookingsData(page, rowsPerPage);
+  } = useAllBookingsData(page, rowsPerPage, tableStatus);
 
   useEffect(() => {
     setTableStatus("All Bookings");
@@ -117,7 +118,7 @@ const Bookings: React.FC = () => {
         text: "Operation successful",
         type: "success",
       });
-      refetch();
+      await refetch();
       setBookingId("");
       closeBookingDetailsModal();
     } else {
@@ -236,7 +237,7 @@ const Bookings: React.FC = () => {
           categories={data.categories}
           refetch={refetch}
           searchQuery={searchQuery}
-          isLoading={isLoadingInitial}
+          isLoading={isLoadingDetails}
           isLoadingInitial={isLoadingInitial}
           getCategoryDetails={getCategoryDetails}
         />
