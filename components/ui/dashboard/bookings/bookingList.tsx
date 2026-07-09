@@ -33,7 +33,6 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
 import { notify, submitBookingStatus } from "@/lib/utils";
-import { useQueryClient } from '@tanstack/react-query';
 import { CiCalendar } from "react-icons/ci";
 import { IoCheckmark } from "react-icons/io5";
 import { LiaTimesSolid } from "react-icons/lia";
@@ -92,24 +91,7 @@ interface BookingsListProps {
   isLoadingInitial?: boolean;
 }
 
-// Status mapping for booking categories
-const getStatusForBookingCategory = (categoryName: string): number | null => {
-  switch (categoryName.toLowerCase()) {
-    case "pending bookings":
-      return 0;
-    case "confirmed bookings":
-    case "incoming bookings":
-      return 1;
-    case "processed bookings":
-      return null;
-    case "today's bookings":
-      return null;
-    case "unsuccessful bookings":
-      return 5;
-    default:
-      return null; // null means show all bookings
-  }
-};
+
 
 // Function to get filtered bookings based on category and pending state
 const getFilteredBookingDetails = (
@@ -191,16 +173,7 @@ const getFilteredBookingDetails = (
     return { bookings: [], paginationMeta: defaultPaginationMeta };
   }
 
-  // Get the status filter for the selected category
-  const statusFilter = getStatusForBookingCategory(selectedCategory);
-
-  // Filter by status if not "All Bookings"
   let filteredByStatus = allBookings;
-  if (statusFilter !== null && Array.isArray(allBookings)) {
-    filteredByStatus = allBookings.filter(
-      (booking: BookingItem) => booking.bookingStatus === statusFilter
-    );
-  }
 
   // Apply search filter if provided
   if (searchQuery.trim() && Array.isArray(filteredByStatus)) {
@@ -238,12 +211,12 @@ const BookingsList: React.FC<BookingsListProps> = ({
   isLoadingInitial = false,
 }) => {
   const { userRolePermissions, role } = usePermission();
-  const queryClient = useQueryClient();
   const [isOpenDelete, setIsOpenDelete] = React.useState<boolean>(false);
   const [isEditBookingModal, setIsEditBookingModal] =
     React.useState<boolean>(false);
   const [id, setId] = React.useState<number>();
   const [eachBooking, setEachBooking] = React.useState<any>(null);
+  const [isCancelLoading, setIsCancelLoading] = React.useState<boolean>(false);
 
   const {
     page,
@@ -270,10 +243,7 @@ const BookingsList: React.FC<BookingsListProps> = ({
     setIsEditBookingModal(!isEditBookingModal);
   };
 
-  const handleTabClick = React.useCallback((categoryName: string) => {
-    setTableStatus(categoryName);
-    setPage(1);
-  }, [setTableStatus, setPage]);
+
 
   const currentCategoryName =
     tableStatus || categories?.bookingCategories?.[0]?.name || "All Bookings";
@@ -341,13 +311,13 @@ const BookingsList: React.FC<BookingsListProps> = ({
     });
   }, [displayData, sortDescriptor]);
 
-  const [value, setValue] = useState("");
-
-  const handleTabChange = React.useCallback((index: string) => {
-    setValue(index);
-  }, []);
+  const handleTabChange = React.useCallback((key: any) => {
+    setTableStatus(key as string);
+    setPage(1);
+  }, [setTableStatus, setPage]);
 
   const updateBookingStatus = async (status: number, id: number) => {
+    if (status === 3) setIsCancelLoading(true);
     const response: any = await postBookingStatus(String(id), status);
     if (response?.data?.isSuccessful) {
       notify({
@@ -355,11 +325,13 @@ const BookingsList: React.FC<BookingsListProps> = ({
         text: "Operation successful",
         type: "success",
       });
-      await queryClient.invalidateQueries('bookingCategories');
-      await queryClient.invalidateQueries(['bookingDetails']);
-      refetch();
-      status === 3 && toggleDeleteModal();
+      await refetch();
+      if (status === 3) {
+        setIsCancelLoading(false);
+        toggleDeleteModal();
+      }
     } else if (response?.data?.error) {
+      setIsCancelLoading(false);
       notify({
         title: "Error!",
         text: response?.data?.error,
@@ -549,33 +521,17 @@ const BookingsList: React.FC<BookingsListProps> = ({
       <Filters
         bookings={categories?.bookingCategories || []}
         handleTabChange={handleTabChange}
-        value={value}
-        handleTabClick={handleTabClick}
+        value={currentCategoryName}
       />
     );
   }, [
     categories?.bookingCategories,
     handleTabChange,
-    value,
-    handleTabClick,
+    currentCategoryName,
   ]);
 
-  // Determine if we should show loading spinner - only show for initial load
-  const shouldShowLoading = isLoadingInitial && filteredData.bookings.length === 0;
-
-  // Check if data is in pending state
-  const isDataPending =
-    (isLoading || isLoadingInitial || isPending) && !currentCategoryData;
-
-  if (isDataPending) {
-    return (
-      <section className="border border-primaryGrey rounded-lg overflow-hidden">
-        <div className="flex justify-center items-center h-64">
-          <SpinnerLoader size="md" />
-        </div>
-      </section>
-    );
-  }
+  // Determine if data is loading (initial load, tab switch, or pagination)
+  const isDataLoading = isLoading || isLoadingInitial || isPending;
 
   return (
     <section className="border border-primaryGrey rounded-lg overflow-hidden">
@@ -608,9 +564,13 @@ const BookingsList: React.FC<BookingsListProps> = ({
         </TableHeader>
         <TableBody
           emptyContent={"No booking(s) found"}
-          items={shouldShowLoading ? [] : sortedBookings}
-          isLoading={shouldShowLoading}
-          loadingContent={<SpinnerLoader size="md" />}
+          items={isDataLoading ? [] : sortedBookings}
+          isLoading={isDataLoading}
+          loadingContent={
+            <div className="flex justify-center items-center w-full h-full py-10">
+              <SpinnerLoader size="md" />
+            </div>
+          }
         >
           {(booking: BookingItem) => (
             <TableRow
@@ -642,6 +602,10 @@ const BookingsList: React.FC<BookingsListProps> = ({
         handleDelete={() => updateBookingStatus(3, id as number)}
         setIsOpen={setIsOpenDelete}
         toggleModal={toggleDeleteModal}
+        isLoading={isCancelLoading}
+        title="Cancel Booking"
+        actionLabel="Yes, Cancel"
+        loadingLabel="Cancelling..."
       />
     </section>
   );

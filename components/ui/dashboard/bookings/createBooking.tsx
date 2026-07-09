@@ -25,7 +25,6 @@ import {
 } from "@nextui-org/react";
 import Image from "next/image";
 import React, { useState } from "react";
-import { useQueryClient } from '@tanstack/react-query';
 import { MdOutlineMailOutline, MdOutlinePhone } from "react-icons/md";
 import { IoRemoveCircleOutline, IoAddCircleOutline } from "react-icons/io5";
 import noImage from "../../../../public/assets/images/no-image.svg";
@@ -41,7 +40,6 @@ const CreateBooking = ({
   const businessInformation = getJsonItemFromLocalStorage("business");
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const { data } = useReservation();
-  const queryClient = useQueryClient();
 
   const [isLoading, setIsLoading] = useState(false);
   const [response, setResponse] = useState(null);
@@ -123,10 +121,7 @@ const CreateBooking = ({
     setIsLoading(false);
 
     if (data?.data?.isSuccessful) {
-      refetch();
-      // Invalidate booking queries to refresh the booking list
-      queryClient.invalidateQueries(["bookingCategories"]);
-      queryClient.invalidateQueries(["bookingDetails"]);
+      await refetch();
 
       setTimeNdate(now(getLocalTimeZone()));
       setSelectedTime("");
@@ -380,25 +375,27 @@ const CreateBooking = ({
                         <label className="font-[500] text-black text-[14px] block mb-2">
                           Date
                         </label>
-                        <DatePicker
-                          calendarWidth={270}
-                          variant="bordered"
-                          hideTimeZone
-                          size="lg"
-                          radius="sm"
-                          granularity="day"
-                          errorMessage={response?.errors?.timeNdate?.[0]}
-                          value={timeNdate}
-                          onChange={setTimeNdate}
-                          showMonthAndYearPickers
-                          minValue={today(getLocalTimeZone())}
-                          defaultValue={now(getLocalTimeZone())}
-                          classNames={{
-                            base: "bg-white  shadow-none",
-                            input: "text-black bg-white",
-                            inputWrapper: "border-2 rounded-sm border-gray-200",
-                          }}
-                        />
+                        <div>
+                          <DatePicker
+                            calendarWidth={270}
+                            variant="bordered"
+                            hideTimeZone
+                            size="lg"
+                            radius="sm"
+                            granularity="day"
+                            errorMessage={response?.errors?.timeNdate?.[0]}
+                            value={timeNdate}
+                            onChange={setTimeNdate}
+                            showMonthAndYearPickers
+                            minValue={today(getLocalTimeZone())}
+                            defaultValue={now(getLocalTimeZone())}
+                            classNames={{
+                              base: "bg-white  shadow-none",
+                              input: "text-black bg-white",
+                              inputWrapper: "border-2 rounded-sm border-gray-200",
+                            }}
+                          />
+                        </div>
                       </div>
 
                       <div className="mt-0.5">
