@@ -14,6 +14,12 @@ export const AUTH = {
   getRoleCount: "api/v1/User/role-count",
   logout: "api/v1/User/logout",
 };
+export const QR_PAYMENT = {
+  getBanks: "api/v1/QrPayment/banks",
+  onboardBusiness: "api/v1/QrPayment/business/onboard",
+  bankAccounts: "api/v1/QrPayment/business/bank-accounts",
+  initialize: "api/v1/QrPayment/initialize",
+};
 export const LANDINGPAGE = {
   getFAQs: "api/v1/LandingPage/faqs",
   addToWaitList: "api/v1/LandingPage/waitlist",

@@ -102,7 +102,7 @@ export default function FAQs({ className }: { className?: string }) {
     >
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start'>
         <div className='space-y-10'>
-          <div className='text-center space-y-3'>
+          <div className='text-left space-y-3'>
             <h2 className='font-bricolage_grotesque font-medium text-[#161618] text-[30px] leading-[38px] lg:text-[44px] lg:leading-[52px]'>
               Frequently
               <br /> Asked Questions

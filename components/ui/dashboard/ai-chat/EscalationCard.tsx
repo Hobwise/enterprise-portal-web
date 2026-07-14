@@ -75,7 +75,9 @@ const EscalationCard = ({ userMessage, aiReply, sessionId }: EscalationCardProps
   const { userName, userEmail, businessName } = resolveContext();
 
   const [to] = useState(SUPPORT_EMAIL);
-  const [from, setFrom] = useState(userEmail);
+  // `from` is sent to support as the reply-to address, but it's no longer shown
+  // or editable in the form — we don't want the user's personal email surfaced.
+  const [from] = useState(userEmail);
   const [subject, setSubject] = useState(
     `Support Request — ${businessName} — HOBWISE AI`
   );
@@ -146,16 +148,6 @@ const EscalationCard = ({ userMessage, aiReply, sessionId }: EscalationCardProps
             value={to}
             readOnly
             className={`${inputClass} cursor-default bg-amber-50 text-amber-700`}
-          />
-        </Field>
-
-        <Field label="From">
-          <input
-            type="email"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            placeholder="your@email.com"
-            className={inputClass}
           />
         </Field>
 

@@ -221,39 +221,24 @@ export interface EscalationMailPayload {
   OrderId?: string;
 }
 
-/** Reads a file into a base64 string (without the data-URL prefix) so it can be
- *  carried inside a JSON payload. */
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      // `result` is a data URL: "data:<mime>;base64,<data>" — strip the prefix.
-      const comma = result.indexOf(",");
-      resolve(comma >= 0 ? result.slice(comma + 1) : result);
-    };
-    reader.onerror = () => reject(reader.error ?? new Error("File read failed"));
-    reader.readAsDataURL(file);
-  });
-
 /** Sends a support escalation email via the backend agent mailer.
- *  Sends an application/json body; an optional file attachment is base64-encoded
- *  into the `attachment` field. The `sessionId` is a required path parameter that
- *  links the escalation to its chat session so it shows in history. */
+ *  Sends a multipart/form-data body so an optional file attachment is uploaded
+ *  as a real file part (rather than base64-inlined into JSON). The `sessionId`
+ *  is a required path parameter that links the escalation to its chat session so
+ *  it shows in history. */
 export const sendEscalationMail = async (
   payload: EscalationMailPayload,
   attachment?: File | null,
   sessionId?: string | null
 ): Promise<boolean> => {
-  const body: Record<string, string> = {
-    to: payload.To,
-    from: payload.From,
-    subject: payload.Subject,
-    content: payload.Content,
-  };
-  if (payload.OrderId) body.orderId = payload.OrderId;
-  if (payload.Cc) body.cc = payload.Cc;
-  if (attachment) body.attachment = await fileToBase64(attachment);
+  const form = new FormData();
+  form.append("To", payload.To);
+  form.append("From", payload.From);
+  form.append("Subject", payload.Subject);
+  form.append("Content", payload.Content);
+  if (payload.Cc) form.append("Cc", payload.Cc);
+  if (payload.OrderId) form.append("OrderId", payload.OrderId);
+  if (attachment) form.append("Attachment", attachment);
 
   const response = await fetch(
     `${BASE_URL}api/v${API_VERSION}/Agent/send-escalation-mail/${encodeURIComponent(
@@ -261,12 +246,13 @@ export const sendEscalationMail = async (
     )}`,
     {
       method: "POST",
+      // No explicit Content-Type: the browser sets multipart/form-data with the
+      // correct boundary once a FormData body is supplied.
       headers: {
-        "Content-Type": "application/json",
         Accept: "*/*",
         ...authHeaders(),
       },
-      body: JSON.stringify(body),
+      body: form,
     }
   );
   return response.ok;

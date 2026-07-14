@@ -46,9 +46,9 @@ export default function Hero() {
         </h1>
 
         <p className='text-[#44444A] text-sm lg:text-base max-w-xl mx-auto'>
-          Everything your restaurant needs to operate smoothly — from orders and payments to
-          inventory and reporting. Built for restaurants that want faster operations, better
-          visibility, and fewer daily headaches.
+          Manage orders, payments, inventory, bookings, and reporting from one platform — now with
+          a built-in AI assistant ready to help whenever you need it. Built for restaurants that
+          want faster operations, better visibility, and fewer daily headaches.
         </p>
 
         <div className='flex flex-col sm:flex-row items-center justify-center gap-4 pt-2'>
