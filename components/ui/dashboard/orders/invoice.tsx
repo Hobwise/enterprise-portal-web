@@ -1,10 +1,12 @@
 "use client";
 import { CustomButton } from "@/components/customButton";
+import { CustomInput } from "@/components/CustomInput";
 import {
   formatPrice,
   getJsonItemFromLocalStorage,
   printPDF,
   saveAsPDF,
+  validateEmail,
 } from "@/lib/utils";
 import {
   Divider,
@@ -16,8 +18,9 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import moment from "moment";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import useOrderDetails from "@/hooks/cachedEndpoints/useOrderDetails";
+import { initializePayment } from "@/app/api/controllers/dashboard/qrPayment";
 
 const InvoiceModal = ({
   isOpenInvoice,
@@ -27,6 +30,10 @@ const InvoiceModal = ({
   const userInformation = getJsonItemFromLocalStorage("userInformation");
   const businessInformation = getJsonItemFromLocalStorage("business");
   const invoiceRef = useRef(null);
+  const businessId = businessInformation?.[0]?.businessId;
+  const [email, setEmail] = useState("");
+  const [qrBase64, setQrBase64] = useState("");
+  const [initializing, setInitializing] = useState(false);
 
   // Use cached order details hook
   const {
@@ -37,6 +44,39 @@ const InvoiceModal = ({
   } = useOrderDetails(singleOrder?.id, {
     enabled: !!singleOrder?.id && isOpenInvoice
   });
+
+  // Initialize a QR payment for the order so the receipt can show a scannable
+  // "scan to pay" code. Falls back to the logged-in user's email when no customer
+  // email is supplied (orders don't carry one).
+  const generateQr = async (customerEmail: string) => {
+    if (!singleOrder?.id || !order) return;
+    setInitializing(true);
+    try {
+      const base = singleOrder?.amountRemaining ?? order?.totalAmount ?? 0; // naira
+      const amountKobo = Math.round(base * 100);
+      const response = await initializePayment(businessId, {
+        orderId: singleOrder.id,
+        customerEmail,
+        amountKobo,
+      });
+      const qr = response?.data?.data?.qrCodeBase64;
+      if (qr) setQrBase64(qr);
+    } finally {
+      setInitializing(false);
+    }
+  };
+
+  // Generate the payment QR once the order details load; reset it on close.
+  useEffect(() => {
+    if (!isOpenInvoice) {
+      setQrBase64("");
+      return;
+    }
+    if (isSuccessful && order) {
+      generateQr(email || userInformation?.email);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpenInvoice, isSuccessful]);
 
   // Group items by itemName + unit + isPacked status
   const groupItems = (orderDetails: any[]) => {
@@ -84,8 +124,8 @@ const InvoiceModal = ({
         {() => (
           <>
 
-            <ModalBody className="flex max-h-[80vh] justify-center">
-               <div ref={invoiceRef} className="h-auto flex flex-col overflow-y-auto">
+            <ModalBody className="max-h-[65vh] overflow-y-auto">
+               <div ref={invoiceRef} className="h-auto flex flex-col">
                   {/* Header Section */}
                   <h3 className="font-[600] text-center text-lg text-black mt-6">
                     {businessInformation[0]?.businessName}
@@ -256,12 +296,40 @@ const InvoiceModal = ({
                         </p>
                       </div>
                     </div>
-                     
-                    {/* Payment Method */}
-                  
                   </div>
 
                   <Divider className="my-3"/>
+
+                  {/* Payment QR — scannable "scan to pay" section */}
+                  {(qrBase64 || initializing) && (
+                    <div className="flex flex-col items-center gap-2 py-4">
+                      {qrBase64 ? (
+                        <>
+                          <p className="text-sm font-semibold text-black">
+                            Scan to Pay
+                          </p>
+                          <div className="rounded-xl border border-[#ECECEC] bg-white p-3">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={`data:image/png;base64,${qrBase64}`}
+                              alt="Scan to pay"
+                              width={150}
+                              height={150}
+                            />
+                          </div>
+                          <p className="max-w-[230px] text-center text-xs text-grey500">
+                            Scan with your bank or Paystack app to pay{" "}
+                            {formatPrice(order.totalAmount, 'NGN')}
+                          </p>
+                        </>
+                      ) : (
+                        <div className="flex items-center gap-2 text-grey400">
+                          <Spinner size="sm" />
+                          <span className="text-xs">Generating payment code…</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className={`flex flex-col items-center my-5`}>
@@ -274,22 +342,40 @@ const InvoiceModal = ({
             </ModalBody>
             <Spacer y={1} />
             {!isLoading && order && (
-              <ModalFooter className="w-full flex  gap-5">
-                <CustomButton
-                  className="bg-white text-black border border-primaryGrey flex-grow"
-                  onClick={() => saveAsPDF(invoiceRef)}
-                  type="submit"
-                >
-                  Save
-                </CustomButton>
-                <CustomButton
-                  onClick={() => printPDF(invoiceRef)}
-                  className="flex-grow text-white"
-                  type="submit"
-                >
-                  Print
-                </CustomButton>
-              </ModalFooter>
+              <>
+                <div className="px-6">
+                  <CustomInput
+                    type="email"
+                    name="customerEmail"
+                    label="Customer email (optional)"
+                    placeholder="customer@email.com"
+                    value={email}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setEmail(e.target.value)
+                    }
+                    onBlur={() => {
+                      // Regenerate the QR against the customer's email if valid.
+                      if (validateEmail(email)) generateQr(email);
+                    }}
+                  />
+                </div>
+                <ModalFooter className="w-full flex  gap-5">
+                  <CustomButton
+                    className="bg-white text-black border border-primaryGrey flex-grow"
+                    onClick={() => saveAsPDF(invoiceRef)}
+                    type="submit"
+                  >
+                    Save
+                  </CustomButton>
+                  <CustomButton
+                    onClick={() => printPDF(invoiceRef)}
+                    className="flex-grow text-white"
+                    type="submit"
+                  >
+                    Print
+                  </CustomButton>
+                </ModalFooter>
+              </>
             )}
             <Spacer y={2} />
           </>

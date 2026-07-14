@@ -83,17 +83,15 @@ export default function PricingSection() {
 
   return (
     <section id='pricing' className='scroll-mt-24 bg-[#F8F8F8] font-satoshi py-16 lg:py-24 px-6 lg:px-16'>
-      <div className='lg:flex lg:items-end lg:justify-between space-y-4 lg:space-y-0'>
-        <div className='space-y-4'>
-          <p className='text-[#667085] text-xs lg:text-sm font-semibold tracking-[0.2em] uppercase'>
-            Pricing
-          </p>
-          <h2 className='font-bricolage_grotesque font-medium text-[#161618] text-[30px] leading-[38px] lg:text-[48px] lg:leading-[56px]'>
-            Priced for where
-            <br className='hidden lg:block' /> your business is now.
-          </h2>
-        </div>
-        <p className='text-[#44444A] text-sm lg:text-base lg:max-w-xs'>
+      <div className='space-y-4 max-w-2xl text-left'>
+        <p className='text-[#667085] text-xs lg:text-sm font-semibold tracking-[0.2em] uppercase'>
+          Pricing
+        </p>
+        <h2 className='font-bricolage_grotesque font-medium text-[#161618] text-[30px] leading-[38px] lg:text-[48px] lg:leading-[56px]'>
+          Priced for where
+          <br className='hidden lg:block' /> your business is now.
+        </h2>
+        <p className='text-[#44444A] text-sm lg:text-base'>
           Start small, scale when you grow. Every plan includes Hospira AI and free onboarding.
         </p>
       </div>

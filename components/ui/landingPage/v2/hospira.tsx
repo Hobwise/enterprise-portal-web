@@ -12,15 +12,15 @@ const DEMO_VIDEO_URL =
 const capabilities = [
   {
     icon: <PiLightningFill />,
-    text: 'Ask about stocks, reservations, bookings, menu and more.',
+    text: 'Get immediate answers about platform features and workflows.',
   },
   {
     icon: <PiChartPieSliceFill />,
-    text: 'Generates reports & spots trends easily.',
+    text: 'Learn how to place orders, manage bookings, or update inventory records.',
   },
   {
     icon: <PiRobotFill />,
-    text: 'Always on — never clocks out',
+    text: 'Always on — helps new staff learn the system, any time.',
   },
 ];
 
@@ -48,8 +48,8 @@ export default function Hospira() {
           <br className='hidden lg:block' /> your operations assistant.
         </h2>
         <p className='text-[#44444A] text-sm lg:text-base'>
-          Hospira helps you track performance, monitor stock, and answer operational questions
-          about your business in seconds.
+          Need help navigating the platform? Get guidance on placing orders, managing reservations,
+          checking inventory, or using specific features — simply ask.
         </p>
       </div>
 

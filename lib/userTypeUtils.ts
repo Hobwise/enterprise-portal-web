@@ -95,6 +95,7 @@ export const getAllowedSettingsPaths = (userInfo: UserInformation | null): strin
       "/dashboard/settings/personal-information",
       "/dashboard/settings/password-management",
       "/dashboard/settings/business-information",
+      "/dashboard/settings/payment-management",
       "/dashboard/settings/kyc-compliance",
       "/dashboard/settings/subscriptions",
       "/dashboard/settings/teams",

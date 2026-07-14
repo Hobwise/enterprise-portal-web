@@ -11,7 +11,7 @@ interface Suggestion {
 
 const SUGGESTIONS: Suggestion[] = [
   { icon: MessagesSquare, label: "Sales", prompt: "What was the average sales yesterday?" },
-  { icon: CalendarPlus, label: "Reservation", prompt: "How do I create a reservation?" },
+  { icon: CalendarPlus, label: "Reservation", prompt: "How do I book a reservation?" },
   { icon: Boxes, label: "Stock", prompt: "How do I transfer stock to a new location?" },
   { icon: QrCode, label: "QR Reports", prompt: "Where do I view QR reports?" },
 ];

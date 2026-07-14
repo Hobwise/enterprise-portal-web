@@ -27,6 +27,8 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { TbFileInvoice } from "react-icons/tb";
 import { Clock, Receipt, RotateCcw, CreditCard, ClipboardList } from "lucide-react";
 import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
+import PaystackPop from "paystack-inline-ts";
+import { initializePayment } from "@/app/api/controllers/dashboard/qrPayment";
 import {
   availableOptions,
   columns,
@@ -174,6 +176,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const { userRolePermissions, role } = usePermission();
   const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const isPOSUserState = isPOSUser(userInformation);
 
   const [singleOrder, setSingleOrder] = React.useState<OrderItem | null>(null);
@@ -232,8 +235,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [paymentReference, setPaymentReference] = React.useState<string>("");
   const [isProcessingPayment, setIsProcessingPayment] =
     React.useState<boolean>(false);
+  const [payNowLoading, setPayNowLoading] = React.useState<boolean>(false);
 
   // Payment methods array
+  const PAY_NOW_ID = 4;
+
   const paymentMethods = [
     { text: "Pay with cash", subText: " Accept payment using cash", id: 0 },
     { text: "Pay with Pos", subText: " Accept payment using Pos", id: 1 },
@@ -241,6 +247,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
       text: "Pay with bank transfer",
       subText: "Accept payment via bank transfer",
       id: 2,
+    },
+    {
+      text: "Pay now",
+      subText: "Pay online with card via Paystack",
+      id: PAY_NOW_ID,
     },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
@@ -473,9 +484,76 @@ const OrdersList: React.FC<OrdersListProps> = ({
       } catch (error) {
         console.error("Error in Pay Later:", error);
       }
+    } else if (methodId === PAY_NOW_ID) {
+      // Pay now - initialize the payment and open the Paystack popup
+      handlePayNow();
     } else {
       setSelectedPaymentMethod(methodId);
       setPaymentScreen(3);
+    }
+  };
+
+  // Initializes a QR payment for the order and opens the Paystack popup so the
+  // customer can pay online with a card. On success the order list is refreshed
+  // (the backend confirms the payment against the order via webhook).
+  const handlePayNow = async () => {
+    if (!singleOrder?.id) {
+      notify({ title: "Error!", text: "Order data not available", type: "error" });
+      return;
+    }
+
+    setPayNowLoading(true);
+    try {
+      const base =
+        singleOrder?.amountRemaining ?? singleOrder?.totalAmount ?? 0; // naira
+      const amountKobo = Math.round(base * 100);
+
+      const response = await initializePayment(
+        businessInformation?.[0]?.businessId,
+        {
+          orderId: singleOrder.id,
+          customerEmail: userInformation?.email,
+          amountKobo,
+        }
+      );
+
+      const accessCode = response?.data?.data?.accessCode;
+      if (!accessCode) {
+        notify({
+          title: "Error!",
+          text: response?.data?.error ?? "Unable to start payment.",
+          type: "error",
+        });
+        return;
+      }
+
+      const popup = new PaystackPop();
+      popup.resumeTransaction({
+        accessCode,
+        onSuccess: () => {
+          notify({
+            title: "Payment successful!",
+            text: "Payment received, awaiting confirmation",
+            type: "success",
+          });
+          setIsOpenPaymentModal(false);
+          queryClient.invalidateQueries({
+            queryKey: ["orderCategories"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orderDetails"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orders"],
+            refetchType: "active",
+          });
+          refetch();
+        },
+      });
+    } finally {
+      setPayNowLoading(false);
     }
   };
 
@@ -1327,21 +1405,30 @@ const OrdersList: React.FC<OrdersListProps> = ({
                 </div>
               </div>
               <div className="flex flex-col gap-1 text-black">
-                {paymentMethods.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => handlePaymentClick(item.id)}
-                    className={`flex cursor-pointer items-center gap-2 p-4 rounded-lg justify-between ${
-                      selectedPaymentMethod === item.id ? "bg-[#EAE5FF80]" : ""
-                    }`}
-                  >
-                    <div>
-                      <p className="font-semibold">{item.text}</p>
-                      <p className="text-sm text-grey500">{item.subText}</p>
+                {paymentMethods.map((item) => {
+                  const isPayNow = item.id === PAY_NOW_ID;
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() =>
+                        !(isPayNow && payNowLoading) && handlePaymentClick(item.id)
+                      }
+                      className={`flex cursor-pointer items-center gap-2 p-4 rounded-lg justify-between ${
+                        selectedPaymentMethod === item.id ? "bg-[#EAE5FF80]" : ""
+                      } ${isPayNow && payNowLoading ? "pointer-events-none opacity-60" : ""}`}
+                    >
+                      <div>
+                        <p className="font-semibold">{item.text}</p>
+                        <p className="text-sm text-grey500">{item.subText}</p>
+                      </div>
+                      {isPayNow && payNowLoading ? (
+                        <SpinnerLoader size="sm" />
+                      ) : (
+                        <MdKeyboardArrowRight />
+                      )}
                     </div>
-                    <MdKeyboardArrowRight />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

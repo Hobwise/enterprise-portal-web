@@ -37,6 +37,7 @@ interface CustomInputProps {
   max?: string;
   autoComplete?: string;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onBlur?: any;
 }
 
 export const CustomInput = ({
@@ -64,6 +65,7 @@ export const CustomInput = ({
   max,
   autoComplete,
   onFocus,
+  onBlur,
 }: CustomInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const inputRef = useRef<HTMLDivElement>(null);
@@ -161,6 +163,7 @@ export const CustomInput = ({
         onCopy={handleCopy}
         onPaste={handlePaste}
         onFocus={handleFocus}
+        onBlur={onBlur}
         min={min}
         max={max}
       />
