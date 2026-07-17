@@ -1662,6 +1662,7 @@ const CreateOrder = () => {
         orderData={orderData}
         businessId={businessId || ""}
         cooperateId={cooperateID || ""}
+        userId={qrId || undefined}
       />
 
       <TrackingDetailsPage

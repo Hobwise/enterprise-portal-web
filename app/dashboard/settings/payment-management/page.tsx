@@ -22,10 +22,14 @@ import {
   BankAccount,
   addBankAccount,
   deleteBankAccount,
+  deleteSettlementAccount,
   getBankAccounts,
   getBanks,
   onboardBusiness,
+  requestSettlementOtp,
   setDefaultBankAccount,
+  updateSettlementAccount,
+  acceptOnboardTerms,
 } from "@/app/api/controllers/dashboard/qrPayment";
 
 interface BankOption {
@@ -81,19 +85,23 @@ const PaymentManagement = () => {
   const [settlementBank, setSettlementBank] = useState<string>(""); // bank code
   const [accountNumber, setAccountNumber] = useState<string>("");
   const [isDefault, setIsDefault] = useState<boolean>(false);
+  const [otp, setOtp] = useState<string>("");
+  const [reason, setReason] = useState<string>("Update settlement account");
+  const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
+  const [onboardOtpSent, setOnboardOtpSent] = useState<boolean>(false);
 
   // Edit mode — set when editing an existing account.
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
   const [editingKind, setEditingKind] = useState<EditKind | null>(null);
 
   // Per-account async guard for the default toggle.
-  const [settingDefaultId, setSettingDefaultId] = useState<
-    string | undefined
-  >();
-
+  const [settingDefaultId, setSettingDefaultId] = useState<string>();
+  
   // Delete confirmation.
   const { isOpen, onOpen, onOpenChange, onClose } = useDisclosure();
+  
   const [pendingDelete, setPendingDelete] = useState<BankAccount | null>(null);
+  const [pendingDeleteKind, setPendingDeleteKind] = useState<EditKind | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   // Whether a settlement account already exists — drives onboard vs add-account.
@@ -133,7 +141,33 @@ const PaymentManagement = () => {
     accountName.trim().length > 0 &&
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
+    (editingKind === "settlement" ? otp.trim().length > 0 : true) &&
+    (!isOnboarded ? termsAccepted && otp.trim().length > 0 : true) &&
     !submitting;
+
+  const canRequestOnboardOtp =
+    !isOnboarded &&
+    accountName.trim().length > 0 &&
+    settlementBank.length > 0 &&
+    accountNumber.trim().length === 10 &&
+    termsAccepted &&
+    !submitting;
+
+  const handleRequestOnboardOtp = async () => {
+    if (!canRequestOnboardOtp) return;
+    setSubmitting(true);
+    try {
+      const response = await acceptOnboardTerms(businessId, { termsAccepted });
+      if (!succeeded(response)) {
+        toast.error(errorOf(response) ?? "Unable to request OTP. Please try again.");
+        return;
+      }
+      setOnboardOtpSent(true);
+      toast.success("OTP sent to your email.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const resetForm = () => {
     setAccountName(defaultBusinessName);
@@ -142,6 +176,9 @@ const PaymentManagement = () => {
     setIsDefault(false);
     setEditingAccount(null);
     setEditingKind(null);
+    setOtp("");
+    setTermsAccepted(false);
+    setOnboardOtpSent(false);
   };
 
   const openCreateForm = () => {
@@ -149,13 +186,28 @@ const PaymentManagement = () => {
     setMode("form");
   };
 
-  const openEditForm = (account: BankAccount, kind: EditKind) => {
+  const openEditForm = async (account: BankAccount, kind: EditKind) => {
+    if (kind === "settlement") {
+      setLoading(true);
+      try {
+        const response = await requestSettlementOtp(businessId);
+        if (!succeeded(response)) {
+          toast.error(errorOf(response) ?? "Unable to request OTP for settlement account update.");
+          return;
+        }
+        toast.success("OTP sent to your email.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
     setEditingAccount(account);
     setEditingKind(kind);
     setAccountName(account.accountName ?? defaultBusinessName);
     setSettlementBank(account.bankCode ?? account.settlementBank ?? "");
     setAccountNumber(account.accountNumber ?? "");
     setIsDefault(!!account.isDefault);
+    setOtp("");
     setMode("form");
   };
 
@@ -180,10 +232,11 @@ const PaymentManagement = () => {
       let response;
 
       if (editingAccount && editingKind === "settlement") {
-        // No update endpoint — re-onboard to change the settlement account.
-        response = await onboardBusiness(businessId, {
+        response = await updateSettlementAccount(businessId, {
           settlementBank,
           accountNumber: trimmedNumber,
+          reason,
+          otp: otp.trim(),
         });
       } else if (editingAccount) {
         // No update endpoint — add the new version, then remove the old one
@@ -211,6 +264,8 @@ const PaymentManagement = () => {
         response = await onboardBusiness(businessId, {
           settlementBank,
           accountNumber: trimmedNumber,
+          otp: otp.trim(),
+          termsAccepted,
         });
       }
 
@@ -252,18 +307,26 @@ const PaymentManagement = () => {
     }
   };
 
-  const confirmDelete = (account: BankAccount) => {
+  const confirmDelete = (account: BankAccount, kind: EditKind) => {
     setPendingDelete(account);
+    setPendingDeleteKind(kind);
     onOpen();
   };
 
   const handleDelete = async () => {
-    const id = pendingDelete ? accountIdOf(pendingDelete) : undefined;
-    if (!id) return;
+    if (!pendingDelete) return;
 
     setDeleting(true);
     try {
-      const response = await deleteBankAccount(businessId, id);
+      let response;
+      if (pendingDeleteKind === "settlement") {
+        response = await deleteSettlementAccount(businessId);
+      } else {
+        const id = accountIdOf(pendingDelete);
+        if (!id) return;
+        response = await deleteBankAccount(businessId, id);
+      }
+
       if (!succeeded(response)) {
         toast.error(errorOf(response) ?? "Unable to remove account.");
         return;
@@ -271,6 +334,7 @@ const PaymentManagement = () => {
       toast.success("Account removed");
       onClose();
       setPendingDelete(null);
+      setPendingDeleteKind(null);
       await loadAccounts();
     } finally {
       setDeleting(false);
@@ -300,7 +364,7 @@ const PaymentManagement = () => {
       </button>
       <button
         type="button"
-        onClick={() => confirmDelete(account)}
+        onClick={() => confirmDelete(account, kind)}
         aria-label="Remove account"
         className="text-[#D42620] transition-colors hover:text-[#a51d18]"
       >
@@ -346,43 +410,80 @@ const PaymentManagement = () => {
       <div className="space-y-8 p-6 sm:p-8">
         <h2 className="text-2xl font-medium text-[#344054]">{heading}</h2>
 
-        <div className="max-w-2xl space-y-6">
-          <CustomInput
-            type="text"
-            name="accountName"
-            label="Account Name"
-            placeholder="Account name"
-            value={accountName}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setAccountName(e.target.value)
-            }
-          />
+        <div className="max-w-2xl space-y-8 pt-4">
+          <div className="mt-2">
+            <CustomInput
+              type="text"
+              name="accountName"
+              label="Account Name"
+              placeholder="Account name"
+              value={accountName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setAccountName(e.target.value)
+              }
+            />
+          </div>
 
-          <SelectInput
-            label="Settlement Bank"
-            name="settlementBank"
-            placeholder="Select your bank name"
-            contents={bankOptions}
-            value={settlementBank}
-            selectedKeys={settlementBank ? [settlementBank] : []}
-            onChange={(e: { target: { value: string } }) =>
-              setSettlementBank(e.target.value)
-            }
-          />
+          <div className="mt-4">
+            <SelectInput
+              label="Settlement Bank"
+              name="settlementBank"
+              placeholder="Select your bank name"
+              contents={bankOptions}
+              value={settlementBank}
+              selectedKeys={settlementBank ? [settlementBank] : []}
+              onChange={(e: { target: { value: string } }) =>
+                setSettlementBank(e.target.value)
+              }
+            />
+          </div>
 
-          <CustomInput
-            type="text"
-            name="accountNumber"
-            label="Account Number"
-            placeholder="0123456789"
-            value={accountNumber}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
-            }
-          />
+          <div className="mt-4">
+            <CustomInput
+              type="text"
+              name="accountNumber"
+              label="Account Number"
+              placeholder="0123456789"
+              value={accountNumber}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
+              }
+            />
+          </div>
+
+          {!isOnboarded && (
+            <div className="mt-6 flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="termsAccepted"
+                className="mt-1 h-4 w-4 cursor-pointer rounded border-[#E4E7EC] text-primaryColor focus:ring-primaryColor"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                disabled={onboardOtpSent}
+              />
+              <label htmlFor="termsAccepted" className="text-sm text-[#101928] leading-tight cursor-pointer">
+                I accept the Terms and Conditions for managing the settlement account.
+              </label>
+            </div>
+          )}
+
+          {(editingKind === "settlement" || (!isOnboarded && onboardOtpSent)) && (
+            <div className="mt-4">
+              <CustomInput
+                type="text"
+                name="otp"
+                label="OTP Verification"
+                placeholder="Enter the OTP sent to your email"
+                value={otp}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setOtp(e.target.value)
+                }
+              />
+            </div>
+          )}
 
           {showDefaultToggle && (
-            <div className="flex items-center justify-between rounded-lg border border-[#E4E7EC] px-4 py-3">
+            <div className="flex items-center justify-between rounded-lg border border-[#E4E7EC] px-4 py-3 mt-4">
               <div className="flex flex-col">
                 <span className="text-sm font-medium text-[#101928]">
                   Set as default account
@@ -413,14 +514,25 @@ const PaymentManagement = () => {
           >
             Back
           </CustomButton>
-          <CustomButton
-            className="h-[52px] w-full max-w-[260px] px-6 font-semibold text-white"
-            disabled={!canSubmit}
-            loading={submitting}
-            onClick={handleSubmit}
-          >
-            {editingAccount ? "Save Changes" : "Create Account"}
-          </CustomButton>
+          {!isOnboarded && !onboardOtpSent ? (
+            <CustomButton
+              className="h-[52px] w-full max-w-[260px] px-6 font-semibold text-white"
+              disabled={!canRequestOnboardOtp}
+              loading={submitting}
+              onClick={handleRequestOnboardOtp}
+            >
+              Request OTP
+            </CustomButton>
+          ) : (
+            <CustomButton
+              className="h-[52px] w-full max-w-[260px] px-6 font-semibold text-white"
+              disabled={!canSubmit}
+              loading={submitting}
+              onClick={handleSubmit}
+            >
+              {editingAccount ? "Save Changes" : "Complete Onboarding"}
+            </CustomButton>
+          )}
         </div>
       </div>
     );
