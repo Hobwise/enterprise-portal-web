@@ -456,3 +456,16 @@ input:-webkit-autofill:focus {
 .overflow-auto {
   -webkit-overflow-scrolling: touch;
 }
+
+/* Invoice print utilities — the payment section (QR + bank accounts) is
+   hidden in the on-screen modal preview but shown when printing / saving as PDF */
+.print-only {
+  display: none;
+}
+
+@media print {
+  .print-only {
+    display: block !important;
+  }
+}
+

@@ -1,65 +1,24 @@
 "use client";
 
 import { CustomButton } from "@/components/customButton";
-import {
-  CheckoutData,
-  confirmPayment,
-  getCheckout,
-} from "@/app/api/controllers/dashboard/qrPayment";
+// Type-only on purpose: this page is public, so it must not pull in the
+// authenticated apiService, whose 401 handler redirects to the staff login.
+import type { CheckoutData } from "@/app/api/controllers/dashboard/qrPayment";
+import { getCustomerCheckout, initializeCustomerPayment } from "@/app/api/controllers/customerOrder";
 import { formatPrice } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import QRCode from "react-qr-code";
 import { toast } from "sonner";
 import { FiArrowRight, FiChevronDown, FiChevronUp, FiX } from "react-icons/fi";
 import { TbCopy } from "react-icons/tb";
+import PaystackPop from "paystack-inline-ts";
 
 interface CheckoutDetailsProps {
   reference: string;
+  businessId: string;
+  cooperateId?: string;
+  userId?: string;
 }
-
-// TODO: replace with real data once the checkout-by-reference endpoint (or the
-// `initialize` response shape) is available. Rendered so the page is reviewable.
-const placeholderCheckout = (reference: string): CheckoutData => ({
-  businessName: "Cubana Restaurant & Grills",
-  reference,
-  items: [
-    { name: "Chicken Biryani", quantity: 5, price: 100000 },
-    { name: "Four cousins", quantity: 2, price: 50000 },
-    { name: "Fresh pineapple juice", quantity: 2, price: 20000 },
-    { name: "Omelca Tequila", quantity: 2, price: 200000 },
-    { name: "Asun", quantity: 4, price: 40000 },
-    { name: "Cannibal Platter", quantity: 1, price: 50000 },
-    { name: "Seafood Boil", quantity: 1, price: 50000 },
-    { name: "Nestle water", quantity: 6, price: 9000 },
-    { name: "Steamed fried rice", quantity: 10, price: 250000 },
-  ],
-  total: 769000,
-  tax: 57675,
-  grandTotal: 831675,
-  bankAccounts: [
-    {
-      bankName: "PayStack Titan",
-      accountNumber: "0123456789",
-      accountName: "Cubana Restaurant & Grills",
-    },
-    {
-      bankName: "Opay",
-      accountNumber: "0123456789",
-      accountName: "Cubana Restaurant & Grills",
-    },
-    {
-      bankName: "Access Bank",
-      accountNumber: "0123456789",
-      accountName: "Cubana Restaurant & Grills",
-    },
-  ],
-  // Sample QR from an `initialize` response — placeholder until the checkout
-  // endpoint supplies the real qrCodeBase64.
-  qrCodeBase64:
-    "iVBORw0KGgoAAAANSUhEUgAAAZoAAAGaAQAAAAAefbjOAAACGklEQVR4nO2ayY3DMAxFCaQAlaTWXZILMMCRuElxnBnMlfw62I78H3MhuMnE/18HAQIECBAgQIAAOUS2XuP5fDF1fXuNrXYNyemCDqgIpKqhHzsCDX2feBjadIAqQNNRTCVP4jLDgw6iDQdUEWoX7V7VLkC1obltviQvWFINoHKQ+426kSaY0Pc/8hOgfJAtE3xeXACoCLSWdyS79CYBVABygTQjRNKleN1BtL8FVAaKZBKFhkaSacMM3QILoMyQhJPDHUX11G7WPMQAyg/Zj6hEj8bqS8z8tWUFlBjySGJDTStC2WxY09LCOKAKEMUwa6YVr0n3p5AAqgC1qEmbHYqtcGL6h/wEKCtkWcan3ta3qsCgVZoAKgBJXLEsE9Dh5ehKNZ/RCFBOyPXuS1ucoa8tK6DE0BKofks1UoT6bEv/AFARiPU8zHtUF3jf+jwdBZQUktWjD7FwEuOMuHRARSD9dkJ2VmBxa4pHaQKoBBSpprvg1pbsdgEVgNZFx1r8Vp2SlaOACkH2aa5ONidkM072RBTBBlABaC3bblGQbP71eKYGKCVkjvKeVo6tW33x07wcUF6oy+1cpx9xfsqrMP3ocwElhsJbdHl7Sna2LnuPNSyg7FD32dbWmywbHVA5aC4pTNWDrIOdWeb8PbAAygXJTSebF63eZH1mYzigIhBtfhN9q7sR0c0QoPTQ/xYgQIAAAQIECNCEfgBWu4+Wq1uOaQAAAABJRU5ErkJggg==",
-  qrValue:
-    typeof window !== "undefined" ? window.location.href : `checkout/${reference}`,
-});
 
 const AmountRow = ({
   label,
@@ -84,40 +43,97 @@ const AmountRow = ({
   </div>
 );
 
-export default function CheckoutDetails({ reference }: CheckoutDetailsProps) {
+export default function CheckoutDetails({
+  reference,
+  businessId,
+  cooperateId,
+  userId,
+}: CheckoutDetailsProps) {
   const [data, setData] = useState<CheckoutData | null>(null);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [showItems, setShowItems] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     const load = async () => {
-      // TODO: getCheckout returns null until the endpoint exists; fall back to
-      // placeholder data so the layout renders.
-      const checkout = await getCheckout(reference);
-      setData(checkout ?? placeholderCheckout(reference));
+      setLoadFailed(false);
+      try {
+        const checkout = await getCustomerCheckout(
+          reference,
+          businessId,
+          cooperateId
+        );
+        if (checkout) {
+          let updatedCheckout = { ...checkout };
+          if (businessId && checkout.orderId) {
+            try {
+              const amountKobo = Math.round(checkout.grandTotal * 100);
+              const paymentRes = await initializeCustomerPayment(
+                businessId,
+                {
+                  orderId: checkout.orderId,
+                  customerEmail: "",
+                  amountKobo,
+                },
+                userId
+              );
+              
+              if (paymentRes?.data) {
+                updatedCheckout.qrCodeBase64 = paymentRes.data.qrCodeBase64;
+                updatedCheckout.accessCode = paymentRes.data.accessCode;
+                updatedCheckout.authorizationUrl = paymentRes.data.authorizationUrl;
+                updatedCheckout.bankAccounts = paymentRes.data.bankAccounts || [];
+              }
+            } catch (err) {
+              console.error("Failed to initialize public QR payment:", err);
+            }
+          }
+          setData(updatedCheckout);
+        } else {
+          setLoadFailed(true);
+        }
+      } catch {
+        setLoadFailed(true);
+      }
     };
     load();
-  }, [reference]);
+  }, [reference, businessId, cooperateId, userId]);
 
   const copy = async (value: string) => {
     await navigator.clipboard.writeText(value);
     toast.success("Copied to clipboard");
   };
 
-  const handleMadePayment = async () => {
-    setConfirming(true);
-    try {
-      // TODO: wire to the real confirm-payment endpoint. Currently a no-op stub.
-      const ok = await confirmPayment(reference);
-      if (ok) {
-        toast.success("Payment confirmation received");
-      } else {
-        toast.message("We'll confirm your payment shortly.");
+  const handlePayOnline = () => {
+    if (!data?.accessCode) return;
+    
+    const popup = new PaystackPop();
+    popup.resumeTransaction({
+      accessCode: data.accessCode,
+      onSuccess: () => {
+        toast.success("Payment successful!");
+        setTimeout(() => window.history.back(), 2000);
+      },
+      onCancel: () => {
+        toast.error("Payment cancelled");
       }
-    } finally {
-      setConfirming(false);
-    }
+    });
   };
+
+  const handleMadeTransfer = () => {
+    setConfirming(true);
+    toast.message("We'll confirm your transfer shortly.");
+    setConfirming(false);
+  };
+
+  if (loadFailed) {
+    return (
+      <div className="mx-auto flex min-h-screen max-w-md items-center justify-center px-6 text-center font-satoshi text-[#45464E]">
+        We couldn&apos;t load this order. Please check the link or ask a member
+        of staff for help.
+      </div>
+    );
+  }
 
   if (!data) {
     return (
@@ -221,14 +237,26 @@ export default function CheckoutDetails({ reference }: CheckoutDetailsProps) {
       </div>
 
       <div className="mt-10 space-y-4">
+        {data.accessCode && (
+          <CustomButton
+            className="h-[52px] w-full border border-primaryColor font-semibold text-white hover:bg-primaryColor/90 transition-colors"
+            backgroundColor="bg-primaryColor"
+            onClick={handlePayOnline}
+          >
+            <span className="flex items-center justify-center gap-2">
+              Pay Online <FiArrowRight />
+            </span>
+          </CustomButton>
+        )}
+
         <CustomButton
           className="h-[52px] w-full border border-[#E4E7EC] font-semibold text-[#161618]"
           backgroundColor="bg-[#F4F4F6]"
           loading={confirming}
-          onClick={handleMadePayment}
+          onClick={handleMadeTransfer}
         >
           <span className="flex items-center justify-center gap-2">
-            I have made payment <FiArrowRight />
+            I have made a transfer <FiArrowRight />
           </span>
         </CustomButton>
 

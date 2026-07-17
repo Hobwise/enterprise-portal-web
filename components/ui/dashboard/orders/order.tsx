@@ -28,7 +28,10 @@ import { TbFileInvoice } from "react-icons/tb";
 import { Clock, Receipt, RotateCcw, CreditCard, ClipboardList } from "lucide-react";
 import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 import PaystackPop from "paystack-inline-ts";
-import { initializePayment } from "@/app/api/controllers/dashboard/qrPayment";
+import {
+  hasPaymentAccount,
+  initializePayment,
+} from "@/app/api/controllers/dashboard/qrPayment";
 import {
   availableOptions,
   columns,
@@ -61,10 +64,11 @@ import OrderProgressModal from "./OrderProgressModal";
 import PaymentSummaryModal from "./PaymentSummaryModal";
 import RefundPaymentModal from "./RefundPaymentModal";
 import OrderHistoryModal from "./OrderHistoryModal";
+import PaymentStatusModal from "./PaymentStatusModal";
 import DocketModal, { DocketCategory } from "./docket";
 import useMenuCategories from "@/hooks/cachedEndpoints/useMenuCategories";
 import { usePOSMenu } from "@/hooks/usePOSMenu";
-import { History } from "lucide-react";
+import { History, Info } from "lucide-react";
 import {
   completeOrder,
   completeOrderWithPayment,
@@ -104,6 +108,7 @@ interface OrderItem {
   amountPaid?: number;
   isVatApplied?: boolean;
   vatRate?: number;
+  checkOutReference?: string;
 }
 
 interface OrderCategory {
@@ -199,6 +204,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenRefund, setIsOpenRefund] = React.useState<boolean>(false);
   const [isOpenHistoryModal, setIsOpenHistoryModal] =
     React.useState<boolean>(false);
+  const [isOpenPaymentStatus, setIsOpenPaymentStatus] = React.useState<boolean>(false);
   const [isOpenDocket, setIsOpenDocket] = React.useState<boolean>(false);
 
   // Menu categories drive the "Generate Docket" action. Sourced from the Menu
@@ -268,6 +274,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setIsOpenCheckoutModal(false);
     setIsOpenPaymentModal(false);
     setIsOpenProgress(false);
+    setIsOpenPaymentStatus(false);
     setSingleOrder(null);
 
     setTableStatus(categoryName);
@@ -411,6 +418,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setIsOpenHistoryModal(!isOpenHistoryModal);
   };
 
+  const togglePaymentStatusModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenPaymentStatus(!isOpenPaymentStatus);
+  };
+
   // Functional toggle so it works from both the (memoized) desktop dropdown and
   // the modal's onOpenChange (which passes a boolean, not an order).
   const toggleDocketModal = (order?: OrderItem) => {
@@ -504,18 +516,17 @@ const OrdersList: React.FC<OrdersListProps> = ({
 
     setPayNowLoading(true);
     try {
+      const payingBusinessId = businessInformation?.[0]?.businessId;
+
       const base =
         singleOrder?.amountRemaining ?? singleOrder?.totalAmount ?? 0; // naira
       const amountKobo = Math.round(base * 100);
 
-      const response = await initializePayment(
-        businessInformation?.[0]?.businessId,
-        {
-          orderId: singleOrder.id,
-          customerEmail: userInformation?.email,
-          amountKobo,
-        }
-      );
+      const response = await initializePayment(payingBusinessId, userInformation?.id, {
+        orderId: singleOrder.id,
+        customerEmail: userInformation?.email,
+        amountKobo,
+      });
 
       const accessCode = response?.data?.data?.accessCode;
       if (!accessCode) {
@@ -868,6 +879,17 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     }
 
                     <DropdownItem
+                      key="payment-status"
+                      onClick={() => togglePaymentStatusModal(order)}
+                      aria-label="Payment Status"
+                    >
+                      <div className="flex gap-3 items-center text-grey500">
+                        <Info className="w-[18px] h-[18px]" />
+                        <p>Payment Status</p>
+                      </div>
+                    </DropdownItem>
+
+                    <DropdownItem
                       key="generate-docket"
                       onClick={() => toggleDocketModal(order)}
                       aria-label="Generate Docket"
@@ -1054,6 +1076,17 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             <div className="flex gap-3 items-center text-grey500">
                               <Receipt className="w-[18px] h-[18px]" />
                               <p>Payment Summary</p>
+                            </div>
+                          </DropdownItem>
+
+                          <DropdownItem
+                            key="payment-status"
+                            onClick={() => togglePaymentStatusModal(order)}
+                            aria-label="Payment Status"
+                          >
+                            <div className="flex gap-3 items-center text-grey500">
+                              <Info className="w-[18px] h-[18px]" />
+                              <p>Payment Status</p>
                             </div>
                           </DropdownItem>
 
@@ -1616,6 +1649,17 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenHistoryModal}
         orderId={singleOrder?.id || null}
         orderReference={singleOrder?.reference}
+      />
+      <PaymentStatusModal
+        isOpen={isOpenPaymentStatus}
+        onOpenChange={setIsOpenPaymentStatus}
+        reference={
+          singleOrder?.checkOutReference || 
+          (singleOrder as any)?.checkoutReference || 
+          singleOrder?.qrReference || 
+          singleOrder?.reference || 
+          null
+        }
       />
     </section>
   );

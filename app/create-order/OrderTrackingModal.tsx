@@ -10,6 +10,7 @@ import { getCustomerOrderByReference } from "../api/controllers/customerOrder";
 import { HiMenuAlt3 } from "react-icons/hi";
 import { MdOutlineWarning } from "react-icons/md";
 import { formatPrice } from "@/lib/utils";
+import PaymentSheet from "./PaymentSheet";
 
 interface OrderTrackingPageProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ interface OrderTrackingPageProps {
   orderData?: any; // Full order data from API
   businessId?: string;
   cooperateId?: string;
+  userId?: string;
 }
 
 const OrderTrackingPage = ({
@@ -45,6 +47,7 @@ const OrderTrackingPage = ({
   orderData: initialOrderData,
   businessId,
   cooperateId,
+  userId,
 }: OrderTrackingPageProps) => {
   // Dynamic color from menu config
   const primaryColor = menuConfig?.backgroundColour || "#5F35D2";
@@ -59,6 +62,15 @@ const OrderTrackingPage = ({
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [previousStatus, setPreviousStatus] = useState<number | null>(null);
   const [previousEstimatedTime, setPreviousEstimatedTime] = useState<string | undefined>(estimatedTime);
+  const [showPaymentSheet, setShowPaymentSheet] = useState(false);
+
+  // Status 1 (closed) and 2 (cancelled) orders have nothing left to pay for.
+  const isOrderClosed = orderData?.status === 1 || orderData?.status === 2;
+
+  // Opens the inline payment sheet instead of navigating away.
+  const handlePayNow = () => {
+    setShowPaymentSheet(true);
+  };
 
   useEffect(() => {
     if (
@@ -679,7 +691,22 @@ const OrderTrackingPage = ({
               </div>
             )}
           <div className="border-t border-gray-200 py-4 pb-safe z-20">
-            <div className="flex gap-5">
+            <CustomButton
+              onClick={handlePayNow}
+              disabled={isOrderClosed}
+              style={
+                isOrderClosed
+                  ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
+                  : primaryColorStyle
+              }
+              className={`w-full h-12 md:h-14 ${
+                isOrderClosed ? "cursor-not-allowed" : "text-white"
+              } font-semibold flex items-center justify-center gap-2 text-base`}
+            >
+              <span>Pay Now</span>
+              <HiArrowLongLeft className="w-6 h-6 rotate-180" />
+            </CustomButton>
+            <div className="flex gap-5 mt-3">
               {/* <CustomButton
                 onClick={onAddMoreItems}
                 disabled={orderData?.status === 1 || orderData?.status === 2}
@@ -713,15 +740,15 @@ const OrderTrackingPage = ({
                   onCheckout(orderData);
                 }}
                 disabled={orderData?.status === 2 || orderData?.status === 1}
+                // CustomButton ignores the backgroundColor prop whenever a
+                // style is passed, so the fill has to be set here.
                 style={
-                  orderData?.status === 1 || orderData?.status === 1
-                    ? { backgroundColor: "#D1D5DB", color: "#6B7280" }
-                    : primaryColorStyle
+                  isOrderClosed
+                    ? { color: "#9CA3AF", backgroundColor: "transparent" }
+                    : { ...textColorStyle, backgroundColor: "transparent" }
                 }
                 className={`flex-1 h-12 md:h-14 ${
-                  orderData?.status === 1 || orderData?.status === 1
-                    ? "cursor-not-allowed"
-                    : "text-white"
+                  isOrderClosed ? "cursor-not-allowed" : ""
                 } font-semibold flex items-center justify-center gap-2 text-base`}
               >
                 <span>Update this order</span>
@@ -813,6 +840,20 @@ const OrderTrackingPage = ({
           </div>
         </div>
       )}
+
+      {/* Inline Payment Sheet */}
+      <PaymentSheet
+        isOpen={showPaymentSheet}
+        onClose={() => setShowPaymentSheet(false)}
+        businessId={businessId || ""}
+        orderId={orderData?.orderDetails?.[0]?.orderID || orderData?.id || ""}
+        grandTotal={orderData?.totalAmount || 0}
+        userId={userId}
+        menuConfig={menuConfig}
+        onPaymentSuccess={() => {
+          setShowPaymentSheet(false);
+        }}
+      />
     </div>
   );
 };

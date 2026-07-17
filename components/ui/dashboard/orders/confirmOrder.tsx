@@ -3,6 +3,10 @@ import {
   completeOrderWithPayment,
   getOrder,
 } from "@/app/api/controllers/dashboard/orders";
+import {
+  hasPaymentAccount,
+  initializePayment,
+} from "@/app/api/controllers/dashboard/qrPayment";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import { formatPrice, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
@@ -16,6 +20,7 @@ import {
   Spinner,
 } from "@nextui-org/react";
 import Image from "next/image";
+import PaystackPop from "paystack-inline-ts";
 import { useEffect, useState } from "react";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { IoIosArrowRoundBack } from "react-icons/io";
@@ -23,6 +28,10 @@ import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../public/assets/images/no-image.svg";
 import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
 import { useQueryClient } from "@tanstack/react-query";
+
+// Payment method ids. "Pay now" is appended as 4 so the existing ids (3 = Pay
+// Later) keep matching the handlers that hardcode them.
+const PAY_NOW_ID = 4;
 
 const ConfirmOrderModal = ({
   singleOrder,
@@ -32,7 +41,9 @@ const ConfirmOrderModal = ({
 }: any) => {
   const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const [isLoading, setIsLoading] = useState(false);
+  const [payNowLoading, setPayNowLoading] = useState<boolean>(false);
 
   const [screen, setScreen] = useState(1);
   const [order, setOrder] = useState<any>([]);
@@ -40,11 +51,90 @@ const ConfirmOrderModal = ({
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(0);
 
+  // Initializes a QR payment for the order and opens the Paystack popup so the
+  // customer can pay online with a card. On success the order list is refreshed
+  // (the backend confirms the payment against the order via webhook).
+  const handlePayNow = async () => {
+    if (!singleOrder?.id) {
+      notify({
+        title: "Error!",
+        text: "Order data not available",
+        type: "error",
+      });
+      return;
+    }
+
+    setPayNowLoading(true);
+    try {
+      const payingBusinessId = businessInformation?.[0]?.businessId;
+
+      const base =
+        singleOrder?.amountRemaining ?? singleOrder?.totalAmount ?? 0; // naira
+      const amountKobo = Math.round(base * 100);
+
+      const response = await initializePayment(payingBusinessId, userInformation?.id, {
+        orderId: singleOrder.id,
+        customerEmail: userInformation?.email,
+        amountKobo,
+      });
+
+      const accessCode = response?.data?.data?.accessCode;
+      if (!accessCode) {
+        notify({
+          title: "Error!",
+          text: response?.data?.error ?? "Unable to start payment.",
+          type: "error",
+        });
+        return;
+      }
+
+      const popup = new PaystackPop();
+      popup.resumeTransaction({
+        accessCode,
+        onSuccess: () => {
+          notify({
+            title: "Payment successful!",
+            text: "Payment received, awaiting confirmation",
+            type: "success",
+          });
+
+          // Clear the global orders cache to force fresh data
+          ordersCacheUtils.clearAll();
+
+          queryClient.invalidateQueries({
+            queryKey: ["orderCategories"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orderDetails"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["allOrdersData"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orders"],
+            refetchType: "active",
+          });
+
+          toggleConfirmModal();
+          refetch();
+        },
+      });
+    } finally {
+      setPayNowLoading(false);
+    }
+  };
+
   const handleClick = (methodId: number) => {
     if (methodId === 3) {
       // Pay Later - close modal without payment
       toggleConfirmModal();
       refetch();
+    } else if (methodId === PAY_NOW_ID) {
+      // Pay now - initialize the payment and open the Paystack popup
+      handlePayNow();
     } else {
       setSelectedPaymentMethod(methodId);
       setScreen(3);
@@ -58,6 +148,11 @@ const ConfirmOrderModal = ({
       text: "Pay with bank transfer",
       subText: "Accept payment via bank transfer",
       id: 2,
+    },
+    {
+      text: "Pay now",
+      subText: "Pay online with card via Paystack",
+      id: PAY_NOW_ID,
     },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
@@ -336,23 +431,36 @@ const ConfirmOrderModal = ({
                   </p>
                 </div>
                 <div className="flex flex-col gap-1 text-black">
-                  {paymentMethods.map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => handleClick(item.id)}
-                      className={`flex  cursor-pointer items-center gap-2 p-4 rounded-lg justify-between  ${
-                        selectedPaymentMethod === item.id
-                          ? "bg-[#EAE5FF80]"
-                          : ""
-                      } `}
-                    >
-                      <div>
-                        <p className="font-semibold">{item.text}</p>
-                        <p className="text-sm text-grey500">{item.subText}</p>
+                  {paymentMethods.map((item) => {
+                    const isPayNow = item.id === PAY_NOW_ID;
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() =>
+                          !payNowLoading && handleClick(item.id)
+                        }
+                        className={`flex items-center gap-2 p-4 rounded-lg justify-between ${
+                          selectedPaymentMethod === item.id
+                            ? "bg-[#EAE5FF80]"
+                            : ""
+                        } ${
+                          payNowLoading
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer"
+                        }`}
+                      >
+                        <div>
+                          <p className="font-semibold">{item.text}</p>
+                          <p className="text-sm text-grey500">{item.subText}</p>
+                        </div>
+                        {isPayNow && payNowLoading ? (
+                          <Spinner size="sm" />
+                        ) : (
+                          <MdKeyboardArrowRight />
+                        )}
                       </div>
-                      <MdKeyboardArrowRight />
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}

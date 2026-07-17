@@ -4,6 +4,10 @@ import {
   createOrder,
   editOrder,
 } from "@/app/api/controllers/dashboard/orders";
+import {
+  hasPaymentAccount,
+  initializePayment,
+} from "@/app/api/controllers/dashboard/qrPayment";
 import { getQRByBusiness } from "@/app/api/controllers/dashboard/quickResponse";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
@@ -27,6 +31,7 @@ import {
   Spacer,
 } from "@nextui-org/react";
 import Image from "next/image";
+import PaystackPop from "paystack-inline-ts";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa6";
@@ -74,6 +79,10 @@ type ValidationErrors = {
   additionalCostName?: string;
 };
 
+// Payment method ids. "Pay now" is appended as 4 so the existing ids (3 = Pay
+// Later) keep matching the handlers that hardcode them.
+const PAY_NOW_ID = 4;
+
 // Type guard to check if response has data property
 const hasDataProperty = (response: any): response is ApiResponse => {
   return response && typeof response === "object" && "data" in response;
@@ -115,6 +124,7 @@ const CheckoutModal = ({
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
+  const [payNowLoading, setPayNowLoading] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<{
     placedByName?: boolean;
     placedByPhoneNumber?: boolean;
@@ -306,6 +316,82 @@ const CheckoutModal = ({
     }
   };
 
+  // Initializes a QR payment for the just-placed order and opens the Paystack
+  // popup so the customer can pay online with a card. On success the order list
+  // is refreshed (the backend confirms the payment against the order via webhook).
+  const handlePayNow = async () => {
+    if (!orderId) {
+      notify({
+        title: "Error!",
+        text: "Order data not available",
+        type: "error",
+      });
+      return;
+    }
+
+    setPayNowLoading(true);
+    try {
+      const payingBusinessId = businessId
+        ? businessId
+        : businessInformation?.[0]?.businessId;
+
+      const base = Math.max(
+        0,
+        finalTotalPrice - (orderDetails?.amountPaid || 0)
+      ); // naira
+      const amountKobo = Math.round(base * 100);
+
+      const response = await initializePayment(payingBusinessId, userInformation?.id, {
+        orderId,
+        customerEmail: userInformation?.email,
+        amountKobo,
+      });
+
+      const accessCode = response?.data?.data?.accessCode;
+      if (!accessCode) {
+        notify({
+          title: "Error!",
+          text: response?.data?.error ?? "Unable to start payment.",
+          type: "error",
+        });
+        return;
+      }
+
+      const popup = new PaystackPop();
+      popup.resumeTransaction({
+        accessCode,
+        onSuccess: () => {
+          notify({
+            title: "Payment successful!",
+            text: "Payment received, awaiting confirmation",
+            type: "success",
+          });
+          setScreen(1);
+          setOrderId("");
+          setReference("");
+          setSelectedPaymentMethod(0);
+          ordersCacheUtils.clearAll();
+          queryClient.invalidateQueries({
+            queryKey: ["orderCategories"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orderDetails"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orders"],
+            refetchType: "active",
+          });
+          onOrderSuccess?.();
+          onOpenChange(false);
+        },
+      });
+    } finally {
+      setPayNowLoading(false);
+    }
+  };
+
   const handleClick = async (methodId: number) => {
     // Clear all screen tracking states after any payment action
     const clearScreenStates = () => {
@@ -368,6 +454,9 @@ const CheckoutModal = ({
       } finally {
         setIsPayLaterLoading(false);
       }
+    } else if (methodId === PAY_NOW_ID) {
+      // Pay now - initialize the payment and open the Paystack popup
+      await handlePayNow();
     } else if (screen === 3) {
       clearScreenStates(); // Clear states before navigation
       router.push("/dashboard/orders");
@@ -443,8 +532,20 @@ const CheckoutModal = ({
       subText: "Accept payment via bank transfer",
       id: 2,
     },
+    {
+      text: "Pay now",
+      subText: "Pay online with card via Paystack",
+      id: PAY_NOW_ID,
+    },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
+
+  // A payment method is busy while its own request is in flight; the whole list
+  // is disabled meanwhile so a second method can't be started on top of it.
+  const isMethodLoading = (methodId: number) =>
+    (methodId === 3 && isPayLaterLoading) ||
+    (methodId === PAY_NOW_ID && payNowLoading);
+  const isPaymentBusy = isPayLaterLoading || payNowLoading;
 
   // Calculate detailed total price directly from selectedItems to ensure accuracy
   const calculateDetailedTotalPrice = (): {
@@ -2243,14 +2344,14 @@ const CheckoutModal = ({
                         <div
                           key={item.id}
                           onClick={() =>
-                            !isPayLaterLoading && handleClick(item.id)
+                            !isPaymentBusy && handleClick(item.id)
                           }
                           className={`flex items-center gap-2 p-4 rounded-lg justify-between ${
                             selectedPaymentMethod === item.id
                               ? "bg-[#EAE5FF80]"
                               : ""
                           } ${
-                            isPayLaterLoading
+                            isPaymentBusy
                               ? "cursor-not-allowed opacity-50"
                               : "cursor-pointer"
                           }`}
@@ -2258,7 +2359,7 @@ const CheckoutModal = ({
                           <div>
                             <p className="font-semibold">
                               {item.text}
-                              {item.id === 3 && isPayLaterLoading && (
+                              {isMethodLoading(item.id) && (
                                 <span className="ml-2 text-sm">
                                   Processing...
                                 </span>
@@ -2268,7 +2369,7 @@ const CheckoutModal = ({
                               {item.subText}
                             </p>
                           </div>
-                          {item.id === 3 && isPayLaterLoading ? (
+                          {isMethodLoading(item.id) ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primaryColor"></div>
                           ) : (
                             <MdKeyboardArrowRight />
@@ -2311,14 +2412,14 @@ const CheckoutModal = ({
                           <div
                             key={item.id}
                             onClick={() =>
-                              !isPayLaterLoading && handleClick(item.id)
+                              !isPaymentBusy && handleClick(item.id)
                             }
                             className={`flex items-center gap-3 p-5 rounded-lg border justify-between transition-all ${
                               selectedPaymentMethod === item.id
                                 ? "bg-[#EAE5FF80] border-primaryColor"
                                 : "border-gray-200"
                             } ${
-                              isPayLaterLoading
+                              isPaymentBusy
                                 ? "cursor-not-allowed opacity-50"
                                 : "cursor-pointer active:scale-95"
                             }`}
@@ -2326,7 +2427,7 @@ const CheckoutModal = ({
                             <div className="flex-1">
                               <p className="font-semibold text-base text-black">
                                 {item.text}
-                                {item.id === 3 && isPayLaterLoading && (
+                                {isMethodLoading(item.id) && (
                                   <span className="ml-2 text-sm font-normal">
                                     Processing...
                                   </span>
@@ -2336,7 +2437,7 @@ const CheckoutModal = ({
                                 {item.subText}
                               </p>
                             </div>
-                            {item.id === 3 && isPayLaterLoading ? (
+                            {isMethodLoading(item.id) ? (
                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primaryColor"></div>
                             ) : (
                               <MdKeyboardArrowRight className="text-2xl text-gray-400" />

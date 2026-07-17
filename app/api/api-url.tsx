@@ -19,6 +19,11 @@ export const QR_PAYMENT = {
   onboardBusiness: "api/v1/QrPayment/business/onboard",
   bankAccounts: "api/v1/QrPayment/business/bank-accounts",
   initialize: "api/v1/QrPayment/initialize",
+  verifySession: "api/v1/QrPayment/sessions/verify",
+  deleteSettlement: "api/v1/QrPayment/business/settlement-account",
+  requestSettlementOtp: "api/v1/QrPayment/business/settlement-account/request-otp",
+  updateSettlement: "api/v1/QrPayment/business/settlement-account",
+  acceptOnboardTerms: "api/v1/QrPayment/business/onboard/accept-terms",
 };
 export const LANDINGPAGE = {
   getFAQs: "api/v1/LandingPage/faqs",

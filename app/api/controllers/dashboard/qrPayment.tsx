@@ -28,6 +28,8 @@ export interface BankAccountsData {
 export interface OnboardBusinessPayload {
   settlementBank: string; // bank code from getBanks()
   accountNumber: string;
+  otp?: string;
+  termsAccepted?: boolean;
 }
 
 export interface AddBankAccountPayload {
@@ -71,6 +73,7 @@ export interface CheckoutItem {
 export interface CheckoutData {
   businessName: string;
   reference: string;
+  orderId?: string;
   items: CheckoutItem[];
   total: number;
   tax: number;
@@ -80,6 +83,8 @@ export interface CheckoutData {
   qrCodeBase64?: string;
   /** Fallback value to encode client-side when no qrCodeBase64 is available. */
   qrValue: string;
+  accessCode?: string;
+  authorizationUrl?: string;
 }
 
 const withBusiness = (businessId: string) =>
@@ -108,14 +113,13 @@ export async function onboardBusiness(
   }
 }
 
-/** Initializes a QR payment for an order so a customer can pay it.
- *  `amountKobo` is the amount in kobo (naira × 100). */
-export async function initializePayment(
+/** Accepts terms and conditions for onboarding and requests OTP. */
+export async function acceptOnboardTerms(
   businessId: string,
-  payload: InitializePaymentPayload
+  payload: { termsAccepted: boolean }
 ) {
   try {
-    return await api.post(QR_PAYMENT.initialize, payload, {
+    return await api.post(QR_PAYMENT.acceptOnboardTerms, payload, {
       headers: withBusiness(businessId),
     });
   } catch (error) {
@@ -123,23 +127,31 @@ export async function initializePayment(
   }
 }
 
-/**
- * TODO: no public endpoint exists yet to fetch a checkout by its reference.
- * Wire this to the real endpoint (or the `initialize` response shape) once the
- * backend provides it. Returns null so the page falls back to placeholder data.
- */
-export async function getCheckout(reference: string): Promise<CheckoutData | null> {
-  void reference;
-  return null;
+/** Initializes a QR payment for an order so a customer can pay it.
+ *  `amountKobo` is the amount in kobo (naira × 100). */
+export async function initializePayment(
+  businessId: string,
+  userId: string | undefined,
+  payload: InitializePaymentPayload
+) {
+  try {
+    return await api.post(QR_PAYMENT.initialize, payload, {
+      headers: { ...withBusiness(businessId), ...(userId ? { userId } : {}) },
+    });
+  } catch (error) {
+    handleError(error, false);
+  }
 }
 
-/**
- * TODO: no confirm-payment endpoint exists yet. Wire this to the real
- * "I have made payment" endpoint once available.
- */
-export async function confirmPayment(reference: string): Promise<boolean> {
-  void reference;
-  return false;
+/** Verifies a QR payment session using its reference */
+export async function verifyQrPayment(businessId: string, reference: string) {
+  try {
+    return await api.get(`${QR_PAYMENT.verifySession}/${reference}`, {
+      headers: withBusiness(businessId),
+    });
+  } catch (error) {
+    handleError(error, false);
+  }
 }
 
 /** Fetches the business settlement account and any additional bank accounts. */
@@ -151,6 +163,66 @@ export async function getBankAccounts(businessId: string) {
   } catch (error) {
     handleError(error, false);
   }
+}
+
+/** Deletes the business settlement account. */
+export async function deleteSettlementAccount(businessId: string) {
+  try {
+    return await api.delete(QR_PAYMENT.deleteSettlement, {
+      headers: withBusiness(businessId),
+    });
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+/** Requests an OTP to update the settlement account. */
+export async function requestSettlementOtp(businessId: string) {
+  try {
+    return await api.post(QR_PAYMENT.requestSettlementOtp, {}, {
+      headers: withBusiness(businessId),
+    });
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+/** Updates the business settlement account using an OTP. */
+export async function updateSettlementAccount(
+  businessId: string,
+  payload: { settlementBank: string; accountNumber: string; reason: string; otp: string }
+) {
+  try {
+    return await api.put(QR_PAYMENT.updateSettlement, payload, {
+      headers: withBusiness(businessId),
+    });
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+/**
+ * Whether the business has set up a payment account (a settlement account or
+ * any bank account) and can therefore accept online card payments.
+ *
+ * Returns `null` when the status can't be determined — e.g. the request failed
+ * — so callers fall through to the payment attempt and surface the real error
+ * rather than wrongly telling the business its account is missing.
+ */
+export async function hasPaymentAccount(
+  businessId: string
+): Promise<boolean | null> {
+  const response = await getBankAccounts(businessId);
+  const data: BankAccountsData | undefined = response?.data?.data;
+
+  if (!data) return null;
+
+  return Boolean(
+    data.hasSettlementAccount ||
+      data.hasBankAccounts ||
+      data.settlementAccount ||
+      data.bankAccounts?.length
+  );
 }
 
 /** Adds an additional bank account for the business. */

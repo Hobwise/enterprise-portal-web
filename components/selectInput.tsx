@@ -73,7 +73,7 @@ const SelectInput = ({
         isEnabled: false
       }}
     >
-      {contents.map((content: any) => (
+      {Array.from(new Map(contents.map((item: any) => [item.value, item])).values()).map((content: any) => (
         <SelectItem
           className={isMobile ? 'text-black text-base py-3 px-4' : 'text-black text-small'}
           key={content.value}
