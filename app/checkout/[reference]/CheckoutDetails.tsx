@@ -11,7 +11,6 @@ import QRCode from "react-qr-code";
 import { toast } from "sonner";
 import { FiArrowRight, FiChevronDown, FiChevronUp, FiX } from "react-icons/fi";
 import { TbCopy } from "react-icons/tb";
-import PaystackPop from "paystack-inline-ts";
 
 interface CheckoutDetailsProps {
   reference: string;
@@ -104,9 +103,10 @@ export default function CheckoutDetails({
     toast.success("Copied to clipboard");
   };
 
-  const handlePayOnline = () => {
+  const handlePayOnline = async () => {
     if (!data?.accessCode) return;
     
+    const PaystackPop = (await import("paystack-inline-ts")).default;
     const popup = new PaystackPop();
     popup.resumeTransaction({
       accessCode: data.accessCode,

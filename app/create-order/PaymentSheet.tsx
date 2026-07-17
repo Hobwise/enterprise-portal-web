@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { TbCopy } from "react-icons/tb";
 import { FiArrowRight, FiX } from "react-icons/fi";
 import { HiArrowLongLeft } from "react-icons/hi2";
-import PaystackPop from "paystack-inline-ts";
 import { CustomButton } from "@/components/customButton";
 
 interface BankAccount {
@@ -92,8 +91,9 @@ export default function PaymentSheet({
     init();
   }, [isOpen, businessId, orderId, grandTotal, userId]);
 
-  const handlePayOnline = () => {
+  const handlePayOnline = async () => {
     if (!paymentData?.accessCode) return;
+    const PaystackPop = (await import("paystack-inline-ts")).default;
     const popup = new PaystackPop();
     popup.resumeTransaction({
       accessCode: paymentData.accessCode,
