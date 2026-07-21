@@ -494,7 +494,9 @@ const InvoiceModal = ({
                               </p>
                             </div>
 
-                            {bankAccounts.map((account: any, idx: number) => (
+                            {[...bankAccounts]
+                              .sort((a: any, b: any) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
+                              .map((account: any, idx: number) => (
                               <div
                                 key={account.id}
                                 style={{
@@ -515,7 +517,7 @@ const InvoiceModal = ({
                                       fontSize: "9px", fontWeight: 700, color: "#fff",
                                       letterSpacing: "0.06em", textTransform: "uppercase",
                                     }}>
-                                      Default
+                                      Preferred
                                     </span>
                                   </div>
                                 )}

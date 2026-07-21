@@ -204,14 +204,21 @@ export default function CheckoutDetails({
       </div>
 
       <div className="mt-8 space-y-3">
-        {data.bankAccounts.map((account, index) => (
+        {[...data.bankAccounts]
+          .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
+          .map((account, index) => (
           <div
             key={`${account.bankName}-${account.accountNumber}-${index}`}
-            className={`flex items-start justify-between gap-3 rounded-lg px-4 py-3 text-sm text-[#45464E] ${
-              index === 0 ? "bg-[#F4F4F6]" : "border-b border-[#F0F0F0]"
+            className={`relative flex items-start justify-between gap-3 rounded-lg px-4 py-3 text-sm text-[#45464E] ${
+              account.isDefault ? "bg-[#F4F4F6]" : "border-b border-[#F0F0F0]"
             }`}
           >
             <div className="space-y-1">
+              {account.isDefault && (
+                <span className="mb-1 inline-block rounded-full bg-primaryColor px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                  Preferred
+                </span>
+              )}
               <p>
                 <span className="text-[#98A2B3]">Bank:</span> {account.bankName}
               </p>

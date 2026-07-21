@@ -733,12 +733,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const handleRowClick = (order: OrderItem) => {
     switch (order.status) {
       case 0: // Open orders
-      case 3: // Awaiting confirmation
         saveJsonItemToLocalStorage("order", order);
         toggleUpdateOrderModal(order);
         break;
       case 1: // Closed orders
       case 2: // Cancelled orders
+      case 3: // Awaiting confirmation
         toggleInvoiceModal(order);
         break;
       default:
