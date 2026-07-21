@@ -44,8 +44,6 @@ export const availableOptions: Record<string, AvailableOption[]> = {
   closed: ["Generate Invoice", "Payment Summary", "Refund Order", "Order History"],
   cancelled: ["Payment Summary", "Order History"],
   "awaiting confirmation": [
-    "Update Order",
-    "Checkout",
     "Confirm Payment",
     "Cancel Order",
     "Payment Summary",

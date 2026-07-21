@@ -61,6 +61,7 @@ export interface CheckoutBankAccount {
   bankName: string;
   accountNumber: string;
   accountName: string;
+  isDefault?: boolean;
 }
 
 export interface CheckoutItem {

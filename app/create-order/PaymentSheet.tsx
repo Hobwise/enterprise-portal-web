@@ -318,7 +318,9 @@ export default function PaymentSheet({
                     </p>
                   ) : (
                     <div className="space-y-3">
-                      {paymentData.bankAccounts!.map((account, i) => (
+                      {[...paymentData.bankAccounts!]
+                        .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
+                        .map((account, i) => (
                         <div
                           key={account.id}
                           className="rounded-xl p-4 border transition-all"
@@ -333,7 +335,7 @@ export default function PaymentSheet({
                               className="text-xs font-semibold px-2 py-0.5 rounded-full mb-2 inline-block"
                               style={{ backgroundColor: `${primaryColor}18`, color: primaryColor }}
                             >
-                              Default
+                              Preferred
                             </span>
                           )}
                           <div className="space-y-1.5 text-sm">
