@@ -533,8 +533,8 @@ const CheckoutModal = ({
       id: 2,
     },
     {
-      text: "Pay now",
-      subText: "Pay online with card via Paystack",
+      text: "Pay with Paystack",
+      subText: "Pay online via Paystack",
       id: PAY_NOW_ID,
     },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },

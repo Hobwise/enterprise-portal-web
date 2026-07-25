@@ -1,9 +1,42 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import EmptyState from '@/components/ui/dashboard/menu/EmptyState';
 import { Chip, Spinner } from '@nextui-org/react';
 const noImage = "/assets/images/no-image.svg";
+
+const LazyImage = ({ item }: { item: any }) => {
+  const [src, setSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    // requestAnimationFrame ensures this runs immediately after the next repaint
+    requestAnimationFrame(() => {
+      if (item.image && item.image !== "null" && item.image !== "undefined" && item.image.trim() !== "") {
+        setSrc(
+          item.image.startsWith('data:') || item.image.startsWith('http')
+            ? item.image
+            : `data:image/jpeg;base64,${item.image}`
+        );
+      } else {
+        setSrc(noImage);
+      }
+    });
+  }, [item.image]);
+
+  return (
+    <img
+      src={src || noImage}
+      alt={item.name}
+      loading="lazy"
+      className={`w-full h-[118px] object-cover transition-opacity duration-300 ${
+        item.isAvailable === false ? 'grayscale opacity-70' : ''
+      } ${!src ? 'opacity-0' : 'opacity-100'}`}
+      onError={(e) => {
+        (e.target as HTMLImageElement).src = noImage;
+      }}
+    />
+  );
+};
 
 interface MenuItemsGridProps {
   loadingItems: boolean;
@@ -93,21 +126,7 @@ const MenuItemsGrid = ({
                   {item.isAvailable === false && (
                     <div className="absolute inset-0 bg-gray-900/40 z-10 rounded-md" />
                   )}
-                  <img
-                    src={
-                      item.image.startsWith('data:') || item.image.startsWith('http')
-                        ? item.image
-                        : `data:image/jpeg;base64,${item.image}`
-                    }
-                    alt={item.name}
-                    className={`w-full h-[118px] object-cover ${
-                      item.isAvailable === false ? 'grayscale opacity-70' : ''
-                    }`}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src =
-                        noImage;
-                    }}
-                  />
+                  <LazyImage item={item} />
                 </div>
                 <div className="px-1.5 mt-1">
                   <h3 className={`text-sm font-normal mb-1 truncate font-satoshi ${
