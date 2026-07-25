@@ -269,24 +269,21 @@ const Header = ({ ispos }: any) => {
                   isOpen={notifPopoverOpen}
                 >
                   <PopoverTrigger>
-                    {unreadCount === 0 ? (
-                      <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
-                    ) : (
-                      <Badge
-                        className="cursor-pointer h-6 w-6 flex justify-center items-center rounded-full"
-                        size="sm"
-                        color="danger"
-                        content={
-                          unreadNotCount !== 0
-                            ? unreadNotCount
-                            : unreadCount > 0
-                            ? unreadCount
-                            : undefined
-                        }
-                      >
-                        <SlBell className="text-[#494E58] h-5 w-5 cursor-pointer" />
-                      </Badge>
-                    )}
+                    {(() => {
+                      const displayCount = unreadNotCount > 0 ? unreadNotCount : unreadCount;
+                      return displayCount === 0 ? (
+                        <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
+                      ) : (
+                        <Badge
+                          className="cursor-pointer h-6 w-6 flex justify-center items-center rounded-full"
+                          size="sm"
+                          color="danger"
+                          content={displayCount}
+                        >
+                          <SlBell className="text-[#494E58] h-5 w-5 cursor-pointer" />
+                        </Badge>
+                      );
+                    })()}
                   </PopoverTrigger>
                   <PopoverContent className="">
                     {notifPopoverOpen && (

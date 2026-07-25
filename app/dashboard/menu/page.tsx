@@ -208,11 +208,17 @@ const RestaurantMenu = () => {
     }
 
     try {
-      const preloadPromises = sections.map(async (section) => {
-        // Check global cache first
-        const cached = globalMenuItemsCache.get(section.id);
+      const newPreloadedSections = new Map(preloadedSections);
+      const newTimestamps = new Map(cacheTimestamps);
+
+      // Process sequentially to avoid overwhelming the server/browser
+      for (const section of sections) {
+        // Check global cache first using the correct page_1 key
+        const cacheKey = `${section.id}_page_1`;
+        const cached = globalMenuItemsCache.get(cacheKey);
+        
         if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
-          return { sectionId: section.id, cached: true };
+          continue;
         }
 
         try {
@@ -239,35 +245,29 @@ const RestaurantMenu = () => {
               hasVariety: item.hasVariety,
             }));
 
-            // Update global cache
-            globalMenuItemsCache.set(section.id, {
+            const pagination = response.data.data?.pagination;
+            const totalPagesFromAPI = pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / pageSize);
+            const totalItemsFromAPI = pagination?.totalItems || response.data.data?.totalCount || items.length;
+
+            // Update global cache with correct key and pagination
+            globalMenuItemsCache.set(cacheKey, {
               items: transformedItems,
               timestamp: Date.now(),
-              totalPages: 1,
-              totalItems: transformedItems.length,
+              totalPages: totalPagesFromAPI,
+              totalItems: totalItemsFromAPI,
               currentPage: 1
             });
 
-            return { sectionId: section.id, items: transformedItems };
+            newPreloadedSections.set(section.id, transformedItems);
+            newTimestamps.set(section.id, Date.now());
+
+            // Add a small delay between requests to keep the main thread responsive
+            await new Promise(resolve => setTimeout(resolve, 200));
           }
         } catch (error) {
           console.error(`Failed to preload section ${section.id}:`, error);
-          return { sectionId: section.id, error: true };
         }
-      });
-
-      const results = await Promise.allSettled(preloadPromises);
-
-      const newPreloadedSections = new Map(preloadedSections);
-      const newTimestamps = new Map(cacheTimestamps);
-
-      results.forEach((result) => {
-        if (result.status === 'fulfilled' && result.value?.items) {
-          const { sectionId, items } = result.value;
-          newPreloadedSections.set(sectionId, items);
-          newTimestamps.set(sectionId, Date.now());
-        }
-      });
+      }
 
       setPreloadedSections(newPreloadedSections);
       setCacheTimestamps(newTimestamps);
@@ -504,6 +504,23 @@ const RestaurantMenu = () => {
               fetchFirstItemPriority(sections[0].id);
               fetchRemainingItemsBackground(sections[0].id, 1);
             }
+
+            // After prioritizing the first section, systematically preload ALL other sections across all categories
+            setTimeout(() => {
+              const allOtherSections: any[] = [];
+              categoriesData.forEach((category: any) => {
+                const catSections = category.menus?.[0]?.menuSections || [];
+                catSections.forEach((section: any) => {
+                  if (section.id !== sections[0].id) {
+                    allOtherSections.push(section);
+                  }
+                });
+              });
+              
+              if (allOtherSections.length > 0) {
+                preloadMenuSections(allOtherSections, false);
+              }
+            }, 1000); // 1-second delay to ensure the initial category has completely painted
           } else {
             // Normal cache check for subsequent loads
             const cached = globalMenuItemsCache.get(sections[0].id);

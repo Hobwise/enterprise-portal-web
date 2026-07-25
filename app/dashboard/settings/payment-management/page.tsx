@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { Search } from "lucide-react";
 import {
   Modal,
   ModalBody,
@@ -11,11 +12,10 @@ import {
   Switch,
   useDisclosure,
 } from "@nextui-org/react";
-import { Pencil, Trash2, ShieldCheck, Mail, CreditCard } from "lucide-react";
+import { Pencil, Trash2, ShieldCheck, Mail, CreditCard, ChevronDown, X } from "lucide-react";
 import { toast } from "sonner";
 import { CustomButton } from "@/components/customButton";
 import { CustomInput } from "@/components/CustomInput";
-import SelectInput from "@/components/selectInput";
 import { getJsonItemFromLocalStorage } from "@/lib/utils";
 import {
   Bank,
@@ -89,6 +89,33 @@ const PaymentManagement = () => {
   const [reason, setReason] = useState<string>("Update settlement account");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
   const [onboardOtpSent, setOnboardOtpSent] = useState<boolean>(false);
+
+  // Bank search state
+  const [bankSearch, setBankSearch] = useState<string>("");
+  const [bankDropdownOpen, setBankDropdownOpen] = useState<boolean>(false);
+  const bankDropdownRef = useRef<HTMLDivElement>(null);
+
+  const filteredBankOptions = useMemo(() => {
+    const q = bankSearch.toLowerCase().trim();
+    if (!q) return bankOptions;
+    return bankOptions.filter((b) => b.label.toLowerCase().includes(q));
+  }, [bankSearch, bankOptions]);
+
+  const selectedBankLabel = useMemo(
+    () => bankOptions.find((b) => b.value === settlementBank)?.label ?? "",
+    [settlementBank, bankOptions]
+  );
+
+  // Close bank dropdown when clicking outside.
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (bankDropdownRef.current && !bankDropdownRef.current.contains(e.target as Node)) {
+        setBankDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   // Edit mode — set when editing an existing account.
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
@@ -315,7 +342,9 @@ const PaymentManagement = () => {
   };
 
   const openCreateForm = () => {
+    const currentTerms = termsAccepted;
     resetForm();
+    setTermsAccepted(currentTerms);
     setMode("form");
   };
 
@@ -633,12 +662,29 @@ const PaymentManagement = () => {
           ))}
         </div>
 
+        {/* Terms & Conditions */}
+        <div className="flex items-start gap-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3 w-full max-w-sm">
+          <input
+            type="checkbox"
+            id="emptyTermsAccepted"
+            className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-[#E4E7EC] text-primaryColor focus:ring-primaryColor"
+            checked={termsAccepted}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
+          />
+          <label htmlFor="emptyTermsAccepted" className="text-sm leading-snug text-[#475467] cursor-pointer">
+            I accept the{" "}
+            <span className="font-medium text-primaryColor">Terms and Conditions</span>{" "}
+            for managing the settlement account.
+          </label>
+        </div>
+
         {/* CTA */}
         <CustomButton
           className="h-[52px] w-full max-w-[260px] px-6 text-base font-semibold text-white shadow-md hover:shadow-lg transition-shadow"
+          disabled={!termsAccepted}
           onClick={openCreateForm}
         >
-          + Create Payment Account
+          + Onboard Settlement Account
         </CustomButton>
       </div>
     );
@@ -650,7 +696,7 @@ const PaymentManagement = () => {
       ? "Edit payment account"
       : isOnboarded
       ? "Add a payment account"
-      : "Create payment account";
+      : "Onboard Settlement Account";
     
     const subHeading = editingAccount
       ? "Update your payment account details for settlements."
@@ -659,9 +705,9 @@ const PaymentManagement = () => {
     return (
       <>
         <div className="p-6 sm:p-8">
-          <div className="mx-auto max-w-2xl overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
+          <div className="mx-auto max-w-2xl">
             {/* Header Area */}
-            <div className="border-b border-[#E4E7EC] bg-[#F9FAFB] p-6 sm:p-8">
+            <div className="mb-8 border-b border-[#E4E7EC] pb-6">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-purple-50">
                   <CreditCard className="h-6 w-6 text-primaryColor" />
@@ -674,7 +720,7 @@ const PaymentManagement = () => {
             </div>
 
             {/* Form Body */}
-            <div className="space-y-6 p-6 sm:p-8">
+            <div className="space-y-6">
               <div>
                 <CustomInput
                   type="text"
@@ -689,17 +735,86 @@ const PaymentManagement = () => {
               </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <SelectInput
-                  label="Settlement Bank"
-                  name="settlementBank"
-                  placeholder="Select bank"
-                  contents={bankOptions}
-                  value={settlementBank}
-                  selectedKeys={settlementBank ? [settlementBank] : []}
-                  onChange={(e: { target: { value: string } }) =>
-                    setSettlementBank(e.target.value)
-                  }
-                />
+                {/* Searchable Bank Dropdown */}
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-[#000]">Settlement Bank</label>
+                  <div className="relative" ref={bankDropdownRef}>
+                    <button
+                      type="button"
+                      onClick={() => { setBankDropdownOpen((o) => !o); setBankSearch(""); }}
+                      className="flex w-full items-center justify-between rounded-[6px] border border-[#E4E7EC] bg-white px-3 py-[11px] text-sm text-left hover:border-[#C3ADFF] focus:border-[#C3ADFF] focus:outline-none min-h-[48px] transition-colors"
+                      aria-haspopup="listbox"
+                      aria-expanded={bankDropdownOpen}
+                    >
+                      <span className={selectedBankLabel ? "text-[#000]" : "text-[#98A2B3]"}>
+                        {selectedBankLabel || "Select bank"}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        {settlementBank && (
+                          <span
+                            role="button"
+                            aria-label="Clear bank selection"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); setSettlementBank(""); setBankSearch(""); }}
+                            onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), setSettlementBank(""), setBankSearch(""))}
+                            className="flex h-4 w-4 items-center justify-center rounded-full text-[#98A2B3] hover:text-[#475467] cursor-pointer"
+                          >
+                            <X className="h-3 w-3" />
+                          </span>
+                        )}
+                        <ChevronDown className={`h-4 w-4 text-[#98A2B3] transition-transform ${bankDropdownOpen ? "rotate-180" : ""}`} />
+                      </div>
+                    </button>
+
+                    {bankDropdownOpen && (
+                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#E4E7EC] bg-white shadow-lg">
+                        {/* Search input */}
+                        <div className="flex items-center gap-2 border-b border-[#E4E7EC] px-3 py-2">
+                          <Search className="h-4 w-4 shrink-0 text-[#98A2B3]" />
+                          <input
+                            autoFocus
+                            type="text"
+                            placeholder="Search bank..."
+                            value={bankSearch}
+                            onChange={(e) => setBankSearch(e.target.value)}
+                            className="flex-1 bg-transparent text-sm text-[#101928] placeholder:text-[#98A2B3] focus:outline-none"
+                          />
+                          {bankSearch && (
+                            <button type="button" onClick={() => setBankSearch("")} className="text-[#98A2B3] hover:text-[#475467]">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Bank list */}
+                        <ul
+                          role="listbox"
+                          className="max-h-[220px] overflow-y-auto py-1"
+                          aria-label="Bank options"
+                        >
+                          {filteredBankOptions.length === 0 ? (
+                            <li className="px-4 py-3 text-center text-sm text-[#98A2B3]">No banks found</li>
+                          ) : (
+                            filteredBankOptions.map((bank) => (
+                              <li
+                                key={bank.value}
+                                role="option"
+                                aria-selected={settlementBank === bank.value}
+                                onClick={() => { setSettlementBank(bank.value); setBankDropdownOpen(false); setBankSearch(""); }}
+                                className={`cursor-pointer px-4 py-2.5 text-sm transition-colors hover:bg-purple-50 hover:text-primaryColor ${
+                                  settlementBank === bank.value ? "bg-purple-50 font-medium text-primaryColor" : "text-[#101928]"
+                                }`}
+                              >
+                                {bank.label}
+                              </li>
+                            ))
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <CustomInput
                   type="text"
                   name="accountNumber"
@@ -711,21 +826,6 @@ const PaymentManagement = () => {
                   }
                 />
               </div>
-
-              {!isOnboarded && (
-                <div className="flex items-start gap-3 rounded-xl bg-gray-50 p-4 border border-gray-100">
-                  <input
-                    type="checkbox"
-                    id="termsAccepted"
-                    className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-[#E4E7EC] text-primaryColor focus:ring-primaryColor"
-                    checked={termsAccepted}
-                    onChange={(e) => setTermsAccepted(e.target.checked)}
-                  />
-                  <label htmlFor="termsAccepted" className="text-sm leading-snug text-[#475467] cursor-pointer">
-                    I accept the <span className="font-medium text-primaryColor">Terms and Conditions</span> for managing the settlement account.
-                  </label>
-                </div>
-              )}
 
               {showDefaultToggle && (
                 <div className="flex items-center justify-between rounded-xl border border-[#E4E7EC] px-5 py-4">
@@ -751,7 +851,7 @@ const PaymentManagement = () => {
             </div>
 
             {/* Footer / Actions */}
-            <div className="flex items-center justify-between gap-4 border-t border-[#E4E7EC] bg-[#F9FAFB] p-6 sm:px-8 sm:py-5">
+            <div className="mt-8 flex items-center justify-between gap-4 border-t border-[#E4E7EC] pt-6">
               <CustomButton
                 className="h-11 w-full max-w-[140px] border border-[#E4E7EC] px-6 text-sm font-semibold text-[#344054] transition-colors hover:bg-gray-50"
                 backgroundColor="bg-white"
