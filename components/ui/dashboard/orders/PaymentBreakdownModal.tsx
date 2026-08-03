@@ -15,13 +15,13 @@ import moment from "moment";
 import { verifyQrPayment } from "@/app/api/controllers/dashboard/qrPayment";
 import { CustomButton } from "@/components/customButton";
 
-interface PaymentStatusModalProps {
+interface PaymentBreakdownModalProps {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   reference: string | null;
 }
 
-const PaymentStatusModal: React.FC<PaymentStatusModalProps> = ({
+const PaymentBreakdownModal: React.FC<PaymentBreakdownModalProps> = ({
   isOpen,
   onOpenChange,
   reference,
@@ -45,10 +45,10 @@ const PaymentStatusModal: React.FC<PaymentStatusModalProps> = ({
           if (response?.data?.isSuccessful !== false && resultData) {
             setData(resultData);
           } else {
-            setError(response?.data?.error || "Failed to fetch payment status");
+            setError(response?.data?.error || "Failed to fetch payment breakdown");
           }
         } catch (err: any) {
-          setError(err?.response?.data?.error || "An error occurred while fetching payment status.");
+          setError(err?.response?.data?.error || "An error occurred while fetching payment breakdown.");
         } finally {
           setIsLoading(false);
         }
@@ -64,7 +64,7 @@ const PaymentStatusModal: React.FC<PaymentStatusModalProps> = ({
         {(onClose) => (
           <>
             <ModalHeader className="flex flex-col gap-1 text-black">
-              Payment Status
+              Payment Breakdown
             </ModalHeader>
             <ModalBody>
               {isLoading ? (
@@ -123,10 +123,10 @@ const PaymentStatusModal: React.FC<PaymentStatusModalProps> = ({
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-semibold ${
                         ["successful", "success"].includes(data.status?.toLowerCase())
-                          ? "bg-green-100 text-green-700 border border-green-300"
-                          : data.status?.toLowerCase() === "pending"
-                          ? "bg-yellow-100 text-yellow-700 border border-yellow-300"
-                          : "bg-red-100 text-red-700 border border-red-300"
+                           ? "bg-green-100 text-green-700 border border-green-300"
+                           : data.status?.toLowerCase() === "pending"
+                           ? "bg-yellow-100 text-yellow-700 border border-yellow-300"
+                           : "bg-red-100 text-red-700 border border-red-300"
                       }`}
                     >
                       {data.status || "Unknown"}
@@ -235,4 +235,4 @@ const PaymentStatusModal: React.FC<PaymentStatusModalProps> = ({
   );
 };
 
-export default PaymentStatusModal;
+export default PaymentBreakdownModal;

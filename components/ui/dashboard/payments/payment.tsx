@@ -30,7 +30,7 @@ import { useGlobalContext } from "@/hooks/globalProvider";
 import { formatPrice } from "@/lib/utils";
 import ApprovePayment from "./approvePayment";
 import Filters from "./filters";
-import PaymentStatusModal from "../orders/PaymentStatusModal";
+import PaymentBreakdownModal from "../orders/PaymentBreakdownModal";
 import { Info } from "lucide-react";
 
 const INITIAL_VISIBLE_COLUMNS = [
@@ -151,7 +151,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     null
   );
   const [isOpen, setIsOpen] = React.useState<boolean>(false);
-  const [isOpenPaymentStatus, setIsOpenPaymentStatus] = React.useState<boolean>(false);
+  const [isOpenPaymentBreakdown, setIsOpenPaymentBreakdown] = React.useState<boolean>(false);
   const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
     useGlobalContext();
 
@@ -209,9 +209,9 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     setIsOpen(false);
   };
 
-  const togglePaymentStatusModal = (payment: PaymentItem) => {
+  const togglePaymentBreakdownModal = (payment: PaymentItem) => {
     setSinglePayment(payment);
-    setIsOpenPaymentStatus(true);
+    setIsOpenPaymentBreakdown(true);
   };
 
   const handleTabClick = (categoryName: string) => {
@@ -297,17 +297,19 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
                       <p>View more</p>
                     </div>
                   </DropdownItem>
-                  <DropdownItem
-                    onClick={() => {
-                      togglePaymentStatusModal(payment);
-                    }}
-                    aria-label="payment status"
-                  >
-                    <div className={` flex gap-2  items-center text-grey500`}>
-                      <Info className="w-[18px] h-[18px]" />
-                      <p>Payment Status</p>
-                    </div>
-                  </DropdownItem>
+                  {payment.treatedBy?.toLowerCase().includes("paystack") && (
+                    <DropdownItem
+                      onClick={() => {
+                        togglePaymentBreakdownModal(payment);
+                      }}
+                      aria-label="payment breakdown"
+                    >
+                      <div className={` flex gap-2  items-center text-grey500`}>
+                        <Info className="w-[18px] h-[18px]" />
+                        <p>Payment Breakdown</p>
+                      </div>
+                    </DropdownItem>
+                  )}
                 </DropdownMenu>
               </Dropdown>
             </div>
@@ -329,11 +331,11 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     );
   }, [categories, tableStatus]);
 
-  const paymentStatusModal = React.useMemo(() => {
+  const paymentBreakdownModal = React.useMemo(() => {
     return (
-      <PaymentStatusModal
-        isOpen={isOpenPaymentStatus}
-        onOpenChange={setIsOpenPaymentStatus}
+      <PaymentBreakdownModal
+        isOpen={isOpenPaymentBreakdown}
+        onOpenChange={setIsOpenPaymentBreakdown}
         reference={
           singlePayment?.checkOutReference || 
           (singlePayment as any)?.checkoutReference || 
@@ -343,7 +345,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
         }
       />
     );
-  }, [isOpenPaymentStatus, singlePayment]);
+  }, [isOpenPaymentBreakdown, singlePayment]);
 
   // Determine if we should show loading spinner
   // Only show loading spinner on initial load when there's no data
@@ -439,7 +441,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
         isOpen={isOpen}
         toggleApproveModal={closeApproveModal}
       />
-      {paymentStatusModal}
+      {paymentBreakdownModal}
     </section>
   );
 };

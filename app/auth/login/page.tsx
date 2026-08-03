@@ -18,14 +18,16 @@ const LoginPage = () => {
       <div className="relative flex min-h-screen w-full items-center justify-center bg-[#160151] px-4 py-10 sm:px-8 lg:w-1/2 lg:bg-[#F3F4F6] lg:px-10 lg:py-12">
         <div className="w-full max-w-[460px]">
           <div className="mb-6 flex justify-center lg:hidden">
-            <Image
-              src="/assets/icons/hobwise-logo.png"
-              height={56}
-              width={56}
-              className="rounded-xl"
-              alt="Hobwise logo"
-              priority
-            />
+            <Link href="/">
+              <Image
+                src="/assets/icons/hobwise-logo.png"
+                height={56}
+                width={56}
+                className="rounded-xl"
+                alt="Hobwise logo"
+                priority
+              />
+            </Link>
           </div>
 
           <div className="mb-6 hidden lg:flex">

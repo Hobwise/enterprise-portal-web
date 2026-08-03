@@ -275,7 +275,7 @@ const Header = ({ ispos }: any) => {
                         <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
                       ) : (
                         <Badge
-                          className="cursor-pointer h-6 w-6 flex justify-center items-center rounded-full"
+                          className="cursor-pointer h-6 min-w-6 px-1.5 flex justify-center items-center rounded-full text-xs"
                           size="sm"
                           color="danger"
                           content={displayCount}

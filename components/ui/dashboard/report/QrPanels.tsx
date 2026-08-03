@@ -193,19 +193,19 @@ export const QrOverviewPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => 
 
   const stats: StatCard[] = [
     {
-      label: 'Total QR Codes',
+      label: 'Total Quick Responses',
       value: totalQRCodes.toLocaleString(),
       footer: `${activeQRCodes.toLocaleString()} active · ${idleQRCodes.toLocaleString()} idle`,
       footerTone: activeQRCodes > 0 ? 'success' : 'muted',
     },
     {
-      label: 'Total QR Orders',
+      label: 'Total Quick Response Orders',
       value: totalQROrders.toLocaleString(),
-      footer: `Avg ${averageOrdersPerActiveQR.toFixed(2)} per active QR`,
+      footer: `Avg ${averageOrdersPerActiveQR.toFixed(2)} per active Quick Response`,
       footerTone: 'muted',
     },
     {
-      label: 'QR Revenue',
+      label: 'Quick Response Revenue',
       value: formatNgn(totalQRRevenue),
       delta: revenueDelta.delta,
       direction: revenueDelta.direction,
@@ -213,9 +213,9 @@ export const QrOverviewPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => 
       footerTone: 'muted',
     },
     {
-      label: 'Top QR Concentration',
+      label: 'Top Quick Response Concentration',
       value: formatPercentage(topQRConcentrationPct),
-      footer: 'Share of orders by top QR',
+      footer: 'Share of orders by top Quick Response',
       footerTone: topQRConcentrationPct >= 50 ? 'warning' : 'muted',
     },
   ];
@@ -232,7 +232,7 @@ export const QrOverviewPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => 
       {hasAnyTop && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <TopQrCard
-            title="Top QR by Revenue"
+            title="Top Quick Response by Revenue"
             item={qrDetails?.topByRevenue ?? null}
             metricLabel="Net Revenue"
             metricValue={formatNgn(
@@ -240,7 +240,7 @@ export const QrOverviewPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => 
             )}
           />
           <TopQrCard
-            title="Top QR by Orders"
+            title="Top Quick Response by Orders"
             item={qrDetails?.topByOrders ?? null}
             metricLabel="Order Count"
             metricValue={safeNumber(
@@ -248,7 +248,7 @@ export const QrOverviewPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => 
             ).toLocaleString()}
           />
           <TopQrCard
-            title="Top QR by Avg. Order Value"
+            title="Top Quick Response by Avg. Order Value"
             item={qrDetails?.topByAverageOrderValue ?? null}
             metricLabel="Avg. Order Value"
             metricValue={formatNgn(
@@ -261,7 +261,7 @@ export const QrOverviewPanel: React.FC<QrPanelProps> = ({ data, isLoading }) => 
       {topRows.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-1 gap-5">
           <BarList
-            title="Top QR Codes by Orders"
+            title="Top Quick Responses by Orders"
             rows={topRows}
             max={Math.max(...topRows.map((r) => r.value), 1)}
             valueFormatter={(r) => `${r.value.toLocaleString()} Orders`}
@@ -381,7 +381,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
-              QR Code Details
+              Quick Response Details
             </h3>
             <span className="text-xs text-gray-500">
               {allRows.length.toLocaleString()} total
@@ -394,7 +394,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
               }}
               className="text-xs h-9 px-3 rounded-lg border border-gray-200 text-gray-700 bg-white focus:outline-none focus:border-primaryColor"
             >
-              <option value="all">All QR codes</option>
+              <option value="all">All Quick Responses</option>
               <option value="active">Active ({counts.active})</option>
               <option value="inactive">Inactive ({counts.inactive})</option>
             </select>
@@ -406,7 +406,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
-                  label="QR Name"
+                  label="Quick Response Name"
                   sortKey="qrName"
                   active={sort.key}
                   direction={sort.direction}
@@ -463,7 +463,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
                     colSpan={7}
                     className="px-5 py-8 text-center text-sm text-gray-500"
                   >
-                    No QR code activity for this period
+                    No Quick Response activity for this period
                   </td>
                 </tr>
               ) : (
@@ -572,7 +572,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
-              QR Order History
+              Quick Response Order History
             </h3>
             <span className="text-xs text-gray-500">
               {rows.length.toLocaleString()} orders
@@ -599,7 +599,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
                   onSort={toggleSort}
                 />
                 <SortableTH
-                  label="QR"
+                  label="Quick Response"
                   sortKey="quickResponseName"
                   active={sort.key}
                   direction={sort.direction}
@@ -642,7 +642,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
                     colSpan={7}
                     className="px-5 py-8 text-center text-sm text-gray-500"
                   >
-                    No QR orders for this period
+                    No Quick Response orders for this period
                   </td>
                 </tr>
               ) : (
@@ -746,7 +746,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
 
   const stats: StatCard[] = [
     {
-      label: 'Total QR Revenue',
+      label: 'Total Quick Response Revenue',
       value: formatNgn(totalQRRevenue),
       delta: revenueDelta.delta,
       direction: revenueDelta.direction,
@@ -754,7 +754,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
       footerTone: 'muted',
     },
     {
-      label: 'Top QR by Revenue',
+      label: 'Top Quick Response by Revenue',
       value: topRevenue?.qrName ?? '—',
       footer: topRevenue
         ? `${formatNgn(safeNumber(topRevenue.netRevenue))} net`
@@ -762,15 +762,15 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
       footerTone: topRevenue ? 'success' : 'muted',
     },
     {
-      label: 'Active QR Codes',
+      label: 'Active Quick Responses',
       value: activeQRCodes.toLocaleString(),
-      footer: `Avg ${averagePerActive.toFixed(2)} orders / active QR`,
+      footer: `Avg ${averagePerActive.toFixed(2)} orders / active Quick Response`,
       footerTone: 'muted',
     },
     {
       label: 'Top Concentration',
       value: formatPercentage(safeNumber(qrDetails?.topQRConcentrationPct)),
-      footer: 'Share of orders by top QR',
+      footer: 'Share of orders by top Quick Response',
       footerTone: 'muted',
     },
   ];
@@ -787,7 +787,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
       {hasAnyTop && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <TopQrCard
-            title="Top QR by Revenue"
+            title="Top Quick Response by Revenue"
             item={qrDetails?.topByRevenue ?? null}
             metricLabel="Net Revenue"
             metricValue={formatNgn(
@@ -795,7 +795,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
             )}
           />
           <TopQrCard
-            title="Top QR by Orders"
+            title="Top Quick Response by Orders"
             item={qrDetails?.topByOrders ?? null}
             metricLabel="Order Count"
             metricValue={safeNumber(
@@ -803,7 +803,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
             ).toLocaleString()}
           />
           <TopQrCard
-            title="Top QR by Avg. Order Value"
+            title="Top Quick Response by Avg. Order Value"
             item={qrDetails?.topByAverageOrderValue ?? null}
             metricLabel="Avg. Order Value"
             metricValue={formatNgn(
@@ -817,10 +817,10 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
-              Revenue by QR Code
+              Revenue by Quick Response
             </h3>
             <span className="text-xs text-gray-500">
-              {performance.length.toLocaleString()} QR codes
+              {performance.length.toLocaleString()} Quick Responses
             </span>
           </div>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
@@ -830,7 +830,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
-                  label="QR Name"
+                  label="Quick Response Name"
                   sortKey="qrName"
                   active={sort.key}
                   direction={sort.direction}
@@ -979,7 +979,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
-              QR Activity Timeline
+              Quick Response Activity Timeline
             </h3>
             <span className="text-xs text-gray-500">
               {rows.length.toLocaleString()} events
@@ -999,7 +999,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
                   onSort={toggleSort}
                 />
                 <SortableTH
-                  label="QR"
+                  label="Quick Response"
                   sortKey="qrName"
                   active={sort.key}
                   direction={sort.direction}
@@ -1030,7 +1030,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
                     colSpan={hasAmount ? 4 : 3}
                     className="px-5 py-8 text-center text-sm text-gray-500"
                   >
-                    No QR activity in this period
+                    No Quick Response activity in this period
                   </td>
                 </tr>
               ) : (

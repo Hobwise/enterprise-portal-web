@@ -708,13 +708,13 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
 
   const stats: StatCard[] = [
     {
-      label: 'Active QR Codes',
+      label: 'Active Quick Responses',
       value: sortedQr.length.toLocaleString(),
       footer: 'Generating revenue',
       footerTone: 'success',
     },
     {
-      label: 'Top QR Code',
+      label: 'Top Quick Response',
       value: top?.quickResponseName ?? '—',
       footer: top
         ? `${safeNumber(top.numberOfOrders)} orders`
@@ -730,7 +730,7 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
     {
       label: 'Refunds',
       value: formatNgn(totals.refunds),
-      footer: totals.refunds > 0 ? 'Across QR codes' : 'No refunds',
+      footer: totals.refunds > 0 ? 'Across Quick Responses' : 'No refunds',
       footerTone: totals.refunds > 0 ? 'danger' : 'muted',
     },
   ];
@@ -741,7 +741,7 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
         <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
           <h3 className="text-base font-semibold text-gray-900">
-            Revenue by QR Code
+            Revenue by Quick Response
           </h3>
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
@@ -750,7 +750,7 @@ export const QrRevenueSubPanel: React.FC<PaymentSubTabPanelProps> = ({
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
-                  label="QR Code"
+                  label="Quick Response"
                   sortKey="quickResponseName"
                   active={qrSort.key}
                   direction={qrSort.direction}
