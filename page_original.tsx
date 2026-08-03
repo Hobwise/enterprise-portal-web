@@ -1,5 +1,4 @@
 "use client";
-import { OnlinePaymentsTermsContent } from "@/app/privacy-policy/OnlinePaymentsTermsContent";
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Search } from "lucide-react";
@@ -27,7 +26,6 @@ import {
   getBankAccounts,
   getBanks,
   onboardBusiness,
-  requestBankAccountOtp,
   requestSettlementOtp,
   setDefaultBankAccount,
   updateSettlementAccount,
@@ -88,54 +86,19 @@ const PaymentManagement = () => {
   const [accountNumber, setAccountNumber] = useState<string>("");
   const [isDefault, setIsDefault] = useState<boolean>(false);
   const [otp, setOtp] = useState<string>("");
-  const [reason, setReason] = useState<string>("");
+  const [reason, setReason] = useState<string>("Update settlement account");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
-
-  const {
-    isOpen: isTermsModalOpen,
-    onOpen: onTermsModalOpen,
-    onOpenChange: onTermsModalOpenChange,
-    onClose: onTermsModalClose,
-  } = useDisclosure();
   const [onboardOtpSent, setOnboardOtpSent] = useState<boolean>(false);
 
   // Bank search state
   const [bankSearch, setBankSearch] = useState<string>("");
   const [bankDropdownOpen, setBankDropdownOpen] = useState<boolean>(false);
   const bankDropdownRef = useRef<HTMLDivElement>(null);
-  const hasCheckedTerms = useRef<boolean>(false);
 
   const filteredBankOptions = useMemo(() => {
     const q = bankSearch.toLowerCase().trim();
     if (!q) return bankOptions;
-
-    const searchTerms = q.split(/\s+/).filter(Boolean);
-
-    return bankOptions
-      .filter((b) => {
-        const labelStr = (b.label || "").toLowerCase();
-        // Split label into word tokens so "bank" won't match inside "bankit"
-        const tokens = labelStr.split(/[^a-z0-9]+/).filter(Boolean);
-        return searchTerms.every((term) =>
-          tokens.some((token) => token.startsWith(term))
-        );
-      })
-      .sort((a, b) => {
-        const aLabel = (a.label || "").toLowerCase();
-        const bLabel = (b.label || "").toLowerCase();
-
-        // Exact match wins
-        if (aLabel === q) return -1;
-        if (bLabel === q) return 1;
-
-        // Starts-with next
-        const aStarts = aLabel.startsWith(q);
-        const bStarts = bLabel.startsWith(q);
-        if (aStarts && !bStarts) return -1;
-        if (!aStarts && bStarts) return 1;
-
-        return aLabel.localeCompare(bLabel);
-      });
+    return bankOptions.filter((b) => b.label.toLowerCase().includes(q));
   }, [bankSearch, bankOptions]);
 
   const selectedBankLabel = useMemo(
@@ -227,53 +190,25 @@ const PaymentManagement = () => {
       settlement !== null ||
       accounts.length > 0;
     setMode(hasAny ? "details" : "empty");
-    return hasAny;
   }, [businessId]);
 
   useEffect(() => {
-    let mounted = true;
     const init = async () => {
-      try {
-        const [banksResponse, hasAny] = await Promise.all([
-          getBanks(),
-          loadAccounts()
-        ]);
-        
-        const banks: Bank[] = banksResponse?.data?.data ?? [];
-        if (mounted) {
-          const seen = new Set<string>();
-          const uniqueBanks = banks.filter((bank) => {
-            const key = bank.code || bank.name;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-          setBankOptions(
-            uniqueBanks.map((bank) => ({ label: bank.name, value: bank.code }))
-          );
-          
-          if (!hasAny && !hasCheckedTerms.current) {
-            hasCheckedTerms.current = true;
-            onTermsModalOpen();
-          }
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
+      const [banksResponse] = await Promise.all([getBanks(), loadAccounts()]);
+      const banks: Bank[] = banksResponse?.data?.data ?? [];
+      setBankOptions(
+        banks.map((bank) => ({ label: bank.name, value: bank.code }))
+      );
+      setLoading(false);
     };
     init();
-    return () => { mounted = false; };
-  }, [loadAccounts, onTermsModalOpen]);
+  }, [loadAccounts]);
 
   const canSubmit =
     accountName.trim().length > 0 &&
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
-    (editingKind === "settlement" ? (otp.trim().length > 0 && reason.trim().length > 0) : true) &&
-    // OTP required for new onboarding and for adding other accounts
-    (!editingAccount ? otp.trim().length > 0 : true) &&
+    (editingKind === "settlement" ? otp.trim().length > 0 : true) &&
     !submitting;
 
   const canRequestOnboardOtp =
@@ -281,6 +216,7 @@ const PaymentManagement = () => {
     accountName.trim().length > 0 &&
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
+    termsAccepted &&
     !submitting;
 
   // Onboard OTP prompt modal.
@@ -320,24 +256,10 @@ const PaymentManagement = () => {
 
   useEffect(() => () => { if (onboardTimerRef.current) clearInterval(onboardTimerRef.current); }, []);
 
-  // Calls acceptOnboardTerms API directly and opens the OTP entry modal.
-  const handleRequestOnboardOtp = async () => {
+  // Opens the onboard OTP prompt modal when user clicks "Request OTP".
+  const handleRequestOnboardOtp = () => {
     if (!canRequestOnboardOtp) return;
-    setSubmitting(true);
-    try {
-      const response = await acceptOnboardTerms(businessId, { termsAccepted: true });
-      if (!succeeded(response)) {
-        toast.error(errorOf(response) ?? "Unable to request OTP. Please try again.");
-        return;
-      }
-      setOnboardOtpSent(true);
-      setTermsAccepted(true);
-      toast.success("OTP sent to your email.");
-      startOnboardResendCountdown();
-      onOnboardOtpOpen();
-    } finally {
-      setSubmitting(false);
-    }
+    onOnboardPromptOpen();
   };
 
   // Step 2 — send OTP after user confirms in prompt modal.
@@ -392,7 +314,7 @@ const PaymentManagement = () => {
         settlementBank,
         accountNumber: accountNumber.trim(),
         otp: onboardOtp.trim(),
-        termsAccepted: true,
+        termsAccepted,
       });
       if (!succeeded(response)) {
         toast.error(errorOf(response) ?? "Unable to save account. Please try again.");
@@ -421,80 +343,9 @@ const PaymentManagement = () => {
 
   const openCreateForm = () => {
     const currentTerms = termsAccepted;
-    const currentOtpSent = onboardOtpSent;
     resetForm();
     setTermsAccepted(currentTerms);
-    setOnboardOtpSent(currentOtpSent);
     setMode("form");
-  };
-
-  // Add Other Accounts: call request-otp endpoint, show OTP modal, then navigate to form.
-  const handleAddOtherAccounts = async () => {
-    setSubmitting(true);
-    try {
-      const response = await requestBankAccountOtp(businessId);
-      if (!succeeded(response)) {
-        toast.error(errorOf(response) ?? "Unable to request OTP. Please try again.");
-        return;
-      }
-      toast.success("OTP sent to your email.");
-      // Reset form for new account
-      resetForm();
-      setTermsAccepted(true);
-      setOnboardOtpSent(true);
-      setMode("form");
-      // Open the Verify OTP modal
-      setOnboardOtp("");
-      startOnboardResendCountdown();
-      onOnboardOtpOpen();
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Step 1 — T&C accepted: call accept-terms API, send OTP, navigate to form & open OTP modal.
-  const handleAcceptTermsAndContinue = async () => {
-    setSubmitting(true);
-    try {
-      const response = await acceptOnboardTerms(businessId, { termsAccepted: true });
-      if (!succeeded(response)) {
-        toast.error(errorOf(response) ?? "Unable to accept terms. Please try again.");
-        return;
-      }
-      setTermsAccepted(true);
-      setOnboardOtpSent(true);
-      toast.success("OTP sent to your email.");
-      onTermsModalClose();
-      // Reset form but preserve terms state
-      resetForm();
-      setTermsAccepted(true);
-      setOnboardOtpSent(true);
-      setMode("form");
-      // Open the Verify OTP modal immediately
-      setOnboardOtp("");
-      startOnboardResendCountdown();
-      onOnboardOtpOpen();
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // Resend OTP for onboarding (from the inline form OTP field).
-  const handleResendOnboardOtp = async () => {
-    if (onboardResendCountdown > 0) return;
-    setSubmitting(true);
-    try {
-      const response = await acceptOnboardTerms(businessId, { termsAccepted: true });
-      if (!succeeded(response)) {
-        toast.error(errorOf(response) ?? "Unable to resend OTP. Please try again.");
-        return;
-      }
-      toast.success("OTP resent to your email.");
-      setOtp("");
-      startOnboardResendCountdown();
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   // Step 1 — user clicks the edit pencil: store the target and open the prompt.
@@ -516,17 +367,6 @@ const PaymentManagement = () => {
           toast.error(errorOf(response) ?? "Unable to request OTP. Please try again.");
           return;
         }
-      } else {
-        const accountId = accountIdOf(pendingEditAccount);
-        if (!accountId) {
-          toast.error("Account ID missing.");
-          return;
-        }
-        const response = await requestBankAccountOtp(businessId, accountId);
-        if (!succeeded(response)) {
-          toast.error(errorOf(response) ?? "Unable to request OTP. Please try again.");
-          return;
-        }
       }
       toast.success("OTP sent to your registered email.");
       onOtpPromptClose();
@@ -539,19 +379,11 @@ const PaymentManagement = () => {
 
   // Resend OTP (inside the entry modal).
   const handleResendEditOtp = async () => {
-    if (resendCountdown > 0 || !pendingEditKind || !pendingEditAccount) return;
+    if (resendCountdown > 0 || !pendingEditKind) return;
     setSendingOtp(true);
     try {
       if (pendingEditKind === "settlement") {
         const response = await requestSettlementOtp(businessId);
-        if (!succeeded(response)) {
-          toast.error(errorOf(response) ?? "Unable to resend OTP. Please try again.");
-          return;
-        }
-      } else {
-        const accountId = accountIdOf(pendingEditAccount);
-        if (!accountId) return;
-        const response = await requestBankAccountOtp(businessId, accountId);
         if (!succeeded(response)) {
           toast.error(errorOf(response) ?? "Unable to resend OTP. Please try again.");
           return;
@@ -568,7 +400,7 @@ const PaymentManagement = () => {
   // Step 3 — user enters OTP and clicks "Verify & Continue".
   const handleVerifyEditOtp = () => {
     if (!pendingEditAccount || !pendingEditKind) return;
-    if (otp.trim().length === 0) {
+    if (pendingEditKind === "settlement" && otp.trim().length === 0) {
       toast.error("Please enter the OTP sent to your email.");
       return;
     }
@@ -619,7 +451,6 @@ const PaymentManagement = () => {
           bankName,
           bankCode: settlementBank,
           isDefault,
-          otp: otp.trim(),
         });
         const oldId = accountIdOf(editingAccount);
         if (succeeded(response) && oldId) {
@@ -632,14 +463,13 @@ const PaymentManagement = () => {
           bankName,
           bankCode: settlementBank,
           isDefault,
-          otp: otp.trim(),
         });
       } else {
         response = await onboardBusiness(businessId, {
           settlementBank,
           accountNumber: trimmedNumber,
           otp: otp.trim(),
-          termsAccepted: true,
+          termsAccepted,
         });
       }
 
@@ -747,177 +577,6 @@ const PaymentManagement = () => {
     </div>
   );
 
-  const onboardOtpModal = (
-    <>
-      {/* ── Onboard: OTP prompt modal ── */}
-            <Modal
-              isOpen={isOnboardPromptOpen}
-              onOpenChange={onOnboardPromptOpenChange}
-              placement="center"
-              classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
-            >
-              <ModalContent>
-                {(close) => (
-                  <>
-                    <ModalHeader className="px-6 pb-0 pt-6" />
-                    <ModalBody className="px-6 py-4">
-                      <div className="flex flex-col items-center gap-4 text-center">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50">
-                          <Mail className="h-7 w-7 text-primaryColor" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="text-lg font-semibold text-[#101928]">Verify your identity</h3>
-                          <p className="text-sm leading-relaxed text-[#475467]">
-                            To complete your account setup, we&apos;ll send a one-time password
-                            (OTP) to your registered email address. Please confirm to continue.
-                          </p>
-                        </div>
-                      </div>
-                    </ModalBody>
-                    <ModalFooter className="gap-3 px-6 pb-6 pt-2">
-                      <CustomButton
-                        className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
-                        backgroundColor="bg-white"
-                        disabled={submitting}
-                        onClick={close}
-                      >
-                        Cancel
-                      </CustomButton>
-                      <CustomButton
-                        className="h-[44px] w-full font-semibold text-white"
-                        loading={submitting}
-                        onClick={handleOnboardSendOtp}
-                      >
-                        Send OTP
-                      </CustomButton>
-                    </ModalFooter>
-                  </>
-                )}
-              </ModalContent>
-            </Modal>
-      
-            {/* ── Onboard: OTP entry modal ── */}
-            <Modal
-              isOpen={isOnboardOtpOpen}
-              onOpenChange={onOnboardOtpOpenChange}
-              placement="center"
-              classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
-            >
-              <ModalContent>
-                {() => (
-                  <>
-                    <ModalHeader className="px-6 pb-0 pt-6" />
-                    <ModalBody className="px-6 py-4">
-                      <div className="flex flex-col items-center gap-4 text-center">
-                        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50">
-                          <ShieldCheck className="h-7 w-7 text-primaryColor" />
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="text-lg font-semibold text-[#101928]">Verify OTP</h3>
-                          <p className="text-sm leading-relaxed text-[#475467]">
-                            A one-time password has been sent to your registered email.
-                            Enter it below to complete your account setup.
-                          </p>
-                        </div>
-                        <div className="w-full">
-                          <CustomInput
-                            type="text"
-                            name="onboard-otp"
-                            label="Verify OTP"
-                            placeholder="Enter OTP"
-                            value={onboardOtp}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                              setOnboardOtp(e.target.value.trim())
-                            }
-                          />
-                          {/* Resend link */}
-                          <div className="mt-3 flex items-center justify-center gap-1 text-sm">
-                            <span className="text-[#667085]">Didn&apos;t receive it?</span>
-                            {onboardResendCountdown > 0 ? (
-                              <span className="text-[#98A2B3]">
-                                Resend in{" "}
-                                <span className="font-semibold text-primaryColor">{onboardResendCountdown}s</span>
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={handleOnboardResendOtp}
-                                disabled={submitting}
-                                className="font-semibold text-primaryColor transition-opacity hover:opacity-70 disabled:opacity-40"
-                              >
-                                {submitting ? "Sending…" : "Resend OTP"}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </ModalBody>
-                    <ModalFooter className="gap-3 px-6 pb-6 pt-2">
-                      <CustomButton
-                        className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
-                        backgroundColor="bg-white"
-                        disabled={submitting}
-                        onClick={() => { onOnboardOtpClose(); setOnboardOtp(""); }}
-                      >
-                        Cancel
-                      </CustomButton>
-                      <CustomButton
-                        className="h-[44px] w-full font-semibold text-white"
-                        disabled={onboardOtp.trim().length === 0}
-                        loading={submitting}
-                        onClick={handleOnboardVerifyAndSubmit}
-                      >
-                        Verify &amp; Complete
-                      </CustomButton>
-                    </ModalFooter>
-                  </>
-                )}
-              </ModalContent>
-            </Modal>
-    </>
-  );
-
-  const termsModal = (
-    <Modal
-      isOpen={isTermsModalOpen}
-      onOpenChange={onTermsModalOpenChange}
-      size="2xl"
-      scrollBehavior="inside"
-      classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
-    >
-      <ModalContent>
-        {() => (
-          <>
-            <ModalHeader className="px-6 pb-2 pt-6">
-              <h2 className="text-xl font-semibold text-[#101928]">Review Terms & Conditions</h2>
-            </ModalHeader>
-            <ModalBody className="px-6 py-4">
-              <div className="bg-white rounded-lg border border-[#E4E7EC] p-6 shadow-inner text-[#101928]">
-                <OnlinePaymentsTermsContent />
-              </div>
-            </ModalBody>
-            <ModalFooter className="gap-3 px-6 pb-6 pt-2">
-              <CustomButton
-                className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
-                backgroundColor="bg-white"
-                onClick={onTermsModalClose}
-              >
-                Cancel
-              </CustomButton>
-              <CustomButton
-                className="h-[44px] w-full font-semibold text-white"
-                loading={submitting}
-                onClick={handleAcceptTermsAndContinue}
-              >
-                Accept &amp; Continue
-              </CustomButton>
-            </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
-  );
-
   if (loading) {
     return (
       <div className="flex min-h-[360px] items-center justify-center p-6">
@@ -1010,13 +669,7 @@ const PaymentManagement = () => {
             id="emptyTermsAccepted"
             className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-[#E4E7EC] text-primaryColor focus:ring-primaryColor"
             checked={termsAccepted}
-            onChange={(e) => {
-              if (e.target.checked) {
-                onTermsModalOpen();
-              } else {
-                setTermsAccepted(false);
-              }
-            }}
+            onChange={(e) => setTermsAccepted(e.target.checked)}
           />
           <label htmlFor="emptyTermsAccepted" className="text-sm leading-snug text-[#475467] cursor-pointer">
             I accept the{" "}
@@ -1033,8 +686,6 @@ const PaymentManagement = () => {
         >
           + Onboard Settlement Account
         </CustomButton>
-        {onboardOtpModal}
-        {termsModal}
       </div>
     );
   }
@@ -1176,21 +827,6 @@ const PaymentManagement = () => {
                 />
               </div>
 
-              {editingAccount && editingKind === "settlement" && (
-                <div className="space-y-6 pt-0.5">
-                  <CustomInput
-                    type="text"
-                    name="reason"
-                    label="Reason for Update"
-                    placeholder="e.g. Changed primary bank"
-                    value={reason}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setReason(e.target.value)
-                    }
-                  />
-                </div>
-              )}
-
               {showDefaultToggle && (
                 <div className="flex items-center justify-between rounded-xl border border-[#E4E7EC] px-5 py-4">
                   <div className="flex flex-col">
@@ -1224,16 +860,14 @@ const PaymentManagement = () => {
               >
                 Back
               </CustomButton>
-              {/* For new onboarding: open the OTP modal (OTP was sent in Step 1 via T&C acceptance) */}
-              {!isOnboarded && !editingAccount ? (
+              {!isOnboarded && !onboardOtpSent ? (
                 <CustomButton
-                  type="button"
                   className="h-11 w-full max-w-[200px] px-6 text-sm font-semibold text-white shadow-sm"
-                  disabled={!canSubmit}
+                  disabled={!canRequestOnboardOtp}
                   loading={submitting}
-                  onClick={handleSubmit}
+                  onClick={handleRequestOnboardOtp}
                 >
-                  Complete Setup
+                  Request OTP
                 </CustomButton>
               ) : (
                 <CustomButton
@@ -1249,19 +883,57 @@ const PaymentManagement = () => {
           </div>
         </div>
 
+      {/* ── Onboard: OTP prompt modal ── */}
+      <Modal
+        isOpen={isOnboardPromptOpen}
+        onOpenChange={onOnboardPromptOpenChange}
+        placement="center"
+        classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
+      >
+        <ModalContent>
+          {(close) => (
+            <>
+              <ModalHeader className="px-6 pb-0 pt-6" />
+              <ModalBody className="px-6 py-4">
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50">
+                    <Mail className="h-7 w-7 text-primaryColor" />
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-semibold text-[#101928]">Verify your identity</h3>
+                    <p className="text-sm leading-relaxed text-[#475467]">
+                      To complete your account setup, we&apos;ll send a one-time password
+                      (OTP) to your registered email address. Please confirm to continue.
+                    </p>
+                  </div>
+                </div>
+              </ModalBody>
+              <ModalFooter className="gap-3 px-6 pb-6 pt-2">
+                <CustomButton
+                  className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
+                  backgroundColor="bg-white"
+                  disabled={submitting}
+                  onClick={close}
+                >
+                  Cancel
+                </CustomButton>
+                <CustomButton
+                  className="h-[44px] w-full font-semibold text-white"
+                  loading={submitting}
+                  onClick={handleOnboardSendOtp}
+                >
+                  Send OTP
+                </CustomButton>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
 
-      {/* ── Verify OTP Modal (inline) ── */}
+      {/* ── Onboard: OTP entry modal ── */}
       <Modal
         isOpen={isOnboardOtpOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            // Closing via X button or clicking outside — go back to the appropriate screen
-            onOnboardOtpClose();
-            setOnboardOtp("");
-            resetForm();
-            setMode(isOnboarded ? "details" : "empty");
-          }
-        }}
+        onOpenChange={onOnboardOtpOpenChange}
         placement="center"
         classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
       >
@@ -1275,7 +947,7 @@ const PaymentManagement = () => {
                     <ShieldCheck className="h-7 w-7 text-primaryColor" />
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-lg font-semibold text-[#101928]">Verify OTP</h3>
+                    <h3 className="text-lg font-semibold text-[#101928]">Enter OTP</h3>
                     <p className="text-sm leading-relaxed text-[#475467]">
                       A one-time password has been sent to your registered email.
                       Enter it below to complete your account setup.
@@ -1285,13 +957,14 @@ const PaymentManagement = () => {
                     <CustomInput
                       type="text"
                       name="onboard-otp"
-                      label="Verify OTP"
+                      label="One-Time Password"
                       placeholder="Enter OTP"
                       value={onboardOtp}
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setOnboardOtp(e.target.value.trim())
                       }
                     />
+                    {/* Resend link */}
                     <div className="mt-3 flex items-center justify-center gap-1 text-sm">
                       <span className="text-[#667085]">Didn&apos;t receive it?</span>
                       {onboardResendCountdown > 0 ? (
@@ -1302,11 +975,11 @@ const PaymentManagement = () => {
                       ) : (
                         <button
                           type="button"
-                          onClick={handleResendOnboardOtp}
+                          onClick={handleOnboardResendOtp}
                           disabled={submitting}
                           className="font-semibold text-primaryColor transition-opacity hover:opacity-70 disabled:opacity-40"
                         >
-                          {submitting ? "Sending\u2026" : "Resend OTP"}
+                          {submitting ? "Sending…" : "Resend OTP"}
                         </button>
                       )}
                     </div>
@@ -1318,33 +991,23 @@ const PaymentManagement = () => {
                   className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
                   backgroundColor="bg-white"
                   disabled={submitting}
-                  onClick={() => {
-                    onOnboardOtpClose();
-                    setOnboardOtp("");
-                    resetForm();
-                    setMode(isOnboarded ? "details" : "empty");
-                  }}
+                  onClick={() => { onOnboardOtpClose(); setOnboardOtp(""); }}
                 >
                   Cancel
                 </CustomButton>
                 <CustomButton
                   className="h-[44px] w-full font-semibold text-white"
                   disabled={onboardOtp.trim().length === 0}
-                  onClick={() => {
-                    // Save OTP to state and close modal — user will fill bank details next
-                    setOtp(onboardOtp.trim());
-                    onOnboardOtpClose();
-                  }}
+                  loading={submitting}
+                  onClick={handleOnboardVerifyAndSubmit}
                 >
-                  Verify
+                  Verify &amp; Complete
                 </CustomButton>
               </ModalFooter>
             </>
           )}
         </ModalContent>
       </Modal>
-
-      {termsModal}
       </>
     );
   }
@@ -1427,8 +1090,7 @@ const PaymentManagement = () => {
       <div className="flex justify-end pt-2">
         <CustomButton
           className="h-[56px] w-full max-w-[280px] px-6 font-semibold text-white"
-          loading={submitting}
-          onClick={handleAddOtherAccounts}
+          onClick={openCreateForm}
         >
           Add Other Accounts
         </CustomButton>
@@ -1617,8 +1279,6 @@ const PaymentManagement = () => {
           )}
         </ModalContent>
       </Modal>
-      {onboardOtpModal}
-      {termsModal}
     </div>
   );
 };

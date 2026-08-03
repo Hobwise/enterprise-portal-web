@@ -233,7 +233,7 @@ const MODULES: ModuleTab[] = [
   },
   {
     id: 'qr',
-    label: 'QR Code',
+    label: 'Quick Response',
     icon: <HiOutlineQrcode size={18} />,
     subTabs: [
       { id: 'overview', label: 'Overview', icon: <MdOutlineGridView size={16} /> },
@@ -251,7 +251,7 @@ const MODULES: ModuleTab[] = [
       },
       {
         id: 'qr-revenue-by-code',
-        label: 'Revenue by QR Code',
+        label: 'Revenue by Quick Response',
         icon: <MdOutlinePayments size={16} />,
         reportType: 6,
       },

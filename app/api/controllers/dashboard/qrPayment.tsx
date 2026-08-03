@@ -38,6 +38,16 @@ export interface AddBankAccountPayload {
   bankName: string;
   bankCode: string;
   isDefault: boolean;
+  otp: string;
+}
+
+export interface UpdateBankAccountPayload {
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  bankCode: string;
+  isDefault: boolean;
+  otp: string;
 }
 
 export interface InitializePaymentPayload {
@@ -188,6 +198,20 @@ export async function requestSettlementOtp(businessId: string) {
   }
 }
 
+/** Requests an OTP to update a bank account. */
+export async function requestBankAccountOtp(businessId: string, accountId?: string) {
+  try {
+    const url = accountId 
+      ? `${QR_PAYMENT.bankAccounts}/${accountId}/request-otp` 
+      : `${QR_PAYMENT.bankAccounts}/request-otp`;
+    return await api.post(url, {}, {
+      headers: withBusiness(businessId),
+    });
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
 /** Updates the business settlement account using an OTP. */
 export async function updateSettlementAccount(
   businessId: string,
@@ -233,6 +257,21 @@ export async function addBankAccount(
 ) {
   try {
     return await api.post(QR_PAYMENT.bankAccounts, payload, {
+      headers: withBusiness(businessId),
+    });
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
+/** Updates a regular bank account using an OTP. */
+export async function updateBankAccount(
+  businessId: string,
+  accountId: string,
+  payload: UpdateBankAccountPayload
+) {
+  try {
+    return await api.put(`${QR_PAYMENT.bankAccounts}/${accountId}`, payload, {
       headers: withBusiness(businessId),
     });
   } catch (error) {

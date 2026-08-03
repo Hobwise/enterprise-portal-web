@@ -7,6 +7,8 @@ import {
 import {
   hasPaymentAccount,
   initializePayment,
+  verifyQrPayment,
+  InitializePaymentData
 } from "@/app/api/controllers/dashboard/qrPayment";
 import { getQRByBusiness } from "@/app/api/controllers/dashboard/quickResponse";
 import { CustomInput } from "@/components/CustomInput";
@@ -29,6 +31,7 @@ import {
   ModalContent,
   ModalHeader,
   Spacer,
+  Spinner,
 } from "@nextui-org/react";
 import Image from "next/image";
 import PaystackPop from "paystack-inline-ts";
@@ -138,6 +141,10 @@ const CheckoutModal = ({
   const [qr, setQr] = useState<
     { id: string; label: string; name?: string; value?: string }[]
   >([]);
+  const [qrPaymentData, setQrPaymentData] = useState<InitializePaymentData | null>(null);
+  const [qrPaymentLoading, setQrPaymentLoading] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
+  const [qrPaymentStatus, setQrPaymentStatus] = useState<"pending" | "success" | "failed" | null>(null);
   const [order, setOrder] = useState<Order>({
     placedByName: orderDetails?.placedByName || "",
     placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
@@ -370,6 +377,9 @@ const CheckoutModal = ({
           setOrderId("");
           setReference("");
           setSelectedPaymentMethod(0);
+          setQrPaymentData(null);
+          setQrPaymentStatus(null);
+          setIsPolling(false);
           ordersCacheUtils.clearAll();
           queryClient.invalidateQueries({
             queryKey: ["orderCategories"],
@@ -398,11 +408,16 @@ const CheckoutModal = ({
       setScreen(1);
       onOpenChange();
       setOrderId("");
-      setReference("");
       setSelectedPaymentMethod(0);
+      setQrPaymentData(null);
+      setQrPaymentStatus(null);
+      setIsPolling(false);
     };
 
-    if (methodId === 3) {
+    if (methodId === 5) {
+      // Handle QR Payment
+      handleQrPayment();
+    } else if (methodId === 3) {
       // Pay Later logic with page detection
       setIsPayLaterLoading(true);
       clearScreenStates(); // Clear states before navigation
@@ -469,10 +484,12 @@ const CheckoutModal = ({
   // Handle cancel payment - same as "Pay Later" logic
   const handleCancelPayment = async () => {
     // Clear screen states
-    setScreen(1);
     setOrderId("");
     setReference("");
     setSelectedPaymentMethod(0);
+    setQrPaymentData(null);
+    setQrPaymentStatus(null);
+    setIsPolling(false);
 
     try {
       if (pathname === "/dashboard/orders") {
@@ -525,11 +542,11 @@ const CheckoutModal = ({
   };
 
   const paymentMethods = [
-    { text: "Pay with cash", subText: " Accept payment using cash", id: 0 },
-    { text: "Pay with Pos", subText: " Accept payment using Pos", id: 1 },
+    { text: "Pay with Cash", subText: " Accept payment using Cash", id: 0 },
+    { text: "Pay with POS", subText: " Accept payment using POS", id: 1 },
     {
-      text: "Pay with bank transfer",
-      subText: "Accept payment via bank transfer",
+      text: "Pay with Bank Transfer",
+      subText: "Accept payment via Bank Transfer",
       id: 2,
     },
     {
@@ -537,6 +554,7 @@ const CheckoutModal = ({
       subText: "Pay online via Paystack",
       id: PAY_NOW_ID,
     },
+    { text: "Pay with QR", subText: "Pay via Hobwise QR Code", id: 5 },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
 
@@ -544,8 +562,9 @@ const CheckoutModal = ({
   // is disabled meanwhile so a second method can't be started on top of it.
   const isMethodLoading = (methodId: number) =>
     (methodId === 3 && isPayLaterLoading) ||
-    (methodId === PAY_NOW_ID && payNowLoading);
-  const isPaymentBusy = isPayLaterLoading || payNowLoading;
+    (methodId === PAY_NOW_ID && payNowLoading) ||
+    (methodId === 5 && qrPaymentLoading);
+  const isPaymentBusy = isPayLaterLoading || payNowLoading || qrPaymentLoading;
 
   // Calculate detailed total price directly from selectedItems to ensure accuracy
   const calculateDetailedTotalPrice = (): {
@@ -750,7 +769,7 @@ const CheckoutModal = ({
     }
 
     // Validate order details
-    if (
+    if(
       !Array.isArray(payload.orderDetails) ||
       payload.orderDetails.length === 0
     ) {
@@ -1187,9 +1206,9 @@ const CheckoutModal = ({
     } else {
       // Extract error message from various possible response formats
       const errorMessage =
-        data?.data?.error ||
-        data?.error ||
-        (data?.errors ? Object.entries(data.errors)
+        (data as any)?.data?.error ||
+        (data as any)?.error ||
+        ((data as any)?.errors ? Object.entries((data as any).errors)
           .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`)
           .join("; ") : null) ||
         "Failed to update order. Please try again.";
@@ -1371,6 +1390,76 @@ const CheckoutModal = ({
     }
   };
 
+  const handleQrPayment = async () => {
+    if (!orderId) {
+      notify({ title: "Error!", text: "Order data not available", type: "error" });
+      return;
+    }
+
+    setQrPaymentLoading(true);
+    try {
+      const payingBusinessId = businessId ? businessId : businessInformation?.[0]?.businessId;
+      const base = Math.max(0, finalTotalPrice - (orderDetails?.amountPaid || 0));
+      const amountKobo = Math.round(base * 100);
+
+      const response = await initializePayment(payingBusinessId, userInformation?.id, {
+        orderId,
+        customerEmail: userInformation?.email || "customer@email.com",
+        amountKobo,
+      });
+
+      if (response?.data?.isSuccessful && response.data.data) {
+        setQrPaymentData(response.data.data);
+        setQrPaymentStatus("pending");
+        setScreen(4); // Use screen 4 for QR payment
+        startPolling(payingBusinessId, response.data.data.hobwiseReference);
+      } else {
+        notify({ title: "Error", text: response?.data?.error || "Failed to initialize QR Payment.", type: "error" });
+      }
+    } catch (error) {
+      console.error(error);
+      notify({ title: "Error", text: "Failed to initialize QR payment", type: "error" });
+    } finally {
+      setQrPaymentLoading(false);
+    }
+  };
+
+  const startPolling = (payingBusinessId: string, reference: string) => {
+    setIsPolling(true);
+    let attempts = 0;
+    
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await verifyQrPayment(payingBusinessId, reference);
+        const status = res?.data?.data?.status;
+
+        if (status === 'Success') {
+          setQrPaymentStatus('success');
+          clearInterval(interval);
+          setIsPolling(false);
+          notify({ title: "Payment successful!", text: "Payment received, awaiting confirmation", type: "success" });
+          setTimeout(() => {
+            handleCancelPayment();
+          }, 2000);
+        } else if (status === 'Failed') {
+          setQrPaymentStatus('failed');
+          clearInterval(interval);
+          setIsPolling(false);
+        } else if (attempts >= 10) {
+          // If we reach 10 attempts (30s), stop polling automatically but leave it as pending to let user refresh or cancel
+          clearInterval(interval);
+          setIsPolling(false);
+        }
+      } catch (err) {
+        // error handled by apiService interceptor usually
+      }
+    }, 3000);
+
+    // clear interval if component unmounts
+    return () => clearInterval(interval);
+  };
+
   const getQrID = async () => {
     const id = businessId ? businessId : businessInformation[0]?.businessId;
 
@@ -1493,6 +1582,9 @@ const CheckoutModal = ({
             });
             setAdditionalCost(orderDetails?.additionalCost || 0);
             setAdditionalCostName(orderDetails?.additionalCostName || "");
+            setQrPaymentData(null);
+            setQrPaymentStatus(null);
+            setIsPolling(false);
           }
           onOpenChange(open);
         }}
@@ -2606,10 +2698,92 @@ const CheckoutModal = ({
                   </div>
                 </>
               )}
+              {screen === 4 && qrPaymentData && (
+                <>
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <h2 className="text-[20px] font-semibold text-black mb-2">Scan to Pay</h2>
+                    <p className="text-sm text-grey500 mb-6 text-center">
+                      Scan this QR code with your bank app to complete the payment of <b>{formatPrice(Math.max(0, finalTotalPrice - (orderDetails?.amountPaid || 0)), "NGN")}</b>.
+                    </p>
+
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-sm">
+                      {qrPaymentData.qrCodeBase64 ? (
+                        <img 
+                          src={`data:image/png;base64,${qrPaymentData.qrCodeBase64}`} 
+                          alt="Payment QR Code" 
+                          className="w-64 h-64 object-contain"
+                        />
+                      ) : (
+                        <div className="w-64 h-64 flex items-center justify-center bg-gray-100 rounded-lg">
+                          <p className="text-gray-500">QR Code unavailable</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center w-full max-w-md bg-gray-50 rounded-lg p-4 mb-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        {qrPaymentStatus === "pending" && isPolling && <Spinner size="sm" />}
+                        <span className="font-medium text-black">
+                          {qrPaymentStatus === "pending" 
+                            ? "Waiting for payment..." 
+                            : qrPaymentStatus === "success" 
+                            ? "Payment successful!" 
+                            : "Payment failed or expired."}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Expires at: {new Date(qrPaymentData.expiresAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+
+                    {/* @ts-ignore */}
+                    {qrPaymentData.bankAccounts && qrPaymentData.bankAccounts.length > 0 && (
+                      <div className="w-full max-w-md text-center">
+                        <p className="text-sm text-gray-600 mb-3">Or pay directly to our account:</p>
+                        <div className="flex flex-col gap-3">
+                          {/* @ts-ignore */}
+                          {qrPaymentData.bankAccounts.map((acct: any, idx: number) => (
+                            <div key={idx} className="bg-white border rounded-lg p-3 flex justify-between items-center text-left">
+                              <div>
+                                <p className="text-xs text-gray-500">{acct.bankName}</p>
+                                <p className="font-semibold text-black">{acct.accountNumber}</p>
+                                <p className="text-xs text-gray-500">{acct.accountName}</p>
+                              </div>
+                              <CustomButton 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(acct.accountNumber);
+                                  notify({ title: "Success", text: "Account number copied!", type: "success" });
+                                }}
+                                className="bg-gray-100 text-black text-xs py-1 px-3"
+                              >
+                                Copy
+                              </CustomButton>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="w-full mt-6">
+                      <CustomButton
+                        onClick={() => {
+                          setScreen(2);
+                          setQrPaymentData(null);
+                          setQrPaymentStatus(null);
+                          setIsPolling(false);
+                        }}
+                        className="bg-white h-[50px] w-full border border-primaryGrey text-black"
+                      >
+                        Cancel QR Payment
+                      </CustomButton>
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
         </ModalContent>
-      </Modal>{" "}
+      </Modal>
     </div>
   );
 };

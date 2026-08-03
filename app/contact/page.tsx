@@ -190,10 +190,10 @@ export default function Contact() {
                     Call Us
                   </h4>
                   <a
-                    href="tel:+2348123456789"
+                    href="tel:+2348162255803"
                     className="text-primaryColor underline font-medium"
                   >
-                    +234 812 345 6789
+                    +234 816 225 5803
                   </a>
                 </div>
                 <div className="space-y-1.5">

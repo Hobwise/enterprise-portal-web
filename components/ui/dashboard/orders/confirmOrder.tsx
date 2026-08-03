@@ -142,11 +142,11 @@ const ConfirmOrderModal = ({
   };
 
   const paymentMethods = [
-    { text: "Pay with cash", subText: " Accept payment using cash", id: 0 },
-    { text: "Pay with Pos", subText: " Accept payment using Pos", id: 1 },
+    { text: "Pay with Cash", subText: " Accept payment using Cash", id: 0 },
+    { text: "Pay with POS", subText: " Accept payment using POS", id: 1 },
     {
-      text: "Pay with bank transfer",
-      subText: "Accept payment via bank transfer",
+      text: "Pay with Bank Transfer",
+      subText: "Accept payment via Bank Transfer",
       id: 2,
     },
     {

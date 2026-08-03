@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { PiShieldCheckFill } from "react-icons/pi";
 
 interface AuthLeftPanelProps {
@@ -60,7 +61,7 @@ const AuthLeftPanel = ({ variant = "wrapped" }: AuthLeftPanelProps) => {
         aria-hidden
       />
 
-      <div className="relative z-10 flex items-center gap-3">
+      <Link href="/" className="relative z-10 flex items-center gap-3 w-fit">
         <Image
           src="/assets/icons/hobwise-logo.png"
           height={52}
@@ -73,7 +74,7 @@ const AuthLeftPanel = ({ variant = "wrapped" }: AuthLeftPanelProps) => {
           <p className="text-[20px] font-bold text-white">Hobwise</p>
           <p className="text-[13px] text-white/60">Hospitality solution</p>
         </div>
-      </div>
+      </Link>
 
       <div className="relative z-10 mt-16 flex flex-1 flex-col">
         <h1 className="text-[44px] font-extrabold leading-[1.1] xl:text-[52px]">
