@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import {
   Modal,
   ModalContent,
-  ModalHeader,
   ModalBody,
   ModalFooter,
   Spinner,
@@ -59,14 +58,11 @@ const PaymentBreakdownModal: React.FC<PaymentBreakdownModalProps> = ({
   }, [isOpen, reference, businessId]);
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="md">
+    <Modal isOpen={isOpen} onOpenChange={onOpenChange} size="md" classNames={{ closeButton: "top-3 right-3 z-10" }}>
       <ModalContent>
         {(onClose) => (
           <>
-            <ModalHeader className="flex flex-col gap-1 text-black">
-              Payment Breakdown
-            </ModalHeader>
-            <ModalBody>
+            <ModalBody className="pt-10 pb-4">
               {isLoading ? (
                 <div className="flex justify-center items-center py-10">
                   <Spinner size="lg" color="primary" />
@@ -137,16 +133,6 @@ const PaymentBreakdownModal: React.FC<PaymentBreakdownModalProps> = ({
                     <span className="text-gray-500">Reference</span>
                     <span className="font-medium text-right truncate w-48" title={data.hobwiseReference || data.paystackReference}>{data.hobwiseReference || data.paystackReference || reference}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Amount</span>
-                    <span className="font-semibold text-lg">{formatPrice(data.amountNaira || 0, "NGN")}</span>
-                  </div>
-                  {data.merchantAmountNaira !== undefined && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Merchant Amount</span>
-                      <span className="font-medium">{formatPrice(data.merchantAmountNaira, "NGN")}</span>
-                    </div>
-                  )}
                   {data.paymentChannel && (
                     <div className="flex justify-between">
                       <span className="text-gray-500">Channel</span>
@@ -169,6 +155,53 @@ const PaymentBreakdownModal: React.FC<PaymentBreakdownModalProps> = ({
                       </span>
                     </div>
                   )}
+
+                  {/* Fee Breakdown */}
+                  <Divider />
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Fee Breakdown</p>
+                  <div className="bg-gray-50 rounded-xl border border-gray-100 px-4 py-3 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">Amount</span>
+                      <span className="font-semibold text-base">
+                        {formatPrice(
+                          data.amountKobo != null
+                            ? data.amountKobo / 100
+                            : data.amountNaira || 0
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">Platform Fee</span>
+                      <span className="font-medium text-orange-600">
+                        {formatPrice(
+                          data.platformFeeKobo != null
+                            ? data.platformFeeKobo / 100
+                            : data.platformFeeNaira || 0
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-500">Gateway Fee</span>
+                      <span className="font-medium text-orange-600">
+                        {formatPrice(
+                          data.gatewayFeeKobo != null
+                            ? data.gatewayFeeKobo / 100
+                            : data.gatewayFeeNaira || 0
+                        )}
+                      </span>
+                    </div>
+                    <Divider />
+                    <div className="flex justify-between items-center">
+                      <span className="font-semibold text-gray-700">Merchant Amount</span>
+                      <span className="font-bold text-green-700 text-base">
+                        {formatPrice(
+                          data.merchantAmountKobo != null
+                            ? data.merchantAmountKobo / 100
+                            : data.merchantAmountNaira || 0
+                        )}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col justify-center items-center py-8 gap-4">

@@ -22,7 +22,7 @@ import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 
 import { GrFormView } from "react-icons/gr";
-import { columns, paymentTypeMap, statusColorMap, statusDataMap } from "./data";
+import { columns, paymentTypeMap, statusColorMap, statusDataMap, isCheckoutPayment } from "./data";
 
 import moment from "moment";
 
@@ -55,6 +55,7 @@ interface PaymentItem {
   status: number;
   paymentReference: string;
   paymentType: number;
+  paymentMethod: number;
   checkOutReference?: string;
 }
 
@@ -297,7 +298,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
                       <p>View more</p>
                     </div>
                   </DropdownItem>
-                  {payment.treatedBy?.toLowerCase().includes("paystack") && (
+                  {isCheckoutPayment(payment.paymentMethod) && (
                     <DropdownItem
                       onClick={() => {
                         togglePaymentBreakdownModal(payment);

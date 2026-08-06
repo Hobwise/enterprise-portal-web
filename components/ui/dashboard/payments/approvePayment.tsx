@@ -472,10 +472,17 @@ const ApprovePayment = ({
                 ) : (
                   <div className="space-y-4 mb-8">
                     <InfoRow
-                      label="Order ID"
+                      label="Reference"
                       value={singlePayment.reference}
                       valueClassName="text-gray-900 font-bold text-base"
                     />
+                    {singlePayment.orderID && (
+                      <InfoRow
+                        label="Order ID"
+                        value={singlePayment.orderID}
+                        valueClassName="text-gray-900 font-bold text-base"
+                      />
+                    )}
                     <InfoRow
                       label="Payment Amount:"
                       value={formatPrice(singlePayment.totalAmount)}

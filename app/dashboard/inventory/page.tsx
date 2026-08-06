@@ -30,12 +30,7 @@ const InventoryDashboard: React.FC = () => {
     }
 
     setHasAccess(true);
-    // Simulate loading data
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
-
-    return () => clearTimeout(timer);
+    setIsLoading(false);
   }, [router]);
 
   if (!hasAccess) {
