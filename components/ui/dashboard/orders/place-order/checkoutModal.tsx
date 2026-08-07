@@ -554,7 +554,6 @@ const CheckoutModal = ({
       subText: "Pay online via Paystack",
       id: PAY_NOW_ID,
     },
-    { text: "Pay with QR", subText: "Pay via Hobwise QR Code", id: 5 },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
 

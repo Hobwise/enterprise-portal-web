@@ -2,6 +2,7 @@
 import { OnlinePaymentsTermsContent } from "@/app/privacy-policy/OnlinePaymentsTermsContent";
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Search } from "lucide-react";
 import {
   Modal,
@@ -70,6 +71,19 @@ const DetailRow = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
+// Generates bank initials avatar from bank name
+const BankInitials = ({ name }: { name: string }) => {
+  const words = name.trim().split(/\s+/);
+  const initials = words.length >= 2
+    ? `${words[0][0]}${words[1][0]}`
+    : name.slice(0, 2);
+  return (
+    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-primaryColor uppercase">
+      {initials}
+    </div>
+  );
+};
+
 const PaymentManagement = () => {
   const { businessId, businessName: defaultBusinessName } = resolveBusiness();
 
@@ -98,6 +112,8 @@ const PaymentManagement = () => {
     onClose: onTermsModalClose,
   } = useDisclosure();
   const [onboardOtpSent, setOnboardOtpSent] = useState<boolean>(false);
+  // Controls which sub-step is shown inside mode==="form" for new/add-account flows
+  const [formStep, setFormStep] = useState<"bankDetails" | "verifyOtp">("bankDetails");
 
   // Bank search state
   const [bankSearch, setBankSearch] = useState<string>("");
@@ -230,28 +246,40 @@ const PaymentManagement = () => {
     return hasAny;
   }, [businessId]);
 
+  const { data: banksData } = useQuery<Bank[]>({
+    queryKey: ["banksList"],
+    queryFn: async () => {
+      const response = await getBanks();
+      return response?.data?.data ?? [];
+    },
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 24 * 60 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (banksData) {
+      const seen = new Set<string>();
+      const uniqueBanks = banksData.filter((bank: Bank) => {
+        const key = bank.code || bank.name;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      setBankOptions(
+        uniqueBanks.map((bank: Bank) => ({
+          label: bank.name,
+          value: bank.code,
+        }))
+      );
+    }
+  }, [banksData]);
+
   useEffect(() => {
     let mounted = true;
     const init = async () => {
       try {
-        const [banksResponse, hasAny] = await Promise.all([
-          getBanks(),
-          loadAccounts()
-        ]);
-        
-        const banks: Bank[] = banksResponse?.data?.data ?? [];
+        const hasAny = await loadAccounts();
         if (mounted) {
-          const seen = new Set<string>();
-          const uniqueBanks = banks.filter((bank) => {
-            const key = bank.code || bank.name;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
-          setBankOptions(
-            uniqueBanks.map((bank) => ({ label: bank.name, value: bank.code }))
-          );
-          
           if (!hasAny && !hasCheckedTerms.current) {
             hasCheckedTerms.current = true;
             onTermsModalOpen();
@@ -264,7 +292,9 @@ const PaymentManagement = () => {
       }
     };
     init();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [loadAccounts, onTermsModalOpen]);
 
   const canSubmit =
@@ -272,12 +302,23 @@ const PaymentManagement = () => {
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
     (editingKind === "settlement" ? (otp.trim().length > 0 && reason.trim().length > 0) : true) &&
-    // OTP required for new onboarding and for adding other accounts
-    (!editingAccount ? otp.trim().length > 0 : true) &&
+    // For existing accounts being edited, OTP is required; for new onboarding OTP is collected via modal after Proceed
+    (editingAccount ? otp.trim().length > 0 : true) &&
     !submitting;
 
-  const canRequestOnboardOtp =
+  // For new onboarding: can proceed to request OTP when bank details are filled
+  const canProceedToOtp =
     !isOnboarded &&
+    !editingAccount &&
+    accountName.trim().length > 0 &&
+    settlementBank.length > 0 &&
+    accountNumber.trim().length === 10 &&
+    !submitting;
+
+  // For adding another account (already onboarded): can proceed to request OTP when bank details are filled
+  const canProceedAddAccount =
+    isOnboarded &&
+    !editingAccount &&
     accountName.trim().length > 0 &&
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
@@ -320,9 +361,9 @@ const PaymentManagement = () => {
 
   useEffect(() => () => { if (onboardTimerRef.current) clearInterval(onboardTimerRef.current); }, []);
 
-  // Calls acceptOnboardTerms API directly and opens the OTP entry modal.
-  const handleRequestOnboardOtp = async () => {
-    if (!canRequestOnboardOtp) return;
+  // "Proceed" button on the bank details form — calls acceptOnboardTerms, sends OTP, then shows inline OTP step.
+  const handleProceedToOtp = async () => {
+    if (!canProceedToOtp) return;
     setSubmitting(true);
     try {
       const response = await acceptOnboardTerms(businessId, { termsAccepted: true });
@@ -333,8 +374,9 @@ const PaymentManagement = () => {
       setOnboardOtpSent(true);
       setTermsAccepted(true);
       toast.success("OTP sent to your email.");
+      setOnboardOtp("");
       startOnboardResendCountdown();
-      onOnboardOtpOpen();
+      setFormStep("verifyOtp");
     } finally {
       setSubmitting(false);
     }
@@ -359,12 +401,14 @@ const PaymentManagement = () => {
     }
   };
 
-  // Resend OTP for onboarding.
+  // Resend OTP — uses requestBankAccountOtp when adding another account, acceptOnboardTerms otherwise.
   const handleOnboardResendOtp = async () => {
     if (onboardResendCountdown > 0) return;
     setSubmitting(true);
     try {
-      const response = await acceptOnboardTerms(businessId, { termsAccepted });
+      const response = isOnboarded
+        ? await requestBankAccountOtp(businessId)
+        : await acceptOnboardTerms(businessId, { termsAccepted });
       if (!succeeded(response)) {
         toast.error(errorOf(response) ?? "Unable to resend OTP. Please try again.");
         return;
@@ -377,7 +421,7 @@ const PaymentManagement = () => {
     }
   };
 
-  // Step 3 — verify OTP and submit onboarding.
+  // Verify OTP and submit — onboardBusiness for first-time setup, addBankAccount when adding another account.
   const handleOnboardVerifyAndSubmit = async () => {
     if (onboardOtp.trim().length === 0) {
       toast.error("Please enter the OTP sent to your email.");
@@ -388,18 +432,32 @@ const PaymentManagement = () => {
     try {
       const bankName =
         bankOptions.find((bank) => bank.value === settlementBank)?.label ?? settlementBank;
-      const response = await onboardBusiness(businessId, {
-        settlementBank,
-        accountNumber: accountNumber.trim(),
-        otp: onboardOtp.trim(),
-        termsAccepted: true,
-      });
+      let response;
+      if (isOnboarded) {
+        // Adding another account to an already-onboarded business
+        response = await addBankAccount(businessId, {
+          accountNumber: accountNumber.trim(),
+          accountName: accountName.trim(),
+          bankName,
+          bankCode: settlementBank,
+          isDefault,
+          otp: onboardOtp.trim(),
+        });
+      } else {
+        // First-time onboarding
+        response = await onboardBusiness(businessId, {
+          settlementBank,
+          accountNumber: accountNumber.trim(),
+          otp: onboardOtp.trim(),
+          termsAccepted: true,
+        });
+      }
       if (!succeeded(response)) {
         toast.error(errorOf(response) ?? "Unable to save account. Please try again.");
         return;
       }
-      toast.success("Payment account saved successfully");
-      onOnboardOtpClose();
+      toast.success(isOnboarded ? "Payment account added successfully" : "Payment account saved successfully");
+      setFormStep("bankDetails");
       resetForm();
       await loadAccounts();
     } finally {
@@ -417,6 +475,7 @@ const PaymentManagement = () => {
     setOtp("");
     setTermsAccepted(false);
     setOnboardOtpSent(false);
+    setFormStep("bankDetails");
   };
 
   const openCreateForm = () => {
@@ -428,8 +487,17 @@ const PaymentManagement = () => {
     setMode("form");
   };
 
-  // Add Other Accounts: call request-otp endpoint, show OTP modal, then navigate to form.
-  const handleAddOtherAccounts = async () => {
+  // Add Other Accounts: just navigate to the form; OTP is requested only after the user fills bank details.
+  const handleAddOtherAccounts = () => {
+    resetForm();
+    setTermsAccepted(true);
+    setOnboardOtpSent(true);
+    setMode("form");
+  };
+
+  // "Proceed" button on the add-account form — calls requestBankAccountOtp, then shows inline OTP step.
+  const handleProceedAddAccountOtp = async () => {
+    if (!canProceedAddAccount) return;
     setSubmitting(true);
     try {
       const response = await requestBankAccountOtp(businessId);
@@ -438,45 +506,21 @@ const PaymentManagement = () => {
         return;
       }
       toast.success("OTP sent to your email.");
-      // Reset form for new account
-      resetForm();
-      setTermsAccepted(true);
-      setOnboardOtpSent(true);
-      setMode("form");
-      // Open the Verify OTP modal
       setOnboardOtp("");
       startOnboardResendCountdown();
-      onOnboardOtpOpen();
+      setFormStep("verifyOtp");
     } finally {
       setSubmitting(false);
     }
   };
 
-  // Step 1 — T&C accepted: call accept-terms API, send OTP, navigate to form & open OTP modal.
-  const handleAcceptTermsAndContinue = async () => {
-    setSubmitting(true);
-    try {
-      const response = await acceptOnboardTerms(businessId, { termsAccepted: true });
-      if (!succeeded(response)) {
-        toast.error(errorOf(response) ?? "Unable to accept terms. Please try again.");
-        return;
-      }
-      setTermsAccepted(true);
-      setOnboardOtpSent(true);
-      toast.success("OTP sent to your email.");
-      onTermsModalClose();
-      // Reset form but preserve terms state
-      resetForm();
-      setTermsAccepted(true);
-      setOnboardOtpSent(true);
-      setMode("form");
-      // Open the Verify OTP modal immediately
-      setOnboardOtp("");
-      startOnboardResendCountdown();
-      onOnboardOtpOpen();
-    } finally {
-      setSubmitting(false);
-    }
+  // T&C accepted — just navigate to the bank details form; API is called only after the user fills in their details.
+  const handleAcceptTermsAndContinue = () => {
+    setTermsAccepted(true);
+    onTermsModalClose();
+    resetForm();
+    setTermsAccepted(true);
+    setMode("form");
   };
 
   // Resend OTP for onboarding (from the inline form OTP field).
@@ -906,7 +950,6 @@ const PaymentManagement = () => {
               </CustomButton>
               <CustomButton
                 className="h-[44px] w-full font-semibold text-white"
-                loading={submitting}
                 onClick={handleAcceptTermsAndContinue}
               >
                 Accept &amp; Continue
@@ -1041,396 +1084,562 @@ const PaymentManagement = () => {
 
   // Create/add/edit account form.
   if (mode === "form") {
+    const isOtpStep = formStep === "verifyOtp" && !editingAccount;
+
     const heading = editingAccount
       ? "Edit payment account"
+      : isOtpStep
+      ? "Verify your identity"
       : isOnboarded
       ? "Add a payment account"
       : "Onboard Settlement Account";
-    
+
     const subHeading = editingAccount
       ? "Update your payment account details for settlements."
+      : isOtpStep
+      ? "Enter the one-time password sent to your registered email."
       : "Provide your bank details to receive settlements securely.";
 
     return (
       <>
         <div className="p-6 sm:p-8">
           <div className="mx-auto max-w-2xl">
-            {/* Header Area */}
-            <div className="mb-8 border-b border-[#E4E7EC] pb-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-purple-50">
-                  <CreditCard className="h-6 w-6 text-primaryColor" />
+
+            {/* ── Step Indicator ── */}
+            {!editingAccount && (
+              <div className="mb-8 flex items-center gap-0">
+                {/* Step 1 */}
+                <div className="flex flex-1 flex-col items-center gap-1.5">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shadow-sm ${
+                    isOtpStep
+                      ? "border-2 border-primaryColor bg-white text-primaryColor"
+                      : "bg-primaryColor text-white"
+                  }`}>
+                    {isOtpStep ? (
+                      <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">
+                        <path d="M3 8l3.5 3.5 6.5-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    ) : "1"}
+                  </div>
+                  <span className={`text-xs font-semibold ${isOtpStep ? "text-[#98A2B3]" : "text-primaryColor"}`}>
+                    Bank Details
+                  </span>
                 </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-[#101928]">{heading}</h2>
-                  <p className="mt-1 text-sm text-[#475467]">{subHeading}</p>
+                {/* Connector */}
+                <div className={`mb-5 h-px flex-1 transition-colors ${isOtpStep ? "bg-primaryColor" : "bg-gradient-to-r from-primaryColor to-[#E4E7EC]"}`} />
+                {/* Step 2 */}
+                <div className="flex flex-1 flex-col items-center gap-1.5">
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shadow-sm ${
+                    isOtpStep
+                      ? "bg-primaryColor text-white"
+                      : "border-2 border-[#E4E7EC] bg-white text-[#98A2B3]"
+                  }`}>
+                    2
+                  </div>
+                  <span className={`text-xs font-semibold ${isOtpStep ? "text-primaryColor" : "text-[#98A2B3]"}`}>
+                    Verify OTP
+                  </span>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Form Body */}
-            <div className="space-y-6">
+            {/* ── Header ── */}
+            <div className="mb-7 flex items-start gap-4">
+              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${isOtpStep ? "bg-purple-100" : "bg-purple-100"}`}>
+                {isOtpStep
+                  ? <ShieldCheck className="h-6 w-6 text-primaryColor" />
+                  : <CreditCard className="h-6 w-6 text-primaryColor" />
+                }
+              </div>
               <div>
-                <CustomInput
-                  type="text"
-                  name="accountName"
-                  label="Account Name"
-                  placeholder="e.g. John Doe"
-                  value={accountName}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setAccountName(e.target.value)
-                  }
-                />
+                <h2 className="text-xl font-bold text-[#101928]">{heading}</h2>
+                <p className="mt-0.5 text-sm text-[#667085]">{subHeading}</p>
               </div>
-
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                {/* Searchable Bank Dropdown */}
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-[#000]">Settlement Bank</label>
-                  <div className="relative" ref={bankDropdownRef}>
-                    <button
-                      type="button"
-                      onClick={() => { setBankDropdownOpen((o) => !o); setBankSearch(""); }}
-                      className="flex w-full items-center justify-between rounded-[6px] border border-[#E4E7EC] bg-white px-3 py-[11px] text-sm text-left hover:border-[#C3ADFF] focus:border-[#C3ADFF] focus:outline-none min-h-[48px] transition-colors"
-                      aria-haspopup="listbox"
-                      aria-expanded={bankDropdownOpen}
-                    >
-                      <span className={selectedBankLabel ? "text-[#000]" : "text-[#98A2B3]"}>
-                        {selectedBankLabel || "Select bank"}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {settlementBank && (
-                          <span
-                            role="button"
-                            aria-label="Clear bank selection"
-                            tabIndex={0}
-                            onClick={(e) => { e.stopPropagation(); setSettlementBank(""); setBankSearch(""); }}
-                            onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), setSettlementBank(""), setBankSearch(""))}
-                            className="flex h-4 w-4 items-center justify-center rounded-full text-[#98A2B3] hover:text-[#475467] cursor-pointer"
-                          >
-                            <X className="h-3 w-3" />
-                          </span>
-                        )}
-                        <ChevronDown className={`h-4 w-4 text-[#98A2B3] transition-transform ${bankDropdownOpen ? "rotate-180" : ""}`} />
-                      </div>
-                    </button>
-
-                    {bankDropdownOpen && (
-                      <div className="absolute z-50 mt-1 w-full rounded-lg border border-[#E4E7EC] bg-white shadow-lg">
-                        {/* Search input */}
-                        <div className="flex items-center gap-2 border-b border-[#E4E7EC] px-3 py-2">
-                          <Search className="h-4 w-4 shrink-0 text-[#98A2B3]" />
-                          <input
-                            autoFocus
-                            type="text"
-                            placeholder="Search bank..."
-                            value={bankSearch}
-                            onChange={(e) => setBankSearch(e.target.value)}
-                            className="flex-1 bg-transparent text-sm text-[#101928] placeholder:text-[#98A2B3] focus:outline-none"
-                          />
-                          {bankSearch && (
-                            <button type="button" onClick={() => setBankSearch("")} className="text-[#98A2B3] hover:text-[#475467]">
-                              <X className="h-3.5 w-3.5" />
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Bank list */}
-                        <ul
-                          role="listbox"
-                          className="max-h-[220px] overflow-y-auto py-1"
-                          aria-label="Bank options"
-                        >
-                          {filteredBankOptions.length === 0 ? (
-                            <li className="px-4 py-3 text-center text-sm text-[#98A2B3]">No banks found</li>
-                          ) : (
-                            filteredBankOptions.map((bank) => (
-                              <li
-                                key={bank.value}
-                                role="option"
-                                aria-selected={settlementBank === bank.value}
-                                onClick={() => { setSettlementBank(bank.value); setBankDropdownOpen(false); setBankSearch(""); }}
-                                className={`cursor-pointer px-4 py-2.5 text-sm transition-colors hover:bg-purple-50 hover:text-primaryColor ${
-                                  settlementBank === bank.value ? "bg-purple-50 font-medium text-primaryColor" : "text-[#101928]"
-                                }`}
-                              >
-                                {bank.label}
-                              </li>
-                            ))
-                          )}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <CustomInput
-                  type="text"
-                  name="accountNumber"
-                  label="Account Number"
-                  placeholder="0123456789"
-                  value={accountNumber}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
-                  }
-                />
-              </div>
-
-              {editingAccount && editingKind === "settlement" && (
-                <div className="space-y-6 pt-0.5">
-                  <CustomInput
-                    type="text"
-                    name="reason"
-                    label="Reason for Update"
-                    placeholder="e.g. Changed primary bank"
-                    value={reason}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                      setReason(e.target.value)
-                    }
-                  />
-                </div>
-              )}
-
-              {showDefaultToggle && (
-                <div className="flex items-center justify-between rounded-xl border border-[#E4E7EC] px-5 py-4">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-[#101928]">
-                      Set as preferred account
-                    </span>
-                    <span className="mt-0.5 text-xs text-[#667085]">
-                      Payments will be settled to this account.
-                    </span>
-                  </div>
-                  <Switch
-                    size="sm"
-                    isSelected={isDefault}
-                    onValueChange={setIsDefault}
-                    classNames={{
-                      wrapper: `m-0 ${isDefault ? "!bg-primaryColor" : "bg-[#E4E7EC]"}`,
-                    }}
-                    aria-label="Set as preferred account"
-                  />
-                </div>
-              )}
             </div>
 
-            {/* Footer / Actions */}
-            <div className="mt-8 flex items-center justify-between gap-4 border-t border-[#E4E7EC] pt-6">
-              <CustomButton
-                className="h-11 w-full max-w-[140px] border border-[#E4E7EC] px-6 text-sm font-semibold text-[#344054] transition-colors hover:bg-gray-50"
-                backgroundColor="bg-white"
-                disabled={submitting}
-                onClick={handleBack}
-              >
-                Back
-              </CustomButton>
-              {/* For new onboarding: open the OTP modal (OTP was sent in Step 1 via T&C acceptance) */}
-              {!isOnboarded && !editingAccount ? (
-                <CustomButton
-                  type="button"
-                  className="h-11 w-full max-w-[200px] px-6 text-sm font-semibold text-white shadow-sm"
-                  disabled={!canSubmit}
-                  loading={submitting}
-                  onClick={handleSubmit}
-                >
-                  Complete Setup
-                </CustomButton>
-              ) : (
-                <CustomButton
-                  className="h-11 w-full max-w-[200px] px-6 text-sm font-semibold text-white shadow-sm"
-                  disabled={!canSubmit}
-                  loading={submitting}
-                  onClick={handleSubmit}
-                >
-                  {editingAccount ? "Save Changes" : "Complete Setup"}
-                </CustomButton>
-              )}
-            </div>
-          </div>
-        </div>
-
-
-      {/* ── Verify OTP Modal (inline) ── */}
-      <Modal
-        isOpen={isOnboardOtpOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            // Closing via X button or clicking outside — go back to the appropriate screen
-            onOnboardOtpClose();
-            setOnboardOtp("");
-            resetForm();
-            setMode(isOnboarded ? "details" : "empty");
-          }
-        }}
-        placement="center"
-        classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
-      >
-        <ModalContent>
-          {() => (
-            <>
-              <ModalHeader className="px-6 pb-0 pt-6" />
-              <ModalBody className="px-6 py-4">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50">
-                    <ShieldCheck className="h-7 w-7 text-primaryColor" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold text-[#101928]">Verify OTP</h3>
-                    <p className="text-sm leading-relaxed text-[#475467]">
-                      A one-time password has been sent to your registered email.
-                      Enter it below to complete your account setup.
+            {/* ── OTP Step (Step 2) ── */}
+            {isOtpStep ? (
+              <>
+                <div className="rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
+                  {/* Section label */}
+                  <div className="rounded-t-2xl border-b border-[#F0F2F5] bg-[#FAFAFA] px-6 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-[#98A2B3]">
+                      One-Time Password
                     </p>
                   </div>
-                  <div className="w-full">
-                    <CustomInput
-                      type="text"
-                      name="onboard-otp"
-                      label="Verify OTP"
-                      placeholder="Enter OTP"
-                      value={onboardOtp}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setOnboardOtp(e.target.value.trim())
-                      }
-                    />
-                    <div className="mt-3 flex items-center justify-center gap-1 text-sm">
+
+                  <div className="space-y-5 p-6">
+                    {/* Email hint */}
+                    <div className="flex items-start gap-3 rounded-xl border border-purple-100 bg-purple-50 px-4 py-3">
+                      <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primaryColor" />
+                      <p className="text-sm text-[#475467]">
+                        A 6-digit OTP has been sent to your registered email address. Check your inbox and enter it below.
+                      </p>
+                    </div>
+
+                    {/* OTP input */}
+                    <div className="pt-2">
+                      <CustomInput
+                        type="text"
+                        name="onboard-otp"
+                        label="Enter OTP"
+                        placeholder="e.g. 123456"
+                        value={onboardOtp}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setOnboardOtp(e.target.value.replace(/\D/g, "").slice(0, 6).trim())
+                        }
+                      />
+                      <p className="mt-1.5 text-xs text-[#98A2B3]">
+                        OTP is valid for 10 minutes. Do not share it with anyone.
+                      </p>
+                    </div>
+
+                    {/* Resend */}
+                    <div className="flex items-center gap-1.5 text-sm">
                       <span className="text-[#667085]">Didn&apos;t receive it?</span>
                       {onboardResendCountdown > 0 ? (
                         <span className="text-[#98A2B3]">
-                          Resend in{" "}
-                          <span className="font-semibold text-primaryColor">{onboardResendCountdown}s</span>
+                          Resend in <span className="font-semibold text-primaryColor">{onboardResendCountdown}s</span>
                         </span>
                       ) : (
                         <button
                           type="button"
-                          onClick={handleResendOnboardOtp}
+                          onClick={handleOnboardResendOtp}
                           disabled={submitting}
                           className="font-semibold text-primaryColor transition-opacity hover:opacity-70 disabled:opacity-40"
                         >
-                          {submitting ? "Sending\u2026" : "Resend OTP"}
+                          {submitting ? "Sending…" : "Resend OTP"}
                         </button>
                       )}
                     </div>
                   </div>
+
+                  {/* Security strip */}
+                  <div className="flex items-center gap-2.5 rounded-b-2xl border-t border-[#F0F2F5] bg-green-50 px-6 py-3">
+                    <svg className="h-4 w-4 shrink-0 text-green-600" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 1L2 3.5v4c0 3.5 2.5 6.7 6 7.5 3.5-.8 6-4 6-7.5v-4L8 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                      <path d="M5.5 8l1.8 1.8 3.2-3.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <p className="text-xs text-green-700">
+                      Never share this OTP with anyone. Hobwise will never ask for your OTP over the phone.
+                    </p>
+                  </div>
                 </div>
-              </ModalBody>
-              <ModalFooter className="gap-3 px-6 pb-6 pt-2">
-                <CustomButton
-                  className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
-                  backgroundColor="bg-white"
-                  disabled={submitting}
-                  onClick={() => {
-                    onOnboardOtpClose();
-                    setOnboardOtp("");
-                    resetForm();
-                    setMode(isOnboarded ? "details" : "empty");
-                  }}
-                >
-                  Cancel
-                </CustomButton>
-                <CustomButton
-                  className="h-[44px] w-full font-semibold text-white"
-                  disabled={onboardOtp.trim().length === 0}
-                  onClick={() => {
-                    // Save OTP to state and close modal — user will fill bank details next
-                    setOtp(onboardOtp.trim());
-                    onOnboardOtpClose();
-                  }}
-                >
-                  Verify
-                </CustomButton>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+
+                {/* OTP Footer */}
+                <div className="mt-6 flex items-center justify-between gap-4">
+                  <CustomButton
+                    className="h-11 w-full max-w-[130px] border border-[#E4E7EC] px-6 text-sm font-semibold text-[#344054] transition-colors hover:bg-gray-50"
+                    backgroundColor="bg-white"
+                    disabled={submitting}
+                    onClick={() => {
+                      setFormStep("bankDetails");
+                      setOnboardOtp("");
+                    }}
+                  >
+                    ← Back
+                  </CustomButton>
+                  <CustomButton
+                    className="h-11 flex-1 max-w-[240px] px-6 text-sm font-semibold text-white shadow-sm"
+                    disabled={onboardOtp.trim().length === 0}
+                    loading={submitting}
+                    onClick={handleOnboardVerifyAndSubmit}
+                  >
+                    Verify &amp; Complete
+                  </CustomButton>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* ── Form Card (Step 1) ── */}
+                <div className="rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
+
+                  {/* Section label */}
+                  <div className="rounded-t-2xl border-b border-[#F0F2F5] bg-[#FAFAFA] px-6 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-[#98A2B3]">
+                      Account Information
+                    </p>
+                  </div>
+
+                  <div className="space-y-5 p-6">
+                    {/* Account Name */}
+                    <div>
+                      <CustomInput
+                        type="text"
+                        name="accountName"
+                        label="Account Name"
+                        placeholder="e.g. John Doe"
+                        value={accountName}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          setAccountName(e.target.value)
+                        }
+                      />
+                      <p className="mt-1.5 text-xs text-[#98A2B3]">
+                        This should match the name on your bank account exactly.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                      {/* Searchable Bank Dropdown */}
+                      <div>
+                        <label className="mb-1.5 block text-sm font-medium text-[#000]">Settlement Bank</label>
+                        <div className="relative" ref={bankDropdownRef}>
+                          <button
+                            type="button"
+                            onClick={() => { setBankDropdownOpen((o) => !o); setBankSearch(""); }}
+                            className="flex w-full items-center justify-between rounded-[8px] border border-[#E4E7EC] bg-white px-3 py-[11px] text-sm text-left hover:border-[#C3ADFF] focus:border-[#C3ADFF] focus:outline-none min-h-[48px] transition-colors"
+                            aria-haspopup="listbox"
+                            aria-expanded={bankDropdownOpen}
+                          >
+                            <span className={selectedBankLabel ? "text-[#000]" : "text-[#98A2B3]"}>
+                              {selectedBankLabel || "Select bank"}
+                            </span>
+                            <div className="flex items-center gap-1">
+                              {settlementBank && (
+                                <span
+                                  role="button"
+                                  aria-label="Clear bank selection"
+                                  tabIndex={0}
+                                  onClick={(e) => { e.stopPropagation(); setSettlementBank(""); setBankSearch(""); }}
+                                  onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), setSettlementBank(""), setBankSearch(""))}
+                                  className="flex h-4 w-4 items-center justify-center rounded-full text-[#98A2B3] hover:text-[#475467] cursor-pointer"
+                                >
+                                  <X className="h-3 w-3" />
+                                </span>
+                              )}
+                              <ChevronDown className={`h-4 w-4 text-[#98A2B3] transition-transform ${bankDropdownOpen ? "rotate-180" : ""}`} />
+                            </div>
+                          </button>
+
+                          {bankDropdownOpen && (
+                            <div className="absolute z-50 mt-1 w-full rounded-xl border border-[#E4E7EC] bg-white shadow-xl">
+                              <div className="flex items-center gap-2 border-b border-[#E4E7EC] px-3 py-2">
+                                <Search className="h-4 w-4 shrink-0 text-[#98A2B3]" />
+                                <input
+                                  autoFocus
+                                  type="text"
+                                  placeholder="Search bank..."
+                                  value={bankSearch}
+                                  onChange={(e) => setBankSearch(e.target.value)}
+                                  className="flex-1 bg-transparent text-sm text-[#101928] placeholder:text-[#98A2B3] focus:outline-none"
+                                />
+                                {bankSearch && (
+                                  <button type="button" onClick={() => setBankSearch("")} className="text-[#98A2B3] hover:text-[#475467]">
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                )}
+                              </div>
+                              <ul role="listbox" className="max-h-[220px] overflow-y-auto py-1" aria-label="Bank options">
+                                {filteredBankOptions.length === 0 ? (
+                                  <li className="px-4 py-3 text-center text-sm text-[#98A2B3]">No banks found</li>
+                                ) : (
+                                  filteredBankOptions.map((bank) => (
+                                    <li
+                                      key={bank.value}
+                                      role="option"
+                                      aria-selected={settlementBank === bank.value}
+                                      onClick={() => { setSettlementBank(bank.value); setBankDropdownOpen(false); setBankSearch(""); }}
+                                      className={`cursor-pointer px-4 py-2.5 text-sm transition-colors hover:bg-purple-50 hover:text-primaryColor ${
+                                        settlementBank === bank.value ? "bg-purple-50 font-medium text-primaryColor" : "text-[#101928]"
+                                      }`}
+                                    >
+                                      {bank.label}
+                                    </li>
+                                  ))
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                        <p className="mt-1.5 text-xs text-[#98A2B3]">Select the bank where you receive payouts.</p>
+                      </div>
+
+                      {/* Account Number */}
+                      <div>
+                        <CustomInput
+                          type="text"
+                          name="accountNumber"
+                          label="Account Number"
+                          placeholder="0123456789"
+                          value={accountNumber}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))
+                          }
+                        />
+                        <p className="mt-1.5 text-xs text-[#98A2B3]">Enter your 10-digit NUBAN account number.</p>
+                      </div>
+                    </div>
+
+                    {/* Reason field (settlement edit only) */}
+                    {editingAccount && editingKind === "settlement" && (
+                      <div>
+                        <CustomInput
+                          type="text"
+                          name="reason"
+                          label="Reason for Update"
+                          placeholder="e.g. Changed primary bank"
+                          value={reason}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            setReason(e.target.value)
+                          }
+                        />
+                        <p className="mt-1.5 text-xs text-[#98A2B3]">
+                          Briefly describe why you are updating the settlement account.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Preferred toggle */}
+                    {showDefaultToggle && (
+                      <div className="flex items-center justify-between rounded-xl border border-[#E4E7EC] bg-[#FAFAFA] px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-100">
+                            <svg className="h-4 w-4 text-primaryColor" viewBox="0 0 16 16" fill="none">
+                              <path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.2l-3.7 2.1.7-4.1-3-2.9 4.2-.7z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                          <div>
+                            <span className="text-sm font-semibold text-[#101928]">Set as preferred account</span>
+                            <p className="text-xs text-[#667085]">Payments will be settled to this account first.</p>
+                          </div>
+                        </div>
+                        <Switch
+                          size="sm"
+                          isSelected={isDefault}
+                          onValueChange={setIsDefault}
+                          classNames={{
+                            wrapper: `m-0 ${isDefault ? "!bg-primaryColor" : "bg-[#E4E7EC]"}`,
+                          }}
+                          aria-label="Set as preferred account"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Security trust strip */}
+                  <div className="flex items-center gap-2.5 rounded-b-2xl border-t border-[#F0F2F5] bg-green-50 px-6 py-3">
+                    <svg className="h-4 w-4 shrink-0 text-green-600" viewBox="0 0 16 16" fill="none">
+                      <path d="M8 1L2 3.5v4c0 3.5 2.5 6.7 6 7.5 3.5-.8 6-4 6-7.5v-4L8 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                      <path d="M5.5 8l1.8 1.8 3.2-3.2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <p className="text-xs text-green-700">
+                      Your bank details are encrypted and stored securely. We never share them with third parties.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer / Actions */}
+                <div className="mt-6 flex items-center justify-between gap-4">
+                  <CustomButton
+                    className="h-11 w-full max-w-[130px] border border-[#E4E7EC] px-6 text-sm font-semibold text-[#344054] transition-colors hover:bg-gray-50"
+                    backgroundColor="bg-white"
+                    disabled={submitting}
+                    onClick={handleBack}
+                  >
+                    ← Back
+                  </CustomButton>
+
+                  {!isOnboarded && !editingAccount ? (
+                    <CustomButton
+                      type="button"
+                      className="h-11 flex-1 max-w-[240px] px-6 text-sm font-semibold text-white shadow-sm"
+                      disabled={!canProceedToOtp}
+                      loading={submitting}
+                      onClick={handleProceedToOtp}
+                    >
+                      Continue to Verify →
+                    </CustomButton>
+                  ) : isOnboarded && !editingAccount ? (
+                    <CustomButton
+                      type="button"
+                      className="h-11 flex-1 max-w-[240px] px-6 text-sm font-semibold text-white shadow-sm"
+                      disabled={!canProceedAddAccount}
+                      loading={submitting}
+                      onClick={handleProceedAddAccountOtp}
+                    >
+                      Continue to Verify →
+                    </CustomButton>
+                  ) : (
+                    <CustomButton
+                      className="h-11 flex-1 max-w-[240px] px-6 text-sm font-semibold text-white shadow-sm"
+                      disabled={!canSubmit}
+                      loading={submitting}
+                      onClick={handleSubmit}
+                    >
+                      Save Changes
+                    </CustomButton>
+                  )}
+                </div>
+              </>
+            )}
+
+          </div>
+        </div>
 
       {termsModal}
       </>
     );
   }
 
+
+
+
+
   // Details state — settlement account and any other accounts.
   return (
-    <div className="space-y-8 p-6 sm:p-8">
+    <div className="space-y-6 p-6 sm:p-8">
+
+      {/* ── Page Header ── */}
+      <div className="flex items-start justify-between gap-4 border-b border-[#F0F2F5] pb-6">
+        <div>
+          <h2 className="text-lg font-semibold text-[#101928]">Payment Accounts</h2>
+          <p className="mt-1 max-w-lg text-sm leading-relaxed text-[#667085]">
+            Manage the bank accounts where Hobwise sends your settlements. Your{" "}
+            <span className="font-medium text-[#344054]">Settlement Account</span> receives
+            automatic payouts, while{" "}
+            <span className="font-medium text-[#344054]">Other Accounts</span> can be
+            used as alternate payment destinations.
+          </p>
+        </div>
+      </div>
+
+      {/* ── Settlement Account ── */}
       {settlementAccount && (
-        <div className="space-y-4 rounded-lg bg-[#F9FAFB] p-5 sm:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <h3 className="text-base font-semibold text-[#101928]">
-              Settlement Account Details
-            </h3>
+        <div className="overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
+          {/* Card header strip */}
+          <div className="flex items-center justify-between gap-3 border-b border-[#F0F2F5] bg-[#F9FAFB] px-5 py-3">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                Primary Settlement
+              </span>
+            </div>
             <AccountActions account={settlementAccount} kind="settlement" />
           </div>
-          <div className="space-y-3">
-            <DetailRow
-              label="Account Name"
-              value={settlementAccount.accountName}
-            />
-            <DetailRow
-              label="Bank Name"
-              value={resolveBankName(settlementAccount)}
-            />
-            <DetailRow
-              label="Account Number"
-              value={settlementAccount.accountNumber}
-            />
+
+          {/* Card body */}
+          <div className="flex items-start gap-4 p-5">
+            <BankInitials name={resolveBankName(settlementAccount)} />
+            <div className="flex-1 space-y-1 min-w-0">
+              <p className="text-base font-semibold text-[#101928] truncate">{settlementAccount.accountName}</p>
+              <p className="text-sm text-[#667085] truncate">{resolveBankName(settlementAccount)}</p>
+              <p className="font-mono text-sm font-medium tracking-wider text-[#344054]">{settlementAccount.accountNumber}</p>
+            </div>
+          </div>
+
+          {/* Info footer */}
+          <div className="flex items-start gap-2.5 border-t border-[#F0F2F5] bg-purple-50 px-5 py-3">
+            <svg className="mt-0.5 h-4 w-4 shrink-0 text-primaryColor" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="7.5" stroke="currentColor" strokeWidth="1" />
+              <path d="M8 7v4M8 5.5v.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+            <p className="text-xs leading-relaxed text-primaryColor">
+              All online payment settlements are automatically sent to this account.
+              To change it, click the edit icon above.
+            </p>
           </div>
         </div>
       )}
 
+      {/* ── Other Payment Options ── */}
       {bankAccounts.length > 0 && (
-        <div className="space-y-5 px-1">
-          <h3 className="text-base font-semibold text-[#101928]">
-            Other Payment Options
-          </h3>
-          {[...bankAccounts]
-            .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
-            .map((account) => (
-            <div
-              key={accountKey(account)}
-              className="flex items-start justify-between gap-4 border-b border-[#F0F2F5] pb-5 last:border-b-0 last:pb-0"
-            >
-              <div className="space-y-3">
-                <DetailRow label="Account Name" value={account.accountName} />
-                <DetailRow label="Bank Name" value={resolveBankName(account)} />
-                <DetailRow
-                  label="Account Number"
-                  value={account.accountNumber}
-                />
-              </div>
-
-              <div className="flex flex-col items-end gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-[#667085]">Preferred</span>
-                  <Switch
-                    size="sm"
-                    isSelected={!!account.isDefault}
-                    isDisabled={
-                      !!account.isDefault ||
-                      settingDefaultId === accountIdOf(account)
-                    }
-                    onValueChange={() => handleToggleDefault(account)}
-                    classNames={{
-                      wrapper: `m-0 ${
-                        account.isDefault ? "!bg-primaryColor" : "bg-[#E4E7EC]"
-                      }`,
-                    }}
-                    aria-label="Set as preferred account"
-                  />
-                </div>
-                <AccountActions account={account} kind="other" />
-              </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-[#101928]">Other Payment Accounts</h3>
+              <p className="text-xs text-[#98A2B3] mt-0.5">Alternate accounts customers or staff can pay into directly.</p>
             </div>
-          ))}
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {[...bankAccounts]
+              .sort((a, b) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0))
+              .map((account) => (
+              <div
+                key={accountKey(account)}
+                className={`relative overflow-hidden rounded-2xl border bg-white shadow-sm transition-shadow hover:shadow-md ${
+                  account.isDefault ? "border-primaryColor" : "border-[#E4E7EC]"
+                }`}
+              >
+                {/* Preferred ribbon */}
+                {account.isDefault && (
+                  <div className="absolute right-0 top-0">
+                    <div className="flex items-center gap-1 rounded-bl-xl bg-primaryColor px-2.5 py-1 text-[10px] font-semibold text-white">
+                      <svg className="h-2.5 w-2.5" viewBox="0 0 10 10" fill="currentColor">
+                        <path d="M5 0l1.12 3.45H9.76L6.82 5.59l1.12 3.45L5 7.03l-2.94 2.01L3.18 5.59.24 3.45H3.88z" />
+                      </svg>
+                      Preferred
+                    </div>
+                  </div>
+                )}
+
+                {/* Card top: avatar + name + actions */}
+                <div className="flex items-start justify-between gap-3 p-4 pb-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <BankInitials name={resolveBankName(account)} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[#101928] truncate">{account.accountName}</p>
+                      <p className="text-xs text-[#667085] truncate">{resolveBankName(account)}</p>
+                    </div>
+                  </div>
+                  <AccountActions account={account} kind="other" />
+                </div>
+
+                {/* Divider */}
+                <div className="mx-4 border-t border-[#F0F2F5]" />
+
+                {/* Account number + preferred toggle */}
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-widest text-[#98A2B3]">Account No.</p>
+                    <p className="font-mono text-sm font-semibold text-[#344054]">{account.accountNumber}</p>
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-[10px] uppercase tracking-widest text-[#98A2B3]">Preferred</span>
+                    <Switch
+                      size="sm"
+                      isSelected={!!account.isDefault}
+                      isDisabled={
+                        !!account.isDefault ||
+                        settingDefaultId === accountIdOf(account)
+                      }
+                      onValueChange={() => handleToggleDefault(account)}
+                      classNames={{
+                        wrapper: `m-0 ${
+                          account.isDefault ? "!bg-primaryColor" : "bg-[#E4E7EC]"
+                        }`,
+                      }}
+                      aria-label="Set as preferred account"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      <div className="flex justify-end pt-2">
+      {/* ── Add Account CTA ── */}
+      <div className="flex items-center justify-between rounded-2xl border border-dashed border-[#C3ADFF] bg-purple-50/50 px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-purple-100">
+            <svg className="h-5 w-5 text-primaryColor" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="9.5" stroke="currentColor" strokeWidth="1" />
+              <path d="M10 6v8M6 10h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#101928]">Add another account</p>
+            <p className="text-xs text-[#667085]">Link an alternate bank account for payments.</p>
+          </div>
+        </div>
         <CustomButton
-          className="h-[56px] w-full max-w-[280px] px-6 font-semibold text-white"
+          className="h-10 px-5 text-sm font-semibold text-white shadow-sm"
           loading={submitting}
           onClick={handleAddOtherAccounts}
         >
-          Add Other Accounts
+          + Add Account
         </CustomButton>
       </div>
 

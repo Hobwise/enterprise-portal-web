@@ -69,6 +69,7 @@ import DocketModal, { DocketCategory } from "./docket";
 import useMenuCategories from "@/hooks/cachedEndpoints/useMenuCategories";
 import { usePOSMenu } from "@/hooks/usePOSMenu";
 import { History, Info } from "lucide-react";
+import { isCheckoutPayment } from "../payments/data";
 import {
   completeOrder,
   completeOrderWithPayment,
@@ -878,7 +879,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                         )) as any
                     }
 
-                    {order.treatedBy?.toLowerCase().includes("paystack") && (
+                    {isCheckoutPayment(order.paymentMethod) && (
                       <DropdownItem
                         key="payment-status"
                         onClick={() => togglePaymentBreakdownModal(order)}
@@ -1081,7 +1082,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             </div>
                           </DropdownItem>
 
-                          {order.treatedBy?.toLowerCase().includes("paystack") && (
+                          {isCheckoutPayment(order.paymentMethod) && (
                             <DropdownItem
                               key="payment-status"
                               onClick={() => togglePaymentBreakdownModal(order)}
