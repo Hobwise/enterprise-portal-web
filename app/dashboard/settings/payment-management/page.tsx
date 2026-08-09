@@ -104,6 +104,7 @@ const PaymentManagement = () => {
   const [otp, setOtp] = useState<string>("");
   const [reason, setReason] = useState<string>("");
   const [termsAccepted, setTermsAccepted] = useState<boolean>(false);
+  const [termsModalTab, setTermsModalTab] = useState<"privacy" | "terms" | "guide">("terms");
 
   const {
     isOpen: isTermsModalOpen,
@@ -925,22 +926,219 @@ const PaymentManagement = () => {
     <Modal
       isOpen={isTermsModalOpen}
       onOpenChange={onTermsModalOpenChange}
-      size="2xl"
+      size="3xl"
       scrollBehavior="inside"
       classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
     >
       <ModalContent>
         {() => (
           <>
-            <ModalHeader className="px-6 pb-2 pt-6">
-              <h2 className="text-xl font-semibold text-[#101928]">Review Terms & Conditions</h2>
+            <ModalHeader className="flex flex-col gap-0 px-6 pb-0 pt-6">
+              <h2 className="text-xl font-semibold text-[#101928]">Review Terms &amp; Conditions</h2>
+              <p className="text-xs text-[#667085] font-normal mt-1">
+                Please read all sections before accepting.
+              </p>
+              {/* Tab bar */}
+              <div className="flex gap-0 mt-4 border-b border-[#E4E7EC] w-full -mx-0">
+                {([
+                  { key: "privacy", label: "Privacy Policy" },
+                  { key: "terms",   label: "Terms Of Use" },
+                  { key: "guide",   label: "User Guide" },
+                ] as const).map(({ key, label }) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setTermsModalTab(key)}
+                    className={[
+                      "px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px whitespace-nowrap",
+                      termsModalTab === key
+                        ? "border-primaryColor text-primaryColor"
+                        : "border-transparent text-[#667085] hover:text-[#344054] hover:border-[#D0D5DD]",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </ModalHeader>
+
             <ModalBody className="px-6 py-4">
-              <div className="bg-white rounded-lg border border-[#E4E7EC] p-6 shadow-inner text-[#101928]">
-                <OnlinePaymentsTermsContent />
+              <div className="text-[#101928] text-sm">
+                {termsModalTab === "privacy" && (
+                  <div className="space-y-5 leading-relaxed">
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold text-primaryColor">Welcome to Hobwise</h2>
+                      <p>Hobwise is a modern hospitality management app designed to streamline operations for hotels, restaurants, bars, lounges, clubs, and coffee shops. It offers features like reservations, menu management, bookings, business analytics, and customer engagement tools. Your privacy is important to us. This Privacy Policy explains how we collect, use, disclose, and protect your information when you use our hospitality web app (HOBWISE). By accessing or using the App, you agree to the terms outlined below.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Information We Collect</h2>
+                      <p>We collect the following types of information:</p>
+                      <ul className="space-y-1.5">
+                        <li>&#8226; <span className="font-medium">Personal Information:</span> Name, email address, phone number, business details provided during account registration or usage.</li>
+                        <li>&#8226; <span className="font-medium">Usage Data:</span> Information about how you interact with the App, including IP address, device information, browser type, and pages viewed.</li>
+                        <li>&#8226; <span className="font-medium">Transactional Data:</span> Details related to reservations, menu orders, bookings, and payments processed through the App.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">How We Use Your Information</h2>
+                      <ul className="space-y-1.5">
+                        <li>&#8226; Facilitate account registration, authentication, and access.</li>
+                        <li>&#8226; Manage bookings, reservations, menus, and other hospitality-related operations.</li>
+                        <li>&#8226; Process payments securely.</li>
+                        <li>&#8226; Provide customer support.</li>
+                        <li>&#8226; Send notifications about updates, features, or changes to the App.</li>
+                        <li>&#8226; Improve the App&apos;s functionality and user experience.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Sharing Your Information</h2>
+                      <p>We do not sell or rent your personal information. However, we may share your information with:</p>
+                      <ul className="space-y-1.5">
+                        <li>&#8226; <span className="font-medium">Service Providers:</span> Technical support.</li>
+                        <li>&#8226; <span className="font-medium">Legal Authorities:</span> If required by law or to enforce our terms and policies.</li>
+                        <li>&#8226; <span className="font-medium">Affiliates:</span> For business operations, where applicable.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Data Security</h2>
+                      <p>We implement security measures to protect your information from unauthorised access, alteration, disclosure, or destruction.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Your Rights</h2>
+                      <p>Depending on your location, you may have the following rights:</p>
+                      <ul className="space-y-1.5">
+                        <li>&#8226; Access and update your personal information.</li>
+                        <li>&#8226; Request deactivation of your account.</li>
+                        <li>&#8226; Opt-out of promotional communications.</li>
+                      </ul>
+                      <p>To exercise these rights, contact us at <a href="mailto:hello@hobwise.com" className="text-primaryColor underline">hello@hobwise.com</a>.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Cookies &amp; Tracking</h2>
+                      <p>We use cookies and similar technologies to enhance your experience. You can control cookie preferences through your browser settings.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Updates To This Privacy Policy</h2>
+                      <p>We may update this Privacy Policy periodically. Changes will be effective upon posting to the App.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Contact Us</h2>
+                      <p>If you have questions about this Privacy Policy, contact us at: <a href="mailto:hello@hobwise.com" className="text-primaryColor underline">hello@hobwise.com</a>.</p>
+                    </div>
+                  </div>
+                )}
+                {termsModalTab === "terms" && (
+                  <div className="space-y-5">
+                    <OnlinePaymentsTermsContent />
+                  </div>
+                )}
+                {termsModalTab === "guide" && (
+                  <div className="space-y-5 leading-relaxed">
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold text-primaryColor">Overview</h2>
+                      <p>This guide will help you navigate the platform and use its key features, including managing menus, processing orders, creating QR codes, running campaigns, managing reservations, and handling payments.</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Dashboard Overview</h2>
+                      <p>The <span className="font-semibold">Dashboard</span> is the first screen you will see after logging in. It provides real-time analytics of your business operations, including orders, payments, and performance metrics.</p>
+                      <ul className="space-y-1.5">
+                        <li>&#8226; View analytics on sales, orders, menu and reservations.</li>
+                        <li>&#8226; Access to quick performance summaries and reports.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Menu Management</h2>
+                      <p>The Menu module allows you to create and manage your business offerings.</p>
+                      <p className="font-semibold">Creating a New Menu:</p>
+                      <ul className="space-y-1.5">
+                        <li>1. Navigate to the <span className="font-semibold">Menu</span> module from the side panel.</li>
+                        <li>2. Click on <span className="font-semibold">Create a New Menu.</span></li>
+                        <li>3. Enter the Menu Name in the pop-up modal and click <span className="font-semibold">Save.</span></li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Order Management</h2>
+                      <p>The Order module helps you manage and track customer orders efficiently.</p>
+                      <p className="font-semibold">Creating a New Order:</p>
+                      <ul className="space-y-1.5">
+                        <li>1. Access the <span className="font-semibold">Order</span> module.</li>
+                        <li>2. Click on <span className="font-semibold">Create Order.</span></li>
+                        <li>3. Select the customer&apos;s items from the Menu.</li>
+                        <li>4. Enter the customer&apos;s details (Name, Phone Number, Table, Comment).</li>
+                        <li>5. Proceed to <span className="font-semibold">Checkout.</span></li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Handling Payments</h2>
+                      <ul className="space-y-1.5">
+                        <li>&#8226; Click the Payment Method you prefer from the payment method modal.</li>
+                        <li>&#8226; Enter a Payment Reference Number (if available).</li>
+                        <li>&#8226; Click <span className="font-semibold">Confirm Payment.</span></li>
+                        <li>&#8226; If Pay Later is selected, the order remains <span className="font-semibold">Open</span> so the customer can add more items.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">QR Code Management</h2>
+                      <p>The QR Code feature allows you to generate QR codes and map them to tables.</p>
+                      <ul className="space-y-1.5">
+                        <li>1. Navigate to the <span className="font-semibold">QR</span> module.</li>
+                        <li>2. Click on <span className="font-semibold">Create a QR.</span></li>
+                        <li>3. Input the Name for the QR code and save it.</li>
+                        <li>4. Download the generated QR code or create another one.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Campaign Management</h2>
+                      <p>The Campaign module lets you create and manage campaigns related to your business.</p>
+                      <ul className="space-y-1.5">
+                        <li>1. Go to the <span className="font-semibold">Campaign</span> module.</li>
+                        <li>2. Click <span className="font-semibold">Add Campaign.</span></li>
+                        <li>3. Fill in Time, Description, Start Date, End Date, and upload an Image.</li>
+                        <li>4. Click <span className="font-semibold">Schedule Campaign</span> to finalise.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Reservation Management</h2>
+                      <p>The Reservation module allows you to create and manage reservations for your restaurant.</p>
+                      <ul className="space-y-1.5">
+                        <li>1. Go to the <span className="font-semibold">Reservation</span> module.</li>
+                        <li>2. Click on <span className="font-semibold">Add Reservation.</span></li>
+                        <li>3. Fill out Reservation Name, Description, Fee, Minimum Spend, Quantity, and Image.</li>
+                        <li>4. Click <span className="font-semibold">Add Reservation</span> to save.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Booking Management</h2>
+                      <p>Manage customer bookings from the Booking module.</p>
+                      <ul className="space-y-1.5">
+                        <li>1. Access the <span className="font-semibold">Booking</span> module and enter customer details.</li>
+                        <li>2. Click <span className="font-semibold">Create Booking.</span></li>
+                        <li>3. To confirm, enter the Booking Reference Number and click <span className="font-semibold">Confirm.</span></li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Payment Management</h2>
+                      <p>Handle payments via the <span className="font-semibold">Payments</span> module.</p>
+                      <ul className="space-y-1.5">
+                        <li>1. Once an order is created and payment is pending, go to the <span className="font-semibold">More</span> options icon on the order.</li>
+                        <li>2. Click <span className="font-semibold">Confirm Payment</span> to complete the process.</li>
+                      </ul>
+                    </div>
+                    <div className="space-y-2">
+                      <h2 className="text-base font-bold">Bills and Subscription</h2>
+                      <p>Choosing a plan will allow you to manage the features you want for your business.</p>
+                      <ul className="space-y-1.5">
+                        <li>1. After login, navigate to the Settings page.</li>
+                        <li>2. Click on <span className="font-semibold">Bills &amp; Subscription</span> to view all plans.</li>
+                        <li>3. Select a plan and make payment through the gateway.</li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </div>
             </ModalBody>
-            <ModalFooter className="gap-3 px-6 pb-6 pt-2">
+
+            <ModalFooter className="gap-3 px-6 pb-6 pt-2 border-t border-[#E4E7EC]">
               <CustomButton
                 className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
                 backgroundColor="bg-white"
