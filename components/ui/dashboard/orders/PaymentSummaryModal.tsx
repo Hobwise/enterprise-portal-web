@@ -140,7 +140,7 @@ const PaymentSummaryModal: React.FC<PaymentSummaryModalProps> = ({
           {data && (
             <div className="flex items-center gap-2 mt-2 text-sm text-gray-600">
               <span>
-                Reference:{" "}
+                Order ID:{" "}
                 <span className="font-semibold text-black">
                   {data.reference}
                 </span>
