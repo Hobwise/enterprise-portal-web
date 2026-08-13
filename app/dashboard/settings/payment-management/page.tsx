@@ -1,5 +1,5 @@
 "use client";
-import { OnlinePaymentsTermsContent } from "@/app/privacy-policy/OnlinePaymentsTermsContent";
+import { TermsAndConditionsContent } from "@/app/privacy-policy/TermsAndConditionsContent";
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -314,6 +314,7 @@ const PaymentManagement = () => {
     accountName.trim().length > 0 &&
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
+    termsAccepted &&
     !submitting;
 
   // For adding another account (already onboarded): can proceed to request OTP when bank details are filled
@@ -1028,8 +1029,8 @@ const PaymentManagement = () => {
                   </div>
                 )}
                 {termsModalTab === "terms" && (
-                  <div className="space-y-5">
-                    <OnlinePaymentsTermsContent />
+                  <div className="space-y-5 leading-relaxed overflow-y-auto max-h-[60vh] pr-2">
+                    <TermsAndConditionsContent />
                   </div>
                 )}
                 {termsModalTab === "guide" && (
@@ -1610,6 +1611,38 @@ const PaymentManagement = () => {
                           }}
                           aria-label="Set as preferred account"
                         />
+                      </div>
+                    )}
+
+                    {/* Terms & Conditions Checkbox (Onboarding only) */}
+                    {!isOnboarded && !editingAccount && (
+                      <div className="flex items-start gap-3 rounded-xl bg-gray-50 border border-gray-100 px-4 py-3">
+                        <input
+                          type="checkbox"
+                          id="formTermsAccepted"
+                          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer rounded border-[#E4E7EC] text-primaryColor focus:ring-primaryColor"
+                          checked={termsAccepted}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              onTermsModalOpen();
+                            } else {
+                              setTermsAccepted(false);
+                            }
+                          }}
+                        />
+                        <label htmlFor="formTermsAccepted" className="text-sm leading-snug text-[#475467] cursor-pointer">
+                          I accept the{" "}
+                          <span
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onTermsModalOpen();
+                            }}
+                            className="font-medium text-primaryColor hover:underline cursor-pointer"
+                          >
+                            Terms and Conditions
+                          </span>{" "}
+                          for managing the settlement account.
+                        </label>
                       </div>
                     )}
                   </div>

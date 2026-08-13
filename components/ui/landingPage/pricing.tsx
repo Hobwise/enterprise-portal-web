@@ -99,9 +99,6 @@ export default function PricingComponent() {
                 {/* <p className="text-white/65 lg:text-base text-sm">per {pricings?.Starter?.maxUsers} Users |</p> */}
                 <p className="text-[#ACB5BB] lg:text-base text-sm">per {plan === 'monthly' ? 'month' : 'year'}</p>
               </div>
-              <p className="text-[#000000] text-left lg:text-base text-sm h-[70px]">
-                Recommended for small businesses, looking to streamline their menu & order management process
-              </p>
             </div>
           </Transition>
           <Transition>
@@ -148,14 +145,11 @@ export default function PricingComponent() {
         >
           <Transition>
             <div className="space-y-2.5">
-              <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Professional Plan (Recommended)</h4>
+              <h4 className="text-left text-[#FF9900] text-base lg:text-[20px]">Professional Plan</h4>
               <div className="flex items-baseline space-x-2">
                 <p className="text-[24px] lg:text-[42px] text-[#161618] font-medium font-sans">₦{formatNumber(professionalFee)}</p>
                 <p className="text-[#ACB5BB] lg:text-base text-sm">per {plan === 'monthly' ? 'month' : 'year'}</p>
               </div>
-              <p className="text-[#161618] text-left lg:text-base text-sm">
-                Suitable for medium size businesses looking to manage booking, process order & menu while leveraging the campaign feature also
-              </p>
             </div>
           </Transition>
           <Transition>
@@ -206,9 +200,6 @@ export default function PricingComponent() {
                 <p className="text-[24px] lg:text-[42px] text-[#000000] font-medium font-sans">₦{formatNumber(premiumFee)}</p>
                 <p className="text-[#ACB5BB] lg:text-base text-sm">per {plan === 'monthly' ? 'month' : 'year'}</p>
               </div>
-              <p className="text-[#161618] text-left lg:text-base text-sm">
-                For large scale businesses operations, enabling businesses with multiple locations manage their operations effectively
-              </p>
             </div>
           </Transition>
           <Transition>

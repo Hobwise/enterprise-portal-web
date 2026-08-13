@@ -192,7 +192,7 @@ const PaymentBreakdownModal: React.FC<PaymentBreakdownModalProps> = ({
                     </div>
                     <Divider />
                     <div className="flex justify-between items-center">
-                      <span className="font-semibold text-gray-700">Merchant Amount</span>
+                      <span className="font-semibold text-gray-700">Total Amount</span>
                       <span className="font-bold text-green-700 text-base">
                         {formatPrice(
                           data.merchantAmountKobo != null

@@ -117,11 +117,6 @@ export default function PricingSection() {
                 >
                   <div className='flex items-center gap-3'>
                     <h3 className='text-[#161618] font-bricolage_grotesque text-xl'>{plan.name}</h3>
-                    {plan.popular && (
-                      <span className='bg-[#D9F2E1] text-[#15803D] text-xs px-3 py-1 rounded-full'>
-                        Recommended
-                      </span>
-                    )}
                   </div>
 
                   <div className='space-y-1 border-b border-[#E0E0EA] pb-6'>
@@ -133,8 +128,6 @@ export default function PricingSection() {
                     </p>
                     <p className='text-[#44444A] text-sm'>{plan.limits}</p>
                   </div>
-
-                  <p className='text-[#161618] font-semibold text-sm lg:text-base'>{plan.audience}</p>
 
                   <ul className='space-y-3'>
                     {plan.features.map((feature) => (
