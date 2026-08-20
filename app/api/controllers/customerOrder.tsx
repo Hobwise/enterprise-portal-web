@@ -159,21 +159,25 @@ export const placeCustomerOrder = async (
     status: number;
     placedByName: string;
     placedByPhoneNumber: string;
+    userId?: string;
     quickResponseID: string;
     comment?: string;
+    additionalCostName?: string;
+    additionalCost?: number;
     totalAmount: number;
+    estimatedCompletionTime?: string;
     orderDetails: Array<{
-      itemId: string;
+      itemID: string;
       quantity: number;
       unitPrice: number;
       isVariety?: boolean;
       isPacked?: boolean;
-      packingCost?: number;
       comment?: string;
     }>;
   },
   businessId?: string,
-  cooperateId?: string
+  cooperateId?: string,
+  userId?: string
 ) => {
   try {
     const url = `${BASE_URL}/Order/place`;
@@ -183,11 +187,15 @@ export const placeCustomerOrder = async (
     };
 
     if (businessId) {
-      headers["BusinessId"] = businessId;
+      headers["businessId"] = businessId;
     }
 
     if (cooperateId) {
-      headers["CooperateId"] = cooperateId;
+      headers["cooperateId"] = cooperateId;
+    }
+
+    if (userId) {
+      headers["userId"] = userId;
     }
 
     const response = await fetch(url, {
@@ -212,28 +220,48 @@ export const updateCustomerOrder = async (
     status: number;
     placedByName: string;
     placedByPhoneNumber: string;
+    userId?: string;
     quickResponseID: string;
     comment?: string;
+    additionalCostName?: string;
+    additionalCost?: number;
     totalAmount: number;
+    estimatedCompletionTime?: string;
     orderDetails: Array<{
-      itemId: string;
+      itemID: string;
       quantity: number;
       unitPrice: number;
       isVariety?: boolean;
       isPacked?: boolean;
-      packingCost?: number;
       comment?: string;
     }>;
-  }
+  },
+  businessId?: string,
+  cooperateId?: string,
+  userId?: string
 ) => {
   try {
     const url = `${BASE_URL}/Order?orderId=${orderId}`;
 
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+
+    if (businessId) {
+      headers["businessId"] = businessId;
+    }
+
+    if (cooperateId) {
+      headers["cooperateId"] = cooperateId;
+    }
+
+    if (userId) {
+      headers["userId"] = userId;
+    }
+
     const response = await fetch(url, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify(payload),
     });
 

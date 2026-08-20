@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { initializeCustomerPayment } from "@/app/api/controllers/customerOrder";
+import { verifyQrPayment } from "@/app/api/controllers/dashboard/qrPayment";
 import { formatPrice } from "@/lib/utils";
 import { toast } from "sonner";
 import { TbCopy } from "react-icons/tb";
@@ -60,6 +61,8 @@ export default function PaymentSheet({
   const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
   const [activeTab, setActiveTab] = useState<PaymentTab>("online");
   const [hasMadeTransfer, setHasMadeTransfer] = useState(false);
+  const [isPayingOnline, setIsPayingOnline] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !businessId || !orderId) return;
@@ -91,21 +94,54 @@ export default function PaymentSheet({
     init();
   }, [isOpen, businessId, orderId, grandTotal, userId]);
 
+  // Poll for payment status when shared
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (isOpen && paymentData?.hobwiseReference) {
+      interval = setInterval(async () => {
+        try {
+          const res = await verifyQrPayment(businessId, paymentData.hobwiseReference!);
+          if (res?.data?.data?.status === "Success") {
+            clearInterval(interval);
+            toast.success("Payment verified successfully!");
+            onPaymentSuccess?.();
+            onClose();
+          }
+        } catch (err) {
+          // Silent catch for polling
+        }
+      }, 3000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isOpen, paymentData?.hobwiseReference, businessId, onPaymentSuccess, onClose]);
+
   const handlePayOnline = async () => {
     if (!paymentData?.accessCode) return;
-    const PaystackPop = (await import("paystack-inline-ts")).default;
-    const popup = new PaystackPop();
-    popup.resumeTransaction({
-      accessCode: paymentData.accessCode,
-      onSuccess: () => {
-        toast.success("Payment successful!");
-        onPaymentSuccess?.();
-        onClose();
-      },
-      onCancel: () => {
-        toast.error("Payment cancelled.");
-      },
-    });
+    setIsPayingOnline(true);
+    try {
+      const PaystackPop = (await import("paystack-inline-ts")).default;
+      const popup = new PaystackPop();
+      popup.resumeTransaction({
+        accessCode: paymentData.accessCode,
+        onSuccess: () => {
+          toast.success("Payment successful!");
+          onPaymentSuccess?.();
+          onClose();
+          setIsPayingOnline(false);
+        },
+        onCancel: () => {
+          toast.error("Payment cancelled.");
+          setIsPayingOnline(false);
+        },
+      });
+    } catch (e) {
+      toast.error("Failed to load payment gateway.");
+      setIsPayingOnline(false);
+    }
   };
 
   const copy = async (value: string, label = "Copied!") => {
@@ -120,6 +156,33 @@ export default function PaymentSheet({
       onPaymentSuccess?.();
       onClose();
     }, 2000);
+  };
+
+  const handlePayForMe = async () => {
+    setIsSharing(true);
+    try {
+      const urlToShare = paymentData?.authorizationUrl || window.location.href;
+      
+      const shareData = {
+        title: 'Pay for my order',
+        text: `Please help me pay for my order of ${formatPrice(grandTotal, "NGN")}.`,
+        url: urlToShare
+      };
+
+      if (navigator.share) {
+        try {
+          await navigator.share(shareData);
+          toast.success("Shared successfully!");
+        } catch (err) {
+          console.error("Error sharing:", err);
+        }
+      } else {
+        await navigator.clipboard.writeText(urlToShare);
+        toast.success("Payment link copied to clipboard!");
+      }
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   const tabs: { id: PaymentTab; label: string }[] = [
@@ -246,9 +309,21 @@ export default function PaymentSheet({
                     style={primaryStyle}
                     onClick={handlePayOnline}
                     disabled={!paymentData.accessCode}
+                    loading={isPayingOnline}
                   >
                     <span className="flex items-center justify-center gap-2">
                       Pay {formatPrice(grandTotal, "NGN")} Now <FiArrowRight />
+                    </span>
+                  </CustomButton>
+
+                  <CustomButton
+                    className="w-full h-[52px] font-semibold text-[#161618] border-2 border-gray-200 hover:bg-gray-50 transition-colors"
+                    backgroundColor="transparent"
+                    onClick={handlePayForMe}
+                    loading={isSharing}
+                  >
+                    <span className="flex items-center justify-center gap-2">
+                      Pay for me (Share Link) <FiArrowRight />
                     </span>
                   </CustomButton>
                 </div>

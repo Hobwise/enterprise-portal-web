@@ -857,6 +857,7 @@ const CheckoutModal = ({
         status: 0,
         placedByName: customerName,
         placedByPhoneNumber: order.placedByPhoneNumber?.trim() || "",
+        userId: userInformation?.id,
         quickResponseID: order.quickResponseID,
         comment: order.comment,
         additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
@@ -916,7 +917,7 @@ const CheckoutModal = ({
     }
 
     const id = businessId ? businessId : businessInformation[0]?.businessId;
-    const data = await createOrder(id, payload, effectiveCooperateID);
+    const data = await createOrder(id, payload, effectiveCooperateID, userInformation?.id);
 
     // Handle undefined response — the upstream error toast (e.g. "Insufficient
     // stock…") has already been surfaced by handleError in createOrder, so

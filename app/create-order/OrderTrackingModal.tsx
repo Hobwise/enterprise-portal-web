@@ -20,6 +20,7 @@ interface OrderTrackingPageProps {
   estimatedTime?: string;
   onAddMoreItems: () => void;
   onCheckout: (updatedOrderData?: any) => void;
+  onPaymentSuccess?: () => void;
   businessName?: string;
   menuConfig?: {
     image?: string;
@@ -41,6 +42,7 @@ const OrderTrackingPage = ({
   estimatedTime,
   onAddMoreItems,
   onCheckout,
+  onPaymentSuccess,
   businessName,
   menuConfig,
   baseString,
@@ -852,6 +854,7 @@ const OrderTrackingPage = ({
         menuConfig={menuConfig}
         onPaymentSuccess={() => {
           setShowPaymentSheet(false);
+          onPaymentSuccess?.();
         }}
       />
     </div>
