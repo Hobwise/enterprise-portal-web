@@ -546,9 +546,10 @@ const CreateOrder = () => {
           quantity: item.count,
           unitPrice: item.price,
           isVariety: item.isVariety || false,
+          varieties: item.varieties || [],
           isPacked: item.isPacked ?? false,
           packingCost: item.isPacked ? item.packingCost ?? 0 : 0,
-          menuID: item.menuID,
+          menuID: item.menuID || "",
           isVatEnabled: item.isVatEnabled ?? false,
           vatRate: item.vatRate ?? 0,
           comment: item.comment || "",
@@ -1656,6 +1657,10 @@ const CreateOrder = () => {
         estimatedTime={orderData?.estimatedCompletionTime}
         onAddMoreItems={handleAddMoreItemsFromTracking}
         onCheckout={handleCheckoutFromTracking}
+        onPaymentSuccess={() => {
+          setSelectedItems([]);
+          setOriginalOrderItems([]);
+        }}
         businessName={businessName}
         menuConfig={menuConfig}
         baseString={baseString}

@@ -5,12 +5,14 @@ import api, { handleError } from "../../apiService";
 interface Order {
   placedByName: string;
   placedByPhoneNumber: string;
+  userId?: string;
   quickResponseID?: string;
   comment: string;
   status?: number;
   additionalCost?: number;
   additionalCostName?: string;
   totalAmount?: number;
+  estimatedCompletionTime?: string;
   orderDetails: OrderDetail[];
 }
 
@@ -336,7 +338,8 @@ export async function cancelOrder(payload: any, orderId: string) {
 export async function createOrder(
   businessId: string,
   payload: Order,
-  cooperateID?: string
+  cooperateID?: string,
+  userId?: string
 ) {
   const validatedFields = orderSchema.safeParse({
     placedByName: payload?.placedByName,
@@ -349,7 +352,10 @@ export async function createOrder(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const headers = businessId ? { businessId, cooperateId: cooperateID } : {};
+  const headers: any = {};
+  if (businessId) headers.businessId = businessId;
+  if (cooperateID) headers.cooperateId = cooperateID;
+  if (userId) headers.userId = userId;
 
   try {
     const data = await api.post(DASHBOARD.placeOrder, payload, {
@@ -364,7 +370,8 @@ export async function createOrder(
 export async function createUserOrder(
   businessId: string,
   payload: Order,
-  cooperateID?: string
+  cooperateID?: string,
+  userId?: string
 ) {
   const validatedFields = orderSchemaUser.safeParse({
     placedByName: payload?.placedByName,
@@ -376,7 +383,10 @@ export async function createUserOrder(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const headers = businessId ? { businessId, cooperateId: cooperateID } : {};
+  const headers: any = {};
+  if (businessId) headers.businessId = businessId;
+  if (cooperateID) headers.cooperateId = cooperateID;
+  if (userId) headers.userId = userId;
 
   try {
     const data = await api.post(DASHBOARD.placeOrder, payload, {
