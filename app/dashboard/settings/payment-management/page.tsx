@@ -62,7 +62,17 @@ const accountIdOf = (account: BankAccount) => account.id ?? account.accountId;
 const succeeded = (response: any): boolean =>
   !!response && response?.data?.isSuccessful !== false;
 
-const errorOf = (response: any): string | undefined => response?.data?.error;
+// Extract a human-readable error string from the API response.
+// The API can return error as:
+//   • a plain string:  { error: "Some message" }
+//   • a nested object: { error: { responseCode: "H003", responseDescription: "..." } }
+const errorOf = (response: any): string | undefined => {
+  const err = response?.data?.error;
+  if (!err) return undefined;
+  if (typeof err === "string") return err;
+  // Nested object shape — prefer responseDescription, fall back to responseCode
+  return err?.responseDescription || err?.responseCode || undefined;
+};
 
 const DetailRow = ({ label, value }: { label: string; value: string }) => (
   <div className="flex gap-3 text-sm">

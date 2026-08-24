@@ -56,6 +56,8 @@ const refreshToken = async () => {
     const businesses = getJsonItemFromLocalStorage('business');
 
     if (!userData?.refreshToken || !userData?.email || !businesses?.[0]?.businessId) {
+      // Missing local data — do NOT wipe the session; this is not an auth failure.
+      // The token may still be valid; let the caller decide what to do.
       throw new Error('Missing required refresh data');
     }
 
@@ -86,15 +88,21 @@ const refreshToken = async () => {
     api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     onTokenRefreshed(newToken);
     return newToken;
-  } catch (error) {
+  } catch (error: any) {
     onRefreshFailed(error);
-    resetLoginInfo();
-    window.location.href = '/auth/login';
+    // Only redirect to login for real authentication failures (API rejection),
+    // not for local data issues like missing businessId right after onboarding.
+    const isMissingData = error?.message === 'Missing required refresh data';
+    if (!isMissingData) {
+      resetLoginInfo();
+      window.location.href = '/auth/login';
+    }
     throw error;
   } finally {
     isRefreshing = false;
   }
 };
+
 
 const refreshTokenIfNeeded = async () => {
   if (!isTokenExpiringSoon() || isRefreshing) return null;

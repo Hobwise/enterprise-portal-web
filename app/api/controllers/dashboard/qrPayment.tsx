@@ -78,12 +78,15 @@ export interface CheckoutItem {
   name: string;
   quantity: number;
   price: number;
+  image?: string;
 }
 
 /** Everything the customer-facing checkout page needs to render. */
 export interface CheckoutData {
   businessName: string;
+  businessLogo?: string;
   reference: string;
+  status: number;
   orderId?: string;
   items: CheckoutItem[];
   total: number;
@@ -107,6 +110,7 @@ export async function getBanks() {
     return await api.get(QR_PAYMENT.getBanks);
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -121,6 +125,7 @@ export async function onboardBusiness(
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -135,6 +140,7 @@ export async function acceptOnboardTerms(
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -151,6 +157,7 @@ export async function initializePayment(
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -162,6 +169,7 @@ export async function verifyQrPayment(businessId: string, reference: string) {
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -173,6 +181,7 @@ export async function getBankAccounts(businessId: string) {
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -184,6 +193,7 @@ export async function deleteSettlementAccount(businessId: string) {
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -195,6 +205,7 @@ export async function requestSettlementOtp(businessId: string) {
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -209,6 +220,7 @@ export async function requestBankAccountOtp(businessId: string, accountId?: stri
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -223,6 +235,7 @@ export async function updateSettlementAccount(
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -261,6 +274,7 @@ export async function addBankAccount(
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -276,6 +290,7 @@ export async function updateBankAccount(
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -292,6 +307,7 @@ export async function setDefaultBankAccount(
     );
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }
 
@@ -303,5 +319,6 @@ export async function deleteBankAccount(businessId: string, accountId: string) {
     });
   } catch (error) {
     handleError(error, false);
+    return (error as any).response;
   }
 }

@@ -133,7 +133,7 @@ export default function SuppliersPage() {
   return (
     <div className='h-full flex flex-col'>
       <div className="flex-1">
-        {suppliers.length > 0 ? (
+        {(suppliers.length > 0 || search.trim() !== '') ? (
             <SuppliersList
                 suppliers={suppliers}
                 onAddSupplier={handleOpenAddModal}
