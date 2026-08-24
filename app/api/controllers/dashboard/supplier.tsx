@@ -26,11 +26,16 @@ export async function createSupplier(businessId: string, payload: SupplierPayloa
 }
 
 
-export async function getSuppliersByBusiness(businessId: string, clientParameters: any) {
-  const headers = businessId ? { businessId, clientParameters: JSON.stringify(clientParameters) } : {};
+export async function getSuppliersByBusiness(businessId: string, clientParameters: { page?: number; pageSize?: number; search?: string }) {
+  const headers = businessId ? { businessId } : {};
 
   try {
-    const data = await api.get(DASHBOARD.supplierByBusiness, {
+    let url = `${DASHBOARD.supplierByBusiness}?Page=${clientParameters.page ?? 0}&PageSize=${clientParameters.pageSize ?? 10}`;
+    if (clientParameters.search) {
+      url += `&Search=${encodeURIComponent(clientParameters.search)}`;
+    }
+
+    const data = await api.get(url, {
       headers,
     });
 

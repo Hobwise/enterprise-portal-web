@@ -174,10 +174,17 @@ export const PricingCards: React.FC<PlansFromParent> = ({
 
         const handleSuccess = async () => {
           // The token held right after onboarding predates the active business,
-          // so the subscription endpoint rejects it. Refresh to a business-scoped
-          // token before reloading; on failure forceTokenRefresh has already
-          // redirected to /auth/login.
-          await forceTokenRefresh();
+          // so the subscription endpoint may reject it. Attempt to refresh to a
+          // business-scoped token before reloading. If the refresh fails (e.g. for
+          // a brand-new user whose business context isn't yet in localStorage), we
+          // do NOT wipe the session — the interceptor will refresh it lazily on
+          // the next request. Either way we reload so the UI reflects the new plan.
+          try {
+            await forceTokenRefresh();
+          } catch {
+            // Refresh failed — swallow the error and let the page reload with the
+            // existing token. The axios interceptor will handle re-authentication.
+          }
           window.location.reload();
         };
 

@@ -15,7 +15,7 @@ interface LockedCardOverlayProps {
 const LockedCardOverlay = ({
   children,
   variant = "card",
-  planLabel = "Premium Plan",
+  planLabel = "Professional & Premium Plan",
   upgradeHref = "/dashboard/settings/subscriptions",
 }: LockedCardOverlayProps) => {
   const isTile = variant === "tile";

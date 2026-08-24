@@ -15,7 +15,6 @@ import {
 } from "@nextui-org/react";
 import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { HiOutlineDotsVertical } from "react-icons/hi";
 
 const CreateNewRoleTab = () => {
   const { data, isLoading, refetch } = useRoleCount();
@@ -31,21 +30,12 @@ const CreateNewRoleTab = () => {
   const columns = [
     { name: "ROLE", uid: "role" },
     { name: "MEMBERS", uid: "count" },
-    { name: "", uid: "actions" },
   ];
 
   const renderCell = useCallback((user, columnKey) => {
     const cellValue = user[columnKey];
 
     switch (columnKey) {
-      case "actions":
-        return (
-          <div className="inline-flex p-0.5 gap-2 border border-primaryGrey rounded-md">
-            <span className="text-lg text-default-400 cursor-pointer active:opacity-50">
-              <HiOutlineDotsVertical />
-            </span>
-          </div>
-        );
       default:
         return cellValue;
     }
@@ -99,7 +89,6 @@ const CreateNewRoleTab = () => {
             <TableHeader columns={columns}>
               {(column) => (
                 <TableColumn
-                  align={column.uid === "actions" ? "center" : "start"}
                   key={column.uid}
                 >
                   {column.name}

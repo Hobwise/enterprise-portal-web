@@ -33,14 +33,67 @@ export const getCustomerCheckout = async (
   const grandTotal = order.totalAmount ?? 0;
   const tax = order.vatAmount ?? 0;
 
+  const items = [...order.orderDetails];
+
+  // Enrich missing images by fetching from menu endpoints
+  if (items.some((item) => !item.image && !item.itemImage && !item.imageReference)) {
+    try {
+      const catRes = await getCustomerMenuCategories(businessId, cooperateId);
+      const categories = catRes?.data || [];
+      const menuMap = new Map<string, string>(); // menuName -> menuId
+      
+      categories.forEach((cat: any) => {
+        cat.menus?.forEach((m: any) => {
+          m.menuSections?.forEach((sec: any) => {
+            if (sec.name && sec.id) menuMap.set(sec.name, sec.id);
+          });
+        });
+      });
+
+      const missingMenus = new Set<string>();
+      items.forEach((item) => {
+        if (!item.image && !item.itemImage && !item.imageReference && item.menuName) {
+          missingMenus.add(item.menuName);
+        }
+      });
+
+      const imageCache = new Map<string, string>(); // itemID -> image
+      for (const menuName of missingMenus) {
+        const menuId = menuMap.get(menuName);
+        if (menuId) {
+          // Fetch menu items (page 1, up to 100 items to cover most cases)
+          const menuItemsRes = await getCustomerMenuItems(menuId, 1, 100);
+          const menuItems = menuItemsRes?.data?.data || [];
+          menuItems.forEach((mi: any) => {
+            if (mi.id && mi.image) {
+              imageCache.set(mi.id, mi.image);
+            }
+          });
+        }
+      }
+
+      items.forEach((item) => {
+        if (!item.image && !item.itemImage && !item.imageReference && item.itemID) {
+          const cachedImage = imageCache.get(item.itemID);
+          if (cachedImage) item.image = cachedImage;
+        }
+      });
+    } catch (e) {
+      console.error("Failed to enrich item images", e);
+    }
+  }
+
   return {
     businessName: order.businessName ?? "",
+    businessLogo: order.businessLogo || order.logoImageReference || "",
     reference: order.reference ?? reference,
+    status: order.status ?? 0,
     orderId: order.id ?? order.orderDetails?.[0]?.orderID,
-    items: (order.orderDetails ?? []).map((item: any) => ({
+    items: items.map((item: any) => ({
       name: item.itemName,
       quantity: item.quantity,
       price: (item.unitPrice ?? 0) * (item.quantity ?? 0),
+      image: item.image || item.itemImage || item.imageReference || "",
     })),
     total: grandTotal - tax,
     tax,

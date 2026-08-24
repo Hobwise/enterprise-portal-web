@@ -5,7 +5,7 @@ import { verifyQrPayment } from "@/app/api/controllers/dashboard/qrPayment";
 import { formatPrice } from "@/lib/utils";
 import { toast } from "sonner";
 import { TbCopy } from "react-icons/tb";
-import { FiArrowRight, FiX } from "react-icons/fi";
+import { FiArrowRight, FiX, FiShare2 } from "react-icons/fi";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { CustomButton } from "@/components/customButton";
 
@@ -31,6 +31,8 @@ interface PaymentSheetProps {
   onClose: () => void;
   businessId: string;
   orderId: string;
+  orderReference?: string;
+  cooperateId?: string;
   grandTotal: number;
   userId?: string;
   menuConfig?: {
@@ -40,13 +42,15 @@ interface PaymentSheetProps {
   onPaymentSuccess?: () => void;
 }
 
-type PaymentTab = "online" | "qr" | "bank";
+type PaymentTab = "online" | "share" | "bank";
 
 export default function PaymentSheet({
   isOpen,
   onClose,
   businessId,
   orderId,
+  orderReference,
+  cooperateId,
   grandTotal,
   userId,
   menuConfig,
@@ -161,7 +165,15 @@ export default function PaymentSheet({
   const handlePayForMe = async () => {
     setIsSharing(true);
     try {
-      const urlToShare = paymentData?.authorizationUrl || window.location.href;
+      const referenceToShare = orderReference || paymentData?.hobwiseReference;
+      
+      let urlToShare = paymentData?.authorizationUrl || window.location.href;
+      if (referenceToShare) {
+        urlToShare = `${window.location.origin}/pay-for-me/${businessId}/${referenceToShare}`;
+        if (cooperateId) {
+          urlToShare += `?cooperateId=${cooperateId}`;
+        }
+      }
       
       const shareData = {
         title: 'Pay for my order',
@@ -187,7 +199,7 @@ export default function PaymentSheet({
 
   const tabs: { id: PaymentTab; label: string }[] = [
     { id: "online", label: "Pay Online" },
-    { id: "qr", label: "Scan QR" },
+    { id: "share", label: "Share Link" },
     { id: "bank", label: "Bank Transfer" },
   ];
 
@@ -319,8 +331,7 @@ export default function PaymentSheet({
                   <CustomButton
                     className="w-full h-[52px] font-semibold text-[#161618] border-2 border-gray-200 hover:bg-gray-50 transition-colors"
                     backgroundColor="transparent"
-                    onClick={handlePayForMe}
-                    loading={isSharing}
+                    onClick={() => setActiveTab("share")}
                   >
                     <span className="flex items-center justify-center gap-2">
                       Pay for me (Share Link) <FiArrowRight />
@@ -329,46 +340,82 @@ export default function PaymentSheet({
                 </div>
               )}
 
-              {/* QR tab */}
-              {activeTab === "qr" && (
-                <div className="flex flex-col items-center gap-4 py-2">
+              {/* Share Link tab */}
+              {activeTab === "share" && (
+                <div className="flex flex-col items-center gap-5 py-2">
                   <div className="text-center">
-                    <p className="text-[#161618] font-semibold">Scan to Pay</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Open your banking app and scan this QR code
+                    <p className="text-[#161618] font-semibold text-base">Share Payment Link</p>
+                    <p className="text-sm text-gray-500 mt-1 max-w-[280px] mx-auto">
+                      Send this link to someone else to pay for this order on your behalf.
                     </p>
                   </div>
 
-                  <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-4">
-                    {paymentData.qrCodeBase64 ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={`data:image/png;base64,${paymentData.qrCodeBase64}`}
-                        alt="Payment QR code"
-                        width={200}
-                        height={200}
-                        className="rounded-xl"
-                      />
-                    ) : (
-                      <div className="w-[200px] h-[200px] flex items-center justify-center text-gray-400 text-sm text-center">
-                        QR code unavailable
+                  <div
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center"
+                    style={{ backgroundColor: `${primaryColor}18` }}
+                  >
+                    <FiShare2 className="w-8 h-8" style={{ color: primaryColor }} />
+                  </div>
+
+                  <div className="w-full flex items-center justify-between gap-3 p-3.5 rounded-xl border border-gray-100 bg-gray-50">
+                    <div className="flex-1 min-w-0 text-left">
+                      <p className="text-xs text-gray-400 font-medium uppercase tracking-wider">Payment Link</p>
+                      <p className="text-sm font-medium text-[#161618] truncate mt-0.5">
+                        {(() => {
+                          const referenceToShare = orderReference || paymentData?.hobwiseReference;
+                          let urlToShare = paymentData?.authorizationUrl || (typeof window !== "undefined" ? window.location.href : "");
+                          if (referenceToShare && typeof window !== "undefined") {
+                            urlToShare = `${window.location.origin}/pay-for-me/${businessId}/${referenceToShare}`;
+                            if (cooperateId) {
+                              urlToShare += `?cooperateId=${cooperateId}`;
+                            }
+                          }
+                          return urlToShare;
+                        })()}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const referenceToShare = orderReference || paymentData?.hobwiseReference;
+                        let urlToShare = paymentData?.authorizationUrl || (typeof window !== "undefined" ? window.location.href : "");
+                        if (referenceToShare && typeof window !== "undefined") {
+                          urlToShare = `${window.location.origin}/pay-for-me/${businessId}/${referenceToShare}`;
+                          if (cooperateId) {
+                            urlToShare += `?cooperateId=${cooperateId}`;
+                          }
+                        }
+                        copy(urlToShare, "Link copied to clipboard!");
+                      }}
+                      className="p-2.5 rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors shadow-sm shrink-0"
+                    >
+                      <TbCopy className="text-lg" />
+                    </button>
+                  </div>
+
+                  <div className="w-full p-4 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 space-y-2.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Amount to pay</span>
+                      <span className="font-bold text-[#161618]">{formatPrice(grandTotal, "NGN")}</span>
+                    </div>
+                    {paymentData.hobwiseReference && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Order Reference</span>
+                        <span className="font-mono text-xs text-[#161618] truncate ml-4 max-w-[180px]">{paymentData.hobwiseReference}</span>
                       </div>
                     )}
                   </div>
 
-                  <p className="text-xs text-gray-400 text-center">
-                    Amount: <span className="font-semibold text-[#161618]">{formatPrice(grandTotal, "NGN")}</span>
-                  </p>
-
                   <div className="w-full border-t border-gray-100 pt-4">
                     <CustomButton
-                      className="w-full h-[52px] font-semibold"
-                      backgroundColor="#F4F4F6"
-                      onClick={handleMadeTransfer}
-                      loading={hasMadeTransfer}
+                      className="w-full h-[52px] font-semibold text-white"
+                      backgroundColor={primaryColor}
+                      style={primaryStyle}
+                      onClick={handlePayForMe}
+                      loading={isSharing}
                     >
-                      <span className="flex items-center justify-center gap-2 text-[#161618]">
-                        I have made payment <FiArrowRight />
+                      <span className="flex items-center justify-center gap-2">
+                        Share Payment Link <FiArrowRight />
                       </span>
                     </CustomButton>
                   </div>

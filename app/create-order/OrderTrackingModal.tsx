@@ -849,6 +849,8 @@ const OrderTrackingPage = ({
         onClose={() => setShowPaymentSheet(false)}
         businessId={businessId || ""}
         orderId={orderData?.orderDetails?.[0]?.orderID || orderData?.id || ""}
+        orderReference={trackingId || orderData?.reference || ""}
+        cooperateId={cooperateId || ""}
         grandTotal={orderData?.totalAmount || 0}
         userId={userId}
         menuConfig={menuConfig}
