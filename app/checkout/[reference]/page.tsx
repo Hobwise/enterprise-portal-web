@@ -9,7 +9,7 @@ export default function CheckoutPage() {
   const reference = String(params?.reference ?? "");
 
   // This page is public and has no session, so the order is looked up by
-  // reference + businessId. Both come from the URL, matching /create-order.
+  // reference + businessId. Both come from the URL, matching /order.
   return (
     <CheckoutDetails
       reference={reference}

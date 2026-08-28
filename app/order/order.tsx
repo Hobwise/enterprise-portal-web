@@ -1582,7 +1582,7 @@ const CreateOrder = () => {
 
               {/* Book Reservation */}
               <a
-                href={`/reservation/select-reservation?businessID=${businessId}&cooperateID=${
+                href={`/reserve?businessID=${businessId}&cooperateID=${
                   cooperateID || ""
                 }&businessName=${businessName}`}
                 onClick={() => setIsMenuOpen(false)}

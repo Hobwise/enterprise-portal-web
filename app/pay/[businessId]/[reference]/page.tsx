@@ -1,4 +1,4 @@
-import { getCustomerCheckout } from "@/app/api/controllers/customerOrder";
+import { getCustomerCheckout, getCustomerOrderByReference } from "@/app/api/controllers/customerOrder";
 import PayForMeClient from "./PayForMeClient";
 import { Metadata } from "next";
 
@@ -20,7 +20,6 @@ export default async function PayForMePage({
   let checkoutData;
   let rawResponse;
   try {
-    const { getCustomerOrderByReference } = await import("@/app/api/controllers/customerOrder");
     rawResponse = await getCustomerOrderByReference(reference, businessId, cooperateId);
     const order = rawResponse?.data ?? rawResponse;
     if (order?.orderDetails) {
@@ -43,15 +42,15 @@ export default async function PayForMePage({
           <p className="text-gray-500 mb-4">
             We couldn't find the order you're looking for. The link might be invalid or the order may have expired.
           </p>
-          <div className="text-left bg-gray-100 p-4 rounded text-xs overflow-auto">
-            <p><strong>Business ID:</strong> {businessId}</p>
-            <p><strong>Reference:</strong> {reference}</p>
-            <p><strong>Raw Response:</strong> {JSON.stringify(rawResponse, null, 2)}</p>
+          <div className="text-left bg-gray-100 text-gray-800 p-4 rounded-xl text-xs overflow-auto space-y-2">
+            <p><strong className="text-gray-900">Business ID:</strong> <span className="break-all">{businessId}</span></p>
+            <p><strong className="text-gray-900">Reference:</strong> <span className="break-all">{reference}</span></p>
+            <p><strong className="text-gray-900">Raw Response:</strong> <span className="break-all">{JSON.stringify(rawResponse, null, 2)}</span></p>
           </div>
         </div>
       </div>
     );
   }
 
-  return <PayForMeClient checkoutData={checkoutData} businessId={businessId} />;
+  return <PayForMeClient checkoutData={checkoutData} businessId={businessId} cooperateId={cooperateId} />;
 }

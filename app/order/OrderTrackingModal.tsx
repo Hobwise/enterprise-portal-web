@@ -854,6 +854,13 @@ const OrderTrackingPage = ({
         grandTotal={orderData?.totalAmount || 0}
         userId={userId}
         menuConfig={menuConfig}
+        businessName={businessName}
+        cartItems={orderData?.orderDetails?.map((item: any) => ({
+          name: item.itemName,
+          quantity: item.quantity,
+          price: (item.unitPrice || 0) * (item.quantity || 1),
+          image: item.itemImage || item.imageReference || ""
+        })) || []}
         onPaymentSuccess={() => {
           setShowPaymentSheet(false);
           onPaymentSuccess?.();

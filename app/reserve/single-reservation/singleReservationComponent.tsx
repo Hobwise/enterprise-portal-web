@@ -59,7 +59,7 @@ const SingleReservationComponent = () => {
         {reservationId ? null : (
           <BackButton
             color='text-black'
-            url={`${companyInfo.webUrl}/reservation/select-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
+            url={`${companyInfo.webUrl}/reserve?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`}
           />
         )}
       </div>
@@ -111,10 +111,10 @@ const SingleReservationComponent = () => {
         onClick={() => {
           reservationId
             ? router.push(
-                `/reservation/select-reservation/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
+                `/reserve/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
               )
             : router.push(
-                `/reservation/select-reservation/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+                `/reserve/complete-booking?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
               );
         }}
       >
