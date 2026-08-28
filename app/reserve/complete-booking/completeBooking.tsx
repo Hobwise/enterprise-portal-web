@@ -42,7 +42,7 @@ const CompleteBookingComponent = () => {
   const [editorState, setEditorState] = useState(EditorState.createEmpty());
   const searchParams = useSearchParams();
   let businessName = searchParams.get('businessName');
-  let businessId = searchParams.get('businessId');
+  let businessId = searchParams.get('businessID') || searchParams.get('businessId');
   let cooperateID = searchParams.get('cooperateID');
   let reservationId = searchParams.get('reservationId');
 
@@ -119,14 +119,14 @@ const CompleteBookingComponent = () => {
         ? router.push(
             `${
               window.location.origin || companyInfo.webUrl
-            }/reservation/select-reservation/complete-booking/success?businessName=${encodeURIComponent(
+            }/reserve/complete-booking/success?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}&reservationId=${reservationId}`
           )
         : router.push(
             `${
               window.location.origin || companyInfo.webUrl
-            }/reservation/select-reservation/complete-booking/success?businessName=${encodeURIComponent(
+            }/reserve/complete-booking/success?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}`
           );
@@ -161,7 +161,7 @@ const CompleteBookingComponent = () => {
             color="text-black"
             url={`${
               window.location.origin || companyInfo.webUrl
-            }/reservation/select-reservation/single-reservation?businessName=${encodeURIComponent(
+            }/reserve/single-reservation?businessName=${encodeURIComponent(
               businessName || ""
             )}&businessId=${businessId}&cooperateID=${cooperateID}`}
           />

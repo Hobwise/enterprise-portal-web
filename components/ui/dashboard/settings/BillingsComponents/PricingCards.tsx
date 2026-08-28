@@ -43,6 +43,10 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   const business = getJsonItemFromLocalStorage("business");
   const popup = new PaystackPop();
   const planType = currentSubscriptionDetails?.subscription?.plan;
+  const isSubscriptionActive =
+    currentSubscriptionDetails?.subscription?.status === 1 ||
+    currentSubscriptionDetails?.subscription?.isActive === true ||
+    currentSubscriptionDetails?.isActive === true;
 
   const token = userInformation?.token;
   const cooperateID = userInformation?.cooperateID;
@@ -101,7 +105,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
     e.preventDefault();
     
     // If user has an active subscription and is selecting a different plan
-    if (planType && planType !== selectedPlan) {
+    if (isSubscriptionActive && planType && planType !== selectedPlan) {
       setPendingPlanSelection(selectedPlan);
       onOpen(); // Show warning modal
     } else {
@@ -339,7 +343,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 />
               )}
 
-              {isActive ? (
+              {isActive && isSubscriptionActive ? (
                 <button
                   disabled
                   className="mt-6 w-full mx-auto bg-[#F1F2F4] rounded-lg px-8 py-2 font-normal text-sm text-grey500"

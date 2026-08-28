@@ -100,6 +100,21 @@ const nextConfig = {
   redirects: async () => {
     return [
       {
+        source: '/create-order',
+        destination: '/order',
+        permanent: true,
+      },
+      {
+        source: '/pay-for-me/:path*',
+        destination: '/pay/:path*',
+        permanent: true,
+      },
+      {
+        source: '/reservation/select-reservation',
+        destination: '/reserve',
+        permanent: true,
+      },
+      {
         source: '/reports',
         destination: '/dashboard/reports',
         permanent: false,

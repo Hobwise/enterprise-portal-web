@@ -65,13 +65,29 @@ const succeeded = (response: any): boolean =>
 // Extract a human-readable error string from the API response.
 // The API can return error as:
 //   • a plain string:  { error: "Some message" }
+//   • a stringified JSON body inside error
 //   • a nested object: { error: { responseCode: "H003", responseDescription: "..." } }
 const errorOf = (response: any): string | undefined => {
-  const err = response?.data?.error;
-  if (!err) return undefined;
-  if (typeof err === "string") return err;
-  // Nested object shape — prefer responseDescription, fall back to responseCode
-  return err?.responseDescription || err?.responseCode || undefined;
+  let err = response?.data?.error;
+  
+  if (!err) {
+    err = response?.data;
+    if (!err) return undefined;
+  }
+
+  if (typeof err === "string") {
+    try {
+      const parsed = JSON.parse(err);
+      if (parsed && typeof parsed === "object") {
+        return parsed.responseMessage || parsed.responseDescription || parsed.message || err;
+      }
+    } catch (e) {
+      return err;
+    }
+    return err;
+  }
+
+  return err?.responseMessage || err?.responseDescription || err?.message || err?.responseCode || undefined;
 };
 
 const DetailRow = ({ label, value }: { label: string; value: string }) => (

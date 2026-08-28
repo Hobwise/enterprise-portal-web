@@ -199,7 +199,6 @@ const Header = ({ ispos }: any) => {
         {onTrialVersion === false && isActive === false && (
           <NavigationBanner
             title="Your subscription has expired!"
-            desc="Upgrade to a paid plan to continue enjoying uninterrupted access"
           />
         )}
         {onTrialVersion && isActive === false && showBanner && (

@@ -7,11 +7,11 @@ import {
 } from '@/lib/utils';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Success from '../../../../../public/assets/images/success.png';
+import Success from '../../../../public/assets/images/success.png';
 const SuccessComponent = () => {
   const searchParams = useSearchParams();
   let businessName = searchParams.get('businessName');
-  let businessId = searchParams.get('businessId');
+  let businessId = searchParams.get('businessID') || searchParams.get('businessId');
   let cooperateID = searchParams.get('cooperateID');
   let reservationId = searchParams.get('reservationId');
   const router = useRouter();
@@ -40,13 +40,13 @@ const SuccessComponent = () => {
           onClick={async () => {
             // reservationId
             //   ? router.push(
-            //       `/reservation/select-reservation/single-reservation?businessName=${businessName}&businessId=${businessId}&cooperateID=${cooperateID}`
+            //       `/reserve/single-reservation?businessName=${businessName}&businessID=${businessId}&cooperateID=${cooperateID}`
             //     )
             //   :
             router.push(
-              `/reservation/select-reservation?businessName=${encodeURIComponent(
+              `/reserve?businessName=${encodeURIComponent(
                 businessName || ""
-              )}&businessId=${businessId}&cooperateID=${cooperateID}`
+              )}&businessID=${businessId}&cooperateID=${cooperateID}`
             );
 
             clearItemLocalStorage('bookingDetails');

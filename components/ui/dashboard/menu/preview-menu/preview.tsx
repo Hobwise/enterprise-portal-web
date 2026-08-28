@@ -14,7 +14,7 @@ import {
   IoSearchOutline,
 } from "react-icons/io5";
 import { HiOutlineMicrophone } from "react-icons/hi";
-import RestaurantBanner from "@/app/create-order/RestaurantBanner";
+import RestaurantBanner from "@/app/order/RestaurantBanner";
 
 const Preview = () => {
   const {

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import CreateOrder from './create-order';
+import CreateOrder from './order';
 
 // Title uses the business name from the link so each business sees its own
 // branding (falls back to a generic label when the param is missing).

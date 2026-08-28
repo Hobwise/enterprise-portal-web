@@ -367,3 +367,33 @@ export const initializeCustomerPayment = async (
     throw error;
   }
 };
+
+/**
+ * Verify payment session for customer (no auth required — avoids the
+ * authenticated api service which would redirect to /auth/login when
+ * there is no session on the /order public page).
+ */
+export const verifyCustomerPayment = async (
+  businessId: string,
+  reference: string
+) => {
+  try {
+    const url = `${BASE_URL}/QrPayment/sessions/verify/${reference}`;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        businessId,
+      },
+    });
+    const contentType = response.headers.get("content-type") ?? "";
+    const text = await response.text();
+    if (!text) return null;
+    if (!contentType.includes("json")) return null;
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Error verifying customer payment:", error);
+    return null;
+  }
+};
+

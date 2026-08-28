@@ -6,14 +6,14 @@ import { saveJsonItemToLocalStorage, saveToLocalStorage } from '@/lib/utils';
 import { Divider } from '@nextui-org/react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import noImage from "../../../public/assets/images/no-image.svg";
+import noImage from "../../public/assets/images/no-image.svg";
 import useMenuConfig from "@/hooks/cachedEndpoints/useMenuConfiguration";
 import { useState } from "react";
 import { IoClose } from "react-icons/io5";
 import { MdOutlineRestaurantMenu } from "react-icons/md";
 import { BiPackage } from "react-icons/bi";
 import { IoCalendarOutline } from "react-icons/io5";
-import RestaurantBanner from "@/app/create-order/RestaurantBanner";
+import RestaurantBanner from "@/app/order/RestaurantBanner";
 
 interface ReservationItem {
   reservationName: string;
@@ -152,7 +152,7 @@ const SelectReservationComponents = () => {
                       router.push(
                         `${
                           window.location.origin || companyInfo.webUrl
-                        }/reservation/select-reservation/single-reservation?businessName=${encodeURIComponent(
+                        }/reserve/single-reservation?businessName=${encodeURIComponent(
                           businessName || ""
                         )}&businessID=${businessId}&cooperateID=${cooperateID}`
                       );
@@ -220,7 +220,7 @@ const SelectReservationComponents = () => {
                   setIsMenuOpen(false);
                   const modeParam = isViewOnlyMode ? "&mode=view" : "";
                   router.push(
-                    `/create-order?businessID=${businessId}&cooperateID=${
+                    `/order?businessID=${businessId}&cooperateID=${
                       cooperateID || ""
                     }&businessName=${businessName}${modeParam}`
                   );
@@ -247,7 +247,7 @@ const SelectReservationComponents = () => {
                   onClick={() => {
                     setIsMenuOpen(false);
                     router.push(
-                      `/create-order?businessID=${businessId}&cooperateID=${
+                      `/order?businessID=${businessId}&cooperateID=${
                         cooperateID || ""
                       }&businessName=${businessName}`
                     );

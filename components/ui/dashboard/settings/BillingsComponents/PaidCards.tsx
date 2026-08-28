@@ -26,7 +26,7 @@ export const PaidCards: React.FC<PaidCardsData> = ({
   paystackStatus,
 }) => {
   const userInformation = getJsonItemFromLocalStorage("userInformation");
-  const businessID = userInformation?.businesses[0]?.businessId;
+  const businessID = userInformation?.businesses?.[0]?.businessId;
 
   const [manageSubUrl, setManageSubUrl] = useState<string>("");
   const [triggerIframe, setTriggerIframe] = useState(false);

@@ -21,10 +21,10 @@ const useMenuConfig = (businessIdOutsideApp?: any, cooperateID?: any) => {
   const getMenuConfig = async () => {
     const responseData = await getMenuConfiguration(businessId, cooperateID);
 
-    return responseData?.data?.data as DesignOptions;
+    return (responseData?.data?.data as DesignOptions) ?? null;
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<DesignOptions>({
+  const { data, isLoading, isError, refetch } = useQuery<DesignOptions | null>({
     queryKey: ["menuConfig", businessId, cooperateID],
     queryFn: getMenuConfig,
     enabled: !!businessId,

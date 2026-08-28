@@ -39,7 +39,7 @@ export default function MenuRedirect() {
           }
 
           // Redirect to the full URL
-          const fullUrl = `/create-order?${queryParams.toString()}`;
+          const fullUrl = `/order?${queryParams.toString()}`;
           console.log('Redirecting to:', fullUrl);
           router.replace(fullUrl);
         } else {
