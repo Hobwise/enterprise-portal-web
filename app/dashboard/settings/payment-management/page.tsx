@@ -1,5 +1,7 @@
 "use client";
 import { TermsAndConditionsContent } from "@/app/privacy-policy/TermsAndConditionsContent";
+import useBilling from "@/hooks/cachedEndpoints/useBilling";
+import LockedCardOverlay from "@/components/ui/dashboard/home/LockedCardOverlay";
 
 import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -112,6 +114,10 @@ const BankInitials = ({ name }: { name: string }) => {
 
 const PaymentManagement = () => {
   const { businessId, businessName: defaultBusinessName } = resolveBusiness();
+  const { data: billingData, isLoading: billingLoading } = useBilling();
+  const isSubscriptionActive =
+    billingData?.subscription?.status === 1 ||
+    billingData?.isActive === true;
 
   const [mode, setMode] = useState<Mode>("empty");
   const [loading, setLoading] = useState(true);
@@ -307,7 +313,7 @@ const PaymentManagement = () => {
       try {
         const hasAny = await loadAccounts();
         if (mounted) {
-          if (!hasAny && !hasCheckedTerms.current) {
+          if (!hasAny && !hasCheckedTerms.current && isSubscriptionActive) {
             hasCheckedTerms.current = true;
             onTermsModalOpen();
           }
@@ -1186,7 +1192,7 @@ const PaymentManagement = () => {
     </Modal>
   );
 
-  if (loading) {
+  if (loading || billingLoading) {
     return (
       <div className="flex min-h-[360px] items-center justify-center p-6">
         <Spinner color="secondary" />

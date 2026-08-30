@@ -21,7 +21,7 @@ import {
 } from "./Interfaces";
 
 import { MdVerified } from "react-icons/md";
-import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+import { cn, getJsonItemFromLocalStorage, notify, formatNumber } from "@/lib/utils";
 import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
 import { forceTokenRefresh } from "@/app/api/apiService";
 // import PaystackPop from 'paystack-inline-ts';
@@ -45,7 +45,6 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   const planType = currentSubscriptionDetails?.subscription?.plan;
   const isSubscriptionActive =
     currentSubscriptionDetails?.subscription?.status === 1 ||
-    currentSubscriptionDetails?.subscription?.isActive === true ||
     currentSubscriptionDetails?.isActive === true;
 
   const token = userInformation?.token;
@@ -306,7 +305,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 >
                   {activeTab === "Monthly" && (
                     <p className="font-extrabold text-2xl">
-                      ₦{plan?.monthlyFee}
+                      ₦{formatNumber(plan?.monthlyFee)}
                       <span className="text-[#ACB5BB] font-normal">/month</span>
                     </p>
                   )}
@@ -319,7 +318,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 >
                   {activeTab === "Yearly" && (
                     <p className="font-extrabold text-2xl">
-                      ₦{plan?.yearlyFee}
+                      ₦{formatNumber(plan?.yearlyFee)}
                       <span className="text-[#ACB5BB] font-normal">/year</span>
                     </p>
                   )}
