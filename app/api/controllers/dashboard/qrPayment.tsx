@@ -247,6 +247,18 @@ export async function updateSettlementAccount(
  * — so callers fall through to the payment attempt and surface the real error
  * rather than wrongly telling the business its account is missing.
  */
+export async function getNameEnquiry(
+  accountNumber: string,
+  bankCode: string
+) {
+  try {
+    return await api.get(`${QR_PAYMENT.nameEnquiry}?accountNumber=${accountNumber}&bankCode=${bankCode}`);
+  } catch (error) {
+    handleError(error, false);
+    return (error as any).response;
+  }
+}
+
 export async function hasPaymentAccount(
   businessId: string
 ): Promise<boolean | null> {
