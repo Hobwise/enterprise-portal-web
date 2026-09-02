@@ -14,9 +14,9 @@ interface SubscriptionWarningModalProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  currentPlan: string;
   newPlan: string;
   isLoading?: boolean;
+  isDowngrade?: boolean;
 }
 
 const SubscriptionWarningModal = ({
@@ -26,6 +26,7 @@ const SubscriptionWarningModal = ({
   currentPlan,
   newPlan,
   isLoading = false,
+  isDowngrade = false,
 }: SubscriptionWarningModalProps) => {
   return (
     <Modal 
@@ -46,7 +47,9 @@ const SubscriptionWarningModal = ({
             <ModalBody>
               <div className="space-y-4">
                 <p className="text-base text-gray-700">
-                  You are about to change your subscription plan.
+                  {isDowngrade 
+                    ? "You are about to downgrade your subscription plan." 
+                    : "You are about to change your subscription plan."}
                 </p>
                 <div className="bg-[#EAE5FF] border border-primaryColor rounded-lg p-4">
                   <p className="text-sm font-medium text-gray-900 mb-2">
@@ -55,6 +58,18 @@ const SubscriptionWarningModal = ({
                   <p className="text-sm font-medium text-gray-900 mb-3">
                     New Plan: <span className="font-bold">{newPlan}</span>
                   </p>
+
+                  {isDowngrade && (
+                    <div className="mb-3">
+                      <p className="text-sm font-bold text-red-600 mb-1">Downgrade Limitations:</p>
+                      <ul className="list-disc pl-5 text-sm text-gray-700 space-y-1">
+                        <li>You may lose access to premium features (e.g., Campaigns, advanced Reports).</li>
+                        <li>User limits and location allowances will be reduced to match the {newPlan} plan.</li>
+                        <li>Any data exceeding the new limits might become inaccessible or restricted.</li>
+                      </ul>
+                    </div>
+                  )}
+
                   <p className="text-sm text-primaryColor">
                     <strong>Important:</strong> Your previous {currentPlan} plan will be terminated 
                     immediately upon successful payment. Any unused time on your current plan will 

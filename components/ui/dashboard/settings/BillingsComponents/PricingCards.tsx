@@ -377,6 +377,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           (pendingPlanSelection === 1 ? starterLoading : 
            pendingPlanSelection === 2 ? professionalLoading : 
            premiumLoading) : false}
+        isDowngrade={pendingPlanSelection !== null && planType !== undefined && pendingPlanSelection < planType}
       />
     </div>
   );

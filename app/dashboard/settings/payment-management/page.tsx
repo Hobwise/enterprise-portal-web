@@ -34,7 +34,9 @@ import {
   requestSettlementOtp,
   setDefaultBankAccount,
   updateSettlementAccount,
+  updateBankAccount,
   acceptOnboardTerms,
+  getNameEnquiry,
 } from "@/app/api/controllers/dashboard/qrPayment";
 
 interface BankOption {
@@ -132,6 +134,7 @@ const PaymentManagement = () => {
   const [accountName, setAccountName] = useState<string>(defaultBusinessName);
   const [settlementBank, setSettlementBank] = useState<string>(""); // bank code
   const [accountNumber, setAccountNumber] = useState<string>("");
+  const [isFetchingName, setIsFetchingName] = useState<boolean>(false);
   const [isDefault, setIsDefault] = useState<boolean>(false);
   const [otp, setOtp] = useState<string>("");
   const [reason, setReason] = useState<string>("");
@@ -145,8 +148,11 @@ const PaymentManagement = () => {
     onClose: onTermsModalClose,
   } = useDisclosure();
   const [onboardOtpSent, setOnboardOtpSent] = useState<boolean>(false);
-  // Controls which sub-step is shown inside mode==="form" for new/add-account flows
-  const [formStep, setFormStep] = useState<"bankDetails" | "verifyOtp">("bankDetails");
+  // Controls which sub-step is shown inside mode==="form"
+  // "bankDetails" → fill in details, "verifyOtp" → inline OTP step (new/add), "verifyEditOtp" → inline OTP step (edit)
+  const [formStep, setFormStep] = useState<"bankDetails" | "verifyOtp" | "verifyEditOtp">("bankDetails");
+  // OTP used in the inline edit OTP step
+  const [editInlineOtp, setEditInlineOtp] = useState<string>("");
 
   // Bank search state
   const [bankSearch, setBankSearch] = useState<string>("");
@@ -202,6 +208,44 @@ const PaymentManagement = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Name enquiry effect
+  useEffect(() => {
+    let mounted = true;
+    const fetchAccountName = async () => {
+      if (accountNumber.trim().length === 10 && settlementBank) {
+        setIsFetchingName(true);
+        try {
+          const response = await getNameEnquiry(accountNumber.trim(), settlementBank);
+          if (mounted) {
+            if (succeeded(response) && response?.data?.data?.accountName) {
+              setAccountName(response.data.data.accountName);
+              toast.success("Account name verified");
+            } else {
+              setAccountName("");
+              toast.error(errorOf(response) ?? "Could not verify account name");
+            }
+          }
+        } catch (error) {
+          if (mounted) {
+            setAccountName("");
+            toast.error("An error occurred verifying the account name");
+          }
+        } finally {
+          if (mounted) {
+            setIsFetchingName(false);
+          }
+        }
+      }
+    };
+    
+    // Add a small debounce
+    const timeoutId = setTimeout(fetchAccountName, 500);
+    return () => {
+      mounted = false;
+      clearTimeout(timeoutId);
+    };
+  }, [accountNumber, settlementBank]);
 
   // Edit mode — set when editing an existing account.
   const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
@@ -334,9 +378,18 @@ const PaymentManagement = () => {
     accountName.trim().length > 0 &&
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
-    (editingKind === "settlement" ? (otp.trim().length > 0 && reason.trim().length > 0) : true) &&
-    // For existing accounts being edited, OTP is required; for new onboarding OTP is collected via modal after Proceed
-    (editingAccount ? otp.trim().length > 0 : true) &&
+    !isFetchingName &&
+    (editingKind === "settlement" ? reason.trim().length > 0 : true) &&
+    !submitting;
+
+  // Can proceed from edit bank-details step to send OTP
+  const canProceedEditToOtp =
+    !!editingAccount &&
+    accountName.trim().length > 0 &&
+    settlementBank.length > 0 &&
+    accountNumber.trim().length === 10 &&
+    !isFetchingName &&
+    (editingKind === "settlement" ? reason.trim().length > 0 : true) &&
     !submitting;
 
   // For new onboarding: can proceed to request OTP when bank details are filled
@@ -346,6 +399,7 @@ const PaymentManagement = () => {
     accountName.trim().length > 0 &&
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
+    !isFetchingName &&
     termsAccepted &&
     !submitting;
 
@@ -356,6 +410,7 @@ const PaymentManagement = () => {
     accountName.trim().length > 0 &&
     settlementBank.length > 0 &&
     accountNumber.trim().length === 10 &&
+    !isFetchingName &&
     !submitting;
 
   // Onboard OTP prompt modal.
@@ -490,6 +545,12 @@ const PaymentManagement = () => {
         toast.error(errorOf(response) ?? "Unable to save account. Please try again.");
         return;
       }
+      // If the API returns an account name in the response, prefer it.
+      const returnedName =
+        response?.data?.data?.accountName ||
+        response?.data?.accountName ||
+        response?.data?.data?.settlementAccount?.accountName;
+      if (returnedName) setAccountName(returnedName);
       toast.success(isOnboarded ? "Payment account added successfully" : "Payment account saved successfully");
       setFormStep("bankDetails");
       resetForm();
@@ -506,7 +567,11 @@ const PaymentManagement = () => {
     setIsDefault(false);
     setEditingAccount(null);
     setEditingKind(null);
+    setPendingEditAccount(null);
+    setPendingEditKind(null);
     setOtp("");
+    setEditInlineOtp("");
+    setReason("");
     setTermsAccepted(false);
     setOnboardOtpSent(false);
     setFormStep("bankDetails");
@@ -575,27 +640,37 @@ const PaymentManagement = () => {
     }
   };
 
-  // Step 1 — user clicks the edit pencil: store the target and open the prompt.
+  // User clicks the edit pencil — open the edit form directly with pre-filled data.
+  // OTP is only requested after the user fills/updates their details and clicks "Continue to Verify".
   const openEditForm = (account: BankAccount, kind: EditKind) => {
     setPendingEditAccount(account);
     setPendingEditKind(kind);
+    setEditingAccount(account);
+    setEditingKind(kind);
+    setAccountName(account.accountName ?? defaultBusinessName);
+    setSettlementBank(account.bankCode ?? account.settlementBank ?? "");
+    setAccountNumber(account.accountNumber ?? "");
+    setIsDefault(!!account.isDefault);
+    setReason("");
     setOtp("");
-    onOtpPromptOpen();
+    setEditInlineOtp("");
+    setFormStep("bankDetails");
+    setMode("form");
   };
 
-  // Step 2 — user clicks "Send OTP" in the prompt modal.
-  const handleSendEditOtp = async () => {
-    if (!pendingEditAccount || !pendingEditKind) return;
+  // "Continue to Verify" clicked in edit form — send OTP then move to inline OTP step.
+  const handleProceedEditToOtp = async () => {
+    if (!editingAccount || !editingKind) return;
     setSendingOtp(true);
     try {
-      if (pendingEditKind === "settlement") {
+      if (editingKind === "settlement") {
         const response = await requestSettlementOtp(businessId);
         if (!succeeded(response)) {
           toast.error(errorOf(response) ?? "Unable to request OTP. Please try again.");
           return;
         }
       } else {
-        const accountId = accountIdOf(pendingEditAccount);
+        const accountId = accountIdOf(editingAccount);
         if (!accountId) {
           toast.error("Account ID missing.");
           return;
@@ -607,27 +682,27 @@ const PaymentManagement = () => {
         }
       }
       toast.success("OTP sent to your registered email.");
-      onOtpPromptClose();
+      setEditInlineOtp("");
       startResendCountdown();
-      onOtpEntryOpen();
+      setFormStep("verifyEditOtp");
     } finally {
       setSendingOtp(false);
     }
   };
 
-  // Resend OTP (inside the entry modal).
+  // Resend OTP from the inline edit OTP step.
   const handleResendEditOtp = async () => {
-    if (resendCountdown > 0 || !pendingEditKind || !pendingEditAccount) return;
+    if (resendCountdown > 0 || !editingKind || !editingAccount) return;
     setSendingOtp(true);
     try {
-      if (pendingEditKind === "settlement") {
+      if (editingKind === "settlement") {
         const response = await requestSettlementOtp(businessId);
         if (!succeeded(response)) {
           toast.error(errorOf(response) ?? "Unable to resend OTP. Please try again.");
           return;
         }
       } else {
-        const accountId = accountIdOf(pendingEditAccount);
+        const accountId = accountIdOf(editingAccount);
         if (!accountId) return;
         const response = await requestBankAccountOtp(businessId, accountId);
         if (!succeeded(response)) {
@@ -636,29 +711,54 @@ const PaymentManagement = () => {
         }
       }
       toast.success("OTP resent to your registered email.");
-      setOtp("");
+      setEditInlineOtp("");
       startResendCountdown();
     } finally {
       setSendingOtp(false);
     }
   };
 
-  // Step 3 — user enters OTP and clicks "Verify & Continue".
-  const handleVerifyEditOtp = () => {
-    if (!pendingEditAccount || !pendingEditKind) return;
-    if (otp.trim().length === 0) {
+  // Verify the inline edit OTP and submit the updated account details.
+  const handleVerifyEditOtpAndSubmit = async () => {
+    if (editInlineOtp.trim().length === 0) {
       toast.error("Please enter the OTP sent to your email.");
       return;
     }
-    // Populate the edit form with the pending account's data.
-    setEditingAccount(pendingEditAccount);
-    setEditingKind(pendingEditKind);
-    setAccountName(pendingEditAccount.accountName ?? defaultBusinessName);
-    setSettlementBank(pendingEditAccount.bankCode ?? pendingEditAccount.settlementBank ?? "");
-    setAccountNumber(pendingEditAccount.accountNumber ?? "");
-    setIsDefault(!!pendingEditAccount.isDefault);
-    onOtpEntryClose();
-    setMode("form");
+    setSubmitting(true);
+    try {
+      const bankName =
+        bankOptions.find((bank) => bank.value === settlementBank)?.label ?? settlementBank;
+      let response;
+      if (editingKind === "settlement") {
+        response = await updateSettlementAccount(businessId, {
+          settlementBank,
+          accountNumber: accountNumber.trim(),
+          reason,
+          otp: editInlineOtp.trim(),
+        });
+      } else {
+        const oldId = accountIdOf(editingAccount!);
+        if (oldId) {
+          response = await updateBankAccount(businessId, oldId, {
+            accountNumber: accountNumber.trim(),
+            accountName: accountName.trim(),
+            bankName,
+            bankCode: settlementBank,
+            isDefault,
+            otp: editInlineOtp.trim(),
+          });
+        }
+      }
+      if (!succeeded(response)) {
+        toast.error(errorOf(response) ?? "Unable to save account. Please try again.");
+        return;
+      }
+      toast.success("Account updated successfully");
+      resetForm();
+      await loadAccounts();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // The settlement account stores only the bank code, so resolve a display name
@@ -669,75 +769,11 @@ const PaymentManagement = () => {
     return bankOptions.find((bank) => bank.value === code)?.label ?? code ?? "";
   };
 
+  // handleSubmit is now only used for the legacy path (should not be reached in normal flow).
   const handleSubmit = async () => {
     if (!canSubmit) return;
-
-    const bankName =
-      bankOptions.find((bank) => bank.value === settlementBank)?.label ??
-      settlementBank;
-    const trimmedNumber = accountNumber.trim();
-
-    setSubmitting(true);
-    try {
-      let response;
-
-      if (editingAccount && editingKind === "settlement") {
-        response = await updateSettlementAccount(businessId, {
-          settlementBank,
-          accountNumber: trimmedNumber,
-          reason,
-          otp: otp.trim(),
-        });
-      } else if (editingAccount) {
-        // No update endpoint — add the new version, then remove the old one
-        // only once the add has succeeded so nothing is lost on failure.
-        response = await addBankAccount(businessId, {
-          accountNumber: trimmedNumber,
-          accountName: accountName.trim(),
-          bankName,
-          bankCode: settlementBank,
-          isDefault,
-          otp: otp.trim(),
-        });
-        const oldId = accountIdOf(editingAccount);
-        if (succeeded(response) && oldId) {
-          await deleteBankAccount(businessId, oldId);
-        }
-      } else if (isOnboarded) {
-        response = await addBankAccount(businessId, {
-          accountNumber: trimmedNumber,
-          accountName: accountName.trim(),
-          bankName,
-          bankCode: settlementBank,
-          isDefault,
-          otp: otp.trim(),
-        });
-      } else {
-        response = await onboardBusiness(businessId, {
-          settlementBank,
-          accountNumber: trimmedNumber,
-          otp: otp.trim(),
-          termsAccepted: true,
-        });
-      }
-
-      if (!succeeded(response)) {
-        toast.error(
-          errorOf(response) ?? "Unable to save account. Please try again."
-        );
-        return;
-      }
-
-      toast.success(
-        editingAccount
-          ? "Account updated successfully"
-          : "Payment account saved successfully"
-      );
-      resetForm();
-      await loadAccounts();
-    } finally {
-      setSubmitting(false);
-    }
+    // Edit mode is handled by handleVerifyEditOtpAndSubmit; this path is kept as a fallback.
+    toast.error("Unexpected state. Please try again.");
   };
 
   const handleToggleDefault = async (account: BankAccount) => {
@@ -1315,59 +1351,67 @@ const PaymentManagement = () => {
 
   // Create/add/edit account form.
   if (mode === "form") {
-    const isOtpStep = formStep === "verifyOtp" && !editingAccount;
+  // In editing mode: bankDetails → fill form, verifyEditOtp → OTP step
+  // In new/add mode: bankDetails → fill form, verifyOtp → OTP step
+  const isOtpStep = formStep === "verifyOtp" && !editingAccount;
+  const isEditOtpStep = formStep === "verifyEditOtp" && !!editingAccount;
+  const showOtpUI = isOtpStep || isEditOtpStep;
 
-    const heading = editingAccount
-      ? "Edit payment account"
-      : isOtpStep
-      ? "Verify your identity"
-      : isOnboarded
-      ? "Add a payment account"
-      : "Onboard Settlement Account";
+  const heading = isEditOtpStep
+    ? "Verify your identity"
+    : editingAccount
+    ? "Edit payment account"
+    : isOtpStep
+    ? "Verify your identity"
+    : isOnboarded
+    ? "Add a payment account"
+    : "Onboard Settlement Account";
 
-    const subHeading = editingAccount
-      ? "Update your payment account details for settlements."
-      : isOtpStep
-      ? "Enter the one-time password sent to your registered email."
-      : "Provide your bank details to receive settlements securely.";
+  const subHeading = isEditOtpStep
+    ? "Enter the one-time password sent to your registered email to confirm changes."
+    : editingAccount
+    ? "Update your payment account details for settlements."
+    : isOtpStep
+    ? "Enter the one-time password sent to your registered email."
+    : "Provide your bank details to receive settlements securely.";
 
     return (
       <>
         <div className="p-6 sm:p-8">
           <div className="mx-auto max-w-2xl">
 
-            {/* ── Step Indicator ── */}
-            {!editingAccount && (
+            {/* ── Step Indicator (shown for new/add and for editing) ── */}
+            {(
               <div className="mb-8 flex items-center gap-0">
                 {/* Step 1 */}
                 <div className="flex flex-1 flex-col items-center gap-1.5">
                   <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shadow-sm ${
-                    isOtpStep
+                    showOtpUI
                       ? "border-2 border-primaryColor bg-white text-primaryColor"
                       : "bg-primaryColor text-white"
                   }`}>
-                    {isOtpStep ? (
+                    {showOtpUI ? (
                       <svg className="h-4 w-4" viewBox="0 0 16 16" fill="none">
                         <path d="M3 8l3.5 3.5 6.5-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     ) : "1"}
                   </div>
-                  <span className={`text-xs font-semibold ${isOtpStep ? "text-[#98A2B3]" : "text-primaryColor"}`}>
-                    Bank Details
+                  <span className={`text-xs font-semibold ${showOtpUI ? "text-[#98A2B3]" : "text-primaryColor"}`}>
+                    {editingAccount ? "Edit Details" : "Bank Details"}
                   </span>
                 </div>
                 {/* Connector */}
-                <div className={`mb-5 h-px flex-1 transition-colors ${isOtpStep ? "bg-primaryColor" : "bg-gradient-to-r from-primaryColor to-[#E4E7EC]"}`} />
+                <div className={`mb-5 h-px flex-1 transition-colors ${showOtpUI ? "bg-primaryColor" : "bg-gradient-to-r from-primaryColor to-[#E4E7EC]"}`} />
                 {/* Step 2 */}
                 <div className="flex flex-1 flex-col items-center gap-1.5">
                   <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shadow-sm ${
-                    isOtpStep
+                    showOtpUI
                       ? "bg-primaryColor text-white"
                       : "border-2 border-[#E4E7EC] bg-white text-[#98A2B3]"
                   }`}>
                     2
                   </div>
-                  <span className={`text-xs font-semibold ${isOtpStep ? "text-primaryColor" : "text-[#98A2B3]"}`}>
+                  <span className={`text-xs font-semibold ${showOtpUI ? "text-primaryColor" : "text-[#98A2B3]"}`}>
                     Verify OTP
                   </span>
                 </div>
@@ -1376,8 +1420,8 @@ const PaymentManagement = () => {
 
             {/* ── Header ── */}
             <div className="mb-7 flex items-start gap-4">
-              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${isOtpStep ? "bg-purple-100" : "bg-purple-100"}`}>
-                {isOtpStep
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-purple-100">
+                {showOtpUI
                   ? <ShieldCheck className="h-6 w-6 text-primaryColor" />
                   : <CreditCard className="h-6 w-6 text-primaryColor" />
                 }
@@ -1388,8 +1432,8 @@ const PaymentManagement = () => {
               </div>
             </div>
 
-            {/* ── OTP Step (Step 2) ── */}
-            {isOtpStep ? (
+            {/* ── OTP Step (new/add or edit) ── */}
+            {showOtpUI ? (
               <>
                 <div className="rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
                   {/* Section label */}
@@ -1415,9 +1459,11 @@ const PaymentManagement = () => {
                         name="onboard-otp"
                         label="Enter OTP"
                         placeholder="e.g. 123456"
-                        value={onboardOtp}
+                        value={isEditOtpStep ? editInlineOtp : onboardOtp}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          setOnboardOtp(e.target.value.replace(/\D/g, "").slice(0, 6).trim())
+                          isEditOtpStep
+                            ? setEditInlineOtp(e.target.value.replace(/\D/g, "").slice(0, 6).trim())
+                            : setOnboardOtp(e.target.value.replace(/\D/g, "").slice(0, 6).trim())
                         }
                       />
                       <p className="mt-1.5 text-xs text-[#98A2B3]">
@@ -1428,18 +1474,18 @@ const PaymentManagement = () => {
                     {/* Resend */}
                     <div className="flex items-center gap-1.5 text-sm">
                       <span className="text-[#667085]">Didn&apos;t receive it?</span>
-                      {onboardResendCountdown > 0 ? (
+                      {(isEditOtpStep ? resendCountdown : onboardResendCountdown) > 0 ? (
                         <span className="text-[#98A2B3]">
-                          Resend in <span className="font-semibold text-primaryColor">{onboardResendCountdown}s</span>
+                          Resend in <span className="font-semibold text-primaryColor">{isEditOtpStep ? resendCountdown : onboardResendCountdown}s</span>
                         </span>
                       ) : (
                         <button
                           type="button"
-                          onClick={handleOnboardResendOtp}
-                          disabled={submitting}
+                          onClick={isEditOtpStep ? handleResendEditOtp : handleOnboardResendOtp}
+                          disabled={submitting || sendingOtp}
                           className="font-semibold text-primaryColor transition-opacity hover:opacity-70 disabled:opacity-40"
                         >
-                          {submitting ? "Sending…" : "Resend OTP"}
+                          {(submitting || sendingOtp) ? "Sending…" : "Resend OTP"}
                         </button>
                       )}
                     </div>
@@ -1466,17 +1512,18 @@ const PaymentManagement = () => {
                     onClick={() => {
                       setFormStep("bankDetails");
                       setOnboardOtp("");
+                      setEditInlineOtp("");
                     }}
                   >
                     ← Back
                   </CustomButton>
                   <CustomButton
                     className="h-11 flex-1 max-w-[240px] px-6 text-sm font-semibold text-white shadow-sm"
-                    disabled={onboardOtp.trim().length === 0}
+                    disabled={isEditOtpStep ? editInlineOtp.trim().length === 0 : onboardOtp.trim().length === 0}
                     loading={submitting}
-                    onClick={handleOnboardVerifyAndSubmit}
+                    onClick={isEditOtpStep ? handleVerifyEditOtpAndSubmit : handleOnboardVerifyAndSubmit}
                   >
-                    Verify &amp; Complete
+                    {isEditOtpStep ? "Verify & Save" : "Verify & Complete"}
                   </CustomButton>
                 </div>
               </>
@@ -1499,14 +1546,22 @@ const PaymentManagement = () => {
                         type="text"
                         name="accountName"
                         label="Account Name"
-                        placeholder="e.g. John Doe"
-                        value={accountName}
+                        placeholder={isFetchingName ? "Verifying account name..." : "e.g. John Doe"}
+                        value={isFetchingName ? "" : accountName}
+                        disabled={true}
                         onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                           setAccountName(e.target.value)
                         }
                       />
                       <p className="mt-1.5 text-xs text-[#98A2B3]">
-                        This should match the name on your bank account exactly.
+                        {isFetchingName ? (
+                          <span className="flex items-center gap-2 text-primaryColor">
+                            <Spinner size="sm" color="secondary" className="scale-75" />
+                            Verifying account details...
+                          </span>
+                        ) : (
+                          "Account name is automatically fetched from your bank."
+                        )}
                       </p>
                     </div>
 
@@ -1723,13 +1778,15 @@ const PaymentManagement = () => {
                       Continue to Verify →
                     </CustomButton>
                   ) : (
+                    // Edit mode: proceed to OTP after filling details
                     <CustomButton
+                      type="button"
                       className="h-11 flex-1 max-w-[240px] px-6 text-sm font-semibold text-white shadow-sm"
-                      disabled={!canSubmit}
-                      loading={submitting}
-                      onClick={handleSubmit}
+                      disabled={!canProceedEditToOtp || sendingOtp}
+                      loading={sendingOtp}
+                      onClick={handleProceedEditToOtp}
                     >
-                      Save Changes
+                      Continue to Verify →
                     </CustomButton>
                   )}
                 </div>
@@ -1951,147 +2008,10 @@ const PaymentManagement = () => {
         </ModalContent>
       </Modal>
 
-      {/* ── Step 1: OTP prompt modal ── */}
-      <Modal
-        isOpen={isOtpPromptOpen}
-        onOpenChange={onOtpPromptOpenChange}
-        placement="center"
-        classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
-      >
-        <ModalContent>
-          {(close) => (
-            <>
-              <ModalHeader className="px-6 pb-0 pt-6" />
-              <ModalBody className="px-6 py-4">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50">
-                    <Mail className="h-7 w-7 text-primaryColor" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold text-[#101928]">
-                      Verify your identity
-                    </h3>
-                    <p className="text-sm leading-relaxed text-[#475467]">
-                      To edit this payment account, we'll send a one-time password
-                      (OTP) to your registered email address. Please confirm to
-                      continue.
-                    </p>
-                  </div>
-                  <div className="w-full rounded-lg border border-[#E4E7EC] bg-[#F9FAFB] px-4 py-3 text-left">
-                    <p className="text-xs text-[#667085]">Account</p>
-                    <p className="mt-0.5 text-sm font-medium text-[#101928]">
-                      {pendingEditAccount?.accountName}
-                    </p>
-                    <p className="text-xs text-[#667085]">
-                      {pendingEditAccount?.accountNumber}
-                    </p>
-                  </div>
-                </div>
-              </ModalBody>
-              <ModalFooter className="gap-3 px-6 pb-6 pt-2">
-                <CustomButton
-                  className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
-                  backgroundColor="bg-white"
-                  disabled={sendingOtp}
-                  onClick={close}
-                >
-                  Cancel
-                </CustomButton>
-                <CustomButton
-                  className="h-[44px] w-full font-semibold text-white"
-                  loading={sendingOtp}
-                  onClick={handleSendEditOtp}
-                >
-                  Send OTP
-                </CustomButton>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-
-      {/* ── Step 2: OTP entry modal ── */}
-      <Modal
-        isOpen={isOtpEntryOpen}
-        onOpenChange={onOtpEntryOpenChange}
-        placement="center"
-        classNames={{ closeButton: "top-4 right-4 text-[#667085]" }}
-      >
-        <ModalContent>
-          {() => (
-            <>
-              <ModalHeader className="px-6 pb-0 pt-6" />
-              <ModalBody className="px-6 py-4">
-                <div className="flex flex-col items-center gap-4 text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-50">
-                    <ShieldCheck className="h-7 w-7 text-primaryColor" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-lg font-semibold text-[#101928]">
-                      Enter OTP
-                    </h3>
-                    <p className="text-sm leading-relaxed text-[#475467]">
-                      A one-time password has been sent to your registered email.
-                      Enter it below to proceed with editing.
-                    </p>
-                  </div>
-                  <div className="w-full">
-                    <CustomInput
-                      type="text"
-                      name="edit-otp"
-                      label="One-Time Password"
-                      placeholder="Enter OTP"
-                      value={otp}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        setOtp(e.target.value.trim())
-                      }
-                    />
-                    {/* Resend link */}
-                    <div className="mt-3 flex items-center justify-center gap-1 text-sm">
-                      <span className="text-[#667085]">Didn&apos;t receive it?</span>
-                      {resendCountdown > 0 ? (
-                        <span className="text-[#98A2B3]">
-                          Resend in <span className="font-semibold text-primaryColor">{resendCountdown}s</span>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={handleResendEditOtp}
-                          disabled={sendingOtp}
-                          className="font-semibold text-primaryColor transition-opacity hover:opacity-70 disabled:opacity-40"
-                        >
-                          {sendingOtp ? "Sending…" : "Resend OTP"}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </ModalBody>
-              <ModalFooter className="gap-3 px-6 pb-6 pt-2">
-                <CustomButton
-                  className="h-[44px] w-full border border-[#E4E7EC] font-semibold text-[#344054]"
-                  backgroundColor="bg-white"
-                  disabled={verifyingOtp}
-                  onClick={() => { onOtpEntryClose(); setOtp(""); }}
-                >
-                  Cancel
-                </CustomButton>
-                <CustomButton
-                  className="h-[44px] w-full font-semibold text-white"
-                  disabled={otp.trim().length === 0}
-                  loading={verifyingOtp}
-                  onClick={handleVerifyEditOtp}
-                >
-                  Verify &amp; Continue
-                </CustomButton>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
       {onboardOtpModal}
       {termsModal}
     </div>
+
   );
 };
 
