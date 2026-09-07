@@ -1641,7 +1641,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenRefund}
         orderId={singleOrder?.id || ""}
         totalAmount={singleOrder?.totalAmount || 0}
-        maxRefundAmount={singleOrder?.amountPaid || 0}
+        maxRefundAmount={
+          singleOrder?.amountPaid !== undefined && singleOrder.amountPaid > 0
+            ? singleOrder.amountPaid
+            : singleOrder?.amountRemaining !== undefined
+            ? Math.max(0, (singleOrder?.totalAmount || 0) - singleOrder.amountRemaining)
+            : singleOrder?.totalAmount || 0
+        }
         isVatApplied={singleOrder?.isVatApplied ?? false}
         vatPercentage={singleOrder?.vatRate ?? 0}
         onSuccess={() => {
