@@ -26,9 +26,10 @@ export interface PlanDetails {
 interface PlanFeatureListProps {
   plan: PlanDetails;
   handleIcons: (value: boolean) => React.ReactNode;
+  isPremium?: boolean;
 }
 
-const FeatureList: React.FC<PlanFeatureListProps> = ({ plan, handleIcons }) => {
+const FeatureList: React.FC<PlanFeatureListProps> = ({ plan, handleIcons, isPremium }) => {
   const enabledFeatures = Object.entries(plan)
     .filter(([key, value]) => key.startsWith("canAccess") && value === true)
     .map(([key]) => ({
@@ -40,7 +41,11 @@ const FeatureList: React.FC<PlanFeatureListProps> = ({ plan, handleIcons }) => {
     <div className="flex flex-col gap-2">
       <div className="flex flex-row gap-3 items-center">
         {handleIcons(true)}
-        <p className="text-sm">Maximum users - Unlimited users</p>
+        <p className="text-sm">
+          {isPremium
+            ? "Maximum users - Unlimited users"
+            : `Maximum users - Up to ${plan.maxUsers} users`}
+        </p>
       </div>
 
       {enabledFeatures.map((feature) => (

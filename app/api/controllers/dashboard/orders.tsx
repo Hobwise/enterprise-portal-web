@@ -523,13 +523,17 @@ export async function getPaymentSummary(orderId: string) {
 }
 
 interface RefundPayload {
-  refundAmount: number;
   reason: string;
   treatedBy: string;
   treatedById: string;
   paymentReference: string;
+  systemReference: string;
   paymentMethod: number;
-   systemReference: number;
+  orderDetails: any[];
+  totalAmount: number;
+  refundAmount: number;
+  isVatApplied: boolean;
+  vatPercentage: number;
 }
 
 // Function to process refund

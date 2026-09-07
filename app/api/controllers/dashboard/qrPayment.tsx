@@ -28,6 +28,8 @@ export interface BankAccountsData {
 export interface OnboardBusinessPayload {
   settlementBank: string; // bank code from getBanks()
   accountNumber: string;
+  accountName?: string;
+  bankName?: string;
   otp?: string;
   termsAccepted?: boolean;
 }
@@ -227,7 +229,7 @@ export async function requestBankAccountOtp(businessId: string, accountId?: stri
 /** Updates the business settlement account using an OTP. */
 export async function updateSettlementAccount(
   businessId: string,
-  payload: { settlementBank: string; accountNumber: string; reason: string; otp: string }
+  payload: { settlementBank: string; accountNumber: string; accountName?: string; reason: string; otp: string }
 ) {
   try {
     return await api.put(QR_PAYMENT.updateSettlement, payload, {

@@ -339,6 +339,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 <FeatureList
                   plan={plan!}
                   handleIcons={(value) => handleIcons(value)}
+                  isPremium={index === 2}
                 />
               )}
 

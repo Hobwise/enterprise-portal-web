@@ -131,7 +131,7 @@ const PaymentManagement = () => {
   const [bankOptions, setBankOptions] = useState<BankOption[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  const [accountName, setAccountName] = useState<string>(defaultBusinessName);
+  const [accountName, setAccountName] = useState<string>("");
   const [settlementBank, setSettlementBank] = useState<string>(""); // bank code
   const [accountNumber, setAccountNumber] = useState<string>("");
   const [isFetchingName, setIsFetchingName] = useState<boolean>(false);
@@ -218,8 +218,9 @@ const PaymentManagement = () => {
         try {
           const response = await getNameEnquiry(accountNumber.trim(), settlementBank);
           if (mounted) {
-            if (succeeded(response) && response?.data?.data?.accountName) {
-              setAccountName(response.data.data.accountName);
+            const verifiedName = response?.data?.data?.accountName || response?.data?.accountName;
+            if (succeeded(response) && verifiedName) {
+              setAccountName(verifiedName);
               toast.success("Account name verified");
             } else {
               setAccountName("");
@@ -537,6 +538,8 @@ const PaymentManagement = () => {
         response = await onboardBusiness(businessId, {
           settlementBank,
           accountNumber: accountNumber.trim(),
+          accountName: accountName.trim(),
+          bankName,
           otp: onboardOtp.trim(),
           termsAccepted: true,
         });
@@ -561,7 +564,7 @@ const PaymentManagement = () => {
   };
 
   const resetForm = () => {
-    setAccountName(defaultBusinessName);
+    setAccountName("");
     setSettlementBank("");
     setAccountNumber("");
     setIsDefault(false);
@@ -647,7 +650,7 @@ const PaymentManagement = () => {
     setPendingEditKind(kind);
     setEditingAccount(account);
     setEditingKind(kind);
-    setAccountName(account.accountName ?? defaultBusinessName);
+    setAccountName(account.accountName ?? "");
     setSettlementBank(account.bankCode ?? account.settlementBank ?? "");
     setAccountNumber(account.accountNumber ?? "");
     setIsDefault(!!account.isDefault);
@@ -733,6 +736,7 @@ const PaymentManagement = () => {
         response = await updateSettlementAccount(businessId, {
           settlementBank,
           accountNumber: accountNumber.trim(),
+          accountName: accountName.trim(),
           reason,
           otp: editInlineOtp.trim(),
         });
@@ -1233,6 +1237,58 @@ const PaymentManagement = () => {
       <div className="flex min-h-[360px] items-center justify-center p-6">
         <Spinner color="secondary" />
       </div>
+    );
+  }
+
+  // ── Subscription gate — lock the page for non-subscribed users ──
+  if (!isSubscriptionActive) {
+    return (
+      <LockedCardOverlay>
+        <div className="space-y-6 p-6 sm:p-8 min-h-[500px]">
+          {/* Page Header placeholder */}
+          <div className="flex items-start justify-between gap-4 border-b border-[#F0F2F5] pb-6">
+            <div>
+              <h2 className="text-lg font-semibold text-[#101928]">Payment Accounts</h2>
+              <p className="mt-1 max-w-lg text-sm leading-relaxed text-[#667085]">
+                Manage the bank accounts where Hobwise sends your settlements. Your{" "}
+                <span className="font-medium text-[#344054]">Settlement Account</span> receives
+                automatic payouts, while{" "}
+                <span className="font-medium text-[#344054]">Other Accounts</span> can be
+                used as alternate payment destinations.
+              </p>
+            </div>
+          </div>
+
+          {/* Placeholder cards */}
+          <div className="overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-[#F0F2F5] bg-[#F9FAFB] px-5 py-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                Primary Settlement
+              </span>
+            </div>
+            <div className="flex items-start gap-4 p-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-purple-100 text-sm font-bold text-primaryColor uppercase">
+                BA
+              </div>
+              <div className="flex-1 space-y-1 min-w-0">
+                <p className="text-base font-semibold text-[#101928]">Bank Account Name</p>
+                <p className="text-sm text-[#667085]">Bank Name</p>
+                <p className="font-mono text-sm font-medium tracking-wider text-[#344054]">●●●● ●●●● ●●</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border border-[#E4E7EC] bg-white shadow-sm">
+            <div className="flex items-center justify-between gap-3 border-b border-[#F0F2F5] bg-[#F9FAFB] px-5 py-3">
+              <h3 className="text-sm font-semibold text-[#344054]">Other Payment Accounts</h3>
+            </div>
+            <div className="flex items-center justify-center p-8 text-sm text-[#98A2B3]">
+              No additional accounts
+            </div>
+          </div>
+        </div>
+      </LockedCardOverlay>
     );
   }
 
