@@ -268,15 +268,6 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
       return;
     }
 
-    if (totalRefundAmount > maxRefundAmount) {
-      notify({
-        title: "Validation Error",
-        text: "Refund amount exceeds the maximum refundable amount for this order",
-        type: "error",
-      });
-      return;
-    }
-
     setStep(2);
   };
 
@@ -295,15 +286,6 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
       notify({
         title: "Validation Error",
         text: "Please provide a reason for the refund",
-        type: "error",
-      });
-      return;
-    }
-
-    if (totalRefundAmount > maxRefundAmount) {
-      notify({
-        title: "Validation Error",
-        text: "Refund amount exceeds the maximum refundable amount for this order",
         type: "error",
       });
       return;
@@ -538,22 +520,18 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                     </div>
                   )}
 
-                  {maxRefundAmount < totalRefundAmount && (
+                  {/* {maxRefundAmount < totalRefundAmount && (
                     <p className="text-xs text-red-500 mt-2">
                       Refund amount ({formatPrice(totalRefundAmount, "NGN")})
                       exceeds paid amount ({formatPrice(maxRefundAmount, "NGN")}
-                      )
+                      ) 
                     </p>
-                  )}
+                  )} */}
 
                   <Spacer y={4} />
 
                   <CustomButton
                     onClick={handleContinue}
-                    disabled={
-                      itemsRefundAmount <= 0 ||
-                      totalRefundAmount > maxRefundAmount
-                    }
                     className="w-full bg-primaryColor py-6 text-white"
                     backgroundColor="bg-primaryColor"
                   >

@@ -29,8 +29,8 @@ interface ReservationData {
 const SelectReservationComponents = () => {
   const searchParams = useSearchParams();
   let businessName = searchParams.get("businessName");
-  let businessId = searchParams.get("businessID"); // Changed from 'businessId' to 'businessID'
-  let cooperateID = searchParams.get("cooperateID");
+  let businessId = searchParams.get("businessID") || searchParams.get("businessId"); // Support both casing conventions
+  let cooperateID = searchParams.get("cooperateID") || searchParams.get("cooperateId");
   const mode = searchParams.get("mode"); // Check for view-only mode
   const router = useRouter();
 
