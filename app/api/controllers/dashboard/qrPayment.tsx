@@ -16,6 +16,12 @@ export interface BankAccount {
   /** Present on the settlement account, which stores the bank code here. */
   settlementBank?: string;
   isDefault?: boolean;
+  /** Bank-verified account holder name (may differ from accountName). */
+  resolvedAccountName?: string;
+  /** Alternative field for the bank-verified account holder name. */
+  name?: string;
+  /** Verified account name from name enquiry. */
+  verifiedAccountName?: string;
 }
 
 export interface BankAccountsData {

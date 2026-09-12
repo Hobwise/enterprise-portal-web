@@ -11,8 +11,8 @@ const SingleReservationComponent = () => {
   const singleReservation = getJsonItemFromLocalStorage('singleReservation');
   const searchParams = useSearchParams();
   const reservationId: string = searchParams.get('reservationId') || '';
-  const businessId = searchParams.get('businessID');
-  const cooperateID = searchParams.get('cooperateID');
+  const businessId = searchParams.get('businessID') || searchParams.get('businessId');
+  const cooperateID = searchParams.get('cooperateID') || searchParams.get('cooperateId');
   const businessName = searchParams.get("businessName");
 
   // Fetch menu config for customer pages

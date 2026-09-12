@@ -773,6 +773,10 @@ const PaymentManagement = () => {
     return bankOptions.find((bank) => bank.value === code)?.label ?? code ?? "";
   };
 
+  const resolveAccountName = (account: BankAccount): string => {
+    return account.resolvedAccountName ?? account.verifiedAccountName ?? account.name ?? account.accountName;
+  };
+
   // handleSubmit is now only used for the legacy path (should not be reached in normal flow).
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -1243,7 +1247,7 @@ const PaymentManagement = () => {
   // ── Subscription gate — lock the page for non-subscribed users ──
   if (!isSubscriptionActive) {
     return (
-      <LockedCardOverlay>
+      <LockedCardOverlay planLabel="Basic, Professional & Premium Plan">
         <div className="space-y-6 p-6 sm:p-8 min-h-[500px]">
           {/* Page Header placeholder */}
           <div className="flex items-start justify-between gap-4 border-b border-[#F0F2F5] pb-6">
@@ -1897,7 +1901,7 @@ const PaymentManagement = () => {
           <div className="flex items-start gap-4 p-5">
             <BankInitials name={resolveBankName(settlementAccount)} />
             <div className="flex-1 space-y-1 min-w-0">
-              <p className="text-base font-semibold text-[#101928] truncate">{settlementAccount.accountName}</p>
+              <p className="text-base font-semibold text-[#101928] truncate">{resolveAccountName(settlementAccount)}</p>
               <p className="text-sm text-[#667085] truncate">{resolveBankName(settlementAccount)}</p>
               <p className="font-mono text-sm font-medium tracking-wider text-[#344054]">{settlementAccount.accountNumber}</p>
             </div>
@@ -1954,7 +1958,7 @@ const PaymentManagement = () => {
                   <div className="flex items-center gap-3 min-w-0">
                     <BankInitials name={resolveBankName(account)} />
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-[#101928] truncate">{account.accountName}</p>
+                      <p className="text-sm font-semibold text-[#101928] truncate">{resolveAccountName(account)}</p>
                       <p className="text-xs text-[#667085] truncate">{resolveBankName(account)}</p>
                     </div>
                   </div>

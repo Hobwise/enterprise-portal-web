@@ -53,8 +53,8 @@ const CreateOrder = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   let businessName = searchParams.get("businessName") || "";
-  let businessId = searchParams.get("businessID");
-  let cooperateID = searchParams.get("cooperateID");
+  let businessId = searchParams.get("businessID") || searchParams.get("businessId");
+  let cooperateID = searchParams.get("cooperateID") || searchParams.get("cooperateId");
   let qrId = searchParams.get("id");
   const mode = searchParams.get("mode");
 
