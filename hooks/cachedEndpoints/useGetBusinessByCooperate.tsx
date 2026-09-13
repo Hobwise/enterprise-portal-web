@@ -19,7 +19,7 @@ const useGetBusinessByCooperate = () => {
     const responseData = await getBusinesByCooperate(
       businessInformation[0].businessId
     );
-    return responseData?.data?.data as any;
+    return responseData?.data?.data ?? [];
   };
 
   const { data, isLoading, isError, refetch } = useQuery<any>({

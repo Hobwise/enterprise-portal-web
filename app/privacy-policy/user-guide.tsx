@@ -13,7 +13,7 @@ export default function UserGuide() {
     "Bills and Subscription",
   ];
   return (
-    <div className="w-full flex space-x-4 px-4 lg:px-10 font-satoshi pt-[32%] lg:pt-[10%]">
+    <div className="w-full flex space-x-4 px-4 lg:px-10 font-satoshi pt-44 lg:pt-36">
       <div className="w-[20%] border-r border-r-[#C4C4C480] py-8 space-y-8 fixed h-screen hidden lg:block">
         {items.map((each) => (
           <a href={`#${each}`} className="py-8">

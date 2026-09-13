@@ -35,24 +35,23 @@ interface AllBookingsData {
 const useAllBookingsData = (
   page: number = 1,
   rowsPerPage: number = 10,
-  // Maintain parameter count for hook stability
+  activeCategory?: string,
   _filterType?: number,
   _startDate?: string,
   _endDate?: string
 ) => {
   const queryClient = useQueryClient();
   const businessInformation = getJsonItemFromLocalStorage("business");
-  const [categoryDetails, setCategoryDetails] = useState<Record<string, any>>({});
-  const [isLoadingAll, setIsLoadingAll] = useState(false);
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
 
-  // First, fetch categories
+  // 1. Fetch categories (tab names + counts)
   const { 
     data: categoriesData, 
     isLoading: isLoadingCategories,
     isError: isCategoriesError,
     refetch: refetchCategories
   } = useQuery({
-    queryKey: ['bookingCategories', { page, rowsPerPage }],
+    queryKey: ['bookingCategories'],
     queryFn: async () => {
       const response = await getBookingCategories(
         businessInformation[0]?.businessId
@@ -63,126 +62,94 @@ const useAllBookingsData = (
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  const categories = categoriesData?.bookingCategories   || [];
+  const categories = categoriesData?.bookingCategories || [];
 
-  // Fetch first category details immediately
-  const firstCategory = categories[0]?.name;
+  // Determine which category to fetch details for
+  const activeCategoryName = activeCategory || categories[0]?.name;
+
+  // Check if the active category has items (skip fetch if totalCount is 0)
+  const activeCategoryInfo = categories.find((c: BookingCategory) => c.name === activeCategoryName);
+  const hasItems = !activeCategoryInfo || activeCategoryInfo.totalCount > 0;
+
+  // 2. Fetch details ONLY for the active category
   const { 
-    data: firstCategoryData,
-    isLoading: isLoadingFirst
+    data: activeCategoryData,
+    isLoading: isLoadingDetails,
   } = useQuery({
-    queryKey: ['bookingDetails', firstCategory, { page, rowsPerPage }],
+    queryKey: ['bookingDetails', activeCategoryName, { page, rowsPerPage }],
     queryFn: async () => {
-      if (!firstCategory) return null;
       const response = await getBookingDetails(
         businessInformation[0]?.businessId,
-        firstCategory,
+        activeCategoryName!,
         page,
         rowsPerPage
       );
       return response;
     },
-    enabled: !!firstCategory && categories.length > 0,
+    enabled: !!activeCategoryName && categories.length > 0 && hasItems,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
 
-  // Update categoryDetails when first category loads
+  // Track when initial load completes (categories + first tab)
+  // Once set, full-page loading is never shown again (tab switches use inline spinner)
   useEffect(() => {
-    if (firstCategoryData && firstCategory) {
-      setCategoryDetails(prev => ({
-        ...prev,
-        [firstCategory]: firstCategoryData
-      }));
+    if (
+      !isLoadingCategories &&
+      !isLoadingDetails &&
+      categories.length > 0 &&
+      !hasInitiallyLoaded
+    ) {
+      setHasInitiallyLoaded(true);
     }
-  }, [firstCategoryData, firstCategory]);
-
-  // Fetch all other categories after 2 seconds
-  useEffect(() => {
-    if (categories.length <= 1 || isLoadingFirst) return;
-
-    const timer = setTimeout(async () => {
-      setIsLoadingAll(true);
-      
-      // Get categories except the first one
-      const otherCategories = categories.slice(1);
-      
-      // Fetch all other categories in parallel
-      const promises = otherCategories.map(async (category) => {
-        const queryKey = ['bookingDetails', category.name, { page, rowsPerPage }];
-        
-        // Check if already cached
-        const cachedData = queryClient.getQueryData(queryKey);
-        if (cachedData) {
-          return { categoryName: category.name, data: cachedData };
-        }
-
-        // Fetch if not cached
-        try {
-          const response = await getBookingDetails(
-            businessInformation[0]?.businessId,
-            category.name,
-            page,
-            rowsPerPage
-          );
-          
-          // Cache the result
-          queryClient.setQueryData(queryKey, response);
-          
-          return { categoryName: category.name, data: response };
-        } catch (error) {
-          console.error(`Failed to fetch ${category.name}:`, error);
-          return { categoryName: category.name, data: null };
-        }
-      });
-
-      const results = await Promise.all(promises);
-      
-      // Update categoryDetails with all fetched data
-      const newDetails: Record<string, any> = {};
-      results.forEach(result => {
-        if (result.data) {
-          newDetails[result.categoryName] = result.data;
-        }
-      });
-      
-      setCategoryDetails(prev => ({
-        ...prev,
-        ...newDetails
-      }));
-      
-      setIsLoadingAll(false);
-    }, 2000); // 2 second delay
-
-    return () => clearTimeout(timer);
-  }, [categories, isLoadingFirst, businessInformation, page, rowsPerPage, _filterType, _startDate, _endDate, queryClient]);
+  }, [isLoadingCategories, isLoadingDetails, categories, hasInitiallyLoaded]);
 
   // Get details for a specific category
   const getCategoryDetails = (categoryName: string) => {
-    const category = categories.find(c => c.name === categoryName);
+    const category = categories.find((c: BookingCategory) => c.name === categoryName);
     
-    // If category has 0 items, return empty array immediately
+    // If category has 0 items, return empty data immediately
     if (category && category.totalCount === 0) {
       return { data: [], totalCount: 0 };
     }
 
-    // Return cached data if available
-    if (categoryDetails[categoryName]) {
-      return categoryDetails[categoryName];
+    // If requesting the active category, return its query data
+    if (categoryName === activeCategoryName && activeCategoryData) {
+      return activeCategoryData;
     }
+    
+    // For other categories, check React Query cache (previously visited tabs)
+    const cachedData = queryClient.getQueryData(
+      ['bookingDetails', categoryName, { page, rowsPerPage }]
+    );
+    if (cachedData) return cachedData;
 
-    // Return null if still loading
+    // Not yet loaded
     return null;
+  };
+
+  // Refetch: invalidate all queries, only active tab auto-refetches
+  // Other tabs refetch lazily when the user navigates to them
+  const refetchAll = async () => {
+    // Invalidate categories (refreshes tab counts)
+    await queryClient.invalidateQueries({ queryKey: ['bookingCategories'] });
+    // Invalidate all cached booking details (marks them stale)
+    await queryClient.invalidateQueries({ queryKey: ['bookingDetails'] });
+    // Re-fetch categories + active tab auto-refetches since it's observed
+    await refetchCategories();
   };
 
   return {
     categories,
     getCategoryDetails,
-    isLoadingInitial: isLoadingCategories || isLoadingFirst,
-    isLoadingAll,
+    // Full-page loading: only during very first load
+    isLoadingInitial: !hasInitiallyLoaded && (isLoadingCategories || isLoadingDetails),
+    // Inline table loading: for tab switches to uncached tabs
+    isLoadingDetails,
+    isLoadingAll: false, // Kept for backward compatibility
     isError: isCategoriesError,
-    refetch: refetchCategories,
-    allCategoryDetails: categoryDetails
+    refetch: refetchAll,
+    allCategoryDetails: {} // Kept for backward compatibility
   };
 };
 

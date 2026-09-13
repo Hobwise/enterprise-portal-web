@@ -61,9 +61,10 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
   const [vatRate, setVatRate] = useState<number>(0);
 
   // Fetch full order details
-  const { orderDetails: fullOrderData, isLoading: isLoadingOrder } = useOrderDetails(orderId, {
-    enabled: !!orderId && isOpen,
-  });
+  const { orderDetails: fullOrderData, isLoading: isLoadingOrder } =
+    useOrderDetails(orderId, {
+      enabled: !!orderId && isOpen,
+    });
 
   useEffect(() => {
     const user = getJsonItemFromLocalStorage("userInformation");
@@ -80,10 +81,10 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
           originalQuantity: item.quantity,
           refundQuantity: 0,
           unitPrice: item.unitPrice,
-          packingCost: item.isPacked ? (item.packingCost || 0) : 0,
+          packingCost: item.isPacked ? item.packingCost || 0 : 0,
           isVariety: item.isVariety || false,
           isPacked: item.isPacked || false,
-        }))
+        })),
       );
     }
   }, [fullOrderData, isOpen]);
@@ -91,11 +92,6 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
   // Set VAT values from props (passed from order table)
   useEffect(() => {
     if (isOpen) {
-      console.log("VAT Debug:", {
-        orderIsVatApplied,
-        orderVatPercentage,
-      });
-
       if (orderIsVatApplied && orderVatPercentage > 0) {
         setIsVatApplied(true);
         setVatRate(orderVatPercentage);
@@ -121,14 +117,13 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
 
   // Calculate original subtotal (before VAT) from all items - includes packing costs
   const originalSubtotal = useMemo(() => {
-    return refundItems.reduce(
-      (sum, item) => {
-        const itemTotal = item.originalQuantity * item.unitPrice;
-        const packingTotal = item.isPacked ? item.originalQuantity * item.packingCost : 0;
-        return sum + itemTotal + packingTotal;
-      },
-      0
-    );
+    return refundItems.reduce((sum, item) => {
+      const itemTotal = item.originalQuantity * item.unitPrice;
+      const packingTotal = item.isPacked
+        ? item.originalQuantity * item.packingCost
+        : 0;
+      return sum + itemTotal + packingTotal;
+    }, 0);
   }, [refundItems]);
 
   // Calculate original VAT (if applicable)
@@ -137,78 +132,71 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
     return Math.round(originalSubtotal * (vatRate / 100) * 100) / 100;
   }, [originalSubtotal, isVatApplied, vatRate]);
 
-  // Original grand total (subtotal + VAT)
-  const originalGrandTotal = useMemo(() => {
-    return originalSubtotal + originalVatAmount;
-  }, [originalSubtotal, originalVatAmount]);
+  // Additional costs (service charge, delivery fee, misc, etc.) not tied to specific items
+  // Derived once from the original order so it can be carried forward unchanged into the new total.
+  const additionalCost = useMemo(() => {
+    const calculatedAdditional =
+      totalAmount - (originalSubtotal + originalVatAmount);
+    return calculatedAdditional > 0.01
+      ? Math.round(calculatedAdditional * 100) / 100
+      : 0;
+  }, [totalAmount, originalSubtotal, originalVatAmount]);
+
+  // Original grand total is simply the totalAmount passed in from the order
+  const originalGrandTotal = totalAmount;
 
   // Calculate items refund amount (before VAT) - includes packing costs
-  // This is the base amount of items being refunded
   const itemsRefundAmount = useMemo(() => {
-    return refundItems.reduce(
-      (sum, item) => {
-        const itemTotal = item.refundQuantity * item.unitPrice;
-        const packingTotal = item.isPacked ? item.refundQuantity * item.packingCost : 0;
-        return sum + itemTotal + packingTotal;
-      },
-      0
-    );
+    return refundItems.reduce((sum, item) => {
+      const itemTotal = item.refundQuantity * item.unitPrice;
+      const packingTotal = item.isPacked
+        ? item.refundQuantity * item.packingCost
+        : 0;
+      return sum + itemTotal + packingTotal;
+    }, 0);
   }, [refundItems]);
 
   // Calculate VAT refund amount - VAT that was charged on the refunded items
-  // KEY RULE: VAT was charged on the refunded items, so VAT on them must also be refunded
   // Formula: VAT Refund = Items Refund Amount × VAT Rate
-  // Example: If refunding ₦50,000 item with 7.5% VAT:
-  //   VAT Refund = ₦50,000 × 7.5% = ₦3,750
-  // Use same precision as checkout: round to 2 decimal places
   const vatRefundAmount = useMemo(() => {
     if (!isVatApplied || vatRate <= 0) return 0;
     return Math.round(itemsRefundAmount * (vatRate / 100) * 100) / 100;
   }, [itemsRefundAmount, isVatApplied, vatRate]);
 
-  // Calculate total refund amount (items + VAT)
-  // This is what the customer will receive back
-  // Formula: Total Refund = Item Price × (1 + VAT Rate)
-  // Example: Total Refund = ₦50,000 + ₦3,750 = ₦53,750
+  // Calculate total refund amount (items + VAT) - what the customer receives back
   const totalRefundAmount = useMemo(() => {
     return itemsRefundAmount + vatRefundAmount;
   }, [itemsRefundAmount, vatRefundAmount]);
 
   // Calculate subtotal of remaining items (after refund) - includes packing costs
-  // Formula: New Subtotal = Original Subtotal - Items Refund Amount
-  // Example: ₦147,800 - ₦50,000 = ₦97,800
   const remainingSubtotal = useMemo(() => {
-    return refundItems.reduce(
-      (sum, item) => {
-        const remainingQty = item.originalQuantity - item.refundQuantity;
-        const itemTotal = remainingQty * item.unitPrice;
-        const packingTotal = item.isPacked ? remainingQty * item.packingCost : 0;
-        return sum + itemTotal + packingTotal;
-      },
-      0
-    );
+    return refundItems.reduce((sum, item) => {
+      const remainingQty = item.originalQuantity - item.refundQuantity;
+      const itemTotal = remainingQty * item.unitPrice;
+      const packingTotal = item.isPacked ? remainingQty * item.packingCost : 0;
+      return sum + itemTotal + packingTotal;
+    }, 0);
   }, [refundItems]);
 
-  // Calculate new VAT on remaining items
-  // Formula: New VAT = New Subtotal × VAT Rate
-  // Example: ₦97,800 × 7.5% = ₦7,335
-  // IMPORTANT: Recalculate VAT on the new subtotal, don't guess or estimate
+  // Calculate new VAT on remaining items (recalculated fresh, not subtracted)
   const newVatAmount = useMemo(() => {
     if (!isVatApplied || vatRate <= 0) return 0;
     return Math.round(remainingSubtotal * (vatRate / 100) * 100) / 100;
   }, [remainingSubtotal, isVatApplied, vatRate]);
 
-  // Calculate new grand total = remaining subtotal + VAT on remaining items
-  // Formula: New Grand Total = New Subtotal + New VAT
-  // Example: ₦97,800 + ₦7,335 = ₦105,135
-  // This must match what backend calculates from orderDetails
-  // Use same precision as checkout: round to 2 decimal places
+  // Calculate new grand total BOTTOM-UP from the remaining items, not by subtracting
+  // the refund from the original total. This keeps it consistent with what the backend
+  // will compute when it recalculates the total from `orderDetails`, avoiding rounding
+  // drift between "original - refund" and "sum of what's left".
   const newTotalAmount = useMemo(() => {
-    return remainingSubtotal + newVatAmount;
-  }, [remainingSubtotal, newVatAmount]);
+    return (
+      Math.round((remainingSubtotal + newVatAmount + additionalCost) * 100) /
+      100
+    );
+  }, [remainingSubtotal, newVatAmount, additionalCost]);
 
-  // Balance check: Original Grand Total - Total Refund = New Grand Total
-  // This verifies the math is correct: ₦158,885 - ₦53,750 = ₦105,135 ✓
+  // Balance check: Original Grand Total - Total Refund ≈ New Grand Total
+  // This is a display/sanity check only; the payload's totalAmount is the bottom-up value above.
   const balanceCheck = useMemo(() => {
     const calculated = originalGrandTotal - totalRefundAmount;
     return Math.abs(calculated - newTotalAmount) < 0.01; // Allow small floating point differences
@@ -217,19 +205,20 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
   // Build orderDetails payload (remaining items)
   const remainingOrderDetails = useMemo(() => {
     return refundItems
-      .filter(item => item.originalQuantity - item.refundQuantity > 0)
-      .map(item => ({
+      .filter((item) => item.originalQuantity - item.refundQuantity > 0)
+      .map((item) => ({
         itemID: item.itemID,
         quantity: item.originalQuantity - item.refundQuantity,
         unitPrice: item.unitPrice,
         isVariety: item.isVariety,
         isPacked: item.isPacked,
+        comment: "",
       }));
   }, [refundItems]);
 
   // Get items selected for refund (for display in step 2)
   const itemsToRefund = useMemo(() => {
-    return refundItems.filter(item => item.refundQuantity > 0);
+    return refundItems.filter((item) => item.refundQuantity > 0);
   }, [refundItems]);
 
   const paymentOptions = [
@@ -240,32 +229,32 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
 
   // Quantity handlers
   const incrementRefund = (itemID: string) => {
-    setRefundItems(prev =>
-      prev.map(item =>
+    setRefundItems((prev) =>
+      prev.map((item) =>
         item.itemID === itemID && item.refundQuantity < item.originalQuantity
           ? { ...item, refundQuantity: item.refundQuantity + 1 }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
   const decrementRefund = (itemID: string) => {
-    setRefundItems(prev =>
-      prev.map(item =>
+    setRefundItems((prev) =>
+      prev.map((item) =>
         item.itemID === itemID && item.refundQuantity > 0
           ? { ...item, refundQuantity: item.refundQuantity - 1 }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
   const refundAll = (itemID: string) => {
-    setRefundItems(prev =>
-      prev.map(item =>
+    setRefundItems((prev) =>
+      prev.map((item) =>
         item.itemID === itemID
           ? { ...item, refundQuantity: item.originalQuantity }
-          : item
-      )
+          : item,
+      ),
     );
   };
 
@@ -278,6 +267,7 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
       });
       return;
     }
+
     setStep(2);
   };
 
@@ -301,49 +291,27 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
       return;
     }
 
-    if (totalRefundAmount > maxRefundAmount) {
-      notify({
-        title: "Validation Error",
-        text: `Refund amount cannot exceed ${formatPrice(maxRefundAmount, "NGN")}`,
-        type: "error",
-      });
-      return;
-    }
-
     setIsLoading(true);
 
-    const systemReference = (): number => Math.floor(1e9 + Math.random() * 9e9);
+    const systemReference = (): string =>
+      Math.floor(1e9 + Math.random() * 9e9).toString();
 
-    // CRITICAL: Ensure refundAmount includes both items AND VAT
-    // Formula: refundAmount = itemsRefundAmount + vatRefundAmount
-    // This is what the customer should receive back
-    
     // Recalculate to ensure accuracy (even though totalRefundAmount should already be correct)
-    const itemsRefund = refundItems.reduce(
-      (sum, item) => {
-        const itemTotal = item.refundQuantity * item.unitPrice;
-        const packingTotal = item.isPacked ? item.refundQuantity * item.packingCost : 0;
-        return sum + itemTotal + packingTotal;
-      },
-      0
-    );
-    
-    const vatRefund = isVatApplied && vatRate > 0
-      ? Math.round(itemsRefund * (vatRate / 100) * 100) / 100
-      : 0;
-    
+    const itemsRefund = refundItems.reduce((sum, item) => {
+      const itemTotal = item.refundQuantity * item.unitPrice;
+      const packingTotal = item.isPacked
+        ? item.refundQuantity * item.packingCost
+        : 0;
+      return sum + itemTotal + packingTotal;
+    }, 0);
+
+    const vatRefund =
+      isVatApplied && vatRate > 0
+        ? Math.round(itemsRefund * (vatRate / 100) * 100) / 100
+        : 0;
+
     // Final refund amount MUST include VAT
-    const finalRefundAmount = itemsRefund + vatRefund;
-    
-    console.log("Refund Calculation Breakdown:", {
-      itemsRefundAmount: itemsRefund,
-      vatRefundAmount: vatRefund,
-      totalRefundAmount: finalRefundAmount,
-      isVatApplied,
-      vatRate,
-      calculation: `${itemsRefund} + ${vatRefund} = ${finalRefundAmount}`,
-      note: "refundAmount MUST include both items and VAT"
-    });
+    const finalRefundAmount = Math.round((itemsRefund + vatRefund) * 100) / 100;
 
     const payload = {
       reason: reason,
@@ -353,12 +321,10 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
       systemReference: systemReference(),
       paymentMethod: parseInt(paymentMethod),
       orderDetails: remainingOrderDetails,
-      totalAmount: newTotalAmount,
-      refundAmount: finalRefundAmount, // This MUST include items + VAT
-      isVatApplied: isVatApplied,
-      vatPercentage: vatRate,
+      totalAmount: newTotalAmount, // bottom-up: sum of remaining items + VAT + additional costs
+      refundAmount: finalRefundAmount,
     };
-    console.log("Refund Payload (refundAmount includes items + VAT):", payload);
+
     try {
       const response = await refundOrder(payload as any, orderId);
 
@@ -456,7 +422,10 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                             </p>
                           </div>
                           <p className="font-semibold text-black text-sm">
-                            {formatPrice(item.unitPrice * item.originalQuantity, "NGN")}
+                            {formatPrice(
+                              item.unitPrice * item.originalQuantity,
+                              "NGN",
+                            )}
                           </p>
                         </div>
 
@@ -487,7 +456,9 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                               size="sm"
                               variant="flat"
                               onPress={() => incrementRefund(item.itemID)}
-                              isDisabled={item.refundQuantity >= item.originalQuantity}
+                              isDisabled={
+                                item.refundQuantity >= item.originalQuantity
+                              }
                               className="min-w-8 w-8 h-8"
                             >
                               <Plus size={14} />
@@ -497,7 +468,9 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                               variant="flat"
                               color="primary"
                               onPress={() => refundAll(item.itemID)}
-                              isDisabled={item.refundQuantity === item.originalQuantity}
+                              isDisabled={
+                                item.refundQuantity === item.originalQuantity
+                              }
                               className="text-xs ml-1"
                             >
                               All
@@ -511,10 +484,13 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                               Refunding {item.refundQuantity} item(s)
                             </span>
                             <span className="text-xs font-medium text-primaryColor">
-                              -{formatPrice(
-                                (item.unitPrice * item.refundQuantity) +
-                                (item.isPacked ? item.packingCost * item.refundQuantity : 0),
-                                "NGN"
+                              -
+                              {formatPrice(
+                                item.unitPrice * item.refundQuantity +
+                                  (item.isPacked
+                                    ? item.packingCost * item.refundQuantity
+                                    : 0),
+                                "NGN",
                               )}
                             </span>
                           </div>
@@ -536,23 +512,26 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                       </div>
                       {isVatApplied && vatRefundAmount > 0 && (
                         <p className="text-xs text-gray-500 mt-1">
-                          Includes {formatPrice(itemsRefundAmount, "NGN")} items + {formatPrice(vatRefundAmount, "NGN")} VAT ({vatRate}%)
+                          Includes {formatPrice(itemsRefundAmount, "NGN")} items
+                          + {formatPrice(vatRefundAmount, "NGN")} VAT ({vatRate}
+                          %)
                         </p>
                       )}
                     </div>
                   )}
 
-                  {maxRefundAmount < totalRefundAmount && (
+                  {/* {maxRefundAmount < totalRefundAmount && (
                     <p className="text-xs text-red-500 mt-2">
-                      Refund amount ({formatPrice(totalRefundAmount, "NGN")}) exceeds paid amount ({formatPrice(maxRefundAmount, "NGN")})
+                      Refund amount ({formatPrice(totalRefundAmount, "NGN")})
+                      exceeds paid amount ({formatPrice(maxRefundAmount, "NGN")}
+                      ) 
                     </p>
-                  )}
+                  )} */}
 
                   <Spacer y={4} />
 
                   <CustomButton
                     onClick={handleContinue}
-                    disabled={itemsRefundAmount <= 0}
                     className="w-full bg-primaryColor py-6 text-white"
                     backgroundColor="bg-primaryColor"
                   >
@@ -600,18 +579,36 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                   </p>
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-1">
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">Subtotal (before VAT)</span>
-                      <span className="text-gray-600">{formatPrice(originalSubtotal, "NGN")}</span>
+                      <span className="text-gray-600">
+                        Subtotal (before VAT)
+                      </span>
+                      <span className="text-gray-600">
+                        {formatPrice(originalSubtotal, "NGN")}
+                      </span>
                     </div>
                     {isVatApplied && originalVatAmount > 0 && (
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-gray-600">VAT ({vatRate}%)</span>
-                        <span className="text-gray-600">{formatPrice(originalVatAmount, "NGN")}</span>
+                        <span className="text-gray-600">
+                          {formatPrice(originalVatAmount, "NGN")}
+                        </span>
+                      </div>
+                    )}
+                    {additionalCost > 0 && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Additional Costs</span>
+                        <span className="text-gray-600">
+                          {formatPrice(additionalCost, "NGN")}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center pt-2 border-t border-gray-300">
-                      <span className="font-semibold text-gray-700">Grand Total Paid</span>
-                      <span className="font-semibold text-gray-700">{formatPrice(originalGrandTotal, "NGN")}</span>
+                      <span className="font-semibold text-gray-700">
+                        Grand Total Paid
+                      </span>
+                      <span className="font-semibold text-gray-700">
+                        {formatPrice(originalGrandTotal, "NGN")}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -623,11 +620,17 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                   </p>
                   <div className="bg-red-50 border border-red-100 rounded-lg p-3 space-y-2">
                     {itemsToRefund.map((item) => {
-                      const itemRefundAmount = (item.unitPrice * item.refundQuantity) +
-                        (item.isPacked ? item.packingCost * item.refundQuantity : 0);
+                      const itemRefundAmount =
+                        item.unitPrice * item.refundQuantity +
+                        (item.isPacked
+                          ? item.packingCost * item.refundQuantity
+                          : 0);
 
                       return (
-                        <div key={item.itemID} className="flex justify-between items-center text-sm">
+                        <div
+                          key={item.itemID}
+                          className="flex justify-between items-center text-sm"
+                        >
                           <span className="text-gray-700">
                             {item.itemName} x{item.refundQuantity}
                           </span>
@@ -641,12 +644,18 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                       {isVatApplied && vatRefundAmount > 0 && (
                         <div className="flex justify-between text-sm">
                           <span className="text-red-600">VAT ({vatRate}%)</span>
-                          <span className="text-red-600">-{formatPrice(vatRefundAmount, "NGN")}</span>
+                          <span className="text-red-600">
+                            -{formatPrice(vatRefundAmount, "NGN")}
+                          </span>
                         </div>
                       )}
                       <div className="flex justify-between pt-1">
-                        <span className="font-bold text-red-700">Total Refund</span>
-                        <span className="font-bold text-red-700">-{formatPrice(totalRefundAmount, "NGN")}</span>
+                        <span className="font-bold text-red-700">
+                          Total Refund
+                        </span>
+                        <span className="font-bold text-red-700">
+                          -{formatPrice(totalRefundAmount, "NGN")}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -660,17 +669,35 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 space-y-1">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-gray-600">New Subtotal</span>
-                      <span className="text-gray-600">{formatPrice(remainingSubtotal, "NGN")}</span>
+                      <span className="text-gray-600">
+                        {formatPrice(remainingSubtotal, "NGN")}
+                      </span>
                     </div>
                     {isVatApplied && newVatAmount > 0 && (
                       <div className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">New VAT ({vatRate}%)</span>
-                        <span className="text-gray-600">{formatPrice(newVatAmount, "NGN")}</span>
+                        <span className="text-gray-600">
+                          New VAT ({vatRate}%)
+                        </span>
+                        <span className="text-gray-600">
+                          {formatPrice(newVatAmount, "NGN")}
+                        </span>
+                      </div>
+                    )}
+                    {additionalCost > 0 && (
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-600">Additional Costs</span>
+                        <span className="text-gray-600">
+                          {formatPrice(additionalCost, "NGN")}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center pt-2 border-t border-gray-300">
-                      <span className="font-semibold text-black">New Grand Total</span>
-                      <span className="font-semibold text-black">{formatPrice(newTotalAmount, "NGN")}</span>
+                      <span className="font-semibold text-black">
+                        New Grand Total
+                      </span>
+                      <span className="font-semibold text-black">
+                        {formatPrice(newTotalAmount, "NGN")}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -680,12 +707,18 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
                   <div className="flex justify-between items-center text-xs text-gray-600 mb-1">
                     <span>Balance Check:</span>
                     <span>
-                      {formatPrice(originalGrandTotal, "NGN")} - {formatPrice(totalRefundAmount, "NGN")} = {formatPrice(originalGrandTotal - totalRefundAmount, "NGN")}
+                      {formatPrice(originalGrandTotal, "NGN")} -{" "}
+                      {formatPrice(totalRefundAmount, "NGN")} ={" "}
+                      {formatPrice(
+                        originalGrandTotal - totalRefundAmount,
+                        "NGN",
+                      )}
                     </span>
                   </div>
                   {balanceCheck ? (
                     <div className="text-xs text-green-700 font-medium flex items-center gap-1">
-                      ✓ Matches new grand total exactly - Math is correct and balanced
+                      ✓ Matches new grand total exactly - Math is correct and
+                      balanced
                     </div>
                   ) : (
                     <div className="text-xs text-red-600 font-medium">
@@ -725,7 +758,8 @@ const RefundPaymentModal: React.FC<RefundPaymentModalProps> = ({
               {/* Max Refund Warning */}
               {maxRefundAmount > 0 && (
                 <p className="text-xs text-gray-500 mb-2">
-                  Maximum refundable amount: {formatPrice(maxRefundAmount, "NGN")}
+                  Maximum refundable amount:{" "}
+                  {formatPrice(maxRefundAmount, "NGN")}
                 </p>
               )}
 

@@ -1,7 +1,7 @@
 import { Card, CardBody, Divider } from "@nextui-org/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { saveJsonItemToLocalStorage } from "@/lib/utils";
+import { buildReportPath } from "@/lib/reportRoutes";
 import { IoIosArrowForward } from "react-icons/io";
 import {
   AcceptedReportIcon,
@@ -27,16 +27,12 @@ const ReportDetails = ({ report }: any) => {
   const router = useRouter();
 
   const handleActivityReport = (
-    reportType: number,
+    _reportType: number,
     reportName: string,
     route: string
   ) => {
-    router.push(`/dashboard/reports/${route}`);
-    saveJsonItemToLocalStorage("reportFilter", {
-      reportType: reportType,
-      reportName: reportName,
-      route: route,
-    });
+    const path = buildReportPath(route, reportName);
+    if (path) router.push(path);
   };
   return (
     <div className=" flex lg:flex-row flex-col gap-4 mb-4">

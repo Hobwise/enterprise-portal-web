@@ -22,7 +22,7 @@ import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 
 import { GrFormView } from "react-icons/gr";
-import { columns, paymentTypeMap, statusColorMap, statusDataMap } from "./data";
+import { columns, paymentTypeMap, statusColorMap, statusDataMap, isCheckoutPayment } from "./data";
 
 import moment from "moment";
 
@@ -30,6 +30,8 @@ import { useGlobalContext } from "@/hooks/globalProvider";
 import { formatPrice } from "@/lib/utils";
 import ApprovePayment from "./approvePayment";
 import Filters from "./filters";
+import PaymentBreakdownModal from "../orders/PaymentBreakdownModal";
+import { Info } from "lucide-react";
 
 const INITIAL_VISIBLE_COLUMNS = [
   "paymentType",
@@ -53,6 +55,8 @@ interface PaymentItem {
   status: number;
   paymentReference: string;
   paymentType: number;
+  paymentMethod: number;
+  checkOutReference?: string;
 }
 
 interface PaymentCategory {
@@ -147,7 +151,8 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
   const [singlePayment, setSinglePayment] = React.useState<PaymentItem | null>(
     null
   );
-  const [isOpen, setIsOpen] = React.useState<Boolean>(false);
+  const [isOpen, setIsOpen] = React.useState<boolean>(false);
+  const [isOpenPaymentBreakdown, setIsOpenPaymentBreakdown] = React.useState<boolean>(false);
   const { page, rowsPerPage, setTableStatus, tableStatus, setPage } =
     useGlobalContext();
 
@@ -193,9 +198,21 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
     });
   }, [paymentDetails, sortDescriptor]);
 
-  const toggleApproveModal = (payment: PaymentItem) => {
+  // Explicit open/close avoids the phase-desync that a setIsOpen(!isOpen)
+  // toggle suffers when onOpenChange fires out of sync — which made row
+  // clicks intermittently fail to open the modal.
+  const openApproveModal = (payment: PaymentItem) => {
     setSinglePayment(payment);
-    setIsOpen(!isOpen);
+    setIsOpen(true);
+  };
+
+  const closeApproveModal = () => {
+    setIsOpen(false);
+  };
+
+  const togglePaymentBreakdownModal = (payment: PaymentItem) => {
+    setSinglePayment(payment);
+    setIsOpenPaymentBreakdown(true);
   };
 
   const handleTabClick = (categoryName: string) => {
@@ -272,7 +289,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
                 >
                   <DropdownItem
                     onClick={() => {
-                      toggleApproveModal(payment);
+                      openApproveModal(payment);
                     }}
                     aria-label="update order"
                   >
@@ -281,6 +298,19 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
                       <p>View more</p>
                     </div>
                   </DropdownItem>
+                  {isCheckoutPayment(payment.paymentMethod) && (
+                    <DropdownItem
+                      onClick={() => {
+                        togglePaymentBreakdownModal(payment);
+                      }}
+                      aria-label="payment breakdown"
+                    >
+                      <div className={` flex gap-2  items-center text-grey500`}>
+                        <Info className="w-[18px] h-[18px]" />
+                        <p>Payment Breakdown</p>
+                      </div>
+                    </DropdownItem>
+                  )}
                 </DropdownMenu>
               </Dropdown>
             </div>
@@ -301,6 +331,22 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
       />
     );
   }, [categories, tableStatus]);
+
+  const paymentBreakdownModal = React.useMemo(() => {
+    return (
+      <PaymentBreakdownModal
+        isOpen={isOpenPaymentBreakdown}
+        onOpenChange={setIsOpenPaymentBreakdown}
+        reference={
+          singlePayment?.checkOutReference || 
+          (singlePayment as any)?.checkoutReference || 
+          singlePayment?.paymentReference || 
+          singlePayment?.reference || 
+          null
+        }
+      />
+    );
+  }, [isOpenPaymentBreakdown, singlePayment]);
 
   // Determine if we should show loading spinner
   // Only show loading spinner on initial load when there's no data
@@ -335,7 +381,7 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
 
   // Handle row click to open payment details
   const handleRowClick = (payment: PaymentItem) => {
-    toggleApproveModal(payment);
+    openApproveModal(payment);
   };
 
   return (
@@ -394,8 +440,9 @@ const PaymentsList: React.FC<PaymentsListProps> = ({
         refetch={refetch}
         singlePayment={singlePayment}
         isOpen={isOpen}
-        toggleApproveModal={toggleApproveModal}
+        toggleApproveModal={closeApproveModal}
       />
+      {paymentBreakdownModal}
     </section>
   );
 };

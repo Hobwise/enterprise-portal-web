@@ -5,12 +5,14 @@ import api, { handleError } from "../../apiService";
 interface Order {
   placedByName: string;
   placedByPhoneNumber: string;
+  userId?: string;
   quickResponseID?: string;
   comment: string;
   status?: number;
   additionalCost?: number;
   additionalCostName?: string;
   totalAmount?: number;
+  estimatedCompletionTime?: string;
   orderDetails: OrderDetail[];
 }
 
@@ -21,6 +23,7 @@ interface OrderDetail {
   packingCost?: number;
   isVariety?: boolean;
   isPacked?: boolean;
+  comment?: string;
 }
 
 const optionalPhoneSchema = z.string().trim().optional().or(z.literal(""));
@@ -244,6 +247,23 @@ export async function getOrder(
     handleError(error, false);
   }
 }
+// Fetch a single order scoped to a menu category, used to print a docket
+// (e.g. kitchen/bar ticket) containing only that category's items.
+export async function getCategoryOrderDocket(
+  categoryId: string,
+  orderId: string
+) {
+  try {
+    const data = await api.get(
+      `/api/v1/Order/categories/${categoryId}/orders/${orderId}`
+    );
+
+    return data;
+  } catch (error) {
+    handleError(error, false);
+  }
+}
+
 export async function getOrderByRef(
   reference: string,
   businessId: string,
@@ -318,7 +338,8 @@ export async function cancelOrder(payload: any, orderId: string) {
 export async function createOrder(
   businessId: string,
   payload: Order,
-  cooperateID?: string
+  cooperateID?: string,
+  userId?: string
 ) {
   const validatedFields = orderSchema.safeParse({
     placedByName: payload?.placedByName,
@@ -331,7 +352,10 @@ export async function createOrder(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const headers = businessId ? { businessId, cooperateId: cooperateID } : {};
+  const headers: any = {};
+  if (businessId) headers.businessId = businessId;
+  if (cooperateID) headers.cooperateId = cooperateID;
+  if (userId) headers.userId = userId;
 
   try {
     const data = await api.post(DASHBOARD.placeOrder, payload, {
@@ -346,7 +370,8 @@ export async function createOrder(
 export async function createUserOrder(
   businessId: string,
   payload: Order,
-  cooperateID?: string
+  cooperateID?: string,
+  userId?: string
 ) {
   const validatedFields = orderSchemaUser.safeParse({
     placedByName: payload?.placedByName,
@@ -358,7 +383,10 @@ export async function createUserOrder(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  const headers = businessId ? { businessId, cooperateId: cooperateID } : {};
+  const headers: any = {};
+  if (businessId) headers.businessId = businessId;
+  if (cooperateID) headers.cooperateId = cooperateID;
+  if (userId) headers.userId = userId;
 
   try {
     const data = await api.post(DASHBOARD.placeOrder, payload, {
@@ -495,13 +523,17 @@ export async function getPaymentSummary(orderId: string) {
 }
 
 interface RefundPayload {
-  refundAmount: number;
   reason: string;
   treatedBy: string;
   treatedById: string;
   paymentReference: string;
+  systemReference: string;
   paymentMethod: number;
-   systemReference: number;
+  orderDetails: any[];
+  totalAmount: number;
+  refundAmount: number;
+  isVatApplied: boolean;
+  vatPercentage: number;
 }
 
 // Function to process refund

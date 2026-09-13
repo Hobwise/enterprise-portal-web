@@ -25,8 +25,13 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { TbFileInvoice } from "react-icons/tb";
-import { Clock, Receipt, RotateCcw, CreditCard } from "lucide-react";
+import { Clock, Receipt, RotateCcw, CreditCard, ClipboardList } from "lucide-react";
 import SpinnerLoader from "@/components/ui/dashboard/menu/SpinnerLoader";
+import PaystackPop from "paystack-inline-ts";
+import {
+  hasPaymentAccount,
+  initializePayment,
+} from "@/app/api/controllers/dashboard/qrPayment";
 import {
   availableOptions,
   columns,
@@ -59,7 +64,12 @@ import OrderProgressModal from "./OrderProgressModal";
 import PaymentSummaryModal from "./PaymentSummaryModal";
 import RefundPaymentModal from "./RefundPaymentModal";
 import OrderHistoryModal from "./OrderHistoryModal";
-import { History } from "lucide-react";
+import PaymentBreakdownModal from "./PaymentBreakdownModal";
+import DocketModal, { DocketCategory } from "./docket";
+import useMenuCategories from "@/hooks/cachedEndpoints/useMenuCategories";
+import { usePOSMenu } from "@/hooks/usePOSMenu";
+import { History, Info } from "lucide-react";
+import { isCheckoutPayment } from "../payments/data";
 import {
   completeOrder,
   completeOrderWithPayment,
@@ -99,6 +109,7 @@ interface OrderItem {
   amountPaid?: number;
   isVatApplied?: boolean;
   vatRate?: number;
+  checkOutReference?: string;
 }
 
 interface OrderCategory {
@@ -171,6 +182,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const { userRolePermissions, role } = usePermission();
   const queryClient = useQueryClient();
   const userInformation = getJsonItemFromLocalStorage("userInformation");
+  const businessInformation = getJsonItemFromLocalStorage("business");
   const isPOSUserState = isPOSUser(userInformation);
 
   const [singleOrder, setSingleOrder] = React.useState<OrderItem | null>(null);
@@ -193,6 +205,33 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [isOpenRefund, setIsOpenRefund] = React.useState<boolean>(false);
   const [isOpenHistoryModal, setIsOpenHistoryModal] =
     React.useState<boolean>(false);
+  const [isOpenPaymentBreakdown, setIsOpenPaymentBreakdown] = React.useState<boolean>(false);
+  const [isOpenDocket, setIsOpenDocket] = React.useState<boolean>(false);
+
+  // Menu categories drive the "Generate Docket" action. Sourced from the Menu
+  // Controller (react-query cached); the action is hidden when none exist.
+  const { data: menuCategoriesData, isLoading: menuCategoriesLoading } =
+    useMenuCategories();
+  // The menu-categories endpoint is cooperate-scoped, so POS/staff users coming
+  // from POS get an empty list. When that happens we fall back to the POS menu
+  // (only needs businessId). The fetch is enabled only once menu categories
+  // have loaded empty, so managers with real categories never make the request.
+  const menuCategoriesEmpty =
+    !menuCategoriesLoading && (menuCategoriesData ?? []).length === 0;
+  const { posData } = usePOSMenu({ enabled: menuCategoriesEmpty });
+  const docketCategories: DocketCategory[] = React.useMemo(() => {
+    const menuCats = (menuCategoriesData ?? []).map((category) => ({
+      categoryId: category.categoryId,
+      categoryName: category.categoryName,
+    }));
+    if (menuCats.length > 0) {
+      return menuCats;
+    }
+    return (posData ?? []).map((section) => ({
+      categoryId: section.id,
+      categoryName: section.name,
+    }));
+  }, [menuCategoriesData, posData]);
 
   // Payment modal states
   const [isOpenPaymentModal, setIsOpenPaymentModal] =
@@ -203,15 +242,23 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const [paymentReference, setPaymentReference] = React.useState<string>("");
   const [isProcessingPayment, setIsProcessingPayment] =
     React.useState<boolean>(false);
+  const [payNowLoading, setPayNowLoading] = React.useState<boolean>(false);
 
   // Payment methods array
+  const PAY_NOW_ID = 4;
+
   const paymentMethods = [
-    { text: "Pay with cash", subText: " Accept payment using cash", id: 0 },
-    { text: "Pay with Pos", subText: " Accept payment using Pos", id: 1 },
+    { text: "Pay with Cash", subText: " Accept payment using Cash", id: 0 },
+    { text: "Pay with POS", subText: " Accept payment using POS", id: 1 },
     {
-      text: "Pay with bank transfer",
-      subText: "Accept payment via bank transfer",
+      text: "Pay with Bank Transfer",
+      subText: "Accept payment via Bank Transfer",
       id: 2,
+    },
+    {
+      text: "Pay with Paystack",
+      subText: "Pay online via Paystack",
+      id: PAY_NOW_ID,
     },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
@@ -228,6 +275,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setIsOpenCheckoutModal(false);
     setIsOpenPaymentModal(false);
     setIsOpenProgress(false);
+    setIsOpenPaymentBreakdown(false);
     setSingleOrder(null);
 
     setTableStatus(categoryName);
@@ -371,6 +419,20 @@ const OrdersList: React.FC<OrdersListProps> = ({
     setIsOpenHistoryModal(!isOpenHistoryModal);
   };
 
+  const togglePaymentBreakdownModal = (order: OrderItem) => {
+    setSingleOrder(order);
+    setIsOpenPaymentBreakdown(!isOpenPaymentBreakdown);
+  };
+
+  // Functional toggle so it works from both the (memoized) desktop dropdown and
+  // the modal's onOpenChange (which passes a boolean, not an order).
+  const toggleDocketModal = (order?: OrderItem) => {
+    if (order && typeof order === "object" && "id" in order) {
+      setSingleOrder(order);
+    }
+    setIsOpenDocket((prev) => !prev);
+  };
+
   const [paymentOption, setPaymentOption] = React.useState<"full" | "partial">(
     "full"
   );
@@ -435,9 +497,75 @@ const OrdersList: React.FC<OrdersListProps> = ({
       } catch (error) {
         console.error("Error in Pay Later:", error);
       }
+    } else if (methodId === PAY_NOW_ID) {
+      // Pay now - initialize the payment and open the Paystack popup
+      handlePayNow();
     } else {
       setSelectedPaymentMethod(methodId);
       setPaymentScreen(3);
+    }
+  };
+
+  // Initializes a QR payment for the order and opens the Paystack popup so the
+  // customer can pay online with a card. On success the order list is refreshed
+  // (the backend confirms the payment against the order via webhook).
+  const handlePayNow = async () => {
+    if (!singleOrder?.id) {
+      notify({ title: "Error!", text: "Order data not available", type: "error" });
+      return;
+    }
+
+    setPayNowLoading(true);
+    try {
+      const payingBusinessId = businessInformation?.[0]?.businessId;
+
+      const base =
+        singleOrder?.amountRemaining ?? singleOrder?.totalAmount ?? 0; // naira
+      const amountKobo = Math.round(base * 100);
+
+      const response = await initializePayment(payingBusinessId, userInformation?.id, {
+        orderId: singleOrder.id,
+        customerEmail: userInformation?.email,
+        amountKobo,
+      });
+
+      const accessCode = response?.data?.data?.accessCode;
+      if (!accessCode) {
+        notify({
+          title: "Error!",
+          text: response?.data?.error ?? "Unable to start payment.",
+          type: "error",
+        });
+        return;
+      }
+
+      const popup = new PaystackPop();
+      popup.resumeTransaction({
+        accessCode,
+        onSuccess: () => {
+          notify({
+            title: "Payment successful!",
+            text: "Payment received, awaiting confirmation",
+            type: "success",
+          });
+          setIsOpenPaymentModal(false);
+          queryClient.invalidateQueries({
+            queryKey: ["orderCategories"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orderDetails"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orders"],
+            refetchType: "active",
+          });
+          refetch();
+        },
+      });
+    } finally {
+      setPayNowLoading(false);
     }
   };
 
@@ -594,6 +722,11 @@ const OrdersList: React.FC<OrdersListProps> = ({
       ...sourceData,
       quickResponseID:
         sourceData.qrReference || sourceData.quickResponseID || "",
+      // The order-details endpoint may omit the order comment, so fall back to
+      // the list item's comment to keep it visible/editable on the checkout
+      // "Add comment" field when updating an order.
+      comment:
+        (sourceData as any)?.comment ?? singleOrder.comment ?? "",
     };
   }, [singleOrder, fullOrderDetails]);
 
@@ -601,12 +734,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
   const handleRowClick = (order: OrderItem) => {
     switch (order.status) {
       case 0: // Open orders
-      case 3: // Awaiting confirmation
         saveJsonItemToLocalStorage("order", order);
         toggleUpdateOrderModal(order);
         break;
       case 1: // Closed orders
       case 2: // Cancelled orders
+      case 3: // Awaiting confirmation
         toggleInvoiceModal(order);
         break;
       default:
@@ -745,6 +878,30 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           </DropdownItem>
                         )) as any
                     }
+
+                    {isCheckoutPayment(order.paymentMethod) && (
+                      <DropdownItem
+                        key="payment-status"
+                        onClick={() => togglePaymentBreakdownModal(order)}
+                        aria-label="Payment Breakdown"
+                      >
+                        <div className="flex gap-3 items-center text-grey500">
+                          <Info className="w-[18px] h-[18px]" />
+                          <p>Payment Breakdown</p>
+                        </div>
+                      </DropdownItem>
+                    )}
+
+                    <DropdownItem
+                      key="generate-docket"
+                      onClick={() => toggleDocketModal(order)}
+                      aria-label="Generate Docket"
+                    >
+                      <div className="flex gap-3 items-center text-grey500">
+                        <ClipboardList className="w-[18px] h-[18px]" />
+                        <p>Generate Docket</p>
+                      </div>
+                    </DropdownItem>
 
                     {
                       ((role === 0 ||
@@ -922,6 +1079,30 @@ const OrdersList: React.FC<OrdersListProps> = ({
                             <div className="flex gap-3 items-center text-grey500">
                               <Receipt className="w-[18px] h-[18px]" />
                               <p>Payment Summary</p>
+                            </div>
+                          </DropdownItem>
+
+                          {isCheckoutPayment(order.paymentMethod) && (
+                            <DropdownItem
+                              key="payment-status"
+                              onClick={() => togglePaymentBreakdownModal(order)}
+                              aria-label="Payment Breakdown"
+                            >
+                              <div className="flex gap-3 items-center text-grey500">
+                                <Info className="w-[18px] h-[18px]" />
+                                <p>Payment Breakdown</p>
+                              </div>
+                            </DropdownItem>
+                          )}
+
+                          <DropdownItem
+                            key="generate-docket"
+                            onClick={() => toggleDocketModal(order)}
+                            aria-label="Generate Docket"
+                          >
+                            <div className="flex gap-3 items-center text-grey500">
+                              <ClipboardList className="w-[18px] h-[18px]" />
+                              <p>Generate Docket</p>
                             </div>
                           </DropdownItem>
 
@@ -1160,6 +1341,12 @@ const OrdersList: React.FC<OrdersListProps> = ({
         toggleInvoiceModal={toggleInvoiceModal}
         onClose={() => setIsOpenInvoice(false)}
       />
+      <DocketModal
+        singleOrder={singleOrder}
+        isOpenDocket={isOpenDocket}
+        toggleDocketModal={toggleDocketModal}
+        categories={docketCategories}
+      />
       <OrderProgressModal
         isOpen={isOpenProgress}
         onOpenChange={() => setIsOpenProgress(!isOpenProgress)}
@@ -1218,6 +1405,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
             )
           );
         }}
+        handleItemComment={(itemId: string, comment: string) => {
+          setCheckoutSelectedItems((prev) =>
+            prev.map((item) =>
+              item.id === itemId ? { ...item, comment } : item
+            )
+          );
+        }}
       />
 
       {/* Payment Modal */}
@@ -1249,21 +1443,30 @@ const OrdersList: React.FC<OrdersListProps> = ({
                 </div>
               </div>
               <div className="flex flex-col gap-1 text-black">
-                {paymentMethods.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => handlePaymentClick(item.id)}
-                    className={`flex cursor-pointer items-center gap-2 p-4 rounded-lg justify-between ${
-                      selectedPaymentMethod === item.id ? "bg-[#EAE5FF80]" : ""
-                    }`}
-                  >
-                    <div>
-                      <p className="font-semibold">{item.text}</p>
-                      <p className="text-sm text-grey500">{item.subText}</p>
+                {paymentMethods.map((item) => {
+                  const isPayNow = item.id === PAY_NOW_ID;
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() =>
+                        !(isPayNow && payNowLoading) && handlePaymentClick(item.id)
+                      }
+                      className={`flex cursor-pointer items-center gap-2 p-4 rounded-lg justify-between ${
+                        selectedPaymentMethod === item.id ? "bg-[#EAE5FF80]" : ""
+                      } ${isPayNow && payNowLoading ? "pointer-events-none opacity-60" : ""}`}
+                    >
+                      <div>
+                        <p className="font-semibold">{item.text}</p>
+                        <p className="text-sm text-grey500">{item.subText}</p>
+                      </div>
+                      {isPayNow && payNowLoading ? (
+                        <SpinnerLoader size="sm" />
+                      ) : (
+                        <MdKeyboardArrowRight />
+                      )}
                     </div>
-                    <MdKeyboardArrowRight />
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1438,7 +1641,13 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenRefund}
         orderId={singleOrder?.id || ""}
         totalAmount={singleOrder?.totalAmount || 0}
-        maxRefundAmount={singleOrder?.amountPaid || 0}
+        maxRefundAmount={
+          singleOrder?.amountPaid !== undefined && singleOrder.amountPaid > 0
+            ? singleOrder.amountPaid
+            : singleOrder?.amountRemaining !== undefined
+            ? Math.max(0, (singleOrder?.totalAmount || 0) - singleOrder.amountRemaining)
+            : singleOrder?.totalAmount || 0
+        }
         isVatApplied={singleOrder?.isVatApplied ?? false}
         vatPercentage={singleOrder?.vatRate ?? 0}
         onSuccess={() => {
@@ -1451,6 +1660,17 @@ const OrdersList: React.FC<OrdersListProps> = ({
         onOpenChange={setIsOpenHistoryModal}
         orderId={singleOrder?.id || null}
         orderReference={singleOrder?.reference}
+      />
+      <PaymentBreakdownModal
+        isOpen={isOpenPaymentBreakdown}
+        onOpenChange={setIsOpenPaymentBreakdown}
+        reference={
+          singleOrder?.checkOutReference || 
+          (singleOrder as any)?.checkoutReference || 
+          singleOrder?.qrReference || 
+          singleOrder?.reference || 
+          null
+        }
       />
     </section>
   );

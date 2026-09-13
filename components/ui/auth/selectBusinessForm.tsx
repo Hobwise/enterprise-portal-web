@@ -2,6 +2,7 @@
 import {
   loginUserSelectedBusiness,
 } from "@/app/api/controllers/auth";
+import { getUserHomeRoute } from "@/lib/userTypeUtils";
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { decryptPayload } from "@/lib/encrypt-decrypt";
@@ -86,10 +87,9 @@ const SelectBusinessForm = () => {
     }
   }, []);
 
-  // Initialize: prefetch route, restore credentials, and handle cleanup
+  // Initialize: restore credentials and handle cleanup
   useEffect(() => {
     isMountedRef.current = true;
-    router.prefetch('/dashboard');
 
     const storedLoginDetails = getJsonItemFromLocalStorage("loginDetails");
 
@@ -175,8 +175,8 @@ const SelectBusinessForm = () => {
           });
           saveJsonItemToLocalStorage("userInformation", decryptedData?.data);
 
-          // Navigate to dashboard
-          router.replace("/dashboard");
+          // Navigate to the correct home for this user type
+          router.replace(getUserHomeRoute(decryptedData?.data));
         } else if (decryptedData?.error) {
           if (!handleAuthenticationError(decryptedData.error)) {
             throw new Error(decryptedData.error?.message || "Failed to process business selection");

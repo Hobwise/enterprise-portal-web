@@ -2,10 +2,12 @@ import CategoryPrivateRoute from "@/components/auth/CategoryPrivateRoute";
 import ClientProviders from "@/components/ClientProviders";
 import QueryProvider from "@/hooks/queryProvider";
 import { AppProvider } from "@/hooks/globalProvider";
+import { SubscriptionProvider } from "@/hooks/providers/SubscriptionProvider";
 import { Providers } from "@/utilities/providers";
 import { bricolage_grotesque } from "@/utilities/ui-config/fonts";
 import { Toaster } from "react-hot-toast";
 import { companyInfo } from "../../lib/companyInfo";
+import AiChatWidget from "@/components/ui/dashboard/ai-chat/AiChatWidget";
 
 export const metadata = {
   title: `${companyInfo.name} - Business Activities`,
@@ -24,7 +26,8 @@ export default function BusinessActivitiesLayout({
           <QueryProvider>
             <AppProvider>
               <Providers>
-                {children}
+                <SubscriptionProvider>{children}</SubscriptionProvider>
+                <AiChatWidget />
                 <Toaster
                   toastOptions={{
                     duration: 5000,

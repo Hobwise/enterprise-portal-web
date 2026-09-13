@@ -20,7 +20,7 @@ export default function ReservationRedirect() {
           // Check if it's a single reservation or all reservations
           if (decodedParams.reservationId) {
             // Single reservation redirect
-            const fullUrl = `/reservation/select-reservation/single-reservation?reservationId=${decodedParams.reservationId}`;
+            const fullUrl = `/reserve/single-reservation?reservationId=${decodedParams.reservationId}`;
             console.log('Redirecting to single reservation:', fullUrl);
             router.replace(fullUrl);
           } else if (decodedParams.businessId) {
@@ -33,7 +33,7 @@ export default function ReservationRedirect() {
               queryParams.set('cooperateID', decodedParams.cooperateID);
             }
 
-            const fullUrl = `/reservation/select-reservation?${queryParams.toString()}`;
+            const fullUrl = `/reserve?${queryParams.toString()}`;
             console.log('Redirecting to all reservations:', fullUrl);
             router.replace(fullUrl);
           } else {

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDisclosure } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 import useMenuCategories from '@/hooks/cachedEndpoints/useMenuCategories';
 import usePermission from '@/hooks/cachedEndpoints/usePermission';
 import { useGlobalContext } from '@/hooks/globalProvider';
@@ -21,7 +20,12 @@ import {
   deleteVariety,
 } from '@/app/api/controllers/dashboard/menu';
 import { CustomLoading } from '@/components/ui/dashboard/CustomLoading';
-import { getJsonItemFromLocalStorage, dynamicExportConfig } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, dynamicExportConfig, notify } from '@/lib/utils';
+
+const toast = {
+  success: (text: string) => notify({ text, type: 'success' }),
+  error: (text: string) => notify({ text, type: 'error' }),
+};
 import MenuHeader from '@/components/ui/dashboard/menu/MenuHeader';
 import CategoryTabs from '@/components/ui/dashboard/menu/CategoryTabs';
 import MenuToolbar from '@/components/ui/dashboard/menu/MenuToolbar';
@@ -135,12 +139,14 @@ const RestaurantMenu = () => {
   const [itemName, setItemName] = useState('');
   const [itemDescription, setItemDescription] = useState('');
   const [itemPrice, setItemPrice] = useState('');
+  const [itemQuantity, setItemQuantity] = useState('');
   const [itemImage, setItemImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState('');
 
   // Form states for Create Variety
   const [varietyName, setVarietyName] = useState('');
   const [varietyPrice, setVarietyPrice] = useState('');
+  const [varietyQuantity, setVarietyQuantity] = useState('');
 
   // Upload loading states
   const [isUploadingItemImage, setIsUploadingItemImage] = useState(false);
@@ -202,11 +208,17 @@ const RestaurantMenu = () => {
     }
 
     try {
-      const preloadPromises = sections.map(async (section) => {
-        // Check global cache first
-        const cached = globalMenuItemsCache.get(section.id);
+      const newPreloadedSections = new Map(preloadedSections);
+      const newTimestamps = new Map(cacheTimestamps);
+
+      // Process sequentially to avoid overwhelming the server/browser
+      for (const section of sections) {
+        // Check global cache first using the correct page_1 key
+        const cacheKey = `${section.id}_page_1`;
+        const cached = globalMenuItemsCache.get(cacheKey);
+        
         if (cached && (Date.now() - cached.timestamp < GLOBAL_CACHE_EXPIRY_TIME)) {
-          return { sectionId: section.id, cached: true };
+          continue;
         }
 
         try {
@@ -233,35 +245,29 @@ const RestaurantMenu = () => {
               hasVariety: item.hasVariety,
             }));
 
-            // Update global cache
-            globalMenuItemsCache.set(section.id, {
+            const pagination = response.data.data?.pagination;
+            const totalPagesFromAPI = pagination?.totalPages || Math.ceil((response.data.data?.totalCount || items.length) / pageSize);
+            const totalItemsFromAPI = pagination?.totalItems || response.data.data?.totalCount || items.length;
+
+            // Update global cache with correct key and pagination
+            globalMenuItemsCache.set(cacheKey, {
               items: transformedItems,
               timestamp: Date.now(),
-              totalPages: 1,
-              totalItems: transformedItems.length,
+              totalPages: totalPagesFromAPI,
+              totalItems: totalItemsFromAPI,
               currentPage: 1
             });
 
-            return { sectionId: section.id, items: transformedItems };
+            newPreloadedSections.set(section.id, transformedItems);
+            newTimestamps.set(section.id, Date.now());
+
+            // Add a small delay between requests to keep the main thread responsive
+            await new Promise(resolve => setTimeout(resolve, 200));
           }
         } catch (error) {
           console.error(`Failed to preload section ${section.id}:`, error);
-          return { sectionId: section.id, error: true };
         }
-      });
-
-      const results = await Promise.allSettled(preloadPromises);
-
-      const newPreloadedSections = new Map(preloadedSections);
-      const newTimestamps = new Map(cacheTimestamps);
-
-      results.forEach((result) => {
-        if (result.status === 'fulfilled' && result.value?.items) {
-          const { sectionId, items } = result.value;
-          newPreloadedSections.set(sectionId, items);
-          newTimestamps.set(sectionId, Date.now());
-        }
-      });
+      }
 
       setPreloadedSections(newPreloadedSections);
       setCacheTimestamps(newTimestamps);
@@ -498,6 +504,23 @@ const RestaurantMenu = () => {
               fetchFirstItemPriority(sections[0].id);
               fetchRemainingItemsBackground(sections[0].id, 1);
             }
+
+            // After prioritizing the first section, systematically preload ALL other sections across all categories
+            setTimeout(() => {
+              const allOtherSections: any[] = [];
+              categoriesData.forEach((category: any) => {
+                const catSections = category.menus?.[0]?.menuSections || [];
+                catSections.forEach((section: any) => {
+                  if (section.id !== sections[0].id) {
+                    allOtherSections.push(section);
+                  }
+                });
+              });
+              
+              if (allOtherSections.length > 0) {
+                preloadMenuSections(allOtherSections, false);
+              }
+            }, 1000); // 1-second delay to ensure the initial category has completely painted
           } else {
             // Normal cache check for subsequent loads
             const cached = globalMenuItemsCache.get(sections[0].id);
@@ -690,7 +713,7 @@ const RestaurantMenu = () => {
       if (response?.data?.isSuccessful) {
         const itemData = response.data.data;
         const varieties = itemData?.varieties || [];
-        const updatedItem = { ...item, varieties, ...itemData };
+        const updatedItem = { ...item, varieties, ...itemData, menuID: item.menuID || itemData?.menuID };
         setSelectedItem(updatedItem);
 
         if (varieties.length > 0) {
@@ -747,7 +770,9 @@ const RestaurantMenu = () => {
       if (response?.data?.isSuccessful) {
         const itemData = response.data.data;
         const varieties = itemData?.varieties || [];
-        setSelectedItem({ ...selectedItem, varieties, ...itemData });
+        setSelectedItem({ ...selectedItem, varieties, ...itemData, menuID: selectedItem.menuID || itemData?.menuID });
+      } else {
+        toast.error('Failed to refresh item data');
       }
     }
     // Refresh menu items
@@ -760,7 +785,7 @@ const RestaurantMenu = () => {
         }
       });
       keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
-      
+
       // Also invalidate preloaded sections cache
       setPreloadedSections(prev => {
         const newMap = new Map(prev);
@@ -785,9 +810,10 @@ const RestaurantMenu = () => {
       const business = getJsonItemFromLocalStorage('business');
       const payload: payloadMenuVariety = {
         itemID: selectedItem.id,
-        menuID: selectedItem.menuID,
+        menuID: selectedItem.menuID || activeSubCategory,
         unit: varietyName,
         price: parseFloat(varietyPrice),
+        ...(varietyQuantity ? { quantityPerSale: parseFloat(varietyQuantity) } : {}),
         currency: 'NGA',
       };
 
@@ -802,7 +828,23 @@ const RestaurantMenu = () => {
         toast.success('Variety created successfully');
         setVarietyName('');
         setVarietyPrice('');
-        backToItemDetails();
+        setVarietyQuantity('');
+
+        // Refresh selectedItem with new variety data before navigating
+        if (selectedItem) {
+          const refreshResponse = await getMenuItem(selectedItem.id);
+          if (refreshResponse?.data?.isSuccessful) {
+            const itemData = refreshResponse.data.data;
+            const varieties = itemData?.varieties || [];
+            setSelectedItem({ ...selectedItem, varieties, ...itemData, menuID: selectedItem.menuID || itemData?.menuID });
+          }
+        }
+
+        // After a successful create, we know there is at least one variety,
+        // so always open ItemDetailsModal (not SingleItemModal)
+        setIsCreateVarietyModalOpen(false);
+        setIsItemDetailsModalOpen(true);
+
         if (activeSubCategory) {
           // Invalidate all pages in cache for this section
           const keysToDelete: string[] = [];
@@ -812,7 +854,7 @@ const RestaurantMenu = () => {
             }
           });
           keysToDelete.forEach(key => globalMenuItemsCache.delete(key));
-          
+
           // Also invalidate preloaded sections cache
           setPreloadedSections(prev => {
             const newMap = new Map(prev);
@@ -847,6 +889,7 @@ const RestaurantMenu = () => {
         itemDescription: itemDescription,
         price: parseFloat(itemPrice),
         currency: 'NGN',
+        ...(itemQuantity ? { quantityPerSale: parseFloat(itemQuantity) } : {}),
         isAvailable: true,
         hasVariety: false,
         imageReference: itemImageReference,
@@ -864,6 +907,7 @@ const RestaurantMenu = () => {
         setItemName('');
         setItemDescription('');
         setItemPrice('');
+        setItemQuantity('');
         setSelectedSection('');
         setSelectedMenuType('');
         setItemImage(null);
@@ -1250,7 +1294,7 @@ const RestaurantMenu = () => {
           if (updatedResponse?.data?.isSuccessful) {
             const itemData = updatedResponse.data.data;
             const varieties = itemData?.varieties || [];
-            setSelectedItem({ ...selectedItem, varieties, ...itemData });
+            setSelectedItem({ ...selectedItem, varieties, ...itemData, menuID: selectedItem.menuID || itemData?.menuID });
           }
         }
         if (activeSubCategory) {
@@ -1719,6 +1763,8 @@ const RestaurantMenu = () => {
         setItemDescription={setItemDescription}
         itemPrice={itemPrice}
         setItemPrice={setItemPrice}
+        itemQuantity={itemQuantity}
+        setItemQuantity={setItemQuantity}
         handleDrag={handleDrag}
         handleDrop={handleDrop}
         handleFileChange={handleFileChange}
@@ -1740,6 +1786,8 @@ const RestaurantMenu = () => {
         setVarietyName={setVarietyName}
         varietyPrice={varietyPrice}
         setVarietyPrice={setVarietyPrice}
+        varietyQuantity={varietyQuantity}
+        setVarietyQuantity={setVarietyQuantity}
         loading={loading}
         handleCreateVariety={handleCreateVariety}
         backToItemDetails={backToItemDetails}

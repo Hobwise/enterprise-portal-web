@@ -8,7 +8,6 @@ import {
   HOME_URL,
   LOGIN_URL,
   PRICING_URL,
-  RESERVATIONS_URL,
   SIGN_UP_URL,
 } from "@/utilities/routes";
 import Image from "next/image";
@@ -34,8 +33,7 @@ import { MdOutlinePerson } from "react-icons/md";
 export const navItem = [
   { title: "Home", href: HOME_URL },
   { title: "Pricing", href: PRICING_URL },
-  // { title: 'Businesses', href: BUSINESS_URL },
-  { title: "Reservations", href: RESERVATIONS_URL },
+  { title: "Features", href: "#features" },
   { title: "Contact", href: CONTACT_URL },
 ];
 

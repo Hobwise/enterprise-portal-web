@@ -25,6 +25,11 @@ export const lists = [
   },
   // { title: "KYC Compliance", subtitle: "Complete your KYC verification", href: "/dashboard/settings/kyc-compliance" },
   {
+    title: "Payment Management",
+    subtitle: "Create and customize your payment account to ease transactions.",
+    href: "/dashboard/settings/payment-management",
+  },
+  {
     title: "Billing & Subscription",
     subtitle: "Manage your subscription and billing details",
     href: "/dashboard/settings/subscriptions",

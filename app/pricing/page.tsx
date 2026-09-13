@@ -1,26 +1,22 @@
 'use client';
-import Navbar from '@/components/ui/landingPage/navBar';
 import Image from 'next/image';
-import React, { useState } from 'react';
+import React from 'react';
 import PricePlan from '@/public/assets/images/pricing-bg-2.png';
 import { TagIcon } from '@/public/assets/svg';
 import PricingComponent from '@/components/ui/landingPage/pricing';
 import JoinCommunity from '@/components/ui/landingPage/joinCommunity';
 import BestToolsComponent from '@/components/ui/landingPage/bestTools';
-import Footer from '@/components/ui/landingPage/footer';
+import LandingFooter from '@/components/ui/landingPage/v2/footer';
+import LandingNav from '@/components/ui/landingPage/v2/nav';
 import Companies from '@/components/ui/landingPage/companies';
-import LandingPageHeader from '@/components/ui/landingPage/header';
 import { Transition } from '@/components/ui/landingPage/transition';
 
 export default function Pricing() {
   return (
     <div className="bg-white">
-      <header className="z-50 backdrop-filter backdrop-blur-md fixed w-full">
-        <LandingPageHeader />
-        <Navbar type="default" />
-      </header>
+      <LandingNav />
 
-      <main className="w-full pt-12 font-satoshi">
+      <main className="w-full pt-20 font-satoshi">
         <section className=" font-satoshi py-12 space-y-12 bg-white  main-section">
           <Image src={PricePlan} alt="" className="absolute top-0 w-[60%] right-[20%] px-6 lg:px-12" priority />
           <div className="bg-[#6840D50D] text-[#5F35D2] lg:px-12 border border-[#5F35D2] flex items-center w-fit space-x-2 px-4 py-1.5 rounded-full mx-auto shadow-custom_inset_2">
@@ -89,7 +85,7 @@ export default function Pricing() {
           <JoinCommunity className="mt-0" />
         </section>
       </main>
-      <Footer />
+      <LandingFooter />
     </div>
   );
 }

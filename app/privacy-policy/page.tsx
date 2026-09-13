@@ -26,7 +26,7 @@ export default function PrivacyView() {
 
   return (
     <React.Fragment>
-      <div className="border-b w-full flex border-b-[#C4C4C480] space-x-8 px-6 lg:px-10 bg-white pt-24 fixed" id="tabs">
+      <div className="border-b w-full flex border-b-[#C4C4C480] space-x-8 px-6 lg:px-10 bg-white pt-[88px] fixed top-0 inset-x-0 z-[90]" id="tabs">
         {tabs.map((tab) => (
           <div
             className={cn(

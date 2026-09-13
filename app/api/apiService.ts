@@ -56,6 +56,8 @@ const refreshToken = async () => {
     const businesses = getJsonItemFromLocalStorage('business');
 
     if (!userData?.refreshToken || !userData?.email || !businesses?.[0]?.businessId) {
+      // Missing local data — do NOT wipe the session; this is not an auth failure.
+      // The token may still be valid; let the caller decide what to do.
       throw new Error('Missing required refresh data');
     }
 
@@ -86,15 +88,21 @@ const refreshToken = async () => {
     api.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
     onTokenRefreshed(newToken);
     return newToken;
-  } catch (error) {
+  } catch (error: any) {
     onRefreshFailed(error);
-    resetLoginInfo();
-    window.location.href = '/auth/login';
+    // Only redirect to login for real authentication failures (API rejection),
+    // not for local data issues like missing businessId right after onboarding.
+    const isMissingData = error?.message === 'Missing required refresh data';
+    if (!isMissingData) {
+      resetLoginInfo();
+      window.location.href = '/auth/login';
+    }
     throw error;
   } finally {
     isRefreshing = false;
   }
 };
+
 
 const refreshTokenIfNeeded = async () => {
   if (!isTokenExpiringSoon() || isRefreshing) return null;
@@ -104,6 +112,30 @@ const refreshTokenIfNeeded = async () => {
     return await refreshToken();
   } catch (error) {
     return null;
+  }
+};
+
+/**
+ * Force a business-scoped token refresh on demand (e.g. right after subscribing
+ * to a plan, when the currently stored token predates the active business).
+ * Respects the shared `isRefreshing` flag / `refreshSubscribers` queue so it
+ * never races a refresh already triggered by the interceptors.
+ * Returns the new token, or null when refresh failed (in which case
+ * `refreshToken` has already redirected to /auth/login).
+ */
+export const forceTokenRefresh = async (): Promise<string | null> => {
+  if (isRefreshing) {
+    // Join the in-flight refresh instead of starting a second one.
+    return new Promise((resolve) =>
+      subscribeTokenRefresh((token) => resolve(token ?? null))
+    );
+  }
+
+  isRefreshing = true; // mirror the interceptor's contract
+  try {
+    return await refreshToken(); // refreshToken's finally resets isRefreshing
+  } catch (error) {
+    return null; // refreshToken already redirected to /auth/login on failure
   }
 };
 
@@ -121,17 +153,19 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  if (cooperateID) {
+  if (cooperateID && !config.headers['cooperateId']) {
     config.headers['cooperateId'] = cooperateID;
   }
-  if (businessId) {
+  if (businessId && !config.headers['businessId']) {
     config.headers['businessId'] = businessId;
   }
-  if (userId) {
+  if (userId && !config.headers['userId']) {
     config.headers['userId'] = userId;
   }
 
-  const isMultipartFormData = config.headers['Content-Type'] === 'multipart/form-data';
+  const isMultipartFormData =
+    config.headers['Content-Type'] === 'multipart/form-data' ||
+    (typeof FormData !== 'undefined' && config.data instanceof FormData);
   if (isMultipartFormData) {
     delete config.headers['Content-Type'];
   }
@@ -221,8 +255,9 @@ export const handleError = (error: any, showError: boolean = true) => {
     return;
   }
   
-  // Handle other authentication errors
-  if (error?.response?.status === 401 || error?.response?.status === 403) {
+  // Only 401 should force logout; 403 can be a valid authorization response
+  // (e.g., plan/feature restrictions) and should not clear auth state.
+  if (error?.response?.status === 401) {
     console.warn('Unauthorized access, redirecting to login...');
     resetLoginInfo();
     window.location.href = '/auth/login';

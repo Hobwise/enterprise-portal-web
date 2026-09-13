@@ -52,6 +52,7 @@ type Item = {
   packingCost: number;
   isPacked?: boolean;
   categoryId?: string;
+  comment?: string;
 };
 
 
@@ -873,6 +874,14 @@ const MenuList = () => {
     );
   }, [isUpdating, menuItems]);
 
+  const handleItemComment = useCallback((itemId: string, comment: string) => {
+    setSelectedItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === itemId ? { ...item, comment } : item
+      )
+    );
+  }, []);
+
   const handleOpenCheckoutModal = useCallback(() => {
     if (isUpdating) return; // Prevent concurrent updates
 
@@ -1136,6 +1145,7 @@ const MenuList = () => {
           id={order?.id}
           orderDetails={orderDetails}
           handlePackingCost={handlePackingCost}
+          handleItemComment={handleItemComment}
           businessId={businessInformation?.[0]?.businessId}
           cooperateID={userInformation?.cooperateID}
           categoriesData={categories}

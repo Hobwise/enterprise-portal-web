@@ -1,0 +1,450 @@
+"use client";
+
+import {
+  getInventoryItems,
+  getInventoryItem,
+  getIngredients,
+  getSuppliers,
+  getUnits,
+  getRecipeDetails,
+  getMenuSummary,
+  InventoryItem,
+  InventoryUnit,
+  Supplier,
+  ItemUnit,
+  RecipeWithHistory,
+  MenuSummaryCategory,
+} from "@/app/api/controllers/dashboard/inventory";
+import { getJsonItemFromLocalStorage } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { fetchQueryConfig } from "@/lib/queryConfig";
+
+type UseInventoryItemsParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  /**
+   * Optional override for the businessId.
+   * If not provided, the current business from localStorage is used.
+   */
+  businessIdOverride?: string;
+  /**
+   * When false, the query will not run. Defaults to true.
+   */
+  enabled?: boolean;
+};
+
+type InventoryItemsResult = {
+  items: InventoryItem[];
+  totalCount: number;
+  pageSize: number;
+  currentPage: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+};
+
+const useInventoryItems = (params: UseInventoryItemsParams = {}) => {
+  const {
+    page = 1,
+    pageSize = 10,
+    search,
+    businessIdOverride,
+    enabled = true,
+  } = params;
+
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const defaultBusinessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+  const businessId = businessIdOverride ?? defaultBusinessId;
+
+  const fetchInventoryItems = async (): Promise<InventoryItemsResult> => {
+    try {
+      const response = await getInventoryItems(
+        businessId,
+        page,
+        pageSize,
+        search,
+      );
+
+      if (!response?.data?.isSuccessful) {
+        return {
+          items: [],
+          totalCount: 0,
+          pageSize,
+          currentPage: page,
+          totalPages: 1,
+          hasNext: false,
+          hasPrevious: false,
+        };
+      }
+
+      const responseData = response.data;
+      const data = responseData.data;
+
+      // Extract items - could be array or nested in .items
+      const rawItems = Array.isArray(data) ? data : data?.items || [];
+
+      // Sort items by dateCreated (newest first) as fallback if API doesn't sort
+      const items = [...rawItems].sort((a, b) => {
+        const dateA = new Date(a.dateCreated).getTime();
+        const dateB = new Date(b.dateCreated).getTime();
+        return dateB - dateA;
+      });
+
+      // Extract pagination from response.data level (not response.data.data)
+      // The API returns pagination metadata at the response.data level
+      const totalCount =
+        responseData.totalCount ?? data?.totalCount ?? items.length;
+      const totalPages =
+        responseData.totalPages ??
+        data?.totalPages ??
+        (Math.ceil(totalCount / pageSize) || 1);
+      const currentPageNum =
+        responseData.currentPage ?? data?.currentPage ?? page;
+      const hasNextPage =
+        responseData.hasNext ?? data?.hasNext ?? currentPageNum < totalPages;
+      const hasPreviousPage =
+        responseData.hasPrevious ?? data?.hasPrevious ?? page > 1;
+
+      return {
+        items: items as InventoryItem[],
+        totalCount,
+        pageSize: responseData.pageSize ?? data?.pageSize ?? pageSize,
+        currentPage: currentPageNum,
+        totalPages,
+        hasNext: hasNextPage,
+        hasPrevious: hasPreviousPage,
+      };
+    } catch (error) {
+      console.error("Error fetching inventory items:", error);
+      return {
+        items: [],
+        totalCount: 0,
+        pageSize,
+        currentPage: page,
+        totalPages: 1,
+        hasNext: false,
+        hasPrevious: false,
+      };
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<InventoryItemsResult>({
+    queryKey: [
+      "inventoryItems",
+      { businessId, page, pageSize, search },
+    ],
+    queryFn: fetchInventoryItems,
+    enabled: enabled && !!businessId,
+    ...fetchQueryConfig(),
+    retry: 1,
+  });
+
+  return {
+    data: data?.items || [],
+    totalCount: data?.totalCount || 0,
+    totalPages: data?.totalPages || 1,
+    currentPage: data?.currentPage || page,
+    hasNext: data?.hasNext || false,
+    hasPrevious: data?.hasPrevious || false,
+    isLoading,
+    isError,
+    refetch,
+  };
+};
+
+export const useInventoryItem = (itemId: string | null) => {
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+
+  const fetchItem = async () => {
+    if (!itemId) return null;
+
+    try {
+      const response = await getInventoryItem(businessId, itemId);
+      if (response?.data?.isSuccessful) {
+        return response.data.data as InventoryItem;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching inventory item:", error);
+      return null;
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<InventoryItem | null>({
+    queryKey: ["inventoryItem", itemId],
+    queryFn: fetchItem,
+    enabled: !!itemId,
+    ...fetchQueryConfig(),
+    retry: 1,
+  });
+
+  return {
+    data,
+    isLoading,
+    isError,
+    refetch,
+  };
+};
+
+export const useIngredients = (
+  options: { businessId?: string; search?: string; enabled?: boolean } = {},
+) => {
+  const { businessId: overrideBusinessId, search, enabled = true } = options;
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const defaultBusinessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+  const businessId =
+    overrideBusinessId !== undefined ? overrideBusinessId : defaultBusinessId;
+
+  const fetchIngredients = async () => {
+    try {
+      const response = await getIngredients(businessId, search);
+      if (response?.data?.isSuccessful) {
+        const result = response.data.data;
+        return Array.isArray(result) ? result : [];
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching ingredients:", error);
+      return [];
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<InventoryItem[]>({
+    queryKey: ["ingredients", businessId, search],
+    queryFn: fetchIngredients,
+    ...fetchQueryConfig(),
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+    enabled: !!businessId && enabled,
+  });
+
+  return {
+    data: data || [],
+    isLoading,
+    isError,
+    refetch,
+  };
+};
+
+export const useUnitsByBusiness = () => {
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+
+  const fetchUnits = async () => {
+    try {
+      const response = await getUnits(businessId);
+      if (response?.data?.isSuccessful) {
+        const result = response.data.data;
+        const units = result?.units ?? result;
+        return Array.isArray(units) ? (units as InventoryUnit[]) : [];
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching units by business:", error);
+      return [];
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<InventoryUnit[]>({
+    queryKey: ["unitsByBusiness", businessId],
+    queryFn: fetchUnits,
+    ...fetchQueryConfig(),
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+    enabled: !!businessId,
+  });
+
+  return { data: data || [], isLoading, isError, refetch };
+};
+
+export const useSuppliers = () => {
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+
+  const fetchSuppliers = async () => {
+    try {
+      const response = await getSuppliers(businessId);
+      if (response?.data?.isSuccessful) {
+        const result = response.data.data;
+        // The LOV endpoint wraps the list (like Unit/lov → { units: [...] }),
+        // so unwrap `suppliers` but still tolerate a flat array.
+        const suppliers = result?.suppliers ?? result;
+        return Array.isArray(suppliers) ? (suppliers as Supplier[]) : [];
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching suppliers:", error);
+      return [];
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<Supplier[]>({
+    queryKey: ["suppliers", businessId],
+    queryFn: fetchSuppliers,
+    ...fetchQueryConfig(),
+    retry: 1,
+    enabled: !!businessId,
+  });
+
+  return { data: data || [], isLoading, isError, refetch };
+};
+
+type UseUnitsParams = {
+  page?: number;
+  pageSize?: number;
+};
+
+export const useUnits = (params: UseUnitsParams = {}) => {
+  const { page = 1, pageSize = 10 } = params;
+
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+
+  const fetchUnits = async () => {
+    try {
+      const response = await getUnits(businessId, page, pageSize);
+      if (response?.data?.isSuccessful) {
+        return response.data.data as InventoryUnit[];
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching units:", error);
+      return [];
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<InventoryUnit[]>({
+    queryKey: ["units", { page, pageSize }],
+    queryFn: fetchUnits,
+    ...fetchQueryConfig(),
+    retry: 1,
+  });
+
+  return { data: data || [], isLoading, isError, refetch };
+};
+
+export const useItemUnits = (itemId: string | null) => {
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+
+  const fetchItemUnits = async () => {
+    if (!itemId) return [];
+
+    try {
+      const response = await getInventoryItem(businessId, itemId);
+      if (response?.data?.isSuccessful) {
+        const item = response.data.data as InventoryItem;
+        return (item.itemUnits || []) as ItemUnit[];
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching item units:", error);
+      return [];
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<ItemUnit[]>({
+    queryKey: ["itemUnits", itemId],
+    queryFn: fetchItemUnits,
+    enabled: !!itemId,
+    ...fetchQueryConfig(),
+    retry: 1,
+  });
+
+  return { data: data || [], isLoading, isError, refetch };
+};
+
+export const useRecipeDetails = (recipeId: string | null) => {
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+
+  const fetchRecipeDetails = async () => {
+    if (!recipeId) return null;
+
+    try {
+      const response = await getRecipeDetails(businessId, recipeId);
+      if (response?.data?.isSuccessful) {
+        return response.data.data as RecipeWithHistory;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching recipe details:", error);
+      return null;
+    }
+  };
+
+  const { data, isLoading, isError, refetch } =
+    useQuery<RecipeWithHistory | null>({
+      queryKey: ["recipeDetails", recipeId],
+      queryFn: fetchRecipeDetails,
+      enabled: !!recipeId,
+      ...fetchQueryConfig(),
+      retry: 1,
+    });
+
+  return { data, isLoading, isError, refetch };
+};
+
+export const useMenuSummary = () => {
+  const businessInformation = getJsonItemFromLocalStorage("business");
+  const businessId = businessInformation
+    ? businessInformation[0]?.businessId
+    : "";
+
+  const fetchMenuSummary = async (): Promise<MenuSummaryCategory[]> => {
+    try {
+      const response = await getMenuSummary(businessId);
+      if (response?.data?.isSuccessful) {
+        const result = response.data.data;
+        return Array.isArray(result) ? result : [];
+      }
+      return [];
+    } catch (error) {
+      console.error("Error fetching menu summary:", error);
+      return [];
+    }
+  };
+
+  const { data, isLoading, isError, refetch } = useQuery<MenuSummaryCategory[]>(
+    {
+      queryKey: ["menuSummary", businessId],
+      queryFn: fetchMenuSummary,
+      ...fetchQueryConfig(),
+      retry: 1,
+      enabled: !!businessId,
+    },
+  );
+
+  const totalItemCount = (data || []).reduce(
+    (sum, cat) => sum + cat.itemCount,
+    0,
+  );
+
+  return {
+    data: data || [],
+    isLoading,
+    isError,
+    refetch,
+    totalItemCount,
+  };
+};
+
+export default useInventoryItems;

@@ -1,12 +1,12 @@
 "use client";
 import { CustomButton } from "@/components/customButton";
-import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
 import { useRouter } from "next/router";
 import { CiLock } from "react-icons/ci";
 import { IoReload } from "react-icons/io5";
 
 export default function Unauthorized() {
-  const { refetch, isLoading } = useSubscription();
+  const { refetch, isLoading } = useSubscriptionContext();
 
   return (
     <div className="flex items-center justify-center min-h-[400px]   p-4">

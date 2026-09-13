@@ -47,21 +47,23 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
-    
+
     if (!passwordFormData.oldPassword) {
-      newErrors.oldPassword = [isForced ? "Current password is required" : "Password is required"];
+      newErrors.oldPassword = [isForced ? 'Current password is required' : 'Password is required'];
     }
 
     if (!passwordFormData.password) {
-      newErrors.password = ["New password is required"];
+      newErrors.password = ['New password is required'];
     } else if (!validatePassword(passwordFormData.password)) {
-      newErrors.password = ["Password must contain uppercase, lowercase, special character, number and be at least 8 characters long"];
+      newErrors.password = [
+        'Password must contain uppercase, lowercase, special character, number and be at least 8 characters long',
+      ];
     }
 
     if (!passwordFormData.confirmPassword) {
-      newErrors.confirmPassword = ["Please confirm your password"];
+      newErrors.confirmPassword = ['Please confirm your password'];
     } else if (passwordFormData.password !== passwordFormData.confirmPassword) {
-      newErrors.confirmPassword = ["Passwords do not match"];
+      newErrors.confirmPassword = ['Passwords do not match'];
     }
 
     setErrors(newErrors);
@@ -74,7 +76,6 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
       ...prev,
       [name]: value,
     }));
-    // Clear error when user starts typing
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({
         ...prev,
@@ -106,7 +107,6 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
             ? 'Password updated successfully! You can now login with your new password.'
             : 'Your password has been changed, Proceed to login'
         );
-        // Add a small delay to ensure the toast is visible before redirect
         setTimeout(() => {
           router.push('/auth/login');
         }, 1500);
@@ -117,7 +117,6 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
           type: 'error',
         });
       } else if (data?.errors) {
-        // Handle validation errors
         setErrors(data.errors);
       }
     } catch (error: any) {
@@ -131,22 +130,29 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
     }
   };
 
+  const inputBgColor = 'bg-transparent lg:bg-white';
+  const inputClasses =
+    'h-[58px] rounded-xl border border-secondaryColor/40 lg:border-transparent lg:shadow-[0_1px_2px_rgba(16,24,40,0.05)] data-[hover=true]:!border-secondaryColor/60 data-[focus=true]:!border-secondaryColor';
+
   return (
     <>
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-extrabold mb-3">
-          {isForced ? 'Update Password Required' : 'Enter Password'}
+      <div className="mb-8 text-center lg:text-left">
+        <h2 className="text-[34px] font-extrabold leading-tight text-white lg:text-[40px] lg:text-[#1F2937]">
+          {isForced ? 'Update Password' : 'Create Password'}
         </h2>
-        <p className="text-base text-gray-400">
+        <p className="mt-3 text-[15px] leading-relaxed text-white/70 lg:text-[#6B7280]">
           {isForced ? (
             <>
-              You need to update your password for security reasons. Please enter your current password and create a new one for{' '}
+              You need to update your password for security reasons. Please enter your current
+              password and create a new one for{' '}
               <span className="font-semibold text-secondaryColor">{email}</span>
             </>
           ) : (
             <>
-              Enter the password that was sent to{' '}
-              <span className="font-semibold text-secondaryColor">{email}</span>
+              Your email{' '}
+              <span className="font-semibold text-secondaryColor">{email}</span> has been
+              confirmed.
+              <br className="hidden lg:block" /> Create new password
             </>
           )}
         </p>
@@ -160,14 +166,16 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
           name="oldPassword"
           type="password"
           label=""
-          placeholder={isForced ? "Enter current password" : "Enter password"}
-          bgColor="bg-transparent"
-          classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-          inputTextColor="text-gray-200"
-          eyeIconStyle="text-gray-300 text-lg"
+          placeholder={
+            isForced ? 'Enter current password' : 'Enter temporary password'
+          }
+          bgColor={inputBgColor}
+          classnames={inputClasses}
+          inputTextColor="text-white lg:text-[#1F2937]"
+          eyeIconStyle="text-base text-white/70 lg:text-[#1F2937]"
         />
 
-        <Spacer y={5} />
+        <Spacer y={4} />
 
         <CustomInput
           errorMessage={errors.password?.[0]}
@@ -176,14 +184,14 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
           type="password"
           name="password"
           label=""
-          placeholder="Enter new password"
-          bgColor="bg-transparent"
-          classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-          inputTextColor="text-gray-200"
-          eyeIconStyle="text-gray-300 text-lg"
+          placeholder="Create new password"
+          bgColor={inputBgColor}
+          classnames={inputClasses}
+          inputTextColor="text-white lg:text-[#1F2937]"
+          eyeIconStyle="text-base text-white/70 lg:text-[#1F2937]"
         />
 
-        <Spacer y={5} />
+        <Spacer y={4} />
 
         <CustomInput
           errorMessage={errors.confirmPassword?.[0]}
@@ -192,22 +200,28 @@ const ChangePasswordForm = ({ email, isForced = false }: ChangePasswordFormProps
           type="password"
           name="confirmPassword"
           label=""
-          placeholder="Confirm new password"
-          bgColor="bg-transparent"
-          classnames="h-[56px] rounded-xl border border-secondaryColor !border-secondaryColor focus-within:!border-secondaryColor hover:!border-secondaryColor data-[focus=true]:!border-secondaryColor data-[hover=true]:!border-secondaryColor"
-          inputTextColor="text-gray-200"
-          eyeIconStyle="text-gray-300 text-lg"
+          placeholder="Confirm password"
+          bgColor={inputBgColor}
+          classnames={inputClasses}
+          inputTextColor="text-white lg:text-[#1F2937]"
+          eyeIconStyle="text-base text-white/70 lg:text-[#1F2937]"
         />
 
-        <Spacer y={7} />
+        <Spacer y={6} />
 
         <CustomButton
           loading={loading}
           disabled={loading}
           type="submit"
-          className="bg-secondaryColor font-[600] text-[16px] w-full rounded-xl h-[55px] text-white hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80 transition-all"
+          className={`flex h-[56px] w-full items-center justify-center rounded-xl text-[16px] font-semibold text-white transition-colors ${
+            passwordFormData.oldPassword &&
+            passwordFormData.password &&
+            passwordFormData.confirmPassword
+              ? 'bg-primaryColor hover:bg-primaryColor/90 focus:bg-primaryColor/90 active:bg-primaryColor/80'
+              : 'bg-secondaryColor hover:bg-secondaryColor/90 focus:bg-secondaryColor/90 active:bg-secondaryColor/80'
+          }`}
         >
-          Save new password
+          {loading ? 'Saving...' : 'Save Password'}
         </CustomButton>
       </form>
     </>

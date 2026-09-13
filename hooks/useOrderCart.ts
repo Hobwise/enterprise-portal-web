@@ -89,6 +89,14 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
     );
   }, [isUpdating, menuItems]);
 
+  const handleItemComment = useCallback((itemId: string, comment: string) => {
+    setOrderItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === itemId ? { ...item, comment } : item
+      )
+    );
+  }, []);
+
   const addItemToCart = useCallback((item: MenuItem, quantity: number = 1) => {
     // Check if item already exists in cart, matching by distinct itemID and packing status
     // valid itemID check is crucial to merge items from different categories/menus
@@ -182,6 +190,7 @@ export const useOrderCart = (menuItems: MenuItem[]) => {
     handleDecrement,
     handleIncrement,
     handlePackingCost,
+    handleItemComment,
     addItemToCart,
     clearCart,
     calculateOrderSummary,

@@ -28,14 +28,22 @@ export const paymentTypeMap: Record<number, string> = {
   1: "Refund",
 };
 
-export const paymentMethodMap: Record<
-  number,
-  "Cash" | "POS" | "Bank transfer" | "Checkout"
-> = {
+export const paymentMethodMap: Record<number, string> = {
   0: "Cash",
   1: "POS",
   2: "Bank transfer",
   3: "Checkout",
+};
+
+/** Payment method enum value for Checkout (Paystack online checkout) */
+export const CHECKOUT_PAYMENT_METHOD = 3;
+
+/** Helper to determine if a payment method corresponds to Checkout */
+export const isCheckoutPayment = (paymentMethod?: number | string) => {
+  if (paymentMethod === 3 || paymentMethod === "3") return true;
+  if (typeof paymentMethod === "string" && paymentMethod.toLowerCase() === "checkout") return true;
+  if (typeof paymentMethod === "number" && paymentMethodMap[paymentMethod] === "Checkout") return true;
+  return false;
 };
 
 export const availableOptions = {

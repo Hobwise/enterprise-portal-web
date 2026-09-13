@@ -17,6 +17,7 @@ import States from "../../../lib/cities.json";
 import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
 import { setJsonCookie } from "@/lib/cookies";
 import { getUserSubscription } from "@/app/api/controllers/dashboard/settings";
+import { forceTokenRefresh } from "@/app/api/apiService";
 import useLogout from "@/hooks/cachedEndpoints/useLogout";
 
 const BusinessInformationForm = () => {
@@ -166,6 +167,12 @@ const BusinessInformationForm = () => {
         });
         
         saveJsonItemToLocalStorage("business", [data?.data?.data]);
+
+        // The token issued at signup predates this newly created business, so
+        // the subscription endpoint rejects it (causing the Billing &
+        // Subscription page to error until a re-login). Re-scope the JWT to the
+        // new business before fetching subscription data or navigating away.
+        await forceTokenRefresh();
 
         const responseData = await getUserSubscription(
           data?.data?.data?.businessId

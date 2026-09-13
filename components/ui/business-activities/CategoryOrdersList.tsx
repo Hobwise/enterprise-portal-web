@@ -11,13 +11,20 @@ import {
   TableRow,
   Selection,
   SortDescriptor,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
 } from '@nextui-org/react';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
+import { ClipboardList } from 'lucide-react';
 import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 import usePagination from '@/hooks/usePagination';
 import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
 import moment from 'moment';
 import OrderDetailModal, { OrderDetailData } from '@/components/ui/dashboard/orders/OrderDetailModal';
+import DocketModal, { DocketCategory } from '@/components/ui/dashboard/orders/docket';
+import useMenuCategories from '@/hooks/cachedEndpoints/useMenuCategories';
 import { getOrderDetailsByCategory } from '@/app/api/controllers/dashboard/orders';
 
 // Type definitions
@@ -90,6 +97,54 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
   const { setTableStatus, tableStatus, setPage } = useGlobalContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<OrderDetailData | null>(null);
+
+  // Docket generation — mirrors the Dashboard Orders list. All menu categories
+  // are offered and DocketModal queries each to find the ones with items.
+  const [isOpenDocket, setIsOpenDocket] = useState(false);
+  const [docketOrder, setDocketOrder] = useState<any>(null);
+  const { data: menuCategoriesData } = useMenuCategories();
+  const docketCategories: DocketCategory[] = React.useMemo(() => {
+    const menuCats = (menuCategoriesData ?? []).map((category: any) => ({
+      categoryId: category.categoryId,
+      categoryName: category.categoryName,
+    }));
+
+    if (menuCats.length > 0) {
+      return menuCats;
+    }
+
+    // Category-scoped staff don't have access to the full menu-categories list,
+    // so fall back to their own assigned category — which is exactly the scope
+    // this page (and the docket endpoint) already works against.
+    const userInformation = getJsonItemFromLocalStorage("userInformation");
+    const assignedCategoryId = userInformation?.assignedCategoryId;
+    if (assignedCategoryId && assignedCategoryId !== "POS") {
+      return [
+        {
+          categoryId: assignedCategoryId,
+          categoryName: userInformation?.primaryAssignment || "Docket",
+        },
+      ];
+    }
+
+    return [];
+  }, [menuCategoriesData]);
+  const toggleDocketModal = React.useCallback(() => {
+    setIsOpenDocket((prev) => !prev);
+  }, []);
+
+  // DocketModal expects an order shaped like the Dashboard order object.
+  const handleGenerateDocket = React.useCallback((order: OrderItem) => {
+    setDocketOrder({
+      id: order.orderId,
+      reference: order.reference,
+      qrReference: order.tableName,
+      dateCreated: order.dateUpdated,
+    });
+    setIsOpenDocket(true);
+  }, []);
+  const handleGenerateDocketRef = React.useRef(handleGenerateDocket);
+  handleGenerateDocketRef.current = handleGenerateDocket;
 
   const handleTabClick = (categoryName: string) => {
     setTableStatus(categoryName);
@@ -328,13 +383,32 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
         );
       case 'actions':
         return (
-          <div className='relative flex justify-center items-center'>
-            <button
-              onClick={(e) => e.stopPropagation()}
-              className='text-gray-400 hover:text-gray-600 transition-colors'
-            >
-              <HiOutlineDotsVertical className='w-5 h-5' />
-            </button>
+          <div
+            className='relative flex justify-center items-center'
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Dropdown>
+              <DropdownTrigger>
+                <button
+                  aria-label='Order actions'
+                  className='text-gray-400 hover:text-gray-600 transition-colors'
+                >
+                  <HiOutlineDotsVertical className='w-5 h-5' />
+                </button>
+              </DropdownTrigger>
+              <DropdownMenu aria-label='Order actions'>
+                <DropdownItem
+                  key='generate-docket'
+                  aria-label='Generate Docket'
+                  onClick={() => handleGenerateDocketRef.current(order)}
+                >
+                  <div className='flex gap-3 items-center text-grey500'>
+                    <ClipboardList className='w-[18px] h-[18px]' />
+                    <p>Generate Docket</p>
+                  </div>
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
           </div>
         );
       default:
@@ -485,6 +559,21 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
                   {moment(order.dateUpdated).format('DD/MM/YYYY hh:mm A')}
                 </div>
               </div>
+
+              {docketCategories.length > 0 && (
+                <button
+                  type='button'
+                  aria-label='Generate Docket'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleGenerateDocket(order);
+                  }}
+                  className='mt-3 w-full flex items-center justify-center gap-2 rounded-lg border border-primaryGrey py-2 text-sm font-medium text-grey500 hover:bg-primaryColor/5 hover:border-primaryColor transition-colors'
+                >
+                  <ClipboardList className='w-[18px] h-[18px]' />
+                  Generate Docket
+                </button>
+              )}
             </article>
           ))}
 
@@ -557,6 +646,14 @@ const CategoryOrdersList: React.FC<CategoryOrdersListProps> = ({
         isOpen={isModalOpen}
         onOpenChange={setIsModalOpen}
         orderData={selectedOrder}
+      />
+
+      {/* Docket Modal */}
+      <DocketModal
+        isOpenDocket={isOpenDocket}
+        singleOrder={docketOrder}
+        toggleDocketModal={toggleDocketModal}
+        categories={docketCategories}
       />
     </section>
   );

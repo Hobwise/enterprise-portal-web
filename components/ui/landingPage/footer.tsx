@@ -2,10 +2,17 @@
 import { EclipseIcon, FacebookIcon, InstgramIcon, LinkedInIcon, TwitterIcon } from '@/public/assets/svg';
 import Image from 'next/image';
 import Link from 'next/link';
-import { navItem } from './navBar';
 import { Transition } from './transition';
 import Hobwise from '@/public/assets/images/hobwise.png';
-import { PRIVACY_POLICY } from '@/utilities/routes';
+import { CONTACT_URL, HOME_URL, PRICING_URL, PRIVACY_POLICY } from '@/utilities/routes';
+
+const footerNav = [
+  { title: 'Home', href: HOME_URL },
+  { title: 'Features', href: '/#features' },
+  { title: 'Pricing', href: `/${PRICING_URL}` },
+  { title: 'FAQ', href: '/#faq' },
+  { title: 'Contact Us', href: `/${CONTACT_URL}` },
+];
 
 export const socialMedia = [
   { icon: <FacebookIcon />, url: 'https://www.facebook.com/profile.php?id=61570807141575&mibextid=ZbWKwL' },
@@ -19,12 +26,12 @@ export default function Footer() {
       <footer className="font-satoshi w-full pt-10 lg:pt-20 pb-10 space-y-6 lg:space-y-12 bg-white text-[#4C4C4C]">
         <Image src={Hobwise} alt="Hobwise logo" width={140} className="mx-auto" />
         <div className="lg:w-1/2 mx-auto flex flex-wrap justify-center items-center">
-          {navItem.map((each, index) => (
+          {footerNav.map((each, index) => (
             <div className="flex items-center px-2 lg:px-0 mb-4 justify-center" key={each.title + 'footer'}>
               <Link href={each.href} className="px-4 nav_link hover:text-primaryColor">
                 {each.title}
               </Link>
-              {index !== navItem.length - 1 && <EclipseIcon />}
+              {index !== footerNav.length - 1 && <EclipseIcon />}
             </div>
           ))}
         </div>

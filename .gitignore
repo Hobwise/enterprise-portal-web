@@ -4,6 +4,8 @@
 /node_modules
 /.pnp
 .pnp.js
+.claude
+.gemini
 .yarn/install-state.gz
 
 # testing
@@ -38,3 +40,12 @@ next-env.d.ts
 
 .vercel
 .qodo
+
+# browser automation tools
+/b
+/.browser-sessions/
+/.browser-screenshots/
+/browser-control.cjs
+/cmds/
+/lib/cdp.cjs
+/lib/sessions.cjs

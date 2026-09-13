@@ -211,19 +211,22 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
       // Deduplicate items by merging quantities
       const uniqueItemsMap = new Map<string, any>();
       validItems.forEach((item: any) => {
-        if (uniqueItemsMap.has(item.itemID)) {
-          const existing = uniqueItemsMap.get(item.itemID);
+        // Create a unique key that accounts for price, unit, and packing differences for varieties
+        const uniqueKey = `${item.itemID}-${item.unit || 'default'}-${item.isPacked ? 'packed' : 'unpacked'}-${item.unitPrice}`;
+        
+        if (uniqueItemsMap.has(uniqueKey)) {
+          const existing = uniqueItemsMap.get(uniqueKey);
           existing.quantity += item.quantity;
         } else {
           // Clone the item to avoid mutating original data
-          uniqueItemsMap.set(item.itemID, { ...item });
+          uniqueItemsMap.set(uniqueKey, { ...item, uniqueKey });
         }
       });
 
       const deduplicatedItems = Array.from(uniqueItemsMap.values());
 
       const updatedArray = deduplicatedItems.map((item: any) => {
-        const { unitPrice, quantity, itemID, ...rest } = item;
+        const { unitPrice, quantity, itemID, uniqueKey, ...rest } = item;
 
         // Correctly find the item and its category from menuData
         let foundCategory = null;
@@ -242,7 +245,7 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
 
         return {
           ...rest,
-          id: itemID,
+          id: uniqueKey || itemID, // Use uniqueKey so increment/decrement targets the exact variety
           itemID: itemID,
           price: unitPrice,
           count: quantity,
@@ -524,6 +527,14 @@ const UpdateOrderModal: React.FC<UpdateOrderModalProps> = ({
                       userInformation?.lastName || "Not assigned"}
                   </span>
                 </div>
+                {(fullOrderData?.comment || orderData?.comment) && (
+                  <div className="flex flex-col w-full gap-1 mt-2 pt-2 border-t border-primaryGrey">
+                    <span className="text-textGrey">Comment:</span>
+                    <span className="font-semibold text-black whitespace-pre-wrap break-words">
+                      {fullOrderData?.comment || orderData?.comment}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </ModalHeader>

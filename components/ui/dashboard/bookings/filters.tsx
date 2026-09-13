@@ -3,7 +3,7 @@ import { Chip, Tab, Tabs } from '@nextui-org/react';
 import { useRef, useState, useEffect } from 'react';
 import { IoIosArrowBack, IoIosArrowForward } from 'react-icons/io';
 
-const Filters = ({ bookings, handleTabChange, handleTabClick }: any) => {
+const Filters = ({ bookings, handleTabChange, value }: any) => {
   const tabsRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(false);
@@ -58,6 +58,7 @@ const Filters = ({ bookings, handleTabChange, handleTabClick }: any) => {
           )}
           <Tabs
             ref={tabsRef}
+            selectedKey={value}
             classNames={{
               base: 'w-full',
               tabList:
@@ -76,12 +77,9 @@ const Filters = ({ bookings, handleTabChange, handleTabClick }: any) => {
             {bookings?.map((booking: any, index: number) => {
               return (
                 <Tab
-                  key={booking.id || booking.name || `booking-filter-${index}`}
+                  key={booking.name}
                   title={
-                    <div
-                      onClick={() => handleTabClick(booking.name)}
-                      className='flex items-center h-10 space-x-2 capitalize'
-                    >
+                    <div className='flex items-center h-10 space-x-2 capitalize'>
                       <span>{booking.name}</span>
 
                       <Chip

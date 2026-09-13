@@ -38,15 +38,15 @@ export default function Demo() {
     'flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1 rounded-full text-xs lg:mx-auto shadow_custom-inset';
 
   return (
-    <section className="bg-white py-8 lg:py-16 font-satoshi space-y-4 lg:space-y-8 px-6 lg:px-12">
-      <div className={sectionHeaderClass}>
+    <section className="bg-[#ECE6FB] py-8 lg:py-16 font-satoshi space-y-4 lg:space-y-8 px-6 lg:px-12">
+      <div className={cn(sectionHeaderClass, 'bg-white')}>
         <FlashIcon />
         <p className="font-normal">Demo</p>
       </div>
 
-      <div className="lg:w-[85%] lg:mx-auto mx-0">
-        <h2 className="text-[24px] lg:text-center lg:text-[40px] text-[#161618] lg:leading-[64px] font-bricolage_grotesque">How our Application Works</h2>
-        <p className="px-8 lg:px-56 text-[#44444A]">Introduction to Hobwise</p>
+      <div className="lg:w-[85%] lg:mx-auto mx-0 lg:text-center">
+        <h2 className="text-[28px] lg:text-[44px] text-[#1D2939] lg:leading-[52px] font-bricolage_grotesque font-bold">How our Application Works</h2>
+        <p className="text-[#44444A]">Sample description to speak about the header above</p>
       </div>
       <div className="lg:flex lg:space-x-16 mt-6 lg:mt-12 items-center">
         <div className="w-full lg:w-[35%]">
@@ -57,8 +57,8 @@ export default function Demo() {
                   <div
                     className={cn(
                       'p-4 rounded-2xl flex space-x-4 items-center cursor-pointer',
-                      !tab.src ? 'cursor-not-allowed opacity-30' : 'cursor-pointer,',
-                      selectedTab.title === tab.title ? 'bg-[#F5F2FC]' : 'bg-[FBFBFC]'
+                      !tab.src ? 'cursor-not-allowed' : 'cursor-pointer',
+                      selectedTab.title === tab.title ? 'bg-white shadow-custom' : 'bg-transparent'
                     )}
                     onClick={() => {
                       tab.src ? setSelectedTab(tab) : null;
@@ -83,7 +83,7 @@ export default function Demo() {
             </div>
           </Transition>
         </div>
-        <div className="w-full lg:w-[65%]">
+        <div className="w-full lg:w-[65%] mt-6 lg:mt-0">
           <Transition>
             <video
               width="100%"

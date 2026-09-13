@@ -3,8 +3,8 @@ import { CustomButton } from '@/components/customButton';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomTextArea } from '@/components/customTextArea';
 import FAQs from '@/components/ui/landingPage/faq';
-import Footer from '@/components/ui/landingPage/footer';
-import Navbar from '@/components/ui/landingPage/navBar';
+import LandingFooter from '@/components/ui/landingPage/v2/footer';
+import LandingNav from '@/components/ui/landingPage/v2/nav';
 import { notify, phoneNumberPattern, validateEmail } from '@/lib/utils';
 import HobwiseIcon from '@/public/assets/icons/hobwise-icon.png';
 import ContactUsBg from '@/public/assets/images/contact-us-bg.png';
@@ -82,9 +82,7 @@ export default function Contact() {
 
   return (
     <div className="w-full bg-white">
-      <header className="z-[100] backdrop-filter backdrop-blur-md fixed w-full">
-        <Navbar type="default" />
-      </header>
+      <LandingNav />
       <main>
         <section className="font-satoshi bg-white w-full pt-28 space-y-8">
           <div className={sectionHeaderClass}>
@@ -236,7 +234,7 @@ export default function Contact() {
           <FAQs />
         </section>
       </main>
-      <Footer />
+      <LandingFooter />
     </div>
   );
 }

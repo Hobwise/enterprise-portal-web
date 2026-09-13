@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, useEffect, useRef, useState } from 'react';
+import React, { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -9,10 +9,14 @@ import { getJsonItemFromLocalStorage } from '@/lib/utils';
 import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from '@/lib/userTypeUtils';
 import { useDisclosure } from '@nextui-org/react';
 import { motion, useCycle } from 'framer-motion';
-import { FiLogOut } from 'react-icons/fi';
+import { FiLock, FiLogOut } from 'react-icons/fi';
+import { IoIosArrowDown } from 'react-icons/io';
+import usePermission from '@/hooks/cachedEndpoints/usePermission';
+import { useSubscriptionContext } from '@/hooks/providers/SubscriptionProvider';
+import { routePermissions } from '@/lib/routePermissions';
 import LogoutModal from '../logoutModal';
-import { SIDENAV_ITEMS } from './constants';
-import { SideNavItem } from './types';
+import { SIDENAV_ITEMS, SIDENAV_CONFIG } from './constants';
+import { SideNavItem, SideNavSection } from './types';
 
 type MenuItemWithSubMenuProps = {
   item: SideNavItem;
@@ -51,6 +55,97 @@ const HeaderMobile = () => {
   const isPOSUser = checkIsPOSUser(userInformation);
   const isCategoryUser = checkIsCategoryUser(userInformation);
 
+  // Get user role (0 = Manager, 1 = Staff)
+  const userRole = userInformation?.role;
+
+  const { userRolePermissions } = usePermission();
+  const { planCapabilities } = useSubscriptionContext();
+
+  const isPlanLockedPath = useCallback(
+    (path: string): boolean => {
+      let match: { key: string; capability: string } | null = null;
+      for (const [route, capability] of Object.entries(routePermissions)) {
+        if (path === route || path.startsWith(route + '/')) {
+          if (!match || route.length > match.key.length) {
+            match = { key: route, capability };
+          }
+        }
+      }
+      if (!match) return false;
+      return !planCapabilities[match.capability];
+    },
+    [planCapabilities]
+  );
+
+  const decorateItemsForSection = useCallback(
+    (items: SideNavItem[], section: SideNavSection): SideNavItem[] => {
+      const sectionLockedByRole =
+        section.requiredRole !== undefined && userRole !== section.requiredRole;
+      const sectionLockedByPlan = Boolean(
+        section.requiredCapability && !planCapabilities[section.requiredCapability]
+      );
+      const sectionLocked = sectionLockedByRole || sectionLockedByPlan;
+
+      const rbacMap: Record<string, boolean | undefined> = {
+        Menu: userRolePermissions?.canViewMenu,
+        Campaigns: userRolePermissions?.canViewCampaign,
+        Reservation: userRolePermissions?.canViewReservation,
+        Payments: userRolePermissions?.canViewPayment,
+        Orders: userRolePermissions?.canViewOrder,
+        Reports: userRolePermissions?.canViewReport,
+        Bookings: userRolePermissions?.canViewBooking,
+        Dashboard: userRolePermissions?.canViewDashboard,
+        'Quick Response': userRolePermissions?.canViewQR,
+      };
+
+      return items.map((item) => {
+        const rbacLocked = userRole === 1 && rbacMap[item.title] === false;
+        const planLocked = isPlanLockedPath(item.path);
+        return {
+          ...item,
+          locked: sectionLocked || rbacLocked || planLocked,
+        };
+      });
+    },
+    [userRole, userRolePermissions, planCapabilities, isPlanLockedPath]
+  );
+
+  // Show every section, decorate items as locked when restricted
+  const filteredSections = useMemo(() => {
+    return SIDENAV_CONFIG.map((section) => ({
+      ...section,
+      items: decorateItemsForSection(section.items, section),
+    }));
+  }, [decorateItemsForSection]);
+
+  // Accordion state — only one section open at a time
+  const [expandedSection, setExpandedSection] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('mobile-sidebar-accordion-expanded');
+    }
+    return null;
+  });
+
+  // Initialize expanded section when filteredSections first loads
+  useEffect(() => {
+    if (filteredSections.length === 0) return;
+    if (expandedSection && filteredSections.some(s => s.sectionTitle === expandedSection)) return;
+
+    const activeSection = filteredSections.find(s =>
+      s.items.some(item => pathname === item.path || pathname.startsWith(item.path + '/'))
+    );
+    const title = activeSection?.sectionTitle ?? filteredSections[0].sectionTitle;
+    setExpandedSection(title);
+    localStorage.setItem('mobile-sidebar-accordion-expanded', title);
+  }, [filteredSections]);
+
+
+  const handleSectionToggle = useCallback((title: string) => {
+    if (title === expandedSection) return;
+    setExpandedSection(title);
+    localStorage.setItem('mobile-sidebar-accordion-expanded', title);
+  }, [expandedSection]);
+
   if (isPOSUser || isCategoryUser) {
     return null;
   }
@@ -73,34 +168,17 @@ const HeaderMobile = () => {
         variants={variants}
         className='absolute grid w-full gap-3 px-10 py-16 max-h-screen overflow-y-auto'
       >
-        {SIDENAV_ITEMS.map((item, idx) => {
-          const isLastItem = idx === SIDENAV_ITEMS.length - 1;
-
-          return (
-            <div key={idx}>
-              {item.submenu ? (
-                <MenuItemWithSubMenu item={item} toggleOpen={toggleOpen} />
-              ) : (
-                <MenuItem>
-                  <Link
-                    prefetch={true}
-                    href={item?.path}
-                    onClick={() => toggleOpen()}
-                    className={`flex w-full text-white text-xl ${
-                      item?.path === pathname ? 'font-bold' : ''
-                    }`}
-                  >
-                    {item?.title}
-                  </Link>
-                </MenuItem>
-              )}
-
-              {!isLastItem && (
-                <MenuItem className='my-3 h-px w-full bg-gray-300' />
-              )}
-            </div>
-          );
-        })}
+        {filteredSections.map((section, sectionIdx) => (
+          <MobileSectionGroup
+            key={section.sectionTitle}
+            section={section}
+            pathname={pathname}
+            toggleOpen={toggleOpen}
+            isLastSection={sectionIdx === filteredSections.length - 1}
+            isExpanded={expandedSection === section.sectionTitle}
+            onToggle={handleSectionToggle}
+          />
+        ))}
       </motion.ul>
       <MenuToggle toggle={toggleOpen} />
       <div
@@ -222,6 +300,90 @@ const MenuItemWithSubMenu: React.FC<MenuItemWithSubMenuProps> = ({
         )}
       </div>
     </>
+  );
+};
+
+// Mobile Section Group Component for collapsible sections (accordion-controlled)
+const MobileSectionGroup = ({
+  section,
+  pathname,
+  toggleOpen,
+  isLastSection,
+  isExpanded,
+  onToggle,
+}: {
+  section: SideNavSection;
+  pathname: string;
+  toggleOpen: () => void;
+  isLastSection: boolean;
+  isExpanded: boolean;
+  onToggle: (title: string) => void;
+}) => {
+  return (
+    <div className="mb-4">
+      {/* Section Header */}
+      <MenuItem>
+        <button
+          onClick={section.collapsible ? () => onToggle(section.sectionTitle) : undefined}
+          className={`flex items-center justify-between w-full text-sm font-semibold uppercase tracking-wider text-gray-400 ${
+            section.collapsible ? 'cursor-pointer' : 'cursor-default'
+          }`}
+        >
+          <span>{section.sectionTitle}</span>
+          {section.collapsible && (
+            <IoIosArrowDown
+              className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+            />
+          )}
+        </button>
+      </MenuItem>
+
+      {/* Section Items — always visible when non-collapsible */}
+      {(isExpanded || !section.collapsible) && (
+        <div className="mt-2 space-y-2">
+          {section.items.map((item, idx) => {
+            const isLastItem = idx === section.items.length - 1;
+
+            return (
+              <div key={idx}>
+                {item.submenu ? (
+                  <MenuItemWithSubMenu item={item} toggleOpen={toggleOpen} />
+                ) : (
+                  <MenuItem>
+                    <Link
+                      prefetch={true}
+                      href={item.locked ? '/dashboard/unauthorized' : item?.path}
+                      onClick={() => toggleOpen()}
+                      aria-disabled={item.locked ? true : undefined}
+                      className={`flex w-full items-center justify-between text-white text-xl ${
+                        item?.path === pathname ? 'font-bold' : ''
+                      } ${item.locked ? 'opacity-60' : ''}`}
+                    >
+                      <span>{item?.title}</span>
+                      {item.locked ? (
+                        <FiLock
+                          aria-label="No access"
+                          className="text-[18px] text-gray-400"
+                        />
+                      ) : null}
+                    </Link>
+                  </MenuItem>
+                )}
+
+                {!isLastItem && (
+                  <MenuItem className='my-3 h-px w-full bg-gray-600' />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Section Divider */}
+      {!isLastSection && (
+        <MenuItem className='my-4 h-px w-full bg-gray-300' />
+      )}
+    </div>
   );
 };
 

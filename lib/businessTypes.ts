@@ -1,34 +1,35 @@
 export const businessTypes = [
   {
     label: "Lounge",
-    value: 1,
+    value: 0,
   },
   {
     label: "Game House",
-    value: 2,
+    value: 1,
   },
   {
     label: "Bar",
-    value: 3,
+    value: 2,
   },
   {
     label: "Restaurant",
-    value: 4,
+    value: 3,
   },
   {
     label: "Club",
-    value: 5,
+    value: 4,
   },
   {
     label: "Cafe",
-    value: 6,
+    value: 5,
   },
   {
     label: "Hotel",
-    value: 7,
+    value: 6,
   },
   {
     label: "Gallery",
-    value: 8,
+    value: 7,
   },
 ];
+

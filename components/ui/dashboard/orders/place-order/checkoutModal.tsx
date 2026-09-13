@@ -4,6 +4,12 @@ import {
   createOrder,
   editOrder,
 } from "@/app/api/controllers/dashboard/orders";
+import {
+  hasPaymentAccount,
+  initializePayment,
+  verifyQrPayment,
+  InitializePaymentData
+} from "@/app/api/controllers/dashboard/qrPayment";
 import { getQRByBusiness } from "@/app/api/controllers/dashboard/quickResponse";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
@@ -25,8 +31,10 @@ import {
   ModalContent,
   ModalHeader,
   Spacer,
+  Spinner,
 } from "@nextui-org/react";
 import Image from "next/image";
+import PaystackPop from "paystack-inline-ts";
 import { useRouter, usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { FaMinus, FaPlus } from "react-icons/fa6";
@@ -74,6 +82,10 @@ type ValidationErrors = {
   additionalCostName?: string;
 };
 
+// Payment method ids. "Pay now" is appended as 4 so the existing ids (3 = Pay
+// Later) keep matching the handlers that hardcode them.
+const PAY_NOW_ID = 4;
+
 // Type guard to check if response has data property
 const hasDataProperty = (response: any): response is ApiResponse => {
   return response && typeof response === "object" && "data" in response;
@@ -91,6 +103,7 @@ const CheckoutModal = ({
   businessId,
   cooperateID,
   handlePackingCost,
+  handleItemComment,
   categoriesData,
 }: any) => {
   const businessInformation = getJsonItemFromLocalStorage("business");
@@ -114,6 +127,7 @@ const CheckoutModal = ({
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPayLaterLoading, setIsPayLaterLoading] = useState(false);
+  const [payNowLoading, setPayNowLoading] = useState<boolean>(false);
   const [validationErrors, setValidationErrors] = useState<{
     placedByName?: boolean;
     placedByPhoneNumber?: boolean;
@@ -127,6 +141,10 @@ const CheckoutModal = ({
   const [qr, setQr] = useState<
     { id: string; label: string; name?: string; value?: string }[]
   >([]);
+  const [qrPaymentData, setQrPaymentData] = useState<InitializePaymentData | null>(null);
+  const [qrPaymentLoading, setQrPaymentLoading] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
+  const [qrPaymentStatus, setQrPaymentStatus] = useState<"pending" | "success" | "failed" | null>(null);
   const [order, setOrder] = useState<Order>({
     placedByName: orderDetails?.placedByName || "",
     placedByPhoneNumber: orderDetails?.placedByPhoneNumber || "",
@@ -305,17 +323,101 @@ const CheckoutModal = ({
     }
   };
 
+  // Initializes a QR payment for the just-placed order and opens the Paystack
+  // popup so the customer can pay online with a card. On success the order list
+  // is refreshed (the backend confirms the payment against the order via webhook).
+  const handlePayNow = async () => {
+    if (!orderId) {
+      notify({
+        title: "Error!",
+        text: "Order data not available",
+        type: "error",
+      });
+      return;
+    }
+
+    setPayNowLoading(true);
+    try {
+      const payingBusinessId = businessId
+        ? businessId
+        : businessInformation?.[0]?.businessId;
+
+      const base = Math.max(
+        0,
+        finalTotalPrice - (orderDetails?.amountPaid || 0)
+      ); // naira
+      const amountKobo = Math.round(base * 100);
+
+      const response = await initializePayment(payingBusinessId, userInformation?.id, {
+        orderId,
+        customerEmail: userInformation?.email,
+        amountKobo,
+      });
+
+      const accessCode = response?.data?.data?.accessCode;
+      if (!accessCode) {
+        notify({
+          title: "Error!",
+          text: response?.data?.error ?? "Unable to start payment.",
+          type: "error",
+        });
+        return;
+      }
+
+      const popup = new PaystackPop();
+      popup.resumeTransaction({
+        accessCode,
+        onSuccess: () => {
+          notify({
+            title: "Payment successful!",
+            text: "Payment received, awaiting confirmation",
+            type: "success",
+          });
+          setScreen(1);
+          setOrderId("");
+          setReference("");
+          setSelectedPaymentMethod(0);
+          setQrPaymentData(null);
+          setQrPaymentStatus(null);
+          setIsPolling(false);
+          ordersCacheUtils.clearAll();
+          queryClient.invalidateQueries({
+            queryKey: ["orderCategories"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orderDetails"],
+            refetchType: "active",
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["orders"],
+            refetchType: "active",
+          });
+          onOrderSuccess?.();
+          onOpenChange(false);
+        },
+      });
+    } finally {
+      setPayNowLoading(false);
+    }
+  };
+
   const handleClick = async (methodId: number) => {
     // Clear all screen tracking states after any payment action
     const clearScreenStates = () => {
       setScreen(1);
       onOpenChange();
       setOrderId("");
-      setReference("");
       setSelectedPaymentMethod(0);
+      setQrPaymentData(null);
+      setQrPaymentStatus(null);
+      setIsPolling(false);
     };
 
-    if (methodId === 3) {
+    if (methodId === 5) {
+      // Handle QR Payment
+      handleQrPayment();
+    } else if (methodId === 3) {
       // Pay Later logic with page detection
       setIsPayLaterLoading(true);
       clearScreenStates(); // Clear states before navigation
@@ -367,6 +469,9 @@ const CheckoutModal = ({
       } finally {
         setIsPayLaterLoading(false);
       }
+    } else if (methodId === PAY_NOW_ID) {
+      // Pay now - initialize the payment and open the Paystack popup
+      await handlePayNow();
     } else if (screen === 3) {
       clearScreenStates(); // Clear states before navigation
       router.push("/dashboard/orders");
@@ -379,10 +484,12 @@ const CheckoutModal = ({
   // Handle cancel payment - same as "Pay Later" logic
   const handleCancelPayment = async () => {
     // Clear screen states
-    setScreen(1);
     setOrderId("");
     setReference("");
     setSelectedPaymentMethod(0);
+    setQrPaymentData(null);
+    setQrPaymentStatus(null);
+    setIsPolling(false);
 
     try {
       if (pathname === "/dashboard/orders") {
@@ -435,15 +542,28 @@ const CheckoutModal = ({
   };
 
   const paymentMethods = [
-    { text: "Pay with cash", subText: " Accept payment using cash", id: 0 },
-    { text: "Pay with Pos", subText: " Accept payment using Pos", id: 1 },
+    { text: "Pay with Cash", subText: " Accept payment using Cash", id: 0 },
+    { text: "Pay with POS", subText: " Accept payment using POS", id: 1 },
     {
-      text: "Pay with bank transfer",
-      subText: "Accept payment via bank transfer",
+      text: "Pay with Bank Transfer",
+      subText: "Accept payment via Bank Transfer",
       id: 2,
+    },
+    {
+      text: "Pay with Paystack",
+      subText: "Pay online via Paystack",
+      id: PAY_NOW_ID,
     },
     { text: "Pay Later", subText: "Keep this order open", id: 3 },
   ];
+
+  // A payment method is busy while its own request is in flight; the whole list
+  // is disabled meanwhile so a second method can't be started on top of it.
+  const isMethodLoading = (methodId: number) =>
+    (methodId === 3 && isPayLaterLoading) ||
+    (methodId === PAY_NOW_ID && payNowLoading) ||
+    (methodId === 5 && qrPaymentLoading);
+  const isPaymentBusy = isPayLaterLoading || payNowLoading || qrPaymentLoading;
 
   // Calculate detailed total price directly from selectedItems to ensure accuracy
   const calculateDetailedTotalPrice = (): {
@@ -648,7 +768,7 @@ const CheckoutModal = ({
     }
 
     // Validate order details
-    if (
+    if(
       !Array.isArray(payload.orderDetails) ||
       payload.orderDetails.length === 0
     ) {
@@ -711,6 +831,10 @@ const CheckoutModal = ({
           // Merge quantities if item already exists
           const existing = deduplicatedMap.get(finalItemID);
           existing.quantity += item.count;
+          // Preserve a per-item note: keep the existing one, fall back to this item's.
+          if (!existing.comment && item.comment) {
+            existing.comment = item.comment;
+          }
         } else {
           deduplicatedMap.set(finalItemID, {
             itemID: finalItemID,
@@ -719,6 +843,7 @@ const CheckoutModal = ({
             isVariety: item.isVariety,
             isPacked: item.isPacked,
             packingCost: item?.packingCost || 0,
+            comment: item.comment || "",
           });
         }
       });
@@ -732,6 +857,7 @@ const CheckoutModal = ({
         status: 0,
         placedByName: customerName,
         placedByPhoneNumber: order.placedByPhoneNumber?.trim() || "",
+        userId: userInformation?.id,
         quickResponseID: order.quickResponseID,
         comment: order.comment,
         additionalCost: Math.round((Number(additionalCost) || 0) * 100) / 100,
@@ -791,20 +917,17 @@ const CheckoutModal = ({
     }
 
     const id = businessId ? businessId : businessInformation[0]?.businessId;
-    const data = await createOrder(id, payload, effectiveCooperateID);
+    const data = await createOrder(id, payload, effectiveCooperateID, userInformation?.id);
 
-    // Handle undefined response
+    // Handle undefined response — the upstream error toast (e.g. "Insufficient
+    // stock…") has already been surfaced by handleError in createOrder, so
+    // don't duplicate it with a generic connection-error toast here.
     if (!data) {
       console.error("CreateOrder returned undefined");
       console.error("Request details:", {
         id,
         cooperateID: effectiveCooperateID,
         payload,
-      });
-      notify({
-        title: "Error!",
-        text: "Failed to create order. Please check your connection and try again.",
-        type: "error",
       });
       throw new Error("Failed to create order");
     }
@@ -927,6 +1050,9 @@ const CheckoutModal = ({
         const existing = deduplicatedMap.get(finalItemID);
         existing.quantity += item.count;
         // Optionally update other fields if needed, but price should be same
+        if (!existing.comment && item.comment) {
+          existing.comment = item.comment;
+        }
       } else {
         deduplicatedMap.set(finalItemID, {
           itemID: finalItemID,
@@ -935,6 +1061,7 @@ const CheckoutModal = ({
           isVariety: item.isVariety,
           isPacked: item.isPacked,
           packingCost: item?.packingCost || 0,
+          comment: item.comment || "",
         });
       }
     });
@@ -1079,9 +1206,9 @@ const CheckoutModal = ({
     } else {
       // Extract error message from various possible response formats
       const errorMessage =
-        data?.data?.error ||
-        data?.error ||
-        (data?.errors ? Object.entries(data.errors)
+        (data as any)?.data?.error ||
+        (data as any)?.error ||
+        ((data as any)?.errors ? Object.entries((data as any).errors)
           .map(([field, errors]) => `${field}: ${Array.isArray(errors) ? errors.join(", ") : errors}`)
           .join("; ") : null) ||
         "Failed to update order. Please try again.";
@@ -1263,6 +1390,76 @@ const CheckoutModal = ({
     }
   };
 
+  const handleQrPayment = async () => {
+    if (!orderId) {
+      notify({ title: "Error!", text: "Order data not available", type: "error" });
+      return;
+    }
+
+    setQrPaymentLoading(true);
+    try {
+      const payingBusinessId = businessId ? businessId : businessInformation?.[0]?.businessId;
+      const base = Math.max(0, finalTotalPrice - (orderDetails?.amountPaid || 0));
+      const amountKobo = Math.round(base * 100);
+
+      const response = await initializePayment(payingBusinessId, userInformation?.id, {
+        orderId,
+        customerEmail: userInformation?.email || "customer@email.com",
+        amountKobo,
+      });
+
+      if (response?.data?.isSuccessful && response.data.data) {
+        setQrPaymentData(response.data.data);
+        setQrPaymentStatus("pending");
+        setScreen(4); // Use screen 4 for QR payment
+        startPolling(payingBusinessId, response.data.data.hobwiseReference);
+      } else {
+        notify({ title: "Error", text: response?.data?.error || "Failed to initialize QR Payment.", type: "error" });
+      }
+    } catch (error) {
+      console.error(error);
+      notify({ title: "Error", text: "Failed to initialize QR payment", type: "error" });
+    } finally {
+      setQrPaymentLoading(false);
+    }
+  };
+
+  const startPolling = (payingBusinessId: string, reference: string) => {
+    setIsPolling(true);
+    let attempts = 0;
+    
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await verifyQrPayment(payingBusinessId, reference);
+        const status = res?.data?.data?.status;
+
+        if (status === 'Success') {
+          setQrPaymentStatus('success');
+          clearInterval(interval);
+          setIsPolling(false);
+          notify({ title: "Payment successful!", text: "Payment received, awaiting confirmation", type: "success" });
+          setTimeout(() => {
+            handleCancelPayment();
+          }, 2000);
+        } else if (status === 'Failed') {
+          setQrPaymentStatus('failed');
+          clearInterval(interval);
+          setIsPolling(false);
+        } else if (attempts >= 10) {
+          // If we reach 10 attempts (30s), stop polling automatically but leave it as pending to let user refresh or cancel
+          clearInterval(interval);
+          setIsPolling(false);
+        }
+      } catch (err) {
+        // error handled by apiService interceptor usually
+      }
+    }, 3000);
+
+    // clear interval if component unmounts
+    return () => clearInterval(interval);
+  };
+
   const getQrID = async () => {
     const id = businessId ? businessId : businessInformation[0]?.businessId;
 
@@ -1385,6 +1582,9 @@ const CheckoutModal = ({
             });
             setAdditionalCost(orderDetails?.additionalCost || 0);
             setAdditionalCostName(orderDetails?.additionalCostName || "");
+            setQrPaymentData(null);
+            setQrPaymentStatus(null);
+            setIsPolling(false);
           }
           onOpenChange(open);
         }}
@@ -1628,6 +1828,25 @@ const CheckoutModal = ({
                                       )}
                                     </div>
                                   </div>
+                                </div>
+                                <div className="pb-3">
+                                  <CustomTextArea
+                                    size="sm"
+                                    minRows={1}
+                                    maxRows={1}
+                                    name={`item-comment-${item.id}`}
+                                    value={item.comment || ""}
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLTextAreaElement>
+                                    ) =>
+                                      handleItemComment?.(
+                                        item.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    label="Item note (optional)"
+                                    placeholder="Add a note for this item"
+                                  />
                                 </div>
                                 {index !== selectedItems?.length - 1 && (
                                   <Divider className="bg-[#E4E7EC80]" />
@@ -1883,6 +2102,24 @@ const CheckoutModal = ({
                                       </Checkbox>
                                     )}
                                   </div>
+
+                                  <CustomTextArea
+                                    size="sm"
+                                    minRows={1}
+                                    maxRows={1}
+                                    name={`item-comment-mobile-${item.id}`}
+                                    value={item.comment || ""}
+                                    onChange={(
+                                      e: React.ChangeEvent<HTMLTextAreaElement>
+                                    ) =>
+                                      handleItemComment?.(
+                                        item.id,
+                                        e.target.value
+                                      )
+                                    }
+                                    label="Item note (optional)"
+                                    placeholder="Add a note for this item"
+                                  />
                                 </div>
                                 {index !== selectedItems?.length - 1 && (
                                   <Divider className="bg-[#E4E7EC80]" />
@@ -2199,14 +2436,14 @@ const CheckoutModal = ({
                         <div
                           key={item.id}
                           onClick={() =>
-                            !isPayLaterLoading && handleClick(item.id)
+                            !isPaymentBusy && handleClick(item.id)
                           }
                           className={`flex items-center gap-2 p-4 rounded-lg justify-between ${
                             selectedPaymentMethod === item.id
                               ? "bg-[#EAE5FF80]"
                               : ""
                           } ${
-                            isPayLaterLoading
+                            isPaymentBusy
                               ? "cursor-not-allowed opacity-50"
                               : "cursor-pointer"
                           }`}
@@ -2214,7 +2451,7 @@ const CheckoutModal = ({
                           <div>
                             <p className="font-semibold">
                               {item.text}
-                              {item.id === 3 && isPayLaterLoading && (
+                              {isMethodLoading(item.id) && (
                                 <span className="ml-2 text-sm">
                                   Processing...
                                 </span>
@@ -2224,7 +2461,7 @@ const CheckoutModal = ({
                               {item.subText}
                             </p>
                           </div>
-                          {item.id === 3 && isPayLaterLoading ? (
+                          {isMethodLoading(item.id) ? (
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primaryColor"></div>
                           ) : (
                             <MdKeyboardArrowRight />
@@ -2267,14 +2504,14 @@ const CheckoutModal = ({
                           <div
                             key={item.id}
                             onClick={() =>
-                              !isPayLaterLoading && handleClick(item.id)
+                              !isPaymentBusy && handleClick(item.id)
                             }
                             className={`flex items-center gap-3 p-5 rounded-lg border justify-between transition-all ${
                               selectedPaymentMethod === item.id
                                 ? "bg-[#EAE5FF80] border-primaryColor"
                                 : "border-gray-200"
                             } ${
-                              isPayLaterLoading
+                              isPaymentBusy
                                 ? "cursor-not-allowed opacity-50"
                                 : "cursor-pointer active:scale-95"
                             }`}
@@ -2282,7 +2519,7 @@ const CheckoutModal = ({
                             <div className="flex-1">
                               <p className="font-semibold text-base text-black">
                                 {item.text}
-                                {item.id === 3 && isPayLaterLoading && (
+                                {isMethodLoading(item.id) && (
                                   <span className="ml-2 text-sm font-normal">
                                     Processing...
                                   </span>
@@ -2292,7 +2529,7 @@ const CheckoutModal = ({
                                 {item.subText}
                               </p>
                             </div>
-                            {item.id === 3 && isPayLaterLoading ? (
+                            {isMethodLoading(item.id) ? (
                               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primaryColor"></div>
                             ) : (
                               <MdKeyboardArrowRight className="text-2xl text-gray-400" />
@@ -2461,10 +2698,92 @@ const CheckoutModal = ({
                   </div>
                 </>
               )}
+              {screen === 4 && qrPaymentData && (
+                <>
+                  <div className="flex flex-col items-center justify-center py-8">
+                    <h2 className="text-[20px] font-semibold text-black mb-2">Scan to Pay</h2>
+                    <p className="text-sm text-grey500 mb-6 text-center">
+                      Scan this QR code with your bank app to complete the payment of <b>{formatPrice(Math.max(0, finalTotalPrice - (orderDetails?.amountPaid || 0)), "NGN")}</b>.
+                    </p>
+
+                    <div className="bg-white p-4 rounded-xl border border-gray-200 mb-6 shadow-sm">
+                      {qrPaymentData.qrCodeBase64 ? (
+                        <img 
+                          src={`data:image/png;base64,${qrPaymentData.qrCodeBase64}`} 
+                          alt="Payment QR Code" 
+                          className="w-64 h-64 object-contain"
+                        />
+                      ) : (
+                        <div className="w-64 h-64 flex items-center justify-center bg-gray-100 rounded-lg">
+                          <p className="text-gray-500">QR Code unavailable</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center w-full max-w-md bg-gray-50 rounded-lg p-4 mb-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        {qrPaymentStatus === "pending" && isPolling && <Spinner size="sm" />}
+                        <span className="font-medium text-black">
+                          {qrPaymentStatus === "pending" 
+                            ? "Waiting for payment..." 
+                            : qrPaymentStatus === "success" 
+                            ? "Payment successful!" 
+                            : "Payment failed or expired."}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500">
+                        Expires at: {new Date(qrPaymentData.expiresAt).toLocaleTimeString()}
+                      </p>
+                    </div>
+
+                    {/* @ts-ignore */}
+                    {qrPaymentData.bankAccounts && qrPaymentData.bankAccounts.length > 0 && (
+                      <div className="w-full max-w-md text-center">
+                        <p className="text-sm text-gray-600 mb-3">Or pay directly to our account:</p>
+                        <div className="flex flex-col gap-3">
+                          {/* @ts-ignore */}
+                          {qrPaymentData.bankAccounts.map((acct: any, idx: number) => (
+                            <div key={idx} className="bg-white border rounded-lg p-3 flex justify-between items-center text-left">
+                              <div>
+                                <p className="text-xs text-gray-500">{acct.bankName}</p>
+                                <p className="font-semibold text-black">{acct.accountNumber}</p>
+                                <p className="text-xs text-gray-500">{acct.accountName}</p>
+                              </div>
+                              <CustomButton 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(acct.accountNumber);
+                                  notify({ title: "Success", text: "Account number copied!", type: "success" });
+                                }}
+                                className="bg-gray-100 text-black text-xs py-1 px-3"
+                              >
+                                Copy
+                              </CustomButton>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="w-full mt-6">
+                      <CustomButton
+                        onClick={() => {
+                          setScreen(2);
+                          setQrPaymentData(null);
+                          setQrPaymentStatus(null);
+                          setIsPolling(false);
+                        }}
+                        className="bg-white h-[50px] w-full border border-primaryGrey text-black"
+                      >
+                        Cancel QR Payment
+                      </CustomButton>
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
         </ModalContent>
-      </Modal>{" "}
+      </Modal>
     </div>
   );
 };

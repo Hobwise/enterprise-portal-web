@@ -1,8 +1,12 @@
 import { Modal, ModalContent, ModalBody, Spinner } from '@nextui-org/react';
 import { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
 import { editMenuItem, payloadMenuItem, uploadFile, deleteFile } from '@/app/api/controllers/dashboard/menu';
-import { getJsonItemFromLocalStorage } from '@/lib/utils';
+import { getJsonItemFromLocalStorage, notify } from '@/lib/utils';
+
+const toast = {
+  success: (text: string) => notify({ text, type: 'success' }),
+  error: (text: string) => notify({ text, type: 'error' }),
+};
 import { Edit, Upload, X, ShoppingBag } from 'lucide-react';
 
 interface EditItemModalProps {
@@ -28,6 +32,7 @@ const EditItemModal = ({
   const [itemName, setItemName] = useState(selectedItem?.itemName || '');
   const [itemDescription, setItemDescription] = useState(selectedItem?.itemDescription || '');
   const [itemPrice, setItemPrice] = useState(selectedItem?.price?.toString() || '');
+  const [itemQuantity, setItemQuantity] = useState(selectedItem?.quantityPerSale?.toString() || '');
 
   // Track original section ID for cache invalidation
   const [originalSectionId, setOriginalSectionId] = useState('');
@@ -66,6 +71,7 @@ const EditItemModal = ({
       setItemName(selectedItem?.itemName || '');
       setItemDescription(selectedItem?.itemDescription || '');
       setItemPrice(selectedItem?.price?.toString() || '');
+      setItemQuantity(selectedItem?.quantityPerSale?.toString() || '');
       setImagePreview(selectedItem?.image || '');
       setImageReference(selectedItem?.imageReference || '');
     }
@@ -162,6 +168,7 @@ const EditItemModal = ({
         itemDescription: itemDescription,
         price: parseFloat(itemPrice),
         currency: 'NGA',
+        ...(itemQuantity ? { quantityPerSale: parseFloat(itemQuantity) } : {}),
         isAvailable: true,
         hasVariety: false,
         imageReference: imageReference,
@@ -292,6 +299,27 @@ const EditItemModal = ({
                               placeholder="0.00"
                               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
                             />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-3">
+                            Quantity per Sale
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={itemQuantity}
+                              onChange={(e) => setItemQuantity(e.target.value)}
+                              placeholder="Optional"
+                              min="0"
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200"
+                            />
+                            {itemQuantity && (selectedItem?.unitName || selectedItem?.unitCode) && (
+                              <span className="absolute right-4 top-1/2 transform -translate-y-1/2 text-sm text-[#667085] font-medium">
+                                {selectedItem.unitName || selectedItem.unitCode}
+                              </span>
+                            )}
                           </div>
                         </div>
 

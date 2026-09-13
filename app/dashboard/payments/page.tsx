@@ -55,15 +55,9 @@ const Payments: React.FC = () => {
   const { setPage, setTableStatus, page, tableStatus } = useGlobalContext();
 
   useEffect(() => {
-    refetch();
     setTableStatus("All");
     setPage(1);
-  }, [filterType, startDate, endDate, refetch]);
-
-  // Refetch data when tableStatus changes (for payment card clicks)
-  useEffect(() => {
-    refetch();
-  }, [tableStatus, refetch]);
+  }, [filterType, startDate, endDate]);
 
   // Reset page when switching tabs
   useEffect(() => {

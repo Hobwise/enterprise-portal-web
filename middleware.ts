@@ -41,7 +41,12 @@ export function middleware(request: NextRequest) {
   }
 
   // Handle POS user access restrictions
-  if (token && (isPOSRoute || pathname.startsWith('/dashboard'))) {
+  if (
+    token &&
+    (isPOSRoute ||
+      pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/report'))
+  ) {
     // Try to get user info from token or localStorage simulation
     const jwtPayload = decodeJWTPayload(token);
     const isPOSUser = jwtPayload?.primaryAssignment === "Point of Sales" ||
@@ -101,6 +106,20 @@ export function middleware(request: NextRequest) {
       // Allow category users to access business-activities
       return NextResponse.next();
     }
+
+    // Inventory + Report routes - Manager only (UserRole === "Manager").
+    // The Reports page used to live under /dashboard/inventory, so it inherited
+    // this Manager-only guard; preserve it now that it lives at /report.
+    if (
+      pathname.startsWith('/dashboard/inventory') ||
+      pathname.startsWith('/report')
+    ) {
+      const userRole = jwtPayload?.UserRole;
+      // Only managers can access inventory/report routes
+      if (userRole !== 'Manager') {
+        return NextResponse.rewrite(new URL("/dashboard/unauthorized", request.url));
+      }
+    }
   }
 
   const matchedBaseRoute = Object.keys(routePermissions).find((route) =>
@@ -147,6 +166,8 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/report",
+    "/report/:path*",
     "/pos/:path*",
     "/auth/business-information",
     "/auth/select-business",

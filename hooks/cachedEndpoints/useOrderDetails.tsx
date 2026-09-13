@@ -26,6 +26,7 @@ const useOrderDetails = (
       return getOrder(orderId);
     },
     ...fetchQueryConfig(),
+    placeholderData: undefined, // Disable placeholderData to prevent showing wrong data when orderId changes
     staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
     enabled: isEnabled,
   });

@@ -19,6 +19,7 @@ export type Item = {
   isPacked?: boolean;
   isVatEnabled?: boolean;
   vatRate?: number;
+  comment?: string;
 };
 
 export type Variety = {

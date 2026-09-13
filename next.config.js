@@ -1,11 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  publicRuntimeConfig: {
-    apiBaseUrl:
-      process.env.NODE_ENV === 'production'
-        ? 'https://api.hobwise.com/'
-        : 'https://sandbox-api.hobwise.com/',
-  },
   reactStrictMode: true,
 
   // Experimental features for performance
@@ -102,6 +96,42 @@ const nextConfig = {
     }
 
     return config;
+  },
+  redirects: async () => {
+    return [
+      {
+        source: '/create-order',
+        destination: '/order',
+        permanent: true,
+      },
+      {
+        source: '/pay-for-me/:path*',
+        destination: '/pay/:path*',
+        permanent: true,
+      },
+      {
+        source: '/reservation/select-reservation',
+        destination: '/reserve',
+        permanent: true,
+      },
+      {
+        source: '/reports',
+        destination: '/dashboard/reports',
+        permanent: false,
+      },
+      {
+        source: '/reports/:path*',
+        destination: '/dashboard/reports/:path*',
+        permanent: false,
+      },
+      {
+        // Reports page moved out from under inventory to a top-level /report.
+        // Keep old bookmarks/links working (query string is preserved automatically).
+        source: '/dashboard/inventory/stock-analysis',
+        destination: '/report',
+        permanent: true,
+      },
+    ];
   },
   headers: async () => {
     return [

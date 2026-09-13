@@ -26,17 +26,17 @@ const StaffManagementPage = () => {
         fullWidth
       >
         <Tab className="px-5" key="team-members" title="Team Members">
-          <TeamMembersTab />
+          {selectedTab === "team-members" && <TeamMembersTab />}
         </Tab>
         <Tab className="px-5" key="create-role" title="Role Management">
-          <CreateNewRoleTab />
+          {selectedTab === "create-role" && <CreateNewRoleTab />}
         </Tab>
         <Tab
           className="px-5"
           key="roles-permission"
           title="Permission Management"
         >
-          <RolesPermissionTab />
+          {selectedTab === "roles-permission" && <RolesPermissionTab />}
         </Tab>
       </Tabs>
     </section>

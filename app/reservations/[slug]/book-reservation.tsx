@@ -10,7 +10,7 @@ import { Modal, ModalBody, ModalContent, Select, SelectItem, Selection,Tooltip }
 import CheckImage from '@/public/assets/images/success-image.png';
 import { useRouter } from 'next/navigation';
 import { RESERVATIONS_URL } from '@/utilities/routes';
-import RestaurantBanner from '@/app/create-order/RestaurantBanner';
+import RestaurantBanner from '@/app/order/RestaurantBanner';
 
 import {
   cn,
@@ -799,7 +799,7 @@ export default function BookReservationPage({
               onClick={() =>
                 menuConfig
                   ? router.push(
-                      `/reservation/select-reservation?businessID=${
+                      `/reserve?businessID=${
                         businessDetails?.businessId
                       }&cooperateID=${
                         businessDetails?.cooperateID || ""

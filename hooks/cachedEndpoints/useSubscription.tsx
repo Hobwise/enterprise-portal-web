@@ -6,10 +6,17 @@ import { useQuery } from "@tanstack/react-query";
 
 const useSubscription = () => {
   const business = getJsonItemFromLocalStorage("business");
+  const businessId = business?.[0]?.businessId;
 
   const getUserSubscriptionInfo = async () => {
     try {
-      const responseData = await getUserSubscription(business[0].businessId);
+      if (!businessId) {
+        console.warn("No businessId found while fetching subscription");
+        setJsonCookie("planCapabilities", {});
+        return null;
+      }
+
+      const responseData = await getUserSubscription(businessId);
 
       // Ensure we set the cookie even if planCapabilities is undefined/null
       const planCapabilities = responseData?.data?.data?.planCapabilities;
@@ -32,7 +39,7 @@ const useSubscription = () => {
   };
 
   const { data, refetch, isLoading, isError } = useQuery<any>({
-    queryKey: ["userSubscription"],
+    queryKey: ["userSubscription", businessId],
     queryFn: getUserSubscriptionInfo,
     refetchOnWindowFocus: false,
     retry: 3, // Retry 3 times on failure

@@ -173,7 +173,7 @@ const ActivityTableAudit = ({
   };
 
   const filteredItems = useMemo(() => {
-    let filteredData = [...columns?.data];
+    let filteredData = Array.isArray(columns?.data) ? [...columns.data] : [];
 
     if (reportType === 11) {
       filteredData = filteredData.filter(

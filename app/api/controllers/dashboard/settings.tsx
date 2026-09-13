@@ -334,6 +334,10 @@ export async function getSubscription(
   } catch (error) {
     console.log("ERROR", error);
     handleError(error, false);
+    // Rethrow so React Query receives a real rejection (enabling retry/refetch)
+    // instead of a resolved `undefined`, which would trip TanStack Query's
+    // "Query data cannot be undefined" error.
+    throw error;
   }
 }
 export async function getUserSubscription(businessId: string) {

@@ -21,8 +21,9 @@ import {
 } from "./Interfaces";
 
 import { MdVerified } from "react-icons/md";
-import { cn, getJsonItemFromLocalStorage, notify } from "@/lib/utils";
+import { cn, getJsonItemFromLocalStorage, notify, formatNumber } from "@/lib/utils";
 import { initializeTransactionv2 } from "@/app/api/controllers/dashboard/settings";
+import { forceTokenRefresh } from "@/app/api/apiService";
 // import PaystackPop from 'paystack-inline-ts';
 import PaystackPop from "paystack-inline-ts";
 import { usePaystackPayment } from "react-paystack";
@@ -30,7 +31,6 @@ import { usePaystackPayment } from "react-paystack";
 
 import LoadingSpinner from "@/app/dashboard/reservation/[reservationId]/loading";
 import FeatureList from "./FeatureList";
-import { getUser } from "@/app/api/controllers/auth";
 import SubscriptionWarningModal from "./SubscriptionWarningModal";
 import { useDisclosure } from "@nextui-org/react";
 
@@ -43,6 +43,9 @@ export const PricingCards: React.FC<PlansFromParent> = ({
   const business = getJsonItemFromLocalStorage("business");
   const popup = new PaystackPop();
   const planType = currentSubscriptionDetails?.subscription?.plan;
+  const isSubscriptionActive =
+    currentSubscriptionDetails?.subscription?.status === 1 ||
+    currentSubscriptionDetails?.isActive === true;
 
   const token = userInformation?.token;
   const cooperateID = userInformation?.cooperateID;
@@ -101,7 +104,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
     e.preventDefault();
     
     // If user has an active subscription and is selecting a different plan
-    if (planType && planType !== selectedPlan) {
+    if (isSubscriptionActive && planType && planType !== selectedPlan) {
       setPendingPlanSelection(selectedPlan);
       onOpen(); // Show warning modal
     } else {
@@ -173,9 +176,19 @@ export const PricingCards: React.FC<PlansFromParent> = ({
         const access_code = initializedTransaction.access_code;
 
         const handleSuccess = async () => {
-          const userDetailss = await getUser(userId).then((response) =>
-            window.location.reload()
-          );
+          // The token held right after onboarding predates the active business,
+          // so the subscription endpoint may reject it. Attempt to refresh to a
+          // business-scoped token before reloading. If the refresh fails (e.g. for
+          // a brand-new user whose business context isn't yet in localStorage), we
+          // do NOT wipe the session — the interceptor will refresh it lazily on
+          // the next request. Either way we reload so the UI reflects the new plan.
+          try {
+            await forceTokenRefresh();
+          } catch {
+            // Refresh failed — swallow the error and let the page reload with the
+            // existing token. The axios interceptor will handle re-authentication.
+          }
+          window.location.reload();
         };
 
         popup.resumeTransaction({
@@ -292,7 +305,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 >
                   {activeTab === "Monthly" && (
                     <p className="font-extrabold text-2xl">
-                      ₦{plan?.monthlyFee}
+                      ₦{formatNumber(plan?.monthlyFee)}
                       <span className="text-[#ACB5BB] font-normal">/month</span>
                     </p>
                   )}
@@ -305,7 +318,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 >
                   {activeTab === "Yearly" && (
                     <p className="font-extrabold text-2xl">
-                      ₦{plan?.yearlyFee}
+                      ₦{formatNumber(plan?.yearlyFee)}
                       <span className="text-[#ACB5BB] font-normal">/year</span>
                     </p>
                   )}
@@ -326,10 +339,11 @@ export const PricingCards: React.FC<PlansFromParent> = ({
                 <FeatureList
                   plan={plan!}
                   handleIcons={(value) => handleIcons(value)}
+                  isPremium={index === 2}
                 />
               )}
 
-              {isActive ? (
+              {isActive && isSubscriptionActive ? (
                 <button
                   disabled
                   className="mt-6 w-full mx-auto bg-[#F1F2F4] rounded-lg px-8 py-2 font-normal text-sm text-grey500"
@@ -364,6 +378,7 @@ export const PricingCards: React.FC<PlansFromParent> = ({
           (pendingPlanSelection === 1 ? starterLoading : 
            pendingPlanSelection === 2 ? professionalLoading : 
            premiumLoading) : false}
+        isDowngrade={pendingPlanSelection !== null && planType !== undefined && pendingPlanSelection < planType}
       />
     </div>
   );

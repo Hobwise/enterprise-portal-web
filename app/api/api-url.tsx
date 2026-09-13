@@ -14,6 +14,18 @@ export const AUTH = {
   getRoleCount: "api/v1/User/role-count",
   logout: "api/v1/User/logout",
 };
+export const QR_PAYMENT = {
+  getBanks: "api/v1/QrPayment/banks",
+  onboardBusiness: "api/v1/QrPayment/business/onboard",
+  bankAccounts: "api/v1/QrPayment/business/bank-accounts",
+  initialize: "api/v1/QrPayment/initialize",
+  verifySession: "api/v1/QrPayment/sessions/verify",
+  deleteSettlement: "api/v1/QrPayment/business/settlement-account",
+  requestSettlementOtp: "api/v1/QrPayment/business/settlement-account/request-otp",
+  updateSettlement: "api/v1/QrPayment/business/settlement-account",
+  acceptOnboardTerms: "api/v1/QrPayment/business/onboard/accept-terms",
+  nameEnquiry: "api/v1/QrPayment/business/name-enquiry",
+};
 export const LANDINGPAGE = {
   getFAQs: "api/v1/LandingPage/faqs",
   addToWaitList: "api/v1/LandingPage/waitlist",
@@ -108,10 +120,64 @@ export const DASHBOARD = {
   reportPayment: "api/v1/ReportManager/payment",
   reportBooking: "api/v1/ReportManager/booking",
   reportAuditLog: "api/v1/ReportManager/user",
+  reportInventory: "api/v1/ReportManager/inventory",
+  reportInventoryExport: "api/v1/ReportManager/inventory/export",
+  reportQr: "api/v1/ReportManager/qr",
+  reportQrExport: "api/v1/ReportManager/qr/export",
   //Billings and Subscriptions
   subscription: "api/v1/Subscription",
   userSubscription: "api/v1/Subscription/User",
   manage: "api/v1/Subscription/manaage-url",
   intializeTransaction: "api/v1/Transaction/initialise",
   completeTransaction: "api/v1/Transaction/complete",
+  // Inventory
+  unit: "api/v1/Unit",
+  unitLov: "api/v1/Unit/lov",
+  inventory: "api/v1/Inventory",
+  inventoryByBusiness: "api/v1/Inventory/by-business",
+  inventoryLov: "api/v1/Inventory/lov",
+  inventoryItems: "api/v1/Inventory/items",
+  inventoryItem: "api/v1/Inventory/item",
+  inventoryCategories: "api/v1/Inventory/categories",
+  inventoryItemUnit: "api/v1/Inventory/item-unit",
+  inventoryRecipe: "api/v1/Inventory/recipe",
+  inventoryCreateItemWithRecipe: "api/v1/Inventory/create-item-with-recipe",
+  inventoryRecipeByBusiness: "api/v1/Inventory/recipe/by-business",
+  inventoryRecipeDetails: "api/v1/Inventory/recipe/details",
+  inventoryRecipeByItem: "api/v1/Inventory/recipe/by-item",
+  inventoryRecipeProduceBatch: "api/v1/Inventory/recipe/produce-batch",
+  inventoryBatchProduction: "api/v1/Inventory/batch-production",
+  supplier: "api/v1/Supplier",
+  supplierByBusiness: "api/v1/Supplier/by-business",
+  supplierLov: "api/v1/Supplier/lov",
+  mapSupplierItem: "api/v1/Supplier/map-item",
+  stockTransfer: "api/v1/TransferOrder",
+  stockTransferCancel: "api/v1/TransferOrder/cancel",
+  stockTransferSendMail: "api/v1/TransferOrder/send-mail",
+  stockTransferByBusiness: "api/v1/TransferOrder/by-business",
+  stockTransferIncoming: "api/v1/TransferOrder/incoming",
+  stockTransferReceive: "api/v1/TransferOrder/receive",
+  // Purchase Order
+  purchaseOrder: "api/v1/PurchaseOrder",
+  purchaseOrderByBusiness: "api/v1/PurchaseOrder/by-business",
+  purchaseOrderReceive: "api/v1/PurchaseOrder/receive",
+  purchaseOrderSendMail: "api/v1/PurchaseOrder/send-mail",
+  purchaseOrderDuplicate: "api/v1/PurchaseOrder/duplicate",
+  // Inventory Wizard
+  inventoryWizardMenuSummary: "api/v1/InventoryWizard/menu-summary",
+  inventoryWizardPredict: "api/v1/InventoryWizard/predict",
+  inventoryWizardSynchronize: "api/v1/InventoryWizard/synchronize",
+  inventoryWizardSetup: "api/v1/InventoryWizard/setup",
+  // Stock Adjustment
+  stockAdjustment: "api/v1/StockAdjustment",
+  stockAdjustmentReasons: "api/v1/StockAdjustment/reasons/lov",
+  // Inventory Count
+  inventoryCount: "api/v1/InventoryCount",
+};
+
+export const INVENTORY = {
+  inventoryByBusiness: "api/v1/Inventory/by-business",
+  unitByBusiness: "api/v1/Unit/by-business",
+  unitLov: "api/v1/Unit/lov",
+  unit: "api/v1/Unit",
 };

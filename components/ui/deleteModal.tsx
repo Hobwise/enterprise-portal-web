@@ -15,6 +15,9 @@ const DeleteModal = ({
   handleDelete,
   isLoading,
   text,
+  title = 'Confirm Deletion',
+  actionLabel = 'Yes, Delete',
+  loadingLabel = 'Deleting...',
 }: any) => {
   return (
     <Modal 
@@ -37,7 +40,8 @@ const DeleteModal = ({
               <div className="relative bg-gradient-to-br from-red-50 to-red-100/50 p-8 rounded-t-2xl border-b border-red-200/30">
                 <button
                   onClick={toggleModal}
-                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-all duration-200"
+                  disabled={isLoading}
+                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-white/50 rounded-full transition-all duration-200 disabled:opacity-50"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -55,7 +59,7 @@ const DeleteModal = ({
                   </div>
                   
                   <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                    Confirm Deletion
+                    {title}
                   </h2>
                   
                   <div className="w-16 h-1 bg-gradient-to-r from-red-400 to-red-600 rounded-full"></div>
@@ -84,12 +88,12 @@ const DeleteModal = ({
                   {isLoading ? (
                     <div className="flex items-center gap-2">
                       <Spinner color="current" size="sm" />
-                      <span>Deleting...</span>
+                      <span>{loadingLabel}</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
                       <Trash2 className="w-5 h-5" />
-                      <span>Yes, Delete</span>
+                      <span>{actionLabel}</span>
                     </div>
                   )}
                 </Button>

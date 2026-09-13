@@ -1,7 +1,7 @@
 "use client";
 
 import useNotification from "@/hooks/cachedEndpoints/useNotifications";
-import useSubscription from "@/hooks/cachedEndpoints/useSubscription";
+import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
 import useUser from "@/hooks/cachedEndpoints/useUser";
 import useScroll from "@/hooks/use-scroll";
 import { cn, getJsonItemFromLocalStorage } from "@/lib/utils";
@@ -34,7 +34,7 @@ import Notifications from "./notifications/notifications";
 import { NavigationBanner, useCheckExpiry } from "./subscription-notification";
 import * as signalR from "@microsoft/signalr";
 import useNotifyCount from "@/hooks/cachedEndpoints/useNotificationCount";
-import CompanyLogo from "@/components/logo";
+import BusinessLogo from "@/components/businessLogo";
 
 // NotificationFetcher: fetches notifications only when mounted (popover open)
 const NotificationFetcher = ({ page, pageSize, ...props }: any) => {
@@ -110,8 +110,12 @@ const Header = ({ ispos }: any) => {
   const navItem = SIDENAV_ITEMS.filter((item) => item.path === pathname)[0];
 
   const routeOutsideSidebar = () => {
+    const segments = pathname.split('/').filter(Boolean);
     for (const [key, value] of Object.entries(headerRouteMapping)) {
-      if (pathname.includes(key)) {
+      const keySegments = key.split('/').filter(Boolean);
+      // Match if all key segments appear consecutively in the pathname segments
+      const idx = segments.indexOf(keySegments[0]);
+      if (idx !== -1 && keySegments.every((seg, i) => segments[idx + i] === seg)) {
         return value;
       }
     }
@@ -121,7 +125,7 @@ const Header = ({ ispos }: any) => {
     setPageSize((prevSize) => prevSize + 10);
   }, []);
 
-  const { data: subscription } = useSubscription();
+  const { subscription } = useSubscriptionContext();
 
   const { message, showBanner } = useCheckExpiry(
     subscription?.nextPaymentDate,
@@ -195,7 +199,6 @@ const Header = ({ ispos }: any) => {
         {onTrialVersion === false && isActive === false && (
           <NavigationBanner
             title="Your subscription has expired!"
-            desc="Upgrade to a paid plan to continue enjoying uninterrupted access"
           />
         )}
         {onTrialVersion && isActive === false && showBanner && (
@@ -224,8 +227,8 @@ const Header = ({ ispos }: any) => {
               }
               className="cursor-pointer"
             >
-              <CompanyLogo
-                textColor="text-black font-lexend text-[28px] font-[600]"
+              <BusinessLogo
+                textColor="text-black font-lexend text-[20px] font-[600]"
                 containerClass="flex gap-2 items-center"
               />
             </Link>
@@ -265,24 +268,21 @@ const Header = ({ ispos }: any) => {
                   isOpen={notifPopoverOpen}
                 >
                   <PopoverTrigger>
-                    {unreadCount === 0 ? (
-                      <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
-                    ) : (
-                      <Badge
-                        className="cursor-pointer h-6 w-6 flex justify-center items-center rounded-full"
-                        size="sm"
-                        color="danger"
-                        content={
-                          unreadNotCount !== 0
-                            ? unreadNotCount
-                            : unreadCount > 0
-                            ? unreadCount
-                            : undefined
-                        }
-                      >
-                        <SlBell className="text-[#494E58] h-5 w-5 cursor-pointer" />
-                      </Badge>
-                    )}
+                    {(() => {
+                      const displayCount = unreadNotCount > 0 ? unreadNotCount : unreadCount;
+                      return displayCount === 0 ? (
+                        <SlBell className="text-[#494E58] h-7 w-7 cursor-pointer" />
+                      ) : (
+                        <Badge
+                          className="cursor-pointer h-6 min-w-6 px-1.5 flex justify-center items-center rounded-full text-xs"
+                          size="sm"
+                          color="danger"
+                          content={displayCount}
+                        >
+                          <SlBell className="text-[#494E58] h-5 w-5 cursor-pointer" />
+                        </Badge>
+                      );
+                    })()}
                   </PopoverTrigger>
                   <PopoverContent className="">
                     {notifPopoverOpen && (

@@ -1,29 +1,86 @@
 'use client';
 import { getFAQItems } from '@/app/api/controllers/landingPage';
-import { cn, notify } from '@/lib/utils';
-import { ArrowDown2, ArrowUp, FaqIcon } from '@/public/assets/svg';
+import { cn } from '@/lib/utils';
+import FaqPhoto from '@/public/assets/images/landing-v2/faq-photo.jpg';
+import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
+import { FiMinus, FiPlus } from 'react-icons/fi';
 import { Transition } from './transition';
+
+// Mirrors the live FAQ content served by the API — used only when the
+// getFAQItems() request fails or returns an empty list.
+const DEFAULT_FAQS = [
+  {
+    question: 'What is this platform, and who is it for?',
+    answer:
+      'Our platform is a B2B SaaS solution tailored for the hospitality industry, including businesses like bars, restaurants, clubs, hotels, lounges etc. We simplify daily operations by offering tools to efficiently manage orders, inventory, reservations, customer interactions, and more.',
+  },
+  {
+    question: 'What types of activities can I manage with this platform?',
+    answer:
+      'You can manage a wide range of activities, including digital menu, order processing, inventory tracking, reservation scheduling, customer communications, staff assignments, and sales reporting. Our platform centralizes your business operations, giving you better control and visibility.',
+  },
+  {
+    question: 'How does your platform help improve customer experience?',
+    answer:
+      'By automating and streamlining tasks, our platform helps you serve customers faster, reduce errors, and personalize interactions. This leads to shorter wait times, more accurate orders, and a smooth customer experience that keeps guests coming back.',
+  },
+  {
+    question: 'Can I use this solution to manage multiple locations?',
+    answer:
+      'Yes, our platform is designed to support businesses with multiple locations. You can monitor and manage each location individually allowing you to make data-driven decisions.',
+  },
+  {
+    question: 'What reports and analytics are available?',
+    answer:
+      'Our platform provides detailed analytics on sales, customer preferences, peak hours, and staff performance. You can generate custom reports to gain insights into your business’s performance, helping you identify opportunities for growth.',
+  },
+  {
+    question: 'Is the platform mobile-friendly?',
+    answer:
+      'Absolutely! Our platform is designed to be accessible from any device, including smartphones and tablets, allowing you to manage your business on the go.',
+  },
+  {
+    question: 'How secure is my data?',
+    answer:
+      'We prioritize data security and employ industry-standard encryption and access control measures. Your data is stored securely, and only authorized users have access to sensitive information.',
+  },
+  {
+    question: 'How much does the platform cost?',
+    answer:
+      'Our pricing is based on the size of your business and the features you need. We offer flexible subscription plans, so you only pay for what you use. Contact us to get a personalized quote.',
+  },
+  {
+    question: 'What kind of customer support do you offer?',
+    answer:
+      'We offer 24/7 customer support to ensure you have assistance whenever you need it. Our support team is available via email, phone, and live chat, and we also offer a knowledge base for self-service help.',
+  },
+  {
+    question: 'How can I get started with the platform?',
+    answer:
+      'Getting started is easy! Sign up for a free trial on our website or contact our sales team for a personalized demo. We’ll help you onboard and set up your account to ensure you’re ready to streamline your business operations right away.',
+  },
+];
+
+interface FaqItem {
+  question: string;
+  answer: string;
+}
 
 export default function FAQs({ className }: { className?: string }) {
   const [isLoading, setIsLoading] = useState(true);
-  const [faqs, setFaqs] = useState<
-    { question: string; answer: string; collapse: boolean }[]
-  >([]);
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
-  const getFaqs = async (loading = true) => {
-    setIsLoading(loading);
+  const getFaqs = async () => {
+    setIsLoading(true);
     const data = await getFAQItems();
     setIsLoading(false);
 
-    if (data?.data?.isSuccessful) {
-      setFaqs([...data?.data?.data, { collapse: true }]);
-    } else if (data?.data?.error) {
-      notify({
-        title: 'Error!',
-        text: data?.data?.error,
-        type: 'error',
-      });
+    if (data?.data?.isSuccessful && data?.data?.data?.length) {
+      setFaqs(data.data.data);
+    } else {
+      setFaqs(DEFAULT_FAQS);
     }
   };
 
@@ -31,70 +88,75 @@ export default function FAQs({ className }: { className?: string }) {
     getFaqs();
   }, []);
 
-  const handleCollapse = (index: number) => {
-    const copyFaqs = [...faqs];
-    if (copyFaqs[index].collapse) {
-      copyFaqs[index].collapse = false;
-    } else {
-      copyFaqs[index].collapse = true;
-    }
-    setFaqs(copyFaqs);
+  const handleToggle = (index: number) => {
+    setOpenIndex((prev) => (prev === index ? null : index));
   };
 
   return (
     <section
+      id='faq'
       className={cn(
-        'bg-white py-8 lg:py-16 font-satoshi space-y-2 px-6 lg:px-12',
+        'scroll-mt-24 bg-white py-16 lg:py-24 font-satoshi px-6 lg:px-16',
         className
       )}
     >
-      <div className='flex items-center w-fit space-x-2 text-primaryColor bg-[#6840D50D] border-[#5F35D24D] border px-4 py-1.5 rounded-full text-xs shadow-custom-inset'>
-        <FaqIcon />
-        <p className='font-normal'>FAQ</p>
-      </div>
-      <div className='w-[100%] text-left'>
-        <h2 className='text-[24px] lg:text-[40px] text-[#161618] lg:leading-[64px] font-bricolage_grotesque'>
-          Your Top Questions About Hobwise
-        </h2>
-      </div>
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-start'>
+        <div className='space-y-10'>
+          <div className='text-left space-y-3'>
+            <h2 className='font-bricolage_grotesque font-medium text-[#161618] text-[30px] leading-[38px] lg:text-[44px] lg:leading-[52px]'>
+              Frequently
+              <br /> Asked Questions
+            </h2>
+            <p className='text-[#667085] text-sm lg:text-base'>Your top questions, answered.</p>
+          </div>
 
-      <div className='space-y-6'>
-        {isLoading ? (
-          ''
-        ) : (
-          <React.Fragment>
-            {faqs.map((each, index) => (
-              <Transition key={each.question}>
-                {each.question && (
-                  <div className='bg-[#F6F5FE] px-4 lg:px-8 py-6 rounded-2xl border border-[#5F35D24D] flex items-start justify-between font-bricolage_grotesque'>
-                    <div className='space-y-2 text-left w-[80%]'>
-                      <p
-                        className='text-[#252525] font-medium text-base lg:text-[20px]'
-                        onClick={() => handleCollapse(index)}
+          {!isLoading && (
+            <div className='space-y-2 text-left'>
+              {faqs.map((each, index) => {
+                if (!each.question) return null;
+                const isOpen = openIndex === index;
+
+                return (
+                  <Transition key={each.question}>
+                    <div className='py-1'>
+                      <button
+                        type='button'
+                        aria-expanded={isOpen}
+                        onClick={() => handleToggle(index)}
+                        className={cn(
+                          'w-full flex items-center gap-4 text-left px-4 py-4 transition-colors',
+                          isOpen
+                            ? 'bg-[#F4F4F6] border-l-4 border-primaryColor text-primaryColor'
+                            : 'text-[#3F3F46]'
+                        )}
                       >
-                        {each.question}
-                      </p>
-                      {each.collapse && (
+                        <span className='shrink-0 text-lg'>
+                          {isOpen ? <FiMinus /> : <FiPlus />}
+                        </span>
+                        <span className='font-bricolage_grotesque text-base lg:text-lg'>
+                          {each.question}
+                        </span>
+                      </button>
+                      {isOpen && (
                         <Transition>
-                          <p className='text-[#677182] font-satoshi text-sm lg:text-base'>
+                          <p className='bg-white shadow-[0_8px_24px_rgba(16,24,40,0.06)] px-5 py-5 text-[#677182] text-sm lg:text-base'>
                             {each.answer}
                           </p>
                         </Transition>
                       )}
                     </div>
-                    <div
-                      className='border border-[#5F35D2] bg-[#EAE8FD] rounded-full lg:h-10 lg:w-10 w-6 h-6 flex items-center justify-center'
-                      role='button'
-                      onClick={() => handleCollapse(index)}
-                    >
-                      {each.collapse ? <ArrowUp /> : <ArrowDown2 />}
-                    </div>
-                  </div>
-                )}
-              </Transition>
-            ))}
-          </React.Fragment>
-        )}
+                  </Transition>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <Image
+          src={FaqPhoto}
+          alt='Warm, modern restaurant interior'
+          className='hidden lg:block w-full h-auto object-cover'
+        />
       </div>
     </section>
   );

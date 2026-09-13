@@ -205,6 +205,7 @@ export type payloadMenuItem = {
   itemDescription: string;
   price: number;
   currency: string;
+  quantityPerSale?: number;
   isAvailable: boolean;
   hasVariety: boolean;
   imageReference: string;
@@ -213,6 +214,7 @@ export type payloadMenuVariety = {
   id?: string; // Required for edit, optional for create
   price: number;
   unit: string;
+  quantityPerSale?: number;
   itemID?: string;
   menuID?: string;
   currency?: string;

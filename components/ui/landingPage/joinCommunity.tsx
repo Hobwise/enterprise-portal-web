@@ -3,7 +3,7 @@ import { AddToWaitingList } from '@/app/api/controllers/landingPage';
 import { CustomButton } from '@/components/customButton';
 import { cn, notify, validateEmail } from '@/lib/utils';
 import PricePlan from '@/public/assets/images/price-bg.png';
-import ReportsImage from '@/public/assets/images/reports-image.png';
+import ReportsImage from '@/public/assets/images/reports-dark.jpg';
 import { StarIcon } from '@/public/assets/svg';
 import Image from 'next/image';
 import { useState } from 'react';
@@ -52,7 +52,7 @@ export default function JoinCommunity({ className }: { className?: string }) {
           <p className="font-normal">Get Started</p>
         </div>
         <div className="lg:w-[45%] mx-auto mt-2.5 lg:mt-0">
-          <h2 className="text-[30px] lg:text-[40px] lg:leading-[54px] font-bricolage_grotesque text-white">Join Our Community of Hospitality Innovators</h2>
+          <h2 className="text-[28px] lg:text-[44px] lg:leading-[52px] font-bricolage_grotesque font-bold text-white">Join Our Community of Hospitality Innovators</h2>
           <p className="text-[#DCE4E8]">
             Come be a part of a warm and supportive network of restaurant, hotel, and bar owners who are simplifying their day-to-day with Hobwise. Share your
             experiences, exchange valuable tips, stay in the loop with the latest industry trends, and watch your business flourish.
@@ -93,7 +93,7 @@ export default function JoinCommunity({ className }: { className?: string }) {
           </form>
         </div>
       </Transition>
-      <Image src={ReportsImage} alt="reports" />
+      <Image src={ReportsImage} alt="reports" placeholder="blur" className="relative z-10 w-full rounded-t-2xl lg:w-[90%] lg:mx-auto" />
     </section>
   );
 }
