@@ -312,14 +312,37 @@ const PaymentManagement = () => {
     const settlement: BankAccount | null = data?.settlementAccount ?? null;
     const accounts: BankAccount[] = data?.bankAccounts ?? [];
 
-    setSettlementAccount(settlement);
-    setBankAccounts(accounts);
+    // Resolve verified names via name-enquiry for all accounts
+    const resolveNameForAccount = async (account: BankAccount): Promise<BankAccount> => {
+      const bankCode = account.bankCode ?? account.settlementBank;
+      if (account.accountNumber && bankCode) {
+        try {
+          const nameResponse = await getNameEnquiry(account.accountNumber, bankCode);
+          const verifiedName = nameResponse?.data?.data?.accountName || nameResponse?.data?.accountName;
+          if (succeeded(nameResponse) && verifiedName) {
+            return { ...account, resolvedAccountName: verifiedName };
+          }
+        } catch {
+          // Silently fall through – display whatever the account already has
+        }
+      }
+      return account;
+    };
+
+    // Resolve names in parallel for all accounts
+    const [resolvedSettlement, ...resolvedAccounts] = await Promise.all([
+      settlement ? resolveNameForAccount(settlement) : Promise.resolve(null),
+      ...accounts.map(resolveNameForAccount),
+    ]);
+
+    setSettlementAccount(resolvedSettlement);
+    setBankAccounts(resolvedAccounts);
 
     const hasAny =
       data?.hasSettlementAccount ||
       data?.hasBankAccounts ||
-      settlement !== null ||
-      accounts.length > 0;
+      resolvedSettlement !== null ||
+      resolvedAccounts.length > 0;
     setMode(hasAny ? "details" : "empty");
     return hasAny;
   }, [businessId]);
@@ -774,7 +797,7 @@ const PaymentManagement = () => {
   };
 
   const resolveAccountName = (account: BankAccount): string => {
-    return account.resolvedAccountName ?? account.verifiedAccountName ?? account.name ?? account.accountName;
+    return account.resolvedAccountName ?? account.verifiedAccountName ?? account.name ?? "";
   };
 
   // handleSubmit is now only used for the legacy path (should not be reached in normal flow).
