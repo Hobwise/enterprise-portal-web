@@ -28,7 +28,7 @@ const LazyImage = ({ item }: { item: any }) => {
       src={src || noImage}
       alt={item.name}
       loading="lazy"
-      className={`w-full h-[118px] object-cover transition-opacity duration-300 ${
+      className={`w-full h-[100px] sm:h-[118px] object-cover transition-opacity duration-300 ${
         item.isAvailable === false ? 'grayscale opacity-70' : ''
       } ${!src ? 'opacity-0' : 'opacity-100'}`}
       onError={(e) => {
@@ -71,7 +71,7 @@ const MenuItemsGrid = ({
   };
 
   return (
-    <div className="p-6 h-[60vh]">
+    <div className="p-3 sm:p-6 h-[60vh]">
       {loadingItems || menuItems === null ? (
         <SpinnerLoader size="md" />
       ) : menuItems && menuItems.length === 0 && searchQuery ? (
@@ -81,16 +81,15 @@ const MenuItemsGrid = ({
         </div>
         
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-6 xl:grid-cols-6 gap-4 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-8">
           {/* Add New Item Card */}
           {canCreateMenu && (
             <div
               onClick={() => setIsAddItemChoiceModalOpen ? setIsAddItemChoiceModalOpen(true) : setIsAddItemModalOpen(true)}
-              className="bg-white border rounded-lg shadow p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[180px]"
+              className="bg-white border rounded-lg shadow p-3 sm:p-6 flex flex-col items-center justify-center hover:border-[#5F35D2] cursor-pointer transition-colors h-[160px] sm:h-[180px]"
             >
               <img src="/assets/icons/menu.svg" alt="add"  />
-              <span className="text-gray-600 text-sm font-med
-              ium font-satoshi">Add new item</span>
+              <span className="text-gray-600 text-sm font-medium font-satoshi">Add new item</span>
             </div>
           )}
 
@@ -100,7 +99,7 @@ const MenuItemsGrid = ({
               <div
                 key={item.id}
                 onClick={() => onItemClick(item)}
-                className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[180px] transition-shadow cursor-pointer relative p-2 ${
+                className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[160px] sm:h-[180px] transition-shadow cursor-pointer relative p-2 ${
                   item.isAvailable === false ? '' : ''
                 }`}
               >

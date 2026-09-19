@@ -62,11 +62,11 @@ const CreateMenuModal = ({
 
                 {/* Content */}
                 <div className="p-1">
-                  <div className="bg-white p-6 rounded-xl ">
+                  <div className="bg-white p-3 sm:p-6 rounded-xl ">
                     <div className="flex items-center gap-2 mb-6">
                       
                       <div>
-                     <h3 className="text-lg font-semibold text-gray-800">Create Menu</h3>
+                     <h3 className="text-base sm:text-lg font-semibold text-gray-800">Create Menu</h3>
 
                         <p className="text-gray-700 text-xs ">
                         Create a new menu section for your items
@@ -98,7 +98,7 @@ const CreateMenuModal = ({
                           <select
                             value={selectedCreateSection}
                             onChange={(e) => setSelectedCreateSection(e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
+                            className="w-full px-3 py-2.5 sm:px-4 sm:py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] text-gray-700 bg-gray-50 hover:bg-white transition-colors duration-200 appearance-none"
                           >
                             <option value="">Choose a Menu</option>
                             {categories.map((category) => (
@@ -163,11 +163,11 @@ const CreateMenuModal = ({
               </div>
             </ModalBody>
             
-            <ModalFooter className="px-8 pb-8 pt-0">
+            <ModalFooter className="px-3 sm:px-8 pb-3 sm:pb-8 pt-0">
               <div className="flex justify-end gap-4 w-full">
                 <button
                   onClick={onOpenChange}
-                  className="px-8 py-3 border flex-1 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
+                  className="px-3 sm:px-8 py-2 sm:py-3 border flex-1 border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 hover:border-gray-300 font-semibold transition-all duration-200 transform hover:scale-105"
                   disabled={loading}
                 >
                   Cancel
@@ -175,7 +175,7 @@ const CreateMenuModal = ({
                 <button
                   onClick={handleCreateMenu}
                   disabled={!name || loading}
-                  className="px-8 py-3 bg-[#5F35D2] text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="px-3 sm:px-8 py-2 sm:py-3 bg-[#5F35D2] text-white rounded-xl hover:from-[#5F35D2]/90 hover:to-[#7C69D8]/90 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                 >
                   {loading ? (
                     <div className="flex items-center gap-2">
