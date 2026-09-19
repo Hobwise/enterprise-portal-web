@@ -74,7 +74,7 @@ const EditVariety = ({
         {(onClose) => (
           <>
             <ModalBody>
-              <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold mb-4'>
+              <h2 className='text-xl sm:text-[24px] leading-3 mt-6 sm:mt-8 text-black font-semibold mb-4'>
                 Update Variety
               </h2>
 

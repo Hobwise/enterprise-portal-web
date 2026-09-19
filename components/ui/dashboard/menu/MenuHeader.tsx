@@ -38,9 +38,9 @@ const MenuHeader = ({
 }: MenuHeaderProps) => {
   return (
     <div className="bg-white py-4 ">
-      <div className="flex flex-row flex-wrap items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="text-[24px] leading-8 font-semibold">
+          <div className="text-[20px] sm:text-[24px] leading-7 sm:leading-8 font-semibold">
             {categories.length > 0 ? (
               <div className="flex items-center">
                 <span>Menu</span>
@@ -51,10 +51,10 @@ const MenuHeader = ({
           </div>
           <p className="text-sm text-grey600">Manage all menu Items and Categories</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div>
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center md:w-auto">
+          <div className="w-full sm:w-auto">
             <CustomInput
-              classnames={"w-[242px]"}
+              classnames={"w-full sm:w-[242px]"}
               label=""
               size="md"
               value={searchQuery}
@@ -66,42 +66,46 @@ const MenuHeader = ({
             />
           </div>
 
-          <ButtonGroup className="border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
-            <Button
-              disabled={isExporting}
-              onClick={handleExportXLSX}
-              className="flex text-grey600 bg-white"
-              title="Export"
-              aria-label="Export"
-            >
-              Export
-              {isExporting ? (
-                <VscLoading className="animate-spin" />
-              ) : (
-                <MdOutlineFileDownload className="text-[22px]" />
-              )}
-            </Button>
-          </ButtonGroup>
-          <CustomButton
-            onClick={() => {
-              // Generate shortened URL using base64 encoding
-              const shortUrl = generateShortMenuUrlBrowser(
-                window.location.origin,
-                {
-                  businessID: businessInformation[0]?.businessId,
-                  cooperateID: cooperateId,
-                  businessName: businessInformation[0]?.businessName,
-                  mode: "view",
-                }
-              );
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex-1 sm:flex-none">
+              <ButtonGroup className="w-full border-2 border-primaryGrey divide-x-2 divide-primaryGrey rounded-lg">
+                <Button
+                  disabled={isExporting}
+                  onClick={handleExportXLSX}
+                  className="flex flex-1 text-grey600 bg-white sm:flex-none"
+                  title="Export"
+                  aria-label="Export"
+                >
+                  Export
+                  {isExporting ? (
+                    <VscLoading className="animate-spin" />
+                  ) : (
+                    <MdOutlineFileDownload className="text-[22px]" />
+                  )}
+                </Button>
+              </ButtonGroup>
+            </div>
+            <CustomButton
+              onClick={() => {
+                // Generate shortened URL using base64 encoding
+                const shortUrl = generateShortMenuUrlBrowser(
+                  window.location.origin,
+                  {
+                    businessID: businessInformation[0]?.businessId,
+                    cooperateID: cooperateId,
+                    businessName: businessInformation[0]?.businessName,
+                    mode: "view",
+                  }
+                );
 
-              navigator.clipboard.writeText(shortUrl);
-              toast.success("Short menu URL copied to clipboard!");
-            }}
-            className="py-2 px-4 md:mb-0 mb-4 text-primaryColor bg-white border border-primaryColor"
-          >
-            Copy Menu URL
-          </CustomButton>
+                navigator.clipboard.writeText(shortUrl);
+                toast.success("Short menu URL copied to clipboard!");
+              }}
+              className="flex-1 sm:flex-none py-2 px-4 text-primaryColor bg-white border border-primaryColor"
+            >
+              Copy Menu URL
+            </CustomButton>
+          </div>
           {/* Preview Menu button commented out - functionality moved to Settings > Customize Business Display */}
           {/* {onPreviewClick && (
             <button

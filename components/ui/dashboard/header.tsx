@@ -5,6 +5,7 @@ import { useSubscriptionContext } from "@/hooks/providers/SubscriptionProvider";
 import useUser from "@/hooks/cachedEndpoints/useUser";
 import useScroll from "@/hooks/use-scroll";
 import { cn, getJsonItemFromLocalStorage } from "@/lib/utils";
+import { isPOSUser as checkIsPOSUser, isCategoryUser as checkIsCategoryUser } from "@/lib/userTypeUtils";
 import {
   Avatar,
   Badge,
@@ -69,6 +70,17 @@ const Header = ({ ispos }: any) => {
 
   // Get user info from localStorage for activeHours, firstLogin, lastLogin
   const userInfo = getJsonItemFromLocalStorage("userInformation");
+
+  // The mobile menu (HeaderMobile) is hidden for POS and Category users, so
+  // don't render a hamburger for them either.
+  const hideMobileMenu =
+    checkIsPOSUser(userInfo) || checkIsCategoryUser(userInfo);
+
+  const toggleMobileNav = useCallback(() => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("hobwise:mobile-nav-toggle"));
+    }
+  }, []);
 
   // Helper function to format active hours
   const formatActiveHours = (hours: number): string => {
@@ -216,8 +228,32 @@ const Header = ({ ispos }: any) => {
         <div
           className={`flex h-[64px] bg-white text-black ${
             ispos ? "" : "border-b"
-          } border-primaryGrey items-center justify-between px-6`}
+          } border-primaryGrey items-center justify-between px-4 sm:px-6`}
         >
+          {!hideMobileMenu && (
+            <button
+              type="button"
+              onClick={toggleMobileNav}
+              aria-label="Open navigation menu"
+              className="mr-2 flex h-10 w-10 shrink-0 items-center justify-center md:hidden"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                className="text-[#1D2739]"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 6h16M4 12h16M4 18h16"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          )}
           {ispos && (
             <Link
               href={
@@ -234,29 +270,37 @@ const Header = ({ ispos }: any) => {
             </Link>
           )}
           {!ispos && (
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center gap-2">
-                {navItem ? (
-                  <>
-                    {navItem?.title === "Menu" ? (
-                      <PiBookOpenTextLight className="font-bold text-grey500 text-xl" />
-                    ) : (
-                      <span className="text-[#494E58]">{navItem?.icon}</span>
-                    )}
-                    <span className="text-[#494E58] font-[600]">
-                      {navItem?.title}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <span className="text-[#494E58]">{routeOutsideSidebar()?.icon}</span>
-                    <span className="text-[#494E58] font-[600]">
-                      {routeOutsideSidebar()?.title}
-                    </span>
-                  </>
-                )}
+            <>
+              <div className="hidden md:flex items-center space-x-4">
+                <div className="flex items-center gap-2">
+                  {navItem ? (
+                    <>
+                      {navItem?.title === "Menu" ? (
+                        <PiBookOpenTextLight className="font-bold text-grey500 text-xl" />
+                      ) : (
+                        <span className="text-[#494E58]">{navItem?.icon}</span>
+                      )}
+                      <span className="text-[#494E58] font-[600]">
+                        {navItem?.title}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-[#494E58]">{routeOutsideSidebar()?.icon}</span>
+                      <span className="text-[#494E58] font-[600]">
+                        {routeOutsideSidebar()?.title}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
+              <div className="flex flex-1 items-center md:hidden">
+                <BusinessLogo
+                  textColor="text-black font-lexend text-base font-[600]"
+                  containerClass="flex items-center gap-2"
+                />
+              </div>
+            </>
           )}
 
           <div className="flex items-center space-x-8">
@@ -332,7 +376,7 @@ const Header = ({ ispos }: any) => {
                 <Dropdown placement="bottom-end">
                   <DropdownTrigger>
                     {data ? (
-                      <div className="flex items-center py-2 px-4 rounded-full border border-gray-300 gap-2 cursor-pointer">
+                      <div className="flex items-center p-1 sm:py-2 sm:px-4 rounded-full border border-gray-300 gap-1.5 sm:gap-2 cursor-pointer">
                         <div className=" hidden md:flex flex-col leading-4 ">
                           <span className="text-xs font-bold">
                             {data?.firstName} {data?.lastName}

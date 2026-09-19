@@ -126,20 +126,20 @@ const ItemDetailsModal = ({
           <>
             <ModalBody className="p-0">
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b">
+              <div className="flex flex-col gap-3 p-3 sm:p-6 border-b sm:flex-row sm:items-center sm:justify-between">
                 <button
                   onClick={() => onOpenChange(false)}
-                  className="flex items-center gap-2 text-[#5F35D2] hover:text-[#5F35D2]"
+                  className="flex items-center gap-2 text-[#5F35D2] hover:text-[#5F35D2] self-start sm:self-auto"
                 >
                   <ArrowLeft className="w-5 h-5" />
                   <span>Back to menu</span>
                 </button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   {onEditItem && (
                     <button
                       onClick={() => onEditItem(selectedItem)}
-                      className="text-gray-700 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+className="text-gray-700 px-2.5 sm:px-6 py-1.5 sm:py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 flex-1 sm:flex-none justify-center"
                     >
                       <Edit className="w-4 h-4" />
                       <span>Edit</span>
@@ -147,7 +147,7 @@ const ItemDetailsModal = ({
                   )}
                   <button
                     onClick={() => openCreateVarietyModal(selectedItem)}
-                    className="text-gray-700 px-6 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2"
+                    className="text-gray-700 px-2.5 sm:px-6 py-1.5 sm:py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 flex-1 sm:flex-none justify-center"
                   >
                     <Plus className="w-4 h-4" />
                     <span className="text-gray-700">Create variety</span>
@@ -155,7 +155,7 @@ const ItemDetailsModal = ({
                   {onDeleteItem && (
                     <button
                       onClick={() => setIsDeleteModalOpen(true)}
-                      className="text-red-600 px-6 py-2.5 border border-red-300 rounded-lg hover:bg-red-50 flex items-center gap-2"
+                      className="text-red-600 px-2.5 sm:px-6 py-1.5 sm:py-2.5 border border-red-300 rounded-lg hover:bg-red-50 flex items-center gap-2 flex-1 sm:flex-none justify-center"
                     >
                       <Trash2 className="w-4 h-4" />
                       <span>Delete</span>
@@ -165,8 +165,8 @@ const ItemDetailsModal = ({
               </div>
 
               {/* Content */}
-              <div className="p-6">
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+              <div className="p-3 sm:p-6">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
                   {/* Main Item */}
                   <div className="lg:col-span-3">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -184,7 +184,7 @@ const ItemDetailsModal = ({
                                 : "/assets/images/no-image.svg"
                             }
                             alt={selectedItem.name}
-                            className="w-full h-[20rem] object-cover transition-transform duration-300 hover:scale-105"
+                            className="w-full h-60 sm:h-[20rem] object-cover transition-transform duration-300 hover:scale-105"
                             onError={(e) => {
                               (e.target as HTMLImageElement).src =
                                 "/assets/images/no-image.svg";
@@ -196,7 +196,7 @@ const ItemDetailsModal = ({
                       {/* Item Details */}
                       <div className="space-y-4">
                         <div>
-                          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
                             {selectedItem.name}
                           </h2>
                           <div className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#5F35D2]/10 text-[#5F35D2] mb-3">
@@ -209,7 +209,7 @@ const ItemDetailsModal = ({
                         </p>
 
                         <div className="pt-4 border-t border-gray-200">
-                          <p className="text-3xl font-bold text-[#5F35D2]">
+                          <p className="text-2xl sm:text-3xl font-bold text-[#5F35D2]">
                             ₦
                             {selectedItem.price.toLocaleString("en-NG", {
                               minimumFractionDigits: 2,
@@ -218,7 +218,7 @@ const ItemDetailsModal = ({
                         </div>
 
                         {/* Availability Toggle */}
-                        <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-200">
+                        <div className="flex items-center gap-3 mt-6 pt-4 border-t border-gray-200 flex-wrap">
                           <span className="text-gray-600 font-medium">
                             Availability:
                           </span>
@@ -245,7 +245,7 @@ const ItemDetailsModal = ({
                   </div>
                   {/* Varieties */}
                   <div className="lg:col-span-2">
-                    <div className=" rounded-2xl p-6 h-full border border-gray-200/50 shadow-sm">
+                    <div className=" rounded-2xl p-3 sm:p-6 h-full border border-gray-200/50 shadow-sm">
                       {/* Header with icon and count */}
                       <div className="flex items-center justify-between mb-6">
                         <div className="flex items-center gap-3">
@@ -253,7 +253,7 @@ const ItemDetailsModal = ({
                             <Star className="w-5 h-5 text-white" />
                           </div>
                           <div>
-                            <h3 className="text-xl font-bold text-gray-800">
+                            <h3 className="text-lg sm:text-xl font-bold text-gray-800">
                               Varieties
                             </h3>
                             {selectedItem.varieties &&
@@ -287,9 +287,9 @@ const ItemDetailsModal = ({
                             (variety: any, index: number) => (
                               <div
                                 key={variety.id}
-                                className="bg-white p-5 rounded-xl border border-gray-100  hover:border-[#5F35D2]/30 transition-all duration-300 group transform hover:-translate-y-1 "
+                                className="bg-white p-3 sm:p-5 rounded-xl border border-gray-100  hover:border-[#5F35D2]/30 transition-all duration-300 group transform hover:-translate-y-1 "
                               >
-                                <div className="flex justify-between items-start mb-3">
+                                <div className="flex justify-between items-start gap-2 mb-3">
                                   <div className="flex-1">
                                     <h4 className="font-bold text-gray-800 text-base group-hover:text-[#5F35D2] transition-colors">
                                       {variety.unit || variety.name}
@@ -340,12 +340,12 @@ const ItemDetailsModal = ({
                                   </div>
                                 </div>
 
-                                <div className="flex justify-between items-end pt-2 border-t border-gray-100">
+                                <div className="flex justify-between items-end gap-2 flex-wrap pt-2 border-t border-gray-100">
                                   <div className="flex items-center gap-2">
                                     <span className="text-gray-600 text-xs font-bold">
                                       ₦
                                     </span>
-                                    <span className="text-xl font-bold text-gray-600 ">
+                                    <span className="text-lg sm:text-xl font-bold text-gray-600 ">
                                       {variety.price?.toLocaleString("en-NG", {
                                         minimumFractionDigits: 2,
                                       })}

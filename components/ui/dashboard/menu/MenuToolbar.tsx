@@ -70,15 +70,15 @@ const MenuToolbar = ({
   };
 
   return (
-    <div className="flex items-center my-3 py-3 gap-6">
+    <div className="flex items-center my-3 py-3 gap-2 sm:gap-6">
       {/* Create new menu button - separate from scroll controls */}
       {canCreateMenu && (
         <div className="flex-shrink-0">
           <button
             onClick={onOpen}
-            className="flex items-center gap-2 py-2 px-4 border border-[#5F35D2] text-[#5F35D2] rounded-lg hover:bg-[#EAE5FF] font-semibold text-sm transition-all duration-200"
+            className="flex items-center gap-2 p-2.5 sm:px-4 sm:py-2 border border-[#5F35D2] text-[#5F35D2] rounded-lg hover:bg-[#EAE5FF] font-semibold text-sm transition-all duration-200"
           >
-            <span>Create new menu</span>
+            <span className="hidden sm:inline">Create new menu</span>
             <Plus className="w-5 h-5" />
           </button>
         </div>
@@ -108,7 +108,7 @@ const MenuToolbar = ({
         className="flex-1 overflow-x-auto scrollbar-hide scroll-smooth"
         onScroll={handleTabsScroll}
       >
-        <div className="flex gap-6 w-full">
+        <div className="flex gap-3 sm:gap-6 w-full">
           {menuSections.map((section) => (
             <Tooltip
             className='text-gray-500'
@@ -119,7 +119,7 @@ const MenuToolbar = ({
             >
               <button
                 onClick={() => handleMenuSectionSelect(section.id)}
-                className={`flex-shrink-0 py-2 px-4 bg-[#EAE5FF] w-28 rounded-lg transition-colors whitespace-nowrap font-medium text-sm ${
+                className={`flex-shrink-0 py-1.5 sm:py-2 px-3 sm:px-4 bg-[#EAE5FF] w-28 rounded-lg transition-colors whitespace-nowrap font-medium text-sm ${
                   activeSubCategory === section.id
                     ? 'bg-primaryColor text-white'
                     : 'text-[#596375] hover:bg-[#EAE5FF]'

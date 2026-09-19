@@ -6,6 +6,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { EXCLUDE_SETTINGS_PATHS } from "@/lib/routePermissions";
 import { useEffect, useState } from "react";
 import { isPOSUser, getAllowedSettingsPaths, canAccessSettingsPath } from "@/lib/userTypeUtils";
+import { useDisclosure } from "@nextui-org/react";
+import { Menu, X } from "lucide-react";
 
 export const lists = [
   {
@@ -54,6 +56,7 @@ export const lists = [
 const SettingsSidebar = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Initialize with all lists to match server render
   const [filteredLists, setFilteredLists] = useState(lists);
@@ -81,24 +84,79 @@ const SettingsSidebar = () => {
     }
   }, [pathname, router]);
 
+  const activeItem = filteredLists.find((item) =>
+    pathname.startsWith(item.href.split("?")[0])
+  );
+
+  const renderNavItem = (item: (typeof lists)[number], onNavigate?: () => void) => (
+    <li
+      key={item.href}
+      className={cn(
+        "font-bold p-4 rounded-[4px] text-sm text-[#98A2B3] hover:bg-[#F0F2F5] hover:text-[#1D2739] duration-200",
+        {
+          "bg-[#F0F2F5] text-[#1D2739]": pathname.startsWith(
+            item.href.split("?")[0]
+          ),
+        }
+      )}
+    >
+      <Link href={item.href} onClick={onNavigate}>
+        {item.title}
+      </Link>
+    </li>
+  );
+
   return (
-    <ul className="col-span-1 lg:col-span-3 border flex flex-col border-secondaryGrey p-3 rounded-lg h-fit">
-      {filteredLists.map((item) => (
-        <li
-          key={item.href}
-          className={cn(
-            "font-bold p-4 rounded-[4px] text-sm text-[#98A2B3] hover:bg-[#F0F2F5] hover:text-[#1D2739] duration-200",
-            {
-              "bg-[#F0F2F5] text-[#1D2739]": pathname.startsWith(
-                item.href.split("?")[0]
-              ),
-            }
-          )}
-        >
-          <Link href={item.href}>{item.title}</Link>
-        </li>
-      ))}
-    </ul>
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:block lg:col-span-3">
+        <ul className="border flex flex-col border-secondaryGrey p-3 rounded-lg h-fit">
+          {filteredLists.map((item) => renderNavItem(item))}
+        </ul>
+      </aside>
+
+      {/* Mobile trigger */}
+      <button
+        type="button"
+        onClick={onOpen}
+        className="lg:hidden col-span-1 flex w-full items-center justify-between rounded-lg border border-secondaryGrey bg-white px-4 py-3 text-sm font-bold text-[#1D2739]"
+      >
+        <span className="flex items-center gap-2">
+          <Menu className="h-4 w-4 text-[#98A2B3]" />
+          Settings Menu
+        </span>
+        <span className="truncate pl-3 text-xs font-medium text-[#98A2B3]">
+          {activeItem?.title ?? "Settings"}
+        </span>
+      </button>
+
+      {/* Mobile drawer */}
+      {isOpen && (
+        <div className="fixed inset-0 z-[70] lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={onClose}
+            aria-hidden="true"
+          />
+          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col overflow-y-auto bg-white p-4 shadow-2xl">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-sm font-bold text-[#344054]">Settings</span>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="Close settings menu"
+                className="rounded-full p-1.5 text-[#667085] transition-colors hover:bg-[#F0F2F5]"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <ul className="flex flex-col pt-1">
+              {filteredLists.map((item) => renderNavItem(item, onClose))}
+            </ul>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 

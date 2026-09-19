@@ -56,7 +56,7 @@ const VarietyModal = ({ menuItem, isOpen, toggleModal, getMenu }: any) => {
         {(onClose) => (
           <>
             <ModalBody>
-              <h2 className='text-[24px] leading-3 mt-8 text-black font-semibold'>
+              <h2 className='text-xl sm:text-[24px] leading-3 mt-6 sm:mt-8 text-black font-semibold'>
                 Create Variety
               </h2>
               <p className='text-sm  text-grey600  xl:w-[231px]  w-full mb-4'>

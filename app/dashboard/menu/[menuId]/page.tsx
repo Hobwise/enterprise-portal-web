@@ -172,7 +172,7 @@ const MenuDetails = () => {
 
       {isLoading ? (
         <div className='flex xl:flex-row flex-col'>
-          <div className='h-[564px] xl:w-1/2 w-full xl:mt-0 mt-4'>
+          <div className='h-[300px] sm:h-[564px] xl:w-1/2 w-full xl:mt-0 mt-4'>
             <Skeleton className='w-full h-full rounded-lg' />
           </div>
           <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0'>
@@ -203,7 +203,7 @@ const MenuDetails = () => {
         </div>
       ) : (
         <div className='flex  xl:flex-row flex-col'>
-          <div className={`h-[564px]  xl:w-1/2 w-full  xl:mt-0 mt-4 `}>
+          <div className='h-[300px] sm:h-[564px]  xl:w-1/2 w-full  xl:mt-0 mt-4 '>
             <Image
               src={
                 menuItem?.image
@@ -219,7 +219,7 @@ const MenuDetails = () => {
             />
           </div>
           <div className='flex-grow xl:w-1/2 w-full xl:p-6 p-0 '>
-            <h1 className='text-[28px] font-semibold'>{menuItem?.menuName}</h1>
+            <h1 className='text-2xl sm:text-[28px] font-semibold'>{menuItem?.menuName}</h1>
             <Spacer y={5} />
             <p className='text-sm font-sm text-grey600 xl:w-[360px] w-full'>
               {menuItem?.itemDescription}
