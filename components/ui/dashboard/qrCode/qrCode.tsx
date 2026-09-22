@@ -18,6 +18,7 @@ import {
   TableColumn,
   TableHeader,
   TableRow,
+  Chip,
 } from '@nextui-org/react';
 import moment from 'moment';
 import { useRouter } from 'next/navigation';
@@ -29,6 +30,7 @@ import { columns } from './data';
 import DeleteQRModal from './deleteModal';
 import EditQrModal from './editQrModal';
 import ViewQrModal from './viewQrModal';
+import SpinnerLoader from '@/components/ui/dashboard/menu/SpinnerLoader';
 
 const INITIAL_VISIBLE_COLUMNS = [
   'name',
@@ -204,52 +206,174 @@ const QrList = ({ qr, searchQuery, data }: any) => {
     }
   }, []);
 
+  const renderMobileCard = React.useCallback(
+    (qr: any) => (
+      <article
+        key={qr.id || qr.name}
+        className="p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+        onClick={() => {
+          saveJsonItemToLocalStorage("qr", qr);
+          toggleQRmodalView();
+        }}
+      >
+        <div className="flex items-end justify-end mb-3 mt-2">
+          <div className="ml-2" onClick={(e) => e.stopPropagation()}>
+            <Dropdown aria-label="QR actions" className="">
+              <DropdownTrigger aria-label="actions">
+                <div className="cursor-pointer flex justify-center items-center text-black p-2 -m-2">
+                  <HiOutlineDotsVertical className="text-[20px]" />
+                </div>
+              </DropdownTrigger>
+              <DropdownMenu className="text-black">
+                <DropdownSection>
+                  <DropdownItem
+                    key="view"
+                    onClick={() => {
+                      saveJsonItemToLocalStorage("qr", qr);
+                      toggleQRmodalView();
+                    }}
+                    aria-label="View QR"
+                  >
+                    <div className="flex gap-3 items-center text-grey500">
+                      <GrFormView className="text-[18px]" />
+                      <p>View QR</p>
+                    </div>
+                  </DropdownItem>
+                  {(role === 0 || userRolePermissions?.canEditQR === true) && (
+                    <DropdownItem
+                      key="edit"
+                      onClick={() => {
+                        saveJsonItemToLocalStorage("qr", qr);
+                        toggleQRmodalEdit();
+                      }}
+                      aria-label="Edit QR"
+                    >
+                      <div className="flex gap-3 items-center text-grey500">
+                        <FaRegEdit />
+                        <p>Edit QR</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                  {(role === 0 ||
+                    userRolePermissions?.canDeleteQR === true) && (
+                    <DropdownItem
+                      key="delete"
+                      onClick={() => {
+                        toggleQRmodalModal();
+                        saveJsonItemToLocalStorage("qr", qr);
+                      }}
+                      aria-label="Delete QR"
+                    >
+                      <div className="text-danger-500 flex items-center gap-3">
+                        <RiDeleteBin6Line />
+                        <p>Delete QR</p>
+                      </div>
+                    </DropdownItem>
+                  )}
+                </DropdownSection>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-semibold text-black text-[15px]">
+                {qr.name}
+              </span>
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] text-textGrey uppercase mb-1">All Orders</div>
+            <div className="text-black font-semibold text-[15px]">
+              {qr.allOrdersCount}
+            </div>
+          </div>
+          <div>
+            <div className="text-[11px] text-textGrey uppercase mb-1">Open Orders</div>
+            <div className="text-black font-semibold text-[15px]">
+              {qr.openOrdersCount}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="text-textGrey text-[12px]">
+            {moment(qr.dateCreated).format("MMM DD, YYYY h:mm A")}
+          </div>
+        </div>
+      </article>
+    ),
+    [role, userRolePermissions]
+  );
+
   return (
     <section className="border border-primaryGrey rounded-lg overflow-hidden">
-      <Table
-        radius="lg"
-        isCompact
-        removeWrapper
-        allowsSorting
-        aria-label="list of orders"
-        bottomContent={bottomContent}
-        bottomContentPlacement="outside"
-        classNames={classNames}
-        selectedKeys={selectedKeys}
-        // selectionMode='multiple'
-        sortDescriptor={sortDescriptor}
-        topContentPlacement="outside"
-        onSelectionChange={setSelectedKeys}
-        onSortChange={setSortDescriptor}
-      >
-        <TableHeader columns={headerColumns}>
-          {(column) => (
-            <TableColumn
-              key={column.uid}
-              align={column.uid === "actions" ? "center" : "start"}
-              allowsSorting={column.sortable}
-            >
-              {column.name}
-            </TableColumn>
+      {/* Mobile Card Layout */}
+      {isMobile ? (
+        <div className="divide-y divide-primaryGrey">
+          {/* Empty state */}
+          {(filteredQr || displayData || []).length === 0 && (
+            <div className="flex justify-center items-center py-16 text-textGrey">
+              No qr found
+            </div>
           )}
-        </TableHeader>
-        <TableBody
-          emptyContent={"No qr found"}
-          items={filteredQr || displayData}
+
+          {/* QR Cards */}
+          {(filteredQr || displayData || []).map((qr: any, index: number) =>
+            renderMobileCard(qr)
+          )}
+
+          {/* Infinite Scroll Sentinel & Loading Indicator from usePagination */}
+          {bottomContent}
+        </div>
+      ) : (
+        /* Desktop Table Layout */
+        <Table
+          radius="lg"
+          isCompact
+          removeWrapper
+          allowsSorting
+          aria-label="list of orders"
+          bottomContent={bottomContent}
+          bottomContentPlacement="outside"
+          classNames={classNames}
+          selectedKeys={selectedKeys}
+          sortDescriptor={sortDescriptor}
+          topContentPlacement="outside"
+          onSelectionChange={setSelectedKeys}
+          onSortChange={setSortDescriptor}
         >
-          {(item, index) => (
-            <TableRow
-              key={item?.id || item?.name || `qr-row-${index}`}
-              className="cursor-pointer hover:bg-gray-50 transition-colors"
-              onClick={(e) => handleRowClick(item, e)}
-            >
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
-              )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+          <TableHeader columns={headerColumns}>
+            {(column) => (
+              <TableColumn
+                key={column.uid}
+                align={column.uid === "actions" ? "center" : "start"}
+                allowsSorting={column.sortable}
+              >
+                {column.name}
+              </TableColumn>
+            )}
+          </TableHeader>
+          <TableBody
+            emptyContent={"No qr found"}
+            items={filteredQr || displayData}
+          >
+            {(item, index) => (
+              <TableRow
+                key={item?.id || item?.name || `qr-row-${index}`}
+                className="cursor-pointer hover:bg-gray-50 transition-colors"
+                onClick={(e) => handleRowClick(item, e)}
+              >
+                {(columnKey) => (
+                  <TableCell>{renderCell(item, columnKey)}</TableCell>
+                )}
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      )}
       <DeleteQRModal
         isOpenDelete={isOpenDelete}
         setIsOpenDelete={setIsOpenDelete}

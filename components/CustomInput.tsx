@@ -120,7 +120,7 @@ export const CustomInput = ({
   };
 
   return (
-    <div ref={inputRef}>
+    <div ref={inputRef} className="w-full">
       <Input
         key="outside"
         type={type === "password" ? passwordType : type}
