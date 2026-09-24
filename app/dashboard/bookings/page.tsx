@@ -176,7 +176,7 @@ const Bookings: React.FC = () => {
           Create and Manage Your Bookings
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {data?.categories.bookingCategories.length > 0 && (
             <>
               <div>
@@ -193,7 +193,7 @@ const Bookings: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}

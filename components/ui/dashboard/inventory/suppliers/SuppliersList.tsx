@@ -123,14 +123,14 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
 
     return (
       <div className="flex flex-col gap-4 mb-12 mt-5">
-        <div className="flex justify-between gap-3 items-end">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 sm:items-end">
           <div className="flex gap-4 items-center flex-1">
             <div className="bg-gray-200 p-2 rounded-md">
                 <SupplierIcon className="w-5 h-5 text-[#494E58]" />
             </div>
             <span className="text-md text-gray-500">{totalCount} Suppliers</span>
           </div>
-          <div className="flex gap-3 w-1/2 justify-end">
+          <div className="flex flex-wrap sm:flex-nowrap gap-3 w-full sm:w-auto justify-start sm:justify-end">
             <Input
                 isClearable
                 className="w-full  sm:max-w-[55%]"
@@ -156,57 +156,116 @@ const SuppliersList: React.FC<SuppliersListProps> = ({
   return (
     <section >
       {topContent}
-      
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-
-     
-      <Table
-        radius="lg"
-        isCompact
-        removeWrapper
-        aria-label="Suppliers table"
-        topContentPlacement="outside"
-        classNames={{
-          wrapper: ["max-h-[382px]"],
-          th: [
-            "text-default-500",
-            "text-xs",
-            "border-b",
-            "border-divider",
-            "py-4",
-            "rounded-none",
-            "bg-grey300",
-          ],
-          tr: "border-b border-divider rounded-none",
-          td: [
-            "py-3",
-            "text-textGrey",
-            "group-data-[first=true]:first:before:rounded-none",
-            "group-data-[first=true]:last:before:rounded-none",
-            "group-data-[middle=true]:before:rounded-none",
-            "group-data-[last=true]:first:before:rounded-none",
-            "group-data-[last=true]:last:before:rounded-none",
-          ],
-        }}
-      >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
-              {column.name}
-            </TableColumn>
+      {isMobile ? (
+        <div className="divide-y divide-primaryGrey border border-gray-200 rounded-lg overflow-hidden">
+          {suppliers.length === 0 && (
+            <div className="flex justify-center items-center py-16 text-textGrey">
+              No suppliers found
+            </div>
           )}
-        </TableHeader>
-        <TableBody items={suppliers} emptyContent={"No suppliers found"}>
-          {(item) => (
-            <TableRow key={item.id} className="cursor-pointer hover:bg-gray-50" onClick={() => onViewSupplier(item)}>
-              {(columnKey) => (
-                <TableCell>{renderCell(item, columnKey)}</TableCell>
+          
+          {suppliers.map((item) => (
+            <article
+              key={item.id}
+              className="p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              onClick={() => onViewSupplier(item)}
+            >
+              <div className="flex items-end justify-end mb-3 mt-2">
+                <div className="ml-2" onClick={(e) => e.stopPropagation()}>
+                  {renderCell(item, "actions")}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-black text-[15px]">
+                      {renderCell(item, "name")}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-textGrey uppercase mb-1">
+                    Company Name
+                  </div>
+                  <div className="text-black font-semibold text-[15px]">
+                    {renderCell(item, "companyName")}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-textGrey uppercase mb-1">
+                    Phone
+                  </div>
+                  <div className="text-black text-[13px] truncate">
+                    {renderCell(item, "phoneNumber")}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-textGrey uppercase mb-1">
+                    Email
+                  </div>
+                  <div className="text-black text-[13px] truncate">
+                    {renderCell(item, "email")}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                {renderCell(item, "status")}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            aria-label="Suppliers table"
+            topContentPlacement="outside"
+            classNames={{
+              wrapper: ["max-h-[382px]"],
+              th: [
+                "text-default-500",
+                "text-xs",
+                "border-b",
+                "border-divider",
+                "py-4",
+                "rounded-none",
+                "bg-grey300",
+              ],
+              tr: "border-b border-divider rounded-none",
+              td: [
+                "py-3",
+                "text-textGrey",
+                "group-data-[first=true]:first:before:rounded-none",
+                "group-data-[first=true]:last:before:rounded-none",
+                "group-data-[middle=true]:before:rounded-none",
+                "group-data-[last=true]:first:before:rounded-none",
+                "group-data-[last=true]:last:before:rounded-none",
+              ],
+            }}
+          >
+            <TableHeader columns={columns}>
+              {(column) => (
+                <TableColumn key={column.uid} align={column.uid === "actions" ? "center" : "start"}>
+                  {column.name}
+                </TableColumn>
               )}
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      </div>
+            </TableHeader>
+            <TableBody items={suppliers} emptyContent={"No suppliers found"}>
+              {(item) => (
+                <TableRow key={item.id} className="cursor-pointer hover:bg-gray-50" onClick={() => onViewSupplier(item)}>
+                  {(columnKey) => (
+                    <TableCell>{renderCell(item, columnKey)}</TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
       <CustomPagination
         currentPage={currentPage}
         totalPages={totalPages}

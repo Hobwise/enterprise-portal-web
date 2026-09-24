@@ -272,7 +272,7 @@ const AddNewReservation = () => {
 
   return (
     <>
-      <div className="flex  justify-between ">
+      <div className="flex sm:flex-row flex-col gap-4 sm:gap-0 justify-between">
         <div>
           <h1 className="text-[24px] leading-8 font-semibold">
             {" "}
@@ -492,7 +492,7 @@ const AddNewReservation = () => {
           </div>
         </div>
         <div
-          className={`flex-grow xl:h-auto lg:w-1/2 full  p-0  xl:mt-0 mt-4 xl:border border-[#F5F5F5]  rounded-tr-lg rounded-br-lg`}
+          className={`flex-grow xl:h-auto lg:w-1/2 w-full p-0 xl:mt-0 mt-4 xl:border border-[#F5F5F5] rounded-tr-lg rounded-br-lg`}
         >
           <label className="flex xl:mx-4 xl:my-2 m-0 justify-between  bg-white">
             <div>
@@ -564,16 +564,16 @@ const AddNewReservation = () => {
         </div>
       </div>
       <Spacer y={1} />
-      <div className="flex justify-end gap-3">
+      <div className="flex flex-col sm:flex-row justify-end gap-3">
         <CustomButton
-          className="w-32  text-black bg-transparent border rounded-lg border-grey500"
+          className="w-full sm:w-32 text-black bg-transparent border rounded-lg border-grey500"
           onClick={saveToDraft}
           type="submit"
         >
           {"Save to draft"}
         </CustomButton>
         <CustomButton
-          className="w-36  text-white"
+          className="w-full sm:w-36 text-white"
           loading={isLoading}
           onClick={postReservation}
           type="submit"
@@ -597,7 +597,7 @@ const AddNewReservation = () => {
                   Your reservation has been created
                 </h3>
 
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <CustomButton
                     onClick={async () => {
                       await refetch();

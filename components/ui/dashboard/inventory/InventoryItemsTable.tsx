@@ -84,6 +84,7 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
     setSortDescriptor,
     classNames,
     displayData,
+    isMobile,
   } = usePagination(data, columns, INITIAL_VISIBLE_COLUMNS, {
     column: 'dateCreated',
     direction: 'descending',
@@ -242,54 +243,111 @@ const InventoryItemsTable: React.FC<InventoryItemsTableProps> = ({
 
   return (
     <section className="border border-primaryGrey rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table
-          radius="lg"
-          isCompact
-          removeWrapper
-          aria-label="list of inventory items"
-          bottomContent={bottomContent}
-          bottomContentPlacement="outside"
-          classNames={classNames}
-          selectedKeys={selectedKeys}
-          sortDescriptor={sortDescriptor as SortDescriptor}
-          onSelectionChange={setSelectedKeys as (keys: Selection) => void}
-          onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
-        >
-          <TableHeader columns={headerColumns}>
-            {(column) => (
-              <TableColumn
-                key={column.uid}
-                align={column.uid === 'actions' ? 'center' : 'start'}
-                allowsSorting={column.sortable}
-              >
-                {column.name}
-              </TableColumn>
-            )}
-          </TableHeader>
-          <TableBody
-            emptyContent={"No inventory items found"}
-            items={shouldShowLoading ? [] : sortedItems}
-            isLoading={shouldShowLoading}
-            loadingContent={<SpinnerLoader size="md" />}
+      {isMobile ? (
+        <div className="divide-y divide-primaryGrey">
+          {shouldShowLoading && (
+            <div className="flex justify-center items-center py-16">
+              <SpinnerLoader size="md" />
+            </div>
+          )}
+          
+          {!shouldShowLoading && sortedItems.length === 0 && (
+            <div className="flex justify-center items-center py-16 text-textGrey">
+              No inventory items found
+            </div>
+          )}
+          
+          {!shouldShowLoading && sortedItems.map((item: InventoryItem) => (
+            <article
+              key={String(item.id)}
+              className="p-4 cursor-pointer hover:bg-gray-50 active:bg-gray-100 transition-colors"
+              onClick={() => onViewItem(item)}
+            >
+              <div className="flex items-end justify-end mb-3 mt-2">
+                <div className="ml-2" onClick={(e) => e.stopPropagation()}>
+                  {renderCell(item, "actions")}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-black text-[15px]">
+                      {renderCell(item, "itemName")}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[11px] text-textGrey uppercase mb-1">
+                    Category
+                  </div>
+                  <div className="text-black font-semibold text-[15px]">
+                    {renderCell(item, "categoryName")}
+                  </div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-[11px] text-textGrey uppercase mb-1">
+                    Quantity
+                  </div>
+                  <div>
+                    {renderCell(item, "quantity")}
+                  </div>
+                </div>
+              </div>
+            </article>
+          ))}
+          {bottomContent}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <Table
+            radius="lg"
+            isCompact
+            removeWrapper
+            aria-label="list of inventory items"
+            bottomContent={bottomContent}
+            bottomContentPlacement="outside"
+            classNames={classNames}
+            selectedKeys={selectedKeys}
+            sortDescriptor={sortDescriptor as SortDescriptor}
+            onSelectionChange={setSelectedKeys as (keys: Selection) => void}
+            onSortChange={setSortDescriptor as (descriptor: SortDescriptor) => void}
           >
-            {(item: InventoryItem) => (
-              <TableRow
-                key={String(item.id)}
-                className="cursor-pointer hover:bg-gray-50 transition-colors"
-              >
-                {(columnKey) => (
-                  <TableCell
-                    onClick={columnKey !== 'actions' ? () => onViewItem(item) : undefined}
-                  >
-                    {renderCell(item, String(columnKey))}
-                  </TableCell>
-                )}
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+            <TableHeader columns={headerColumns}>
+              {(column) => (
+                <TableColumn
+                  key={column.uid}
+                  align={column.uid === 'actions' ? 'center' : 'start'}
+                  allowsSorting={column.sortable}
+                >
+                  {column.name}
+                </TableColumn>
+              )}
+            </TableHeader>
+            <TableBody
+              emptyContent={"No inventory items found"}
+              items={shouldShowLoading ? [] : sortedItems}
+              isLoading={shouldShowLoading}
+              loadingContent={<SpinnerLoader size="md" />}
+            >
+              {(item: InventoryItem) => (
+                <TableRow
+                  key={String(item.id)}
+                  className="cursor-pointer hover:bg-gray-50 transition-colors"
+                >
+                  {(columnKey) => (
+                    <TableCell
+                      onClick={columnKey !== 'actions' ? () => onViewItem(item) : undefined}
+                    >
+                      {renderCell(item, String(columnKey))}
+                    </TableCell>
+                  )}
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </section>
   );
 };
