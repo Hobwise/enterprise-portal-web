@@ -149,7 +149,7 @@ const Reservation: React.FC = () => {
           Manage Your reservations 
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {hasReservations && (
             <>
               <div>
@@ -165,7 +165,7 @@ const Reservation: React.FC = () => {
                   placeholder="Search here..."
                 />
               </div>
-              <div className="flex items-center gap-2  rounded-xl">
+              <div className="flex flex-wrap items-center gap-2 rounded-xl">
                 <Button
                   disabled={loadingExport}
                   onClick={exportCSV}

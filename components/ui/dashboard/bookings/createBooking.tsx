@@ -219,7 +219,7 @@ const CreateBooking = ({
                 <form onSubmit={placeBooking} className="">
                   <div className="p-6 bg-gray-50 rounded-xl space-y-4">
                     {/* Name and Email row */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <CustomInput
                         type="text"
                         value={bookings.firstName}
@@ -286,7 +286,7 @@ const CreateBooking = ({
                     </div>
 
                     {/* Select Type of Reservation and Number of Reservation row */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {/* Select Type of Reservation */}
                       <div>
                         <Select
@@ -370,7 +370,7 @@ const CreateBooking = ({
                     </div>
 
                     {/* Date and Time row */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="font-[500] text-black text-[14px] block mb-2">
                           Date

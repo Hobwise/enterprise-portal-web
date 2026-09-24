@@ -55,7 +55,7 @@ const InventoryItemsHeader: React.FC<InventoryItemsHeaderProps> = ({
         </div>
 
         {/* Action Button */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={onAddItem}
             className="flex items-center gap-2 px-5 py-3 bg-[#5F35D2] text-white rounded-xl hover:bg-[#5F35D2]/90 font-medium transition-all duration-200"
