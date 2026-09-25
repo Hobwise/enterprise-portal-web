@@ -17,6 +17,8 @@ import { IoSearchOutline, IoCloseCircle } from "react-icons/io5";
 import { SupplierInventoryItem } from "./types";
 import { supplierItemColumns } from "./data";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
+import useMobile from "@/hooks/useMobile";
+import { Checkbox } from "@nextui-org/react";
 
 interface SupplierItemsTableProps {
   items: SupplierInventoryItem[];
@@ -34,6 +36,7 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
   const [page, setPage] = useState(1);
   const [filterValue, setFilterValue] = useState("");
   const rowsPerPage = 10;
+  const isMobile = useMobile();
 
   const filteredItems = useMemo(() => {
     if (!filterValue.trim()) return items;
@@ -103,7 +106,7 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
 
   return (
     <div className="mb-8">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-semibold text-[#3D424A]">
             Supplier Items
@@ -114,8 +117,8 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
             </Chip>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative w-64">
+        <div className="flex md:flex-row items-center justify-between gap-3">
+          <div className="relative w-full sm:w-64">
             <IoSearchOutline className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
             <input
               type="text"
@@ -140,7 +143,83 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
       </div>
 
       <div className="border border-primaryGrey rounded-lg overflow-hidden">
-        <Table
+        {isMobile ? (
+          <div className="divide-y divide-primaryGrey">
+            {paginatedItems.length === 0 && (
+              <div className="flex justify-center items-center py-16 text-sm text-textGrey">
+                No items found for this supplier
+              </div>
+            )}
+            {paginatedItems.map((item) => {
+              const isSelected = selectedItems.has(item.id);
+              return (
+                <label
+                  key={item.id}
+                  className="flex items-start gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Checkbox
+                    isSelected={isSelected}
+                    onValueChange={(checked) => {
+                      const next = new Set(selectedItems);
+                      if (checked) {
+                        next.add(item.id);
+                      } else {
+                        next.delete(item.id);
+                      }
+                      onSelectionChange(next);
+                    }}
+                    color="secondary"
+                    size="sm"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="text-sm font-semibold text-gray-900 truncate">
+                        {item.name}
+                      </span>
+                      <span
+                        className={`text-xs font-medium shrink-0 ${
+                          item.status === "Active"
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {item.status}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <div className="text-[11px] text-textGrey uppercase">
+                          Item Type
+                        </div>
+                        <div className="text-[13px] text-gray-700">
+                          {item.itemType}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] text-textGrey uppercase">
+                          Unit
+                        </div>
+                        <div className="text-[13px] text-gray-700">
+                          {item.unitName}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] text-textGrey uppercase">
+                          Cost / Unit
+                        </div>
+                        <div className="text-[13px] text-gray-700 font-medium">
+                          {formatCurrency(item.costPerUnit)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </label>
+              );
+            })}
+          </div>
+        ) : (
+          <Table
           radius="lg"
           isCompact
           removeWrapper
@@ -180,8 +259,9 @@ const SupplierItemsTable: React.FC<SupplierItemsTableProps> = ({
                 )}
               </TableRow>
             )}
-          </TableBody>
-        </Table>
+</TableBody>
+          </Table>
+)}
       </div>
 
       {totalPages > 1 && (
