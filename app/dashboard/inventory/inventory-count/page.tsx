@@ -29,6 +29,7 @@ import {
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
 import InventoryCountHistoryTable from "@/components/ui/dashboard/inventory/InventoryCountHistoryTable";
 import { cn } from "@/lib/utils";
+import useMobile from "@/hooks/useMobile";
 
 type CountMode = null | "full" | "partial";
 
@@ -65,6 +66,7 @@ const getItemTypeName = (itemType: InventoryItemType): string => {
 };
 
 export default function InventoryCountPage() {
+  const isMobile = useMobile();
   const [activeTab, setActiveTab] = useState<"count" | "history">("count");
   const [countMode, setCountMode] = useState<CountMode>(null);
   const [showCountTypeModal, setShowCountTypeModal] = useState(false);
@@ -270,8 +272,8 @@ export default function InventoryCountPage() {
   return (
     <div className="w-full min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 pt-4 pb-2">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between px-4 sm:px-6 pt-4 pb-2 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-1 min-w-max sm:min-w-0 sm:flex-wrap">
           {/* Inventory Count Tab */}
           <button
             onClick={() => {
@@ -311,8 +313,8 @@ export default function InventoryCountPage() {
 
       {/* Page Title & Subtitle */}
       {countMode === null && (
-        <div className="px-6 pt-4 mb-2">
-          <h1 className="text-2xl font-bold text-[#101828]">
+        <div className="px-4 sm:px-6 pt-4 mb-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#101828]">
             {activeTab === "count" ? "Inventory Count" : "Inventory Count History"}
           </h1>
           <p className="text-sm text-[#667085] mt-1">
@@ -324,7 +326,7 @@ export default function InventoryCountPage() {
       )}
 
       {/* Main Content */}
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         {/* ===== INVENTORY COUNT (main view, no count mode) ===== */}
         {activeTab === "count" && countMode === null && (
           <div>
@@ -340,7 +342,7 @@ export default function InventoryCountPage() {
                 Choose between a full or partial stock count to see your inventory items and verify their counts.
               </p>
               <Button
-                className="h-12 rounded-xl bg-[#1D2939] text-white font-semibold text-sm px-8"
+                className="h-12 w-full sm:w-auto rounded-xl bg-[#1D2939] text-white font-semibold text-sm px-8"
                 endContent={<RefreshCw className="w-4 h-4" />}
                 onPress={handleRunStockCount}
               >
@@ -375,9 +377,9 @@ export default function InventoryCountPage() {
         {countMode !== null && (
           <div>
             {/* Title + Verify Button */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-[#101828]">
+                <h1 className="text-xl sm:text-2xl font-bold text-[#101828]">
                   {countMode === "full" ? "Full Stock Count" : "Partial Stock Count"}
                 </h1>
                 <p className="text-sm text-[#667085] mt-1">
@@ -387,7 +389,7 @@ export default function InventoryCountPage() {
                 </p>
               </div>
               <Button
-                className="h-12 rounded-xl bg-[#5F35D2] text-white font-semibold text-sm px-8"
+                className="h-12 w-full sm:w-auto rounded-xl bg-[#5F35D2] text-white font-semibold text-sm px-8"
                 endContent={<CheckCircle2 className="w-4 h-4" />}
                 onPress={handleSubmitStockCount}
                 isLoading={isSubmitting}
@@ -398,7 +400,7 @@ export default function InventoryCountPage() {
             </div>
 
             {/* Filters Row */}
-            <div className="flex flex-wrap items-center gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-4 mb-4">
               <div className="relative flex-1 min-w-[200px]">
                 <LuSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -410,7 +412,7 @@ export default function InventoryCountPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Select
                   placeholder="Item Type"
                   selectedKeys={countItemTypeFilter !== "all" ? [countItemTypeFilter] : []}
@@ -419,7 +421,7 @@ export default function InventoryCountPage() {
                     setCountItemTypeFilter(val || "all");
                   }}
                   variant="bordered"
-                  className="w-[180px]"
+                  className="w-full sm:w-[180px]"
                   classNames={{
                     trigger: "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
                     value: "text-sm text-[#101828]",
@@ -439,7 +441,7 @@ export default function InventoryCountPage() {
                     setCountStockLevelFilter(val || "all");
                   }}
                   variant="bordered"
-                  className="w-[180px]"
+                  className="w-full sm:w-[180px]"
                   classNames={{
                     trigger: "bg-white border-[#E4E7EC] rounded-lg shadow-none h-10",
                     value: "text-sm text-[#101828]",
@@ -474,6 +476,83 @@ export default function InventoryCountPage() {
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
                 </div>
               )}
+              {isMobile ? (
+              <div className="divide-y divide-primaryGrey">
+                {isLoading && (
+                  <div className="flex justify-center items-center py-16">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
+                  </div>
+                )}
+                {paginatedCountItems.length === 0 && !isLoading && (
+                  <div className="flex justify-center items-center py-16 text-sm text-textGrey">
+                    No items to count
+                  </div>
+                )}
+                {!isLoading &&
+                  paginatedCountItems.map((item) => {
+                    const diff = item.verifiedCount - item.expectedStock;
+                    return (
+                      <article key={item.id} className="p-4">
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {countMode === "partial" && (
+                              <Checkbox
+                                isSelected={selectedPartialItems.has(item.id)}
+                                onValueChange={() => handleTogglePartialItem(item.id)}
+                                size="sm"
+                              />
+                            )}
+                            <div className="min-w-0">
+                              <div className="text-[15px] font-semibold text-black truncate">
+                                {item.name}
+                              </div>
+                              <div className="text-textGrey text-[12px] mt-0.5">
+                                {item.itemType} · {item.unit}
+                              </div>
+                            </div>
+                          </div>
+                          <span
+                            className={cn(
+                              "text-sm font-bold shrink-0",
+                              diff > 0
+                                ? "text-[#16AB60]"
+                                : diff < 0
+                                  ? "text-red-500"
+                                  : "text-textGrey",
+                            )}
+                          >
+                            {diff > 0 ? `+${diff}` : diff}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Expected Stock
+                            </div>
+                            <div className="text-[13px] text-black font-medium">
+                              {item.expectedStock}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Verified Count
+                            </div>
+                            <input
+                              type="number"
+                              min={0}
+                              value={item.verifiedCount}
+                              onChange={(e) =>
+                                handleUpdateVerifiedCount(item.id, Number(e.target.value) || 0)
+                              }
+                              className="w-20 px-2 py-1 text-sm text-center border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-[#5F35D2] focus:border-[#5F35D2]"
+                            />
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+              </div>
+            ) : (
               <div className="max-h-[500px] overflow-auto">
                 <Table
                   radius="lg"
@@ -563,6 +642,7 @@ export default function InventoryCountPage() {
                   </TableBody>
                 </Table>
               </div>
+            )}
               <CustomPagination
                 currentPage={countPage}
                 totalPages={countTotalPages}

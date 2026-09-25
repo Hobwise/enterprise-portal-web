@@ -29,6 +29,7 @@ import {
   InventoryItem,
 } from "@/app/api/controllers/dashboard/inventory";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
+import useMobile from "@/hooks/useMobile";
 
 interface InventoryCountHistoryTableProps {
   data: InventoryCountHistoryItem[];
@@ -60,6 +61,7 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
   inventoryItems,
 }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const isMobile = useMobile();
   const [selectedRecord, setSelectedRecord] = useState<InventoryCountHistoryItem | null>(null);
   const [modalPage, setModalPage] = useState(1);
   const modalPageSize = 10;
@@ -113,7 +115,7 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-end">
-        <div className="relative w-64">
+        <div className="relative w-full sm:w-64">
           <LuSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
@@ -132,6 +134,67 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
           </div>
         )}
+        {isMobile ? (
+          <div className="divide-y divide-primaryGrey">
+            {isLoading && (
+              <div className="flex justify-center items-center py-16">
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
+              </div>
+            )}
+            {data.length === 0 && !isLoading && (
+              <div className="flex justify-center items-center py-16 text-sm text-textGrey">
+                No history found
+              </div>
+            )}
+            {!isLoading &&
+              data.map((item) => {
+                let itemsCount = 0;
+                try {
+                  const parsed = JSON.parse(item.requestJson);
+                  itemsCount = (parsed?.countRequests || parsed?.adjustments || []).length;
+                } catch (e) {}
+                return (
+                  <article key={item.id} className="p-4">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Package size={16} className="text-gray-400 shrink-0" />
+                        <div className="min-w-0">
+                          <div className="text-[13px] font-medium text-black">
+                            {item.type}
+                          </div>
+                          <div className="flex items-center gap-2 text-textGrey text-[12px] mt-0.5">
+                            <Calendar size={12} className="text-gray-400" />
+                            <span>
+                              {new Date(item.date).toLocaleString("en-GB", {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="light"
+                        onPress={() => handleViewDetails(item)}
+                        className="hover:bg-[#F0ECFB] rounded-lg min-w-0 shrink-0 px-2 text-[#5F35D2] font-medium"
+                        startContent={<LuEye className="w-4 h-4" />}
+                      >
+                        View
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-textGrey">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#5F35D2]" />
+                      {itemsCount} items counted
+                    </div>
+                  </article>
+                );
+              })}
+          </div>
+        ) : (
         <div className="max-h-[500px] overflow-auto">
           <Table
             radius="lg"
@@ -218,6 +281,7 @@ const InventoryCountHistoryTable: React.FC<InventoryCountHistoryTableProps> = ({
             </TableBody>
           </Table>
         </div>
+        )}
         <div className="flex w-full justify-center">
           <CustomPagination
             currentPage={currentPage}

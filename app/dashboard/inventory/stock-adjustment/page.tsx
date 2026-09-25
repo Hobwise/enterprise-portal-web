@@ -26,6 +26,7 @@ import {
   StockAdjustmentHistoryItem,
 } from "@/app/api/controllers/dashboard/inventory";
 import CustomPagination from "@/components/ui/dashboard/orders/CustomPagination";
+import useMobile from "@/hooks/useMobile";
 
 type MainTab = "adjustment" | "history";
 
@@ -50,6 +51,7 @@ interface AdjustmentItem {
 }
 
 export default function StockAdjustmentPage() {
+  const isMobile = useMobile();
   const [mainTab, setMainTab] = useState<MainTab>("adjustment");
   const [isMultiMode, setIsMultiMode] = useState(false);
 
@@ -416,8 +418,8 @@ export default function StockAdjustmentPage() {
   return (
     <div className="w-full min-h-screen">
       {/* Top Tabs + Current Store */}
-      <div className="flex items-center justify-between px-6 pt-4 pb-2">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between px-4 sm:px-6 pt-4 pb-2 overflow-x-auto scrollbar-hide">
+        <div className="flex items-center gap-1 min-w-max sm:min-w-0 sm:flex-wrap">
           {/* Stock Adjustment Tab */}
           <button
             onClick={() => {
@@ -457,8 +459,8 @@ export default function StockAdjustmentPage() {
       </div>
 
       {/* Page Title & Subtitle */}
-      <div className="px-6 pt-4 mb-2">
-        <h1 className="text-2xl font-bold text-[#101828]">
+      <div className="px-4 sm:px-6 pt-4 mb-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#101828]">
           Stock Adjustment
         </h1>
         <p className="text-sm text-[#667085] mt-1">
@@ -467,7 +469,7 @@ export default function StockAdjustmentPage() {
       </div>
 
       {/* Main Content */}
-      <div className="px-6 py-4">
+      <div className="px-4 sm:px-6 py-4">
         {/* Quick Adjustment View */}
         {mainTab === "adjustment" && !isMultiMode && (
           <div>
@@ -607,7 +609,7 @@ export default function StockAdjustmentPage() {
 
             {/* Stock Info Row */}
             <div className="border border-gray-200 rounded-lg p-6 bg-white mb-6 max-w-[750px] mx-auto">
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div>
                   <label className="text-xs text-[#667085] font-medium mb-2 block">
                     Old Stock
@@ -660,17 +662,17 @@ export default function StockAdjustmentPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-4 max-w-[750px] mx-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 max-w-[750px] mx-auto">
               <Button
                 variant="bordered"
-                className="flex-1 h-12 rounded-xl border-[#5F35D2] text-[#5F35D2] font-semibold text-sm"
+                className="flex-1 w-full sm:w-auto h-12 rounded-xl border-[#5F35D2] text-[#5F35D2] font-semibold text-sm"
                 endContent={<ArrowRight className="w-4 h-4" />}
                 onPress={() => setIsMultiMode(true)}
               >
                 Adjust Multiple Items
               </Button>
               <Button
-                className="flex-1 h-12 rounded-xl bg-[#5F35D2] text-white font-semibold text-sm"
+                className="flex-1 w-full sm:w-auto h-12 rounded-xl bg-[#5F35D2] text-white font-semibold text-sm"
                 endContent={<ArrowRight className="w-4 h-4" />}
                 onPress={handleAdjustStock}
                 isLoading={isSubmitting}
@@ -686,7 +688,7 @@ export default function StockAdjustmentPage() {
         {mainTab === "adjustment" && isMultiMode && (
           <div>
             {/* Search Bar - full width */}
-            <div className="flex gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
               <div className="relative flex-1">
                 <Input
                   placeholder="Search and add items"
@@ -737,7 +739,7 @@ export default function StockAdjustmentPage() {
             </div>
 
             {/* Filters Row */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
               <div className="flex items-center gap-3">
                 {/* Selected Items Badge */}
                 <span className="text-sm font-medium text-[#5F35D2]">
@@ -747,7 +749,7 @@ export default function StockAdjustmentPage() {
                   {adjustmentItems.length}
                 </span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 {/* Stock Level Filter */}
                 <select
                   value={stockLevelFilter}
@@ -787,6 +789,147 @@ export default function StockAdjustmentPage() {
                   </p>
                 </div>
               ) : (
+                isMobile ? (
+                  <div className="divide-y divide-primaryGrey">
+                    {adjustmentItems.map((item) => {
+                      const signedQty = item.reason
+                        ? item.movement === 1
+                          ? -item.adjustmentQty
+                          : item.adjustmentQty
+                        : 0;
+                      const computedNew = item.oldStock + signedQty;
+                      return (
+                        <article key={item.id} className="p-4">
+                          <div className="flex items-start justify-between gap-3 mb-3">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Checkbox
+                                isSelected={item.selected}
+                                onValueChange={() => handleToggleSelect(item.id)}
+                                size="sm"
+                              />
+                              <div className="min-w-0">
+                                <div className="text-[15px] font-semibold text-black truncate">
+                                  {item.name}
+                                </div>
+                                <div className="text-textGrey text-[12px] mt-0.5">
+                                  {item.unit} · {item.date}
+                                </div>
+                              </div>
+                            </div>
+                            <Select
+                              aria-label="Adjustment type"
+                              placeholder="Type"
+                              selectedKeys={item.reason ? [item.reason] : []}
+                              onSelectionChange={(keys) => {
+                                const val = Array.from(keys)[0] as string;
+                                const found = reasons.find(
+                                  (r) => r.name === val,
+                                );
+                                if (found)
+                                  handleUpdateMultiItemReason(item.id, found);
+                              }}
+                              variant="bordered"
+                              classNames={{
+                                trigger:
+                                  "bg-white border-[#E4E7EC] rounded-lg shadow-none h-9 w-[110px] min-w-[110px]",
+                                value: "text-xs text-[#101828]",
+                                listboxWrapper: "max-h-[200px]",
+                              }}
+                              size="sm"
+                            >
+                              {reasons.map((r) => (
+                                <SelectItem
+                                  key={r.name}
+                                  className="text-[#101828]"
+                                >
+                                  {formatReasonLabel(r.name)}
+                                </SelectItem>
+                              ))}
+                            </Select>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                              <div className="text-[11px] text-textGrey uppercase mb-1">
+                                Old Stock
+                              </div>
+                              <div className="text-[13px] text-black font-medium">
+                                {item.oldStock}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-[11px] text-textGrey uppercase mb-1">
+                                New Stock
+                              </div>
+                              <div
+                                className={cn(
+                                  "text-[13px] font-medium",
+                                  signedQty > 0
+                                    ? "text-[#16AB60]"
+                                    : signedQty < 0
+                                      ? "text-red-500"
+                                      : "text-black",
+                                )}
+                              >
+                                {item.reason && item.adjustmentQty > 0
+                                  ? computedNew
+                                  : "\u2014"}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="mb-3">
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Reason
+                            </div>
+                            <Input
+                              placeholder="Enter reason"
+                              value={item.reasonText}
+                              onChange={(e) =>
+                                handleUpdateMultiItem(
+                                  item.id,
+                                  "reasonText",
+                                  e.target.value,
+                                )
+                              }
+                              variant="bordered"
+                              isDisabled={!item.reason}
+                              classNames={{
+                                inputWrapper:
+                                  "bg-white border-[#E4E7EC] rounded-lg shadow-none h-9",
+                                input: "text-xs text-[#101828]",
+                              }}
+                              size="sm"
+                            />
+                          </div>
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Adjustment Quantity
+                            </div>
+                            <Input
+                              type="number"
+                              min="1"
+                              value={String(item.adjustmentQty || "")}
+                              onChange={(e) =>
+                                handleUpdateMultiItem(
+                                  item.id,
+                                  "adjustmentQty",
+                                  Math.max(0, Number(e.target.value)),
+                                )
+                              }
+                              variant="bordered"
+                              isDisabled={!item.reason}
+                              classNames={{
+                                inputWrapper:
+                                  "bg-white border-[#E4E7EC] rounded-lg shadow-none h-9",
+                                input: "text-sm text-[#101828]",
+                              }}
+                              size="sm"
+                            />
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
                 /* Items Table */
                 <div className="max-h-[382px] overflow-auto">
                   <Table
@@ -951,15 +1094,15 @@ export default function StockAdjustmentPage() {
                     </TableBody>
                   </Table>
                 </div>
-              )}
+              ))}
             </div>
 
             {/* Bottom Actions */}
             {adjustmentItems.length > 0 && (
-              <div className="flex items-center justify-between mt-6">
+              <div className="flex flex-col-reverse sm:flex-row items-center justify-between mt-6 gap-3">
                 <Button
                   variant="bordered"
-                  className="h-12 rounded-xl border-[#E4E7EC] text-[#667085] font-semibold text-sm px-8"
+                  className="h-12 w-full sm:w-auto rounded-xl border-[#E4E7EC] text-[#667085] font-semibold text-sm px-8"
                   startContent={<X className="w-4 h-4" />}
                   onPress={handleRemoveSelected}
                   isDisabled={selectedCount === 0}
@@ -967,7 +1110,7 @@ export default function StockAdjustmentPage() {
                   Remove
                 </Button>
                 <Button
-                  className="h-12 rounded-xl bg-[#5F35D2] text-white font-semibold text-sm px-8"
+                  className="h-12 w-full sm:w-auto rounded-xl bg-[#5F35D2] text-white font-semibold text-sm px-8"
                   endContent={<ArrowRight className="w-4 h-4" />}
                   onPress={handleAdjustMultipleStocks}
                   isLoading={isSubmitting}
@@ -985,7 +1128,7 @@ export default function StockAdjustmentPage() {
           <div>
             <div className="flex items-center justify-end mb-4">
           
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 <LuSearch
                   size={16}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
@@ -995,7 +1138,7 @@ export default function StockAdjustmentPage() {
                   placeholder="Search adjustments..."
                   value={activitySearchInput}
                   onChange={(e) => setActivitySearchInput(e.target.value)}
-                  className="border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] w-64"
+                  className="border border-gray-200 rounded-lg pl-9 pr-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5F35D2]/20 focus:border-[#5F35D2] w-full sm:w-64"
                 />
               </div>
             </div>
@@ -1006,6 +1149,92 @@ export default function StockAdjustmentPage() {
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-[#5F35D2]" />
                 </div>
               )}
+              {isMobile ? (
+                <div className="divide-y divide-primaryGrey">
+                  {history.length === 0 && (
+                    <div className="flex justify-center items-center py-16 text-sm text-textGrey">
+                      No adjustment history found
+                    </div>
+                  )}
+                  {history.map(
+                    (row: StockAdjustmentHistoryItem, idx: number) => (
+                      <article
+                        key={`${row.date}-${row.inventoryItemName}-${idx}`}
+                        className="p-4"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div className="min-w-0">
+                            <div className="text-[15px] font-semibold text-black truncate">
+                              {row.inventoryItemName}
+                            </div>
+                            <div className="text-textGrey text-[12px] mt-0.5">
+                              {formatDate(row.date)} · {formatTime(row.date)}
+                            </div>
+                          </div>
+                          <span
+                            className={cn(
+                              "font-semibold text-sm shrink-0",
+                              row.difference > 0
+                                ? "text-[#16AB60]"
+                                : row.difference < 0
+                                  ? "text-red-500"
+                                  : "text-textGrey",
+                            )}
+                          >
+                            {row.difference > 0
+                              ? `+${row.difference}`
+                              : row.difference}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Old Stock
+                            </div>
+                            <div className="text-[13px] text-black font-medium">
+                              {row.oldStock}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              New Stock
+                            </div>
+                            <div className="text-[13px] text-black font-medium">
+                              {row.newStock}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Unit
+                            </div>
+                            <div className="text-[13px] text-black font-medium">
+                              {row.unit}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between gap-3 mt-3">
+                          <div className="min-w-0">
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Staff
+                            </div>
+                            <div className="text-[13px] text-black font-medium truncate">
+                              {row.staff}
+                            </div>
+                          </div>
+                          <div className="text-right min-w-0">
+                            <div className="text-[11px] text-textGrey uppercase mb-1">
+                              Reason
+                            </div>
+                            <div className="text-[13px] text-black font-medium truncate">
+                              {formatReasonLabel(row.reason)}
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    ),
+                  )}
+                </div>
+              ) : (
               <div className="max-h-[382px] overflow-auto">
                 <Table
                   radius="lg"
@@ -1091,6 +1320,7 @@ export default function StockAdjustmentPage() {
                   </TableBody>
                 </Table>
               </div>
+              )}
               <div className="flex w-full justify-center">
                 <CustomPagination
                   currentPage={currentPage}
