@@ -18,6 +18,7 @@ import { FaRegEnvelope } from "react-icons/fa6";
 import { LuArrowRight } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { decryptPayload } from "@/lib/encrypt-decrypt";
+import { identifyUser } from "@/lib/posthogAnalytics";
 
 interface LoginFormData {
   email: string;
@@ -133,6 +134,8 @@ const LoginForm = () => {
       // Persist loginDetails to sessionStorage to survive page navigation
       saveJsonItemToLocalStorage("loginDetails", loginFormData);
       setLoginDetails(loginFormData);
+
+      identifyUser(decryptedData.data);
 
       if (process.env.NODE_ENV !== "production") {
         console.log("[LoginForm] Saved loginDetails to localStorage", {

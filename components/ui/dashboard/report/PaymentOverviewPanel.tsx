@@ -120,7 +120,7 @@ const PaymentMethodsChart: React.FC<PaymentMethodsChartProps> = ({ breakdown }) 
       <h3 className="text-base font-semibold text-gray-900">Methods of Payment</h3>
       {hasData ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-5 mt-2">
-          <div className="relative w-[200px] h-[200px]">
+          <div className="relative w-[200px] h-[200px] max-w-full">
             <Doughnut data={chartData} options={chartOptions} />
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
               <span className="text-[11px] uppercase tracking-wider text-gray-500">
