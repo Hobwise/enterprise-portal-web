@@ -5,7 +5,7 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { TablePagination } from './SalesPanels';
-import { SortableTH, useTableSort } from './SharedPanels';
+import { reportTableClass, SortableTH, useTableSort } from './SharedPanels';
 import { ExportType } from './exportHelpers';
 import {
   UserAuditLogItem,
@@ -33,7 +33,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
   onExportPdf,
   isLoading,
 }) => (
-  <div className="flex items-center gap-2 px-5 py-4">
+  <div className="flex flex-wrap items-center gap-2">
     <Button
       variant="bordered"
       onPress={onExportExcel}
@@ -174,7 +174,7 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Activities
@@ -204,7 +204,7 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(8)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -281,19 +281,19 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
                     key={`${row.userName}-${row.dateCreated}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {moment(row.dateCreated).format('MMM DD, YYYY')}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {moment(row.dateCreated).format('hh:mma')}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.userName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.role || '—'}
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-3 sm:px-5 py-4">
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${activityTypeClass(
                           row.activityType
@@ -302,16 +302,16 @@ export const ActivityAuditPanel: React.FC<UserSubTabPanelProps> = ({
                         {row.activityType || '—'}
                       </span>
                     </td>
-                    <td className="px-5 py-4 max-w-md">
+                    <td className="px-3 sm:px-5 py-4 max-w-md">
                       <div className="truncate" title={row.activity}>
                         {renderActivity(row.activity)}
                       </div>
                     </td>
-                    <td className="px-5 py-4 text-gray-500 font-mono text-xs">
+                    <td className="px-3 sm:px-5 py-4 text-gray-500 font-mono text-xs">
                       {row.ipAddress || '—'}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${
+                      className={`px-3 sm:px-5 py-4 font-medium ${
                         row.isSuccessful ? 'text-emerald-600' : 'text-red-500'
                       }`}
                     >
@@ -415,7 +415,7 @@ export const DailySessionsPanel: React.FC<UserSubTabPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Daily Sessions
@@ -444,7 +444,7 @@ export const DailySessionsPanel: React.FC<UserSubTabPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(6)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -507,16 +507,16 @@ export const DailySessionsPanel: React.FC<UserSubTabPanelProps> = ({
                     key={`${row.email}-${row.date}-${index}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-700">{row.date}</td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">{row.date}</td>
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.staff}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">{row.email}</td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">{row.email}</td>
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.firstLogin}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">{row.lastSeen}</td>
-                    <td className="px-5 py-4 text-primaryColor font-semibold">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">{row.lastSeen}</td>
+                    <td className="px-3 sm:px-5 py-4 text-primaryColor font-semibold">
                       {row.activePeriod}
                     </td>
                   </tr>

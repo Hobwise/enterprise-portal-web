@@ -1,5 +1,6 @@
 import { logout } from "@/app/api/controllers/dashboard/settings";
 import { notify, removeCookie } from "@/lib/utils";
+import { resetPostHog } from "@/lib/posthogAnalytics";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,10 @@ const useLogout = () => {
       // Clear all storage
       localStorage.clear();
       sessionStorage.clear();
+
+      // Drop the identified PostHog person so the next sign-in on this
+      // browser is not attributed to the previous user
+      resetPostHog();
 
       // Clear all possible cookies systematically
       removeCookie("token");
