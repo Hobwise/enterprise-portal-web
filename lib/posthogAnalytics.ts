@@ -26,7 +26,19 @@ const debug = (...args: unknown[]): void => {
  * local/dev environments without a key never fire requests.
  */
 export const initPostHog = (): void => {
-  if (initialized || !isPostHogEnabled()) return;
+  if (initialized) return;
+
+  if (!isPostHogEnabled()) {
+    if (isBrowser() && !POSTHOG_KEY) {
+      // Silent no-op here is the #1 cause of "events never arrive", so make it
+      // obvious instead of failing quietly.
+      // eslint-disable-next-line no-console
+      console.warn(
+        '[posthog] Disabled: NEXT_PUBLIC_POSTHOG_KEY is not set, so no events will be sent.'
+      );
+    }
+    return;
+  }
 
   posthog.init(POSTHOG_KEY as string, {
     api_host: POSTHOG_HOST,
