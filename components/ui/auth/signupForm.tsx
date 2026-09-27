@@ -3,7 +3,8 @@ import { createUser } from '@/app/api/controllers/auth';
 import { CustomInput } from '@/components/CustomInput';
 import { CustomButton } from '@/components/customButton';
 import { useGlobalContext } from '@/hooks/globalProvider';
-import { notify } from '@/lib/utils';
+import { notify, clearAppStorage } from '@/lib/utils';
+import { trackSignUpStarted } from '@/lib/posthogAnalytics';
 import { Spacer, Tooltip } from '@nextui-org/react';
 import { useRouter } from 'next/navigation';
 import React, { useState } from 'react';
@@ -40,7 +41,7 @@ const SignupForm = () => {
   const submitFormData = async (e) => {
     e.preventDefault();
     queryClient.clear();
-    localStorage.clear();
+    clearAppStorage();
     setUserData(signupFormData);
     setLoading(true);
     const data = await createUser(signupFormData);
@@ -48,6 +49,9 @@ const SignupForm = () => {
     setResponse(data);
 
     if (data?.data?.isSuccessful) {
+      // Capture the attempt on the anonymous id; the account is only identified
+      // once the email is confirmed and we have a backend id.
+      trackSignUpStarted(signupFormData);
       setExpireTime(new Date(data.data.data));
       router.push("/auth/confirm-email");
     } else if (data?.data?.error) {

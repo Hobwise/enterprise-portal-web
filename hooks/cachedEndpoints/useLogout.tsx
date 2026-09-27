@@ -1,6 +1,6 @@
 import { logout } from "@/app/api/controllers/dashboard/settings";
-import { notify, removeCookie } from "@/lib/utils";
-import { resetPostHog } from "@/lib/posthogAnalytics";
+import { notify, removeCookie, clearAppStorage } from "@/lib/utils";
+import { trackSignOut } from "@/lib/posthogAnalytics";
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,13 +26,14 @@ const useLogout = () => {
       // Clear React Query cache
       queryClient.clear();
 
-      // Clear all storage
-      localStorage.clear();
+      // Clear auth state but keep the PostHog identity so this visitor's
+      // activity stays on one person across the logout boundary.
+      clearAppStorage();
       sessionStorage.clear();
 
-      // Drop the identified PostHog person so the next sign-in on this
-      // browser is not attributed to the previous user
-      resetPostHog();
+      // Capture "signed out" while the person is still identified, then reset.
+      // Doing it in this order attributes the logout to the right person.
+      trackSignOut();
 
       // Clear all possible cookies systematically
       removeCookie("token");

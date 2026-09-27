@@ -50,6 +50,39 @@ export const getFromLocalStorage = (name: string) => {
 export const clearItemLocalStorage = (name: string) => {
   return typeof window !== "undefined" ? localStorage.removeItem(name) : false;
 };
+
+/**
+ * Storage key prefixes that must survive a logout/login wipe.
+ *
+ * PostHog stores `$device_id`, `$user_id` and `$isidentified` in localStorage
+ * under `ph_*`. Blanket `localStorage.clear()` throws those away, so every
+ * sign-in starts from a brand new anonymous id and the pre-login journey
+ * (pageviews, clicks) can never be merged into the identified person.
+ */
+const PRESERVED_STORAGE_PREFIXES = ["ph_", "posthog", "__ph"];
+
+/**
+ * Clears app auth state without destroying the analytics identity, so an
+ * anonymous visitor that signs in is merged into one continuous person.
+ */
+export const clearAppStorage = (): void => {
+  if (typeof window === "undefined") return;
+
+  const preserved: Record<string, string | null> = {};
+  for (let i = 0; i < localStorage.length; i += 1) {
+    const key = localStorage.key(i);
+    if (key && PRESERVED_STORAGE_PREFIXES.some((p) => key.startsWith(p))) {
+      preserved[key] = localStorage.getItem(key);
+    }
+  }
+
+  localStorage.clear();
+
+  for (const [key, value] of Object.entries(preserved)) {
+    if (value !== null) localStorage.setItem(key, value);
+  }
+};
+
 export const getJsonItemFromLocalStorage = (name: string) => {
   if (typeof window === "undefined") return false;
   const item = localStorage.getItem(name);
@@ -599,9 +632,11 @@ export function formatDate(dateString: string) {
 
 export function resetLoginInfo() {
   try {
-    // Clear all storage
+    // Clear auth state, but keep the PostHog identity (see clearAppStorage).
+    // This runs on every 401/403, so a blanket clear would split one returning
+    // user across a fresh anonymous id each time their session expired.
     sessionStorage.clear();
-    localStorage.clear();
+    clearAppStorage();
 
     // Remove specific cookies that might persist
     removeCookie("token");
