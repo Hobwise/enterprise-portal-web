@@ -48,7 +48,16 @@ export const initPostHog = (): void => {
     // would double-report every navigation.
     capture_pageview: false,
     rageclick: true,
-    person_profiles: 'identified_only',
+    // Controls whether PostHog creates a *person profile* for anonymous
+    // distinct_ids. It does NOT gate event capture: `$pageview` and
+    // `$autocapture` are sent and stored for anonymous visitors either way.
+    //
+    // 'always' = anonymous visitors also get a row in the People tab, so you can
+    // browse pre-login sessions directly. Cost: one person row per anonymous
+    // visitor/bot, which inflates unique-user counts and burns event quota.
+    // 'identified_only' = events are still recorded, but anonymous visitors have
+    // no person profile (they still merge into the person on `$identify`).
+    person_profiles: 'always',
     // Keep the identity in localStorage so the anonymous -> identified merge
     // survives a reload. Disabling this breaks `$identify` on the next page.
     disable_persistence: false,
