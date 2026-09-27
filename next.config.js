@@ -142,7 +142,7 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value:
               "default-src 'self'; " +
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://checkout.paystack.com https://*.paystack.com https://va.vercel-scripts.com; " +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co https://checkout.paystack.com https://*.paystack.com https://va.vercel-scripts.com https://us.i.posthog.com https://*.posthog.com; " +
               "worker-src 'self' blob:; " +
               "style-src 'self' 'unsafe-inline' 'unsafe-hashes' https://checkout.paystack.com https://*.paystack.com; " +
               "img-src 'self' data: blob: https://walrus-app-lehim.ondigitalocean.app https://hobwise.com https://checkout.paystack.com https://hobwise-corporate-web.vercel.app https://api.hobwise.com https://prod-p2f7c.ondigitalocean.app https://sandbox-api.hobwise.com https://sandbox.hobwise.com https://res.cloudinary.com https://*.paystack.com https://us.i.posthog.com https://*.posthog.com; " +
