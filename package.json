@@ -51,6 +51,7 @@
     "next": "15",
     "next-themes": "^0.4.3",
     "paystack-inline-ts": "^1.0.3",
+    "posthog-js": "^1.434.14",
     "react": "18",
     "react-chartjs-2": "^5.2.0",
     "react-color": "^2.19.3",

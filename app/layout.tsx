@@ -1,5 +1,6 @@
 import { AppProvider } from "@/hooks/globalProvider";
 import ClientProviders from "@/components/ClientProviders";
+import PostHogProvider from "@/components/PostHogProvider";
 import QueryProvider from "@/hooks/queryProvider";
 import "@/public/fonts/satoshi/stylesheet.css";
 import { Providers } from "@/utilities/providers";
@@ -118,18 +119,20 @@ export default function RootLayout({
         <SoftwareApplicationSchema />
       </head>
       <body>
-        <ClientProviders>
-          <QueryProvider>
-            <AppProvider>
-              <Providers>
-                {children}
-                <Analytics />
-                <ToastContainer />
-                <SonnerToaster position="top-right" richColors />
-              </Providers>
-            </AppProvider>
-          </QueryProvider>
-        </ClientProviders>
+        <PostHogProvider>
+          <ClientProviders>
+            <QueryProvider>
+              <AppProvider>
+                <Providers>
+                  {children}
+                  <Analytics />
+                  <ToastContainer />
+                  <SonnerToaster position="top-right" richColors />
+                </Providers>
+              </AppProvider>
+            </QueryProvider>
+          </ClientProviders>
+        </PostHogProvider>
       </body>
     </html>
   );

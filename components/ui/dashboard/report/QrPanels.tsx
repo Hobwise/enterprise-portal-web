@@ -5,7 +5,13 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
-import { BarList, SortableTH, StatCards, useTableSort } from './SharedPanels';
+import {
+  BarList,
+  reportTableClass,
+  SortableTH,
+  StatCards,
+  useTableSort,
+} from './SharedPanels';
 import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
@@ -62,7 +68,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
   onExportPdf,
   isLoading,
 }) => (
-  <div className="flex items-center gap-2 px-5 py-4">
+  <div className="flex flex-wrap items-center gap-2">
     <Button
       variant="bordered"
       onPress={onExportExcel}
@@ -378,7 +384,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Quick Response Details
@@ -402,7 +408,7 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(7)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -469,26 +475,26 @@ export const QrDetailsPanel: React.FC<QrPanelProps> = ({
               ) : (
                 pageRows.map((row) => (
                   <tr key={row.qrName} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.qrName}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.orders.toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.openOrders.toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(row.averageValue)}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(row.netRevenue)}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.refunds.toLocaleString()}
                     </td>
                     <td
-                      className={`px-5 py-4 font-medium ${
+                      className={`px-3 sm:px-5 py-4 font-medium ${
                         row.status === 'Active'
                           ? 'text-emerald-600'
                           : 'text-red-500'
@@ -569,7 +575,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Quick Response Order History
@@ -581,7 +587,7 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(7)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -651,25 +657,25 @@ export const QrOrderHistoryPanel: React.FC<QrPanelProps> = ({
                     key={`${row.orderId}-${idx}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.orderId || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.customerName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.quickResponseName || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.paymentMethod || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(safeNumber(row.totalAmount))}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.orderStatus || '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.dateCreated
                         ? moment(row.dateCreated).format('DD MMM YYYY HH:mm')
                         : '—'}
@@ -814,7 +820,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
       )}
 
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Revenue by Quick Response
@@ -826,7 +832,7 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(6)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -886,22 +892,22 @@ export const QrRevenueByCodePanel: React.FC<QrPanelProps> = ({
               ) : (
                 pageRows.map((row, idx) => (
                   <tr key={`${row.qrName}-${idx}`} className="hover:bg-gray-50">
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.qrName ?? '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(safeNumber(row.netRevenue))}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {safeNumber(row.orderCount).toLocaleString()}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(safeNumber(row.averageOrderValue))}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {formatNgn(safeNumber(row.refundAmount))}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.lastOrderDateTime
                         ? moment(row.lastOrderDateTime).format('DD MMM YYYY')
                         : '—'}
@@ -976,7 +982,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Quick Response Activity Timeline
@@ -988,7 +994,7 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(4)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -1039,19 +1045,19 @@ export const QrActivityTimelinePanel: React.FC<QrPanelProps> = ({
                     key={`${row.qrName}-${row.occurredAt}-${idx}`}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.occurredAt
                         ? moment(row.occurredAt).format('DD MMM YYYY HH:mm')
                         : '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-900 font-medium">
+                    <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                       {row.qrName ?? '—'}
                     </td>
-                    <td className="px-5 py-4 text-gray-700">
+                    <td className="px-3 sm:px-5 py-4 text-gray-700">
                       {row.eventType ?? '—'}
                     </td>
                     {hasAmount && (
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.amount !== undefined && row.amount !== null
                           ? formatNgn(safeNumber(row.amount))
                           : '—'}

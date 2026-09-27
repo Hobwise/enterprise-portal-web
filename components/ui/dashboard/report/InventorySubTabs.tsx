@@ -5,7 +5,12 @@ import moment from 'moment';
 import { Button, Skeleton } from '@nextui-org/react';
 import { FiDownload } from 'react-icons/fi';
 import { formatPrice } from '@/lib/utils';
-import { SortableTH, StatCards, useTableSort } from './SharedPanels';
+import {
+  reportTableClass,
+  SortableTH,
+  StatCards,
+  useTableSort,
+} from './SharedPanels';
 import { TablePagination } from './SalesPanels';
 import { ExportType } from './exportHelpers';
 import {
@@ -48,7 +53,7 @@ const ExportButtons: React.FC<ExportButtonsProps> = ({
   onExportPdf,
   isLoading,
 }) => (
-  <div className="flex items-center gap-2 px-5 py-4">
+  <div className="flex flex-wrap items-center gap-2">
     <Button
       variant="bordered"
       onPress={onExportExcel}
@@ -228,7 +233,7 @@ export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Inventory Stock Levels
@@ -251,7 +256,7 @@ export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(10)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -345,20 +350,20 @@ export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
                       key={`${row.itemName}-${row.itemType}-${index}`}
                       className="hover:bg-gray-50"
                     >
-                      <td className="px-5 py-4 text-gray-900 font-medium">
+                      <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                         {row.itemName}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.itemType || '—'}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.supplierName || '—'}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.unitName || '—'}
                       </td>
                       <td
-                        className={`px-5 py-4 ${stockValueClass(
+                        className={`px-3 sm:px-5 py-4 ${stockValueClass(
                           current,
                           reorder,
                           row.status
@@ -366,22 +371,22 @@ export const StockLevelPanel: React.FC<InventorySubTabPanelProps> = ({
                       >
                         {formatNumber(current)}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {formatNumber(reorder)}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {formatNgn(safeNumber(row.averageCostPerUnit))}
                       </td>
-                      <td className="px-5 py-4 text-gray-900 font-semibold">
+                      <td className="px-3 sm:px-5 py-4 text-gray-900 font-semibold">
                         {formatNgn(safeNumber(row.stockValue))}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.lastRestocked
                           ? moment(row.lastRestocked).format('MMM DD, YYYY')
                           : '—'}
                       </td>
                       <td
-                        className={`px-5 py-4 font-medium ${stockStatusClass(
+                        className={`px-3 sm:px-5 py-4 font-medium ${stockStatusClass(
                           row.status
                         )}`}
                       >
@@ -557,7 +562,7 @@ export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Stock Movement Report
@@ -583,7 +588,7 @@ export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(10)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -680,20 +685,20 @@ export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
                       key={`${row.itemName}-${row.dateCreated}-${index}`}
                       className="hover:bg-gray-50"
                     >
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {moment(row.dateCreated).format('MMM DD, hh:mma')}
                       </td>
-                      <td className="px-5 py-4 text-gray-900 font-medium">
+                      <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                         {row.itemName}
                       </td>
                       <td
-                        className={`px-5 py-4 font-medium ${movementTypeClass(
+                        className={`px-3 sm:px-5 py-4 font-medium ${movementTypeClass(
                           direction
                         )}`}
                       >
                         {direction}
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-3 sm:px-5 py-4">
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${transactionTypeClass(
                             row.transactionType
@@ -703,29 +708,29 @@ export const StockTransferPanel: React.FC<InventorySubTabPanelProps> = ({
                         </span>
                       </td>
                       <td
-                        className={`px-5 py-4 font-semibold ${
+                        className={`px-3 sm:px-5 py-4 font-semibold ${
                           qty < 0 ? 'text-red-500' : 'text-emerald-600'
                         }`}
                       >
                         {qty > 0 ? '+' : ''}
                         {formatNumber(qty)}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.unitName || '—'}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {formatNgn(safeNumber(row.costPerUnit))}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {formatNgn(safeNumber(row.value))}
                       </td>
                       <td
-                        className="px-5 py-4 text-gray-700 max-w-xs truncate"
+                        className="px-3 sm:px-5 py-4 text-gray-700 max-w-xs truncate"
                         title={row.reason}
                       >
                         {row.reason || '—'}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.performedBy || '—'}
                       </td>
                     </tr>
@@ -873,7 +878,7 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
     <div className="flex flex-col gap-5">
       <StatCards cards={stats} />
       <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-        <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
           <div className="flex items-center gap-3 flex-wrap">
             <h3 className="text-base font-semibold text-gray-900">
               Inventory Adjustments Report
@@ -899,7 +904,7 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
           <ExportButtons {...exportHandlers} isLoading={isExporting} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className={reportTableClass(7)}>
             <thead className="bg-gray-50 text-gray-600">
               <tr>
                 <SortableTH
@@ -972,13 +977,13 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
                       key={`${row.itemName}-${row.date}-${index}`}
                       className="hover:bg-gray-50"
                     >
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {moment(row.date).format('MMM DD, hh:mma')}
                       </td>
-                      <td className="px-5 py-4 text-gray-900 font-medium">
+                      <td className="px-3 sm:px-5 py-4 text-gray-900 font-medium">
                         {row.itemName}
                       </td>
-                      <td className="px-5 py-4">
+                      <td className="px-3 sm:px-5 py-4">
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium ${adjustmentTypeClass(
                             row.adjustmentType
@@ -988,14 +993,14 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
                         </span>
                       </td>
                       <td
-                        className={`px-5 py-4 font-semibold ${
+                        className={`px-3 sm:px-5 py-4 font-semibold ${
                           qty < 0 ? 'text-red-500' : 'text-emerald-600'
                         }`}
                       >
                         {formatNumber(qty)}
                       </td>
                       <td
-                        className={`px-5 py-4 ${
+                        className={`px-3 sm:px-5 py-4 ${
                           cost < 0
                             ? 'text-red-500 font-semibold'
                             : 'text-gray-700'
@@ -1005,12 +1010,12 @@ export const PurchaseOrderPanel: React.FC<InventorySubTabPanelProps> = ({
                         {formatNgn(Math.abs(cost))}
                       </td>
                       <td
-                        className="px-5 py-4 text-gray-700 max-w-xs truncate"
+                        className="px-3 sm:px-5 py-4 text-gray-700 max-w-xs truncate"
                         title={row.reason}
                       >
                         {row.reason || '—'}
                       </td>
-                      <td className="px-5 py-4 text-gray-700">
+                      <td className="px-3 sm:px-5 py-4 text-gray-700">
                         {row.performedBy || '—'}
                       </td>
                     </tr>

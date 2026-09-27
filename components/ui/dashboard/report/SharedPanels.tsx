@@ -35,6 +35,36 @@ ChartJS.register(
 
 export type SortDirection = 'asc' | 'desc';
 
+/**
+ * Every report table is wrapped in `overflow-x-auto`, but `w-full` alone lets the
+ * table shrink to the viewport so the wrapper never scrolls and columns get
+ * crushed on phones. A per-column-count min-width keeps `w-full` stretching the
+ * table on desktop while forcing horizontal scroll once the columns no longer
+ * fit. Roughly 110px per column (cell padding included) so no single column is
+ * squeezed below a readable width. Values are literal class strings so Tailwind's
+ * scanner can see them.
+ */
+const REPORT_TABLE_MIN_WIDTH_CLASSES: Record<number, string> = {
+  1: 'min-w-[320px]',
+  2: 'min-w-[320px]',
+  3: 'min-w-[330px]',
+  4: 'min-w-[440px]',
+  5: 'min-w-[550px]',
+  6: 'min-w-[660px]',
+  7: 'min-w-[770px]',
+  8: 'min-w-[880px]',
+  9: 'min-w-[990px]',
+  10: 'min-w-[1100px]',
+  11: 'min-w-[1210px]',
+  12: 'min-w-[1320px]',
+};
+
+export const reportTableClass = (columnCount: number): string =>
+  `w-full text-sm ${
+    REPORT_TABLE_MIN_WIDTH_CLASSES[columnCount] ??
+    REPORT_TABLE_MIN_WIDTH_CLASSES[10]
+  }`;
+
 export type SortableValue = string | number | boolean | null | undefined;
 
 export interface SortState<K extends string> {
@@ -118,7 +148,7 @@ export const SortableTH = <K extends string>({
     <th
       className={
         className ??
-        `${alignClass} px-5 py-3 font-medium select-none whitespace-nowrap`
+        `${alignClass} px-3 sm:px-5 py-3 font-medium select-none whitespace-nowrap`
       }
     >
       <button
@@ -1159,7 +1189,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
 
       {shouldRenderTable && (
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm">
-          <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between flex-wrap gap-3 px-4 md:px-6 py-4">
             <div className="flex items-center gap-3 flex-wrap">
               <h3 className="text-base font-semibold text-gray-900">
                 {reportName}
@@ -1198,7 +1228,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
             )}
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className={reportTableClass(columns.length)}>
               {columns.length > 0 && (
                 <thead className="bg-gray-50 text-gray-600">
                   <tr>
@@ -1220,7 +1250,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
                   <tr>
                     <td
                       colSpan={Math.max(columns.length, 1)}
-                      className="px-5 py-8 text-center text-sm text-gray-500"
+                      className="px-3 sm:px-5 py-8 text-center text-sm text-gray-500"
                     >
                       No data for this period
                     </td>
@@ -1234,7 +1264,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
                       {columns.map((col, colIdx) => (
                         <td
                           key={col}
-                          className={`px-5 py-4 ${
+                          className={`px-3 sm:px-5 py-4 ${
                             colIdx === 0
                               ? 'text-gray-900 font-medium'
                               : 'text-gray-700'
@@ -1250,7 +1280,7 @@ export const GenericReportPanel: React.FC<GenericReportPanelProps> = ({
             </table>
           </div>
           {sorted.length > GENERIC_PAGE_SIZE && (
-            <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 text-xs text-gray-600">
+            <div className="flex items-center justify-between px-4 md:px-5 py-3 border-t border-gray-100 text-xs text-gray-600">
               <span>
                 Page {safePage} of {totalPages}
               </span>

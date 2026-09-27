@@ -1,6 +1,7 @@
 "use client";
 import { CustomButton } from "@/components/customButton";
 import { cn, removeCookie } from "@/lib/utils";
+import { resetPostHog } from "@/lib/posthogAnalytics";
 import Hobwise from "@/public/assets/images/hobwise.png";
 import { CloseIcon, FlashIcon, HamburgerIcon } from "@/public/assets/svg";
 import {
@@ -71,6 +72,7 @@ export default function Navbar({ type = "non-colored", className }: INavbar) {
     queryClient.clear();
     localStorage.clear();
     setUserInfo(null);
+    resetPostHog();
     removeCookie("token");
     removeCookie("planCapabilities");
     removeCookie("username");

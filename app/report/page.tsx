@@ -400,7 +400,7 @@ class PanelErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm py-16 flex items-center justify-center">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm py-10 sm:py-16 flex items-center justify-center">
           <div className="flex flex-col items-center gap-2 text-center px-6">
             <h3 className="text-base font-semibold text-gray-700">
               Unable to load this report
@@ -750,11 +750,11 @@ const StockAnalysisPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col w-full gap-6">
+    <div className="flex flex-col w-full min-w-0 gap-4 md:gap-6">
       {/* Header */}
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[24px] leading-8 font-semibold text-gray-900">
+      <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-[22px] sm:text-[24px] leading-8 font-semibold text-gray-900">
             Reports
           </h1>
           <p className="text-sm text-grey600 mt-1">
@@ -781,48 +781,56 @@ const StockAnalysisPage: React.FC = () => {
       </div>
 
       {/* Period filter */}
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 md:px-6 py-4 flex flex-wrap items-center gap-3">
-        <span className="text-sm font-medium text-gray-700">Period:</span>
-        <div className="flex flex-wrap gap-2">
-          {PERIODS.map((p) => {
-            const isActive = activePeriod === p.id;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => {
-                  setActivePeriod(p.id);
-                  setCustomStart('');
-                  setCustomEnd('');
-                }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
-                  isActive
-                    ? 'bg-primaryColor text-white border-primaryColor'
-                    : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                {p.label}
-              </button>
-            );
-          })}
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm px-4 md:px-6 py-4 flex flex-col lg:flex-row lg:items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
+          <span className="text-sm font-medium text-gray-700 shrink-0">
+            Period:
+          </span>
+          <div className="flex flex-wrap gap-2">
+            {PERIODS.map((p) => {
+              const isActive = activePeriod === p.id;
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    setActivePeriod(p.id);
+                    setCustomStart('');
+                    setCustomEnd('');
+                  }}
+                  className={`flex-1 min-w-[88px] sm:flex-none sm:min-w-0 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                    isActive
+                      ? 'bg-primaryColor text-white border-primaryColor'
+                      : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="flex items-center gap-2 ml-auto flex-wrap">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 lg:ml-auto min-w-0">
           <span className="text-sm font-medium text-gray-700">Custom</span>
-          <input
-            type="date"
-            value={customStart}
-            placeholder="dd / mm / yyyy"
-            onChange={(e) => setCustomStart(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-primaryColor"
-          />
-          <span className="text-sm text-gray-500">to</span>
-          <input
-            type="date"
-            value={customEnd}
-            placeholder="dd / mm / yyyy"
-            onChange={(e) => setCustomEnd(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-primaryColor"
-          />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 min-w-0">
+            <input
+              type="date"
+              value={customStart}
+              placeholder="dd / mm / yyyy"
+              onChange={(e) => setCustomStart(e.target.value)}
+              className="w-full sm:w-auto min-w-0 max-w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-primaryColor"
+            />
+            <span className="text-sm text-gray-500 text-center sm:text-left">
+              to
+            </span>
+            <input
+              type="date"
+              value={customEnd}
+              placeholder="dd / mm / yyyy"
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className="w-full sm:w-auto min-w-0 max-w-full px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-primaryColor"
+            />
+          </div>
         </div>
       </div>
 
@@ -943,7 +951,7 @@ const ModuleTabsBar: React.FC<ModuleTabsBarProps> = ({
               key={tab.id}
               type="button"
               onClick={() => onChange(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap shrink-0 transition-colors ${
                 isActive
                   ? 'text-primaryColor'
                   : 'text-gray-600 hover:text-gray-800'

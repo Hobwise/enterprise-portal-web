@@ -5,6 +5,7 @@ import { confirmEmail } from "@/app/api/controllers/auth";
 import { CustomButton } from "@/components/customButton";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import useCountdown from "@/hooks/useTimer";
+import { identifyUser } from "@/lib/posthogAnalytics";
 import { setJsonCookie } from "@/lib/cookies";
 import {
   notify,
@@ -49,6 +50,7 @@ const ConfirmEmailForm = () => {
     if (data?.data?.isSuccessful) {
       setTokenCookie("token", data?.data?.data.token);
       saveJsonItemToLocalStorage("userInformation", data?.data?.data);
+      identifyUser(data?.data?.data);
 
       router.push("/auth/business-information");
     } else if (data?.data?.error) {
