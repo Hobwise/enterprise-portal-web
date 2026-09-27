@@ -9,6 +9,7 @@ import {
   setTokenCookie,
   getTokenCookie,
   getJsonItemFromLocalStorage,
+  clearAppStorage,
 } from "@/lib/utils";
 import { Checkbox, Spacer } from "@nextui-org/react";
 import Link from "next/link";
@@ -18,7 +19,7 @@ import { FaRegEnvelope } from "react-icons/fa6";
 import { LuArrowRight } from "react-icons/lu";
 import { useQueryClient } from "@tanstack/react-query";
 import { decryptPayload } from "@/lib/encrypt-decrypt";
-import { identifyUser } from "@/lib/posthogAnalytics";
+import { trackSignIn } from "@/lib/posthogAnalytics";
 
 interface LoginFormData {
   email: string;
@@ -117,8 +118,10 @@ const LoginForm = () => {
     try {
       const { businesses, token, user } = decryptedData.data;
 
-      // Clear old session data BEFORE saving new data
-      localStorage.clear();
+      // Clear old session data BEFORE saving new data.
+      // clearAppStorage (not localStorage.clear) so the PostHog anonymous id
+      // survives and this visitor's pre-login activity merges into one person.
+      clearAppStorage();
       sessionStorage.clear();
       queryClient.clear();
 
@@ -135,7 +138,9 @@ const LoginForm = () => {
       saveJsonItemToLocalStorage("loginDetails", loginFormData);
       setLoginDetails(loginFormData);
 
-      identifyUser(decryptedData.data);
+      // Identify + capture "signed in" + flush, all before the hard redirect
+      // below tears the page down.
+      trackSignIn(decryptedData.data);
 
       if (process.env.NODE_ENV !== "production") {
         console.log("[LoginForm] Saved loginDetails to localStorage", {

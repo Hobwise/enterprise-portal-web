@@ -3,7 +3,7 @@ import {
   loginUserSelectedBusiness,
 } from "@/app/api/controllers/auth";
 import { getUserHomeRoute } from "@/lib/userTypeUtils";
-import { identifyUser } from "@/lib/posthogAnalytics";
+import { identifyUser, flushPostHog } from "@/lib/posthogAnalytics";
 import useGetBusinessByCooperate from "@/hooks/cachedEndpoints/useGetBusinessByCooperate";
 import { useGlobalContext } from "@/hooks/globalProvider";
 import { decryptPayload } from "@/lib/encrypt-decrypt";
@@ -176,6 +176,8 @@ const SelectBusinessForm = () => {
           });
           saveJsonItemToLocalStorage("userInformation", decryptedData?.data);
           identifyUser(decryptedData?.data);
+          // Push the identify out before navigating away.
+          flushPostHog();
 
           // Navigate to the correct home for this user type
           router.replace(getUserHomeRoute(decryptedData?.data));

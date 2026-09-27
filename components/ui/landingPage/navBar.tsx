@@ -1,7 +1,7 @@
 "use client";
 import { CustomButton } from "@/components/customButton";
-import { cn, removeCookie } from "@/lib/utils";
-import { resetPostHog } from "@/lib/posthogAnalytics";
+import { cn, removeCookie, clearAppStorage } from "@/lib/utils";
+import { trackSignOut } from "@/lib/posthogAnalytics";
 import Hobwise from "@/public/assets/images/hobwise.png";
 import { CloseIcon, FlashIcon, HamburgerIcon } from "@/public/assets/svg";
 import {
@@ -70,9 +70,10 @@ export default function Navbar({ type = "non-colored", className }: INavbar) {
 
   const externalLogout = () => {
     queryClient.clear();
-    localStorage.clear();
+    clearAppStorage();
     setUserInfo(null);
-    resetPostHog();
+    // Captures "signed out" against the current person, then resets it.
+    trackSignOut();
     removeCookie("token");
     removeCookie("planCapabilities");
     removeCookie("username");
