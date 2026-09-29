@@ -113,6 +113,25 @@ const CompleteBookingComponent = () => {
 
     setIsLoading(false);
 
+    if (data?.queued) {
+      // Request never reached the server — the booking is safely queued and
+      // will sync on reconnect. Show the user a clear confirmation instead of
+      // acting as though the server accepted it.
+      toast.success(
+        "No connection available. Your booking was saved and will be sent automatically when you're back online."
+      );
+      setBookings({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        description: "",
+        id: "",
+      });
+      setQuantity(1);
+      return;
+    }
+
     if (data?.data?.isSuccessful) {
       setTimeNdate(now(getLocalTimeZone()));
       reservationId

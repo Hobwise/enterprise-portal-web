@@ -171,6 +171,14 @@ const AddNewReservation = () => {
     setResponse(data);
 
     setIsLoading(false);
+    if (data?.queued) {
+      notify({
+        title: "Saved offline",
+        text: "No connection available. Your reservation was saved and will be sent automatically when you're back online.",
+        type: "success",
+      });
+      return;
+    }
     if (data?.data?.isSuccessful) {
       onOpen();
       clearItemLocalStorage("saveReservationToDraft");

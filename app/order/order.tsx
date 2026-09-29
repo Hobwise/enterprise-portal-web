@@ -581,7 +581,21 @@ const CreateOrder = () => {
         );
       }
 
-      if (response?.isSuccessful && response?.data) {
+      if (response?.queued) {
+        // Network failure: the order is safe in the local queue and will sync
+        // on reconnect. Give a clear confirmation, clear the cart, and don't
+        // open the tracking modal (there is no order data to track yet).
+        toast.success(
+          "No connection available. Your order was saved and will be sent automatically when you're back online."
+        );
+        setIsServingInfoOpen(false);
+        setSelectedItems([]);
+        setOriginalOrderItems([]);
+        setOrderData(null);
+        setOrderReference("");
+        setOrderId("");
+        setIsUpdatingOrder(false);
+      } else if (response?.isSuccessful && response?.data) {
         let orderDataToStore = response.data;
 
         // Merge the submitted data back into the response

@@ -26,7 +26,9 @@ const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
     ? businessInformation[0]?.businessId
     : businessIdOutsideApp;
   const getAllReservation = async ({ queryKey }) => {
-    try {
+      // Network failures propagate up so the page can show a retry /
+      // stale-data notice instead of a silent empty list. Server (HTTP)
+      // errors return undefined here and fall through to the empty default.
       const responseData = await getReservations(
         businessId,
         page,
@@ -43,20 +45,9 @@ const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
         hasNext: false,
         hasPrevious: false
       };
-    } catch (error) {
-      return {
-        reservations: [],
-        totalCount: 0,
-        pageSize: rowsPerPage || 10,
-        currentPage: page || 1,
-        totalPages: 0,
-        hasNext: false,
-        hasPrevious: false
-      };
-    }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, refetch, dataUpdatedAt, isFetching } = useQuery({
     queryKey: ["reservation", { page, rowsPerPage }],
     queryFn: getAllReservation,
     ...fetchQueryConfig()
@@ -67,6 +58,8 @@ const useReservation = (businessIdOutsideApp?: any, cooperateID?: any) => {
     isLoading,
     isError,
     refetch,
+    dataUpdatedAt,
+    isFetching,
   };
 };
 

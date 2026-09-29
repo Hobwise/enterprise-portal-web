@@ -120,6 +120,26 @@ const CreateBooking = ({
 
     setIsLoading(false);
 
+    if (data?.queued) {
+      notify({
+        title: "Saved offline",
+        text: "No connection available. Your booking was saved and will be sent automatically when you're back online.",
+        type: "success",
+      });
+      closeCreateBookingModal();
+      setBookings({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        description: "",
+        id: "",
+      });
+      setQuantity(1);
+      setNoOfGuests(1);
+      return;
+    }
+
     if (data?.data?.isSuccessful) {
       await refetch();
 

@@ -919,6 +919,20 @@ const CheckoutModal = ({
     const id = businessId ? businessId : businessInformation[0]?.businessId;
     const data = await createOrder(id, payload, effectiveCooperateID, userInformation?.id);
 
+    // Queued offline: request never reached the server, but the order is safe
+    // in the local queue and will sync automatically on reconnect. Clear the
+    // cart and close so kitchen work can resume.
+    if (data && (data as any).queued) {
+      notify({
+        title: "Saved offline",
+        text: "No connection available. Your order was saved and will be sent automatically when you're back online.",
+        type: "success",
+      });
+      onOrderSuccess?.();
+      onOpenChange(false);
+      return;
+    }
+
     // Handle undefined response — the upstream error toast (e.g. "Insufficient
     // stock…") has already been surfaced by handleError in createOrder, so
     // don't duplicate it with a generic connection-error toast here.

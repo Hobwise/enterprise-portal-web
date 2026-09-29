@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { DASHBOARD } from "../../api-url";
 import api, { handleError } from "../../apiService";
+import { isOfflineFailure } from "@/lib/offlineQueue";
+import { submitWithQueue } from "@/lib/submitWithQueue";
 
 interface Order {
   placedByName: string;
@@ -65,6 +67,10 @@ export async function getCategoryOrders(
 
     return response.data;
   } catch (error) {
+    // Surface network-level failures (offline, DNS, timeout) so pages can
+    // serve cached data or show a retry instead of a silent empty list.
+    // Server (HTTP) errors keep the existing behavior.
+    if (isOfflineFailure(error)) throw error;
     handleError(error, false);
   }
 }
@@ -105,6 +111,10 @@ export async function getCategoryOrderDetails(
 
     return response.data;
   } catch (error) {
+    // Surface network-level failures (offline, DNS, timeout) so pages can
+    // serve cached data or show a retry instead of a silent empty list.
+    // Server (HTTP) errors keep the existing behavior.
+    if (isOfflineFailure(error)) throw error;
     handleError(error, false);
   }
 }
@@ -131,6 +141,10 @@ export async function getOrderCategories(
 
     return response.data;
   } catch (error) {
+    // Surface network-level failures (offline, DNS, timeout) so pages can
+    // serve cached data or show a retry instead of a silent empty list.
+    // Server (HTTP) errors keep the existing behavior.
+    if (isOfflineFailure(error)) throw error;
     handleError(error, false);
   }
 }
@@ -188,6 +202,10 @@ export async function getOrderDetails(
 
     return response.data;
   } catch (error) {
+    // Surface network-level failures (offline, DNS, timeout) so pages can
+    // serve cached data or show a retry instead of a silent empty list.
+    // Server (HTTP) errors keep the existing behavior.
+    if (isOfflineFailure(error)) throw error;
     handleError(error, false);
   }
 }
@@ -358,11 +376,23 @@ export async function createOrder(
   if (userId) headers.userId = userId;
 
   try {
-    const data = await api.post(DASHBOARD.placeOrder, payload, {
+    // Cash / pay-later orders only. An online (Paystack) order needs a live
+    // server-issued orderId before payment can start, so it cannot complete
+    // offline — submitWithQueue refuses to queue those and the caller gets a
+    // normal rejection to show "reconnect to pay".
+    const result = await submitWithQueue<any>({
+      kind: 'order',
+      url: DASHBOARD.placeOrder,
+      payload,
       headers,
     });
 
-    return data;
+    if (result.status === 'sent') return result.data;
+    if (result.status === 'queued') {
+      return { queued: true, queueId: result.queueId };
+    }
+
+    handleError(result.error);
   } catch (error) {
     handleError(error);
   }
@@ -389,11 +419,19 @@ export async function createUserOrder(
   if (userId) headers.userId = userId;
 
   try {
-    const data = await api.post(DASHBOARD.placeOrder, payload, {
+    const result = await submitWithQueue<any>({
+      kind: 'order',
+      url: DASHBOARD.placeOrder,
+      payload,
       headers,
     });
 
-    return data;
+    if (result.status === 'sent') return result.data;
+    if (result.status === 'queued') {
+      return { queued: true, queueId: result.queueId };
+    }
+
+    handleError(result.error);
   } catch (error) {
     handleError(error);
   }

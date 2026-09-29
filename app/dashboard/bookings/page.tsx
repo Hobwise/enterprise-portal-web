@@ -12,6 +12,7 @@ import { postBookingStatus } from "@/app/api/controllers/dashboard/bookings";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
+import OfflineDataBanner from "@/components/ui/dashboard/OfflineDataBanner";
 import BookingDetails from "@/components/ui/dashboard/bookings/bookingDetails";
 import BookingsList from "@/components/ui/dashboard/bookings/bookingList";
 import ConfirmBooking from "@/components/ui/dashboard/bookings/confirmBooking";
@@ -74,6 +75,7 @@ const Bookings: React.FC = () => {
     isLoadingDetails,
     isError,
     refetch,
+    dataUpdatedAt,
   } = useAllBookingsData(page, rowsPerPage, tableStatus);
 
   useEffect(() => {
@@ -157,10 +159,19 @@ const Bookings: React.FC = () => {
 
   if (isLoadingInitial) return <CustomLoading />;
 
-  if (isError) return <Error onClick={() => refetch()} />;
+  // Only show the full-screen error when there is nothing to fall back to.
+  // If stale tabs are still on screen, the page renders them under a banner.
+  if (isError && (categories?.length ?? 0) === 0) {
+    return <Error onClick={() => refetch()} />;
+  }
 
   return (
     <>
+      <OfflineDataBanner
+        visible={!!isError && (categories?.length ?? 0) > 0}
+        dataUpdatedAt={dataUpdatedAt}
+        onRetry={refetch}
+      />
       <div className="flex flex-row flex-wrap mb-4 xl:mb-8 item-center justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">

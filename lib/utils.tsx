@@ -59,7 +59,14 @@ export const clearItemLocalStorage = (name: string) => {
  * sign-in starts from a brand new anonymous id and the pre-login journey
  * (pageviews, clicks) can never be merged into the identified person.
  */
-const PRESERVED_STORAGE_PREFIXES = ["ph_", "posthog", "__ph"];
+const PRESERVED_STORAGE_PREFIXES = [
+  "ph_",
+  "posthog",
+  "__ph",
+  // Offline submission queue must survive logout: a 401 wiping the session
+  // mid-flush would otherwise destroy queues created by anonymous customers.
+  "pendingSubmissions",
+];
 
 /**
  * Clears app auth state without destroying the analytics identity, so an

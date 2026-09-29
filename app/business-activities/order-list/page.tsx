@@ -6,6 +6,7 @@ import Header from "@/components/ui/dashboard/header";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
+import OfflineDataBanner from "@/components/ui/dashboard/OfflineDataBanner";
 import CategoryOrdersList from "@/components/ui/business-activities/CategoryOrdersList";
 import useCategoryOrders from "@/hooks/cachedEndpoints/useCategoryOrders";
 import { useGlobalContext } from "@/hooks/globalProvider";
@@ -30,6 +31,7 @@ const OrderListContent: React.FC = () => {
     filterType,
     startDate,
     endDate,
+    dataUpdatedAt,
   } = useDateFilter(useCategoryOrders);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,7 +87,9 @@ const OrderListContent: React.FC = () => {
     );
   }
 
-  if (isError) {
+  // Only show the full-screen error when there's nothing to fall back to.
+  // If stale rows are still on screen, keep them under a banner.
+  if (isError && categories.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header ispos />
@@ -99,6 +103,11 @@ const OrderListContent: React.FC = () => {
       <Header ispos />
 
       <div className="px-6 py-6">
+        <OfflineDataBanner
+          visible={isError && categories.length > 0}
+          dataUpdatedAt={dataUpdatedAt}
+          onRetry={refetch}
+        />
         {/* Header Section */}
         <div className="flex flex-col text-black md:flex-row gap-4 mb-4 xl:mb-8 items-start md:items-center justify-between w-full">
           <div>

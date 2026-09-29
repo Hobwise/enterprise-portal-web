@@ -162,7 +162,9 @@ export const identifyUser = (userInfo?: unknown): void => {
 export const flushPostHog = (): void => {
   if (!isReady()) return;
   try {
-    posthog.flush();
+    // posthog-js exposes flush() at runtime; some installed type bundles omit it
+    // from PostHog's surface, so call it through a minimal local shape.
+    (posthog as unknown as { flush: () => void }).flush();
   } catch (error) {
     debug('flush failed', error);
   }
