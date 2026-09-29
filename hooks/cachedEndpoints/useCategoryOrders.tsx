@@ -1,7 +1,7 @@
 'use client';
 import { getCategoryOrders, getCategoryOrderDetails } from '@/app/api/controllers/dashboard/orders';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 import { useEffect, useRef } from 'react';
@@ -147,11 +147,16 @@ const useCategoryOrders = (
 
     } catch (error) {
       console.error('Error loading category orders:', error);
-      return { categories: [], details: null };
+      // The controller already rethrows network-level failures (offline, DNS,
+      // timeout). Let them reach React Query so the page surfaces a retry /
+      // stale-data banner instead of a silent empty list. Same-page data stays
+      // visible via placeholderData + the retained React Query cache, and
+      // previously-visited pages are still served by the Map cache above.
+      throw error;
     }
   };
 
-  const { data, isLoading, isError, refetch, isFetching } = useQuery<any>({
+  const { data, isLoading, isError, refetch, isFetching, dataUpdatedAt } = useQuery<any>({
     queryKey: [
       "categoryOrders",
       { categoryId, filterType, startDate, endDate, tableStatus, page, rowsPerPage },
@@ -159,7 +164,8 @@ const useCategoryOrders = (
     queryFn: getAllCategoryOrders,
     ...fetchQueryConfig(options),
     refetchOnWindowFocus: false,
-    staleTime: 0,
+    staleTime: 30 * 1000, // 30s — reduces refetch churn; page/date switches still refetch via query keys
+    placeholderData: keepPreviousData,
     gcTime: 5 * 60 * 1000,
     enabled: options?.enabled !== false && !!categoryId,
     refetchOnMount: true,
@@ -194,6 +200,7 @@ const useCategoryOrders = (
     isError,
     refetch,
     isFetching,
+    dataUpdatedAt,
     clearCache,
     clearAllCache,
   };

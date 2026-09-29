@@ -15,6 +15,7 @@ import { Toaster as SonnerToaster } from "sonner";
 import { companyInfo } from "../lib/companyInfo";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
+import OfflineQueueSync from "@/components/OfflineQueueSync";
 import { Metadata, Viewport } from "next";
 import {
   OrganizationSchema,
@@ -125,6 +126,7 @@ export default function RootLayout({
               <AppProvider>
                 <Providers>
                   {children}
+                  <OfflineQueueSync />
                   <Analytics />
                   <ToastContainer />
                   <SonnerToaster position="top-right" richColors />

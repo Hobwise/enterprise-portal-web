@@ -36,7 +36,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // Increased from 20s to 30s for better reliability
+  timeout: 8000, // ~8s: fail fast on flaky networks so cached data / offline UI take over instead of a 30s spinner
 });
 
 const isTokenExpiringSoon = () => {

@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { IoAddCircleOutline, IoSearchOutline } from "react-icons/io5";
 
 import Error from "@/components/error";
+import OfflineDataBanner from "@/components/ui/dashboard/OfflineDataBanner";
 import CreateReservation from "@/components/ui/dashboard/reservations/createReservations";
 import ReservationList from "@/components/ui/dashboard/reservations/reservation";
 import usePermission from "@/hooks/cachedEndpoints/usePermission";
@@ -64,7 +65,7 @@ const Reservation: React.FC = () => {
 
   const business = getJsonItemFromLocalStorage("business") as BusinessInfo[];
   const userInformation = getJsonItemFromLocalStorage("userInformation") as UserInfo;
-  const { data, isLoading, isError, refetch } = useReservation<ReservationData>();
+  const { data, isLoading, isError, refetch, dataUpdatedAt } = useReservation<ReservationData>();
 
   const [loadingExport, setLoadingExport] = useState<boolean>(false);
 
@@ -130,14 +131,21 @@ const Reservation: React.FC = () => {
 
   // Handle loading state
   if (isLoading) return <CustomLoading />;
-  // Handle error state or undefined data
-  if (isError || !data) return <Error onClick={() => refetch()} />;
 
-  // Check if reservations array exists and has items
-  const hasReservations = Array.isArray(data.reservations) && data.reservations.length > 0;
+  // If a reservation snapshot is still on screen (stale cache), tolerate the
+  // error and show it under a banner rather than nuking the page.
+  const hasReservations =
+    Array.isArray(data?.reservations) && data.reservations.length > 0;
+
+  if ((isError || !data) && !hasReservations) return <Error onClick={() => refetch()} />;
 
   return (
     <>
+      <OfflineDataBanner
+        visible={!!isError && hasReservations}
+        dataUpdatedAt={dataUpdatedAt}
+        onRetry={refetch}
+      />
       <div className="flex flex-row flex-wrap xl:mb-8 mb-4 justify-between">
         <div>
           <div className="text-[24px] leading-8 font-semibold">

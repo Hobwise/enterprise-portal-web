@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { CustomInput } from "@/components/CustomInput";
 import { CustomButton } from "@/components/customButton";
 import Error from "@/components/error";
+import OfflineDataBanner from "@/components/ui/dashboard/OfflineDataBanner";
 import CreateOrder from "@/components/ui/dashboard/orders/createOrder";
 import OrdersList from "@/components/ui/dashboard/orders/order";
 import useOrder from "@/hooks/cachedEndpoints/useOrder";
@@ -36,6 +37,7 @@ const OrdersContent: React.FC = () => {
     filterType,
     startDate,
     endDate,
+    dataUpdatedAt,
   } = useDateFilter(useOrder);
   const { userRolePermissions, role } = usePermission();
 
@@ -113,10 +115,19 @@ const OrdersContent: React.FC = () => {
   if (isLoading && categories.length === 0) {
     return <CustomLoading />;
   }
-  if (isError) return <Error onClick={() => refetch()} />;
+  // Only show the full-screen error when there is nothing to fall back to.
+  // If stale rows are still on screen, the page renders them under a banner.
+  if (isError && categories.length === 0) {
+    return <Error onClick={() => refetch()} />;
+  }
 
   return (
     <>
+      <OfflineDataBanner
+        visible={isError && categories.length > 0}
+        dataUpdatedAt={dataUpdatedAt}
+        onRetry={refetch}
+      />
       <div className="flex flex-col md:flex-row gap-4 mb-4 xl:mb-8 items-start md:items-center justify-between w-full">
         <div>
           <div className="text-[24px] leading-8 font-semibold">

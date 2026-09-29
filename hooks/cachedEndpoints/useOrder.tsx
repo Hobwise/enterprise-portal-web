@@ -1,7 +1,7 @@
 'use client';
 import { getOrderCategories, getOrderDetails } from '@/app/api/controllers/dashboard/orders';
 import { getJsonItemFromLocalStorage } from '@/lib/utils';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { useGlobalContext } from '../globalProvider';
 import { fetchQueryConfig } from "@/lib/queryConfig";
 import { useEffect, useRef } from 'react';
@@ -137,11 +137,16 @@ const useOrder = (
 
     } catch (error) {
       console.error('Error loading orders:', error);
-      return { categories: [], details: [], salesSummary: null };
+      // The controller already rethrows network-level failures (offline, DNS,
+      // timeout). Let them reach React Query so the page surfaces a retry /
+      // stale-data banner instead of a silent "No orders found". Same-page data
+      // stays visible via placeholderData + React Query's retained cache, and
+      // previously-visited pages are still served by the Map cache above.
+      throw error;
     }
   };
 
-  const { data, isLoading, isError, refetch } = useQuery<any>({
+  const { data, isLoading, isError, refetch, dataUpdatedAt, isFetching } = useQuery<any>({
     queryKey: [
       "orders",
       { page, rowsPerPage, tableStatus, filterType, startDate, endDate },
@@ -150,7 +155,8 @@ const useOrder = (
 
       ...fetchQueryConfig(options),
       refetchOnWindowFocus: false,
-      staleTime: 0, // Always consider data stale to ensure refetch on page/date changes
+      staleTime: 30 * 1000, // 30s — keeps lists near-live without refetch-on-every-mount churn
+      placeholderData: keepPreviousData, // keep the current rows visible while a refresh runs
       gcTime: 5 * 60 * 1000, // Cache for 5 minutes
       enabled: options?.enabled !== false,
 
@@ -188,6 +194,8 @@ const useOrder = (
     isLoading,
     isError,
     refetch,
+    dataUpdatedAt,
+    isFetching,
     clearCache,
     clearAllCache,
   };
