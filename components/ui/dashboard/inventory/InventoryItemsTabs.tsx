@@ -45,10 +45,12 @@ const InventoryItemsTabs: React.FC = () => {
   const pathname = usePathname() ?? '';
 
   return (
-    <div className="bg-white rounded-xl px-3 py-2 mb-6">
+    <div className="bg-white rounded-xl px-2 sm:px-3 py-2 mb-4 sm:mb-6">
+      {/* Horizontally scrollable on mobile so the 4 tabs stay on one row
+          instead of wrapping into a ragged stack */}
       <nav
         aria-label="Inventory items sections"
-        className="flex flex-wrap items-center gap-1"
+        className="flex items-center gap-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {TABS.map((tab) => {
           const isActive = tab.match(pathname);
@@ -57,7 +59,7 @@ const InventoryItemsTabs: React.FC = () => {
               key={tab.href}
               href={tab.href}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+              className={`flex shrink-0 items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
                 isActive
                   ? 'bg-[#5F35D2]/10 text-[#5F35D2]'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'

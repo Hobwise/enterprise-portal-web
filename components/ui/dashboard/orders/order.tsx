@@ -82,6 +82,9 @@ import { MdKeyboardArrowRight } from "react-icons/md";
 import { IoIosArrowRoundBack } from "react-icons/io";
 import { HiArrowLongLeft } from "react-icons/hi2";
 import { useQueryClient } from "@tanstack/react-query";
+import { useOfflineQueueSync } from "@/hooks/useOfflineQueueSync";
+import QueuedOrderInvoice from "@/components/offline/QueuedOrderInvoice";
+import QueuedOrderEditor from "@/components/offline/QueuedOrderEditor";
 
 // Type definitions
 interface OrderItem {
@@ -207,6 +210,9 @@ const OrdersList: React.FC<OrdersListProps> = ({
     React.useState<boolean>(false);
   const [isOpenPaymentBreakdown, setIsOpenPaymentBreakdown] = React.useState<boolean>(false);
   const [isOpenDocket, setIsOpenDocket] = React.useState<boolean>(false);
+  const { orders: queuedOrders, updateOrder: updateQueued, discardOrder: discardQueued } = useOfflineQueueSync();
+  const [queuedInvoiceId, setQueuedInvoiceId] = useState<string | null>(null);
+  const [queuedEditorId, setQueuedEditorId] = useState<string | null>(null);
 
   // Menu categories drive the "Generate Docket" action. Sourced from the Menu
   // Controller (react-query cached); the action is hidden when none exist.
@@ -312,23 +318,55 @@ const OrdersList: React.FC<OrdersListProps> = ({
     return filteredOrders;
   }, [orders, tableStatus, searchQuery, isLoading, isPending]);
 
+  const queuedAsOrderItems = React.useMemo(() => {
+    return queuedOrders.map((q: any) => ({
+      id: q.id,
+      quickResponseID: q.table || "",
+      placedByName: q.customerName || "Anonymous",
+      placedByPhoneNumber: q.customerPhone || "",
+      reference: `Q-${String(q.id).slice(-6)}`,
+      treatedBy: q.staffName || "",
+      totalAmount: q.totalAmount,
+      qrReference: q.table || "",
+      paymentMethod: 0,
+      paymentReference: "",
+      status: 0,
+      dateCreated: new Date(q.createdAt).toISOString(),
+      dateUpdated: new Date(q.createdAt).toISOString(),
+      comment: q.comment || "",
+      amountRemaining: q.totalAmount,
+      amountPaid: 0,
+      isVatApplied: q.isVatApplied ?? true,
+      vatRate: 0,
+      isQueued: true,
+      queueId: q.id,
+      delivery: q.delivery,
+      reviewReason: q.reviewReason,
+    }));
+  }, [queuedOrders]);
+
+  const displayWithQueued = React.useMemo(() => {
+    return [...queuedAsOrderItems, ...orderDetails];
+  }, [queuedAsOrderItems, orderDetails]);
+
   // Create pagination data structure from props
   const paginationData = React.useMemo(() => {
     return {
-      data: orderDetails,
+      data: displayWithQueued,
       totalPages: propTotalPages,
       currentPage: propCurrentPage,
       hasNext: propHasNext,
       hasPrevious: propHasPrevious,
-      totalCount: propTotalCount,
+      totalCount: propTotalCount + queuedAsOrderItems.length,
     };
   }, [
-    orderDetails,
+    displayWithQueued,
     propCurrentPage,
     propTotalPages,
     propHasNext,
     propHasPrevious,
     propTotalCount,
+    queuedAsOrderItems.length,
   ]);
 
   const {
@@ -778,7 +816,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
         case "amount":
           return (
             <div className="text-textGrey text-sm">
-              <p>{formatPrice(order.totalAmount)}</p>
+              <p>{formatPrice(order.totalAmount, undefined as any)}</p>
             </div>
           );
         case "amountRemaining":
@@ -786,7 +824,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
             <div className={`text-sm ${order.amountRemaining !== undefined && order.amountRemaining < 0 ? "text-red-500" : "text-textGrey"}`}>
               <p>
                 {order.amountRemaining !== undefined
-                  ? formatPrice(order.amountRemaining)
+                  ? formatPrice(order.amountRemaining, undefined as any)
                   : "-"}
               </p>
             </div>
@@ -1210,7 +1248,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                       Amount
                     </div>
                     <div className="text-black font-semibold text-[15px]">
-                      {formatPrice(order.totalAmount)}
+                      {formatPrice(order.totalAmount, undefined as any)}
                     </div>
                   </div>
                   <div>
@@ -1438,7 +1476,7 @@ const OrdersList: React.FC<OrdersListProps> = ({
                     <span className="text-black">Select payment method</span>
                   </div>
                   <p className="text-sm text-primaryColor xl:mb-8 w-full mb-4">
-                    {formatPrice(singleOrder?.totalAmount || 0)}
+                    {formatPrice(singleOrder?.totalAmount || 0, undefined as any)}
                   </p>
                 </div>
               </div>
@@ -1587,7 +1625,8 @@ const OrdersList: React.FC<OrdersListProps> = ({
                           (singleOrder?.amountRemaining ??
                             singleOrder?.totalAmount ??
                             0) - (Number(amountPaid.replace(/,/g, "")) || 0)
-                        )
+                        ),
+                        undefined as any
                       )}
                     </span>
                   </div>

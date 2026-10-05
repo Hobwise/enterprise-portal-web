@@ -13,10 +13,13 @@
 
 import api, { handleError } from '@/app/api/apiService';
 import {
+  classifyFailure,
   enqueue,
   isOfflineFailure,
   isQueueableOrder,
+  type DeliveryState,
   type QueueKind,
+  type QueuedSubmissionLocal,
 } from './offlineQueue';
 import { getJsonItemFromLocalStorage } from './utils';
 
@@ -43,6 +46,10 @@ const isAuthenticated = (): boolean => {
  * @param headers     Business/cooperate scope headers.
  * @param canQueue    Return false for flows that cannot safely be replayed
  *                    (e.g. online payment). Defaults to true.
+ * @param local       Device-only receipt snapshot (item names, business, table).
+ *                    Stored on the queue entry so an undelivered order can still
+ *                    be listed, corrected and invoiced with no server. Never
+ *                    transmitted — see `QueuedSubmissionLocal`.
  */
 export const submitWithQueue = async <T>({
   kind,
@@ -50,12 +57,14 @@ export const submitWithQueue = async <T>({
   payload,
   headers,
   canQueue = true,
+  local,
 }: {
   kind: QueueKind;
   url: string;
   payload: any;
   headers: Record<string, any>;
   canQueue?: boolean;
+  local?: QueuedSubmissionLocal;
 }): Promise<SubmitResult<T>> => {
   const queueId = `q_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
@@ -79,6 +88,10 @@ export const submitWithQueue = async <T>({
       return { status: 'rejected', error };
     }
 
+    const failure = classifyFailure(error);
+    // Be conservative: for orders we cannot prove the server never saw it.
+    // Any non-rejected failure is treated as ambiguous to prevent blind replay.
+    const delivery: DeliveryState = kind === 'order' ? 'unknown' : failure === 'unknown' ? 'unknown' : 'unsent';
     enqueue({
       id: queueId,
       kind,
@@ -86,6 +99,10 @@ export const submitWithQueue = async <T>({
       payload: body,
       headers,
       authenticated: isAuthenticated(),
+      // `local` is only stored when supplied. Never merged into the request body —
+      // it exists purely so the device can still show and invoice this order.
+      ...(local ? { local } : {}),
+      delivery,
     });
 
     // Track separately from the real conversion so funnels can see how many
