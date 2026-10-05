@@ -282,7 +282,7 @@ export default function ItemsPage() {
 
   return (
     <div className="min-h-screen font-satoshi">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Header with search, filters, and action buttons */}
         <div className="">
           <InventoryItemsHeader

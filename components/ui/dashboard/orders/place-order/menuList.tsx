@@ -246,7 +246,10 @@ const MenuList = () => {
   const [isOpenVariety, setIsOpenVariety] = useState(false);
 
   const [selectedMenu, setSelectedMenu] = useState<Item>();
-  const [orderDetails, setOrderDetails] = useState([]);
+  // A single order object (customer, table, surcharge), or null for a new order.
+  // Typed `any` because the API returns an open-ended shape; `never[]` was the
+  // old inference and made resetting it to null impossible.
+  const [orderDetails, setOrderDetails] = useState<any>(null);
 
   // Business and user information
   const businessInformation = getJsonItemFromLocalStorage('business');
@@ -899,6 +902,26 @@ const MenuList = () => {
     );
     onOpen();
   }, [isUpdating, menuItems, onOpen]);
+
+  /**
+   * Runs once the order has actually been placed (sent, or safely queued
+   * offline). Wipes every trace of it so the next order starts blank:
+   *
+   * - `selectedItems` — the cart. Previously this was never cleared on this
+   *   page, so the second order came up pre-filled with the first one's items.
+   * - `orderDetails` — the customer/table header, which the checkout modal reads
+   *   as its initial values.
+   * - `order` + `localStorage["order"]` — the add-items prefill hand-off. Left
+   *   in place it would re-hydrate an already-placed order on the next visit.
+   */
+  const handleOrderPlaced = useCallback(() => {
+    setSelectedItems([]);
+    setOrderDetails(null);
+    setOrder(null);
+    setCurrentMenuItems([]);
+    clearItemLocalStorage("order");
+  }, [setCurrentMenuItems]);
+
   console.log(selectedItems)
 
 
@@ -1083,7 +1106,7 @@ const MenuList = () => {
                             </Button>
                           </div>
                            <p className=" font-medium text-sm text-[#344054]">
-                                {formatPrice(item?.price * item.count)}
+                                {formatPrice(item?.price * item.count, undefined as any)}
                               </p>
                         </div>
                         {index !== selectedItems?.length - 1 && (
@@ -1101,14 +1124,14 @@ const MenuList = () => {
                     <div className="flex justify-between items-center">
                       <h3 className="text-[13px] font-[500]">Subtotal</h3>
                       <p className="text-[14px] font-[600]">
-                        {formatPrice(calculateTotalPrice())}
+                        {formatPrice(calculateTotalPrice(), undefined as any)}
                       </p>
                     </div>
                     <Divider className="my-2" />
                     <div className="flex justify-between flex-col items-center">
                       <h3 className="text-[14px] font-[600]">Total</h3>
                       <p className="text-[16px] font-[700] text-primaryColor">
-                        {formatPrice(calculateTotalPrice())}
+                        {formatPrice(calculateTotalPrice(), undefined as any)}
                       </p>
                     </div>
                   </div>
@@ -1149,6 +1172,7 @@ const MenuList = () => {
           businessId={businessInformation?.[0]?.businessId}
           cooperateID={userInformation?.cooperateID}
           categoriesData={categories}
+          onOrderSuccess={handleOrderPlaced}
         />
         <ViewModal
           handleCardClick={handleCardClick}

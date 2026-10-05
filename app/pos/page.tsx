@@ -204,9 +204,18 @@ const POSContent = () => {
     handleDecrement(itemId);
   };
 
-  // Wrapper function to clear cart and reset URL params
+  // Wrapper to clear cart, forget the loaded order and reset URL params.
+  //
+  // `existingOrder` must be cleared too, not just the cart. It is the fallback
+  // for the checkout modal's order id (`urlOrderId || existingOrder?.id`), so
+  // leaving it behind means the next "Process Order" silently appends to the
+  // order that was just placed instead of creating a new one — the terminal
+  // could only ever complete one order per add-items visit.
   const handleClearCart = () => {
     clearCart();
+    setExistingOrder(null);
+    // Allow add-items mode to load a different order if we come back to it.
+    loadedOrderIdRef.current = null;
     // Clear URL params to exit update mode
     router.replace(pathname);
   };

@@ -18,7 +18,7 @@ export default function ItemsLayout({ children }: ItemsLayoutProps) {
   const showTabs = KNOWN_TAB_SEGMENTS.includes(firstSeg);
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto w-full">
       {showTabs && <InventoryItemsTabs />}
       {children}
     </div>

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DASHBOARD } from "../../api-url";
 import api, { handleError } from "../../apiService";
-import { isOfflineFailure } from "@/lib/offlineQueue";
+import { isOfflineFailure, type QueuedSubmissionLocal } from "@/lib/offlineQueue";
 import { submitWithQueue } from "@/lib/submitWithQueue";
 
 interface Order {
@@ -357,7 +357,8 @@ export async function createOrder(
   businessId: string,
   payload: Order,
   cooperateID?: string,
-  userId?: string
+  userId?: string,
+  local?: QueuedSubmissionLocal
 ) {
   const validatedFields = orderSchema.safeParse({
     placedByName: payload?.placedByName,
@@ -385,6 +386,7 @@ export async function createOrder(
       url: DASHBOARD.placeOrder,
       payload,
       headers,
+      local,
     });
 
     if (result.status === 'sent') return result.data;

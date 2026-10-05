@@ -45,6 +45,9 @@ import { MdKeyboardArrowRight } from "react-icons/md";
 import noImage from "../../../../../public/assets/images/no-image.svg";
 import { ordersCacheUtils } from "@/hooks/cachedEndpoints/useOrder";
 import useOrderConfiguration from "@/hooks/cachedEndpoints/useOrderConfiguration";
+import { getQueuedItem, type QueuedSubmissionLocal } from "@/lib/offlineQueue";
+import QueuedOrderInvoice from "@/components/offline/QueuedOrderInvoice";
+import { toQueuedOrderView } from "@/lib/queuedOrder";
 
 interface Order {
   placedByName: string;
@@ -137,6 +140,8 @@ const CheckoutModal = ({
   const [reference, setReference] = useState("");
   const [screen, setScreen] = useState(1);
   const [mobileSubStep, setMobileSubStep] = useState<"1A" | "1B" | "1C">("1A");
+  const [queuedInvoiceId, setQueuedInvoiceId] = useState<string | null>(null);
+  const [showQueuedPrompt, setShowQueuedPrompt] = useState(false);
 
   const [qr, setQr] = useState<
     { id: string; label: string; name?: string; value?: string }[]
@@ -308,18 +313,18 @@ const CheckoutModal = ({
     try {
       if (id) {
         await updateOrder();
+        resetCheckoutState();
+        onOrderSuccess?.();
+        setScreen(2);
       } else {
-        await placeOrder();
+        const res = await placeOrder();
+        // placeOrder already resets and notifies; still advance screen
+        setScreen(2);
       }
-
-      // Transition to payment screen immediately after successful order placement
-      // Cache operations are now non-blocking, so no delay needed
-      setScreen(2);
       setLoading(false);
     } catch (error) {
       console.error("Error during checkout:", error);
       setLoading(false);
-      // Don't show another notification here - the underlying functions already show specific error messages
     }
   };
 
@@ -373,13 +378,8 @@ const CheckoutModal = ({
             text: "Payment received, awaiting confirmation",
             type: "success",
           });
-          setScreen(1);
-          setOrderId("");
-          setReference("");
-          setSelectedPaymentMethod(0);
-          setQrPaymentData(null);
-          setQrPaymentStatus(null);
-          setIsPolling(false);
+          resetCheckoutState();
+          onOrderSuccess?.();
           ordersCacheUtils.clearAll();
           queryClient.invalidateQueries({
             queryKey: ["orderCategories"],
@@ -393,7 +393,6 @@ const CheckoutModal = ({
             queryKey: ["orders"],
             refetchType: "active",
           });
-          onOrderSuccess?.();
           onOpenChange(false);
         },
       });
@@ -405,13 +404,8 @@ const CheckoutModal = ({
   const handleClick = async (methodId: number) => {
     // Clear all screen tracking states after any payment action
     const clearScreenStates = () => {
-      setScreen(1);
+      resetCheckoutState();
       onOpenChange();
-      setOrderId("");
-      setSelectedPaymentMethod(0);
-      setQrPaymentData(null);
-      setQrPaymentStatus(null);
-      setIsPolling(false);
     };
 
     if (methodId === 5) {
@@ -795,6 +789,29 @@ const CheckoutModal = ({
     return { isValid: errors.length === 0, errors };
   };
 
+  // Wipes every per-order field so the next checkout starts from a blank sheet.
+  // Without this the previous customer's name, phone and table stay prefilled
+  // and the next order is silently made against the wrong table.
+  const resetCheckoutState = () => {
+    setScreen(1);
+    setOrderId("");
+    setReference("");
+    setResponse(null);
+    setSelectedPaymentMethod(0);
+    setQrPaymentData(null);
+    setQrPaymentStatus(null);
+    setIsPolling(false);
+    setValidationErrors({});
+    setAdditionalCost(0);
+    setAdditionalCostName("");
+    setOrder({
+      placedByName: "",
+      placedByPhoneNumber: "",
+      quickResponseID: "",
+      comment: "",
+    });
+  };
+
   const placeOrder = async () => {
     // Debug log at start
 
@@ -818,14 +835,26 @@ const CheckoutModal = ({
     }
 
     let payload: any = {};
+    let localMeta: QueuedSubmissionLocal | undefined;
     try {
       // Deduplicate items merged by finalItemID
       const deduplicatedMap = new Map<string, any>();
+      // Display-only names, kept out of the payload. The API payload carries
+      // item ids only, so without this an order queued offline has no readable
+      // line items and can be neither listed nor invoiced on the device.
+      const nameByItemID = new Map<string, { itemName: string; menuName?: string }>();
 
       selectedItems.forEach((item: any) => {
         // For variety items, item.id is the unique variety ID, while item.itemID might be the parent item ID.
         // We must use the unique variety ID to avoid duplicate keys in the backend.
         const finalItemID = item.isVariety ? item.id : item.itemID || item.id;
+
+        if (!nameByItemID.has(finalItemID)) {
+          nameByItemID.set(finalItemID, {
+            itemName: item.itemName || '',
+            menuName: item.menuName,
+          });
+        }
 
         if (deduplicatedMap.has(finalItemID)) {
           // Merge quantities if item already exists
@@ -867,6 +896,31 @@ const CheckoutModal = ({
         isVatApplied,
         totalAmount: finalTotalPrice, // Already rounded in calculation
         orderDetails: transformedArray,
+      };
+
+      // Everything the offline queue list, editor and invoice need. Only used if
+      // this submission has to be queued; discarded on a successful send.
+      const business = businessInformation?.[0];
+      localMeta = {
+        businessName: business?.businessName || "",
+        businessAddress: business?.address || business?.businessAddress || "",
+        businessCity: business?.city,
+        businessState: business?.state,
+        staffName:
+          `${userInformation?.firstName || ""} ${userInformation?.lastName || ""}`.trim() ||
+          "Staff",
+        currency: selectedItems?.[0]?.currency || "NGN",
+        table: order.quickResponseID,
+        customerName,
+        customerPhone: payload.placedByPhoneNumber,
+        comment: order.comment || "",
+        createdAt: Date.now(),
+        lines: transformedArray.map((detail: any) => ({
+          itemID: String(detail.itemID),
+          itemName: nameByItemID.get(detail.itemID)?.itemName || "",
+          menuName: nameByItemID.get(detail.itemID)?.menuName,
+          isPacked: detail.isPacked,
+        })),
       };
     } catch (error) {
       console.error("Error building payload:", error);
@@ -917,7 +971,13 @@ const CheckoutModal = ({
     }
 
     const id = businessId ? businessId : businessInformation[0]?.businessId;
-    const data = await createOrder(id, payload, effectiveCooperateID, userInformation?.id);
+    const data = await createOrder(
+      id,
+      payload,
+      effectiveCooperateID,
+      userInformation?.id,
+      localMeta
+    );
 
     // Queued offline: request never reached the server, but the order is safe
     // in the local queue and will sync automatically on reconnect. Clear the
@@ -925,9 +985,10 @@ const CheckoutModal = ({
     if (data && (data as any).queued) {
       notify({
         title: "Saved offline",
-        text: "No connection available. Your order was saved and will be sent automatically when you're back online.",
+        text: "No connection available. Your order was saved and will be sent automatically when you're back online. You can view, edit or print it from the offline orders button.",
         type: "success",
       });
+      resetCheckoutState();
       onOrderSuccess?.();
       onOpenChange(false);
       return;
@@ -2796,6 +2857,38 @@ const CheckoutModal = ({
               )}
             </>
           )}
+        </ModalContent>
+      </Modal>
+
+      <QueuedOrderInvoice
+        isOpen={showQueuedPrompt && !!queuedInvoiceId}
+        onClose={() => {
+          setShowQueuedPrompt(false);
+          setQueuedInvoiceId(null);
+        }}
+        order={(() => {
+          const item = queuedInvoiceId ? getQueuedItem(queuedInvoiceId) : undefined;
+          return item ? toQueuedOrderView(item) : null;
+        })()}
+      />
+
+      <Modal isOpen={showQueuedPrompt && !queuedInvoiceId} onOpenChange={setShowQueuedPrompt}>
+        <ModalContent>
+          <div className="p-5">
+            <h3 className="text-lg font-semibold">Order saved offline</h3>
+            <p className="mt-2 text-sm text-gray-600">
+              This order was saved locally and will be sent automatically when you're back online.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowQueuedPrompt(false)}
+                className="rounded-xl border px-4 py-2 text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </ModalContent>
       </Modal>
     </div>
