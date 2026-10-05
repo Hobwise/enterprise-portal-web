@@ -927,7 +927,7 @@ const MenuList = () => {
 
   return (
     <>
-      <div className="flex flex-row flex-wrap  justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:justify-between">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <button
@@ -938,17 +938,17 @@ const MenuList = () => {
               <p>Go back</p>
             </button>
           </div>
-          <div className="text-[24px] leading-8 font-semibold">
+          <div className="text-lg sm:text-[24px] leading-8 font-semibold">
             <span>Create Orders</span>
           </div>
-          <p className="text-sm  text-grey600 xl:mb-8 w-full mb-4">
+          <p className="text-sm text-grey600 xl:mb-8 w-full mb-2 sm:mb-4">
             Showing all orders
           </p>
         </div>
-        <div className="flex items-center justify-center gap-3">
-          <div>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="w-full sm:w-auto">
             <CustomInput
-              classnames={"w-[242px]"}
+              classnames={"w-full sm:w-[242px]"}
               label=""
               size="md"
               value={filterValue}
@@ -968,8 +968,8 @@ const MenuList = () => {
             />
           </div>
           <CustomButton
-            onClick={selectedItems.length > 0 ? handleOpenCheckoutModal : {}}
-            className="py-2 px-4 mb-0 text-white"
+            onClick={selectedItems.length > 0 ? handleOpenCheckoutModal : () => {}}
+            className="py-2 px-4 mb-0 text-white w-full sm:w-auto"
             backgroundColor="bg-primaryColor"
           >
             <div className="flex gap-2 items-center justify-center">
@@ -1014,7 +1014,7 @@ const MenuList = () => {
 
             {/* Pagination */}
             {!loadingItems && totalPages > 1 && (
-              <div className="px-6 pb-6">
+              <div className="px-2 sm:px-6 pb-6">
                 <CustomPagination
                   currentPage={currentPage}
                   totalPages={totalPages}
