@@ -16,7 +16,7 @@ const OrderCategoryTabs = ({
   // Ensure categories is always an array and filter out invalid entries  
   return (
     <div className=" rounded-md">
-      <div className="flex items-center px-4 gap-6 py-2">
+      <div className="flex items-center px-2 sm:px-4 gap-3 sm:gap-6 py-2 overflow-x-auto scrollbar-hide touch-pan-x">
         {loadingCategories ? (
           <div className="flex items-center gap-1 px-4">
             <Spinner size="sm" />
@@ -32,7 +32,7 @@ const OrderCategoryTabs = ({
               <button
                 key={index}
                 onClick={() => handleCategorySelect(category.categoryId)}
-                className={`px-2 border-b-3 transition-colors text-base font-satoshi ${
+                className={`px-1 sm:px-2 border-b-3 transition-colors text-sm sm:text-base font-satoshi whitespace-nowrap flex-shrink-0 ${
                   activeCategory === category.categoryId
                     ? 'border-[#5F35D2] text-[#5F35D2] font-medium'
                     : 'border-transparent text-[#6C7278] hover:text-gray-800'

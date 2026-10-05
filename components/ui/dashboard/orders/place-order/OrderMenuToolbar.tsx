@@ -93,7 +93,7 @@ const OrderMenuToolbar = ({
             >
               <button
                 onClick={() => handleMenuSectionSelect(section.id)}
-                className={`flex-shrink-0 px-4 py-2 bg-[#EAE5FF] w-28 rounded-lg transition-colors whitespace-nowrap font-medium text-sm ${
+                className={`flex-shrink-0 px-3 sm:px-4 py-2 bg-[#EAE5FF] w-24 sm:w-28 rounded-lg transition-colors whitespace-nowrap font-medium text-xs sm:text-sm ${
                   activeSubCategory === section.id
                     ? "bg-primaryColor text-white"
                     : "text-[#596375] hover:bg-[#EAE5FF]"

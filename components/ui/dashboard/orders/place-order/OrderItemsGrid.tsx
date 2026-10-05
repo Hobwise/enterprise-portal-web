@@ -78,7 +78,7 @@ const OrderItemsGrid = ({
           <p className="text-gray-400 text-sm mt-2">This section doesn't have any menu items yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3  lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-2 md:gap-4">
           {menuItems.map((menu: Item) => (
         <div
           title={menu?.isAvailable ? "Select item" : ""}
@@ -91,7 +91,7 @@ const OrderItemsGrid = ({
             }
           }}
           key={menu.id}
-          className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[190px] transition-shadow cursor-pointer relative ${
+          className={`bg-white border rounded-lg border-[#D5D5D5BF] hover:shadow-md h-[150px] sm:h-[170px] md:h-[190px] transition-shadow cursor-pointer relative ${
             menu.isAvailable === false ? '' : ''
           }`}
         >
@@ -153,14 +153,14 @@ const OrderItemsGrid = ({
             )}
             <img
               src={
-                menu.image && menu.image.startsWith('data:') || menu.image && menu.image.startsWith('http')
+                menu.image && (menu.image.startsWith('data:') || menu.image.startsWith('http'))
                   ? menu.image
-                  : menu.image 
+                  : menu.image
                     ? `data:image/jpeg;base64,${menu.image}`
                     : noImage
               }
               alt={menu.itemName}
-              className={`w-full h-[130px] object-cover ${
+              className={`w-full h-[95px] sm:h-[110px] md:h-[130px] object-cover ${
                 menu.isAvailable === false ? 'grayscale opacity-70' : ''
               }`}
               onError={(e) => {

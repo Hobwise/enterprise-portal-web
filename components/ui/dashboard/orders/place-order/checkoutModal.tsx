@@ -1627,11 +1627,12 @@ const CheckoutModal = ({
         classNames={{
           base:
             screen === 1
-              ? "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] m-0 md:m-auto mb-safe"
+              ? "md:overflow-none overflow-hidden h-[100dvh] md:h-auto max-w-[100vw] md:max-w-[90vw] lg:max-w-[80vw] xl:max-w-[1200px] m-0 md:m-auto"
               : "md:overflow-none overflow-hidden md:h-auto max-w-[100vw] md:max-w-[90vw] md:max-w-[500px] m-0 md:m-auto",
-          body: "px-4 py-2 md:px-6 flex-1 overflow-y-auto",
+          body: "px-3 py-2 md:px-6 flex-1 overflow-y-auto overscroll-contain",
           header: "px-4 py-3 md:px-6 flex-shrink-0",
-          wrapper: "!fixed !inset-0 items-center justify-center",
+          wrapper: "!fixed !inset-0 items-center justify-center md:items-center",
+          backdrop: "bg-black/60",
         }}
         isDismissable={false}
         hideCloseButton={true}
@@ -2095,25 +2096,25 @@ const CheckoutModal = ({
                           {selectedItems?.map((item: any, index: number) => {
                             return (
                               <React.Fragment key={item.id}>
-                                <div className="flex flex-col space-y-3 p-4 border border-[#E4E7EC80] rounded-lg">
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-3">
+                                <div className="flex flex-col space-y-2.5 p-3 border border-[#E4E7EC80] rounded-lg">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center space-x-2.5 min-w-0">
                                       <Image
-                                        className="w-12 h-12 rounded-lg object-cover"
+                                        className="w-10 h-10 rounded-md object-cover"
                                         src={
                                           item?.image
                                             ? `data:image/jpeg;base64,${item?.image}`
                                             : noImage
                                         }
-                                        width={48}
-                                        height={48}
+                                        width={40}
+                                        height={40}
                                         alt={item.itemName}
                                       />
                                       <div>
-                                        <h3 className="font-semibold text-sm text-black">
+                                        <h3 className="font-semibold text-[13px] leading-tight text-black">
                                           {item.itemName}
                                         </h3>
-                                        <p className="text-xs text-grey600">
+                                        <p className="text-[11px] text-grey600 line-clamp-1">
                                           {item.menuName}
                                         </p>
                                       </div>
@@ -2136,12 +2137,12 @@ const CheckoutModal = ({
                                         radius="sm"
                                         size="md"
                                         variant="faded"
-                                        className="border border-[#EFEFEF] h-10 w-10"
+                                        className="border border-[#EFEFEF] h-8 w-8"
                                         aria-label="minus"
                                       >
-                                        <FaMinus className="text-sm" />
+                                        <FaMinus className="text-xs" />
                                       </Button>
-                                      <span className="font-bold text-lg text-black min-w-[2rem] text-center">
+                                      <span className="font-bold text-base text-black min-w-[1.75rem] text-center">
                                         {item.count}
                                       </span>
                                       <Button
@@ -2150,10 +2151,10 @@ const CheckoutModal = ({
                                         radius="sm"
                                         size="md"
                                         variant="faded"
-                                        className="border border-[#EFEFEF] h-10 w-10"
+                                        className="border border-[#EFEFEF] h-8 w-8"
                                         aria-label="plus"
                                       >
-                                        <FaPlus className="text-sm" />
+                                        <FaPlus className="text-xs" />
                                       </Button>
                                     </div>
 
